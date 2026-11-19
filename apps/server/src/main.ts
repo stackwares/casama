@@ -482,6 +482,21 @@ if (env.MODE === "api") {
           secret: internalToken(env),
           referrals: referralConfig(env).enabled,
           newsletter: newsletterConfig(env),
+          // The daily batch (§6.4): its pause rules, and a push to the owners on a skipped day.
+          budgetMb: Math.round(env.COMPUTER_HOST_MEMORY_GB * 1024),
+          openRouterDailyCapUsd: env.OPENROUTER_DAILY_CAP_USD,
+          adminEmails: env.INSTANCE_ADMIN_EMAILS,
+          notifications: new NotificationService(
+            waitlistDb.db,
+            serverPushSender({
+              db: waitlistDb.db,
+              fcmServiceAccountJson: env.FCM_SERVICE_ACCOUNT
+                ? inlineOrFile(env.FCM_SERVICE_ACCOUNT)
+                : undefined,
+              cloud,
+              onRelayError: (e) => logger.warn("push relay", { error: e.message }),
+            }),
+          ),
           log: (msg, extra) => logger.info(msg, extra),
         }),
       );

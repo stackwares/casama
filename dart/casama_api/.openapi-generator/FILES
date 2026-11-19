@@ -921,6 +921,7 @@ lib/src/model/voice_transcript_request_turns_inner.dart
 lib/src/model/voice_transcript_request_usage.dart
 lib/src/model/voice_turns_request.dart
 lib/src/model/voice_turns_request_turns_inner.dart
+lib/src/model/waitlist_batch.dart
 lib/src/model/waitlist_changed.dart
 lib/src/model/waitlist_entry.dart
 lib/src/model/waitlist_joined.dart

@@ -921,6 +921,7 @@ export 'package:casama_api/src/model/voice_transcript_request_turns_inner.dart';
 export 'package:casama_api/src/model/voice_transcript_request_usage.dart';
 export 'package:casama_api/src/model/voice_turns_request.dart';
 export 'package:casama_api/src/model/voice_turns_request_turns_inner.dart';
+export 'package:casama_api/src/model/waitlist_batch.dart';
 export 'package:casama_api/src/model/waitlist_changed.dart';
 export 'package:casama_api/src/model/waitlist_entry.dart';
 export 'package:casama_api/src/model/waitlist_joined.dart';

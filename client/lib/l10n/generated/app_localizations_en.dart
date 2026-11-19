@@ -15828,4 +15828,405 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get foldSystemSays => 'What the system reports';
+
+  @override
+  String get inviteGateLine => 'Casama Cloud is invite-only for now.';
+
+  @override
+  String get inviteGateSelfHost =>
+      'Running Casama on your own server is open to everyone.';
+
+  @override
+  String get joinTheWaitlist => 'Join the Waitlist';
+
+  @override
+  String get iHaveAnInvite => 'I Have an Invite';
+
+  @override
+  String get waitlistSubtitle =>
+      'We\'re letting people in every day. You\'ll get one email when it\'s your turn.';
+
+  @override
+  String get waitlistNote => 'What would you have a bot do first?';
+
+  @override
+  String get waitlistNoteHint => 'Optional';
+
+  @override
+  String get waitlistSelfHosting => 'I run Casama on my own server';
+
+  @override
+  String get waitlistNewsletter =>
+      'Also send me Casama\'s monthly email (once a month at most)';
+
+  @override
+  String get waitlistJoinedTitle => 'You\'re on the list.';
+
+  @override
+  String get waitlistJoinedBody =>
+      'We\'re letting people in every day. You\'ll get one email when it\'s your turn, and nothing else unless you asked for the monthly email.';
+
+  @override
+  String get waitlistJoinedCode => 'Have an invite code? Enter it here.';
+
+  @override
+  String get waitlistJoinedSelfHost =>
+      'Don\'t want to wait? Casama is open source. Run it on your own computer today.';
+
+  @override
+  String get waitlistRunItYourself => 'Run It Yourself';
+
+  @override
+  String get inviteSubtitle =>
+      'Enter your invite code, or paste the invite link.';
+
+  @override
+  String get inviteCodeLabel => 'Invite code';
+
+  @override
+  String get inviteNotFound =>
+      'That code doesn\'t match any invite. Check it and try again.';
+
+  @override
+  String inviteFromName(String name) {
+    return '$name invited you to Casama';
+  }
+
+  @override
+  String get inviteFromFriend => 'A friend invited you to Casama';
+
+  @override
+  String inviteFromCampaign(String label) {
+    return 'Your invite: $label';
+  }
+
+  @override
+  String get inviteFromCasama => 'Your invite to Casama';
+
+  @override
+  String get inviteChooseSignIn =>
+      'Now choose how you\'ll sign in. Use the address you want for your account.';
+
+  @override
+  String get inviteGoneHelp =>
+      'These invites are gone. Enter your email and you\'ll go on the waitlist, ahead of the line.';
+
+  @override
+  String get inviteEmailHelp =>
+      'We\'ll let this address in, then send it a sign-in link.';
+
+  @override
+  String inviteCheckInbox(String email) {
+    return 'You\'re in. Check $email for a sign-in link, or type its code here.';
+  }
+
+  @override
+  String get inviteWaitlisted =>
+      'These invites are gone. You\'re on the waitlist, ahead of the line.';
+
+  @override
+  String get inviteUseEmailHere =>
+      'On this device, use Continue with Email. Apple and Google work with an invite in the iPhone, Mac and Android apps.';
+
+  @override
+  String get inviteDifferentCode => 'Use a Different Code';
+
+  @override
+  String get inviteRefusedHelp =>
+      'Join the waitlist and we\'ll email you when it\'s your turn, or enter an invite code if you have one.';
+
+  @override
+  String inviteFriendsInvitesLeft(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count invites left',
+      one: '1 invite left',
+      zero: 'No invites left',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String inviteFriendsInvitesUsed(int used, int total) {
+    return '$used of $total used. Each one lets a friend make an account.';
+  }
+
+  @override
+  String get inviteFriendsInvitesLocked =>
+      'Your invites unlock after your first finished chat.';
+
+  @override
+  String get adminWaitlist => 'Waitlist';
+
+  @override
+  String get adminWaitlistWaiting => 'Waiting';
+
+  @override
+  String get adminWaitlistListedToday => 'Joined the list today';
+
+  @override
+  String get adminWaitlistAdmittedToday => 'Let in today';
+
+  @override
+  String get adminWaitlistAdmittedTotal => 'Let in, total';
+
+  @override
+  String get adminWaitlistJoined => 'Signed up';
+
+  @override
+  String get adminWaitlistFirstChat => 'First chat';
+
+  @override
+  String get adminWaitlistEmailsToday => '\"You\'re in\" emails today';
+
+  @override
+  String adminWaitlistEmailsOf(int sent, int max) {
+    return '$sent of $max';
+  }
+
+  @override
+  String get adminWaitlistLastBatch => 'Last batch';
+
+  @override
+  String adminWaitlistLastBatchValue(int count) {
+    return '$count let in';
+  }
+
+  @override
+  String adminWaitlistLastBatchSkipped(String reason) {
+    return 'Skipped. $reason';
+  }
+
+  @override
+  String get adminWaitlistBySource => 'By source';
+
+  @override
+  String adminWaitlistSourceRow(
+    int listed,
+    int admitted,
+    int joined,
+    int firstChat,
+  ) {
+    return '$listed on the list · $admitted let in · $joined signed up · $firstChat first chat';
+  }
+
+  @override
+  String get adminWaitlistAdmit => 'Admit';
+
+  @override
+  String get adminWaitlistAdmitPrompt => 'Let in the next people in line';
+
+  @override
+  String get adminWaitlistAdmitCount => 'How many';
+
+  @override
+  String adminWaitlistAdmitTitle(int count) {
+    return 'Let in the next $count in line?';
+  }
+
+  @override
+  String get adminWaitlistAdmitBody =>
+      'Each gets a \"You\'re in\" email, within today\'s email limit.';
+
+  @override
+  String adminWaitlistAdmitted(int count) {
+    return '$count let in.';
+  }
+
+  @override
+  String get adminWaitlistAdd => 'Add Addresses';
+
+  @override
+  String get adminWaitlistAddHelp =>
+      'They\'re let in at once. One per line, or separated by commas.';
+
+  @override
+  String get adminWaitlistAddLabel => 'Email addresses';
+
+  @override
+  String get adminWaitlistAddNotify => 'Send each the \"You\'re in\" email';
+
+  @override
+  String adminWaitlistAdded(int count) {
+    return '$count added.';
+  }
+
+  @override
+  String adminWaitlistSkipped(String list) {
+    return 'Not email addresses: $list';
+  }
+
+  @override
+  String adminWaitlistRemoveTitle(String email) {
+    return 'Remove $email from the waitlist?';
+  }
+
+  @override
+  String get adminWaitlistRemoveBody =>
+      'The entry is deleted. They can join again later.';
+
+  @override
+  String get adminWaitlistPeople => 'People';
+
+  @override
+  String get adminWaitlistSearch => 'Search by email';
+
+  @override
+  String get adminWaitlistNone => 'No one here yet.';
+
+  @override
+  String get adminWaitlistShowMore => 'Show More';
+
+  @override
+  String get adminWaitlistStatusWaiting => 'Waiting';
+
+  @override
+  String get adminWaitlistStatusQueued => 'Chosen';
+
+  @override
+  String get adminWaitlistStatusAdmitted => 'Let in';
+
+  @override
+  String get adminWaitlistStatusJoined => 'Signed up';
+
+  @override
+  String get adminWaitlistSelfHosts => 'Runs their own server';
+
+  @override
+  String get adminCampaigns => 'Campaign codes';
+
+  @override
+  String get adminCampaignNew => 'New Code';
+
+  @override
+  String get adminCampaignCode => 'Code';
+
+  @override
+  String get adminCampaignCodeHelp =>
+      '9 or more characters, or with a hyphen: letters, digits and hyphens (SHOWHN-DEC8).';
+
+  @override
+  String get adminCampaignLabel => 'Label';
+
+  @override
+  String get adminCampaignTotal => 'Total uses';
+
+  @override
+  String get adminCampaignPerDay => 'A day at most (optional)';
+
+  @override
+  String get adminCampaignStarts => 'Starts';
+
+  @override
+  String get adminCampaignEnds => 'Ends';
+
+  @override
+  String get adminCampaignAnyTime => 'Any time';
+
+  @override
+  String get adminCampaignCreate => 'Create Code';
+
+  @override
+  String adminCampaignUsed(int used, int total) {
+    return '$used of $total used';
+  }
+
+  @override
+  String adminCampaignPerDayShort(int count) {
+    return '$count a day';
+  }
+
+  @override
+  String adminCampaignEndsOn(String date) {
+    return 'ends $date';
+  }
+
+  @override
+  String adminCampaignStartsOn(String date) {
+    return 'starts $date';
+  }
+
+  @override
+  String get adminCampaignOff => 'Off';
+
+  @override
+  String get adminCampaignTurnOff => 'Turn Off';
+
+  @override
+  String get adminCampaignTurnOn => 'Turn On';
+
+  @override
+  String get adminCampaignNone => 'No campaign codes yet.';
+
+  @override
+  String get adminCampaignCopied => 'Link copied.';
+
+  @override
+  String get adminGate => 'Sign-ups';
+
+  @override
+  String get adminGateInviteOnly => 'Invite-only';
+
+  @override
+  String get adminGateInviteOnlyHelp =>
+      'New accounts only for people let in from the waitlist or with an invite code. Existing accounts sign in as always.';
+
+  @override
+  String get adminGateOpenTitle => 'Open sign-ups to everyone?';
+
+  @override
+  String get adminGateOpenBody =>
+      'Anyone can make an account straight away. The waitlist stays as it is.';
+
+  @override
+  String get adminGateOpenConfirm => 'Open Sign-Ups';
+
+  @override
+  String get adminGateCloseTitle => 'Make Casama Cloud invite-only?';
+
+  @override
+  String get adminGateCloseBody =>
+      'New people need an invite code, or a place let in from the waitlist. Existing accounts keep signing in.';
+
+  @override
+  String get adminGateCloseConfirm => 'Make Invite-Only';
+
+  @override
+  String get adminGateClosedNow => 'Invite-only now';
+
+  @override
+  String get adminGateOpenNow => 'Open now';
+
+  @override
+  String get adminGateOpensAt => 'Opens on its own';
+
+  @override
+  String get adminGateOpensAtNone => 'Not set';
+
+  @override
+  String get adminGateClearOpensAt => 'Clear the Opening Time';
+
+  @override
+  String get adminGateInvites => 'Invites per person';
+
+  @override
+  String get adminGateDailyAdmit => 'Let in each day';
+
+  @override
+  String get adminGateDailyAdmitOff => 'None (by hand only)';
+
+  @override
+  String get adminGateDailyEmails => '\"You\'re in\" emails a day at most';
+
+  @override
+  String get adminGateBatchHour => 'Batch time (UTC)';
+
+  @override
+  String adminGateBatchHourValue(String hour) {
+    return '$hour:00 UTC';
+  }
+
+  @override
+  String get adminGateNumberInvalid => 'Enter a whole number';
 }

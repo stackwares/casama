@@ -8,11 +8,15 @@
  * unless an owner turns it on, and the whole feature exists only where SIGNUP_WAITLIST says so
  * (auto: with billing, so a self-hosted server never sees it).
  */
-import { createHmac, timingSafeEqual } from "node:crypto";
+import { createHash, createHmac, randomInt, randomUUID, timingSafeEqual } from "node:crypto";
 import { readFileSync } from "node:fs";
+import type { NotificationService } from "@casama/agent";
 import { type Database, pgErrorMessage } from "@casama/db";
+import { OPENROUTER_CREDIT_FEE } from "@casama/domain";
+import { getProductAnalytics } from "@casama/observability";
 import { sql } from "drizzle-orm";
 import { appLink, type Env } from "../env.ts";
+import { instanceOwners } from "./capacity.ts";
 import type { EmailSender } from "./email.ts";
 import { type BrandedEmail, renderEmailHtml, renderEmailText } from "./email-layout.ts";
 import { type NewsletterConfig, newsletterState, setNewsletterChoice } from "./newsletter.ts";
@@ -38,6 +42,8 @@ export interface SignupGate {
   daily_admit: number;
   /** "You're in" emails a day at most (the mail provider's cap is shared with sign-in links). */
   daily_emails_max: number;
+  /** The hour (UTC, 0–23) the daily automatic batch runs. */
+  batch_hour_utc: number;
 }
 
 export const DEFAULT_SIGNUP_GATE: SignupGate = {
@@ -46,6 +52,7 @@ export const DEFAULT_SIGNUP_GATE: SignupGate = {
   invites_per_person: 3,
   daily_admit: 0,
   daily_emails_max: 25,
+  batch_hour_utc: 15,
 };
 
 const wholeNumber = (v: unknown, max: number) =>
@@ -71,6 +78,7 @@ export function checkSignupGate(input: unknown): { gate: SignupGate | null; erro
     ["invites_per_person", 100],
     ["daily_admit", 10_000],
     ["daily_emails_max", 100_000],
+    ["batch_hour_utc", 23],
   ] as const) {
     if (v[key] === undefined) continue;
     if (wholeNumber(v[key], max)) gate[key] = v[key] as number;
@@ -194,10 +202,56 @@ export function campaignCodeForm(input: string): string | null {
 }
 
 /**
+ * One-time codes (the "You're in" email's, §7.3): 8 Crockford base32 characters shown as XXXX-XXXX.
+ * A member's code has 6 characters and a workspace code 8 with no hyphen (the invite routes never
+ * take workspace codes). A campaign may share the shape: a handed-out one-time code is looked up
+ * first, by its hash.
+ */
+const ONE_TIME_ALPHABET = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
+
+export function newOneTimeCode() {
+  let s = "";
+  for (let i = 0; i < 8; i++) s += ONE_TIME_ALPHABET[randomInt(ONE_TIME_ALPHABET.length)];
+  return `${s.slice(0, 4)}-${s.slice(4)}`;
+}
+
+/** A one-time code in its stored form (XXXX-XXXX), or null when the text can't be one. */
+export function oneTimeCodeForm(input: string): string | null {
+  const last =
+    input
+      .trim()
+      .replace(/[?#].*$/, "")
+      .replace(/\/+$/, "")
+      .split("/")
+      .pop() ?? "";
+  const s = last
+    .toUpperCase()
+    .replace(/[^0-9A-Z]/g, "")
+    .replace(/O/g, "0")
+    .replace(/[IL]/g, "1")
+    .replace(/U/g, "V");
+  if (s.length !== 8) return null;
+  for (const ch of s) if (!ONE_TIME_ALPHABET.includes(ch)) return null;
+  return `${s.slice(0, 4)}-${s.slice(4)}`;
+}
+
+/** What the database keeps of a one-time code: the same hash public.waitlist_claim computes. */
+export const oneTimeCodeHash = (code: string) =>
+  createHash("sha256").update(code.replace(/-/g, "")).digest("hex");
+
+/**
  * An invite code however it was typed or pasted (a link, spaces, lower case) in its stored form:
- * a campaign code when one with that name exists, else a member's 6-character code.
+ * a one-time code when one with that value was handed out, a campaign code when one with that name
+ * exists, else a member's 6-character code.
  */
 export async function resolveInviteCode(db: Database, input: string): Promise<string | null> {
+  const oneTime = oneTimeCodeForm(input);
+  if (oneTime) {
+    const [row] = await db.execute<{ ok: boolean }>(sql`
+      select true as ok from public.waitlist_entries
+      where one_time_code_hash = ${oneTimeCodeHash(oneTime)} and status in ('admitted', 'joined')`);
+    if (row) return oneTime;
+  }
   const campaign = campaignCodeForm(input);
   if (campaign) {
     const [row] = await db.execute<{ code: string }>(
@@ -206,6 +260,88 @@ export async function resolveInviteCode(db: Database, input: string): Promise<st
     if (row) return row.code;
   }
   return normalizeReferralCode(input);
+}
+
+// --- analytics (§11) ----------------------------------------------------------------------------
+// The people these events are about have no account yet, so they are personless: an entry's id
+// when there is one, else a fresh id. Never an address or a code.
+
+const eventId = (entryId?: string | null) => `waitlist:${entryId ?? randomUUID()}`;
+
+/** How a claim came in: the website, the app, Auth's hook at sign-up, or a native sign-in token. */
+export type ClaimVia = "web" | "app" | "signup" | "id_token";
+
+export function claimVia(source: string | null | undefined, idToken: boolean): ClaimVia {
+  if (idToken) return "id_token";
+  return /^app/i.test(source ?? "") ? "app" : "web";
+}
+
+/** The waitlist_admitted event's `via`: batch (the daily automatic batch), hand (an owner), code. */
+export function admittedVia(stored: string | null | undefined): "batch" | "hand" | "code" {
+  if (stored === "auto") return "batch";
+  if (stored === "batch" || stored === "admin" || !stored) return "hand";
+  return "code";
+}
+
+export function trackJoined(entryId: string, selfHosting: boolean, source: string | null) {
+  const a = getProductAnalytics();
+  if (!a.enabled) return;
+  a.capture({
+    event: "waitlist_joined",
+    distinctId: eventId(entryId),
+    personless: true,
+    properties: { source: short(source, 64) ?? "unknown", self_hosting: selfHosting },
+  });
+}
+
+export function trackClaim(claim: ClaimResult, via: ClaimVia) {
+  const a = getProductAnalytics();
+  if (!a.enabled) return;
+  const distinctId = eventId();
+  a.capture({
+    event: "invite_claimed",
+    distinctId,
+    personless: true,
+    properties: { kind: claim.kind, outcome: claim.outcome, via },
+  });
+  if (claim.admittedNow)
+    a.capture({
+      event: "waitlist_admitted",
+      distinctId,
+      personless: true,
+      properties: { via: "code" },
+    });
+}
+
+function trackAdmitted(entryId: string, via: "batch" | "hand" | "code") {
+  const a = getProductAnalytics();
+  if (!a.enabled) return;
+  a.capture({
+    event: "waitlist_admitted",
+    distinctId: eventId(entryId),
+    personless: true,
+    properties: { via },
+  });
+}
+
+/** Why the hook turned a sign-up away. */
+export type RefusalReason =
+  | "gate"
+  | "relay"
+  | "allowlist"
+  | "invited_only"
+  | "code_not_found"
+  | "code_used_up";
+
+export function trackRefused(reason: RefusalReason) {
+  const a = getProductAnalytics();
+  if (!a.enabled) return;
+  a.capture({
+    event: "signup_refused",
+    distinctId: eventId(),
+    personless: true,
+    properties: { reason },
+  });
 }
 
 // --- joining and claiming ----------------------------------------------------------------------
@@ -239,9 +375,12 @@ export async function joinsFrom(db: Database, hash: string): Promise<number> {
  * Puts an address on the list, or leaves it as it is when it's already there (a repeat can add
  * the self-hosting box, the first note and a yes to the monthly email, never take them away).
  */
-export async function joinWaitlist(db: Database, e: JoinInput) {
+export async function joinWaitlist(
+  db: Database,
+  e: JoinInput,
+): Promise<{ id: string; created: boolean } | null> {
   const news = !!e.newsletter;
-  await db.execute(sql`
+  const [row] = await db.execute<{ id: string; created: boolean }>(sql`
     insert into public.waitlist_entries as w (
       email, email_key, source, ref, self_hosting, note, ip_hash,
       newsletter_opt_in, newsletter_consent_at, newsletter_wording)
@@ -257,14 +396,20 @@ export async function joinWaitlist(db: Database, e: JoinInput) {
         then now() else w.newsletter_consent_at end,
       newsletter_wording = case when excluded.newsletter_opt_in and not w.newsletter_opt_in
         then excluded.newsletter_wording else w.newsletter_wording end,
-      updated_at = now()`);
+      updated_at = now()
+    returning w.id, (xmax = 0) as created`);
+  return row ?? null;
 }
+
+export type InviteKind = "personal" | "campaign" | "one_time";
 
 export interface ClaimResult {
   outcome: "admitted" | "waitlisted";
-  kind: "personal" | "campaign";
+  kind: InviteKind;
   label: string | null;
   inviterId: string | null;
+  /** This claim let the address in (false: it was in already, or no invite was left). */
+  admittedNow: boolean;
 }
 
 /** Claims an invite code for an address; null when the code doesn't exist. */
@@ -282,15 +427,22 @@ export async function claimInvite(
   try {
     const [row] = await db.execute<{
       outcome: "admitted" | "waitlisted";
-      kind: "personal" | "campaign";
+      kind: InviteKind;
       label: string | null;
       inviter_id: string | null;
+      admitted_now: boolean;
     }>(sql`
-      select outcome, kind, label, inviter_id from public.waitlist_claim(
+      select outcome, kind, label, inviter_id, admitted_now from public.waitlist_claim(
         ${e.email}, ${e.code}, ${e.perPerson}, ${!!e.newsletter}, ${NEWSLETTER_WORDING},
         ${short(e.source, 64)}, ${e.ipHash ?? null})`);
     if (!row) return null;
-    return { outcome: row.outcome, kind: row.kind, label: row.label, inviterId: row.inviter_id };
+    return {
+      outcome: row.outcome,
+      kind: row.kind,
+      label: row.label,
+      inviterId: row.inviter_id,
+      admittedNow: !!row.admitted_now,
+    };
   } catch (err) {
     if (pgErrorMessage(err) === "invite_not_found") return null;
     throw err;
@@ -299,7 +451,7 @@ export async function claimInvite(
 
 export async function previewInvite(db: Database, code: string, perPerson: number) {
   const [row] = await db.execute<{
-    kind: "personal" | "campaign";
+    kind: InviteKind;
     label: string | null;
     inviter_name: string | null;
     available: boolean;
@@ -388,6 +540,24 @@ export async function waitlistStats(db: Database) {
     when w.admitted_via is null then 'waiting'
     when w.admitted_via like 'invite:%' then 'invite'
     else w.admitted_via end`);
+  const [batch] = await db.execute<{
+    day: string;
+    ran_at: Date;
+    admitted: number;
+    skipped_reason: string | null;
+    detail: string | null;
+  }>(sql`
+    select to_char(day, 'YYYY-MM-DD') as day, ran_at, admitted, skipped_reason, detail
+    from public.waitlist_batches order by day desc limit 1`);
+  const lastBatch = batch
+    ? {
+        day: batch.day,
+        ran_at: new Date(batch.ran_at).toISOString(),
+        admitted: batch.admitted,
+        skipped_reason: batch.skipped_reason,
+        detail: batch.detail,
+      }
+    : null;
   const empty = {
     waiting: 0,
     queued: 0,
@@ -398,7 +568,12 @@ export async function waitlistStats(db: Database) {
     admitted_today: 0,
     emails_today: 0,
   };
-  return { ...(totals ?? empty), by_source: [...bySource], by_via: [...byVia] };
+  return {
+    ...(totals ?? empty),
+    by_source: [...bySource],
+    by_via: [...byVia],
+    last_batch: lastBatch,
+  };
 }
 
 export interface WaitlistFilter {
@@ -515,6 +690,7 @@ export async function addWaitlistEntries(
         returning w.id`,
     );
     n += rows.length;
+    if (!e.notify) for (const r of rows) trackAdmitted(r.id, "hand");
   }
   return n;
 }
@@ -598,7 +774,7 @@ export async function updateCampaign(
 
 export function youAreInEmail(
   env: Pick<Env, "PUBLIC_APP_URL" | "PUBLIC_OPEN_URL" | "WAITLIST_URL">,
-  e: { email: string; leaveUrl: string },
+  e: { email: string; leaveUrl: string; oneTimeCode?: string | null },
 ): BrandedEmail {
   return {
     mascot: "wow",
@@ -607,6 +783,11 @@ export function youAreInEmail(
     intro: [
       "Your turn came up: Casama Cloud is ready for you.",
       `Sign in with ${e.email}. Google, Apple and the email link all work, as long as it's this address.`,
+      ...(e.oneTimeCode
+        ? [
+            `Signing in with another address, such as Apple's Hide My Email? Use the invite code ${e.oneTimeCode} once: tap I Have an Invite on the sign-in screen, or enter it at ${env.WAITLIST_URL.replace(/^https?:\/\//, "")}. It lets in one address.`,
+          ]
+        : []),
       "Then give a bot something real to do. It works on its own computer, and you can watch it or take over at any time.",
     ],
     button: { label: "Open Casama", url: appLink(env, "/") },
@@ -648,18 +829,23 @@ export async function sendWaitlistInvites(opts: {
   for (const q of queued) {
     // Taking the row first means two workers (a deploy hands over while both run) can't both
     // send; if the send then fails, the person goes back in line.
-    const [row] = await db.execute<{ id: string; email: string }>(sql`
+    // The email's one-time code (§7.3) is made here and only its hash is kept; a failed send that
+    // is tried again gets a new one.
+    const oneTime = mail ? newOneTimeCode() : null;
+    const [row] = await db.execute<{ id: string; email: string; admitted_via: string | null }>(sql`
       update public.waitlist_entries w
         set status = 'admitted', admitted_at = now(), updated_at = now(),
-            notified_at = case when ${!!mail} then now() end
+            notified_at = case when ${!!mail} then now() end,
+            one_time_code_hash = coalesce(${oneTime ? oneTimeCodeHash(oneTime) : null}, w.one_time_code_hash)
       where w.id = ${q.id}::uuid and w.status = 'waiting' and w.queued_at is not null
-      returning w.id, w.email::text as email`);
+      returning w.id, w.email::text as email, w.admitted_via`);
     if (!row) continue;
     if (mail) {
       try {
         const message = youAreInEmail(opts.env, {
           email: row.email,
           leaveUrl: `${opts.env.WAITLIST_URL.replace(/\/$/, "")}/leave?t=${leaveToken(opts.secret, row.id)}`,
+          oneTimeCode: oneTime,
         });
         await mail.send({
           to: row.email,
@@ -678,9 +864,160 @@ export async function sendWaitlistInvites(opts: {
         continue;
       }
     }
+    trackAdmitted(row.id, admittedVia(row.admitted_via));
     n++;
   }
   return n;
+}
+
+// --- the daily automatic batch (§6.4) ------------------------------------------------------------
+
+/** The day is skipped when yesterday's busiest moment used this share of the computer budget… */
+export const BATCH_PAUSE_COMPUTERS_SHARE = 7 / 9;
+/** …or yesterday's model spend on Casama's key passed this share of OpenRouter's daily cap. */
+export const BATCH_PAUSE_SPEND_SHARE = 0.6;
+
+const utcDay = (t: number) => new Date(t).toISOString().slice(0, 10);
+
+/** Yesterday (UTC) on this server: the busiest moment for computers, and model spend on Casama's key. */
+export async function yesterdayLoad(db: Database, now = Date.now()) {
+  const today = Date.parse(`${utcDay(now)}T00:00:00Z`);
+  const from = new Date(today - 86_400_000).toISOString();
+  const to = new Date(today).toISOString();
+  // The same samples Admin's capacity card draws (D-252).
+  const [peak] = await db.execute<{ mb: number | null; n: number | null }>(sql`
+    select max(computers_mem_mb)::int as mb, max(computers_running)::int as n
+    from public.capacity_samples where at >= ${from}::timestamptz and at < ${to}::timestamptz`);
+  // What OpenRouter charged Casama's key, which its daily cap counts. A model call's two rows
+  // (tokens in, tokens out) both carry the call's whole `provider_cost_usd` in meta, so those use
+  // their split upstream cost, less OpenRouter's credit fee (D-395); other rows (voice) have one row
+  // per call.
+  const [spend] = await db.execute<{ usd: string }>(sql`
+    select coalesce(sum(case
+      when kind in ('tokens_in', 'tokens_out') then coalesce(upstream_cost_usd, 0) / ${OPENROUTER_CREDIT_FEE}
+      when jsonb_typeof(meta -> 'provider_cost_usd') = 'number' then (meta ->> 'provider_cost_usd')::numeric
+      else 0 end), 0)::text as usd
+    from public.usage_ledger
+    where created_at >= ${from}::timestamptz and created_at < ${to}::timestamptz
+      and meta ->> 'key' = 'server'
+      and coalesce(meta ->> 'provider', 'openrouter') = 'openrouter'`);
+  return {
+    peakComputersMb: peak?.mb ?? null,
+    peakComputers: peak?.n ?? null,
+    spendUsd: Number(spend?.usd ?? 0),
+  };
+}
+
+export interface BatchResult {
+  day: string;
+  admitted: number;
+  skipped: "capacity" | "model_spend" | "no_mail" | "nobody_waiting" | "error" | null;
+  detail: string | null;
+}
+
+const gbText = (mb: number) => `${(mb / 1024).toFixed(1)} GB`;
+const usdText = (n: number) => `$${n.toFixed(2)}`;
+
+/**
+ * Once a day, from the gate's hour (UTC), chooses `min(daily_admit, mail left today)` people in
+ * batch order for "You're in" emails, the same way an owner's batch does (`admitted_via` auto). It
+ * skips the day, and pushes the owners why, when yesterday was too busy for more people. The day's
+ * row in public.waitlist_batches is claimed first, so two workers can't both run it. Returns null
+ * when nothing was due.
+ */
+export async function runDailyBatch(opts: {
+  db: Database;
+  /** Memory hosted computers may use (COMPUTER_HOST_MEMORY_GB); 0: no capacity check. */
+  budgetMb: number;
+  /** OpenRouter's daily cap on Casama's key, in US dollars. */
+  openRouterDailyCapUsd: number;
+  notifications?: Pick<NotificationService, "notify">;
+  adminEmails?: string;
+  now?: number;
+  log?: Log;
+}): Promise<BatchResult | null> {
+  const { db } = opts;
+  const now = opts.now ?? Date.now();
+  const gate = await getSignupGate(db);
+  if (!gateClosed(gate, now) || gate.daily_admit <= 0) return null;
+  if (new Date(now).getUTCHours() < gate.batch_hour_utc) return null;
+  const day = utcDay(now);
+  const claimed = await db.execute<{ day: string }>(sql`
+    insert into public.waitlist_batches (day) values (${day}::date)
+    on conflict (day) do nothing returning day`);
+  if (!claimed.length) return null;
+  const finish = async (r: BatchResult) => {
+    await db.execute(sql`
+      update public.waitlist_batches
+        set admitted = ${r.admitted}, skipped_reason = ${r.skipped}, detail = ${r.detail}, ran_at = now()
+      where day = ${day}::date`);
+    return r;
+  };
+  try {
+    const load = await yesterdayLoad(db, now);
+    let skipped: BatchResult["skipped"] = null;
+    let detail: string | null = null;
+    if (
+      opts.budgetMb > 0 &&
+      load.peakComputersMb != null &&
+      load.peakComputersMb >= opts.budgetMb * BATCH_PAUSE_COMPUTERS_SHARE
+    ) {
+      skipped = "capacity";
+      detail = `Yesterday's busiest moment had ${load.peakComputers ?? 0} computers running, using ${gbText(load.peakComputersMb)} of the ${gbText(opts.budgetMb)} set aside for computers (the batch pauses at ${Math.round(BATCH_PAUSE_COMPUTERS_SHARE * 100)}%).`;
+    } else if (
+      opts.openRouterDailyCapUsd > 0 &&
+      load.spendUsd > opts.openRouterDailyCapUsd * BATCH_PAUSE_SPEND_SHARE
+    ) {
+      skipped = "model_spend";
+      detail = `Yesterday's model spend on Casama's key was ${usdText(load.spendUsd)}, over ${Math.round(BATCH_PAUSE_SPEND_SHARE * 100)}% of the ${usdText(opts.openRouterDailyCapUsd)} daily cap.`;
+    }
+    if (skipped) {
+      const r = await finish({ day, admitted: 0, skipped, detail });
+      opts.log?.("waitlist: daily batch skipped", { day, reason: skipped });
+      try {
+        const owners = await instanceOwners(db, opts.adminEmails);
+        for (const o of owners)
+          await opts.notifications?.notify(o.id, null, "server_capacity", {
+            title: "Today's waitlist batch was skipped",
+            body: `${detail} Nobody was let in automatically today. You can still let people in by hand in Admin > Waitlist.`,
+            link: "/settings/admin",
+          });
+      } catch (err) {
+        opts.log?.("waitlist batch push failed", { error: (err as Error).message });
+      }
+      return r;
+    }
+    // Mail left today: the day's number, less what went out and who is already chosen.
+    const [mail] = await db.execute<{ sent: number; queued: number }>(sql`
+      select count(*) filter (where w.notified_at >= ${UTC_MIDNIGHT})::int as sent,
+        count(*) filter (where w.status = 'waiting' and w.queued_at is not null)::int as queued
+      from public.waitlist_entries w`);
+    const left = Math.max(0, gate.daily_emails_max - (mail?.sent ?? 0) - (mail?.queued ?? 0));
+    const count = Math.min(gate.daily_admit, left);
+    if (count <= 0)
+      return await finish({
+        day,
+        admitted: 0,
+        skipped: "no_mail",
+        detail: `No "You're in" emails left today (${gate.daily_emails_max} a day).`,
+      });
+    const chosen = await queueWaitlist(db, { count, via: "auto" });
+    opts.log?.("waitlist: daily batch chose people", { day, count: chosen });
+    return await finish({
+      day,
+      admitted: chosen,
+      skipped: chosen ? null : "nobody_waiting",
+      detail: chosen ? null : "Nobody was waiting.",
+    });
+  } catch (err) {
+    opts.log?.("waitlist daily batch failed", { day, error: (err as Error).message });
+    return await finish({
+      day,
+      admitted: 0,
+      skipped: "error",
+      detail: String((err as Error).message ?? err).slice(0, 500),
+    });
+  }
 }
 
 /**
@@ -723,7 +1060,10 @@ export async function linkWaitlistSignups(opts: {
   return rows.length;
 }
 
-/** The worker's loop: emails and sign-ups every minute, tidying every hour. Returns a stopper. */
+/**
+ * The worker's loop: the daily batch, emails and sign-ups every minute, tidying every hour.
+ * Returns a stopper.
+ */
 export function startWaitlist(opts: {
   db: Database;
   email?: EmailSender;
@@ -731,6 +1071,11 @@ export function startWaitlist(opts: {
   secret: string;
   referrals: boolean;
   newsletter?: NewsletterConfig | null;
+  /** The daily batch's pause rules and who hears about a skipped day. */
+  budgetMb?: number;
+  openRouterDailyCapUsd?: number;
+  notifications?: Pick<NotificationService, "notify">;
+  adminEmails?: string;
   log?: Log;
 }): () => Promise<void> {
   let tidiedAt = 0;
@@ -739,6 +1084,14 @@ export function startWaitlist(opts: {
     if (busy) return;
     busy = true;
     try {
+      await runDailyBatch({
+        db: opts.db,
+        budgetMb: opts.budgetMb ?? 0,
+        openRouterDailyCapUsd: opts.openRouterDailyCapUsd ?? 0,
+        notifications: opts.notifications,
+        adminEmails: opts.adminEmails,
+        log: opts.log,
+      });
       const sent = await sendWaitlistInvites(opts);
       if (sent) opts.log?.("waitlist: people let in", { count: sent });
       const linked = await linkWaitlistSignups(opts);

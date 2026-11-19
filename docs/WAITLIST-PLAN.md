@@ -866,6 +866,33 @@ sign-up reaches the hook in `user_metadata` (so Phase 2's code-at-sign-up works 
 - **Docs:** the guide page "Getting an invite", the API and settings pages, the Casama Link notes,
   `docs/COSTS.md`, `CHANGELOG.md`, D-427.
 
+**Phase 2 and 3 (built 2026-11-19, not deployed, no app build yet):**
+
+- **Server:** rule 4 in the hook (`user_metadata.invite_code`, claimed after the sign-up proof is
+  checked, so Auth's sign-up can't spend codes without the puzzle); `POST /v1/waitlist/redeem` with
+  an Apple or Google ID token (`services/id-token.ts`: signature against the provider's keys,
+  issuer, expiry, the audiences Auth accepts, nonce as sha256 of the raw one); a one-time code
+  `XXXX-XXXX` in each "You're in" email, kept as a hash, good for one more address (kind
+  `one_time`); the daily batch at `batch_hour_utc` (default 15) that admits
+  `min(daily_admit, mail left)` once a day, or skips and pushes the owners when yesterday's
+  computers passed 7/9 of their memory or model spend passed 60% of `OPENROUTER_DAILY_CAP_USD`
+  (default 50); `last_batch` in the stats; events `waitlist_joined`, `invite_claimed`,
+  `waitlist_admitted`, `signup_refused` and `admitted_via` on `signed_up` and `first_value`;
+  website beacons `waitlist_view`, `waitlist_join`; Casama Help's `get_invites` knows the gate.
+  Migration `20270217100001_waitlist_phase3.sql`, pgTAP `waitlist_phase3.test.sql` (24).
+  `waitlist.test.ts`: 67 tests. Also fixed: the owners' lookup in `capacity.ts` and the suspension
+  notice in `abuse.ts` used `any(${list})`, which fails whenever `INSTANCE_ADMIN_EMAILS` is set.
+- **App:** the sign-in screen's line with **Join the Waitlist** and **I Have an Invite**
+  (`client/lib/features/auth/invite_gate.dart`, `join_waitlist_sheet.dart`,
+  `have_invite_sheet.dart`), the refusal sheet in place of the toast, codes at sign-up (email:
+  claim plus `invite_code` metadata; Apple and Google: the native sheet's token is redeemed first,
+  then the same token signs in), `/i/<code>` opened signed out goes to I Have an Invite, invites
+  left in Invite Friends, Admin → Waitlist (`client/lib/features/admin/waitlist_tab.dart`).
+  `client/test/waitlist_gate_test.dart`: 18 tests. **Never run on a device; Apple and Google tokens
+  never tried for real.** Browser-based Apple/Google sign-in (web, Windows, Linux) shows the
+  old message on refusal and offers Continue with Email in I Have an Invite.
+- **Not done:** the PostHog dashboard (needs Oliver's yes), the Show HN draft line.
+
 ### Where the build differs from the plan above
 
 - **The allowlist** (`SIGNUP_ALLOWED_EMAILS`) is not an extra way in. Where a server sets it, it

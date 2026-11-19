@@ -22,12 +22,21 @@ address won't work.
 
 Someone may have sent you a code or a link.
 
-1. Open the link, or go to **casama.ai/waitlist** and choose to enter a code.
+1. Open the link, or go to **casama.ai/waitlist** and choose to enter a code. In the app, tap
+   **I Have an Invite** on the sign-in screen.
 2. Enter the code and your email address.
 3. Sign in with that email address, using Google, Apple or the email link.
 
-With Sign in with Apple, choose **Share My Email**. A hidden Apple address is a different address,
-so it doesn't match the one you were let in with.
+In the app you can also enter the code first and then sign in with Apple or Google: the address
+you sign in with is the one let in, even a hidden Apple address (Hide My Email). On casama.ai, with
+Sign in with Apple, choose **Share My Email**: a hidden Apple address is a different address, so it
+doesn't match the one you entered.
+
+## Signing in with a different address
+
+Your "You're in" email has a one-time invite code, like `K7M2-QXAB`. It lets in one other email
+address, for example a hidden Apple address. Enter it with **I Have an Invite** in the app, or at
+casama.ai/waitlist, then sign in with that address. It works once.
 
 If a code has run out, you are put on the waitlist instead, near the front.
 

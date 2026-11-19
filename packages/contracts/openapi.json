@@ -23878,6 +23878,11 @@
             "type": "integer",
             "minimum": 0,
             "maximum": 100000
+          },
+          "batch_hour_utc": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 23
           }
         },
         "required": [
@@ -23919,6 +23924,11 @@
             "type": "integer",
             "minimum": 0,
             "maximum": 100000
+          },
+          "batch_hour_utc": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 23
           }
         }
       },
@@ -24070,6 +24080,9 @@
                 "first_chat"
               ]
             }
+          },
+          "last_batch": {
+            "$ref": "#/components/schemas/WaitlistBatch"
           }
         },
         "required": [
@@ -24083,6 +24096,43 @@
           "emails_today",
           "by_source",
           "by_via"
+        ]
+      },
+      "WaitlistBatch": {
+        "type": [
+          "object",
+          "null"
+        ],
+        "properties": {
+          "day": {
+            "type": "string"
+          },
+          "ran_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "admitted": {
+            "type": "integer"
+          },
+          "skipped_reason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "detail": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "day",
+          "ran_at",
+          "admitted",
+          "skipped_reason",
+          "detail"
         ]
       },
       "WaitlistEntry": {
@@ -24263,7 +24313,8 @@
             "type": "string",
             "enum": [
               "personal",
-              "campaign"
+              "campaign",
+              "one_time"
             ]
           },
           "label": {
@@ -24307,7 +24358,8 @@
             "type": "string",
             "enum": [
               "personal",
-              "campaign"
+              "campaign",
+              "one_time"
             ]
           }
         },
@@ -24332,6 +24384,23 @@
           "proof": {
             "$ref": "#/components/schemas/WaitlistProof"
           },
+          "id_token": {
+            "type": "string",
+            "minLength": 20,
+            "maxLength": 8000
+          },
+          "provider": {
+            "type": "string",
+            "enum": [
+              "apple",
+              "google"
+            ]
+          },
+          "token_nonce": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
           "source": {
             "type": "string",
             "maxLength": 64
@@ -24341,7 +24410,6 @@
           }
         },
         "required": [
-          "email",
           "code",
           "proof"
         ]

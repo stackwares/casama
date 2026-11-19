@@ -18,6 +18,7 @@ import '../../ui/adaptive_modal.dart';
 import '../../ui/brand_sign_in_buttons.dart';
 import '../../ui/form_sheet.dart';
 import 'floating_mascots.dart';
+import 'invite_gate.dart';
 import 'welcome_tagline.dart';
 import '../../ui/glow_button.dart';
 import '../../core/analytics.dart';
@@ -156,6 +157,9 @@ class SignInScreen extends ConsumerWidget {
                                   style: context.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
                                 ),
                               ],
+                              // Casama Cloud while it's invite-only (D-427): the line, Join the
+                              // Waitlist and I Have an Invite. Existing accounts sign in as before.
+                              const Padding(padding: EdgeInsets.only(top: AppSpace.sm), child: InviteGateBlock()),
                               // A code scanned for another server finishes signing in here,
                               // once the app has reconnected to that server (D-296).
                               const Padding(padding: EdgeInsets.only(top: AppSpace.sm), child: PendingPairingRunner()),
@@ -235,7 +239,7 @@ class _SignInOptionsState extends ConsumerState<SignInOptions> {
     _started('password', signUp: _signUp);
     setState(() => _busy = true);
     final backend = ref.read(backendProvider);
-    final ok = await runGuarded(context, () async {
+    final ok = await runSignInGuarded(context, () async {
       if (_signUp) {
         // Sent once the new account signs in (it may need its address confirmed first).
         if (backend.newsletterAvailable) await NewsletterSignUpChoice.save(_newsletter);
@@ -269,7 +273,7 @@ class _SignInOptionsState extends ConsumerState<SignInOptions> {
     if (_sentTo == null) _started('email_code');
     final email = _sentTo ?? _email.text.trim();
     setState(() => _busy = true);
-    final ok = await runGuarded(context, () async {
+    final ok = await runSignInGuarded(context, () async {
       final backend = ref.read(backendProvider);
       await (_resetting ? backend.sendPasswordReset(email) : backend.sendMagicLink(email));
       return true;
@@ -308,7 +312,7 @@ class _SignInOptionsState extends ConsumerState<SignInOptions> {
     final code = _code.text;
     if (email == null || code.length != OtpCodeField.length || _busy) return;
     setState(() => _busy = true);
-    final ok = await runGuarded(context, () async {
+    final ok = await runSignInGuarded(context, () async {
       final backend = ref.read(backendProvider);
       await (_resetting ? backend.verifyPasswordResetCode(email, code) : backend.verifyEmailCode(email, code));
       return true;
@@ -338,7 +342,8 @@ class _SignInOptionsState extends ConsumerState<SignInOptions> {
     if (_busy) return;
     _started(name);
     setState(() => _busy = true);
-    await runGuarded(
+    // A new account the invite gate refuses gets its sheet, not a toast (D-427).
+    await runSignInGuarded(
       context,
       () => ref.read(backendProvider).signInWithProvider(name),
     );
@@ -392,7 +397,7 @@ class _SignInOptionsState extends ConsumerState<SignInOptions> {
     );
     if (email == null || !email.contains('@') || !mounted) return;
     _started('sso');
-    await runGuarded(
+    await runSignInGuarded(
       context,
       () => ref.read(backendProvider).signInWithSso(email),
     );
@@ -762,6 +767,12 @@ class _SignInOptionsState extends ConsumerState<SignInOptions> {
                       textAlign: TextAlign.center,
                       style: context.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
                     ),
+                  )
+                // Casama Cloud while it's invite-only (D-427): the line and the two ways forward.
+                else if (ref.watch(backendProvider).signupGate != null)
+                  const Padding(
+                    padding: EdgeInsets.only(bottom: AppSpace.sm),
+                    child: InviteGateBlock(closeFirst: true),
                   )
                 else if (ref.watch(backendProvider).signUpsByInvitation)
                   Padding(

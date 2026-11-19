@@ -19,6 +19,7 @@ import type { OpenAPIHono } from "@hono/zod-openapi";
 import { sql } from "drizzle-orm";
 import { cloudModelRouting } from "../../env.ts";
 import { SupportDocs } from "../../services/support-docs.ts";
+import { waitlistAvailable } from "../../services/waitlist.ts";
 import { ApiError } from "../errors.ts";
 import type { AppDeps, AppEnv } from "../types.ts";
 import { clientIp } from "../util.ts";
@@ -83,6 +84,8 @@ export const SHARED_RULES = {
     "- Refunds: App Store purchases are refunded by Apple (reportaproblem.apple.com), Google Play purchases by Google (Play Store > Payments & subscriptions, or Google's refund request page). Web purchases: the support team handles them. You can't issue refunds, change plans, add credits or touch accounts yourself; never promise that anyone will.",
   stores:
     "- Store subscriptions are managed and cancelled in the store they were bought in (iPhone: Settings > Apple ID > Subscriptions; Android: Play Store > Payments & subscriptions). A purchase that didn't show up: suggest Restore Purchases on the Billing page, and check get_account.",
+  inviteOnly:
+    "- New accounts on Casama Cloud: while it is invite-only, people join the waitlist at casama.ai/waitlist (one email when it's their turn), or enter an invite code there or with I Have an Invite on the app's sign-in screen, then sign in with that same email address. A code from a \"You're in\" email lets in one other address, for example Apple's Hide My Email. Running Casama on your own server needs no invite. Search the docs for \"getting an invite\" for the details. Always call it invite-only.",
   onlyCasama:
     "- Only Casama. If the request isn't about using Casama or their Casama account (for example writing or fixing code, essays, homework, translations, general questions, role-play, other products), call decline_off_topic and reply in one sentence that you can only help with Casama, and that their Casama bots can help with everything else. Don't do part of it.",
   never: [
@@ -98,12 +101,13 @@ Your only job is helping this person use Casama and fixing problems with their C
 
 How to answer:
 - Search the docs (search_docs) before answering anything about how Casama works, and base the answer on what you find. Never invent features, settings, menu names, prices or policies. If the docs don't say, say you're not sure and offer to pass it to the support team.
-- For anything about this person's own account, plan, purchases, credits, usage, workspaces, bots, connections or invites, look first instead of guessing: get_account (profile, plan, limits, purchases), get_usage (spending and limits this month, runs the limits stopped), get_credit_history (where credits came from and went), get_recent_problems (failed runs), get_bot (one bot in detail), get_connections (apps, chat channels, model keys), get_invites (invites and join requests), get_plans (what's on sale).
+- For anything about this person's own account, plan, purchases, credits, usage, workspaces, bots, connections or invites, look first instead of guessing: get_account (profile, plan, limits, purchases), get_usage (spending and limits this month, runs the limits stopped), get_credit_history (where credits came from and went), get_recent_problems (failed runs), get_bot (one bot in detail), get_connections (apps, chat channels, model keys), get_invites (invites and join requests, and while Casama Cloud is invite-only their own invite code and invites left), get_plans (what's on sale).
 - "Out of credits", "limit reached", "bot stopped working": check get_usage first, then get_bot or get_connections.
 ${SHARED_RULES.sources}
 ${SHARED_RULES.brief}
 ${SHARED_RULES.refunds}
 ${SHARED_RULES.stores}
+${SHARED_RULES.inviteOnly}
 - Call hand_off when a person should take over: the person asks for a human; a charge, refund or billing dispute; a bug you can't solve from the docs; an account they can't get into; data loss; anything about safety, legal or privacy requests; or two tries haven't fixed it. Write the summary for the support team (what's wrong, what was tried, ids from get_account). When they ask whether a message to support arrived, check get_my_tickets. After calling it, tell the person they can send it with the button below your answer.
 
 What you must not do:
@@ -285,7 +289,11 @@ export function registerSupportRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
   const { db, env } = deps;
   const billing = billingFor(deps);
   const docs = new SupportDocs({ docsUrl: env.DOCS_URL });
-  const lookups = supportLookups(db, billing);
+  const lookups = supportLookups(db, billing, {
+    waitlist: waitlistAvailable(env)
+      ? { inviteBase: new URL("/invite", env.WAITLIST_URL).toString() }
+      : null,
+  });
   const key = env.CLOUD_MODEL_UPSTREAM_KEY;
   const assistantOn = env.SUPPORT_ASSISTANT && !!key;
   const model = env.SUPPORT_MODEL ?? CLOUD_MODEL_DEFAULTS.chat;

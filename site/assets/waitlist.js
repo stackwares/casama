@@ -204,6 +204,18 @@
   var GENERIC = "Something went wrong. Try again in a moment.";
   var params = new URLSearchParams(location.search);
 
+  /**
+   * One funnel step through casama.ai's anonymous count (D-398), as site.js sends them; the Worker
+   * keeps only names on its closed list. Never the address or a code.
+   */
+  function countEvent(name, data) {
+    try {
+      if (navigator.sendBeacon && !local) {
+        navigator.sendBeacon("/b", JSON.stringify({ p: location.pathname, e: name, d: data || {} }));
+      }
+    } catch (e) { /* counting is never worth breaking the page for */ }
+  }
+
   function fail(message, code, status) {
     var err = new Error(message);
     err.code = code;
@@ -365,6 +377,7 @@
         if (note) payload.note = note;
       },
       function () {
+        countEvent("waitlist_join", { form: "page" });
         form.hidden = true;
         if (joined) {
           joined.hidden = false;
@@ -387,6 +400,7 @@
         payload.self_hosting = false;
       },
       function () {
+        countEvent("waitlist_join", { form: "inline" });
         var msg = node("p", "wl-inline-done");
         msg.setAttribute("role", "status");
         msg.setAttribute("tabindex", "-1");
@@ -459,6 +473,7 @@
   }
 
   function init() {
+    if (document.querySelector("form[data-wl-join]")) countEvent("waitlist_view");
     Array.prototype.forEach.call(document.querySelectorAll("form[data-wl-join]"), bindJoin);
     Array.prototype.forEach.call(document.querySelectorAll("form[data-wl-inline]"), bindInline);
     Array.prototype.forEach.call(document.querySelectorAll("form[data-wl-redeem]"), bindRedeem);

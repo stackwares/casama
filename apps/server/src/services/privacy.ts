@@ -149,7 +149,8 @@ export async function exportUserData(db: Database, claims: JwtClaims) {
         clean(
           (await db.execute<Record<string, unknown>>(sql`
             select source, ref, self_hosting, note, newsletter_opt_in, newsletter_consent_at,
-              case when admitted_via like 'invite:%' then 'invite' else admitted_via end as admitted_via,
+              case when admitted_via like 'invite:%' then 'invite'
+                when admitted_via like 'one_time:%' then 'one_time' else admitted_via end as admitted_via,
               created_at, admitted_at, joined_at
             from public.waitlist_entries where user_id = ${claims.sub}::uuid`)) as Array<
             Record<string, unknown>

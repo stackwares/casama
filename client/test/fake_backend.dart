@@ -5609,6 +5609,246 @@ class FakeBackend implements Backend {
   @override
   bool signUpsByInvitation = false;
 
+  // --- Casama Cloud's waitlist and invite gate (D-427) -----------------------
+  @override
+  PublicConfigSignupGate? signupGate;
+
+  final waitlistJoins = <WaitlistJoin>[];
+  @override
+  Future<void> joinWaitlist(WaitlistJoin join) async => waitlistJoins.add(join);
+
+  /// Codes that exist, with what their preview says.
+  Map<String, InviteCodePreview> inviteCodes = {
+    'SHOWHN-DEC8': InviteCodePreview(
+      kind: InviteCodePreviewKindEnum.campaign,
+      label: 'Show HN',
+      inviterName: null,
+      available: true,
+      welcomeUsd: 0,
+    ),
+  };
+  static Never _waitlistProblem(int status, String code, String detail) {
+    final req = RequestOptions(path: '/v1/waitlist/redeem');
+    throw DioException(
+      requestOptions: req,
+      response: Response(
+        requestOptions: req,
+        statusCode: status,
+        data: {'type': 'about:blank', 'title': 'Error', 'status': status, 'code': code, 'detail': detail},
+      ),
+    );
+  }
+
+  @override
+  Future<InviteCodePreview> previewInviteCode(String code) async =>
+      inviteCodes[code] ?? _waitlistProblem(404, 'invite_not_found', "That invite code doesn't exist.");
+
+  /// (code, email or provider) for each claim.
+  final inviteRedeems = <(String, String)>[];
+  @override
+  Future<InviteRedeemed> redeemInviteForEmail(String code, String email, {bool? newsletter}) async {
+    inviteRedeems.add((code, email));
+    final p = inviteCodes[code] ?? _waitlistProblem(404, 'invite_not_found', "That invite code doesn't exist.");
+    return InviteRedeemed(
+      outcome: p.available ? InviteRedeemedOutcomeEnum.admitted : InviteRedeemedOutcomeEnum.waitlisted,
+      kind: InviteRedeemedKindEnum.campaign,
+    );
+  }
+
+  Set<String> inviteProviders = {'apple', 'google'};
+  @override
+  bool inviteSignInAvailable(String provider) => inviteProviders.contains(provider);
+
+  InviteSignInResult inviteSignInResult = InviteSignInResult.signedIn;
+  @override
+  Future<InviteSignInResult> signInWithInvite(String provider, String code) async {
+    inviteRedeems.add((code, provider));
+    if (inviteSignInResult == InviteSignInResult.signedIn) {
+      signedIn = true;
+      _auth.add(true);
+    }
+    return inviteSignInResult;
+  }
+
+  /// (email, code) for each invite sign-in email.
+  final inviteMagicLinks = <(String, String)>[];
+  @override
+  Future<void> sendMagicLinkWithInvite(String email, String inviteCode) async =>
+      inviteMagicLinks.add((email, inviteCode));
+
+  WaitlistStats waitlistStats = WaitlistStats(
+    waiting: 42,
+    queued: 3,
+    admitted: 120,
+    joined: 97,
+    firstChat: 61,
+    listedToday: 9,
+    admittedToday: 5,
+    emailsToday: 4,
+    bySource: [
+      WaitlistStatsBySourceInner(key: 'waitlist', listed: 30, admitted: 80, joined: 70, firstChat: 40),
+      WaitlistStatsBySourceInner(key: 'app_ios', listed: 12, admitted: 40, joined: 27, firstChat: 21),
+    ],
+    byVia: const [],
+  );
+  SignupGate signupGateSetting = SignupGate(
+    mode: SignupGateModeEnum.inviteOnly,
+    opensAt: null,
+    invitesPerPerson: 3,
+    dailyAdmit: 0,
+    dailyEmailsMax: 25,
+  );
+  int? batchHourUtc;
+  WaitlistLastBatch? lastBatch;
+  List<WaitlistEntry> waitlistEntries = [
+    WaitlistEntry(
+      id: 'e1',
+      email: 'ana@example.com',
+      status: WaitlistEntryStatusEnum.waiting,
+      source_: 'waitlist',
+      ref: null,
+      selfHosting: true,
+      note: 'Sort my inbox',
+      priority: 0,
+      inviteCode: null,
+      admittedVia: null,
+      admittedAt: null,
+      joinedAt: null,
+      createdAt: DateTime.utc(2026, 11, 18),
+    ),
+    WaitlistEntry(
+      id: 'e2',
+      email: 'ben@example.com',
+      status: WaitlistEntryStatusEnum.admitted,
+      source_: 'app_ios',
+      ref: null,
+      selfHosting: false,
+      note: null,
+      priority: 0,
+      inviteCode: null,
+      admittedVia: 'admin',
+      admittedAt: DateTime.utc(2026, 11, 18),
+      joinedAt: null,
+      createdAt: DateTime.utc(2026, 11, 17),
+    ),
+  ];
+  final waitlistQueries = <String?>[];
+  AdminSignupGate get _adminGate => AdminSignupGate(
+    state: SignupGateState(gate: signupGateSetting, closed: signupGateSetting.mode == SignupGateModeEnum.inviteOnly),
+    batchHourUtc: batchHourUtc,
+  );
+
+  @override
+  Future<AdminWaitlist> adminWaitlist({String? status, String? query, int limit = 50, int offset = 0}) async {
+    waitlistQueries.add(query);
+    final q = query?.trim().toLowerCase() ?? '';
+    return AdminWaitlist(
+      stats: waitlistStats,
+      gate: _adminGate,
+      items: [for (final e in waitlistEntries) if (q.isEmpty || e.email.contains(q)) e],
+      lastBatch: lastBatch,
+    );
+  }
+
+  final waitlistAdmits = <int?>[];
+  @override
+  Future<int> adminAdmitWaitlist({int? count, List<String>? ids}) async {
+    waitlistAdmits.add(count ?? ids?.length);
+    return count ?? ids?.length ?? 0;
+  }
+
+  final waitlistAdded = <(List<String>, bool)>[];
+  @override
+  Future<WaitlistChanged> adminAddWaitlistEntries(List<String> emails, {bool notify = false}) async {
+    waitlistAdded.add((emails, notify));
+    return WaitlistChanged(count: emails.length);
+  }
+
+  final waitlistRemoved = <String>[];
+  @override
+  Future<void> adminRemoveWaitlistEntry(String id) async {
+    waitlistRemoved.add(id);
+    waitlistEntries = [for (final e in waitlistEntries) if (e.id != id) e];
+  }
+
+  @override
+  Future<AdminSignupGate> adminSignupGate() async => _adminGate;
+
+  final signupGateChanges = <Map<String, Object?>>[];
+  @override
+  Future<AdminSignupGate> adminSetSignupGate(Map<String, Object?> changes) async {
+    signupGateChanges.add(changes);
+    final g = signupGateSetting;
+    final mode = changes['mode'];
+    signupGateSetting = SignupGate(
+      mode: mode == null ? g.mode : (mode == 'open' ? SignupGateModeEnum.open : SignupGateModeEnum.inviteOnly),
+      opensAt: changes.containsKey('opens_at') ? DateTime.tryParse('${changes['opens_at']}') : g.opensAt,
+      invitesPerPerson: (changes['invites_per_person'] as int?) ?? g.invitesPerPerson,
+      dailyAdmit: (changes['daily_admit'] as int?) ?? g.dailyAdmit,
+      dailyEmailsMax: (changes['daily_emails_max'] as int?) ?? g.dailyEmailsMax,
+    );
+    if (changes['batch_hour_utc'] is int) batchHourUtc = changes['batch_hour_utc'] as int;
+    return _adminGate;
+  }
+
+  List<InviteCampaign> inviteCampaigns = [
+    InviteCampaign(
+      code: 'SELFHOST-2026',
+      label: 'Self-hosters',
+      maxUses: 60,
+      used: 12,
+      perDay: 30,
+      startsAt: null,
+      expiresAt: null,
+      disabled: false,
+      createdAt: DateTime.utc(2026, 11, 19),
+      link: 'https://casama.ai/invite/SELFHOST-2026',
+    ),
+  ];
+  @override
+  Future<List<InviteCampaign>> adminInviteCampaigns() async => inviteCampaigns;
+
+  final createdCampaigns = <CreateInviteCampaignRequest>[];
+  @override
+  Future<InviteCampaign> adminCreateInviteCampaign(CreateInviteCampaignRequest request) async {
+    createdCampaigns.add(request);
+    final c = InviteCampaign(
+      code: request.code,
+      label: request.label,
+      maxUses: request.maxUses,
+      used: 0,
+      perDay: request.perDay,
+      startsAt: request.startsAt,
+      expiresAt: request.expiresAt,
+      disabled: false,
+      createdAt: DateTime.utc(2026, 11, 19),
+      link: 'https://casama.ai/invite/${request.code}',
+    );
+    inviteCampaigns = [...inviteCampaigns, c];
+    return c;
+  }
+
+  final updatedCampaigns = <(String, UpdateInviteCampaignRequest)>[];
+  @override
+  Future<InviteCampaign> adminUpdateInviteCampaign(String code, UpdateInviteCampaignRequest request) async {
+    updatedCampaigns.add((code, request));
+    final old = inviteCampaigns.firstWhere((c) => c.code == code);
+    final c = InviteCampaign(
+      code: old.code,
+      label: request.label ?? old.label,
+      maxUses: request.maxUses ?? old.maxUses,
+      used: old.used,
+      perDay: old.perDay,
+      startsAt: old.startsAt,
+      expiresAt: old.expiresAt,
+      disabled: request.disabled ?? old.disabled,
+      createdAt: old.createdAt,
+      link: old.link,
+    );
+    inviteCampaigns = [for (final x in inviteCampaigns) x.code == code ? c : x];
+    return c;
+  }
+
   @override
   Future<void> setPrivateNotifications(bool on) async {
     final s = remoteAccessStatus;

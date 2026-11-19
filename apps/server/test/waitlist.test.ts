@@ -3,22 +3,37 @@
  * joining the list, claiming invite codes, letting people in, and what happens after sign-up.
  */
 import { createHash, randomUUID } from "node:crypto";
+import type { JwtClaims } from "@casama/db";
+import {
+  type CaptureOptions,
+  type ProductAnalytics,
+  setProductAnalytics,
+} from "@casama/observability";
 import { sql } from "drizzle-orm";
 import { strFromU8, unzipSync } from "fflate";
+import { exportJWK, generateKeyPair, type JWK, SignJWT } from "jose";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { internalToken } from "../src/api/routes/local.ts";
+import { supportLookups } from "../src/api/routes/support-tools.ts";
 import { standardWebhookSignature } from "../src/billing/dodo.ts";
 import { leadingZeroBits } from "../src/services/abuse.ts";
+import { sweepSignups } from "../src/services/analytics-signups.ts";
+import { IdTokenVerifier, JWKS_URLS } from "../src/services/id-token.ts";
 import {
+  admittedVia,
   campaignCodeForm,
   checkSignupGate,
   claimInvite,
+  claimVia,
   cleanEmail,
   gateClosed,
   isDisposableEmail,
   joinWaitlist,
   linkWaitlistSignups,
+  newOneTimeCode,
+  oneTimeCodeForm,
   resetSignupGateCache,
+  runDailyBatch,
   sendWaitlistInvites,
 } from "../src/services/waitlist.ts";
 import { type Harness, hookVerdict, j, startHarness } from "./helpers.ts";
@@ -44,13 +59,16 @@ const kit = (get: () => Harness) => {
   const h = () => get();
   const hook = (
     email: string,
-    opts: { provider?: string; signed?: boolean; proof?: unknown } = {},
+    opts: { provider?: string; signed?: boolean; proof?: unknown; inviteCode?: unknown } = {},
   ) => {
     const body = JSON.stringify({
       user: {
         email,
         app_metadata: { provider: opts.provider ?? "email" },
-        user_metadata: opts.proof ? { signup_proof: opts.proof } : {},
+        user_metadata: {
+          ...(opts.proof ? { signup_proof: opts.proof } : {}),
+          ...(opts.inviteCode !== undefined ? { invite_code: opts.inviteCode } : {}),
+        },
       },
     });
     const id = `msg_${randomUUID()}`;
@@ -118,7 +136,11 @@ describe("small pieces", () => {
       invites_per_person: 3,
       daily_admit: 0,
       daily_emails_max: 25,
+      batch_hour_utc: 15,
     });
+    expect(checkSignupGate({ batch_hour_utc: 0 }).gate?.batch_hour_utc).toBe(0);
+    expect(checkSignupGate({ batch_hour_utc: 24 }).gate).toBeNull();
+    expect(checkSignupGate({ batch_hour_utc: 1.5 }).gate).toBeNull();
     expect(checkSignupGate({ mode: "invite_only", invites_per_person: 5 }).gate).toMatchObject({
       mode: "invite_only",
       invites_per_person: 5,
@@ -147,6 +169,30 @@ describe("small pieces", () => {
     expect(isDisposableEmail("x@inbox.mailinator.com")).toBe(true);
     expect(isDisposableEmail("x@gmail.com")).toBe(false);
     expect(isDisposableEmail("x@casama.ai")).toBe(false);
+  });
+
+  it("knows what a one-time code looks like, and keeps it apart from the other codes", () => {
+    const code = newOneTimeCode();
+    expect(code).toMatch(/^[0-9A-Z]{4}-[0-9A-Z]{4}$/);
+    expect(oneTimeCodeForm(code)).toBe(code);
+    expect(oneTimeCodeForm(code.toLowerCase().replace("-", " "))).toBe(code);
+    expect(oneTimeCodeForm("abcd-efgo")).toBe("ABCD-EFG0");
+    expect(oneTimeCodeForm("https://casama.ai/invite/K7M2-QXAB")).toBe("K7M2-QXAB");
+    // A member's 6-character code and a campaign code aren't one.
+    expect(oneTimeCodeForm("K7M2QX")).toBeNull();
+    expect(oneTimeCodeForm("SHOWHN-DEC8")).toBeNull();
+  });
+
+  it("names how a claim came in and how someone got in, never anything personal", () => {
+    expect(claimVia("app_ios", false)).toBe("app");
+    expect(claimVia("waitlist", false)).toBe("web");
+    expect(claimVia(undefined, false)).toBe("web");
+    expect(claimVia("app_ios", true)).toBe("id_token");
+    expect(admittedVia("auto")).toBe("batch");
+    expect(admittedVia("batch")).toBe("hand");
+    expect(admittedVia("admin")).toBe("hand");
+    expect(admittedVia("campaign:SHOWHN")).toBe("code");
+    expect(admittedVia("one_time:x")).toBe("code");
   });
 
   it("knows what a campaign code looks like", () => {
@@ -1022,9 +1068,667 @@ describe("the waitlist", () => {
       where p.pronamespace = 'public'::regnamespace
         and p.proname in ('signup_admitted', 'signup_invited_with_seat', 'invites_used',
           'invites_unlocked', 'invite_campaign_open', 'invite_code_preview', 'waitlist_claim',
-          'worker_waitlist_link')
+          'worker_waitlist_link', 'worker_admitted_via')
         and r.rolname in ('anon', 'authenticated')
         and has_function_privilege(r.oid, p.oid, 'execute')`);
     expect([...rows]).toEqual([]);
+  });
+});
+
+// --- Phases 2 and 3 (D-427): codes at sign-up, sign-in tokens, one-time codes, the daily batch ----
+
+class Recorder implements ProductAnalytics {
+  readonly enabled = true;
+  events: CaptureOptions[] = [];
+  capture(o: CaptureOptions) {
+    this.events.push(o);
+  }
+  async flush() {}
+  async close() {}
+}
+
+const sha256hex = (s: string) => createHash("sha256").update(s).digest("hex");
+
+describe("codes at sign-up, sign-in tokens, one-time codes and the daily batch", () => {
+  let h: Harness;
+  const k = kit(() => h);
+  let owner: U;
+  const rec = new Recorder();
+  const events = (name: string) => rec.events.filter((e) => e.event === name);
+  type Key = Awaited<ReturnType<typeof generateKeyPair>>["privateKey"];
+  let appleKey: Key;
+  let googleKey: Key;
+  let strayKey: Key;
+  let appleJwk: JWK;
+  let googleJwk: JWK;
+  const fetched: string[] = [];
+  const fakeFetch = (async (url: string | URL | Request) => {
+    const u = String(url);
+    fetched.push(u);
+    const keys = u === JWKS_URLS.apple ? [appleJwk] : u === JWKS_URLS.google ? [googleJwk] : null;
+    if (!keys) return new Response("no", { status: 404 });
+    return Response.json({ keys }, { headers: { "cache-control": "public, max-age=600" } });
+  }) as typeof fetch;
+  const sign = (
+    key: Key,
+    kid: string,
+    claims: Record<string, unknown>,
+    exp: string | number = "10m",
+  ) =>
+    new SignJWT(claims)
+      .setProtectedHeader({ alg: "RS256", kid })
+      .setIssuedAt()
+      .setExpirationTime(exp)
+      .sign(key);
+  const apple = (claims: Record<string, unknown> = {}, key?: Key, exp?: string | number) =>
+    sign(
+      key ?? appleKey,
+      "apple-1",
+      {
+        iss: "https://appleid.apple.com",
+        aud: "ai.casama.app",
+        sub: "000123.abc",
+        email: "x1y2z3@privaterelay.appleid.com",
+        email_verified: "true",
+        is_private_email: "true",
+        nonce: sha256hex("raw-nonce-1"),
+        ...claims,
+      },
+      exp,
+    );
+  const google = (claims: Record<string, unknown> = {}) =>
+    sign(googleKey, "google-1", {
+      iss: "https://accounts.google.com",
+      aud: "ios.apps.googleusercontent.com",
+      sub: "1098",
+      email: "gina@gmail.com",
+      email_verified: true,
+      nonce: sha256hex("raw-nonce-2"),
+      ...claims,
+    });
+  const redeemToken = async (json: Record<string, unknown>, from = ip()) =>
+    h.request("/v1/waitlist/redeem", {
+      method: "POST",
+      headers: { "x-forwarded-for": from },
+      json: { proof: await k.proof(), ...json },
+    });
+  const campaign = (json: Record<string, unknown>) =>
+    h.request("/v1/admin/invite-campaigns", { method: "POST", token: owner.token, json });
+  const send = () =>
+    sendWaitlistInvites({
+      db: h.handle.db,
+      email: h.deps.email,
+      env: h.deps.env,
+      secret: internalToken(h.deps.env),
+      perTick: 50,
+    });
+
+  beforeAll(async () => {
+    resetSignupGateCache();
+    h = await startHarness({
+      env: {
+        ...ENV,
+        ABUSE_CONTROLS: "on",
+        GOOGLE_AUTH_CLIENT_ID: "web.apps.googleusercontent.com,ios.apps.googleusercontent.com",
+        INSTANCE_ADMIN_EMAILS: "p2-owner@example.dev",
+      },
+      email: true,
+    });
+    owner = await h.user("p2-owner@example.dev");
+    await k.setGate(owner, { mode: "invite_only" });
+    h.deps.idTokenFetch = fakeFetch;
+    const a = await generateKeyPair("RS256");
+    const g = await generateKeyPair("RS256");
+    const x = await generateKeyPair("RS256");
+    appleKey = a.privateKey;
+    googleKey = g.privateKey;
+    strayKey = x.privateKey;
+    appleJwk = { ...(await exportJWK(a.publicKey)), kid: "apple-1", alg: "RS256", use: "sig" };
+    googleJwk = { ...(await exportJWK(g.publicKey)), kid: "google-1", alg: "RS256", use: "sig" };
+    expect((await campaign({ code: "SIGNUP-CODE", label: "At sign-up", max_uses: 1 })).status).toBe(
+      200,
+    );
+    expect((await campaign({ code: "TOKEN-CODE", label: "Tokens", max_uses: 50 })).status).toBe(
+      200,
+    );
+    setProductAnalytics(rec);
+  }, 60_000);
+  afterAll(async () => {
+    setProductAnalytics(null);
+    await h?.stop();
+  });
+
+  describe("a code sent with the sign-up (rule 4)", () => {
+    const used = async (code: string) =>
+      (
+        await h.tdb.admin<{ used: number }[]>`
+          select used from public.invite_campaigns where code = ${code}`
+      )[0]?.used;
+
+    it("lets a good code in on the spot, claimed exactly as the claim route does", async () => {
+      const res = await k.hook("coded@example.dev", {
+        provider: "google",
+        inviteCode: "signup-code",
+      });
+      expect(await hookVerdict(res)).toBe(200);
+      expect(await k.entry("coded@example.dev")).toMatchObject({
+        status: "admitted",
+        source: "signup",
+        admitted_via: "campaign:SIGNUP-CODE",
+        notified_at: null,
+      });
+      expect(await used("SIGNUP-CODE")).toBe(1);
+      expect(events("invite_claimed").at(-1)?.properties).toEqual({
+        kind: "campaign",
+        outcome: "admitted",
+        via: "signup",
+      });
+      // In now: the same address needs no code again, and uses up nothing.
+      expect(await hookVerdict(await k.hook("coded@example.dev", { provider: "google" }))).toBe(
+        200,
+      );
+      expect(
+        await hookVerdict(
+          await k.hook("coded@example.dev", { provider: "google", inviteCode: "SIGNUP-CODE" }),
+        ),
+      ).toBe(200);
+      expect(await used("SIGNUP-CODE")).toBe(1);
+    });
+
+    it("a used-up code is refused with the usual sentence and puts the address near the front", async () => {
+      const res = await k.hook("late@example.dev", {
+        provider: "google",
+        inviteCode: "SIGNUP-CODE",
+      });
+      expect(await hookVerdict(res)).toBe(403);
+      expect((await j(res)).error.message).toContain("Casama Cloud is invite-only for now");
+      expect(await k.entry("late@example.dev")).toMatchObject({
+        status: "waiting",
+        priority: 10,
+        invite_code: "SIGNUP-CODE",
+      });
+      expect(events("signup_refused").at(-1)?.properties).toEqual({ reason: "code_used_up" });
+    });
+
+    it("an unknown code, a code that isn't text and a throwaway address are refused", async () => {
+      const unknown = await k.hook("guess@example.dev", {
+        provider: "google",
+        inviteCode: "NOPE-NOPE",
+      });
+      expect(await hookVerdict(unknown)).toBe(403);
+      expect(await k.entry("guess@example.dev")).toBeUndefined();
+      expect(events("signup_refused").at(-1)?.properties).toEqual({ reason: "code_not_found" });
+      expect(
+        await hookVerdict(await k.hook("odd@example.dev", { provider: "google", inviteCode: 42 })),
+      ).toBe(403);
+      const before = await used("TOKEN-CODE");
+      expect(
+        await hookVerdict(
+          await k.hook("me@mailinator.com", { provider: "google", inviteCode: "TOKEN-CODE" }),
+        ),
+      ).toBe(403);
+      expect(await used("TOKEN-CODE")).toBe(before);
+    });
+
+    it("an email sign-up needs its proof before a code is spent, and the proof is used once", async () => {
+      await campaign({ code: "PROOF-CODE", label: "Proof", max_uses: 5 });
+      // No proof: refused by the proof check, and the code is untouched.
+      const bare = await k.hook("bare@example.dev", { inviteCode: "PROOF-CODE" });
+      expect(await hookVerdict(bare)).toBe(403);
+      expect((await j(bare)).error.message).toContain("Sign-up needs a check from the app");
+      expect(await used("PROOF-CODE")).toBe(0);
+      expect(await k.entry("bare@example.dev")).toBeUndefined();
+      // With a proof: let in, and the one proof covers both checks.
+      const p = await k.proof();
+      expect(
+        await hookVerdict(
+          await k.hook("proved@example.dev", {
+            inviteCode: "PROOF-CODE",
+            proof: { kind: "pow", ...p },
+          }),
+        ),
+      ).toBe(200);
+      expect(await used("PROOF-CODE")).toBe(1);
+      // The same proof again is refused, even for the address it just let in.
+      expect(
+        await hookVerdict(await k.hook("proved@example.dev", { proof: { kind: "pow", ...p } })),
+      ).toBe(403);
+    });
+  });
+
+  describe("the \"You're in\" email's one-time code", () => {
+    let code: string;
+
+    it("each email carries one, and only its hash is kept", async () => {
+      await joinWaitlist(h.handle.db, { email: "listed@example.dev" });
+      const id = (await k.entry("listed@example.dev")).id;
+      await h.request("/v1/admin/waitlist/admit", {
+        method: "POST",
+        token: owner.token,
+        json: { ids: [id] },
+      });
+      expect(await send()).toBeGreaterThanOrEqual(1);
+      const mail = h.outbox.find((m) => m.to === "listed@example.dev");
+      code = /invite code ([0-9A-Z]{4}-[0-9A-Z]{4}) once/.exec(mail?.text ?? "")?.[1] ?? "";
+      expect(code).toMatch(/^[0-9A-Z]{4}-[0-9A-Z]{4}$/);
+      expect(mail?.text).toContain("Hide My Email");
+      const row = await k.entry("listed@example.dev");
+      expect(row.one_time_code_hash).toBe(sha256hex(code.replace("-", "")));
+      expect(JSON.stringify(row)).not.toContain(code);
+      expect(events("waitlist_admitted").at(-1)?.properties).toEqual({ via: "hand" });
+    });
+
+    it("lets in exactly one other address, however it is typed", async () => {
+      const pv = await j(await h.request(`/v1/invites/preview?code=${code.toLowerCase()}`));
+      expect(pv).toEqual({
+        kind: "one_time",
+        label: null,
+        inviter_name: null,
+        available: true,
+        welcome_usd: 0,
+      });
+      const typed = code.toLowerCase().replace("-", "");
+      const a = await k.redeem("q9w8e7@privaterelay.appleid.com", typed, { source: "app_ios" });
+      expect(await j(a)).toEqual({ outcome: "admitted", kind: "one_time" });
+      expect(
+        await hookVerdict(await k.hook("q9w8e7@privaterelay.appleid.com", { provider: "apple" })),
+      ).toBe(200);
+      const issuer = await k.entry("listed@example.dev");
+      expect(await k.entry("q9w8e7@privaterelay.appleid.com")).toMatchObject({
+        status: "admitted",
+        admitted_via: `one_time:${issuer.id}`,
+        invite_code: "ONE-TIME",
+      });
+      expect(issuer.one_time_used_at).not.toBeNull();
+      expect(events("invite_claimed").at(-1)?.properties).toEqual({
+        kind: "one_time",
+        outcome: "admitted",
+        via: "app",
+      });
+      // Used: the next address goes on the list instead.
+      expect(await j(await k.redeem("second@example.dev", code))).toEqual({
+        outcome: "waitlisted",
+        kind: "one_time",
+      });
+      expect((await k.entry("second@example.dev")).invite_code).toBe("ONE-TIME");
+      expect((await j(await h.request(`/v1/invites/preview?code=${code}`))).available).toBe(false);
+    });
+
+    it("a campaign code of the same shape still works as a campaign", async () => {
+      expect((await campaign({ code: "SHOW-HN26", label: "Same shape", max_uses: 1 })).status).toBe(
+        200,
+      );
+      expect(await j(await k.redeem("shape@example.dev", "show-hn26"))).toEqual({
+        outcome: "admitted",
+        kind: "campaign",
+      });
+    });
+  });
+
+  describe("claiming with an Apple or Google sign-in token", () => {
+    it("lets in the address inside a good Apple token, Hide My Email included", async () => {
+      const res = await redeemToken({
+        code: "TOKEN-CODE",
+        provider: "apple",
+        id_token: await apple(),
+        token_nonce: "raw-nonce-1",
+        source: "app_ios",
+      });
+      expect(res.status).toBe(200);
+      expect(await j(res)).toEqual({ outcome: "admitted", kind: "campaign" });
+      expect(
+        await hookVerdict(await k.hook("x1y2z3@privaterelay.appleid.com", { provider: "apple" })),
+      ).toBe(200);
+      expect(events("invite_claimed").at(-1)?.properties).toMatchObject({ via: "id_token" });
+      // The browser's token is for the Services ID.
+      const web = await redeemToken({
+        code: "TOKEN-CODE",
+        provider: "apple",
+        id_token: await apple({
+          aud: "ai.casama.app.signin",
+          email: "web@privaterelay.appleid.com",
+        }),
+        token_nonce: "raw-nonce-1",
+      });
+      expect((await j(web)).outcome).toBe("admitted");
+    });
+
+    it("and a good Google token for any client Auth takes", async () => {
+      const res = await redeemToken({
+        code: "TOKEN-CODE",
+        provider: "google",
+        id_token: await google(),
+        token_nonce: "raw-nonce-2",
+      });
+      expect(await j(res)).toEqual({ outcome: "admitted", kind: "campaign" });
+      expect(await hookVerdict(await k.hook("gina@gmail.com", { provider: "google" }))).toBe(200);
+    });
+
+    it("turns away a token that doesn't pass, and lets nobody in", async () => {
+      const bad = async (
+        provider: "apple" | "google",
+        token: string,
+        nonce: string | undefined,
+        why: string,
+      ) => {
+        const res = await redeemToken({
+          code: "TOKEN-CODE",
+          provider,
+          id_token: token,
+          ...(nonce ? { token_nonce: nonce } : {}),
+        });
+        expect(res.status, why).toBe(400);
+        expect((await j(res)).code, why).toBe("bad_id_token");
+      };
+      const who = { email: "nobody@privaterelay.appleid.com" };
+      await bad("apple", await apple(who), "another-nonce", "wrong nonce");
+      await bad("apple", await apple(who), undefined, "nonce in the token but none sent");
+      await bad(
+        "apple",
+        await apple({ ...who, aud: "com.someone.else" }),
+        "raw-nonce-1",
+        "audience",
+      );
+      await bad(
+        "apple",
+        await apple({ ...who, iss: "https://evil.example" }),
+        "raw-nonce-1",
+        "issuer",
+      );
+      await bad(
+        "apple",
+        await apple(who, undefined, Math.floor(Date.now() / 1000) - 600),
+        "raw-nonce-1",
+        "expired",
+      );
+      await bad("apple", await apple(who, strayKey), "raw-nonce-1", "signed by someone else");
+      await bad(
+        "apple",
+        await google({ email: who.email }),
+        "raw-nonce-2",
+        "Google's token as Apple's",
+      );
+      await bad(
+        "google",
+        await google({ email: "unverified@gmail.com", email_verified: false }),
+        "raw-nonce-2",
+        "unverified address",
+      );
+      await bad("google", await google({ email: undefined }), "raw-nonce-2", "no address");
+      expect(await k.entry("nobody@privaterelay.appleid.com")).toBeUndefined();
+      expect(await k.entry("unverified@gmail.com")).toBeUndefined();
+    });
+
+    it("takes an email or a token, not both, and a token needs its provider", async () => {
+      const t = await apple();
+      expect(
+        (
+          await redeemToken({
+            code: "TOKEN-CODE",
+            email: "a@example.dev",
+            provider: "apple",
+            id_token: t,
+          })
+        ).status,
+      ).toBe(400);
+      expect((await redeemToken({ code: "TOKEN-CODE", id_token: t })).status).toBe(400);
+      expect((await redeemToken({ code: "TOKEN-CODE" })).status).toBe(400);
+    });
+
+    it("fetched each provider's keys once and kept them", () => {
+      expect(fetched.filter((u) => u === JWKS_URLS.apple)).toHaveLength(1);
+      expect(fetched.filter((u) => u === JWKS_URLS.google)).toHaveLength(1);
+    });
+  });
+
+  it("the sign-in token check caches keys, follows a new key, and keeps old keys when offline", async () => {
+    let t = Date.parse("2031-01-01T00:00:00Z");
+    let jwks: JWK[] = [appleJwk];
+    let down = false;
+    let calls = 0;
+    const v = new IdTokenVerifier({
+      audiences: { apple: ["ai.casama.app"], google: [] },
+      now: () => t,
+      fetch: (async () => {
+        calls++;
+        if (down) throw new Error("offline");
+        return Response.json({ keys: jwks }, { headers: { "cache-control": "max-age=600" } });
+      }) as typeof fetch,
+    });
+    const at = (key: Key, kid: string) =>
+      new SignJWT({
+        iss: "https://appleid.apple.com",
+        aud: "ai.casama.app",
+        email: "cache@example.dev",
+      })
+        .setProtectedHeader({ alg: "RS256", kid })
+        .setIssuedAt(Math.floor(t / 1000))
+        .setExpirationTime(Math.floor(t / 1000) + 600)
+        .sign(key);
+    expect((await v.verify("apple", await at(appleKey, "apple-1"))).email).toBe(
+      "cache@example.dev",
+    );
+    await v.verify("apple", await at(appleKey, "apple-1"));
+    expect(calls).toBe(1);
+    // Apple rotates to a new key: an unknown key id fetches again, but not more than every 30 s.
+    const next = await generateKeyPair("RS256");
+    jwks = [{ ...(await exportJWK(next.publicKey)), kid: "apple-2", alg: "RS256" }];
+    t += 10_000;
+    await expect(v.verify("apple", await at(next.privateKey, "apple-2"))).rejects.toThrow();
+    expect(calls).toBe(1);
+    t += 30_000;
+    expect((await v.verify("apple", await at(next.privateKey, "apple-2"))).email).toBe(
+      "cache@example.dev",
+    );
+    expect(calls).toBe(2);
+    // Past max-age it asks again; when Apple can't be reached, the keys it has still work.
+    t += 601_000;
+    down = true;
+    expect((await v.verify("apple", await at(next.privateKey, "apple-2"))).email).toBe(
+      "cache@example.dev",
+    );
+    expect(calls).toBe(3);
+    await expect(v.verify("google", "x.y.z")).rejects.toMatchObject({ reason: "unconfigured" });
+  });
+
+  describe("the daily batch", () => {
+    const pushes: Array<{ user: string; kind: string; title: string; body: string }> = [];
+    const notifications = {
+      notify: async (
+        user: string,
+        _org: string | null,
+        kind: string,
+        m: { title: string; body: string },
+      ) => {
+        pushes.push({ user, kind, title: m.title, body: m.body });
+        return null as never;
+      },
+    };
+    const run = (iso: string, extra: Partial<Parameters<typeof runDailyBatch>[0]> = {}) =>
+      runDailyBatch({
+        db: h.handle.db,
+        budgetMb: 9216,
+        openRouterDailyCapUsd: 50,
+        notifications,
+        adminEmails: "p2-owner@example.dev",
+        now: Date.parse(iso),
+        ...extra,
+      });
+    const stats = async () =>
+      (await j(await h.request("/v1/admin/waitlist", { token: owner.token }))).stats;
+
+    it("does nothing while it's off, before its hour, or with the gate open", async () => {
+      expect(await run("2031-03-01T16:00:00Z")).toBeNull(); // daily_admit is 0
+      await k.setGate(owner, { daily_admit: 2, batch_hour_utc: 15, daily_emails_max: 1000 });
+      expect(await run("2031-03-01T14:59:00Z")).toBeNull();
+      await k.setGate(owner, { mode: "open" });
+      expect(await run("2031-03-01T16:00:00Z")).toBeNull();
+      await k.setGate(owner, { mode: "invite_only" });
+    });
+
+    it("chooses the day's number in batch order, once a day, and they get their emails", async () => {
+      // Only these three are waiting, so the order is easy to see.
+      await h.tdb
+        .admin`update public.waitlist_entries set queued_at = now() where status = 'waiting'`;
+      await h.tdb
+        .admin`update public.waitlist_entries set notify_attempts = 8 where status = 'waiting'`;
+      for (const [email, e] of [
+        ["b-old@example.dev", {}],
+        ["b-host@example.dev", { selfHosting: true }],
+        ["b-new@example.dev", {}],
+      ] as const)
+        await joinWaitlist(h.handle.db, { email, ...e });
+      const [a, b] = await Promise.all([run("2031-03-01T15:00:00Z"), run("2031-03-01T15:00:00Z")]);
+      const r = a ?? b;
+      expect([a, b].filter(Boolean)).toHaveLength(1);
+      expect(r).toMatchObject({ day: "2031-03-01", admitted: 2, skipped: null });
+      expect(await run("2031-03-01T23:00:00Z")).toBeNull();
+      expect((await k.entry("b-host@example.dev")).admitted_via).toBe("auto");
+      expect((await k.entry("b-old@example.dev")).queued_at).not.toBeNull();
+      expect((await k.entry("b-new@example.dev")).queued_at).toBeNull();
+      rec.events.length = 0;
+      expect(await send()).toBe(2);
+      expect(events("waitlist_admitted").map((e) => e.properties)).toEqual([
+        { via: "batch" },
+        { via: "batch" },
+      ]);
+      expect(h.outbox.filter((m) => m.to === "b-host@example.dev")).toHaveLength(1);
+      expect((await stats()).last_batch).toMatchObject({
+        day: "2031-03-01",
+        admitted: 2,
+        skipped_reason: null,
+      });
+    });
+
+    it("never chooses more than the day's mail has room for", async () => {
+      await joinWaitlist(h.handle.db, { email: "b-more@example.dev" });
+      const s = await stats();
+      await k.setGate(owner, { daily_admit: 5, daily_emails_max: s.emails_today + s.queued + 1 });
+      expect(await run("2031-03-02T16:00:00Z")).toMatchObject({ admitted: 1, skipped: null });
+      const s2 = await stats();
+      await k.setGate(owner, { daily_emails_max: s2.emails_today + s2.queued });
+      expect(await run("2031-03-03T16:00:00Z")).toMatchObject({ admitted: 0, skipped: "no_mail" });
+      await k.setGate(owner, { daily_emails_max: 1000 });
+      expect(pushes).toHaveLength(0);
+    });
+
+    it("skips a day after a busy one for computers, and tells the owner why", async () => {
+      await h.tdb.admin`
+        insert into public.capacity_samples (at, mem_total_mb, mem_available_mb, load1, cpus,
+          computers_running, computers_mem_mb, budget_mb)
+        values ('2031-03-04T19:00:00Z', 12288, 2000, 3.1, 6, 7, 7300, 9216),
+               ('2031-03-04T09:00:00Z', 12288, 8000, 0.4, 6, 2, 2048, 9216)`;
+      const before = (await stats()).queued;
+      const r = await run("2031-03-05T16:00:00Z");
+      expect(r).toMatchObject({ admitted: 0, skipped: "capacity" });
+      expect(r?.detail).toContain("7 computers");
+      expect((await stats()).queued).toBe(before);
+      expect(pushes).toEqual([
+        expect.objectContaining({
+          user: owner.id,
+          kind: "server_capacity",
+          title: "Today's waitlist batch was skipped",
+        }),
+      ]);
+      // Under 7 of 9: the day runs.
+      await h.tdb.admin`
+        insert into public.capacity_samples (at, mem_total_mb, mem_available_mb, load1, cpus,
+          computers_running, computers_mem_mb, budget_mb)
+        values ('2031-03-05T19:00:00Z', 12288, 4000, 2.0, 6, 6, 6144, 9216)`;
+      expect((await run("2031-03-06T16:00:00Z"))?.skipped).not.toBe("capacity");
+    });
+
+    it("skips a day after model spend on Casama's key passed 60% of the daily cap", async () => {
+      pushes.length = 0;
+      const org = (
+        await j(
+          await h.request("/v1/orgs", {
+            method: "POST",
+            token: owner.token,
+            json: { name: "Spend" },
+          }),
+        )
+      ).id;
+      // One model call's two rows: each carries the call's whole cost in meta ($32 here).
+      const call = (at: string, usd: number) => {
+        const meta = JSON.stringify({ key: "server", provider_cost_usd: usd });
+        return h.handle.db.execute(sql`
+          insert into public.usage_ledger (org_id, kind, quantity, cost_usd, upstream_cost_usd, billable, meta, created_at)
+          values
+            (${org}::uuid, 'tokens_in', 1000, 0, ${usd * 0.6 * 1.055}, true, ${meta}::jsonb, ${at}::timestamptz),
+            (${org}::uuid, 'tokens_out', 100, 0, ${usd * 0.4 * 1.055}, true, ${meta}::jsonb, ${at}::timestamptz)`);
+      };
+      await call("2031-03-08T10:00:00Z", 20); // $20: under $30, counted once, not twice
+      expect((await run("2031-03-09T16:00:00Z"))?.skipped).not.toBe("model_spend");
+      await call("2031-03-09T10:00:00Z", 32);
+      const r = await run("2031-03-10T16:00:00Z");
+      expect(r).toMatchObject({ skipped: "model_spend" });
+      expect(r?.detail).toContain("$32.00");
+      expect(r?.detail).toContain("$50.00");
+      expect(pushes).toHaveLength(1);
+      expect((await stats()).last_batch).toMatchObject({
+        day: "2031-03-10",
+        skipped_reason: "model_spend",
+      });
+    });
+  });
+
+  it("Casama Help tells a member about their invites while Cloud is invite-only", async () => {
+    const member = await h.user("helper@example.dev");
+    await h.tdb.admin`
+      insert into public.analytics_milestones (user_id, milestone) values (${member.id}::uuid, 'first_value')
+      on conflict do nothing`;
+    const code = (await j(await h.request("/v1/me/referral", { token: member.token }))).code;
+    const claims = { sub: member.id, email: member.email } as JwtClaims;
+    const lookups = supportLookups(h.handle.db, {} as never, {
+      waitlist: { inviteBase: "https://casama.ai/invite" },
+    });
+    const out = await lookups.invites(claims, null);
+    expect(out.cloud_invite_only).toMatchObject({
+      my_invite_code: code,
+      my_invite_link: `https://casama.ai/invite/${code}`,
+      invites_total: 3,
+      invites_used: 0,
+      invites_left: 3,
+      invites_unlocked: true,
+    });
+    // A server without the waitlist says nothing about it.
+    const plain = await supportLookups(h.handle.db, {} as never).invites(claims, null);
+    expect(plain.cloud_invite_only).toBeUndefined();
+    // Nor does Cloud once the gate is open.
+    await k.setGate(owner, { mode: "open" });
+    expect((await lookups.invites(claims, null)).cloud_invite_only).toBeUndefined();
+    await k.setGate(owner, { mode: "invite_only" });
+  });
+
+  it("events say how people got in, and never carry an address or a code", async () => {
+    await k.join("joiner@example.dev", { source: "home", self_hosting: true });
+    expect(events("waitlist_joined").at(-1)?.properties).toEqual({
+      source: "home",
+      self_hosting: true,
+    });
+    const n = events("waitlist_joined").length;
+    await k.join("joiner@example.dev"); // already there: no second event
+    expect(events("waitlist_joined")).toHaveLength(n);
+    await k.hook("stranger-ev@example.dev", { provider: "google" });
+    expect(events("signup_refused").at(-1)?.properties).toEqual({ reason: "gate" });
+    // signed_up and first_value carry how the person got in.
+    await h.user("coded@example.dev");
+    await sweepSignups(h.handle.db, rec);
+    const signup = events("signed_up").find((e) =>
+      rec.events.length ? e.properties?.admitted_via === "code" : false,
+    );
+    expect(signup).toBeDefined();
+    expect(events("signed_up").some((e) => e.properties?.admitted_via === "none")).toBe(true);
+    for (const e of rec.events.filter((x) =>
+      ["waitlist_joined", "invite_claimed", "waitlist_admitted", "signup_refused"].includes(
+        x.event,
+      ),
+    )) {
+      const text = JSON.stringify(e);
+      expect(text, e.event).not.toContain("@");
+      expect(text, e.event).not.toMatch(/SIGNUP-CODE|TOKEN-CODE|PROOF-CODE/);
+      expect(e.personless, e.event).toBe(true);
+    }
   });
 });

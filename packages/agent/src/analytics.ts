@@ -68,6 +68,21 @@ export async function reachMilestone(
   return true;
 }
 
+/**
+ * How a person got past Casama Cloud's waitlist (D-427): batch, hand, code, or none (no entry: the
+ * gate was open, a workspace invite, a self-hosted server). Never an address.
+ */
+async function admittedVia(db: Database, userId: string): Promise<string> {
+  try {
+    const [row] = await db.execute<{ admitted_via: string }>(
+      sql`select admitted_via from public.worker_admitted_via(array[${userId}::uuid])`,
+    );
+    return row?.admitted_via ?? "none";
+  } catch {
+    return "none";
+  }
+}
+
 /** Called when a run completes: a person's first finished run is their first value (F2, F3). */
 export async function runCompletedMilestones(
   db: Database,
@@ -82,7 +97,10 @@ export async function runCompletedMilestones(
     await reachMilestone(db, run.userId, "first_value", {
       orgId: run.orgId,
       event: "first_value",
-      properties: { kind: run.trigger === "voice" ? "voice" : "chat" },
+      properties: {
+        kind: run.trigger === "voice" ? "voice" : "chat",
+        admitted_via: await admittedVia(db, run.userId),
+      },
       setOnce: { first_value_kind: run.trigger === "voice" ? "voice" : "chat" },
       analytics: a,
     });

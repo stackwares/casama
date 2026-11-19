@@ -73,6 +73,7 @@ ${SHARED_RULES.sources}
 ${SHARED_RULES.brief}
 ${SHARED_RULES.refunds}
 ${SHARED_RULES.stores}
+${SHARED_RULES.inviteOnly}
 
 What you must not do:
 ${SHARED_RULES.onlyCasama}

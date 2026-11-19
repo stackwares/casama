@@ -1442,6 +1442,7 @@ Class | Method | HTTP request | Description
  - [VoiceTranscriptRequestUsage](doc/VoiceTranscriptRequestUsage.md)
  - [VoiceTurnsRequest](doc/VoiceTurnsRequest.md)
  - [VoiceTurnsRequestTurnsInner](doc/VoiceTurnsRequestTurnsInner.md)
+ - [WaitlistBatch](doc/WaitlistBatch.md)
  - [WaitlistChanged](doc/WaitlistChanged.md)
  - [WaitlistEntry](doc/WaitlistEntry.md)
  - [WaitlistJoined](doc/WaitlistJoined.md)

@@ -51,6 +51,8 @@ export interface AppDeps {
   newsletterFetch?: typeof fetch;
   /** Calls to Apple's Sign in with Apple token and revoke endpoints (D-420; tests replace it). */
   appleFetch?: typeof fetch;
+  /** Fetches Apple's and Google's sign-in keys (D-427 ID-token invite claims; tests replace it). */
+  idTokenFetch?: typeof fetch;
   /** Auth's admin API (tests replace it); default: from SUPABASE_SERVICE_ROLE_KEY. */
   authAdmin?: { url: string; serviceRoleKey: string; fetch?: typeof fetch };
   /** Casama Link, self-hosted side (D-296): this server's own public address, when it has one. */

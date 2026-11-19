@@ -185,6 +185,12 @@ export const EnvSchema = z.object({
   SIGNUP_WAITLIST: z.enum(["auto", "on", "off"]).default("auto"),
   /** Where the apps and refusals send people to join the waitlist or enter a code. */
   WAITLIST_URL: z.url().default("https://casama.ai/waitlist"),
+  /**
+   * OpenRouter's daily spending cap on Casama's key, in US dollars (set at OpenRouter; this only
+   * mirrors it). The waitlist's daily batch skips a day when yesterday's spend on the key passed
+   * 60% of it (docs/WAITLIST-PLAN.md §6.4).
+   */
+  OPENROUTER_DAILY_CAP_USD: z.coerce.number().nonnegative().default(50),
   /** Dodo Payments (web, desktop, credit packs). */
   DODO_API_KEY: z.string().optional(),
   DODO_WEBHOOK_SECRET: z.string().optional(),

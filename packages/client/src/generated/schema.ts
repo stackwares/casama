@@ -13719,6 +13719,7 @@ export interface components {
             invites_per_person: number;
             daily_admit: number;
             daily_emails_max: number;
+            batch_hour_utc?: number;
         };
         SetSignupGateRequest: {
             /** @enum {string} */
@@ -13728,6 +13729,7 @@ export interface components {
             invites_per_person?: number;
             daily_admit?: number;
             daily_emails_max?: number;
+            batch_hour_utc?: number;
         };
         UpdateInviteCampaignRequest: {
             label?: string;
@@ -13767,7 +13769,16 @@ export interface components {
                 joined: number;
                 first_chat: number;
             }[];
+            last_batch?: components["schemas"]["WaitlistBatch"];
         };
+        WaitlistBatch: {
+            day: string;
+            /** Format: date-time */
+            ran_at: string;
+            admitted: number;
+            skipped_reason: string | null;
+            detail: string | null;
+        } | null;
         WaitlistEntry: {
             /** Format: uuid */
             id: string;
@@ -13810,7 +13821,7 @@ export interface components {
         };
         InviteCodePreview: {
             /** @enum {string} */
-            kind: "personal" | "campaign";
+            kind: "personal" | "campaign" | "one_time";
             label: string | null;
             inviter_name: string | null;
             available: boolean;
@@ -13820,12 +13831,16 @@ export interface components {
             /** @enum {string} */
             outcome: "admitted" | "waitlisted";
             /** @enum {string} */
-            kind: "personal" | "campaign";
+            kind: "personal" | "campaign" | "one_time";
         };
         RedeemInviteRequest: {
-            email: string;
+            email?: string;
             code: string;
             proof: components["schemas"]["WaitlistProof"];
+            id_token?: string;
+            /** @enum {string} */
+            provider?: "apple" | "google";
+            token_nonce?: string;
             source?: string;
             newsletter?: boolean;
         };

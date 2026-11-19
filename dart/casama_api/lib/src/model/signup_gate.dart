@@ -29,6 +29,8 @@ class SignupGate {
     required  this.dailyAdmit,
 
     required  this.dailyEmailsMax,
+
+     this.batchHourUtc,
   });
 
   @JsonKey(
@@ -97,6 +99,20 @@ class SignupGate {
 
 
 
+          // minimum: 0
+          // maximum: 23
+  @JsonKey(
+    
+    name: r'batch_hour_utc',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final int? batchHourUtc;
+
+
+
 
 
     @override
@@ -105,7 +121,8 @@ class SignupGate {
       other.opensAt == opensAt &&
       other.invitesPerPerson == invitesPerPerson &&
       other.dailyAdmit == dailyAdmit &&
-      other.dailyEmailsMax == dailyEmailsMax;
+      other.dailyEmailsMax == dailyEmailsMax &&
+      other.batchHourUtc == batchHourUtc;
 
     @override
     int get hashCode =>
@@ -113,7 +130,8 @@ class SignupGate {
         (opensAt == null ? 0 : opensAt.hashCode) +
         invitesPerPerson.hashCode +
         dailyAdmit.hashCode +
-        dailyEmailsMax.hashCode;
+        dailyEmailsMax.hashCode +
+        batchHourUtc.hashCode;
 
   factory SignupGate.fromJson(Map<String, dynamic> json) => _$SignupGateFromJson(json);
 

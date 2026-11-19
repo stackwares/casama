@@ -156,4 +156,5 @@ Map<String, dynamic> _$InviteCodePreviewToJson(InviteCodePreview instance) =>
 const _$InviteCodePreviewKindEnumEnumMap = {
   InviteCodePreviewKindEnum.personal: 'personal',
   InviteCodePreviewKindEnum.campaign: 'campaign',
+  InviteCodePreviewKindEnum.oneTime: 'one_time',
 };

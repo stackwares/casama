@@ -25406,6 +25406,671 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'What the system reports'**
   String get foldSystemSays;
+
+  /// D-427. On the sign-in screen while Casama Cloud takes new accounts only by invitation. Never the word beta (App Store 2.2).
+  ///
+  /// In en, this message translates to:
+  /// **'Casama Cloud is invite-only for now.'**
+  String get inviteGateLine;
+
+  /// No description provided for @inviteGateSelfHost.
+  ///
+  /// In en, this message translates to:
+  /// **'Running Casama on your own server is open to everyone.'**
+  String get inviteGateSelfHost;
+
+  /// D-427. Button on the sign-in screen and the refusal sheet; also the waitlist form's title and button.
+  ///
+  /// In en, this message translates to:
+  /// **'Join the Waitlist'**
+  String get joinTheWaitlist;
+
+  /// D-427. Button on the sign-in screen and the refusal sheet; also the invite screen's title.
+  ///
+  /// In en, this message translates to:
+  /// **'I Have an Invite'**
+  String get iHaveAnInvite;
+
+  /// No description provided for @waitlistSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'We\'re letting people in every day. You\'ll get one email when it\'s your turn.'**
+  String get waitlistSubtitle;
+
+  /// No description provided for @waitlistNote.
+  ///
+  /// In en, this message translates to:
+  /// **'What would you have a bot do first?'**
+  String get waitlistNote;
+
+  /// No description provided for @waitlistNoteHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional'**
+  String get waitlistNoteHint;
+
+  /// No description provided for @waitlistSelfHosting.
+  ///
+  /// In en, this message translates to:
+  /// **'I run Casama on my own server'**
+  String get waitlistSelfHosting;
+
+  /// No description provided for @waitlistNewsletter.
+  ///
+  /// In en, this message translates to:
+  /// **'Also send me Casama\'s monthly email (once a month at most)'**
+  String get waitlistNewsletter;
+
+  /// No description provided for @waitlistJoinedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re on the list.'**
+  String get waitlistJoinedTitle;
+
+  /// No description provided for @waitlistJoinedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'We\'re letting people in every day. You\'ll get one email when it\'s your turn, and nothing else unless you asked for the monthly email.'**
+  String get waitlistJoinedBody;
+
+  /// No description provided for @waitlistJoinedCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Have an invite code? Enter it here.'**
+  String get waitlistJoinedCode;
+
+  /// No description provided for @waitlistJoinedSelfHost.
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t want to wait? Casama is open source. Run it on your own computer today.'**
+  String get waitlistJoinedSelfHost;
+
+  /// No description provided for @waitlistRunItYourself.
+  ///
+  /// In en, this message translates to:
+  /// **'Run It Yourself'**
+  String get waitlistRunItYourself;
+
+  /// No description provided for @inviteSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your invite code, or paste the invite link.'**
+  String get inviteSubtitle;
+
+  /// No description provided for @inviteCodeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite code'**
+  String get inviteCodeLabel;
+
+  /// No description provided for @inviteNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'That code doesn\'t match any invite. Check it and try again.'**
+  String get inviteNotFound;
+
+  /// No description provided for @inviteFromName.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} invited you to Casama'**
+  String inviteFromName(String name);
+
+  /// No description provided for @inviteFromFriend.
+  ///
+  /// In en, this message translates to:
+  /// **'A friend invited you to Casama'**
+  String get inviteFromFriend;
+
+  /// No description provided for @inviteFromCampaign.
+  ///
+  /// In en, this message translates to:
+  /// **'Your invite: {label}'**
+  String inviteFromCampaign(String label);
+
+  /// No description provided for @inviteFromCasama.
+  ///
+  /// In en, this message translates to:
+  /// **'Your invite to Casama'**
+  String get inviteFromCasama;
+
+  /// No description provided for @inviteChooseSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Now choose how you\'ll sign in. Use the address you want for your account.'**
+  String get inviteChooseSignIn;
+
+  /// No description provided for @inviteGoneHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'These invites are gone. Enter your email and you\'ll go on the waitlist, ahead of the line.'**
+  String get inviteGoneHelp;
+
+  /// No description provided for @inviteEmailHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'We\'ll let this address in, then send it a sign-in link.'**
+  String get inviteEmailHelp;
+
+  /// No description provided for @inviteCheckInbox.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re in. Check {email} for a sign-in link, or type its code here.'**
+  String inviteCheckInbox(String email);
+
+  /// No description provided for @inviteWaitlisted.
+  ///
+  /// In en, this message translates to:
+  /// **'These invites are gone. You\'re on the waitlist, ahead of the line.'**
+  String get inviteWaitlisted;
+
+  /// No description provided for @inviteUseEmailHere.
+  ///
+  /// In en, this message translates to:
+  /// **'On this device, use Continue with Email. Apple and Google work with an invite in the iPhone, Mac and Android apps.'**
+  String get inviteUseEmailHere;
+
+  /// No description provided for @inviteDifferentCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Use a Different Code'**
+  String get inviteDifferentCode;
+
+  /// No description provided for @inviteRefusedHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Join the waitlist and we\'ll email you when it\'s your turn, or enter an invite code if you have one.'**
+  String get inviteRefusedHelp;
+
+  /// D-427. Invite Friends while Casama Cloud is invite-only: how many of the member's invites are left. Never 'invite friends to get in' (App Store 3.2.2).
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No invites left} =1{1 invite left} other{{count} invites left}}'**
+  String inviteFriendsInvitesLeft(int count);
+
+  /// No description provided for @inviteFriendsInvitesUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'{used} of {total} used. Each one lets a friend make an account.'**
+  String inviteFriendsInvitesUsed(int used, int total);
+
+  /// No description provided for @inviteFriendsInvitesLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Your invites unlock after your first finished chat.'**
+  String get inviteFriendsInvitesLocked;
+
+  /// No description provided for @adminWaitlist.
+  ///
+  /// In en, this message translates to:
+  /// **'Waitlist'**
+  String get adminWaitlist;
+
+  /// No description provided for @adminWaitlistWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting'**
+  String get adminWaitlistWaiting;
+
+  /// No description provided for @adminWaitlistListedToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Joined the list today'**
+  String get adminWaitlistListedToday;
+
+  /// No description provided for @adminWaitlistAdmittedToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Let in today'**
+  String get adminWaitlistAdmittedToday;
+
+  /// No description provided for @adminWaitlistAdmittedTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Let in, total'**
+  String get adminWaitlistAdmittedTotal;
+
+  /// No description provided for @adminWaitlistJoined.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed up'**
+  String get adminWaitlistJoined;
+
+  /// No description provided for @adminWaitlistFirstChat.
+  ///
+  /// In en, this message translates to:
+  /// **'First chat'**
+  String get adminWaitlistFirstChat;
+
+  /// No description provided for @adminWaitlistEmailsToday.
+  ///
+  /// In en, this message translates to:
+  /// **'\"You\'re in\" emails today'**
+  String get adminWaitlistEmailsToday;
+
+  /// No description provided for @adminWaitlistEmailsOf.
+  ///
+  /// In en, this message translates to:
+  /// **'{sent} of {max}'**
+  String adminWaitlistEmailsOf(int sent, int max);
+
+  /// No description provided for @adminWaitlistLastBatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Last batch'**
+  String get adminWaitlistLastBatch;
+
+  /// No description provided for @adminWaitlistLastBatchValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} let in'**
+  String adminWaitlistLastBatchValue(int count);
+
+  /// No description provided for @adminWaitlistLastBatchSkipped.
+  ///
+  /// In en, this message translates to:
+  /// **'Skipped. {reason}'**
+  String adminWaitlistLastBatchSkipped(String reason);
+
+  /// No description provided for @adminWaitlistBySource.
+  ///
+  /// In en, this message translates to:
+  /// **'By source'**
+  String get adminWaitlistBySource;
+
+  /// No description provided for @adminWaitlistSourceRow.
+  ///
+  /// In en, this message translates to:
+  /// **'{listed} on the list · {admitted} let in · {joined} signed up · {firstChat} first chat'**
+  String adminWaitlistSourceRow(
+    int listed,
+    int admitted,
+    int joined,
+    int firstChat,
+  );
+
+  /// No description provided for @adminWaitlistAdmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Admit'**
+  String get adminWaitlistAdmit;
+
+  /// No description provided for @adminWaitlistAdmitPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Let in the next people in line'**
+  String get adminWaitlistAdmitPrompt;
+
+  /// No description provided for @adminWaitlistAdmitCount.
+  ///
+  /// In en, this message translates to:
+  /// **'How many'**
+  String get adminWaitlistAdmitCount;
+
+  /// No description provided for @adminWaitlistAdmitTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Let in the next {count} in line?'**
+  String adminWaitlistAdmitTitle(int count);
+
+  /// No description provided for @adminWaitlistAdmitBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Each gets a \"You\'re in\" email, within today\'s email limit.'**
+  String get adminWaitlistAdmitBody;
+
+  /// No description provided for @adminWaitlistAdmitted.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} let in.'**
+  String adminWaitlistAdmitted(int count);
+
+  /// No description provided for @adminWaitlistAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Addresses'**
+  String get adminWaitlistAdd;
+
+  /// No description provided for @adminWaitlistAddHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'They\'re let in at once. One per line, or separated by commas.'**
+  String get adminWaitlistAddHelp;
+
+  /// No description provided for @adminWaitlistAddLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Email addresses'**
+  String get adminWaitlistAddLabel;
+
+  /// No description provided for @adminWaitlistAddNotify.
+  ///
+  /// In en, this message translates to:
+  /// **'Send each the \"You\'re in\" email'**
+  String get adminWaitlistAddNotify;
+
+  /// No description provided for @adminWaitlistAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} added.'**
+  String adminWaitlistAdded(int count);
+
+  /// No description provided for @adminWaitlistSkipped.
+  ///
+  /// In en, this message translates to:
+  /// **'Not email addresses: {list}'**
+  String adminWaitlistSkipped(String list);
+
+  /// No description provided for @adminWaitlistRemoveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {email} from the waitlist?'**
+  String adminWaitlistRemoveTitle(String email);
+
+  /// No description provided for @adminWaitlistRemoveBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The entry is deleted. They can join again later.'**
+  String get adminWaitlistRemoveBody;
+
+  /// No description provided for @adminWaitlistPeople.
+  ///
+  /// In en, this message translates to:
+  /// **'People'**
+  String get adminWaitlistPeople;
+
+  /// No description provided for @adminWaitlistSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by email'**
+  String get adminWaitlistSearch;
+
+  /// No description provided for @adminWaitlistNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No one here yet.'**
+  String get adminWaitlistNone;
+
+  /// No description provided for @adminWaitlistShowMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Show More'**
+  String get adminWaitlistShowMore;
+
+  /// No description provided for @adminWaitlistStatusWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting'**
+  String get adminWaitlistStatusWaiting;
+
+  /// No description provided for @adminWaitlistStatusQueued.
+  ///
+  /// In en, this message translates to:
+  /// **'Chosen'**
+  String get adminWaitlistStatusQueued;
+
+  /// No description provided for @adminWaitlistStatusAdmitted.
+  ///
+  /// In en, this message translates to:
+  /// **'Let in'**
+  String get adminWaitlistStatusAdmitted;
+
+  /// No description provided for @adminWaitlistStatusJoined.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed up'**
+  String get adminWaitlistStatusJoined;
+
+  /// No description provided for @adminWaitlistSelfHosts.
+  ///
+  /// In en, this message translates to:
+  /// **'Runs their own server'**
+  String get adminWaitlistSelfHosts;
+
+  /// No description provided for @adminCampaigns.
+  ///
+  /// In en, this message translates to:
+  /// **'Campaign codes'**
+  String get adminCampaigns;
+
+  /// No description provided for @adminCampaignNew.
+  ///
+  /// In en, this message translates to:
+  /// **'New Code'**
+  String get adminCampaignNew;
+
+  /// No description provided for @adminCampaignCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Code'**
+  String get adminCampaignCode;
+
+  /// No description provided for @adminCampaignCodeHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'9 or more characters, or with a hyphen: letters, digits and hyphens (SHOWHN-DEC8).'**
+  String get adminCampaignCodeHelp;
+
+  /// No description provided for @adminCampaignLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Label'**
+  String get adminCampaignLabel;
+
+  /// No description provided for @adminCampaignTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Total uses'**
+  String get adminCampaignTotal;
+
+  /// No description provided for @adminCampaignPerDay.
+  ///
+  /// In en, this message translates to:
+  /// **'A day at most (optional)'**
+  String get adminCampaignPerDay;
+
+  /// No description provided for @adminCampaignStarts.
+  ///
+  /// In en, this message translates to:
+  /// **'Starts'**
+  String get adminCampaignStarts;
+
+  /// No description provided for @adminCampaignEnds.
+  ///
+  /// In en, this message translates to:
+  /// **'Ends'**
+  String get adminCampaignEnds;
+
+  /// No description provided for @adminCampaignAnyTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Any time'**
+  String get adminCampaignAnyTime;
+
+  /// No description provided for @adminCampaignCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Code'**
+  String get adminCampaignCreate;
+
+  /// No description provided for @adminCampaignUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'{used} of {total} used'**
+  String adminCampaignUsed(int used, int total);
+
+  /// No description provided for @adminCampaignPerDayShort.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} a day'**
+  String adminCampaignPerDayShort(int count);
+
+  /// No description provided for @adminCampaignEndsOn.
+  ///
+  /// In en, this message translates to:
+  /// **'ends {date}'**
+  String adminCampaignEndsOn(String date);
+
+  /// No description provided for @adminCampaignStartsOn.
+  ///
+  /// In en, this message translates to:
+  /// **'starts {date}'**
+  String adminCampaignStartsOn(String date);
+
+  /// No description provided for @adminCampaignOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get adminCampaignOff;
+
+  /// No description provided for @adminCampaignTurnOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn Off'**
+  String get adminCampaignTurnOff;
+
+  /// No description provided for @adminCampaignTurnOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn On'**
+  String get adminCampaignTurnOn;
+
+  /// No description provided for @adminCampaignNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No campaign codes yet.'**
+  String get adminCampaignNone;
+
+  /// No description provided for @adminCampaignCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Link copied.'**
+  String get adminCampaignCopied;
+
+  /// No description provided for @adminGate.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign-ups'**
+  String get adminGate;
+
+  /// No description provided for @adminGateInviteOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite-only'**
+  String get adminGateInviteOnly;
+
+  /// No description provided for @adminGateInviteOnlyHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'New accounts only for people let in from the waitlist or with an invite code. Existing accounts sign in as always.'**
+  String get adminGateInviteOnlyHelp;
+
+  /// No description provided for @adminGateOpenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Open sign-ups to everyone?'**
+  String get adminGateOpenTitle;
+
+  /// No description provided for @adminGateOpenBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Anyone can make an account straight away. The waitlist stays as it is.'**
+  String get adminGateOpenBody;
+
+  /// No description provided for @adminGateOpenConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Sign-Ups'**
+  String get adminGateOpenConfirm;
+
+  /// No description provided for @adminGateCloseTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Make Casama Cloud invite-only?'**
+  String get adminGateCloseTitle;
+
+  /// No description provided for @adminGateCloseBody.
+  ///
+  /// In en, this message translates to:
+  /// **'New people need an invite code, or a place let in from the waitlist. Existing accounts keep signing in.'**
+  String get adminGateCloseBody;
+
+  /// No description provided for @adminGateCloseConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Make Invite-Only'**
+  String get adminGateCloseConfirm;
+
+  /// No description provided for @adminGateClosedNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite-only now'**
+  String get adminGateClosedNow;
+
+  /// No description provided for @adminGateOpenNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Open now'**
+  String get adminGateOpenNow;
+
+  /// No description provided for @adminGateOpensAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Opens on its own'**
+  String get adminGateOpensAt;
+
+  /// No description provided for @adminGateOpensAtNone.
+  ///
+  /// In en, this message translates to:
+  /// **'Not set'**
+  String get adminGateOpensAtNone;
+
+  /// No description provided for @adminGateClearOpensAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear the Opening Time'**
+  String get adminGateClearOpensAt;
+
+  /// No description provided for @adminGateInvites.
+  ///
+  /// In en, this message translates to:
+  /// **'Invites per person'**
+  String get adminGateInvites;
+
+  /// No description provided for @adminGateDailyAdmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Let in each day'**
+  String get adminGateDailyAdmit;
+
+  /// No description provided for @adminGateDailyAdmitOff.
+  ///
+  /// In en, this message translates to:
+  /// **'None (by hand only)'**
+  String get adminGateDailyAdmitOff;
+
+  /// No description provided for @adminGateDailyEmails.
+  ///
+  /// In en, this message translates to:
+  /// **'\"You\'re in\" emails a day at most'**
+  String get adminGateDailyEmails;
+
+  /// No description provided for @adminGateBatchHour.
+  ///
+  /// In en, this message translates to:
+  /// **'Batch time (UTC)'**
+  String get adminGateBatchHour;
+
+  /// No description provided for @adminGateBatchHourValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{hour}:00 UTC'**
+  String adminGateBatchHourValue(String hour);
+
+  /// No description provided for @adminGateNumberInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a whole number'**
+  String get adminGateNumberInvalid;
 }
 
 class _AppLocalizationsDelegate
