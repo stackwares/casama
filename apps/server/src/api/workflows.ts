@@ -41,6 +41,8 @@ export interface Workflows {
   startDomainOrder(orderId: string): Promise<void>;
   /** Writes a person's starter requests for a bot again (D-338); at most once an hour each. */
   refreshStarters(userId: string, orgId: string, botId: string): Promise<void>;
+  /** Writes a finished call's summary and next steps into its card (call card plan); once per call. */
+  summarizeCall(liveCallId: string): Promise<void>;
   /** Voice (D-065): keyed operations run in the worker; each returns quickly. */
   voiceTranscribe(
     orgId: string,
@@ -147,6 +149,16 @@ export async function dbosWorkflows(databaseUrl: string): Promise<Workflows> {
         userId,
         orgId,
         botId,
+      );
+    },
+    async summarizeCall(liveCallId) {
+      await client.enqueue(
+        {
+          queueName: "system",
+          workflowName: "summarizeCall",
+          workflowID: `call-summary:${liveCallId}`,
+        },
+        liveCallId,
       );
     },
     async signalRun(runId) {

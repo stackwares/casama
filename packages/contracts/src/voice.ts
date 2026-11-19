@@ -146,8 +146,23 @@ export const VoiceTranscriptRequest = z
       description:
         "Gemini Live: the call's token counts from usageMetadata, so usage records the real cost instead of a per-minute estimate",
     }),
+    ended: z.enum(["person", "bot", "dropped", "idle", "limit", "replaced"]).optional().openapi({
+      description:
+        "How the call ended, for its card: the person hung up, the bot did (end_call), it dropped, it went quiet, a limit ended it, or another call took its place",
+    }),
   })
   .openapi("VoiceTranscriptRequest");
+
+/** A next step on a call's card (call card plan §3.3): start it as a chat run, or dismiss it. */
+export const CallStepRequest = z
+  .object({ action: z.enum(["start", "dismiss"]) })
+  .openapi("CallStepRequest");
+
+export const CallStepResult = z
+  .object({
+    run_id: Uuid.nullable().openapi({ description: "The chat run a started step became" }),
+  })
+  .openapi("CallStepResult");
 
 /** Turns saved while the call goes on (D-327), so a call that dies keeps its transcript. */
 export const VoiceTurnsRequest = z

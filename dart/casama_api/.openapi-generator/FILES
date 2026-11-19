@@ -170,6 +170,8 @@ lib/src/model/browser_tab_summary.dart
 lib/src/model/browser_trigger_list.dart
 lib/src/model/browser_trigger_list_items_inner.dart
 lib/src/model/calendar_trigger_config.dart
+lib/src/model/call_step_request.dart
+lib/src/model/call_step_result.dart
 lib/src/model/catalog_app.dart
 lib/src/model/catalog_app_api_key.dart
 lib/src/model/catalog_skill.dart
@@ -282,6 +284,7 @@ lib/src/model/decide_join_request.dart
 lib/src/model/delete_account_request.dart
 lib/src/model/delete_integration200_response.dart
 lib/src/model/delete_result.dart
+lib/src/model/deleted_call.dart
 lib/src/model/deleted_channel.dart
 lib/src/model/deleted_computer.dart
 lib/src/model/deleted_conversation.dart

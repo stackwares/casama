@@ -12,7 +12,7 @@
  * reason instead (once per cooldown, however often the bot tries), and the bot is told why.
  */
 import { createHmac, timingSafeEqual } from "node:crypto";
-import type { Database } from "@casama/db";
+import { contentKeys, type Database } from "@casama/db";
 import { callLimits, isValidTimezone } from "@casama/domain";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
@@ -165,6 +165,37 @@ export async function cancelRing(deps: PhoneCallDeps, userId: string, callId: st
 const stringify = (c: CallPayload) =>
   Object.fromEntries(Object.entries(c).map(([k, v]) => [k, v ?? ""])) as Record<string, string>;
 
+/** The missed-call card: a `call` part the app draws, and a text part for older apps. */
+async function postMissedCard(
+  db: Database,
+  c: { org_id: string; conversation_id: string | null; reason: string },
+) {
+  const reason = c.reason.trim().slice(0, 300);
+  const part = {
+    type: "call",
+    live_call_id: null,
+    seconds: 0,
+    kind: "phone",
+    ended: "missed",
+    started_at: null,
+    ended_at: new Date().toISOString(),
+    turns: 0,
+    tasks: [],
+    actions: [],
+    summary: { status: "skipped" },
+    next_steps: [],
+    ...(reason ? { reason } : {}),
+  };
+  const text = reason ? `Missed call\n${reason}` : "Missed call";
+  await db.execute(sql`
+    insert into public.messages (org_id, conversation_id, role, content)
+    values (${c.org_id}::uuid, ${c.conversation_id}::uuid, 'assistant',
+            ${contentKeys.sealJson(c.org_id, [{ type: "text", text }, part])}::jsonb)`);
+  await db.execute(
+    sql`update public.conversations set last_message_at = now() where id = ${c.conversation_id}::uuid`,
+  );
+}
+
 /** A declined or missed call becomes a normal push with the reason. */
 export async function callNotAnswered(
   deps: PhoneCallDeps,
@@ -194,6 +225,9 @@ export async function callNotAnswered(
     bot_id: c.bot_id,
     call_id: callId,
   };
+  // A missed ring leaves a slim call card in its chat (call card plan §3.1), so the person can
+  // see why and call back from there.
+  if (status === "missed" && c.conversation_id) await postMissedCard(deps.db, c).catch(() => {});
   if (deps.notifications)
     await deps.notifications
       .notify(c.user_id, c.org_id, "call_missed", { ...message, urgent: true })

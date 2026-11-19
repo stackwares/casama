@@ -96,6 +96,8 @@ import 'package:casama_api/src/model/browser_tab_summary.dart';
 import 'package:casama_api/src/model/browser_trigger_list.dart';
 import 'package:casama_api/src/model/browser_trigger_list_items_inner.dart';
 import 'package:casama_api/src/model/calendar_trigger_config.dart';
+import 'package:casama_api/src/model/call_step_request.dart';
+import 'package:casama_api/src/model/call_step_result.dart';
 import 'package:casama_api/src/model/catalog_app.dart';
 import 'package:casama_api/src/model/catalog_app_api_key.dart';
 import 'package:casama_api/src/model/catalog_skill.dart';
@@ -204,6 +206,7 @@ import 'package:casama_api/src/model/decide_join_request.dart';
 import 'package:casama_api/src/model/delete_account_request.dart';
 import 'package:casama_api/src/model/delete_integration200_response.dart';
 import 'package:casama_api/src/model/delete_result.dart';
+import 'package:casama_api/src/model/deleted_call.dart';
 import 'package:casama_api/src/model/deleted_channel.dart';
 import 'package:casama_api/src/model/deleted_computer.dart';
 import 'package:casama_api/src/model/deleted_conversation.dart';
@@ -1095,6 +1098,10 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return BrowserTriggerListItemsInner.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CalendarTriggerConfig':
           return CalendarTriggerConfig.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'CallStepRequest':
+          return CallStepRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'CallStepResult':
+          return CallStepResult.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CatalogApp':
           return CatalogApp.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CatalogAppApiKey':
@@ -1323,6 +1330,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return DeleteIntegration200Response.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeleteResult':
           return DeleteResult.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'DeletedCall':
+          return DeletedCall.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeletedChannel':
           return DeletedChannel.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeletedComputer':

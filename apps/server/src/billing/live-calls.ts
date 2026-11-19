@@ -1,7 +1,8 @@
 import { type GeminiLiveUsage, geminiLiveCost, milestone, track, voicePrices } from "@casama/agent";
-import { contentKeys, type Database as Db } from "@casama/db";
+import type { Database as Db } from "@casama/db";
 import { callLifeSeconds, callLimits, cloudCharge, cloudModelDailyCap } from "@casama/domain";
 import { sql } from "drizzle-orm";
+import { postCallRecap } from "../services/call-recap.ts";
 
 /**
  * Live calls are billed on what the server can see, not only what the app reports (D-248): a
@@ -355,69 +356,4 @@ export async function callHeadroom(
   return best;
 }
 
-/** One job started on a call, for the recap. */
-export interface CallTask {
-  run_id: string;
-  task: string;
-  status: string;
-}
-
-/** "3:12", or "1:02:05" past an hour. */
-export function callLength(seconds: number) {
-  const s = Math.max(0, Math.round(seconds));
-  const h = Math.floor(s / 3600);
-  const m = Math.floor((s % 3600) / 60);
-  const ss = String(s % 60).padStart(2, "0");
-  return h > 0 ? `${h}:${String(m).padStart(2, "0")}:${ss}` : `${m}:${ss}`;
-}
-
-/**
- * The recap at the end of a call, in its chat (D-327 §8): how long it was and what was started on
- * it, with each job's run. The app shows the `call` part as a card; the text part is for older apps
- * and anything else that reads the chat. Nothing for a call that never connected and started nothing.
- */
-export async function postCallRecap(
-  db: Db,
-  call: { id: string; org_id: string; conversation_id: string },
-  seconds: number,
-) {
-  const rows = await db.execute<{ run_id: string; status: string; content: unknown }>(sql`
-    select r.id as run_id, r.status, m.content
-    from public.live_calls lc
-    cross join lateral unnest(lc.task_run_ids) with ordinality as t(run_id, n)
-    join public.runs r on r.id = t.run_id
-    left join lateral (
-      select content from public.messages
-      where run_id = r.id and role = 'user' order by created_at limit 1
-    ) m on true
-    where lc.id = ${call.id}::uuid
-    order by t.n`);
-  const tasks: CallTask[] = rows.map((r) => {
-    const parts = r.content == null ? null : contentKeys.open(r.content);
-    const text = Array.isArray(parts)
-      ? parts
-          .filter((p): p is { type: "text"; text: string } => p?.type === "text")
-          .map((p) => p.text ?? "")
-          .join(" ")
-      : "";
-    return { run_id: r.run_id, task: text.trim().slice(0, 300), status: r.status };
-  });
-  if (Math.round(seconds) <= 0 && tasks.length === 0) return null;
-  const text = [
-    `Call ended · ${callLength(seconds)}`,
-    ...(tasks.length ? [`Started on the call: ${tasks.map((t) => t.task).join("; ")}`] : []),
-  ].join("\n");
-  const content = [
-    { type: "text", text },
-    { type: "call", live_call_id: call.id, seconds: Math.round(seconds), tasks },
-  ];
-  const [m] = await db.execute<{ id: string }>(sql`
-    insert into public.messages (org_id, conversation_id, role, content)
-    values (${call.org_id}::uuid, ${call.conversation_id}::uuid, 'assistant',
-            ${contentKeys.sealJson(call.org_id, content)}::jsonb)
-    returning id`);
-  await db.execute(
-    sql`update public.conversations set last_message_at = now() where id = ${call.conversation_id}::uuid`,
-  );
-  return m?.id ?? null;
-}
+export { type CallTask, callLength, postCallRecap } from "../services/call-recap.ts";

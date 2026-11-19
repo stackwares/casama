@@ -1,6 +1,8 @@
 import { createRoute, z } from "@hono/zod-openapi";
 import { jsonBody, jsonResponse, problemResponses, Uuid } from "../common.ts";
 import {
+  CallStepRequest,
+  CallStepResult,
   PhoneCall,
   Transcription,
   VoiceHeartbeat,
@@ -101,6 +103,36 @@ export const saveVoiceTurns = createRoute({
     200: jsonResponse("Saved", z.object({ saved: z.number().int() }).openapi("SavedTurns")),
     401: e401,
     404: e404,
+  },
+});
+
+export const updateCallStep = createRoute({
+  operationId: "updateCallStep",
+  method: "post",
+  path: "/v1/voice/live/{id}/steps/{step_id}",
+  tags: ["voice"],
+  security,
+  summary: "Start a next step from a call's card as a chat run, or dismiss it",
+  request: {
+    params: z.object({ id: Uuid, step_id: z.string().min(1).max(20) }),
+    body: jsonBody(CallStepRequest),
+  },
+  responses: { 200: jsonResponse("Step", CallStepResult), 401: e401, 404: e404, 409: e409 },
+});
+
+export const deleteLiveCall = createRoute({
+  operationId: "deleteLiveCall",
+  method: "delete",
+  path: "/v1/voice/live/{id}",
+  tags: ["voice"],
+  security,
+  summary: "Delete a call from its chat: its card and every turn of its transcript",
+  request: { params: z.object({ id: Uuid }) },
+  responses: {
+    200: jsonResponse("Deleted", z.object({ deleted: z.number().int() }).openapi("DeletedCall")),
+    401: e401,
+    404: e404,
+    409: e409,
   },
 });
 

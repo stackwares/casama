@@ -53,6 +53,7 @@ import { endSilentCalls } from "../billing/live-calls.ts";
 import { ee } from "../ee.ts";
 import { linkUpkeep } from "../link/upkeep.ts";
 import { sweepSignups } from "../services/analytics-signups.ts";
+import { pendingSummaries, summarizeCall } from "../services/call-summary.ts";
 import { sweepReferralRewards } from "../services/referrals.ts";
 import { type BuyingContext, ordersUpkeep, registerOrder } from "../sites/buying.ts";
 import { type DomainsContext, domainsHourly, domainsMinute } from "../sites/domains.ts";
@@ -491,6 +492,16 @@ export const routinesTickWorkflow = DBOS.registerWorkflow(
     await DBOS.runStep(() => endSilentCalls(rt().db).catch(captureStep("end-silent-calls", 0)), {
       name: "end-silent-calls",
     });
+    // Call cards still waiting for a summary (a call the sweep or a limit ended): summarized once.
+    const pendingCalls = await DBOS.runStep(
+      () => pendingSummaries(rt().db).catch(captureStep("pending-summaries", [] as string[])),
+      { name: "pending-summaries" },
+    );
+    for (const id of pendingCalls)
+      await DBOS.startWorkflow(summarizeCallWorkflow, {
+        workflowID: `call-summary:${id}`,
+        queueName: QUEUES.system,
+      })(id).catch(() => {});
     // Every step catches its own errors, so one failing step never blocks the rest (audit 2026-11).
     const runIds = await DBOS.runStep(
       () => claimDueRoutines(rt().db).catch(captureStep("claim-due", [] as string[])),
@@ -709,6 +720,24 @@ export const refreshStartersWorkflow = DBOS.registerWorkflow(
       { name: "starters" },
     ),
   { name: "refreshStarters" },
+);
+
+/**
+ * A finished call's summary and next steps (call card plan §5). The API enqueues it at hang-up with
+ * one workflow id per call; the minute tick enqueues calls still pending (ended by the sweep or a
+ * limit), so each is summarized once.
+ */
+export const summarizeCallWorkflow = DBOS.registerWorkflow(
+  async (liveCallId: string) =>
+    DBOS.runStep(
+      () =>
+        summarizeCall(
+          { db: rt().db, complete: (input) => backgroundComplete(rt().agent, input) },
+          liveCallId,
+        ).catch(captureStep("call-summary", "failed" as const)),
+      { name: "call-summary" },
+    ),
+  { name: "summarizeCall" },
 );
 
 /** Lists an integration's tools to prove the connection works (credentials are read here). */

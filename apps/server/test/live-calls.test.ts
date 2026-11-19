@@ -503,7 +503,7 @@ describe("live calls (D-327)", () => {
       select content from public.messages where conversation_id = ${w.convId}::uuid and role = 'assistant'
       order by created_at desc limit 1`);
     const parts = contentKeys.open(rows[0]?.content) as Array<Record<string, unknown>>;
-    expect(parts[0]?.text).toContain("Call ended · 1:15");
+    expect(parts[0]?.text).toContain("Voice call · 1:15");
     expect(parts[0]?.text).toContain("Book the flight to Cebu");
     const card = parts.find((p) => p.type === "call") as {
       seconds: number;
@@ -519,6 +519,6 @@ describe("live calls (D-327)", () => {
     const nextSetup = mock.minted[next]?.bidiGenerateContentSetup as {
       systemInstruction: { parts: Array<{ text: string }> };
     };
-    expect(nextSetup.systemInstruction.parts[0]?.text).not.toContain("Call ended");
+    expect(nextSetup.systemInstruction.parts[0]?.text).not.toContain("Voice call ·");
   }, 120_000);
 });

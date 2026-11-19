@@ -53,6 +53,7 @@ const noWorkflows: Workflows = {
   routineWebhook: async () => {},
   startDomainOrder: async () => {},
   refreshStarters: async () => {},
+  summarizeCall: async () => {},
   voiceTranscribe: async () => ({ ok: false, error: "no worker" }),
   voiceSpeak: async () => ({ ok: false, error: "no worker" }),
   voiceSession: async () => ({ ok: false, error: "no worker" }),

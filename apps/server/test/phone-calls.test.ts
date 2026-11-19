@@ -13,6 +13,7 @@ import {
   registerPhoneCallTools,
   ToolRegistry,
 } from "@casama/agent";
+import { contentKeys } from "@casama/db";
 import { setCallLimits } from "@casama/domain";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { type Harness, JWT_SECRET, j, startHarness } from "./helpers.ts";
@@ -215,6 +216,16 @@ describe("phone calls", () => {
     expect(push.sent.map((p) => [p.message.title, p.message.body])).toEqual([
       ["Missed call from Max", "Your flight moved to 6am"],
     ]);
+    // The chat gets a missed-call card with the reason (call card plan §3.1).
+    const missed = await h.tdb.admin<{ content: unknown }[]>`
+      select m.content from public.messages m join public.voice_calls vc on vc.conversation_id = m.conversation_id
+      where vc.status = 'missed' and m.role = 'assistant' order by m.created_at desc limit 1`;
+    const parts = contentKeys.open(missed[0]?.content) as Array<Record<string, unknown>>;
+    expect(parts.find((p) => p.type === "call")).toMatchObject({
+      ended: "missed",
+      kind: "phone",
+      reason: "Your flight moved to 6am",
+    });
 
     await call("Can I book the 7am instead?");
     const [vc] = await h.tdb.admin<

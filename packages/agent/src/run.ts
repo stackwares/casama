@@ -865,7 +865,7 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
             toolStep(deps, registry, info, call, bus, redactor, secrets),
           );
       await step("voice-finish", async () => {
-        await db.execute(sql`update public.runs set voice_call = voice_call || ${JSON.stringify({ result: res.content.slice(0, 20_000) })}::jsonb
+        await db.execute(sql`update public.runs set voice_call = voice_call || ${JSON.stringify({ result: res.content.slice(0, 20_000), ...(blocked ? { blocked: true } : {}) })}::jsonb
           where id = ${info.runId}::uuid`);
         if (await setTerminal(db, info, "completed", null))
           await (await bus()).append(info.runId, "run.completed", { final_message_id: null });

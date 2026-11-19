@@ -33,6 +33,8 @@ class VoiceTranscriptRequest {
      this.provider,
 
      this.usage,
+
+     this.ended,
   });
 
   @JsonKey(
@@ -111,6 +113,19 @@ class VoiceTranscriptRequest {
 
 
 
+      /// How the call ended, for its card: the person hung up, the bot did (end_call), it dropped, it went quiet, a limit ended it, or another call took its place
+  @JsonKey(
+    
+    name: r'ended',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final VoiceTranscriptRequestEndedEnum? ended;
+
+
+
 
 
     @override
@@ -120,7 +135,8 @@ class VoiceTranscriptRequest {
       other.turns == turns &&
       other.seconds == seconds &&
       other.provider == provider &&
-      other.usage == usage;
+      other.usage == usage &&
+      other.ended == ended;
 
     @override
     int get hashCode =>
@@ -129,7 +145,8 @@ class VoiceTranscriptRequest {
         turns.hashCode +
         seconds.hashCode +
         provider.hashCode +
-        usage.hashCode;
+        usage.hashCode +
+        ended.hashCode;
 
   factory VoiceTranscriptRequest.fromJson(Map<String, dynamic> json) => _$VoiceTranscriptRequestFromJson(json);
 
@@ -152,6 +169,36 @@ gemini(r'gemini'),
 openai(r'openai');
 
 const VoiceTranscriptRequestProviderEnum(this.value);
+
+final String value;
+
+@override
+String toString() => value;
+}
+
+
+/// How the call ended, for its card: the person hung up, the bot did (end_call), it dropped, it went quiet, a limit ended it, or another call took its place
+enum VoiceTranscriptRequestEndedEnum {
+    /// How the call ended, for its card: the person hung up, the bot did (end_call), it dropped, it went quiet, a limit ended it, or another call took its place
+@JsonValue(r'person')
+person(r'person'),
+    /// How the call ended, for its card: the person hung up, the bot did (end_call), it dropped, it went quiet, a limit ended it, or another call took its place
+@JsonValue(r'bot')
+bot(r'bot'),
+    /// How the call ended, for its card: the person hung up, the bot did (end_call), it dropped, it went quiet, a limit ended it, or another call took its place
+@JsonValue(r'dropped')
+dropped(r'dropped'),
+    /// How the call ended, for its card: the person hung up, the bot did (end_call), it dropped, it went quiet, a limit ended it, or another call took its place
+@JsonValue(r'idle')
+idle(r'idle'),
+    /// How the call ended, for its card: the person hung up, the bot did (end_call), it dropped, it went quiet, a limit ended it, or another call took its place
+@JsonValue(r'limit')
+limit(r'limit'),
+    /// How the call ended, for its card: the person hung up, the bot did (end_call), it dropped, it went quiet, a limit ended it, or another call took its place
+@JsonValue(r'replaced')
+replaced(r'replaced');
+
+const VoiceTranscriptRequestEndedEnum(this.value);
 
 final String value;
 

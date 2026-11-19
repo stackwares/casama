@@ -10,6 +10,9 @@ import 'package:casama_api/src/deserialize.dart';
 import 'package:dio/dio.dart';
 
 import 'dart:typed_data';
+import 'package:casama_api/src/model/call_step_request.dart';
+import 'package:casama_api/src/model/call_step_result.dart';
+import 'package:casama_api/src/model/deleted_call.dart';
 import 'package:casama_api/src/model/phone_call.dart';
 import 'package:casama_api/src/model/phone_call_list.dart';
 import 'package:casama_api/src/model/saved_count.dart';
@@ -271,6 +274,84 @@ _responseData = rawData == null ? null : deserialize<PhoneCall, PhoneCall>(rawDa
     }
 
     return Response<PhoneCall>(
+      data: _responseData,
+      headers: _response.headers,
+      isRedirect: _response.isRedirect,
+      requestOptions: _response.requestOptions,
+      redirects: _response.redirects,
+      statusCode: _response.statusCode,
+      statusMessage: _response.statusMessage,
+      extra: _response.extra,
+    );
+  }
+
+  /// Delete a call from its chat: its card and every turn of its transcript
+  /// 
+  ///
+  /// Parameters:
+  /// * [id] 
+  /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
+  /// * [headers] - Can be used to add additional headers to the request
+  /// * [extras] - Can be used to add flags to the request
+  /// * [validateStatus] - A [ValidateStatus] callback that can be used to determine request success based on the HTTP status of the response
+  /// * [onSendProgress] - A [ProgressCallback] that can be used to get the send progress
+  /// * [onReceiveProgress] - A [ProgressCallback] that can be used to get the receive progress
+  ///
+  /// Returns a [Future] containing a [Response] with a [DeletedCall] as data
+  /// Throws [DioException] if API call or serialization fails
+  Future<Response<DeletedCall>> deleteLiveCall({ 
+    required String id,
+    CancelToken? cancelToken,
+    Map<String, dynamic>? headers,
+    Map<String, dynamic>? extra,
+    ValidateStatus? validateStatus,
+    ProgressCallback? onSendProgress,
+    ProgressCallback? onReceiveProgress,
+  }) async {
+    final _path = r'/v1/voice/live/{id}'.replaceAll('{' r'id' '}', id.toString());
+    final _options = Options(
+      method: r'DELETE',
+      headers: <String, dynamic>{
+        ...?headers,
+      },
+      extra: <String, dynamic>{
+        'secure': <Map<String, String>>[
+          {
+            'type': 'http',
+            'scheme': 'bearer',
+            'name': 'bearerAuth',
+          },
+        ],
+        ...?extra,
+      },
+      validateStatus: validateStatus,
+    );
+
+    final _response = await _dio.request<Object>(
+      _path,
+      options: _options,
+      cancelToken: cancelToken,
+      onSendProgress: onSendProgress,
+      onReceiveProgress: onReceiveProgress,
+    );
+
+    DeletedCall? _responseData;
+
+    try {
+final rawData = _response.data;
+_responseData = rawData == null ? null : deserialize<DeletedCall, DeletedCall>(rawData, 'DeletedCall', growable: true);
+
+    } catch (error, stackTrace) {
+      throw DioException(
+        requestOptions: _response.requestOptions,
+        response: _response,
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    return Response<DeletedCall>(
       data: _responseData,
       headers: _response.headers,
       isRedirect: _response.isRedirect,
@@ -782,6 +863,106 @@ _responseData = rawData == null ? null : deserialize<Transcription, Transcriptio
     }
 
     return Response<Transcription>(
+      data: _responseData,
+      headers: _response.headers,
+      isRedirect: _response.isRedirect,
+      requestOptions: _response.requestOptions,
+      redirects: _response.redirects,
+      statusCode: _response.statusCode,
+      statusMessage: _response.statusMessage,
+      extra: _response.extra,
+    );
+  }
+
+  /// Start a next step from a call&#39;s card as a chat run, or dismiss it
+  /// 
+  ///
+  /// Parameters:
+  /// * [id] 
+  /// * [stepId] 
+  /// * [callStepRequest] 
+  /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
+  /// * [headers] - Can be used to add additional headers to the request
+  /// * [extras] - Can be used to add flags to the request
+  /// * [validateStatus] - A [ValidateStatus] callback that can be used to determine request success based on the HTTP status of the response
+  /// * [onSendProgress] - A [ProgressCallback] that can be used to get the send progress
+  /// * [onReceiveProgress] - A [ProgressCallback] that can be used to get the receive progress
+  ///
+  /// Returns a [Future] containing a [Response] with a [CallStepResult] as data
+  /// Throws [DioException] if API call or serialization fails
+  Future<Response<CallStepResult>> updateCallStep({ 
+    required String id,
+    required String stepId,
+    required CallStepRequest callStepRequest,
+    CancelToken? cancelToken,
+    Map<String, dynamic>? headers,
+    Map<String, dynamic>? extra,
+    ValidateStatus? validateStatus,
+    ProgressCallback? onSendProgress,
+    ProgressCallback? onReceiveProgress,
+  }) async {
+    final _path = r'/v1/voice/live/{id}/steps/{step_id}'.replaceAll('{' r'id' '}', id.toString()).replaceAll('{' r'step_id' '}', stepId.toString());
+    final _options = Options(
+      method: r'POST',
+      headers: <String, dynamic>{
+        ...?headers,
+      },
+      extra: <String, dynamic>{
+        'secure': <Map<String, String>>[
+          {
+            'type': 'http',
+            'scheme': 'bearer',
+            'name': 'bearerAuth',
+          },
+        ],
+        ...?extra,
+      },
+      contentType: 'application/json',
+      validateStatus: validateStatus,
+    );
+
+    dynamic _bodyData;
+
+    try {
+_bodyData=jsonEncode(callStepRequest);
+    } catch(error, stackTrace) {
+      throw DioException(
+         requestOptions: _options.compose(
+          _dio.options,
+          _path,
+        ),
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    final _response = await _dio.request<Object>(
+      _path,
+      data: _bodyData,
+      options: _options,
+      cancelToken: cancelToken,
+      onSendProgress: onSendProgress,
+      onReceiveProgress: onReceiveProgress,
+    );
+
+    CallStepResult? _responseData;
+
+    try {
+final rawData = _response.data;
+_responseData = rawData == null ? null : deserialize<CallStepResult, CallStepResult>(rawData, 'CallStepResult', growable: true);
+
+    } catch (error, stackTrace) {
+      throw DioException(
+        requestOptions: _response.requestOptions,
+        response: _response,
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    return Response<CallStepResult>(
       data: _responseData,
       headers: _response.headers,
       isRedirect: _response.isRedirect,

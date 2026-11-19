@@ -524,12 +524,14 @@ Class | Method | HTTP request | Description
 [*VoiceApi*](doc/VoiceApi.md) | [**answerVoiceCall**](doc/VoiceApi.md#answervoicecall) | **POST** /v1/calls/{id}/answer | Answer a call; then start a voice session with its call_id
 [*VoiceApi*](doc/VoiceApi.md) | [**createVoiceSession**](doc/VoiceApi.md#createvoicesession) | **POST** /v1/voice/session | Start a live call: mints an ephemeral realtime key with the bot&#39;s persona and tools
 [*VoiceApi*](doc/VoiceApi.md) | [**declineVoiceCall**](doc/VoiceApi.md#declinevoicecall) | **POST** /v1/calls/{id}/decline | Decline a call; the reason arrives as a normal notification
+[*VoiceApi*](doc/VoiceApi.md) | [**deleteLiveCall**](doc/VoiceApi.md#deletelivecall) | **DELETE** /v1/voice/live/{id} | Delete a call from its chat: its card and every turn of its transcript
 [*VoiceApi*](doc/VoiceApi.md) | [**getVoiceCall**](doc/VoiceApi.md#getvoicecall) | **GET** /v1/calls/{id} | 
 [*VoiceApi*](doc/VoiceApi.md) | [**listRingingCalls**](doc/VoiceApi.md#listringingcalls) | **GET** /v1/calls/ringing | Calls ringing for you now (the in-app banner on desktop and web)
 [*VoiceApi*](doc/VoiceApi.md) | [**messageSpeech**](doc/VoiceApi.md#messagespeech) | **GET** /v1/messages/{id}/speech | Read aloud: MP3 audio of an assistant message (cached per voice)
 [*VoiceApi*](doc/VoiceApi.md) | [**saveVoiceTranscript**](doc/VoiceApi.md#savevoicetranscript) | **POST** /v1/voice/transcript | Save a call&#39;s transcript to the conversation and record its duration
 [*VoiceApi*](doc/VoiceApi.md) | [**saveVoiceTurns**](doc/VoiceApi.md#savevoiceturns) | **POST** /v1/voice/transcript/turns | Save finished turns of a live call as they happen (idempotent by turn id)
 [*VoiceApi*](doc/VoiceApi.md) | [**transcribeAudio**](doc/VoiceApi.md#transcribeaudio) | **POST** /v1/voice/transcribe | Dictation: send recorded audio (raw body, audio/_* content type, up to 10 MB)
+[*VoiceApi*](doc/VoiceApi.md) | [**updateCallStep**](doc/VoiceApi.md#updatecallstep) | **POST** /v1/voice/live/{id}/steps/{step_id} | Start a next step from a call&#39;s card as a chat run, or dismiss it
 [*VoiceApi*](doc/VoiceApi.md) | [**voiceHeartbeat**](doc/VoiceApi.md#voiceheartbeat) | **POST** /v1/voice/live/{id}/heartbeat | Keep a live call&#39;s server record open; calls silent for 2 minutes are ended and billed
 [*VoiceApi*](doc/VoiceApi.md) | [**voiceTool**](doc/VoiceApi.md#voicetool) | **POST** /v1/voice/tool | Run a tool call from a live call as an agent run (same approvals); waits up to 25 s
 [*WaitlistApi*](doc/WaitlistApi.md) | [**joinWaitlist**](doc/WaitlistApi.md#joinwaitlist) | **POST** /v1/waitlist | Join the waitlist (no sign-in; needs a solved sign-up puzzle)
@@ -695,6 +697,8 @@ Class | Method | HTTP request | Description
  - [BrowserTriggerList](doc/BrowserTriggerList.md)
  - [BrowserTriggerListItemsInner](doc/BrowserTriggerListItemsInner.md)
  - [CalendarTriggerConfig](doc/CalendarTriggerConfig.md)
+ - [CallStepRequest](doc/CallStepRequest.md)
+ - [CallStepResult](doc/CallStepResult.md)
  - [CatalogApp](doc/CatalogApp.md)
  - [CatalogAppApiKey](doc/CatalogAppApiKey.md)
  - [CatalogSkill](doc/CatalogSkill.md)
@@ -807,6 +811,7 @@ Class | Method | HTTP request | Description
  - [DeleteAccountRequest](doc/DeleteAccountRequest.md)
  - [DeleteIntegration200Response](doc/DeleteIntegration200Response.md)
  - [DeleteResult](doc/DeleteResult.md)
+ - [DeletedCall](doc/DeletedCall.md)
  - [DeletedChannel](doc/DeletedChannel.md)
  - [DeletedComputer](doc/DeletedComputer.md)
  - [DeletedConversation](doc/DeletedConversation.md)

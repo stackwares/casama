@@ -19,6 +19,8 @@ abstract class _$VoiceTranscriptRequestCWProxy {
 
   VoiceTranscriptRequest usage(VoiceTranscriptRequestUsage? usage);
 
+  VoiceTranscriptRequest ended(VoiceTranscriptRequestEndedEnum? ended);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `VoiceTranscriptRequest(...).copyWith.fieldName(value)`.
@@ -34,6 +36,7 @@ abstract class _$VoiceTranscriptRequestCWProxy {
     int seconds,
     VoiceTranscriptRequestProviderEnum? provider,
     VoiceTranscriptRequestUsage? usage,
+    VoiceTranscriptRequestEndedEnum? ended,
   });
 }
 
@@ -69,6 +72,10 @@ class _$VoiceTranscriptRequestCWProxyImpl
   VoiceTranscriptRequest usage(VoiceTranscriptRequestUsage? usage) =>
       call(usage: usage);
 
+  @override
+  VoiceTranscriptRequest ended(VoiceTranscriptRequestEndedEnum? ended) =>
+      call(ended: ended);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `VoiceTranscriptRequest(...).copyWith.fieldName(value)`.
@@ -85,6 +92,7 @@ class _$VoiceTranscriptRequestCWProxyImpl
     Object? seconds = const $CopyWithPlaceholder(),
     Object? provider = const $CopyWithPlaceholder(),
     Object? usage = const $CopyWithPlaceholder(),
+    Object? ended = const $CopyWithPlaceholder(),
   }) {
     return VoiceTranscriptRequest(
       conversationId:
@@ -113,6 +121,10 @@ class _$VoiceTranscriptRequestCWProxyImpl
           ? _value.usage
           // ignore: cast_nullable_to_non_nullable
           : usage as VoiceTranscriptRequestUsage?,
+      ended: ended == const $CopyWithPlaceholder()
+          ? _value.ended
+          // ignore: cast_nullable_to_non_nullable
+          : ended as VoiceTranscriptRequestEndedEnum?,
     );
   }
 }
@@ -164,6 +176,10 @@ VoiceTranscriptRequest _$VoiceTranscriptRequestFromJson(
             ? null
             : VoiceTranscriptRequestUsage.fromJson(v as Map<String, dynamic>),
       ),
+      ended: $checkedConvert(
+        'ended',
+        (v) => $enumDecodeNullable(_$VoiceTranscriptRequestEndedEnumEnumMap, v),
+      ),
     );
     return val;
   },
@@ -182,9 +198,19 @@ Map<String, dynamic> _$VoiceTranscriptRequestToJson(
   'seconds': instance.seconds,
   'provider': ?_$VoiceTranscriptRequestProviderEnumEnumMap[instance.provider],
   'usage': ?instance.usage?.toJson(),
+  'ended': ?_$VoiceTranscriptRequestEndedEnumEnumMap[instance.ended],
 };
 
 const _$VoiceTranscriptRequestProviderEnumEnumMap = {
   VoiceTranscriptRequestProviderEnum.gemini: 'gemini',
   VoiceTranscriptRequestProviderEnum.openai: 'openai',
+};
+
+const _$VoiceTranscriptRequestEndedEnumEnumMap = {
+  VoiceTranscriptRequestEndedEnum.person: 'person',
+  VoiceTranscriptRequestEndedEnum.bot: 'bot',
+  VoiceTranscriptRequestEndedEnum.dropped: 'dropped',
+  VoiceTranscriptRequestEndedEnum.idle: 'idle',
+  VoiceTranscriptRequestEndedEnum.limit: 'limit',
+  VoiceTranscriptRequestEndedEnum.replaced: 'replaced',
 };
