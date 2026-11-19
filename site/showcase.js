@@ -185,8 +185,10 @@
   if (map) scene(map, function (s, fig) {
     var days = $$(fig, ".map-day");
     var tabs = $$(fig, "[data-tab]");
+    var pics = $$(fig, "[data-daypic]");
     var showDay = function (d) {
       days.forEach(function (g, i) { g.classList.toggle("on", i === d); });
+      pics.forEach(function (p, i) { p.classList.toggle("on", i === Math.max(d, 0)); });
       tabs.forEach(function (t, i) { t.classList.toggle("on", i === d); });
     };
     return {

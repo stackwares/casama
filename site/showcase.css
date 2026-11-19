@@ -162,6 +162,19 @@
 .c-send svg { width: 15px; height: 15px; }
 .phone-screen .composer { margin-bottom: 18px; }
 
+/* pictures the bots put in their cards (generated art, visuals/round-8) */
+.card-art { display: block; width: calc(100% + 28px); max-width: none; height: auto; aspect-ratio: 600 / 220; object-fit: cover; margin: -12px -14px 4px; border-radius: 5px 16px 0 0; background: var(--line); }
+.m-card.list li { justify-content: flex-start; }
+.m-card.list li em { margin-left: auto; }
+.li-pic { width: 38px; height: 38px; border-radius: 8px; object-fit: cover; flex: none; background: var(--line); }
+.page-hero { display: block; width: 100%; height: auto; aspect-ratio: 600 / 240; object-fit: cover; background: var(--line); }
+.page-body { margin-top: -26px; position: relative; padding-top: 0; background: none; }
+.page-body b { padding: 8px 18px 2px; border-radius: 12px 12px 0 0; background: var(--card); }
+.day-pics { position: relative; aspect-ratio: 480 / 200; border-radius: 10px; overflow: hidden; background: var(--line); }
+.day-pic { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity .5s ease; }
+.day-pic.on { opacity: 1; }
+.mapcard .map { aspect-ratio: 280 / 170; }
+
 /* ------------------------------------------------------------------ the map (phone) */
 .m.bot:has(.mapcard) { max-width: 100%; }
 .mapcard { max-width: 100%; padding: 10px; }
