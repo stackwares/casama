@@ -5216,6 +5216,7 @@ class SupabaseBackend implements Backend {
         'limit': limit,
         'offset': offset,
       },
+      options: Options(headers: authHeaders),
     )).data!;
     final page = WaitlistPage.fromJson(json);
     final stats = json['stats'];
@@ -5265,13 +5266,20 @@ class SupabaseBackend implements Backend {
 
   @override
   Future<AdminSignupGate> adminSignupGate() async {
-    final json = (await api.api.dio.get<Map<String, dynamic>>('/v1/admin/signup-gate')).data!;
+    final json = (await api.api.dio.get<Map<String, dynamic>>(
+      '/v1/admin/signup-gate',
+      options: Options(headers: authHeaders),
+    )).data!;
     return _gateFrom(json, SignupGateState.fromJson(json));
   }
 
   @override
   Future<AdminSignupGate> adminSetSignupGate(Map<String, Object?> changes) async {
-    final json = (await api.api.dio.put<Map<String, dynamic>>('/v1/admin/signup-gate', data: changes)).data!;
+    final json = (await api.api.dio.put<Map<String, dynamic>>(
+      '/v1/admin/signup-gate',
+      data: changes,
+      options: Options(headers: authHeaders, contentType: 'application/json'),
+    )).data!;
     return _gateFrom(json, SignupGateState.fromJson(json));
   }
 
