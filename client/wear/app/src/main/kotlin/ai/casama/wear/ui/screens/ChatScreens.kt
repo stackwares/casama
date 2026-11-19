@@ -208,11 +208,11 @@ fun BotsScreen(nav: NavHostController) {
                                 BotStatus.WORKING -> b.step ?: stringResource(R.string.watch_working)
                                 BotStatus.WAITING -> stringResource(R.string.watch_waiting_for_you)
                                 BotStatus.DISABLED -> stringResource(R.string.watch_off)
-                                BotStatus.IDLE -> b.lastAt?.let { stringResource(R.string.watch_replied_at, clockTime(it)) } ?: stringResource(R.string.watch_idle)
+                                BotStatus.IDLE -> b.lastAt?.let { stringResource(R.string.watch_replied_at, clockTime(it).replace(' ', '\u00A0')) } ?: stringResource(R.string.watch_idle)
                             }
                             Words(
                                 line,
-                                maxLines = 1,
+                                maxLines = 2,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = when (b.status) {
                                     BotStatus.WORKING -> CasamaColors.Working

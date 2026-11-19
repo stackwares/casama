@@ -168,7 +168,7 @@ fun NowScreen(nav: NavHostController) {
                         transformation = SurfaceTransformation(spec),
                     ) {
                         Eyebrow(stringResource(R.string.watch_up_next), CasamaColors.Orchid)
-                        Words(r.name, maxLines = 1, style = MaterialTheme.typography.titleSmall)
+                        Words(r.name, maxLines = 2, style = MaterialTheme.typography.titleSmall)
                         Text(
                             listOfNotNull(r.nextAt?.let { untilText(it) }, r.bot.takeIf { it.isNotBlank() }).joinToString(" · "),
                             style = MaterialTheme.typography.bodySmall,
@@ -234,7 +234,7 @@ fun TransformingLazyColumnItemScope.NeedsCard(count: Int, first: GlanceNeed?, of
                 BotFace(first.bot, first.botAvatar, 26.dp)
                 Spacer(Modifier.width(8.dp))
                 Column {
-                    Words(first.text, maxLines = 1, style = MaterialTheme.typography.titleSmall)
+                    Words(first.text, maxLines = 2, style = MaterialTheme.typography.titleSmall)
                     Text(
                         listOfNotNull(first.bot, riskLabel(first.risk)).joinToString(" · "),
                         style = MaterialTheme.typography.bodySmall,
