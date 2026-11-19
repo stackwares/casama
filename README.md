@@ -23,6 +23,7 @@
   <a href="LICENSING.md"><img src="https://img.shields.io/badge/license-AGPL--3.0-7a3fa8" alt="License: AGPL-3.0, SDKs Apache-2.0"></a>
   <a href="https://github.com/stackwares/casama/releases"><img src="https://img.shields.io/github/v/release/stackwares/casama?color=7a3fa8&include_prereleases" alt="Latest release"></a>
   <a href="https://status.casama.ai"><img src="https://img.shields.io/badge/status-status.casama.ai-7a3fa8" alt="Status"></a>
+  <a href="https://github.com/sponsors/stackwares"><img src="https://img.shields.io/badge/sponsor-GitHub%20Sponsors-7a3fa8?logo=githubsponsors" alt="Sponsor Casama on GitHub"></a>
   <a href="https://www.opensourcealternatives.to"><img src="https://www.opensourcealternatives.to/badge-osa.svg" alt="As seen on Open Source Alternatives" height="20"></a>
 </p>
 
@@ -384,6 +385,20 @@ one-time [CLA](CLA.md). Please follow the
 
 - **Questions and ideas**: [GitHub Discussions](https://github.com/stackwares/casama/discussions)
 - **Bugs and feature requests**: [GitHub Issues](https://github.com/stackwares/casama/issues)
+
+## Sponsors
+
+Casama is free to self-host, with no limit on users or bots. If you run it yourself, at home or at
+work, you can help keep it that way through
+**[GitHub Sponsors](https://github.com/sponsors/stackwares)**, from $5 a month or one time.
+Sponsorships pay for releases on every platform, security fixes, plugin reviews and docs.
+Sponsors at $25 and up are listed here, and teams at $100 and up on
+[casama.ai/open-source](https://casama.ai/open-source). Using [Casama Cloud](https://casama.ai/pricing)
+pays for the project too.
+
+<!-- sponsors -->
+Be the first: [become a sponsor](https://github.com/sponsors/stackwares).
+<!-- /sponsors -->
 
 ## Security
 

@@ -4,7 +4,7 @@ h1: Self-hosted AI agents, on a server you own
 crumb: Self-hosted
 description: Run Casama's AI agents on your own VPS, home server or laptop with one command. Free, open source, any model, and reachable from your phone.
 lead: Casama runs on your own hardware with one command. Your chats, memory and files stay on your machine, you choose the models, and it costs nothing.
-updated: 2026-11-18
+updated: 2026-11-19
 ---
 
 ## What you get
@@ -64,6 +64,9 @@ any other app's. Your chats, memory and files stay on your server.
 
 You can also mix them: keep your server and let Casama Cloud run the bot computers and model calls
 for it.
+
+Self-hosting is free and stays free. If Casama earns a place on your server, you can
+[sponsor the project on GitHub](https://github.com/sponsors/stackwares).
 
 ## Questions
 

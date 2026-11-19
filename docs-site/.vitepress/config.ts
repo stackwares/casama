@@ -325,7 +325,7 @@ export default defineConfig({
     },
     footer: {
       message:
-        'Open source: AGPL-3.0, SDKs and docs Apache-2.0, <code>ee/</code> under the Casama Enterprise License (<a href="https://github.com/stackwares/casama/blob/main/LICENSING.md">licensing</a>). <a href="https://github.com/stackwares/casama/blob/main/CONTRIBUTING.md">Contribute</a> · <a href="https://status.casama.ai">Status</a> · <a href="https://casama.ai/newsletter">Monthly email</a>',
+        'Open source: AGPL-3.0, SDKs and docs Apache-2.0, <code>ee/</code> under the Casama Enterprise License (<a href="https://github.com/stackwares/casama/blob/main/LICENSING.md">licensing</a>). <a href="https://github.com/stackwares/casama/blob/main/CONTRIBUTING.md">Contribute</a> · <a href="https://github.com/sponsors/stackwares">Sponsor</a> · <a href="https://status.casama.ai">Status</a> · <a href="https://casama.ai/newsletter">Monthly email</a>',
     },
   },
 });

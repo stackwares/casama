@@ -4,7 +4,7 @@ h1: Open-source AI agents you can read, run and change
 crumb: Open source
 description: Casama is an open-source AI agent app under AGPL-3.0: bots with their own computers, memory and approvals, plus apps for every platform.
 lead: Casama is open source under AGPL-3.0. The server, the apps for every platform, the CLI and the SDKs are all in one public repository.
-updated: 2026-11-18
+updated: 2026-11-19
 ---
 
 ## What is open
@@ -63,6 +63,22 @@ GitHub repository, and packs share whole bots with their routines. If you build 
 Codex or Cursor, the [agent kit](https://docs.casama.ai/develop/agents) gives your coding agent
 Casama's docs and API reference.
 
+## Sponsor Casama
+
+Self-hosting stays free, so the project is paid for by Casama Cloud and by sponsors. If you run
+Casama yourself, [GitHub Sponsors](https://github.com/sponsors/stackwares) is the simplest way to
+give back, monthly or one time:
+
+| Tier | What it gets you |
+|---|---|
+| $5 a month | A sponsor badge on your GitHub profile and our thanks |
+| $25 a month | Your name in the README's sponsors list |
+| $100 a month | Your team's name and link in the README and on this page |
+| $500 a month | Your logo in the README and on this page, and a monthly call with the maintainers |
+
+One-time sponsorships of $10, $50 or any amount you choose are welcome too. Sponsorships pay for
+signed releases on every platform, security fixes, plugin and gallery reviews, and docs.
+
 ## Questions
 
 ### Is Casama free?
@@ -75,6 +91,11 @@ from $15 a month. See [pricing](/pricing).
 Yes. AGPL-3.0 allows commercial use, including running it for your business and your customers.
 If you change Casama and offer your version to others, share those changes under AGPL-3.0. If
 that doesn't suit your company, a commercial licence is available from hello@casama.ai.
+
+### How can I support the project without writing code?
+
+[Sponsor it on GitHub](https://github.com/sponsors/stackwares), use
+[Casama Cloud](https://casama.ai/pricing), share a bot in the gallery, or tell people about it.
 
 ### How do I contribute?
 
