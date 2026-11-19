@@ -558,90 +558,91 @@ class _WideLayout extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final scheme = context.colorScheme;
+    final header = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l10n.galleryPicksTitle,
+          style: context.textTheme.headlineMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+            letterSpacing: -0.5,
+          ),
+        ).appCardEntrance(),
+        const SizedBox(height: AppSpace.xs),
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 680),
+          child: Text(
+            l10n.galleryPicksHelp,
+            style: context.textTheme.titleMedium?.copyWith(
+              color: scheme.onSurfaceVariant,
+              height: 1.4,
+              fontWeight: FontWeight.w400,
+            ),
+          ),
+        ).appCardEntrance(),
+      ],
+    );
+    final preview = Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _Preview(
+          set: picks.chosen,
+          bestMatch:
+              picks.chosen != null && picks.chosen!.id == picks.bestMatch,
+          contents: picks.contents,
+        ).appCardEntrance(),
+        const SizedBox(height: AppSpace.lg),
+        _Actions(picks: picks),
+      ],
+    );
+    final list = ListView(
+      key: const Key('galleryPicksList'),
+      padding: const EdgeInsets.only(bottom: AppSpace.md),
+      children: [
+        for (final (i, s) in picks.sets.indexed)
+          Padding(
+            padding: const EdgeInsets.only(bottom: AppSpace.sm),
+            child: _SetCard(
+              set: s,
+              selected: s.id == picks.chosen?.id,
+              bestMatch: s.id == picks.bestMatch,
+              contents: const [],
+              showContents: false,
+              onTap: picks.busy ? null : () => picks.onPick(s),
+            ),
+          ).appListItemEntrance(i),
+      ],
+    );
+    // The preview and Add stay put while the list scrolls beside them. The block stops growing
+    // past a comfortable height and sits in the middle of a tall window, so nothing stretches.
     return SafeArea(
       child: Center(
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1180),
+          constraints: const BoxConstraints(maxWidth: 1184, maxHeight: 1080),
           child: Padding(
             padding: const EdgeInsets.fromLTRB(
               AppSpace.xxl + AppSpace.xs,
               AppSpace.xxl,
               AppSpace.xxl + AppSpace.xs,
-              AppSpace.lg,
+              AppSpace.md,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  l10n.galleryPicksTitle,
-                  style: context.textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: -0.5,
-                  ),
-                ).appCardEntrance(),
-                const SizedBox(height: AppSpace.xs),
-                ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 680),
-                  child: Text(
-                    l10n.galleryPicksHelp,
-                    style: context.textTheme.titleMedium?.copyWith(
-                      color: scheme.onSurfaceVariant,
-                      height: 1.4,
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                ).appCardEntrance(),
+                header,
                 const SizedBox(height: AppSpace.xl),
                 Expanded(
                   child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
                         flex: 11,
-                        child: Column(
-                          children: [
-                            Expanded(
-                              child: _Preview(
-                                set: picks.chosen,
-                                bestMatch:
-                                    picks.chosen != null &&
-                                    picks.chosen!.id == picks.bestMatch,
-                                contents: picks.contents,
-                              ).appCardEntrance(),
-                            ),
-                            const SizedBox(height: AppSpace.lg),
-                            _Actions(picks: picks),
-                          ],
-                        ),
+                        child: SingleChildScrollView(child: preview),
                       ),
                       const SizedBox(width: AppSpace.xxl),
                       Expanded(
                         flex: 12,
-                        child: EdgeFade(
-                          extent: AppSpace.xl,
-                          child: ListView(
-                            key: const Key('galleryPicksList'),
-                            padding: const EdgeInsets.only(bottom: AppSpace.md),
-                            children: [
-                              for (final (i, s) in picks.sets.indexed)
-                                Padding(
-                                  padding: const EdgeInsets.only(
-                                    bottom: AppSpace.sm,
-                                  ),
-                                  child: _SetCard(
-                                    set: s,
-                                    selected: s.id == picks.chosen?.id,
-                                    bestMatch: s.id == picks.bestMatch,
-                                    contents: const [],
-                                    showContents: false,
-                                    onTap: picks.busy
-                                        ? null
-                                        : () => picks.onPick(s),
-                                  ),
-                                ).appListItemEntrance(i),
-                            ],
-                          ),
-                        ),
+                        child: EdgeFade(extent: AppSpace.xl, child: list),
                       ),
                     ],
                   ),
@@ -1065,8 +1066,20 @@ class _Preview extends StatelessWidget {
           duration: AppMotion.of(context, AppMotion.duration),
           switchInCurve: AppMotion.curve,
           switchOutCurve: Curves.easeIn,
-          layoutBuilder: (current, previous) =>
-              Stack(fit: StackFit.expand, children: [...previous, ?current]),
+          // The outgoing set fades over the top while the panel takes the new one's height.
+          layoutBuilder: (current, previous) => AnimatedSize(
+            duration: AppMotion.of(context, AppMotion.duration),
+            curve: AppMotion.curve,
+            alignment: Alignment.topCenter,
+            child: Stack(
+              alignment: Alignment.topCenter,
+              children: [
+                for (final p in previous)
+                  Positioned(top: 0, left: 0, right: 0, child: p),
+                ?current,
+              ],
+            ),
+          ),
           transitionBuilder: (child, a) => FadeTransition(
             opacity: a,
             child: SlideTransition(
@@ -1108,10 +1121,10 @@ class _PreviewBody extends StatelessWidget {
     final scheme = context.colorScheme;
     final text = context.textTheme;
     final description = set.description;
-    return EdgeFade(
-      extent: AppSpace.xl,
-      child: SingleChildScrollView(
-        key: Key('galleryPicksPreview-${set.id}'),
+    return KeyedSubtree(
+      key: Key('galleryPicksPreview-${set.id}'),
+      child: Padding(
+        padding: EdgeInsets.zero,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
