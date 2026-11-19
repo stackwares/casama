@@ -11,6 +11,7 @@ import {
   integrationToolName,
   OPENROUTER_STT_MODEL,
   type RealtimeTool,
+  END_CALL_TOOL,
   SHOW_SCREEN_TOOL,
   START_TASK_TOOL,
   STOP_TASK_TOOL,
@@ -330,6 +331,8 @@ export async function voiceSession(
         // The jobs on a call (D-327): stopping one, and showing its screen when there's a computer.
         STOP_TASK_TOOL,
         ...(rt.computers ? [SHOW_SCREEN_TOOL] : []),
+        // The bot hangs up itself once the conversation is over (D-423).
+        END_CALL_TOOL,
       ];
   const instructions = [
     phone
@@ -339,7 +342,7 @@ export async function voiceSession(
     callPersona(bot.persona_md),
     phone
       ? ""
-      : 'Use tools when needed. Before you use a tool, always say a few words first so the caller isn\'t left in silence (like "Let me check that for you" or "One moment, looking that up"), then wait for the result before answering. If a tool says it is still working, tell the caller and keep the conversation going. Some actions may need their approval in the Casama app. For anything that needs your computer, files, the browser, connected apps or several steps, use start_task: it runs in the chat and the result appears there. Changing or deleting a routine, and watching something for changes, also go through start_task. The app tells you (in brackets) when a task finishes, fails or needs the user; tell them in a few words. If they ask you to stop it, use stop_task.' +
+      : 'Use tools when needed. Before you use a tool, always say a few words first so the caller isn\'t left in silence (like "Let me check that for you" or "One moment, looking that up"), then wait for the result before answering. If a tool says it is still working, tell the caller and keep the conversation going. Some actions may need their approval in the Casama app. For anything that needs your computer, files, the browser, connected apps or several steps, use start_task: it runs in the chat and the result appears there. Changing or deleting a routine, and watching something for changes, also go through start_task. The app tells you (in brackets) when a task finishes, fails or needs the user; tell them in a few words. If they ask you to stop it, use stop_task. When the user says goodbye or wants to end the call, say a short goodbye, then use end_call.' +
         (rt.computers
           ? " If they want to see what you're doing on your computer, use show_screen."
           : ""),

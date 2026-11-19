@@ -35,6 +35,9 @@ enum CallEnd {
 
   /// It reached a limit (D-426): its longest length, or the workspace's credits or budgets.
   limit,
+
+  /// The bot hung up after saying goodbye (`end_call`, D-423).
+  bot,
 }
 
 /// A call's finished turns, saved while the call goes on (D-327 §4): each turn is posted once,
@@ -146,6 +149,8 @@ class CallController extends ChangeNotifier {
     this._idleLimit = const Duration(minutes: 1),
     this._heartbeatEvery = const Duration(seconds: 30),
     this.pauseBeforeNote = const Duration(milliseconds: 1500),
+    this.goodbyeGrace = const Duration(milliseconds: 1200),
+    this.goodbyeLimit = const Duration(seconds: 10),
     this.onEnded,
     this.onShowScreen,
     CallSystem? system,
@@ -179,6 +184,11 @@ class CallController extends ChangeNotifier {
 
   /// The bot speaks up about a job only after this long with nobody speaking (decision 8).
   final Duration pauseBeforeNote;
+
+  /// After the bot's `end_call` (D-423): how long a goodbye still on its way gets to start, and
+  /// the most the call waits for it to finish playing before it hangs up anyway.
+  final Duration goodbyeGrace;
+  final Duration goodbyeLimit;
   final void Function(CallController call)? onEnded;
 
   /// Answers the `show_screen` call tool (the app shows the bot's screen); returns what to tell the
@@ -623,6 +633,13 @@ class CallController extends ChangeNotifier {
   }
 
   Future<void> _runTool(VoiceCall call, CallToolRequest t) async {
+    // The bot hangs up itself (D-423): the app answers it and ends the call after the goodbye.
+    if (t.name == 'end_call') {
+      // Intentionally not translated: this goes to the voice model, not the user.
+      call.sendToolResult(t.callId, 'Hanging up. Say nothing more.');
+      await _hangUpAfterGoodbye(call);
+      return;
+    }
     // The app answers show_screen itself: the bot's screen, in the tile or full size.
     if (t.name == 'show_screen') {
       // Intentionally not translated: these go to the voice model, not the user.
@@ -670,6 +687,20 @@ class CallController extends ChangeNotifier {
       call.sendToolResult(t.callId, 'The tool could not run.');
       _settle(run, ToolRunState.failed);
     }
+  }
+
+  var _botHangingUp = false;
+
+  /// Lets the bot's goodbye finish playing, then ends the call as the bot's hang-up.
+  Future<void> _hangUpAfterGoodbye(VoiceCall call) async {
+    if (_botHangingUp) return;
+    _botHangingUp = true;
+    final until = DateTime.now().add(goodbyeLimit);
+    await Future<void>.delayed(goodbyeGrace);
+    while (!over && !_ending && call.speaking.value && DateTime.now().isBefore(until)) {
+      await Future<void>.delayed(const Duration(milliseconds: 200));
+    }
+    if (!over && !_ending) await end(CallEnd.bot);
   }
 
   void _follow(ToolRun card, String runId, String title) {

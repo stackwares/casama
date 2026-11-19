@@ -232,6 +232,17 @@ export const SHOW_SCREEN_TOOL: RealtimeTool = {
   parameters: { type: "object", properties: {} },
 };
 
+/**
+ * The bot hangs up an in-app call itself (D-423): the app answers it, lets the goodbye finish
+ * playing, then ends the call.
+ */
+export const END_CALL_TOOL: RealtimeTool = {
+  name: "end_call",
+  description:
+    "Hang up the call after you've said goodbye: when the user says they're done or wants to go, or the conversation has clearly ended. Never while they're still talking to you.",
+  parameters: { type: "object", properties: {} },
+};
+
 /** Stops the jobs start_task began on this call (D-327). */
 export const STOP_TASK_TOOL: RealtimeTool = {
   name: "stop_task",

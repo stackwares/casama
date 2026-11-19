@@ -370,6 +370,31 @@ void main() {
       expect(calls.last.hungUp, isTrue);
     });
 
+    testWidgets('the bot hangs up itself after its goodbye plays (end_call, D-423)', (
+      tester,
+    ) async {
+      final (active, calls, backend) = await start(tester);
+      final call = calls.last;
+      final c = active.live!;
+      call.speakingNow.value = true;
+      call.askTool('e1', 'end_call', const {});
+      await tester.pump();
+      // The app answers it; it never goes to the server.
+      expect(call.results['e1'], contains('Hanging up'));
+      expect(backend.voiceTools, isNot(contains('end_call')));
+      // Still saying goodbye: the call waits for it.
+      await tester.pump(const Duration(seconds: 3));
+      expect(c.over, isFalse);
+      expect(call.hungUp, isFalse);
+      call.speakingNow.value = false;
+      for (var i = 0; i < 5; i++) {
+        await tester.pump(const Duration(milliseconds: 200));
+      }
+      expect(c.endedBy, CallEnd.bot);
+      expect(call.hungUp, isTrue);
+      expect(active.live, isNull);
+    });
+
     testWidgets('turns are posted once each, and a failed post is retried', (
       tester,
     ) async {

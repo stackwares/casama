@@ -201,6 +201,8 @@ What to know:
   spending limit, or the bot's daily budget run out, the bot warns you; when hit, it says a short
   goodbye explaining why, closes cleanly without reconnecting, and posts the recap in the chat. See
   [When a live call ends for a limit](/guide/limits#when-a-live-call-ends-for-a-limit).
+- The bot can hang up too: say goodbye or "that's all" and it says goodbye and ends the call once
+  it has finished speaking. An older app version can't, so the bot asks you to tap **End Call**.
 - On Gemini Live, **Usage** records what the call actually cost, from the token counts Gemini
   reports; other calls are estimated by the minute.
 - You can interrupt. When you start speaking, the bot stops talking and listens.

@@ -477,6 +477,18 @@ export function registerVoiceRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
         },
         200,
       );
+    // end_call is the app's to answer too (D-423); an older app can't hang up for the bot.
+    if (body.name === "end_call")
+      return c.json(
+        {
+          status: "completed" as const,
+          run_id: NO_RUN,
+          output:
+            "This app can't hang up for you. Say goodbye and tell the user they can tap the red button to end the call.",
+          approval_id: null,
+        },
+        200,
+      );
     const [run] = await db.execute<{ id: string }>(sql`
       insert into public.runs (org_id, bot_id, conversation_id, created_by, trigger, voice_call)
       values (${bot.orgId}::uuid, ${bot.id}::uuid, ${body.conversation_id}::uuid, ${claims.sub}::uuid, 'voice',
