@@ -27,6 +27,13 @@
   <a href="https://www.opensourcealternatives.to"><img src="https://www.opensourcealternatives.to/badge-osa.svg" alt="As seen on Open Source Alternatives" height="20"></a>
 </p>
 
+<p align="center">
+  <a href="https://discord.gg/e86XbXFHwz"><img src="https://img.shields.io/discord/1572818163685523536?label=Discord&logo=discord&logoColor=white&color=5865F2" alt="Join Casama on Discord"></a>
+  <a href="https://x.com/CasamaAI"><img src="https://img.shields.io/badge/X-@CasamaAI-000000?logo=x" alt="Follow Casama on X"></a>
+  <a href="https://bsky.app/profile/casama.ai"><img src="https://img.shields.io/badge/Bluesky-@casama.ai-0285FF?logo=bluesky&logoColor=white" alt="Follow Casama on Bluesky"></a>
+  <a href="https://www.youtube.com/@casamaai"><img src="https://img.shields.io/badge/YouTube-@casamaai-FF0000?logo=youtube&logoColor=white" alt="Casama on YouTube"></a>
+</p>
+
 ---
 
 ## What is Casama?

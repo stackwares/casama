@@ -319,7 +319,13 @@ export default defineConfig({
         ],
       },
     ],
-    socialLinks: [{ icon: "github", link: repo }],
+    socialLinks: [
+      { icon: "github", link: repo },
+      { icon: "discord", link: "https://discord.gg/e86XbXFHwz", ariaLabel: "Casama on Discord" },
+      { icon: "x", link: "https://x.com/CasamaAI", ariaLabel: "Casama on X" },
+      { icon: "bluesky", link: "https://bsky.app/profile/casama.ai", ariaLabel: "Casama on Bluesky" },
+      { icon: "youtube", link: "https://www.youtube.com/@casamaai", ariaLabel: "Casama on YouTube" },
+    ],
     search: { provider: "local" },
     outline: { level: [2, 3] },
     editLink: {

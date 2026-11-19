@@ -176,6 +176,7 @@ ${body}
       <span class="foot-news-row"><input id="foot-news-email" type="email" name="email" required autocomplete="email" placeholder="you@example.com"><button type="submit">Subscribe</button></span>
       <input class="foot-news-hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
     </form>
+    <p class="small">Community: <a href="https://discord.gg/e86XbXFHwz">Discord</a> · <a href="https://x.com/CasamaAI">X</a> · <a href="https://bsky.app/profile/casama.ai">Bluesky</a> · <a href="https://www.youtube.com/@casamaai">YouTube</a></p>
     <p class="small"><a href="/add/">Add to Casama badge</a> · <a href="https://casama.ai/privacy">Privacy</a> · <a href="https://casama.ai/terms">Terms</a> · <a href="https://github.com/${C.REPO}/issues/new">Report an item</a></p>
   </div>
 </footer>

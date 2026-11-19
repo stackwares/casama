@@ -305,6 +305,10 @@ button { cursor: pointer; }
 .footer-brand p { margin-top: 14px; max-width: 36ch; }
 .footer-mail { display: flex; flex-direction: column; gap: 4px; }
 /* The monthly email (D-404): one field and a button; the note under it says what happened. */
+.footer-social { display: flex; flex-wrap: wrap; gap: 2px; margin-top: 16px; margin-left: -8px; }
+.footer-social a { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 999px; color: var(--ink-2); }
+.footer-social a:hover { color: var(--ink); background: var(--line); }
+.footer-social a:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
 .footer-news { margin-top: 22px; max-width: 420px; }
 .footer-news label { display: block; margin-bottom: 10px; color: var(--ink-2); }
 .footer-news-row { display: flex; gap: 8px; }

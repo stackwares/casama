@@ -4,7 +4,7 @@ h1: Contact us
 crumb: Contact
 description: How to reach the Casama team: help with the apps or your account, plans and refunds, privacy requests, security reports and general questions.
 lead: The fastest answer is usually Casama Help, which knows our docs. For anything else, write to the address below that fits and a person will reply by email.
-updated: 2026-11-18
+updated: 2026-11-19
 ---
 
 ## Get an answer now
@@ -16,6 +16,19 @@ updated: 2026-11-18
   tap.
 - **Is something down?** [status.casama.ai](https://status.casama.ai) shows whether the API, web
   app, sign-in and docs are working right now.
+
+## Community
+
+- **[Discord](https://discord.gg/e86XbXFHwz)** is where to ask other Casama users and the team,
+  show what your bots do and tell us what to build next.
+- Follow along on [X](https://x.com/CasamaAI), [Bluesky](https://bsky.app/profile/casama.ai),
+  [Threads](https://www.threads.com/@casamaai) and [Mastodon](https://mastodon.social/@casamaai),
+  and watch how-to videos on [YouTube](https://www.youtube.com/@casamaai).
+- We're also on [Instagram](https://www.instagram.com/casamaai/),
+  [TikTok](https://www.tiktok.com/@casama.ai) and [Reddit](https://www.reddit.com/user/casamaai/).
+
+These are for news and conversation. For anything about your account, use support below: we won't
+ask for account details in a public post or a direct message.
 
 ## Email us
 
