@@ -631,12 +631,20 @@ down, the tabs and the Apps button at the bottom. They also showed two things, b
   same windows, with the same insets and fold, that the simulator reported.
 - **Split View, and the tent pose rotated the other way.**
 - **The keyboard staying up across a pose change** (flutter/flutter #193096) and the black frame
-  between screens.
+  between screens. What Casama controls is checked: on the simulator, closed, with the real
+  keyboard up (304 points), the composer sat above it with its focus and text
+  (`duo_tour_test.dart` with `--dart-define=TOUR_KEYBOARD=true`); and a test in
+  `duo_shell_test.dart` takes the keyboard through every pose and checks the focus, the text and
+  that the composer stays above the keyboard and out of the strip. Whether iOS itself closes the
+  keyboard when the device folds needs a device or Device Hub.
 - **The hinge-driven motion.** `hingeMotionProvider` is off.
 
 Device Hub quit once while it was being scripted (Rotate Right with the device partly open), and
 took the booted simulators down with it. Rotating first and folding second worked. Later it ran
-without a window and had to be force-quit.
+without a window: **Device Hub only shows its windows while the Mac is unlocked**, and the Mac
+was locked. Without its window nothing folds the simulator: `xcrun devicectl device orientation`
+reports a new orientation but the closed Duo stays upright, and the hinge is only reachable
+through CoreDevice's private HID events. Checks that fold the device need someone at the Mac.
 
 ### 11.5 Decided for Oliver, and what is left
 

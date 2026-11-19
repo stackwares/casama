@@ -78,6 +78,19 @@ void main() {
       'call': '/bots/$botId/call',
     };
 
+    // `--dart-define=TOUR_KEYBOARD=true`: instead of the screens, a chat with the keyboard up
+    // through each pose, to see that the composer stays above the keyboard and keeps its focus
+    // when the device folds (flutter/flutter#193096).
+    const keyboard = bool.fromEnvironment('TOUR_KEYBOARD');
+    if (keyboard) {
+      router.go('/bots/$botId/chat');
+      await hold(2000);
+      final input = find.byKey(const Key('messageInput'));
+      await tester.tap(input.first, warnIfMissed: false);
+      await tester.enterText(input.first, 'Typing while the phone folds');
+      await hold(2000);
+    }
+
     const only = String.fromEnvironment('TOUR_POSES');
     final poses = only.isEmpty
         ? ['closed', 'openWide', 'book', 'openTall', 'laptop', 'tent']
@@ -95,6 +108,27 @@ void main() {
         continue;
       }
       await hold(1500);
+      if (keyboard) {
+        await hold(1500);
+        final input = find.byKey(const Key('messageInput'));
+        final media = MediaQuery.of(tester.element(find.byType(HomeShell)));
+        final box = input.evaluate().isEmpty
+            ? null
+            : tester.getRect(input.first);
+        final field = input.evaluate().isEmpty
+            ? null
+            : tester.widget<TextField>(input.first);
+        // ignore: avoid_print
+        print(
+          'TOUR kb $pose window ${media.size} keyboard ${media.viewInsets.bottom} '
+          'input ${box ?? 'gone'} focused ${field?.focusNode?.hasFocus ?? FocusManager.instance.primaryFocus?.context?.widget.runtimeType} '
+          'text "${field?.controller?.text}"',
+        );
+        // ignore: avoid_print
+        print('TOUR shot $pose keyboard');
+        await hold(3500);
+        continue;
+      }
       for (final MapEntry(key: name, value: path) in screens.entries) {
         router.go(path);
         await hold(1800);

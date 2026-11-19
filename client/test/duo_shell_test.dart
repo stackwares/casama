@@ -195,6 +195,59 @@ void main() {
   );
 
   testWidgets(
+    'with the keyboard up, every pose keeps the focus and the composer above the keyboard',
+    (tester) async {
+      await _pumpApp(tester, DuoPose.closed);
+      _router(tester).go('/bots/$botId/chat');
+      await _settle(tester);
+      final input = find.byKey(const Key('messageInput'));
+      await tester.showKeyboard(input);
+      await tester.enterText(input, 'typing while it folds');
+      await _settle(tester);
+
+      for (final pose in [
+        DuoPose.closed,
+        DuoPose.openWide,
+        DuoPose.book,
+        DuoPose.openTall,
+        DuoPose.laptop,
+        DuoPose.tent,
+        DuoPose.closed,
+      ]) {
+        setPose(tester, pose);
+        // iOS's keyboard on each screen, about as tall as the simulator showed it; with it up
+        // the home indicator's inset goes.
+        final keyboard = pose.size.height > 900 ? 380.0 : 300.0;
+        tester.view.viewInsets = FakeViewPadding(bottom: keyboard);
+        tester.view.padding = FakeViewPadding(
+          left: pose.padding.left,
+          top: pose.padding.top,
+          right: pose.padding.right,
+        );
+        await _settle(tester);
+        final field = tester.widget<TextField>(input);
+        expect(field.focusNode?.hasFocus, isTrue, reason: '${pose.name}: focus');
+        expect(tester.testTextInput.isVisible, isTrue, reason: '${pose.name}: keyboard');
+        expect(field.controller?.text, 'typing while it folds', reason: pose.name);
+        final rect = tester.getRect(input);
+        expect(
+          rect.bottom,
+          lessThanOrEqualTo(pose.size.height - keyboard),
+          reason: '${pose.name}: the composer ends at ${rect.bottom}, under the keyboard',
+        );
+        expect(rect.left, greaterThanOrEqualTo(pose.padding.left), reason: pose.name);
+        expect(
+          rect.right,
+          lessThanOrEqualTo(pose.size.width - pose.padding.right),
+          reason: '${pose.name}: the composer runs into the strip',
+        );
+        expect(tester.takeException(), isNull, reason: pose.name);
+      }
+    },
+    variant: _iphone,
+  );
+
+  testWidgets(
     'a chat the shell opened by itself goes back to the list when the device closes untouched',
     (tester) async {
       await _pumpApp(tester, DuoPose.closed);
