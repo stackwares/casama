@@ -380,6 +380,13 @@ export const EnvSchema = z.object({
   SMTP_PASS: z.string().optional(),
   EMAIL_FROM: z.string().default("Casama <no-reply@localhost>"),
   /**
+   * A second way out for the same email (D-433): a Resend key used only when the main sender
+   * (RESEND_API_KEY or SMTP) fails. Sends from EMAIL_BACKUP_FROM, or EMAIL_FROM when unset, so
+   * that address's domain must be verified in Resend too.
+   */
+  EMAIL_BACKUP_RESEND_API_KEY: z.string().optional(),
+  EMAIL_BACKUP_FROM: z.string().optional(),
+  /**
    * Casama's monthly email (D-404, D-408), Casama Cloud only: a Resend key with access to contacts,
    * for the list behind the app's "Casama's monthly email" switch. Kept apart from RESEND_API_KEY,
    * which a self-hosted server may set for its own invite emails. Unset: the app hides the switch

@@ -88,6 +88,9 @@ x-casama: &casama
     SMTP_PORT: ${SMTP_PORT:-587}
     SMTP_USER: ${SMTP_USER:-}
     SMTP_PASS: ${SMTP_PASS:-}
+    # A Resend key used only when the sender above fails (D-433); EMAIL_BACKUP_FROM defaults to EMAIL_FROM.
+    EMAIL_BACKUP_RESEND_API_KEY: ${EMAIL_BACKUP_RESEND_API_KEY:-}
+    EMAIL_BACKUP_FROM: ${EMAIL_BACKUP_FROM:-}
     ERROR_REPORTING: ${ERROR_REPORTING:-auto}
     SENTRY_DSN: ${SENTRY_DSN:-}
     POSTHOG_API_KEY: ${POSTHOG_API_KEY:-}

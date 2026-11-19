@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
+  type EmailSender,
   isUndeliverableAddress,
   type MailTransport,
   resendEmail,
   smtpEmail,
+  withBackupEmail,
 } from "../src/services/email.ts";
 
 describe("smtpEmail", () => {
@@ -63,7 +65,13 @@ describe("undeliverable addresses", () => {
       "no-domain",
     ])
       expect(isUndeliverableAddress(bad), bad).toBe(true);
-    for (const good of ["ada@casama.ai", "a@gmail.com", "a@example.co", "a@myexample.com", "a@test.io"])
+    for (const good of [
+      "ada@casama.ai",
+      "a@gmail.com",
+      "a@example.co",
+      "a@myexample.com",
+      "a@test.io",
+    ])
       expect(isUndeliverableAddress(good), good).toBe(false);
   });
 
@@ -87,5 +95,40 @@ describe("undeliverable addresses", () => {
     expect(fetches).toBe(0);
     await resend.send({ to: "ada@casama.ai", subject: "s", text: "t" });
     expect(fetches).toBe(1);
+  });
+});
+
+describe("withBackupEmail", () => {
+  const msg = { to: "ada@casama.ai", subject: "Join", text: "Hi" };
+  const sender = (fail: boolean, log: string[], name: string): EmailSender => ({
+    enabled: true,
+    async send() {
+      log.push(name);
+      if (fail) throw new Error(`${name} down`);
+    },
+  });
+
+  it("uses only the main sender when it works", async () => {
+    const log: string[] = [];
+    await withBackupEmail(sender(false, log, "main"), sender(false, log, "backup")).send(msg);
+    expect(log).toEqual(["main"]);
+  });
+
+  it("sends through the backup when the main sender fails", async () => {
+    const log: string[] = [];
+    const errors: unknown[] = [];
+    await withBackupEmail(sender(true, log, "main"), sender(false, log, "backup"), (e) =>
+      errors.push(e),
+    ).send(msg);
+    expect(log).toEqual(["main", "backup"]);
+    expect(errors).toHaveLength(1);
+  });
+
+  it("throws the main sender's error when both fail", async () => {
+    const log: string[] = [];
+    await expect(
+      withBackupEmail(sender(true, log, "main"), sender(true, log, "backup")).send(msg),
+    ).rejects.toThrow("main down");
+    expect(log).toEqual(["main", "backup"]);
   });
 });

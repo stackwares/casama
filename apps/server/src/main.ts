@@ -58,7 +58,13 @@ import { createSitesApp } from "./pages/sites.ts";
 import { abuseControlsOn } from "./services/abuse.ts";
 import { startAccountEmails } from "./services/account-emails.ts";
 import { startCapacityMonitor } from "./services/capacity.ts";
-import { disabledEmail, resendEmail, smtpEmail } from "./services/email.ts";
+import {
+  disabledEmail,
+  type EmailSender,
+  resendEmail,
+  smtpEmail,
+  withBackupEmail,
+} from "./services/email.ts";
 import { OutsideRelay } from "./services/outside-relay.ts";
 import { chromiumPdf, remotePdf } from "./services/pdf.ts";
 import { serverPushSender } from "./services/push-sender.ts";
@@ -163,6 +169,31 @@ if (!env.INTERNAL_TOKEN && env.NODE_ENV === "production")
 const allowCidrs = env.OUTBOUND_ALLOW_CIDRS?.split(",")
   .map((c) => c.trim())
   .filter(Boolean);
+/**
+ * The email sender: Resend or SMTP (D-174), with the Resend backup behind it when
+ * EMAIL_BACKUP_RESEND_API_KEY is set (D-433). Undefined when email isn't configured.
+ */
+async function emailFromEnv(): Promise<EmailSender | undefined> {
+  const main = env.RESEND_API_KEY
+    ? resendEmail(env.RESEND_API_KEY, env.EMAIL_FROM)
+    : env.SMTP_HOST
+      ? await smtpEmail(
+          { host: env.SMTP_HOST, port: env.SMTP_PORT, user: env.SMTP_USER, pass: env.SMTP_PASS },
+          env.EMAIL_FROM,
+        )
+      : undefined;
+  if (!env.EMAIL_BACKUP_RESEND_API_KEY) return main;
+  const backup = resendEmail(
+    env.EMAIL_BACKUP_RESEND_API_KEY,
+    env.EMAIL_BACKUP_FROM ?? env.EMAIL_FROM,
+  );
+  if (!main) return backup;
+  return withBackupEmail(main, backup, (err) =>
+    logger.warn("email: main sender failed, sending through the Resend backup", {
+      error: err instanceof Error ? err.message : String(err),
+    }),
+  );
+}
 if (env.MODE === "api") {
   const handle = createDb(env.DATABASE_URL);
   stoppers.push(handle.close);
@@ -205,14 +236,7 @@ if (env.MODE === "api") {
       supabaseUrl: env.SUPABASE_URL,
       jwtSecret: env.SUPABASE_JWT_SECRET,
     }),
-    email: env.RESEND_API_KEY
-      ? resendEmail(env.RESEND_API_KEY, env.EMAIL_FROM)
-      : env.SMTP_HOST
-        ? await smtpEmail(
-            { host: env.SMTP_HOST, port: env.SMTP_PORT, user: env.SMTP_USER, pass: env.SMTP_PASS },
-            env.EMAIL_FROM,
-          )
-        : disabledEmail,
+    email: (await emailFromEnv()) ?? disabledEmail,
     pdf: env.PDF_RENDERER_URL
       ? remotePdf(env.PDF_RENDERER_URL)
       : env.PDF_CHROMIUM_PATH
@@ -430,14 +454,7 @@ if (env.MODE === "api") {
   });
   stoppers.push(worker.stop);
   // One email sender for the worker's own emails (capacity alerts, account emails).
-  const workerEmail = env.RESEND_API_KEY
-    ? resendEmail(env.RESEND_API_KEY, env.EMAIL_FROM)
-    : env.SMTP_HOST
-      ? await smtpEmail(
-          { host: env.SMTP_HOST, port: env.SMTP_PORT, user: env.SMTP_USER, pass: env.SMTP_PASS },
-          env.EMAIL_FROM,
-        )
-      : undefined;
+  const workerEmail = await emailFromEnv();
   // Account emails (D-302): billing changes and the welcome series, from the outbox.
   if (workerEmail && env.ACCOUNT_EMAILS) {
     const outbox = createDb(env.DATABASE_URL, { max: 1 });

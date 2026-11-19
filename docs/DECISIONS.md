@@ -6223,3 +6223,22 @@ deals (price anchoring, a decoy option). Plan: `docs/WEEKLY-PLAN-PLAN.md`.
   badge still compares against monthly, not weekly. Store apps show weekly only once the store
   lists the product.
 - **Website and docs:** a line under the plans ("or pay by the week"), not a third toggle.
+
+## D-433 Resend as the backup for app mail (2026-11-20)
+
+Asked by Oliver: a backup in case ZeptoMail (D-318) stops sending. A second ZeptoMail account was
+weighed and dropped: the same vendor's outage or review hold would stop it too, and it would need its
+own KYC and credits.
+
+- **Resend, same address:** `notify.casama.ai` is verified in Resend as well (DKIM
+  `resend._domainkey.notify`, return path `send.notify`), so the backup sends from
+  `hello@notify.casama.ai` like the main path. Resend was already set up for the newsletter (D-404).
+- **Server mail fails over by itself:** `EMAIL_BACKUP_RESEND_API_KEY` (and optional
+  `EMAIL_BACKUP_FROM`) wraps the main sender in `withBackupEmail`: when ZeptoMail throws, the same
+  email goes through Resend and the server logs a warning. When both fail, the main error is thrown.
+- **Auth mail switches by hand:** Supabase Auth takes one SMTP server, so sign-in links move to
+  Resend SMTP with a `.env` change plus `auth` and `kong` recreated (`docs/EMAIL-RUNBOOK.md`).
+- **Key:** send-only and limited to notify.casama.ai, in Vaultwarden "Casama · Resend API key (app
+  mail backup, notify.casama.ai)".
+- **Limits:** Resend's free plan (100 a day, 3,000 a month) is shared with the newsletter and
+  sayainvitations.com; enough for a short outage, upgrade for a long one.

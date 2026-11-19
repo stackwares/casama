@@ -64,6 +64,33 @@ export function resendEmail(
   };
 }
 
+/**
+ * Sends through `primary`, and through `backup` when the primary refuses or fails (D-433): an
+ * outage, a blocked account or no credits left at the primary provider. When both fail the
+ * primary's error is thrown, so callers report the usual failure.
+ */
+export function withBackupEmail(
+  primary: EmailSender,
+  backup: EmailSender,
+  onFallback?: (err: unknown) => void,
+): EmailSender {
+  return {
+    enabled: true,
+    async send(msg) {
+      try {
+        await primary.send(msg);
+      } catch (err) {
+        onFallback?.(err);
+        try {
+          await backup.send(msg);
+        } catch {
+          throw err;
+        }
+      }
+    },
+  };
+}
+
 export interface SmtpSettings {
   host: string;
   port: number;

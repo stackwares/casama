@@ -218,6 +218,8 @@ optional: without it, people sign in with a password and invites return a code t
 | `EMAIL_AUTOCONFIRM` | `true`                         | Confirm new accounts without an email. Set `false` once SMTP works.                                   |
 | `RESEND_API_KEY`    | (empty)                        | Resend key for invite emails, used instead of SMTP. With neither, an invite returns a code to share.  |
 | `EMAIL_FROM`        | `Casama <no-reply@localhost>`  | Sender for Casama's own emails.                                                                       |
+| `EMAIL_BACKUP_RESEND_API_KEY` | (empty)              | Resend key Casama's own emails fall back to when the SMTP server or `RESEND_API_KEY` fails. Auth's emails don't fall back. |
+| `EMAIL_BACKUP_FROM` | `EMAIL_FROM`                   | Sender for the backup. Its domain must be verified in Resend.                                         |
 | `AUTH_SITE_URL`     | `CASAMA_PUBLIC_URL`            | Where Auth's email links land when the app didn't ask for a place. Set it to your web app's address.  |
 | `EMAIL_TEMPLATE_*`  | Casama's branded templates     | URLs of Auth's email templates (`_MAGIC_LINK`, `_CONFIRMATION`, `_INVITE`, `_RECOVERY`, `_EMAIL_CHANGE`, `_REAUTHENTICATION`). Override one to use your own. |
 
