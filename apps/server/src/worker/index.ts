@@ -85,6 +85,12 @@ import { DBOS, DBOSClient } from "@dbos-inc/dbos-sdk";
 import { sql } from "drizzle-orm";
 import { casamaCloudProvider } from "../billing/index.ts";
 import { appLink } from "../env.ts";
+import {
+  type AdminBotDeps,
+  adminRunCheck,
+  ownerEmails,
+  registerAdminTools,
+} from "../services/admin-bot.ts";
 import { getCloudModels } from "../services/cloud-models.ts";
 import { serverPushSender } from "../services/push-sender.ts";
 import { searchDomains } from "../sites/buying.ts";
@@ -106,6 +112,8 @@ import {
 } from "./workflows.ts";
 
 export interface WorkerOptions {
+  /** INSTANCE_ADMIN_EMAILS: who may use the admin bot (D-435). Empty: no admin tools. */
+  instanceAdminEmails?: string;
   /** Signs Android rings' decline tokens (D-424; `callDeclineSecret`). */
   callDeclineSecret?: string;
   /** Where the Library keeps files copied off computers (D-276). */
@@ -370,6 +378,17 @@ export async function startWorker(opts: WorkerOptions) {
     lockCloudModel: Boolean(opts.platformOpenRouterKey),
   });
   registerSecretRequestTool(tools);
+  // The admin bot (D-435): offered only in the instance owner's own chat with the chosen bot.
+  const adminBot: AdminBotDeps = {
+    db,
+    ownerEmails: ownerEmails(opts.instanceAdminEmails),
+    stopComputer: computers
+      ? async (id) => {
+          await computers.sleep(id);
+        }
+      : undefined,
+  };
+  registerAdminTools(tools, adminBot);
   registerSkillTools(tools, { db });
   registerSetupTools(tools, { db });
   // Bots that change their own setup: connections, theme, rules, knowledge, notifications (D-242).
@@ -802,6 +821,7 @@ export async function startWorker(opts: WorkerOptions) {
       fileLinks,
       ownUrls: opts.ownUrls,
       lazyToolsThreshold: opts.lazyToolsThreshold,
+      instanceAdmin: adminRunCheck(adminBot),
       startRun: async (runId) => {
         if (!client) throw new Error("worker not started");
         await client.enqueue(

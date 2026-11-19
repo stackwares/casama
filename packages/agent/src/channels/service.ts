@@ -984,13 +984,17 @@ export async function decideFromChannel(
     run_id: string;
     status: string;
     expired: boolean;
+    tool_name: string;
   }>(sql`
-    select a.id, a.run_id, a.status, a.expires_at < now() as expired
+    select a.id, a.run_id, a.status, a.expires_at < now() as expired, a.tool_name
     from public.approvals a
     join public.runs r on r.id = a.run_id
     join public.channel_threads t on t.conversation_id = r.conversation_id and t.channel_id = ${c.id}::uuid
     where a.id = ${action.approvalId}::uuid and a.bot_id = ${c.bot_id}::uuid`);
   if (!a) return { ok: false, reason: "That approval isn't from this chat." };
+  // Admin bot actions (D-435) are approved in the Casama app only.
+  if (a.tool_name.startsWith("admin."))
+    return { ok: false, reason: "Approve this in the Casama app." };
   if (a.status !== "pending") return { ok: false, reason: `It was already ${a.status}.` };
   if (a.expired) {
     await db.execute(sql`update public.approvals set status = 'expired' where id = ${a.id}::uuid`);

@@ -1,6 +1,7 @@
 import { createRoute, z } from "@hono/zod-openapi";
 import {
   AbuseEvent,
+  AdminBotSetting,
   AdminCreditPack,
   AdminMargin,
   AdminOrg,
@@ -16,6 +17,7 @@ import {
   SaveCreditPackRequest,
   SavePlanRequest,
   ServerCapacity,
+  SetAdminBotRequest,
   SetConnectionSettingsRequest,
   SetOrgLimitsRequest,
   SuspendOrgRequest,
@@ -117,6 +119,31 @@ export const setAdminConnectionSettings = createRoute({
   summary: "Choose how apps without their own sign-in connect (owner only)",
   request: { body: jsonBody(SetConnectionSettingsRequest) },
   responses: { 200: jsonResponse("Updated", ConnectionSettings), 401: e401, 403: e403 },
+});
+
+export const adminBot = get(
+  "adminBot",
+  "/v1/admin/admin-bot",
+  "The admin bot: which bot may propose admin actions in the owner's chat (owner only)",
+  AdminBotSetting,
+);
+
+export const setAdminBot = createRoute({
+  operationId: "setAdminBot",
+  method: "put",
+  path: "/v1/admin/admin-bot",
+  tags: ["admin"],
+  security,
+  summary: "Turn the admin bot on or off, or choose its bot (owner only)",
+  description:
+    "Every admin action the bot proposes still waits for the owner's approval in the app (D-435).",
+  request: { body: jsonBody(SetAdminBotRequest) },
+  responses: {
+    200: jsonResponse("Updated", AdminBotSetting),
+    400: problemResponses[400],
+    401: e401,
+    403: e403,
+  },
 });
 
 export const setOrgLimits = createRoute({

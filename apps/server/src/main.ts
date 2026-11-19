@@ -337,6 +337,7 @@ if (env.MODE === "api") {
   const stopPrompts = startGalleryPrompts(env, logger);
   stoppers.push(async () => stopPrompts());
   const worker = await startWorker({
+    instanceAdminEmails: env.INSTANCE_ADMIN_EMAILS,
     // Android rings carry a decline token (D-424), checked by the API with the same secret.
     callDeclineSecret: env.SUPABASE_JWT_SECRET
       ? callDeclineSecret(env.SUPABASE_JWT_SECRET)

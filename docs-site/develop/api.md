@@ -451,6 +451,9 @@ curl -s -X POST "$API/v1/approvals/$APPROVAL/decision" \
 
 `decision` is `approved` or `denied`; add `"always_allow": true` to stop asking about this tool for
 this bot. Denying fails only that step, and the bot carries on.
+Admin bot approvals (tools named `admin.*`) take a normal signed-in session of an instance owner
+and can't be always allowed ([the admin bot](/guide/workspaces#the-admin-bot)); `GET` and `PUT
+/v1/admin/admin-bot` read and set which bot that is.
 `GET /v1/approvals?org_id=...&status=pending` lists what's waiting. See [Autonomy and approvals](/guide/autonomy) for how risk decides what asks.
 
 ### Cancel a run

@@ -11060,6 +11060,31 @@
           "created_at"
         ]
       },
+      "AdminBotSetting": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "bot_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "description": "The bot. It must be in a workspace whose every member is an instance owner (INSTANCE_ADMIN_EMAILS)."
+          },
+          "available": {
+            "type": "boolean",
+            "description": "False when INSTANCE_ADMIN_EMAILS isn't set: the admin bot can't be used."
+          }
+        },
+        "required": [
+          "enabled",
+          "bot_id",
+          "available"
+        ]
+      },
       "ServerCapacity": {
         "type": "object",
         "properties": {
@@ -11990,6 +12015,24 @@
             "type": "boolean"
           }
         }
+      },
+      "SetAdminBotRequest": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "bot_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "enabled"
+        ]
       },
       "SetConnectionSettingsRequest": {
         "type": "object",
@@ -41174,6 +41217,117 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/AbuseEventList"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/admin-bot": {
+      "get": {
+        "operationId": "adminBot",
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "The admin bot: which bot may propose admin actions in the owner's chat (owner only)",
+        "responses": {
+          "200": {
+            "description": "The admin bot: which bot may propose admin actions in the owner's chat (owner only)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminBotSetting"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "operationId": "setAdminBot",
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Turn the admin bot on or off, or choose its bot (owner only)",
+        "description": "Every admin action the bot proposes still waits for the owner's approval in the app (D-435).",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetAdminBotRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminBotSetting"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
                 }
               }
             }

@@ -8,6 +8,12 @@ import type { OpenAPIHono } from "@hono/zod-openapi";
 import { sql } from "drizzle-orm";
 import { ee } from "../../ee.ts";
 import { suspendOrg, unsuspendOrg } from "../../services/abuse.ts";
+import {
+  getAdminBot,
+  isListedOwner,
+  ownerEmails,
+  setAdminBot,
+} from "../../services/admin-bot.ts";
 import { capacityReport } from "../../services/capacity.ts";
 import { getCloudModels, setCloudModels } from "../../services/cloud-models.ts";
 import {
@@ -64,6 +70,55 @@ export function registerAdminRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     ...settings,
     composio_key: !!env.COMPOSIO_API_KEY,
     google_direct_available: !!env.GOOGLE_OAUTH_CLIENT_ID && !env.BILLING_ENABLED,
+  });
+
+  // The admin bot (D-435): which of the owner's bots may propose admin actions in their chat.
+  const adminBotOut = async () => {
+    const s = await getAdminBot(db);
+    return { ...s, available: ownerEmails(env.INSTANCE_ADMIN_EMAILS).length > 0 };
+  };
+  app.openapi(routes.adminBot, async (c) => {
+    await requireOwner(requireClaims(c.get("claims")));
+    return c.json(await adminBotOut(), 200);
+  });
+  app.openapi(routes.setAdminBot, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    await requireOwner(claims);
+    const body = c.req.valid("json");
+    const current = await getAdminBot(db);
+    const botId = body.bot_id === undefined ? current.bot_id : body.bot_id;
+    const owners = { db, ownerEmails: ownerEmails(env.INSTANCE_ADMIN_EMAILS) };
+    if (body.enabled) {
+      if (!owners.ownerEmails.length)
+        throw new ApiError(400, "validation_failed", "Set INSTANCE_ADMIN_EMAILS first");
+      if (!(await isListedOwner(owners, claims.sub)))
+        throw new ApiError(403, "not_instance_owner", "Only a listed instance owner can do this");
+      if (!botId) throw new ApiError(400, "validation_failed", "Choose the bot");
+      const [bot] = await db.execute<{ org_id: string }>(
+        sql`select org_id from public.bots where id = ${botId}::uuid`,
+      );
+      if (!bot) throw new ApiError(400, "validation_failed", "No such bot");
+      const members = await db.execute<{ user_id: string }>(
+        sql`select user_id from public.memberships where org_id = ${bot.org_id}::uuid`,
+      );
+      for (const m of members)
+        if (!(await isListedOwner(owners, m.user_id)))
+          throw new ApiError(
+            400,
+            "validation_failed",
+            "The admin bot must be in a workspace where everyone is an instance owner",
+          );
+    }
+    await setAdminBot(db, { enabled: body.enabled, bot_id: botId ?? null });
+    const [org] = botId
+      ? await db.execute<{ org_id: string }>(sql`select org_id from public.bots where id = ${botId}::uuid`)
+      : [];
+    if (org)
+      await db.execute(sql`insert into public.audit_log (org_id, actor_type, actor_id, action, target_type, target_id, metadata)
+        values (${org.org_id}::uuid, 'user', ${claims.sub}::uuid, 'admin_bot.setting', 'bot', ${botId}::uuid,
+                ${JSON.stringify({ enabled: body.enabled })}::jsonb)`);
+    deps.logger.info("admin bot setting changed", { by: claims.sub, enabled: body.enabled });
+    return c.json(await adminBotOut(), 200);
   });
 
   app.openapi(routes.adminConnectionSettings, async (c) => {

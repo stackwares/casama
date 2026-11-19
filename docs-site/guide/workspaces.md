@@ -218,6 +218,32 @@ Open **Settings → Admin console**. It has these tabs:
 Update notices appear only when the server sets `UPDATE_CHECK_URL`; otherwise the server never
 checks for updates.
 
+### The admin bot
+
+The instance owner can let one of their own bots help run the server from a chat: look up
+accounts and the waitlist, let people in, ban and unban accounts, and suspend or unsuspend
+workspaces. The bot only ever proposes; **every change waits for the owner's approval in the app**,
+whatever the bot's autonomy, Full access or action rules say.
+
+It works only when all of these are true:
+
+- `INSTANCE_ADMIN_EMAILS` is set (the "first person to sign up" fallback doesn't count) and the
+  owner's email is confirmed;
+- the owner turned it on for that bot (`PUT /v1/admin/admin-bot` with `{"enabled": true,
+  "bot_id": "..."}`, or `scripts/admin-bot.sh on BOT_ID`);
+- everyone in the bot's workspace is an instance owner;
+- it's the owner's own one-to-one chat with the bot in the Casama app: not a routine, a check-in,
+  a group chat, a call, or a chat app such as Telegram or Slack.
+
+Admin approvals can't be answered from a watch, a widget, a notification, a chat app or an MCP
+client, and can't be "always allowed". Each action checks its approval again when it runs, at most
+25 people per action and 60 actions an hour. Every action is in the audit log as
+`admin_bot.<action>`.
+
+A ban stops sign-in, ends the person's sessions and suspends the workspaces they alone own.
+Workspaces they share keep running for everyone else. Unbanning lifts the ban and those
+suspensions.
+
 ## Limit who can sign up
 
 On a self-hosted server you can close sign-ups or allow only certain people:

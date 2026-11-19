@@ -13,6 +13,7 @@ import 'package:casama_api/src/model/add_teach_step_request.dart';
 import 'package:casama_api/src/model/add_user_facts_request.dart';
 import 'package:casama_api/src/model/add_user_facts_request_items_inner.dart';
 import 'package:casama_api/src/model/add_waitlist_entries_request.dart';
+import 'package:casama_api/src/model/admin_bot_setting.dart';
 import 'package:casama_api/src/model/admin_browser_guard.dart';
 import 'package:casama_api/src/model/admin_call_limits.dart';
 import 'package:casama_api/src/model/admin_credit_pack.dart';
@@ -638,6 +639,7 @@ import 'package:casama_api/src/model/server_capacity.dart';
 import 'package:casama_api/src/model/server_capacity_alerts_inner.dart';
 import 'package:casama_api/src/model/server_capacity_days_inner.dart';
 import 'package:casama_api/src/model/server_capacity_latest.dart';
+import 'package:casama_api/src/model/set_admin_bot_request.dart';
 import 'package:casama_api/src/model/set_analytics_opt_out_request.dart';
 import 'package:casama_api/src/model/set_bot_a2a_request.dart';
 import 'package:casama_api/src/model/set_bot_access_request.dart';
@@ -928,6 +930,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return AddUserFactsRequestItemsInner.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AddWaitlistEntriesRequest':
           return AddWaitlistEntriesRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'AdminBotSetting':
+          return AdminBotSetting.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AdminBrowserGuard':
           return AdminBrowserGuard.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AdminCallLimits':
@@ -2265,6 +2269,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return ServerCapacityDaysInner.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ServerCapacityLatest':
           return ServerCapacityLatest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'SetAdminBotRequest':
+          return SetAdminBotRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SetAnalyticsOptOutRequest':
           return SetAnalyticsOptOutRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SetBotA2aRequest':

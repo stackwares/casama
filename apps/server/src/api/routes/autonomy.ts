@@ -30,6 +30,7 @@ import {
   withStats,
 } from "../../services/gallery-usage.ts";
 import { refuseWatchDecision, watchSurface } from "./watch.ts";
+import { isAdminTool, isListedOwner, ownerEmails } from "../../services/admin-bot.ts";
 
 /** The gallery v2 fields a starter bot's template carries (D-315). */
 function pickTemplateExtras(t: GalleryExtras & { stats?: object }) {
@@ -313,6 +314,19 @@ export function registerAutonomyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
     const { decision, always_allow } = c.req.valid("json");
     // A watch (D-410) allows only what the person lets it, never "always"; deny always works.
     const watch = c.get("watchKey");
+    // Admin bot approvals (D-435): only an instance owner, in their own signed-in app, one at a time.
+    const [pending] = await db.execute<{ tool_name: string }>(
+      sql`select tool_name from public.approvals where id = ${id}::uuid`,
+    );
+    if (isAdminTool(pending?.tool_name)) {
+      const inProcess = !!(c.env as { casamaClaims?: unknown } | undefined)?.casamaClaims;
+      if (watch || c.get("widgetKey") || inProcess)
+        throw new ApiError(403, "admin_approval_in_app", "Admin actions are approved in the app");
+      if (always_allow && decision === "approved")
+        throw new ApiError(400, "validation_failed", "Admin actions can't be always allowed");
+      if (!(await isListedOwner({ db, ownerEmails: ownerEmails(deps.env.INSTANCE_ADMIN_EMAILS) }, claims.sub)))
+        throw new ApiError(403, "not_instance_owner", "Only the instance owner can approve this");
+    }
     if (watch) await refuseWatchDecision(db, watch, id, decision, always_allow);
     let row: ApprovalRow | undefined;
     try {

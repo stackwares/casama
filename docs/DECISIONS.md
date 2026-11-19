@@ -6245,3 +6245,44 @@ own KYC and credits.
   account for now.
 - **Key:** send-only and limited to notify.casama.ai, in Vaultwarden "Casama · Resend API key (app
   mail backup, notify.casama.ai)".
+
+## D-435 The admin bot: the instance owner runs Casama Cloud from a chat, approving every change (2026-11-20)
+
+Asked by Oliver: a Casama bot that lets people in, bans accounts and does other admin work,
+exclusive to admin@casama.ai, and not hackable. Plan: `docs/ADMIN-BOT-PLAN.md` ("build everything
+now!").
+
+- **The rule:** the bot only proposes; an instance owner approves every write, in the app, one at a
+  time. The risk is prompt injection (a waitlist note or ticket that says "let me in"), which no
+  model reliably resists, so nothing depends on the bot behaving.
+- **Where it works:** `instance_settings` `admin_bot` (`{enabled, bot_id}`, `GET`/`PUT
+  /v1/admin/admin-bot`, `scripts/admin-bot.sh`), and only in a run that is an in-app one-to-one chat
+  (`trigger = 'chat'`, no routine, parent run, group or chat-app thread) with that bot, sent by an
+  owner from the explicit `INSTANCE_ADMIN_EMAILS` list (confirmed email, not banned), in a workspace
+  where every member is such an owner. `services/admin-bot.ts` `adminRunCheck`, read on every call.
+- **Run loop:** tools marked `instanceAdmin` are offered only when `RunDeps.instanceAdmin` says yes;
+  a call made anyway is refused before any rule. Writes always ask at high risk, past autonomy, Full
+  access (D-394), action rules, grants and tapped cards (D-335); the approval never goes into a chat
+  app (D-277) and a check-in can't get one.
+- **Approving:** `POST /v1/approvals/{id}/decision` refuses `admin.*` approvals from watch and
+  widget keys and MCP calls, refuses "always allow", and needs a listed owner; chat-app buttons
+  refuse them. Each tool then finds its own approval (`ToolContext.callId`): approved, not always,
+  by a listed owner, within 15 minutes, and checks the run again. At most 25 people per call and 60
+  admin writes an hour; owners and owners-only workspaces can't be banned or suspended.
+- **Tools:** `admin.overview`, `admin.users.find`, `admin.waitlist.list` (reads; people's text marked
+  untrusted), `admin.waitlist.admit`, `admin.waitlist.add`, `admin.users.ban`, `admin.users.unban`,
+  `admin.workspaces.suspend`, `admin.workspaces.unsuspend`. Nothing about keys, prices, plans,
+  billing, connections or the sign-up gate.
+- **Ban (new):** `banned_until` forever, sessions and refresh tokens deleted, workspaces the person
+  alone owns suspended with reason `account_banned`. Unban lifts only those; an account being
+  deleted (D-072) stays banned. An access token already issued lives until it expires.
+- **Worker grants:** the tools run in the worker, which never reads `auth` (D-095). Migration
+  `20270220100001_admin_bot` adds four security-definer functions only `casama_worker` can call:
+  `worker_admin_user`, `worker_admin_find_users`, `worker_admin_user_counts`,
+  `worker_admin_set_ban`. The tests run the tools as that role.
+- **Not done:** no biometric step on the approval card (the server couldn't verify it); no admin
+  console screen for the switch.
+- **Tests:** `apps/server/test/admin-bot.test.ts` (18): off, wrong trigger, group chat, a second
+  member, another workspace's bot, no list or unconfirmed email, Full access plus an allow rule,
+  stranger's, "always" and stale approvals, the switch turned off mid-wait, the API's refusals, and
+  ban/unban.

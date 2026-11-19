@@ -306,3 +306,21 @@ export const ReportedCreation = z
     last_reported_at: z.iso.datetime({ offset: true }),
   })
   .openapi("ReportedCreation");
+
+/** The admin bot (D-435): one of the owner's bots that may propose admin actions in their chat. */
+export const AdminBotSetting = z
+  .object({
+    enabled: z.boolean(),
+    bot_id: z.uuid().nullable().openapi({
+      description:
+        "The bot. It must be in a workspace whose every member is an instance owner (INSTANCE_ADMIN_EMAILS).",
+    }),
+    available: z.boolean().openapi({
+      description: "False when INSTANCE_ADMIN_EMAILS isn't set: the admin bot can't be used.",
+    }),
+  })
+  .openapi("AdminBotSetting");
+
+export const SetAdminBotRequest = z
+  .object({ enabled: z.boolean(), bot_id: z.uuid().nullable().optional() })
+  .openapi("SetAdminBotRequest");

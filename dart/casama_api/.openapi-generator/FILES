@@ -85,6 +85,7 @@ lib/src/model/add_teach_step_request.dart
 lib/src/model/add_user_facts_request.dart
 lib/src/model/add_user_facts_request_items_inner.dart
 lib/src/model/add_waitlist_entries_request.dart
+lib/src/model/admin_bot_setting.dart
 lib/src/model/admin_browser_guard.dart
 lib/src/model/admin_call_limits.dart
 lib/src/model/admin_credit_pack.dart
@@ -739,6 +740,7 @@ lib/src/model/server_capacity.dart
 lib/src/model/server_capacity_alerts_inner.dart
 lib/src/model/server_capacity_days_inner.dart
 lib/src/model/server_capacity_latest.dart
+lib/src/model/set_admin_bot_request.dart
 lib/src/model/set_analytics_opt_out_request.dart
 lib/src/model/set_bot_a2a_request.dart
 lib/src/model/set_bot_access_request.dart

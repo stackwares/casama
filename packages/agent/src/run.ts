@@ -217,7 +217,7 @@ import {
   withHomePaths,
 } from "./team-computer.ts";
 import { ticketAfterRun, ticketStarted } from "./tickets.ts";
-import { type ToolDefinition, ToolError, type ToolRegistry } from "./tools/registry.ts";
+import { type Risk, type ToolDefinition, ToolError, type ToolRegistry } from "./tools/registry.ts";
 import { UI_SHOWN_RESULT, uiChoiceLines } from "./tools/ui.ts";
 import { browserChoiceFor, mineAllowed, preferredBrowser } from "./user-browser.ts";
 
@@ -284,6 +284,11 @@ export interface RunDeps {
    * The worker checks in a step and sleeps on DBOS.recv; the default polls.
    */
   waitUntil?: (name: string, done: () => Promise<boolean>, timeoutMs: number) => Promise<void>;
+  /**
+   * Whether this run may use instance-admin tools (admin bot, D-435). Unset or false: those tools
+   * are never offered, and a call to one is refused. Asked again before every admin call.
+   */
+  instanceAdmin?: (runId: string) => Promise<boolean>;
 }
 
 const pollUntil = async (_name: string, done: () => Promise<boolean>, timeoutMs: number) => {
@@ -785,12 +790,21 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
     // Check-ins (D-247 costs) get only reads and suggestions.add, all sent up front: no computer,
     // no tools.load round trips.
     const checkinRun = isCheckinKind(info.routine?.kind);
-    const available = registry
+    let available = registry
       .available(
         { computer: !!deps.computers, desktop, vision: caps.vision },
         allowed ? (name) => allowed.some((a) => name === a || name.startsWith(`${a}.`)) : undefined,
       )
       .filter((t) => !checkinRun || checkinToolAllowed(t));
+    // Admin tools (D-435) only in the instance owner's own chat with the admin bot.
+    if (available.some((t) => t.instanceAdmin)) {
+      const adminOk = deps.instanceAdmin
+        ? await step("instance-admin", () =>
+            (deps.instanceAdmin as (id: string) => Promise<boolean>)(runId).catch(() => false),
+          )
+        : false;
+      if (!adminOk) available = available.filter((t) => !t.instanceAdmin);
+    }
     // Lazy tool loading (D-106): many tools → core tools, tools.load and an index of the rest.
     const threshold = checkinRun ? 0 : (deps.lazyToolsThreshold ?? DEFAULT_LAZY_THRESHOLD);
     const canLoad = !!registry.get(TOOLS_LOAD);
@@ -3367,6 +3381,7 @@ async function toolStep(
     const res = await def
       .execute(args as never, {
         signal: toolCtrl.signal,
+        callId: call.callId,
         runId: info.runId,
         botId: info.botId,
         orgId: info.orgId,
@@ -4311,6 +4326,22 @@ async function approvalGate(
   } catch {
     return { approvalId: null }; // the tool step reports the error
   }
+  // Admin tools (D-435): refused outright outside the owner's own chat with the admin bot, and
+  // otherwise always asked, before anything below could let them through.
+  if (def.instanceAdmin) {
+    const ok = deps.instanceAdmin ? await deps.instanceAdmin(info.runId).catch(() => false) : false;
+    if (!ok)
+      return {
+        approvalId: null,
+        handOff: "Admin tools aren't available in this chat. Don't try again.",
+      };
+    if (def.readOnly) return { approvalId: null };
+    if (isCheckinKind(info.routine?.kind))
+      return { approvalId: null, handOff: CHECKIN_APPROVAL_NOTE };
+    return requestApproval(deps, info, call, def, args, argsRedacted, "high", bus, redactor, {
+      toChannel: false,
+    });
+  }
   // A tool that can't run here (no key for it) reports that itself; asking first would only
   // have someone approve something that then fails.
   if (def.ready && !(await def.ready({ orgId: info.orgId, botId: info.botId }).catch(() => true)))
@@ -4400,7 +4431,24 @@ async function approvalGate(
   // Nobody is waiting on a check-in: what would need a yes becomes a suggestion (D-247).
   if (isCheckinKind(info.routine?.kind))
     return { approvalId: null, handOff: CHECKIN_APPROVAL_NOTE };
+  return requestApproval(deps, info, call, def, args, argsRedacted, risk, bus, redactor, {
+    toChannel: true,
+  });
+}
 
+/** Creates the approval request, pauses the run and tells the people who can answer. */
+async function requestApproval(
+  deps: RunDeps,
+  info: RunInfo,
+  call: ToolCall,
+  def: ToolDefinition,
+  args: Record<string, unknown>,
+  argsRedacted: unknown,
+  risk: Risk,
+  bus: EventBus,
+  redactor: Redactor,
+  opts: { toChannel: boolean },
+): Promise<{ approvalId: string | null; handOff?: string }> {
   // Some tools show more than their arguments, such as a skill's diff (D-104).
   const details = def.approvalDetails
     ? await def
@@ -4457,7 +4505,7 @@ async function approvalGate(
       );
   }
   // From a chat app with buttons (Slack): the approval goes into the thread too (D-277).
-  if (info.conversationId)
+  if (opts.toChannel && info.conversationId)
     await postApprovalToChannel(
       deps.db,
       info.conversationId,

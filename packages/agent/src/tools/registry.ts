@@ -28,6 +28,8 @@ export interface ToolContext {
   restartComputer?: () => Promise<void>;
   /** Aborted when the run is cancelled while this tool is working; long commands stop with it. */
   signal?: AbortSignal;
+  /** This call's id, for tools that look up their own approval (admin tools, D-435). */
+  callId?: string;
   /** Browsers this run may use: the bot's computer's and the person's own (D-323 Phase 3). */
   browser?: import("./browser.ts").BrowserChoice;
 }
@@ -85,6 +87,13 @@ export interface ToolDefinition<S extends z.ZodType = z.ZodType> {
    * always-ask tools (adding connections, loosening rules) run without asking under full access.
    */
   askEvenWithFullAccess?: boolean;
+  /**
+   * Runs the instance itself (admin bot, D-435). Offered, approved and run only where
+   * `RunDeps.instanceAdmin` says this run may, and then it always asks at high risk, whatever the
+   * autonomy, action rules, grants, Full access or a tapped card. The tool checks its own approval
+   * again when it runs.
+   */
+  instanceAdmin?: boolean;
   /** Always asks for these arguments (for example loosening a rule but not tightening it, D-242). */
   alwaysAskFor?: (args: z.infer<S>) => boolean;
   /** Risk that depends on the arguments (overrides `risk`). */

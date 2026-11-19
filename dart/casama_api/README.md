@@ -92,6 +92,7 @@ Class | Method | HTTP request | Description
 [*AdminApi*](doc/AdminApi.md) | [**adminAdmitWaitlist**](doc/AdminApi.md#adminadmitwaitlist) | **POST** /v1/admin/waitlist/admit | Let people in: chosen entries, or the next N (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**adminAppConfig**](doc/AdminApi.md#adminappconfig) | **GET** /v1/admin/app-config | Remote app settings (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**adminApproveDomainOrder**](doc/AdminApi.md#adminapprovedomainorder) | **POST** /v1/admin/domain-orders/{id}/approve | Approve a new workspace&#39;s first purchase so it registers (instance owners)
+[*AdminApi*](doc/AdminApi.md) | [**adminBot**](doc/AdminApi.md#adminbot) | **GET** /v1/admin/admin-bot | The admin bot: which bot may propose admin actions in the owner&#39;s chat (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**adminBrowserGuard**](doc/AdminApi.md#adminbrowserguard) | **GET** /v1/admin/browser-guard | The browser guard&#39;s added sites and its built-in ones (owner only; D-374)
 [*AdminApi*](doc/AdminApi.md) | [**adminCallLimits**](doc/AdminApi.md#admincalllimits) | **GET** /v1/admin/call-limits | Live-call and ring limits: saved values, defaults and what&#39;s in use (owner only; D-426)
 [*AdminApi*](doc/AdminApi.md) | [**adminCapacity**](doc/AdminApi.md#admincapacity) | **GET** /v1/admin/capacity | Server capacity: host memory, computers&#39; share of their budget, 30-day peaks and a forecast (owner only)
@@ -135,6 +136,7 @@ Class | Method | HTTP request | Description
 [*AdminApi*](doc/AdminApi.md) | [**saveModelCatalog**](doc/AdminApi.md#savemodelcatalog) | **PUT** /v1/admin/model-catalog | Replace the model catalog; refused when any part fails its check (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**savePlan**](doc/AdminApi.md#saveplan) | **PUT** /v1/admin/plans/{code} | Create or change a plan; workspaces on it get the new limits right away
 [*AdminApi*](doc/AdminApi.md) | [**savePriceTables**](doc/AdminApi.md#savepricetables) | **PUT** /v1/admin/price-tables | Change cost tables or domain sale settings; fields left out keep their value
+[*AdminApi*](doc/AdminApi.md) | [**setAdminBot**](doc/AdminApi.md#setadminbot) | **PUT** /v1/admin/admin-bot | Turn the admin bot on or off, or choose its bot (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**setAdminCloudModels**](doc/AdminApi.md#setadmincloudmodels) | **PUT** /v1/admin/models | Change the models Casama Cloud runs (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**setAdminConnectionSettings**](doc/AdminApi.md#setadminconnectionsettings) | **PUT** /v1/admin/connections | Choose how apps without their own sign-in connect (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**setBillingSettings**](doc/AdminApi.md#setbillingsettings) | **PATCH** /v1/admin/billing-settings | Change the markup on usage paid with Casama&#39;s keys
@@ -612,6 +614,7 @@ Class | Method | HTTP request | Description
  - [AddUserFactsRequest](doc/AddUserFactsRequest.md)
  - [AddUserFactsRequestItemsInner](doc/AddUserFactsRequestItemsInner.md)
  - [AddWaitlistEntriesRequest](doc/AddWaitlistEntriesRequest.md)
+ - [AdminBotSetting](doc/AdminBotSetting.md)
  - [AdminBrowserGuard](doc/AdminBrowserGuard.md)
  - [AdminCallLimits](doc/AdminCallLimits.md)
  - [AdminCreditPack](doc/AdminCreditPack.md)
@@ -1266,6 +1269,7 @@ Class | Method | HTTP request | Description
  - [ServerCapacityAlertsInner](doc/ServerCapacityAlertsInner.md)
  - [ServerCapacityDaysInner](doc/ServerCapacityDaysInner.md)
  - [ServerCapacityLatest](doc/ServerCapacityLatest.md)
+ - [SetAdminBotRequest](doc/SetAdminBotRequest.md)
  - [SetAnalyticsOptOutRequest](doc/SetAnalyticsOptOutRequest.md)
  - [SetBotA2aRequest](doc/SetBotA2aRequest.md)
  - [SetBotAccessRequest](doc/SetBotAccessRequest.md)
