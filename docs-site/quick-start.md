@@ -40,7 +40,10 @@ free. Set it up after step 3.
 
 ## 2. Install a client
 
-- **Apps**: iOS, iPadOS, Android, macOS, Windows, Linux and the web.
+- **Apps**: iOS, iPadOS, Android, macOS, Windows, Linux and the web. On a Mac, get the app from
+  [casama.ai/download](https://casama.ai/download) rather than the Mac App Store if you want bots
+  to use your Mac or to run a server on it; see
+  [which Mac app to get](/faq#should-i-get-the-mac-app-from-the-website-or-the-mac-app-store).
 - **CLI**: `brew install stackwares/tap/casama`, or download a binary from the
   [releases page](https://github.com/stackwares/casama/releases). See [CLI](/develop/cli).
 

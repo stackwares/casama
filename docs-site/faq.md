@@ -44,6 +44,28 @@ You can also reach your bots from chat apps such as Slack, Telegram and WhatsApp
 coding tools over MCP. A few things need the desktop app: signing in with a ChatGPT plan, lending
 your own computer to bots, and iMessage, which needs a Mac. See [Quick start](/quick-start).
 
+### Should I get the Mac app from the website or the Mac App Store?
+
+Get it from the website ([casama.ai/download](https://casama.ai/download)) unless you prefer the
+App Store. The website version can do everything. Apple's App Store requires a sandbox, which
+keeps an app inside its own box, so the App Store version leaves out the features that reach
+outside the app:
+
+| | From the website | Mac App Store |
+| --- | --- | --- |
+| Chat, bots, voice, widgets, notifications | Yes | Yes |
+| Let bots use your Mac (terminal, files, browser, desktop apps) | Yes | No |
+| Coding agents and local MCP servers on your Mac | Yes | No |
+| Run your own Casama server on this Mac (**Run on This Mac**) | Yes | No |
+| Quick ask reads the front window and your selection | Yes | No |
+| Watch folders for new files | Yes | No |
+| Updates | The app updates itself | Through the App Store |
+| How you pay | Web checkout | In-app purchase (in the US, a web checkout link too) |
+
+Your account, bots and chats live on the server, so you can switch later: install the other
+version and sign in. A plan you bought in one version stays with the store you bought it in. To
+manage or cancel it, go back to that store (see [Where do I pay?](#where-do-i-pay)).
+
 ### Which languages does Casama support?
 
 The apps are in English only for now.

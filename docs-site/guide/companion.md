@@ -236,8 +236,10 @@ owner can connect it, and only for a bot allowed on that Mac.
   computer.
 - iMessage is text only (no attachments or images), and group chats aren't supported.
 - Coding agents and local MCP servers need the desktop app running and online.
-- The macOS app is distributed with Developer ID signing rather than through the Mac App Store,
-  because it needs to run commands and start a browser outside an app sandbox.
+- On a Mac, this needs the app from [casama.ai/download](https://casama.ai/download). The Mac App
+  Store version runs in Apple's sandbox, which doesn't allow running commands or starting a browser
+  outside the app, so it can't lend your Mac to bots. See
+  [which Mac app to get](/faq#should-i-get-the-mac-app-from-the-website-or-the-mac-app-store).
 - Not yet: the Windows browser tab in Quick ask context, and macOS Calendar and Reminders.
 
 ## Related
