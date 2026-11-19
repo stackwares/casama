@@ -332,6 +332,12 @@ describe.skipIf(!enabled)("Casama Link (Phase 7 gate)", () => {
     await setLimits({ computer_hours: null });
 
     // Zero credits: the sweep puts the running one to sleep, keeps its snapshot, stops the meter.
+    // The meter bills whole seconds and skips an interval that rounds to zero, and the computer
+    // started well under a second ago, so give it a minute on the meter first; otherwise the
+    // ledger check below depends on how slow the machine is.
+    await db.execute(
+      sql`update public.link_computers set running_since = now() - interval '1 minute' where ref = ${a}`,
+    );
     await db.execute(
       sql`select public.credit_apply(${cloudOrg}::uuid, -1000, 'adjustment', 'test-sweep-drain')`,
     );
