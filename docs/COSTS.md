@@ -30,7 +30,7 @@ adds a paid service or a vendor changes its price.
 | Search and AI-answer tracking (OpenSEO on DataForSEO; D-381, `docs/SEO-PLAN.md`) | **about $23 / month**, capped at $35 | Casama pays; nothing is passed on. 75 keywords checked weekly ($0.75 a month by the tool's estimate) and 25 questions asked weekly on ChatGPT, Claude, Gemini, Perplexity and Google's AI Overviews ($22.36 a month, about 4.5 cents an answer). Metered in OpenSEO (project Casama). Search Console, Bing Webmaster Tools, IndexNow and the site's own visit counts are free |
 | E2B (only if hosted computers run on E2B) | **$150 / month** Pro, plus usage | Hobby has a one-time $100 credit, 1-hour sessions only |
 | Sentry Team | $26 / month (annual) | 50k errors; free tier 5k errors |
-| PostHog | Shared Stackwares project, already past the free 1M events. Casama adds about $0.02–0.04 per monthly active person; error tracking free to 100k exceptions a month (shared). | Then from $0.00005 per event |
+| PostHog | Casama's own PostHog Cloud project 750357 (US, account hello@casama.ai, since 2026-11-19, D-430), so its events no longer count against the shared Stackwares project 637030. Free for the first 1M events a month; about $0.02–0.04 per monthly active person after that; error tracking free to 100k exceptions a month. | Then from $0.00005 per event |
 | Google Analytics 4 (D-397, `docs/GA4-PLAN.md`) | **$0** | Standard GA4 and Firebase Analytics are free; the same events as PostHog (minus rollups) go there too. BigQuery export free in the sandbox up to 1M events a day. Nothing is passed on |
 | Langfuse (optional) | $0 up to 50k units, then $29 / month | |
 | Email: Zoho Mail | $1–4 per mailbox / month | People's inboxes only (hello@, support). App mail moved to ZeptoMail (D-318) |
