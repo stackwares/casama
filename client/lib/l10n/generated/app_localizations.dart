@@ -10204,17 +10204,41 @@ abstract class AppLocalizations {
   /// **'Dismiss this suggestion?'**
   String get dismissSuggestion;
 
+  /// No description provided for @dismissSuggestionHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose whether {bot} can bring it up again.'**
+  String dismissSuggestionHelp(String bot);
+
   /// No description provided for @justThisOnce.
   ///
   /// In en, this message translates to:
   /// **'Just This Once'**
   String get justThisOnce;
 
+  /// No description provided for @justThisOnceHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide it for now. If it still matters later, {bot} may suggest it again.'**
+  String justThisOnceHelp(String bot);
+
   /// No description provided for @dontSuggestAgain.
   ///
   /// In en, this message translates to:
   /// **'Don\'t Suggest It Again'**
   String get dontSuggestAgain;
+
+  /// No description provided for @dontSuggestAgainHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Gone for good. {bot} will remember you\'d rather not.'**
+  String dontSuggestAgainHelp(String bot);
+
+  /// No description provided for @wontSuggestAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Got it. {bot} won\'t suggest that again.'**
+  String wontSuggestAgain(String bot);
 
   /// No description provided for @doIt.
   ///

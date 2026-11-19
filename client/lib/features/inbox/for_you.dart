@@ -13,6 +13,7 @@ import '../../ui/app_card.dart';
 import '../../ui/bot_avatar.dart';
 import '../chat/widgets/chat_markdown.dart';
 import '../skills/skill_proposals.dart';
+import 'dismiss_suggestion_sheet.dart';
 
 /// The "For you" feed (D-114): the latest morning briefs, pending suggestions and approvals,
 /// shown in the Inbox.
@@ -95,19 +96,19 @@ class SuggestionCard extends ConsumerWidget {
                 TextButton(
                   key: Key('dismiss-${s.id}'),
                   onPressed: () async {
-                    final never = await showDialog<bool>(
-                      context: context,
-                      builder: (d) => AlertDialog(
-                        title: Text(l10n.dismissSuggestion),
-                        actions: [
-                          TextButton(key: const Key('dismissOnce'), onPressed: () => Navigator.pop(d, false), child: Text(l10n.justThisOnce)),
-                          TextButton(key: const Key('dismissNever'), onPressed: () => Navigator.pop(d, true), child: Text(l10n.dontSuggestAgain)),
-                        ],
-                      ),
-                    );
-                    if (never == null || !context.mounted) return;
-                    await runGuarded(context, () => ref.read(backendProvider).dismissSuggestion(s.id, dontSuggestAgain: never));
+                    final how = await showDismissSuggestion(context, s: s, botName: botName);
+                    if (how == null || !context.mounted) return;
+                    final never = how == SuggestionDismissal.forever;
+                    final ok = await runGuarded(context, () async {
+                      await ref.read(backendProvider).dismissSuggestion(s.id, dontSuggestAgain: never);
+                      return true;
+                    });
                     ref.invalidate(forYouProvider);
+                    // "For good" teaches the bot something, so say it landed; the card leaving is
+                    // enough for "just this once".
+                    if (never && ok == true && context.mounted) {
+                      showToast(context, l10n.wontSuggestAgain(botName.trim().isEmpty ? l10n.theBot : botName.trim()), kind: ToastKind.success);
+                    }
                   },
                   child: Text(l10n.dismiss),
                 ),
