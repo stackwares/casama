@@ -16,11 +16,14 @@ const casamaPrivacyUrl = 'https://casama.ai/privacy';
 /// that it renews until cancelled, who charges it and how to cancel; then Terms and Privacy links.
 /// [store] is the store source ('app_store', 'google_play') or null for web checkout.
 class PurchaseTerms extends ConsumerWidget {
-  const PurchaseTerms({super.key, required this.price, required this.yearly, required this.store, this.priceHasPeriod = false, this.trialDays});
+  const PurchaseTerms({super.key, required this.price, required this.yearly, this.weekly = false, required this.store, this.priceHasPeriod = false, this.trialDays});
 
   /// The price as shown to the person; null hides the disclosure line (no plan picked yet).
   final String? price;
   final bool yearly;
+
+  /// A weekly plan (D-432); [yearly] is false then.
+  final bool weekly;
   final String? store;
 
   /// Web price labels already read "$39 / month".
@@ -34,7 +37,7 @@ class PurchaseTerms extends ConsumerWidget {
     final l10n = context.l10n;
     final scheme = context.colorScheme;
     final small = context.textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant, height: 1.35);
-    final period = yearly ? l10n.pricePerYear : l10n.pricePerMonth;
+    final period = yearly ? l10n.pricePerYear : weekly ? l10n.pricePerWeek : l10n.pricePerMonth;
     final price = this.price;
     final trial = trialDays ?? 0;
     final String? disclosure = price == null

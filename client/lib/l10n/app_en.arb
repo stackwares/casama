@@ -3159,6 +3159,7 @@
   "paywallPerkSeats": "Seats",
   "paywallPerkSeatsBody": "Bring your team into the same workspace.",
   "paywallHours": "{hours} h",
+  "paywallWeekly": "Weekly",
   "paywallMonthly": "Monthly",
   "paywallYearly": "Yearly",
   "paywallPerMonth": "/ month",
@@ -3181,6 +3182,7 @@
   "@paywallDisclosureWebTrial": {
     "placeholders": { "days": { "type": "int" }, "price": { "type": "String" } }
   },
+  "pricePerWeek": "per week",
   "pricePerMonth": "per month",
   "pricePerYear": "per year",
   "storeAccountApple": "Apple Account",
@@ -3426,6 +3428,10 @@
     "placeholders": { "price": { "type": "String" } }
   },
   "paywallBilledMonthly": "Billed monthly",
+  "paywallBilledWeekly": "Billed weekly",
+  "paywallPerWeekShort": "/wk",
+  "paywallPerWeekWorksOut": "That's {price} a week",
+  "@paywallPerWeekWorksOut": {"placeholders": {"price": {"type": "String"}}},
   "paywallBilledYearlyPlain": "Billed yearly",
   "paywallPerYearShort": "/yr",
   "paywallStartTrial": "Start {n}-day free trial",

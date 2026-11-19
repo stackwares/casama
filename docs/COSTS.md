@@ -132,6 +132,7 @@ list works on the web, the App Store (no request for high price points) and Goog
 | Pro | **$49** / $490 | $15 credits, unlimited bots, 5 computers (2 running, 2×), 100 h, 3 seats | about $13.20 | about 68% / 58% |
 | Max | **$99** a month | $30 credits, unlimited bots, 10 computers (2 running, 4×), 300 h, 10 seats | about $32.70 | about 62% / 52% |
 | Max yearly | **$899** a year (about $74.90 a month) | the same | about $32.70 a month | about 52% / 41% |
+| Plus / Pro / Max weekly (D-432) | **$7.99 / $19.99 / $39.99** a week | the monthly plan's limits; a quarter of its credits each week ($1.25 / $3.75 / $7.50); no trial, no extra people | about $0.95 / $3.05 / $7.55 a week | about 79% / 73%, 78% / 70%, 76% / 66% |
 | Extra person (Pro, Max; web only) | **$12** a month ($120 a year) | one more seat | none directly (usage stays within the plan's credits and hours) | about 92% |
 | Pro trial (7 days, once per person) | $0 | $2 credits, 10 h | about $1.70 per trial | acquisition |
 | Credit packs | $10 / $25 web; **$12.99 / $29.99** in the stores | $10 / $25 of credits | $7.70 / $19.25 | about 16% web; 13–30% stores |
@@ -146,6 +147,11 @@ about 2 points: Plus 67% / 60%, Pro 70% / 60%, Max 64% / 54%, Max yearly 54% / 4
 (Free 1, Plus 1, Pro 3, Max 10), with the address, sign-in by QR code and push free: each server
 costs us one tunnel of the 1,000 Cloudflare includes. Plus and up also get live video away from
 home, the one part that costs per use (see the usage table).
+
+Weekly plans (D-432) are priced as an anchor at about twice the monthly rate. Dodo's $0.40 fixed fee
+is charged each week, four times as often as on monthly, and computer hours keep their monthly cap,
+so a single paid week can use a month of hours (worst case Max: 300 h × $0.032 ≈ $9.60). Both are
+covered by the price.
 
 Most people won't use everything included, so real margins are higher. The step to watch is server
 capacity: the $11 VPS has about 9 GB for computers. Memory sizes are limits, not reservations, so a

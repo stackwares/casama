@@ -266,9 +266,7 @@ export class BillingService {
     // subscription and period; it may leave the balance below zero, which stops paid usage.
     if (opts.refund) {
       const end = periodEnd ?? new Date();
-      const start = new Date(end);
-      if (plan.interval === "year") start.setUTCFullYear(start.getUTCFullYear() - 1);
-      else start.setUTCMonth(start.getUTCMonth() - 1);
+      const start = periodStart(end, plan.interval);
       const [g] = await this.db.execute<{ granted: string }>(sql`
         select coalesce(sum(delta), 0)::text as granted from public.credit_ledger
         where org_id = ${orgId}::uuid and reason = 'grant' and delta > 0
@@ -453,9 +451,7 @@ export class BillingService {
       let current = true;
       if (p.createdAt && snap.currentPeriodEnd) {
         const plan = await this.planForProduct(snap.source, snap.productId);
-        const start = new Date(snap.currentPeriodEnd);
-        if (plan.interval === "year") start.setUTCFullYear(start.getUTCFullYear() - 1);
-        else start.setUTCMonth(start.getUTCMonth() - 1);
+        const start = periodStart(new Date(snap.currentPeriodEnd), plan.interval);
         // Two days' slack: a renewal is charged around the period boundary.
         current = p.createdAt.getTime() >= start.getTime() - 2 * 86_400_000;
       }
@@ -667,6 +663,9 @@ export class BillingService {
           : plan.limits.trial_credits_usd
         : plan.limits.monthly_credits_usd) ?? 0,
     );
+    // Weekly plans (D-432) grant a quarter of the monthly amount each paid week.
+    const grantAmount =
+      plan.interval === "week" && !trial ? Math.round((monthly / 4) * 100) / 100 : monthly;
     if (this.enabled && monthly > 0) {
       // The month a grant belongs to follows the paid period, not the calendar (billing audit
       // 2026-11-17): see public.grant_month.
@@ -685,18 +684,20 @@ export class BillingService {
         from public.credit_ledger
         where org_id = ${orgId}::uuid and reason = 'grant' and reference like ${`monthly:${label}:%`}`);
       if (!done?.this_plan) {
-        let amount = Math.max(0, monthly - Number(done?.granted ?? 0));
-        let note = trial ? `${plan.name} trial credits` : `${plan.name} monthly credits`;
+        let amount = Math.max(0, grantAmount - Number(done?.granted ?? 0));
+        let note = trial
+          ? `${plan.name} trial credits`
+          : `${plan.name} ${plan.interval === "week" ? "weekly" : "monthly"} credits`;
         // Moving up from one paid plan to another mid-period is charged pro rata, so the extra
         // credits are too: the share of the period left. Before, upgrading the day before renewal
         // paid a day's difference for the whole month's extra credits, and downgrading back kept
         // them (billing audit 2026-11-17). Starting to pay (from Free or a trial) tops up in full.
         if (amount > 0 && done?.paid_before && best?.current_period_end && !trial) {
-          const days = plan.interval === "year" ? 365 : 30;
+          const days = plan.interval === "year" ? 365 : plan.interval === "week" ? 7 : 30;
           const left = (new Date(best.current_period_end).getTime() - Date.now()) / 86_400_000;
           const share = Math.min(1, Math.max(0, left / days));
           amount = Math.round(amount * share * 100) / 100;
-          note = `${plan.name} monthly credits (the rest of this period)`;
+          note = `${plan.name} ${plan.interval === "week" ? "weekly" : "monthly"} credits (the rest of this period)`;
         }
         if (planCode === "free" && amount > 0 && !(await this.firstFreeWorkspace(orgId))) {
           amount = 0;
@@ -863,6 +864,13 @@ export class BillingService {
         const dodo = this.provider("dodo");
         // Extra people bought on the old plan move to the new one when it sells them (D-249).
         const seats = Number(current.extra_seats ?? 0);
+        // Weekly plans don't sell extra people (D-432): moving there would drop paid seats.
+        if (seats > 0 && plan.interval === "week")
+          throw new BillingError(
+            "seats_not_on_weekly",
+            "Weekly plans don't include extra people. Remove them first, or pick monthly or yearly.",
+            409,
+          );
         const [cfg] =
           seats > 0
             ? await this.db.execute<{ month: string | null; year: string | null }>(
@@ -1194,4 +1202,13 @@ export class BillingService {
     }
     return { slept };
   }
+}
+
+/** When a paid period ending at [end] started, for a plan billed every [interval]. */
+export function periodStart(end: Date, interval: string): Date {
+  const start = new Date(end);
+  if (interval === "year") start.setUTCFullYear(start.getUTCFullYear() - 1);
+  else if (interval === "week") start.setUTCDate(start.getUTCDate() - 7);
+  else start.setUTCMonth(start.getUTCMonth() - 1);
+  return start;
 }

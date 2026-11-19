@@ -11578,6 +11578,7 @@
             "type": "string",
             "enum": [
               "none",
+              "week",
               "month",
               "year"
             ]
@@ -11937,6 +11938,7 @@
             "type": "string",
             "enum": [
               "none",
+              "week",
               "month",
               "year"
             ]
@@ -12478,6 +12480,7 @@
             "type": "string",
             "enum": [
               "none",
+              "week",
               "month",
               "year"
             ]
@@ -42763,6 +42766,17 @@
           }
         ],
         "summary": "Plans and credit packs on this server",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 64
+            },
+            "required": false,
+            "name": "periods",
+            "in": "query"
+          }
+        ],
         "responses": {
           "200": {
             "description": "Catalog",

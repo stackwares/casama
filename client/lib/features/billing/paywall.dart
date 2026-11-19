@@ -53,37 +53,80 @@ Future<bool> openPaywall(
   return upgraded == true;
 }
 
-/// One paid tier: its monthly and yearly plans (`pro` and `pro_yearly`), either may be missing.
+/// How often a plan bills. Weekly (D-432) is priced high on purpose: it anchors monthly and yearly.
+enum PaywallPeriod { week, month, year }
+
+PaywallPeriod? paywallPeriodOf(Plan p) => switch (p.interval.value) {
+  'week' => PaywallPeriod.week,
+  'month' => PaywallPeriod.month,
+  'year' => PaywallPeriod.year,
+  _ => null,
+};
+
+/// One paid tier: its weekly, monthly and yearly plans (`pro_weekly`, `pro`, `pro_yearly`), any of
+/// which may be missing.
 class PaywallTier {
-  const PaywallTier(this.code, {this.monthly, this.yearly});
+  const PaywallTier(this.code, {this.monthly, this.yearly, this.weekly});
   final String code;
   final Plan? monthly;
   final Plan? yearly;
+  final Plan? weekly;
 
-  String get name => (monthly ?? yearly)!.name;
+  String get name => (monthly ?? yearly ?? weekly)!.name;
 
-  Iterable<Plan> get plans => [?monthly, ?yearly];
+  Iterable<Plan> get plans => [?weekly, ?monthly, ?yearly];
+
+  /// The plan this tier sells for [period], else the closest one it has.
+  Plan? planFor(PaywallPeriod period) => switch (period) {
+    PaywallPeriod.week => weekly ?? monthly ?? yearly,
+    PaywallPeriod.month => monthly ?? yearly ?? weekly,
+    PaywallPeriod.year => yearly ?? monthly ?? weekly,
+  };
 
   /// The plan the server opens the paywall on, when it is one of this tier's (D-332).
   Plan? get serverDefault => plans.where((p) => p.paywallDefault == true).firstOrNull;
 }
 
-/// The paid plans grouped into tiers by base code (`x` and `x_yearly` share one), in catalog order.
+/// The paid plans grouped into tiers by base code (`x`, `x_weekly` and `x_yearly` share one), in
+/// catalog order.
 List<PaywallTier> paywallTiers(Iterable<Plan> plans) {
   final order = <String>[];
-  final monthly = <String, Plan>{};
-  final yearly = <String, Plan>{};
+  final by = {for (final p in PaywallPeriod.values) p: <String, Plan>{}};
   for (final p in plans) {
-    if (p.interval.value == 'none') continue;
+    final period = paywallPeriodOf(p);
+    if (period == null) continue;
     final code = paywallTierOf(p.code);
     if (!order.contains(code)) order.add(code);
-    (p.interval.value == 'year' ? yearly : monthly)[code] = p;
+    by[period]![code] = p;
   }
-  return [for (final c in order) PaywallTier(c, monthly: monthly[c], yearly: yearly[c])];
+  return [
+    for (final c in order)
+      PaywallTier(
+        c,
+        weekly: by[PaywallPeriod.week]![c],
+        monthly: by[PaywallPeriod.month]![c],
+        yearly: by[PaywallPeriod.year]![c],
+      ),
+  ];
 }
 
-String paywallTierOf(String planCode) =>
-    planCode.endsWith('_yearly') ? planCode.substring(0, planCode.length - '_yearly'.length) : planCode;
+String paywallTierOf(String planCode) {
+  for (final suffix in const ['_yearly', '_weekly']) {
+    if (planCode.endsWith(suffix)) return planCode.substring(0, planCode.length - suffix.length);
+  }
+  return planCode;
+}
+
+/// The billing periods the paywall can offer, shortest first: those at least one tier sells.
+List<PaywallPeriod> paywallPeriods(List<PaywallTier> tiers) => [
+  for (final p in PaywallPeriod.values)
+    if (tiers.any((t) => switch (p) {
+      PaywallPeriod.week => t.weekly != null,
+      PaywallPeriod.month => t.monthly != null,
+      PaywallPeriod.year => t.yearly != null,
+    }))
+      p,
+];
 
 /// The tier the paywall opens on: the one just above the current plan. From Free, the tier of the
 /// plan the server marks as the paywall's default (D-332), else Plus (the cheapest).
@@ -101,8 +144,12 @@ String? defaultPaywallTier(List<PaywallTier> tiers, String? currentPlan) {
 
 /// Whether the paywall opens on yearly: when the server's default plan is a yearly one (D-332).
 /// Monthly otherwise, the smallest number up front.
-bool defaultPaywallYearly(List<PaywallTier> tiers) =>
-    tiers.map((t) => t.serverDefault).nonNulls.firstOrNull?.interval.value == 'year';
+bool defaultPaywallYearly(List<PaywallTier> tiers) => defaultPaywallPeriod(tiers) == PaywallPeriod.year;
+
+/// The period the paywall opens on: the server's default plan's (D-332), else monthly. Never
+/// weekly unless the server says so: weekly is there to be compared against (D-432).
+PaywallPeriod defaultPaywallPeriod(List<PaywallTier> tiers) =>
+    tiers.map((t) => t.serverDefault).nonNulls.firstOrNull?.let(paywallPeriodOf) ?? PaywallPeriod.month;
 
 /// The tiers marked "Most popular": the ones the server marks (D-332). A server from before the
 /// marks existed badges Pro.
@@ -130,7 +177,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
     with WidgetsBindingObserver {
   String? _tier;
   // Null until the person picks a period: then the server's default plan decides (D-332).
-  bool? _pickedYearly;
+  PaywallPeriod? _pickedPeriod;
   var _busy = false;
   String? _startPlan;
 
@@ -283,15 +330,20 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
         : tiers.isNotEmpty && storeGaveNothing
         ? _Empty.store
         : _Empty.failed;
-    final showYearly = _pickedYearly ?? defaultPaywallYearly(tiers);
+    final periods = paywallPeriods(tiers);
+    final pickedPeriod = _pickedPeriod ?? defaultPaywallPeriod(tiers);
+    // A period no tier sells (say weekly, before the store lists it) falls back to the default.
+    final period = periods.contains(pickedPeriod) || periods.isEmpty
+        ? pickedPeriod
+        : periods.contains(PaywallPeriod.month) ? PaywallPeriod.month : periods.first;
     final popular = popularPaywallTiers(tiers);
     final tier =
         tiers.where((t) => t.code == _tier).firstOrNull ??
         tiers.where((t) => t.code == defaultPaywallTier(tiers, billing?.planCode)).firstOrNull;
-    final selected = tier == null
-        ? null
-        : (showYearly ? tier.yearly ?? tier.monthly : tier.monthly ?? tier.yearly);
-    final yearly = selected?.interval.value == 'year';
+    final selected = tier?.planFor(period);
+    final selectedPeriod = selected == null ? null : paywallPeriodOf(selected);
+    final yearly = selectedPeriod == PaywallPeriod.year;
+    final weekly = selectedPeriod == PaywallPeriod.week;
     final isCurrent = selected != null && selected.code == billing?.planCode;
     final free = catalog?.plans
         .where((p) => p.interval.value == 'none')
@@ -344,18 +396,30 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
     }
 
     final bestSave = tiers.fold(0, (best, t) => math.max(best, savePercentOf(t)));
-    final hasBothPeriods = tiers.any((t) => t.monthly != null && t.yearly != null);
+    final hasBothPeriods = periods.length > 1;
     // The free trial comes with web checkout only. In a store the store alone decides who gets its
     // introductory offer, so the paywall never promises one there (App Store 3.1.2, Play's
     // subscription policy); the store's own payment sheet states the offer to whoever gets it.
     final trialOpen = billing?.trialAvailable == true && !storeChannel;
-    int? trialDaysOf(PaywallTier t) => trialOpen ? (t.monthly ?? t.yearly)?.limits['trial_days']?.toInt() : null;
+    // Weekly plans carry no trial (D-432), so a trial shows only on the periods that have one.
+    int? trialDaysOf(PaywallTier t) => trialOpen ? t.planFor(period)?.limits['trial_days']?.toInt() : null;
+
+    // What a monthly or yearly plan works out to per week, beside a tier that sells weekly, so the
+    // weekly price reads as the expensive way to pay (D-432).
+    String? perWeekOf(PaywallTier t, Plan plan) {
+      if (t.weekly == null || paywallPeriodOf(plan) == PaywallPeriod.week) return null;
+      final amount = amountOf(plan);
+      if (amount == null) return null;
+      final weeks = paywallPeriodOf(plan) == PaywallPeriod.year ? 52 : 52 / 12;
+      return l10n.paywallPerWeekWorksOut(money(amount / weeks, currencyOf(plan)));
+    }
 
     /// What one tier's card shows for the period picked: its price, how it is billed, and on a
     /// web yearly plan the monthly price it beats.
     _CardPrice? cardPrice(PaywallTier t) {
-      final plan = showYearly ? t.yearly ?? t.monthly : t.monthly ?? t.yearly;
+      final plan = t.planFor(period);
       if (plan == null) return null;
+      final perWeek = perWeekOf(t, plan);
       final code = currencyOf(plan);
       final amount = amountOf(plan);
       final product = productFor(plan);
@@ -372,6 +436,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
               ? l10n.paywallTrialThen(storeTrial, product.price, l10n.paywallPerYearShort)
               : amount == null ? l10n.paywallBilledYearlyPlain : l10n.paywallWorksOutTo(money(amount / 12, code)),
           monthsFree: monthsFreeOf(t),
+          perWeek: perWeek,
         );
       }
       // Web checkout: the yearly price per month, with the yearly total right under it.
@@ -385,6 +450,16 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
           billed: amount == null ? l10n.paywallBilledYearlyPlain : l10n.paywallBilledYearly(money(amount, code)),
           was: monthly == null || amount == null || monthly * 12 <= amount ? null : money(monthly, code),
           monthsFree: monthsFreeOf(t),
+          perWeek: perWeek,
+        );
+      }
+      // Weekly: the price charged every week, nothing to divide (D-432).
+      if (plan.interval.value == 'week') {
+        return _CardPrice(
+          plan: plan,
+          big: product?.price ?? (amount == null ? (priceFor(plan) ?? '') : money(amount, code)),
+          suffix: product != null || amount != null ? l10n.paywallPerWeekShort : '',
+          billed: l10n.paywallBilledWeekly,
         );
       }
       return _CardPrice(
@@ -394,6 +469,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
         billed: storeTrial != null
             ? l10n.paywallTrialThen(storeTrial, product!.price, l10n.paywallPerMonthShort)
             : l10n.paywallBilledMonthly,
+        perWeek: perWeek,
       );
     }
 
@@ -413,7 +489,9 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
     if (paidVia != null && selected != null && !isCurrent && currentTier != null) {
       final selectedTier = paywallTierOf(selected.code);
       if (selectedTier == currentTier) {
-        switchLabel = l10n.paywallSwitchTo(yearly ? l10n.paywallYearly : l10n.paywallMonthly);
+        switchLabel = l10n.paywallSwitchTo(
+          yearly ? l10n.paywallYearly : weekly ? l10n.paywallWeekly : l10n.paywallMonthly,
+        );
       } else if ((tierRank[selectedTier] ?? 0) < (tierRank[currentTier] ?? 0)) {
         switchLabel = l10n.paywallSwitchTo(tier!.name);
       }
@@ -571,11 +649,12 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
                             else if (hasBothPeriods) ...[
                               Center(
                                 child: _PeriodToggle(
-                                  yearly: showYearly,
+                                  periods: periods,
+                                  period: period,
                                   saveBadge: bestSave >= 1 ? l10n.paywallSaveUpTo(bestSave) : null,
                                   onChanged: (v) {
                                     HapticsHelper.selection();
-                                    setState(() => _pickedYearly = v);
+                                    setState(() => _pickedPeriod = v);
                                   },
                                 ),
                               ),
@@ -666,6 +745,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
                     terms: PurchaseTerms(
                       price: selected == null || isCurrent ? null : priceFor(selected),
                       yearly: yearly,
+                      weekly: weekly,
                       store: termsStore,
                       priceHasPeriod: termsStore == null,
                       trialDays: termsStore == null ? selectedTrial : storeTrial,
@@ -1095,6 +1175,7 @@ class _CardPrice {
     required this.billed,
     this.was,
     this.monthsFree = 0,
+    this.perWeek,
   });
 
   /// The plan this card buys for the period picked.
@@ -1112,6 +1193,9 @@ class _CardPrice {
   /// The monthly price yearly beats, struck through.
   final String? was;
   final int monthsFree;
+
+  /// "That's $3.46 a week": a monthly or yearly price next to a tier's weekly one (D-432).
+  final String? perWeek;
 }
 
 /// The plan's headline numbers on one line each: bots, computer time, credits, people.
@@ -1124,19 +1208,21 @@ List<String> _facts(AppLocalizations l10n, Map<String, num> limits) => [
   if (limits['seats'] case final v?) l10n.paywallPeople(v.toInt()),
 ];
 
-/// Monthly | Yearly as one pill, with what yearly saves riding on its half.
+/// Weekly | Monthly | Yearly as one pill, with what yearly saves riding on its segment.
 class _PeriodToggle extends StatelessWidget {
-  const _PeriodToggle({required this.yearly, required this.onChanged, this.saveBadge});
-  final bool yearly;
-  final ValueChanged<bool> onChanged;
+  const _PeriodToggle({required this.periods, required this.period, required this.onChanged, this.saveBadge});
+  final List<PaywallPeriod> periods;
+  final PaywallPeriod period;
+  final ValueChanged<PaywallPeriod> onChanged;
   final String? saveBadge;
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final scheme = context.colorScheme;
-    Widget half(bool isYearly, String label, Key key) {
-      final on = yearly == isYearly;
+    Widget half(PaywallPeriod p, String label, Key key) {
+      final on = period == p;
+      final isYearly = p == PaywallPeriod.year;
       return Semantics(
         button: true,
         selected: on,
@@ -1144,7 +1230,7 @@ class _PeriodToggle extends StatelessWidget {
         child: GestureDetector(
           key: key,
           behavior: HitTestBehavior.opaque,
-          onTap: () => onChanged(isYearly),
+          onTap: () => onChanged(p),
           child: AnimatedContainer(
             duration: AppMotion.of(context, AppMotion.fast),
             curve: AppMotion.curve,
@@ -1202,14 +1288,22 @@ class _PeriodToggle extends StatelessWidget {
           borderRadius: BorderRadius.circular(AppRadius.pill),
           border: Border.all(color: context.appColors.hairline),
         ),
-        // Both halves as tall as the taller one, each as wide as its label.
+        // Every segment as tall as the tallest one, each as wide as its label.
         child: IntrinsicHeight(
           child: Row(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              half(false, l10n.paywallMonthly, const Key('paywallInterval-month')),
-              half(true, l10n.paywallYearly, const Key('paywallInterval-year')),
+              for (final p in periods)
+                half(
+                  p,
+                  switch (p) {
+                    PaywallPeriod.week => l10n.paywallWeekly,
+                    PaywallPeriod.month => l10n.paywallMonthly,
+                    PaywallPeriod.year => l10n.paywallYearly,
+                  },
+                  Key('paywallInterval-${p.name}'),
+                ),
             ],
           ),
         ),
@@ -1333,6 +1427,13 @@ class _TierCard extends StatelessWidget {
           textAlign: vertical ? TextAlign.start : TextAlign.end,
           style: context.textTheme.labelSmall?.copyWith(color: muted),
         ),
+        if (price.perWeek case final perWeek?)
+          Text(
+            perWeek,
+            key: Key('paywallPerWeek-${price.plan.code}'),
+            textAlign: vertical ? TextAlign.start : TextAlign.end,
+            style: context.textTheme.labelSmall?.copyWith(color: muted, fontFeatures: AppText.tabular),
+          ),
         if (price.monthsFree >= 1)
           Text(
             l10n.paywallMonthsFree(price.monthsFree),

@@ -169,6 +169,10 @@ Owners and admins can change plans and buy credits. Members see the plan and usa
 | **Pro** | $49 a month or $490 a year | $15 | Unlimited | 5 (2) | 100 | 3 | 50 GB |
 | **Max** | $99 a month or $899 a year | $30 | Unlimited | 10 (2) | 300 | 10 | 200 GB |
 
+Plus, Pro and Max can also be paid by the week ($7.99, $19.99 and $39.99). A weekly plan has the
+same limits as the monthly one and gets a quarter of its credits each paid week; it has no free
+trial, and extra people aren't sold on it.
+
 Each plan also caps what its bots can spend on Casama's own model key in one day ($0.25 on Free,
 $5 on Plus, $10 on Pro and $25 on Max). Bigger plans also get bigger computers: 1 vCPU and 1 GB of
 memory on Free and Plus, 2 on Pro and 4 on Max. Plans can change, so **Billing** always shows the

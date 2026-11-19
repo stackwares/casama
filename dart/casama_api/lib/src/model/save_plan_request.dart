@@ -222,6 +222,8 @@ class SavePlanRequest {
 enum SavePlanRequestIntervalEnum {
 @JsonValue(r'none')
 none(r'none'),
+@JsonValue(r'week')
+week(r'week'),
 @JsonValue(r'month')
 month(r'month'),
 @JsonValue(r'year')

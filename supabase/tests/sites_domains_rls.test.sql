@@ -120,7 +120,7 @@ select throws_ok($$ insert into public.email_outbox (kind, dedupe_key, data) val
   '23514', null, 'an outbox row with no recipient at all is refused');
 
 -- Plan limits were merged, not replaced.
-select is((select jsonb_object_agg(code, limits -> 'max_sites') from public.plans where code <> 'selfhost'),
+select is((select jsonb_object_agg(code, limits -> 'max_sites') from public.plans where code <> 'selfhost' and interval <> 'week'),
   '{"free": 1, "plus": 3, "plus_yearly": 3, "pro": 10, "pro_yearly": 10, "max": 50, "max_yearly": 50}'::jsonb,
   'max_sites per plan');
 

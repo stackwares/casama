@@ -5063,8 +5063,9 @@ class SupabaseBackend implements Backend {
   @override
   Future<BillingSummary> billing(String orgId) async =>
       (await api.billing.getBilling(id: orgId)).data!;
+  // Weekly plans (D-432) are only sent to apps that can show them.
   @override
-  Future<PlanCatalog> plans() async => (await api.billing.listPlans()).data!;
+  Future<PlanCatalog> plans() async => (await api.billing.listPlans(periods: 'week')).data!;
   @override
   Future<String?> checkoutUrl(
     String orgId, {

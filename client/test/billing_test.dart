@@ -555,6 +555,90 @@ void main() {
       });
     }
 
+    group('weekly plans (D-432)', () {
+      List<Plan> withWeekly() {
+        Plan week(String code, String name, Map<String, num> limits, String price) => Plan(
+              code: code,
+              name: name,
+              interval: PlanIntervalEnum.week,
+              limits: limits,
+              priceLabel: price,
+              web: true,
+              storeProductIds: {'app_store': 'ai.casama.$code', 'google_play': 'casama_$code'},
+            );
+        final base = pricingPlans();
+        Map<String, num> limitsOf(String code) => base.firstWhere((p) => p.code == code).limits;
+        return [
+          base.first,
+          week('plus_weekly', 'Plus', limitsOf('plus'), r'$7.99 / week'),
+          ...base.where((p) => p.code.startsWith('plus')),
+          week('pro_weekly', 'Pro', limitsOf('pro'), r'$19.99 / week'),
+          // Monthly and yearly Pro carry the trial; weekly never does.
+          for (final p in base.where((p) => p.code.startsWith('pro')))
+            p.copyWith(limits: {...p.limits, 'trial_days': 7}),
+          week('max_weekly', 'Max', limitsOf('max'), r'$39.99 / week'),
+          ...base.where((p) => p.code.startsWith('max')),
+        ];
+      }
+
+      test('a weekly plan joins its tier, and the paywall still opens on monthly', () {
+        final tiers = paywallTiers(withWeekly());
+        expect([for (final t in tiers) t.code], ['plus', 'pro', 'max']);
+        expect(tiers[1].weekly?.code, 'pro_weekly');
+        expect(tiers[1].planFor(PaywallPeriod.week)?.code, 'pro_weekly');
+        expect(tiers[1].planFor(PaywallPeriod.month)?.code, 'pro');
+        expect(paywallTierOf('pro_weekly'), 'pro');
+        expect(defaultPaywallTier(tiers, 'plus_weekly'), 'pro');
+        expect(paywallPeriods(tiers), PaywallPeriod.values);
+        expect(paywallPeriods(paywallTiers(pricingPlans())), [PaywallPeriod.month, PaywallPeriod.year]);
+        expect(defaultPaywallPeriod(tiers), PaywallPeriod.month);
+      });
+
+      testWidgets('weekly is a third period: billed every week, no trial, and monthly shows what a week costs',
+          (tester) async {
+        await setSize(tester, const Size(400, 900));
+        final backend = FakeBackend()
+          ..billingEnabled = true
+          ..trialAvailable = true
+          ..catalogPlans = withWeekly();
+        final opened = <String>[];
+        await pumpPaywall(tester, backend, opened: opened);
+        Finder inPrice(String code, Finder f) => find.descendant(of: find.byKey(Key('paywallPrice-$code')), matching: f);
+        // Opens on monthly, with each monthly price worked out per week beside the weekly option.
+        await revealInPaywall(tester, find.byKey(const Key('paywallInterval-week')));
+        expect(find.byKey(const Key('paywallInterval-month')), findsOneWidget);
+        expect(find.byKey(const Key('paywallInterval-year')), findsOneWidget);
+        await revealInPaywall(tester, find.byKey(const Key('paywallPrice-plus')));
+        expect(inPrice('plus', find.text(r"That's $3.46 a week")), findsOneWidget);
+
+        await revealInPaywall(tester, find.byKey(const Key('paywallInterval-week')));
+        await tester.tap(find.byKey(const Key('paywallInterval-week')));
+        await settle(tester);
+        await revealInPaywall(tester, find.byKey(const Key('paywallTier-pro')));
+        await tester.tap(find.byKey(const Key('paywallTier-pro')));
+        await settle(tester);
+        expect(inPrice('pro_weekly', find.text(r'$19.99/wk', findRichText: true)), findsOneWidget);
+        expect(inPrice('pro_weekly', find.text('Billed weekly')), findsOneWidget);
+        expect(find.byKey(const Key('paywallPerWeek-pro_weekly')), findsNothing);
+        // The Pro trial belongs to monthly and yearly.
+        expect(find.descendant(of: find.byKey(const Key('paywallTier-pro')), matching: find.text('7 days free')), findsNothing);
+        expect(find.descendant(of: find.byKey(const Key('paywallBuy')), matching: find.text('Get Pro')), findsOneWidget);
+        final disclosure = tester.widget<Text>(find.byKey(const Key('purchaseDisclosure'))).data!;
+        expect(disclosure, startsWith(r'$19.99 / week, renewing automatically'));
+        await tester.tap(find.byKey(const Key('paywallBuy')));
+        await settle(tester);
+        expect(backend.checkouts, ['pro_weekly']);
+
+        // Back on yearly the trial is offered again, and yearly works out per week too.
+        await revealInPaywall(tester, find.byKey(const Key('paywallInterval-year')));
+        await tester.tap(find.byKey(const Key('paywallInterval-year')));
+        await settle(tester);
+        await revealInPaywall(tester, find.byKey(const Key('paywallTier-pro')));
+        expect(find.descendant(of: find.byKey(const Key('paywallTier-pro')), matching: find.text('7 days free')), findsOneWidget);
+        expect(inPrice('pro_yearly', find.text(r"That's $7.50 a week")), findsOneWidget);
+      });
+    });
+
     test('the server picks the plan the paywall opens on and the popular tier (D-332)', () {
       Plan flag(Plan p, {bool def = false, bool popular = false}) => p.copyWith(paywallDefault: def, paywallPopular: popular);
       final tiers = paywallTiers([

@@ -27,6 +27,15 @@ export const listPlans = createRoute({
   tags,
   security,
   summary: "Plans and credit packs on this server",
+  request: {
+    query: z.object({
+      /**
+       * Extra billing periods the caller can show, comma-separated. Weekly plans (D-432) are left
+       * out unless this includes `week`, because older apps can't read that interval.
+       */
+      periods: z.string().max(64).optional(),
+    }),
+  },
   responses: { 200: jsonResponse("Catalog", PlanCatalog), 401: e401 },
 });
 

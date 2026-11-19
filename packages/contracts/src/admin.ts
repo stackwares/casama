@@ -172,7 +172,7 @@ export const AdminPlan = z
   .object({
     code: z.string(),
     name: z.string(),
-    interval: z.enum(["none", "month", "year"]),
+    interval: z.enum(["none", "week", "month", "year"]),
     active: z.boolean(),
     sort: z.number().int(),
     price_label: z.string().nullable(),
@@ -225,7 +225,7 @@ const productIds = z.record(z.string(), z.string().min(1).max(200));
 export const SavePlanRequest = z
   .object({
     name: z.string().min(1).max(80).optional(),
-    interval: z.enum(["none", "month", "year"]).optional(),
+    interval: z.enum(["none", "week", "month", "year"]).optional(),
     active: z.boolean().optional(),
     sort: z.number().int().optional(),
     price_label: z.string().max(80).nullable().optional(),

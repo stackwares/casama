@@ -209,6 +209,61 @@ describe("billing on (Casama Cloud, Phase 7 gate)", () => {
     expect(plans.plans.find((p: { code: string }) => p.code === "pro").web).toBe(true);
   });
 
+  it("weekly plans (D-432) are listed only to apps that ask, without a trial or extra people", async () => {
+    const codes = async (q = "") =>
+      (await j(await h.request(`/v1/billing/plans${q}`, { token: owner.token }))).plans.map(
+        (p: { code: string }) => p.code,
+      ) as string[];
+    // Shipped apps parse the interval strictly: they never see `week`.
+    expect((await codes()).some((c) => c.endsWith("_weekly"))).toBe(false);
+    const all = await j(await h.request("/v1/billing/plans?periods=week", { token: owner.token }));
+    const weekly = all.plans.filter((p: { interval: string }) => p.interval === "week");
+    expect(weekly.map((p: { code: string }) => p.code)).toEqual([
+      "plus_weekly",
+      "pro_weekly",
+      "max_weekly",
+    ]);
+    const proWeek = weekly.find((p: { code: string }) => p.code === "pro_weekly");
+    expect(proWeek.price_label).toBe("$19.99 / week");
+    expect(proWeek.limits.trial_days).toBeUndefined();
+    expect(proWeek.limits.extra_seat_usd).toBeUndefined();
+    expect(proWeek.limits.seats).toBe(3);
+    expect(proWeek.store_product_ids).toEqual({
+      app_store: "ai.casama.pro.weekly",
+      google_play: "casama_pro:weekly",
+    });
+  });
+
+  it("weekly plans grant a quarter of the monthly credits once per paid week (D-432)", async () => {
+    await h.handle.db.execute(
+      sql`update public.plans set dodo_product_id = 'pdt_sub_pro_week' where code = 'pro_weekly'`,
+    );
+    const org = await newOrg("Weekly");
+    const b = await buyOnWeb(org, { plan_code: "pro_weekly" });
+    const sub = f.dodo.subs.get(b.subscriptionId as string) as { next_billing_date: string };
+    sub.next_billing_date = new Date(Date.now() + 3 * 86_400_000).toISOString();
+    await dodoHook("subscription.active", { subscription_id: b.subscriptionId });
+    const grants = async () =>
+      h.handle.db.execute<{ reference: string; delta: string }>(sql`
+        select reference, delta::text from public.credit_ledger
+        where org_id = ${org}::uuid and reason = 'grant' and delta > 0 and reference not like '%:free'
+        order by created_at`);
+    const [w1] = await h.handle.db.execute<{ d: string }>(sql`
+      select to_char((now() at time zone 'utc') + interval '3 days' - interval '7 days', 'YYYY-MM-DD') as d`);
+    expect((await grants()).map((g) => [g.reference, Number(g.delta)])).toEqual([
+      [`monthly:${w1?.d}:pro_weekly`, 3.75],
+    ]);
+    await h.deps.billing?.settle();
+    expect((await grants()).length).toBe(1);
+    // The next paid week grants again, once.
+    sub.next_billing_date = new Date(Date.now() + 10 * 86_400_000).toISOString();
+    await dodoHook("subscription.renewed", { subscription_id: b.subscriptionId });
+    await dodoHook("subscription.renewed", { subscription_id: b.subscriptionId });
+    expect((await grants()).map((g) => Number(g.delta))).toEqual([3.75, 3.75]);
+    const s = await billing(org);
+    expect(s).toMatchObject({ plan_code: "pro_weekly", interval: "week" });
+  });
+
   it("a Dodo purchase on the web unlocks the workspace everywhere (iOS and Android read the same entitlement)", async () => {
     const orgId = await newOrg("Web buyer");
     await h.request(`/v1/orgs/${orgId}/invites`, {

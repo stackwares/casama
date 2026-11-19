@@ -6198,3 +6198,28 @@ Amends D-322's note that no MapTiler key was configured.
 ## D-430 Casama gets its own PostHog Cloud project (2026-11-19)
 
 Casama used the shared Stackwares PostHog project 637030, which was already past its free tier, so every Casama event was paid for out of a project shared with the other Stackwares apps. Casama now has its own PostHog Cloud account (US region, `hello@casama.ai`, email and password) with project 750357, which starts on the free 1M events a month. The project key, a `person:write` key for erasing purged accounts and an `error_tracking:write` + `organization:read` key for crash symbols are Vaultwarden items marked "Casama 750357"; the three old items are marked superseded and stay until the old keys are revoked. Switched the same day: the server's `POSTHOG_API_KEY`, `POSTHOG_PERSONAL_API_KEY` and `POSTHOG_PROJECT_ID` on the VPS (a redeploy of the live commit, API and worker only), the `CASAMA_TELEMETRY_JSON` repo secret for CI desktop builds, and the local `.env`, `client/config/telemetry.json` and `posthog-cli.env`. App builds already in the stores keep sending to 637030 until their users update. History and the dashboards stay in 637030; the new project starts empty.
+
+## D-432 Weekly plans as a price anchor (2026-11-20)
+
+Asked by Oliver: offer a weekly plan priced above monthly and yearly so those read as the good
+deals (price anchoring, a decoy option). Plan: `docs/WEEKLY-PLAN-PLAN.md`.
+
+- **Prices:** Plus **$7.99**, Pro **$19.99**, Max **$39.99** a week, about twice the monthly rate
+  (Oliver picked the higher option). Codes `plus_weekly`, `pro_weekly`, `max_weekly`, interval
+  `week`. App Store `ai.casama.<tier>.weekly`, Play base plan `weekly` on `casama_<tier>`, Dodo
+  products "Casama <Tier> Weekly".
+- **What a week includes:** the monthly plan's limits. Included credits are granted every paid week,
+  a quarter of `monthly_credits_usd` (Plus $1.25, Pro $3.75, Max $7.50): `grant_month()` names a
+  weekly period by the day it started, so references stay `monthly:<label>:<plan>` and expiry and
+  refunds work unchanged. Computer hours keep their calendar-month cap.
+- **No trial and no extra people on weekly:** the rows leave out `trial_days` and
+  `extra_seat_usd`; a web subscriber with extra people can't switch to weekly
+  (`seats_not_on_weekly`).
+- **Older apps never see weekly plans:** the generated Dart model reads `interval` as a strict
+  enum, so `/v1/billing/plans` lists `week` plans only with `?periods=week`, which new apps and the
+  web app send.
+- **Paywall:** Weekly | Monthly | Yearly. It still opens on the D-332 default (monthly); monthly
+  and yearly cards show what they cost per week next to a tier's weekly price. The yearly save
+  badge still compares against monthly, not weekly. Store apps show weekly only once the store
+  lists the product.
+- **Website and docs:** a line under the plans ("or pay by the week"), not a third toggle.

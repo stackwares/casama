@@ -561,6 +561,7 @@ _responseData = rawData == null ? null : deserialize<LinkKeyList, LinkKeyList>(r
   /// 
   ///
   /// Parameters:
+  /// * [periods] 
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -571,6 +572,7 @@ _responseData = rawData == null ? null : deserialize<LinkKeyList, LinkKeyList>(r
   /// Returns a [Future] containing a [Response] with a [PlanCatalog] as data
   /// Throws [DioException] if API call or serialization fails
   Future<Response<PlanCatalog>> listPlans({ 
+    String? periods,
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
     Map<String, dynamic>? extra,
@@ -597,9 +599,14 @@ _responseData = rawData == null ? null : deserialize<LinkKeyList, LinkKeyList>(r
       validateStatus: validateStatus,
     );
 
+    final _queryParameters = <String, dynamic>{
+      if (periods != null) r'periods': periods,
+    };
+
     final _response = await _dio.request<Object>(
       _path,
       options: _options,
+      queryParameters: _queryParameters,
       cancelToken: cancelToken,
       onSendProgress: onSendProgress,
       onReceiveProgress: onReceiveProgress,

@@ -13,7 +13,8 @@ schema: software
 {{plans}}
 
 Pro starts with a 7-day free trial. Paying yearly costs less: $150 for Plus, $490 for Pro and $899
-for Max.
+for Max. For a short project you can also pay by the week: $7.99 for Plus, $19.99 for Pro and
+$39.99 for Max, with a week's share of the credits.
 
 ## What credits pay for
 

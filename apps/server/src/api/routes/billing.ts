@@ -65,8 +65,12 @@ export function registerBillingRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
   app.openapi(routes.listPlans, async (c) => {
     requireClaims(c.get("claims"));
     if (!billing.enabled) return c.json({ enabled: false, plans: [], packs: [] }, 200);
-    // The self-hosted plan is not offered on Casama Cloud.
-    const plans = (await billing.plans()).filter((p) => p.code !== "selfhost");
+    // The self-hosted plan is not offered on Casama Cloud. Weekly plans (D-432) only go to apps
+    // that ask for them: older apps parse the interval as a strict enum and would fail on `week`.
+    const periods = new Set((c.req.valid("query").periods ?? "").split(",").map((x) => x.trim()));
+    const plans = (await billing.plans()).filter(
+      (p) => p.code !== "selfhost" && (p.interval !== "week" || periods.has("week")),
+    );
     const packs = await billing.packs();
     return c.json(
       {
@@ -74,7 +78,7 @@ export function registerBillingRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
         plans: plans.map((p) => ({
           code: p.code,
           name: p.name,
-          interval: p.interval as "none" | "month" | "year",
+          interval: p.interval as "none" | "week" | "month" | "year",
           limits: Object.fromEntries(
             Object.entries(p.limits).filter(([, v]) => typeof v === "number"),
           ) as Record<string, number>,

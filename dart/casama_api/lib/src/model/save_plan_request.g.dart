@@ -240,6 +240,7 @@ Map<String, dynamic> _$SavePlanRequestToJson(SavePlanRequest instance) =>
 
 const _$SavePlanRequestIntervalEnumEnumMap = {
   SavePlanRequestIntervalEnum.none: 'none',
+  SavePlanRequestIntervalEnum.week: 'week',
   SavePlanRequestIntervalEnum.month: 'month',
   SavePlanRequestIntervalEnum.year: 'year',
 };

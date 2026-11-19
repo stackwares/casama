@@ -16282,6 +16282,12 @@ abstract class AppLocalizations {
   /// **'{hours} h'**
   String paywallHours(String hours);
 
+  /// No description provided for @paywallWeekly.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly'**
+  String get paywallWeekly;
+
   /// No description provided for @paywallMonthly.
   ///
   /// In en, this message translates to:
@@ -16376,6 +16382,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Free for {days} days, then {price}, renewing automatically until you cancel. Cancel from Billing before the trial ends and you won\'t be charged.'**
   String paywallDisclosureWebTrial(int days, String price);
+
+  /// No description provided for @pricePerWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'per week'**
+  String get pricePerWeek;
 
   /// No description provided for @pricePerMonth.
   ///
@@ -17636,6 +17648,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Billed monthly'**
   String get paywallBilledMonthly;
+
+  /// No description provided for @paywallBilledWeekly.
+  ///
+  /// In en, this message translates to:
+  /// **'Billed weekly'**
+  String get paywallBilledWeekly;
+
+  /// No description provided for @paywallPerWeekShort.
+  ///
+  /// In en, this message translates to:
+  /// **'/wk'**
+  String get paywallPerWeekShort;
+
+  /// No description provided for @paywallPerWeekWorksOut.
+  ///
+  /// In en, this message translates to:
+  /// **'That\'s {price} a week'**
+  String paywallPerWeekWorksOut(String price);
 
   /// No description provided for @paywallBilledYearlyPlain.
   ///

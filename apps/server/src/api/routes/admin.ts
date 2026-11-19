@@ -530,7 +530,7 @@ export function registerAdminRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
   type PlanRow = {
     code: string;
     name: string;
-    interval: "none" | "month" | "year";
+    interval: "none" | "week" | "month" | "year";
     active: boolean;
     sort: number;
     price_label: string | null;

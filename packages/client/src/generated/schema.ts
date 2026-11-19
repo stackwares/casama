@@ -10533,7 +10533,7 @@ export interface components {
             code: string;
             name: string;
             /** @enum {string} */
-            interval: "none" | "month" | "year";
+            interval: "none" | "week" | "month" | "year";
             active: boolean;
             sort: number;
             price_label: string | null;
@@ -10627,7 +10627,7 @@ export interface components {
         SavePlanRequest: {
             name?: string;
             /** @enum {string} */
-            interval?: "none" | "month" | "year";
+            interval?: "none" | "week" | "month" | "year";
             active?: boolean;
             sort?: number;
             price_label?: string | null;
@@ -10781,7 +10781,7 @@ export interface components {
             code: string;
             name: string;
             /** @enum {string} */
-            interval: "none" | "month" | "year";
+            interval: "none" | "week" | "month" | "year";
             limits: {
                 [key: string]: number;
             };
@@ -25308,7 +25308,9 @@ export interface operations {
     };
     listPlans: {
         parameters: {
-            query?: never;
+            query?: {
+                periods?: string;
+            };
             header?: never;
             path?: never;
             cookie?: never;

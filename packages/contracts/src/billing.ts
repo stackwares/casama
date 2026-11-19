@@ -9,7 +9,8 @@ export const Plan = z
   .object({
     code: z.string(),
     name: z.string(),
-    interval: z.enum(["none", "month", "year"]),
+    /** `week` plans are only listed for apps that ask for them (`?periods=week`, D-432). */
+    interval: z.enum(["none", "week", "month", "year"]),
     limits: Limits,
     price_label: z.string().nullable(),
     /** Can be bought with web checkout (Dodo). */

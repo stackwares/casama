@@ -133,6 +133,9 @@ Casama Cloud has four plans:
 - **Max**: $99 a month or $899 a year. $30 of credits a month, unlimited bots, 10 computers, 300
   computer hours, 10 people, 200 GB.
 
+Plus, Pro and Max can also be paid by the week: $7.99, $19.99 and $39.99, with a quarter of the
+monthly credits each week.
+
 Bigger plans also get bigger computers. Plans can change, so **Settings → Billing** always shows
 the current ones. See [Pricing](https://casama.ai/pricing) and [Plans](/guide/usage#plans).
 

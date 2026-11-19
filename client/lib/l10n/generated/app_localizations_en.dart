@@ -10300,6 +10300,9 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get paywallWeekly => 'Weekly';
+
+  @override
   String get paywallMonthly => 'Monthly';
 
   @override
@@ -10366,6 +10369,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String paywallDisclosureWebTrial(int days, String price) {
     return 'Free for $days days, then $price, renewing automatically until you cancel. Cancel from Billing before the trial ends and you won\'t be charged.';
   }
+
+  @override
+  String get pricePerWeek => 'per week';
 
   @override
   String get pricePerMonth => 'per month';
@@ -11160,6 +11166,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get paywallBilledMonthly => 'Billed monthly';
+
+  @override
+  String get paywallBilledWeekly => 'Billed weekly';
+
+  @override
+  String get paywallPerWeekShort => '/wk';
+
+  @override
+  String paywallPerWeekWorksOut(String price) {
+    return 'That\'s $price a week';
+  }
 
   @override
   String get paywallBilledYearlyPlain => 'Billed yearly';

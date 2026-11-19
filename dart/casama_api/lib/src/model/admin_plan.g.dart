@@ -282,6 +282,7 @@ Map<String, dynamic> _$AdminPlanToJson(AdminPlan instance) => <String, dynamic>{
 
 const _$AdminPlanIntervalEnumEnumMap = {
   AdminPlanIntervalEnum.none: 'none',
+  AdminPlanIntervalEnum.week: 'week',
   AdminPlanIntervalEnum.month: 'month',
   AdminPlanIntervalEnum.year: 'year',
 };
