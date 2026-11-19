@@ -192,6 +192,8 @@ What to know:
   voice.
 - A call with no speech from either side for 2 minutes ends by itself, so a forgotten call doesn't
   keep running.
+- The bot can hang up too: say goodbye or "that's all" and it says goodbye and ends the call once
+  it has finished speaking. An older app version can't, so the bot asks you to tap **End Call**.
 - On Gemini Live, **Usage** records what the call actually cost, from the token counts Gemini
   reports; other calls are estimated by the minute.
 - You can interrupt. When you start speaking, the bot stops talking and listens.

@@ -5951,3 +5951,15 @@ cookies and could set cookies on `.casama.ai`.
 - **Still declared on Play:** phone call (incoming bot calls, `flutter_callkit_incoming`) and microphone (`CallService`, live calls in the background). Both need a short video each.
 - Docs: guide/devices.md, guide/routines.md. Tests: `packages/domain/test/os-permissions.test.ts`; `client/test/device_connections_test.dart` fake.
 
+## D-423 The bot can hang up an in-app call itself (2026-11-19)
+
+- **What:** in-app voice calls get the `end_call` tool that phone calls already have (D-141). The
+  call's instructions say: when the user says goodbye or wants to end the call, say a short
+  goodbye, then use `end_call`.
+- **The app answers it,** as it does `show_screen` (D-327): it tells the model it's hanging up, waits
+  1.2 s for a goodbye still on its way, then waits for the bot to stop speaking (at most 10 s) and
+  ends the call with the reason `CallEnd.bot`. The call is saved and recapped like any other.
+- **Older apps** send `end_call` to `/v1/voice/tool` like any tool. The server answers without a run:
+  it can't hang up, so the bot tells the user to tap the red button.
+- **Why:** a call stayed open after "okay, bye" until the person tapped End Call or two quiet
+  minutes passed, billing turns nobody needed.

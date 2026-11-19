@@ -400,6 +400,8 @@ describe("live calls (D-327)", () => {
     const names = setup.tools.flatMap((t) => t.functionDeclarations.map((f) => f.name));
     expect(names).toContain("start_task");
     expect(names).toContain("stop_task");
+    // The bot can hang up an in-app call itself (D-423).
+    expect(names).toContain("end_call");
 
     const started = await tool(w.owner.token, "start_task", { task: "Book the flight to Cebu" });
     expect(started.status, await started.clone().text()).toBe(200);
@@ -442,6 +444,11 @@ describe("live calls (D-327)", () => {
     const shown = await j(await tool(w.owner.token, "show_screen"));
     expect(shown.status).toBe("completed");
     expect(shown.run_id).toBe("00000000-0000-0000-0000-000000000000");
+    // end_call too (D-423): an older app tells the bot it can't hang up, and starts no run.
+    const hung = await j(await tool(w.owner.token, "end_call"));
+    expect(hung.status).toBe("completed");
+    expect(hung.run_id).toBe("00000000-0000-0000-0000-000000000000");
+    expect(hung.output).toContain("red button");
 
     // Hanging up posts the recap: the length and the jobs, each with its run.
     await h.request("/v1/voice/transcript", {
