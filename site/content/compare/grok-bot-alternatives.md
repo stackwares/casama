@@ -120,8 +120,9 @@ Worth knowing:
 
 ## Moving over from Grok Bot
 
-Each Grok Bot becomes a Casama bot: paste its instructions, re-create its schedules as routines and
-sign in to the apps it used. Each bot gets its own computer, so sign-ins no longer leak from one
+Each Grok Bot becomes a Casama bot. Grok Bot has no export, so Casama asks your Bot instead: choose
+**Paste a Bot's Setup**, send your Bot the prompt and paste its reply. Its instructions, schedules,
+skills and "ask first" rules come over after you review them. Then sign in to the apps it used. Each bot gets its own computer, so sign-ins no longer leak from one
 bot to another. Team Bots in Slack or Teams reconnect per bot.
 
 ## Questions

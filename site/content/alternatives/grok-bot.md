@@ -40,7 +40,7 @@ Grok Bot is a closed, hosted product from a large lab, sold as part of a subscri
 
 ## Moving from Grok Bot to Casama
 
-Recreate each Bot as a Casama bot with the same role and instructions, reconnect its apps, and turn its schedules into routines. If your team uses Bots in Slack, connect Casama's Slack app and add the bot to the same channels.
+Grok Bot has no export, so Casama asks your Bot instead: in Casama, choose **Paste a Bot's Setup**, send your Bot the prompt and paste its reply. Its instructions, schedules, skills and "ask first" rules come over as a bot and routines, and you review each one first. Then reconnect its apps. If your team uses Bots in Slack, connect Casama's Slack app and add the bot to the same channels.
 
 Start on [Casama Cloud's free plan](https://app.casama.ai), or
 [run Casama on your own server](/self-hosted).
