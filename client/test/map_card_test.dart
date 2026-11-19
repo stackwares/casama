@@ -1,14 +1,63 @@
 // A bot's Map card (D-310): the A2UI Map component shows a native map with its pins, and opens
 // full screen. Tiles aren't loaded in tests; the card and its markers are what's checked.
+import 'dart:async';
+
 import 'package:casama/features/chat/chat_screen.dart';
 import 'package:casama/features/chat/widgets/bot_ui_map.dart';
+import 'package:casama/l10n/generated/app_localizations.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app_test.dart' show harness, setSize;
 import 'fake_backend.dart';
+
+class _ErrorImageCompleter extends ImageStreamCompleter {
+  _ErrorImageCompleter(Object error) {
+    scheduleMicrotask(
+      () => reportError(exception: error, stack: StackTrace.current),
+    );
+  }
+}
+
+class _ErrorImageProvider extends ImageProvider<_ErrorImageProvider> {
+  const _ErrorImageProvider(this.error);
+  final Object error;
+
+  @override
+  Future<_ErrorImageProvider> obtainKey(ImageConfiguration configuration) =>
+      SynchronousFuture(this);
+
+  @override
+  ImageStreamCompleter loadImage(
+    _ErrorImageProvider key,
+    ImageDecoderCallback decode,
+  ) => _ErrorImageCompleter(error);
+}
+
+class _FallbackTestTileProvider extends TileProvider {
+  _FallbackTestTileProvider({required this.mapTilerStatusCode});
+  final int mapTilerStatusCode;
+  final List<String> requestedUrls = [];
+
+  @override
+  ImageProvider getImage(TileCoordinates coordinates, TileLayer options) {
+    final url = getTileUrl(coordinates, options);
+    requestedUrls.add(url);
+    if (url.contains('api.maptiler.com')) {
+      return _ErrorImageProvider(
+        NetworkImageLoadException(
+          statusCode: mapTilerStatusCode,
+          uri: Uri.parse(url),
+        ),
+      );
+    }
+    return MemoryImage(TileProvider.transparentImage);
+  }
+}
 
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
@@ -110,6 +159,100 @@ void main() {
       ]);
       expect(find.text('Here'), findsOneWidget);
       expect(find.byType(FlutterMap), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'falls back to OpenStreetMap when MapTiler fails with 429 and keeps fallback full screen',
+    (tester) async {
+      await setSize(tester, const Size(400, 600));
+      final tiles = _FallbackTestTileProvider(mapTilerStatusCode: 429);
+      await tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: BotMapCard(
+              spec: const MapCardSpec(
+                center: LatLng(37.7749, -122.4194),
+                zoom: 12,
+                markers: [],
+                path: [],
+                height: 220,
+              ),
+              mapTilerKey: 'test-key',
+              tileProvider: tiles,
+            ),
+          ),
+        ),
+      );
+
+      // Starts on MapTiler and requests MapTiler tiles first.
+      expect(
+        tester.widget<TileLayer>(find.byType(TileLayer)).urlTemplate,
+        contains('api.maptiler.com'),
+      );
+      await tester.pump();
+      await tester.pump();
+
+      // After MapTiler returns 429, switches to OpenStreetMap with retina off.
+      final fallbackLayer = tester.widget<TileLayer>(find.byType(TileLayer));
+      expect(fallbackLayer.urlTemplate, contains('tile.openstreetmap.org'));
+      expect(fallbackLayer.resolvedRetinaMode, RetinaMode.disabled);
+      expect(
+        tiles.requestedUrls.any((u) => u.contains('api.maptiler.com')),
+        isTrue,
+      );
+      expect(
+        tiles.requestedUrls.any((u) => u.contains('tile.openstreetmap.org')),
+        isTrue,
+      );
+
+      // Opening full screen keeps the OpenStreetMap fallback active.
+      await tester.tap(find.byKey(const Key('mapExpand')));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+      final fullscreenLayer = tester.widget<TileLayer>(
+        find.descendant(
+          of: find.byType(Scaffold).last,
+          matching: find.byType(TileLayer),
+        ),
+      );
+      expect(fullscreenLayer.urlTemplate, contains('tile.openstreetmap.org'));
+    },
+  );
+
+  testWidgets(
+    'stays on MapTiler when a single tile returns 404',
+    (tester) async {
+      await setSize(tester, const Size(400, 600));
+      final tiles = _FallbackTestTileProvider(mapTilerStatusCode: 404);
+      await tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: BotMapCard(
+              spec: const MapCardSpec(
+                center: LatLng(37.7749, -122.4194),
+                zoom: 12,
+                markers: [],
+                path: [],
+                height: 220,
+              ),
+              mapTilerKey: 'test-key',
+              tileProvider: tiles,
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+
+      expect(
+        tester.widget<TileLayer>(find.byType(TileLayer)).urlTemplate,
+        contains('api.maptiler.com'),
+      );
     },
   );
 }
