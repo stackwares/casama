@@ -902,6 +902,15 @@ sign-up reaches the hook in `user_metadata` (so Phase 2's code-at-sign-up works 
 
 Steps 5 and 7 should happen close together, so the site doesn't promise a waitlist that isn't on.
 
+**Done on 2026-11-19 (Oliver: "deploy all you need"):** steps 1–3 and 5–7. Phase 1 is 640a82c9 on
+origin; the server, casama.ai, docs and gallery are deployed from it; the gate is on (invite_only,
+`daily_admit` 0, `daily_emails_max` 25). A stranger's sign-up is refused with the sentence, existing
+accounts sign in, and a claim on casama.ai/invite/<App Review code> answers "You're in". Codes:
+`SELFHOST-2026` (Self-hosters, 60, 30 a day) and the App Review code (20; kept out of this public
+repo, Oliver has it). Step 4 was skipped: production's compose file doesn't pass
+`REFERRAL_LINK_BASE` through, and `/i/<code>` already shows the claim form while the gate is on.
+Still to do: step 8, and the App Review paragraph in the store notes on the next submission.
+
 ### Store text, ready to paste when the gate is on (§9)
 
 **Top of both store descriptions:**

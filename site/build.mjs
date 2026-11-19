@@ -450,6 +450,26 @@ const newsBox = (id, heading = "Get what's new, once a month") => `<aside class=
   </form>
 </aside>`;
 
+/**
+ * The waitlist box that replaces the newsletter box at the end of blog posts and the changelog
+ * (docs/WAITLIST-PLAN.md §12). The same small inline form as the home page; site/assets/waitlist.js wires it.
+ * Back to newsBox on launch day.
+ */
+// waitlist copy: docs/WAITLIST-PLAN.md §12
+const waitlistBox = (id) => `<aside class="news-box" aria-labelledby="${id}-h">
+  <!-- waitlist copy: docs/WAITLIST-PLAN.md §12 -->
+  <h2 id="${id}-h">Join the waitlist</h2>
+  <p>Casama Cloud is invite-only for now. Leave your email and we'll write when it's your turn.</p>
+  <form class="wl-inline" data-wl-inline data-source="${id}" action="/waitlist" method="get" aria-label="Join the waitlist">
+    <label class="visually-hidden" for="${id}-email">Email address</label>
+    <div class="wl-inline-row">
+      <input id="${id}-email" type="email" name="email" required autocomplete="email" inputmode="email" maxlength="254" placeholder="you@example.com">
+      <button class="btn primary" type="submit">Join the waitlist</button>
+    </div>
+    <p class="wl-status" role="status" aria-live="polite" data-wl-status></p>
+  </form>
+</aside>`;
+
 /** Explainer diagrams: site/assets/diagrams/<name>.svg, with alt text, caption and size in manifest.json. */
 let diagramManifest = null;
 function diagramFor(name, where) {
@@ -690,7 +710,7 @@ ${page.section === "blog" ? '  <link rel="alternate" type="application/rss+xml" 
       <p class="page-meta">${byline}${dates}</p>
       ${figure}
 ${html}
-${(page.section === "blog" && !page.isIndex) || page.slug === "changelog" ? newsBox("news-end") : ""}
+${(page.section === "blog" && !page.isIndex) || page.slug === "changelog" ? waitlistBox("news-end") : ""}
     </article>
   </main>
 
@@ -698,7 +718,7 @@ ${(page.section === "blog" && !page.isIndex) || page.slug === "changelog" ? news
 
   <script src="/site.js"></script>
   <script src="/assets/brand/casama-mark.js"></script>
-${(page.scripts ?? []).map((src) => `  <script src="${src}"></script>\n`).join("")}</body>
+${((page.section === "blog" && !page.isIndex) || page.slug === "changelog") && !(page.scripts ?? []).includes("/assets/waitlist.js") ? `  <script src="/assets/waitlist.js"></script>\n` : ""}${(page.scripts ?? []).map((src) => `  <script src="${src}"></script>\n`).join("")}</body>
 </html>
 `;
 }

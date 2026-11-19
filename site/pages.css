@@ -92,6 +92,10 @@
 .prose .news-box .footer-news-note { margin: 8px 0 0 !important; }
 .prose .news-box .footer-news-note.is-good { color: var(--good); }
 .prose .news-box .footer-news-note.is-bad { color: var(--warn); }
+/* The waitlist box (docs/WAITLIST-PLAN.md §12) uses the small join form inside the same box. */
+.news-box .wl-inline { margin-top: 0; }
+.prose .news-box .wl-status { margin: 8px 0 0 !important; }
+.prose .news-box .wl-inline-done { margin: 0; }
 
 /* Explainer diagrams ({{figure: name}}) */
 .page-figure { margin: 28px auto; text-align: center; }

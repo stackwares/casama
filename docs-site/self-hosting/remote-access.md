@@ -21,8 +21,10 @@ You need:
   address first.
 - **A free Casama Cloud account** where you are an owner or admin of a workspace. You can make one
   while you approve the link. Casama Cloud is invite-only for now, and people who run their own
-  server are let in first: tick **I run Casama on my own server** at casama.ai/waitlist. See
-  [Getting an invite](/guide/getting-an-invite).
+  server can skip the line: claim the invite code `SELFHOST-2026` at
+  [casama.ai/invite/SELFHOST-2026](https://casama.ai/invite/SELFHOST-2026) with the email you'll
+  sign in with (a few each day). When it's used up, tick **I run Casama on my own server** at
+  casama.ai/waitlist and you're let in first. See [Getting an invite](/guide/getting-an-invite).
 - **Outbound port 7844, TCP and UDP.** The `connector` container dials out to Cloudflare on it. Most
   home networks allow it. Some company networks and VPNs don't.
 - **A Casama Cloud that gives out addresses.** The CLI and the app use `https://api.casama.ai`. If

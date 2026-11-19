@@ -338,3 +338,70 @@ test("the solver handles the real difficulty in good time and refuses odd puzzle
   assert.equal(lib.leadingZeros(new Int32Array([0, 0x00ffffff, 1, 1, 1, 1, 1, 1]), 40), true);
   assert.equal(lib.leadingZeros(new Int32Array([0, 0x00ffffff, 1, 1, 1, 1, 1, 1]), 41), false);
 });
+
+// ------------------------------------------------------------------ waitlist placements (docs/WAITLIST-PLAN.md §12)
+
+const site = (p) => readFileSync(new URL(`../site/${p}`, import.meta.url), "utf8");
+const MARK = "<!-- waitlist copy: docs/WAITLIST-PLAN.md §12 -->";
+
+test("the header has a Join the waitlist button and a quiet Sign in link on a written page, the home page and a hand-written page", () => {
+  for (const p of ["about.html", "index.html", "download.html", "privacy.html", "blog/how-approvals-work.html"]) {
+    const html = site(p);
+    const header = html.slice(html.indexOf('<header class="site-header">'), html.indexOf("</header>"));
+    assert.match(header, /<a class="btn sm primary" href="\/waitlist">Join the waitlist<\/a>/, p);
+    assert.match(header, /<a class="header-signin" href="https:\/\/app\.casama\.ai">Sign in<\/a>/, p);
+    assert.ok(header.includes(MARK), p);
+  }
+  assert.match(site("site.css"), /@media \(max-width: 480px\) \{ \.header-signin \{ display: none; \}/);
+});
+
+test("the home page has an email-only inline form in the hero and the bottom call to action", () => {
+  const html = site("index.html");
+  const forms = html.match(/<form class="wl-inline"[\s\S]*?<\/form>/g) ?? [];
+  assert.equal(forms.length, 2);
+  assert.ok(forms[0].includes('data-source="home-hero"') && forms[1].includes('data-source="home-cta"'));
+  for (const f of forms) {
+    assert.match(f, /type="email" name="email"/);
+    assert.doesNotMatch(f, /name="note"|name="newsletter"/);
+    assert.match(f, /action="\/waitlist" method="get"/); // works without JavaScript
+  }
+  assert.match(html, /<script src="\/assets\/waitlist\.js"><\/script>/);
+});
+
+test("blog posts and the changelog end with a waitlist box, not the newsletter box; the footer form stays", () => {
+  for (const p of ["blog/how-approvals-work.html", "changelog.html"]) {
+    const html = site(p);
+    const box = html.match(/<aside class="news-box"[\s\S]*?<\/aside>/)?.[0] ?? "";
+    assert.ok(box.includes("Casama Cloud is invite-only for now."), p);
+    assert.ok(box.includes("data-wl-inline"), p);
+    assert.ok(!box.includes("data-newsletter") && !/monthly email/.test(box), p);
+    assert.ok(html.includes('<script src="/assets/waitlist.js"></script>'), p);
+    assert.ok(html.includes('data-newsletter'), `${p} keeps the footer newsletter form`);
+  }
+  const dl = site("download.html");
+  const card = dl.match(/<div class="dl-news-card">[\s\S]*?<\/form>/)[0];
+  assert.ok(card.includes("data-wl-inline") && !card.includes("data-newsletter"));
+  assert.ok(dl.includes('id="newsletter"'));
+  // The standalone newsletter page still has its own box.
+  assert.ok(site("newsletter.html").includes("data-newsletter"));
+});
+
+test("the footer's Product column has a Waitlist link right after Casama Cloud", () => {
+  for (const p of ["index.html", "download.html", "about.html", "blog/how-approvals-work.html"]) {
+    assert.match(site(p), /<a href="https:\/\/app\.casama\.ai">Casama Cloud<\/a>\s*(?:<!--[^>]*-->\s*)?<a href="\/waitlist">Waitlist<\/a>/, p);
+  }
+});
+
+test("gallery item pages say Cloud is invite-only under the Open in Casama button", () => {
+  const html = readFileSync(new URL("../gallery/i/app/beehiiv/index.html", import.meta.url), "utf8");
+  const at = html.indexOf("Open in Casama");
+  assert.ok(at > 0);
+  assert.ok(html.indexOf('Casama Cloud is invite-only for now. <a href="https://casama.ai/waitlist">Join the waitlist</a>', at) > at);
+});
+
+test("the inline form shares waitlist.js's join code and shows the joined message", () => {
+  const js = site("assets/waitlist.js");
+  assert.match(js, /function bindInline/);
+  assert.equal((js.match(/function searcher/g) ?? []).length, 1);
+  assert.match(js, /form\[data-wl-inline\]/);
+});
