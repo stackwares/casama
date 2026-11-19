@@ -166,7 +166,7 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
               },
             ),
             // AI providers (D-421): withdrawing brings the consent step back before anything else is sent.
-            if (ref.watch(aiConsentProvider) != null)
+            if (ref.watch(aiConsentAskedHereProvider) && ref.watch(aiConsentProvider) != null)
               GroupedTile(
                 key: const Key('aiConsentTile'),
                 icon: LucideIcons.sparkles,

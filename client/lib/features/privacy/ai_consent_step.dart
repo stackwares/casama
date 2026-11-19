@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:material_ui/material_ui.dart';
@@ -11,7 +12,8 @@ import '../../theme/app_tokens.dart';
 import '../../ui/bottom_padding.dart';
 import '../../ui/mascot.dart';
 import '../../ui/progressive_fade.dart';
-import '../billing/billing_screen.dart' show openUrlProvider;
+import '../../core/distribution.dart';
+import '../billing/billing_screen.dart' show openUrlProvider, platformProvider;
 import '../billing/purchase_terms.dart' show casamaPrivacyUrl;
 
 /// When the person agreed to share what they give bots with outside AI providers (App Store
@@ -31,9 +33,21 @@ class AiConsent extends Notifier<DateTime?> {
 
 final aiConsentProvider = NotifierProvider<AiConsent, DateTime?>(AiConsent.new);
 
-/// Whether the consent step covers the app: signed in all the way and never agreed (or withdrawn).
-/// Every other first-run step, and the welcome chat, wait for it.
+/// Whether this app asks at all: only the App Store apps, where Apple requires it (5.1.2(i)), that
+/// is iOS and the sandboxed Mac App Store build. Web, Android, the Mac direct download, Windows and
+/// Linux never show the step.
+final aiConsentAskedHereProvider = Provider<bool>((ref) {
+  if (kIsWeb) return false;
+  final platform = ref.watch(platformProvider);
+  return platform == TargetPlatform.iOS ||
+      (platform == TargetPlatform.macOS && kDistribution == 'appstore');
+});
+
+/// Whether the consent step covers the app: an App Store app ([aiConsentAskedHereProvider]),
+/// signed in all the way and never agreed (or withdrawn). Every other first-run step, and the
+/// welcome chat, wait for it.
 final aiConsentNeededProvider = Provider<bool>((ref) {
+  if (!ref.watch(aiConsentAskedHereProvider)) return false;
   if (!ref.watch(signInFinishedProvider)) return false;
   return ref.watch(aiConsentProvider) == null;
 });

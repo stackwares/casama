@@ -1,4 +1,6 @@
 import 'package:casama/core/backend.dart';
+import 'package:casama/features/billing/billing_screen.dart'
+    show platformProvider;
 import 'package:casama/features/privacy/ai_consent_step.dart';
 import 'package:casama/features/settings/name_step.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -19,7 +21,13 @@ void main() {
           displayName: 'Robin Park',
           nameAsked: false,
         );
-      await tester.pumpWidget(harness(backend, const _Steps()));
+      await tester.pumpWidget(
+        harness(
+          backend,
+          const _Steps(),
+          overrides: [platformProvider.overrideWithValue(TargetPlatform.iOS)],
+        ),
+      );
       await tester.pumpAndSettle();
       expect(find.byKey(const Key('aiConsentStep')), findsOneWidget);
       expect(find.byKey(const Key('nameStep')), findsNothing);
@@ -33,10 +41,43 @@ void main() {
     },
   );
 
+  testWidgets(
+    'only the App Store apps ask: never on Android, web or the Mac download',
+    (tester) async {
+      await setSize(tester, const Size(400, 800));
+      for (final platform in [
+        TargetPlatform.android,
+        TargetPlatform.macOS,
+        TargetPlatform.windows,
+      ]) {
+        final backend = FakeBackend()..aiConsent = null;
+        await tester.pumpWidget(
+          harness(
+            backend,
+            const _Steps(),
+            overrides: [platformProvider.overrideWithValue(platform)],
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(
+          find.byKey(const Key('aiConsentStep')),
+          findsNothing,
+          reason: '$platform',
+        );
+      }
+    },
+  );
+
   testWidgets('people who agreed never see the consent step', (tester) async {
     await setSize(tester, const Size(400, 800));
     final backend = FakeBackend();
-    await tester.pumpWidget(harness(backend, const _Steps()));
+    await tester.pumpWidget(
+      harness(
+        backend,
+        const _Steps(),
+        overrides: [platformProvider.overrideWithValue(TargetPlatform.iOS)],
+      ),
+    );
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('aiConsentStep')), findsNothing);
   });
@@ -44,7 +85,13 @@ void main() {
   testWidgets('withdrawing brings the step back', (tester) async {
     await setSize(tester, const Size(400, 800));
     final backend = FakeBackend();
-    await tester.pumpWidget(harness(backend, const _Steps()));
+    await tester.pumpWidget(
+      harness(
+        backend,
+        const _Steps(),
+        overrides: [platformProvider.overrideWithValue(TargetPlatform.iOS)],
+      ),
+    );
     await tester.pumpAndSettle();
     final container = ProviderScope.containerOf(
       tester.element(find.byType(_Steps)),
