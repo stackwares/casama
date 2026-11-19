@@ -55,7 +55,8 @@ export const OS_PERMISSIONS = [
     id: "location_always",
     label: "Location in the background",
     why: "So I can notice when you arrive or leave places",
-    platforms: { ios: "prompt", android: "prompt" },
+    // iOS only: Android has no background location (D-414), so Places there is "location".
+    platforms: { ios: "prompt" },
   },
   {
     id: "camera",
@@ -239,7 +240,7 @@ export function osPermissionForKind(kind: string, platform: string): OsPermissio
   const pick: Record<string, OsPermissionId | undefined> = {
     calendar: "calendar",
     contacts: "contacts",
-    places: p === "ios" || p === "android" ? "location_always" : "location",
+    places: p === "ios" ? "location_always" : "location",
     photos: "photos",
     health: "health",
     notifications: p === "android" ? "notification_access" : undefined,

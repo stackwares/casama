@@ -48,7 +48,7 @@ lists every permission Casama uses on the device you're on.
 | Calendar          | Yes | Yes     |       |         |       | One summary per day, from yesterday to 30 days ahead |
 | Contacts          | Yes | Yes     | Yes   |         |       | Names, phone numbers and email addresses             |
 | Health data       | Yes | Yes     |       |         |       | Daily and workout summaries (see below)              |
-| Places            | Yes | Yes     |       |         |       | Arriving at and leaving named places                 |
+| Places            | Yes | Yes     |       |         |       | Arriving at and leaving named places (iOS); which named place you're at while Casama is open (Android) |
 | Notifications     |     | Yes     |       |         |       | Notifications from apps you pick                     |
 | Computer activity |     |         | Yes   | Yes     | Yes   | Minutes per app and top window titles, per hour      |
 

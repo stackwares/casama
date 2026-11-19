@@ -33,7 +33,8 @@ const _c = PermissionAsk.casama;
 
 const osPermissions = <OsPermissionInfo>[
   OsPermissionInfo('location', {'ios': _p, 'android': _p, 'web': _p}),
-  OsPermissionInfo('location_always', {'ios': _p, 'android': _p}),
+  // iOS only: Android has no background location (D-414).
+  OsPermissionInfo('location_always', {'ios': _p}),
   OsPermissionInfo('camera', {'ios': _p, 'web': _p}),
   OsPermissionInfo('microphone', {'ios': _p, 'android': _p, 'macos': _p, 'windows': _s, 'web': _p}),
   OsPermissionInfo('speech', {'ios': _p, 'macos': _p}),

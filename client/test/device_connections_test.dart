@@ -61,6 +61,8 @@ class FakeTriggers implements DeviceTriggerPlatform {
   @override
   bool get supportsPlaces => true;
   @override
+  bool get supportsPlaceEvents => true;
+  @override
   bool get supportsNotifications => true;
   @override
   Future<bool> requestPlaces() async => true;

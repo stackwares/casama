@@ -38,6 +38,9 @@ describe("system permissions (D-376)", () => {
 
   it("maps device kinds to the permission each needs", () => {
     expect(osPermissionForKind("places", "ios")).toBe("location_always");
+    // Android has no background location (D-414): Places there only reads location while open.
+    expect(osPermissionForKind("places", "android")).toBe("location");
+    expect(osPermissionOn("location_always", "android")).toBe(false);
     expect(osPermissionForKind("calendar", "android")).toBe("calendar");
     expect(osPermissionForKind("notifications", "android")).toBe("notification_access");
     expect(osPermissionForKind("notifications", "ios")).toBeNull();

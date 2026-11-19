@@ -150,7 +150,7 @@ never sees your events.
 | Event | Fires when | Needs |
 | --- | --- | --- |
 | Wake | You wake up, from last night's sleep in your health data. Once a day. | Health data on your phone |
-| Arrive, leave | You arrive at or leave a named place, such as Home or Work. | Places on iOS or Android |
+| Arrive, leave | You arrive at or leave a named place, such as Home or Work. | Places on iOS (Android has no background location) |
 | Leave now | It's time to leave for your next calendar event that has a location, based on live travel time plus a buffer (5 minutes by default). | Places, a connected calendar, and a Google Maps or Mapbox key |
 | Workout ended | A workout ended in the last 6 hours. | Health data on your phone |
 | Notification | A notification arrives from an app you picked. One-time codes are masked. | Android's notification access |

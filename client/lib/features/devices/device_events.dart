@@ -137,6 +137,9 @@ Future<void> placeGeofenceTriggered(GeofenceCallbackParams params) async {
 /// What device triggers need from the platform (a seam for tests).
 abstract class DeviceTriggerPlatform {
   bool get supportsPlaces;
+
+  /// Arrive and leave with the app closed (geofences). iOS only: Android would need background location (D-414).
+  bool get supportsPlaceEvents;
   bool get supportsNotifications;
   Future<bool> requestPlaces();
   Future<({double lat, double lng})?> currentLocation();
@@ -153,6 +156,8 @@ class PluginTriggerPlatform implements DeviceTriggerPlatform {
   @override
   bool get supportsPlaces => _mobile;
   @override
+  bool get supportsPlaceEvents => !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
+  @override
   bool get supportsNotifications => !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
 
   @override
@@ -160,8 +165,9 @@ class PluginTriggerPlatform implements DeviceTriggerPlatform {
     if (!await Geolocator.isLocationServiceEnabled()) return false;
     var p = await Geolocator.checkPermission();
     if (p == LocationPermission.denied) p = await Geolocator.requestPermission();
-    // Arrive and leave with the app closed need "Always"; the OS asks for it after "While using".
-    if (p == LocationPermission.whileInUse) p = await Geolocator.requestPermission();
+    // Arrive and leave with the app closed need "Always"; iOS asks for it after "While using". Android stops at
+    // "While using" (D-414).
+    if (p == LocationPermission.whileInUse && supportsPlaceEvents) p = await Geolocator.requestPermission();
     return p == LocationPermission.always || p == LocationPermission.whileInUse;
   }
 
@@ -177,6 +183,7 @@ class PluginTriggerPlatform implements DeviceTriggerPlatform {
 
   @override
   Future<void> watchPlaces(List<DevicePlace> places) async {
+    if (!supportsPlaceEvents) return;
     if (!_geoReady) {
       await NativeGeofenceManager.instance.initialize();
       _geoReady = true;
@@ -199,6 +206,7 @@ class PluginTriggerPlatform implements DeviceTriggerPlatform {
 
   @override
   Future<void> stopPlaces() async {
+    if (!supportsPlaceEvents) return;
     if (!_geoReady) {
       await NativeGeofenceManager.instance.initialize();
       _geoReady = true;
