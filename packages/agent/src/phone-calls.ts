@@ -99,9 +99,18 @@ export function callDeclineTokenValid(secret: string, callId: string, token: str
   return a.length === b.length && timingSafeEqual(a, b);
 }
 
-/** Rings the person's devices for a new call row. */
-export async function ringCall(deps: PhoneCallDeps, userId: string, call: CallPayload) {
+/**
+ * Rings the person's devices for a new call row. Answers whether anything could ring (D-438): a
+ * phone took the ring, or they have a computer or browser set up, which shows the banner. A ring
+ * that reached nothing doesn't count toward the ring limits.
+ */
+export async function ringCall(
+  deps: PhoneCallDeps,
+  userId: string,
+  call: CallPayload,
+): Promise<boolean> {
   const { db } = deps;
+  let reached = 0;
   const voip = await db.execute<{ token: string }>(
     sql`select token from public.voip_tokens where user_id = ${userId}::uuid`,
   );
@@ -114,11 +123,13 @@ export async function ringCall(deps: PhoneCallDeps, userId: string, call: CallPa
       .catch(() => ({ invalidTokens: [] as string[] }));
     for (const t of invalidTokens)
       await db.execute(sql`delete from public.voip_tokens where token = ${t}`);
+    reached += voip.length - invalidTokens.length;
   }
   // Android (and any FCM device): a high-priority data message. iOS FCM tokens skip it; they ring through PushKit.
   const android = await db.execute<{ fcm_token: string }>(sql`
     select fcm_token from public.devices where user_id = ${userId}::uuid and platform = 'android'`);
-  if (android.length && deps.notifications?.push.sendCall)
+  if (android.length && deps.notifications?.push.sendCall) {
+    reached += android.length;
     await deps.notifications.push
       .sendCall(
         android.map((d) => d.fcm_token),
@@ -132,10 +143,15 @@ export async function ringCall(deps: PhoneCallDeps, userId: string, call: CallPa
         RING_SECONDS,
       )
       .catch(() => {});
+  }
   // Desktop and web: the in-app banner, through the notifications Realtime topic (no push).
   await db.execute(sql`
     insert into public.notifications (user_id, kind, payload, push_status)
     values (${userId}::uuid, 'call', ${JSON.stringify({ title: call.bot_name, body: call.reason, ...call })}::jsonb, 'sent')`);
+  if (reached > 0) return true;
+  const [screens] = await db.execute<{ n: number }>(sql`
+    select count(*)::int as n from public.devices where user_id = ${userId}::uuid and platform not in ('ios', 'android')`);
+  return (screens?.n ?? 0) > 0;
 }
 
 /**
@@ -267,13 +283,13 @@ export async function ringBlocked(
       (select may_call from public.user_bot_settings where user_id = ${userId}::uuid and bot_id = ${botId}::uuid) as may_call,
       (select timezone from public.profiles where user_id = ${userId}::uuid) as timezone,
       (select max(created_at)::text from public.voice_calls
-        where user_id = ${userId}::uuid and bot_id = ${botId}::uuid and blocked is null) as last_ring`);
+        where user_id = ${userId}::uuid and bot_id = ${botId}::uuid and blocked is null and reached) as last_ring`);
   if (r?.may_call === false) return { block: "may_not_call" };
   // The daily cap first: it lasts longer, so it's the more useful thing to tell the bot.
   const tz = r?.timezone && isValidTimezone(r.timezone) ? r.timezone : "UTC";
   const [today] = await db.execute<{ n: number }>(sql`
     select count(*)::int as n from public.voice_calls
-    where user_id = ${userId}::uuid and blocked is null
+    where user_id = ${userId}::uuid and blocked is null and reached
       and created_at >= date_trunc('day', now() at time zone ${tz}) at time zone ${tz}`);
   if ((today?.n ?? 0) >= limits.ring_daily_cap) return { block: "daily_cap" };
   if (r?.last_ring && limits.ring_cooldown_minutes > 0) {
@@ -366,13 +382,24 @@ export function registerPhoneCallTools(registry: ToolRegistry, deps: PhoneCallDe
         values (${ctx.orgId}::uuid, ${ctx.botId}::uuid, ${user}::uuid, ${ctx.runId}::uuid, ${b?.conversation_id ?? null}::uuid, ${args.reason},
                 now() + make_interval(secs => ${RING_SECONDS}))
         returning id`);
-      await ringCall(deps, user, {
+      const reached = await ringCall(deps, user, {
         call_id: call!.id,
         bot_id: ctx.botId,
         bot_name: b?.name ?? "Casama",
         reason: args.reason,
         conversation_id: b?.conversation_id ?? null,
       });
+      if (!reached) {
+        // Nothing to ring (no phone or computer set up for calls): it doesn't count toward the
+        // ring limits (D-438), so a later try once the app is set up isn't held back.
+        await db.execute(
+          sql`update public.voice_calls set reached = false where id = ${call!.id}::uuid`,
+        );
+        return {
+          content: `They have no phone or computer set up to ring (call ${call!.id}): it only shows in the app if it's open now. If they don't pick up within ${RING_SECONDS} seconds, they get a notification with the reason. Their phone may need the Casama app opened, signed in, with notifications on.`,
+          preview: args.reason,
+        };
+      }
       return {
         content: `Calling them now (call ${call!.id}). If they answer, the live call opens in this conversation and you speak first. If they don't pick up within ${RING_SECONDS} seconds, they get a notification with the reason.`,
         preview: args.reason,

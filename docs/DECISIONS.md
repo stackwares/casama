@@ -6341,3 +6341,12 @@ a row with the same token that belongs to someone else, only when the row being 
 signed-in person's own; so the latest sign-in on a phone owns its tokens, and shipped apps get
 this without an update. The app now deletes this device's two rows on Sign Out and Sign Out
 Everywhere, and registers push and the VoIP token again on every sign-in.
+
+## D-438 A bot's ring that reached nothing doesn't count toward the ring limits (2026-11-20)
+
+The D-437 phone, once fixed, still couldn't be called back for 30 minutes: the first ring, which
+had no phone to reach, counted as a ring, so the cooldown (D-426) held back every retry. A ring now
+records `voice_calls.reached`: false when no phone took it (no live VoIP token, no Android device)
+and the person has no computer or browser set up for the banner. Unreached rings don't count toward
+the cooldown or the daily cap, and the bot is told the person has nothing set up to ring, so it
+can say so instead of claiming it rang. The call still expires as missed with its notification.

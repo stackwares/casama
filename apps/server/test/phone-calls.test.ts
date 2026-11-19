@@ -323,7 +323,6 @@ describe("phone calls", () => {
     await expireCalls({ db: h.handle.db, notifications });
     expect(cancels(missed)).toHaveLength(1);
     expect(await ended(missed)).toBe(1);
-
   });
 
   it("doesn't ring during quiet hours; it leaves a notification instead", async () => {
@@ -399,6 +398,28 @@ describe("phone calls", () => {
     // A cap of 0: bots never ring.
     setCallLimits({ ring_cooldown_minutes: 30, ring_daily_cap: 0 });
     expect((await call("Never")).content).toContain("Bots can't phone people on this server");
+
+    // A ring that reached nothing (no phone or computer set up) doesn't count (D-438): once the
+    // phone is set up, the next try rings instead of waiting out the cooldown.
+    setCallLimits({ ring_cooldown_minutes: 30, ring_daily_cap: 2 });
+    await h.tdb.admin`delete from public.voice_calls`;
+    const devices = await h.tdb.admin<{ fcm_token: string; platform: string }[]>`
+      delete from public.devices where user_id = ${user.id} returning fcm_token, platform`;
+    const voip = await h.tdb.admin<{ token: string }[]>`
+      delete from public.voip_tokens where user_id = ${user.id} returning token`;
+    r = await call("Nobody home");
+    expect(r.content).toContain("no phone or computer set up to ring");
+    const [unreached] = await h.tdb.admin<{ reached: boolean }[]>`
+      select reached from public.voice_calls where reason = 'Nobody home'`;
+    expect(unreached?.reached).toBe(false);
+    await missed();
+    for (const d of devices)
+      await h.tdb
+        .admin`insert into public.devices (user_id, fcm_token, platform) values (${user.id}, ${d.fcm_token}, ${d.platform})`;
+    for (const v of voip)
+      await h.tdb
+        .admin`insert into public.voip_tokens (user_id, token) values (${user.id}, ${v.token})`;
+    expect((await call("Set up now")).content).toContain("Calling them now");
     setCallLimits({ ring_cooldown_minutes: 0, ring_daily_cap: 20 });
   });
 });
