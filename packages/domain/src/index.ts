@@ -10,6 +10,7 @@ export * from "./apps.ts";
 export * from "./browser-guard.ts";
 export * from "./browser-mcp.ts";
 export * from "./budget.ts";
+export * from "./call-limits.ts";
 export * from "./cloud-model-assignment.ts";
 export * from "./cloud-models.ts";
 export * from "./coding-agents.ts";

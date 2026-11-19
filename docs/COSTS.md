@@ -214,7 +214,10 @@ Ranked by saving. ✅ = done, ☐ = to do.
    call instead of $0.002, free connections, Casama on the sign-in screen).
 4. **Voice and phone:** ✅ Gemini Live is the only call service, in the app and on the phone, on
    the workspace's Google key or else the server's (D-187, D-260). Read-aloud and dictation run on
-   OpenRouter like the models (D-261).
+   OpenRouter like the models (D-261). ✅ Call guardrails (D-426): a quiet call hangs up after a
+   minute (was two), a call lasts at most an hour, and a call on credits ends when the credits,
+   the daily or monthly limit or the bot's budget run out, checked every 20 s instead of only at
+   the start. At about $0.04–0.06 a minute, the longest call costs Casama about $2.40–3.60.
    ☐ Compare Telnyx and other carriers with Twilio.
 5. **Search:** ✅ our own SearXNG (free) for workspaces without a Brave or Tavily key (D-179; turn it
    on in production with `--search`). ☐ Cache results;

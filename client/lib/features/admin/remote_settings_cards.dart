@@ -16,8 +16,8 @@ import '../../ui/form_sheet.dart';
 
 export '../../core/backend.dart' show AdminJsonSettingKind;
 
-/// Admin rows for the lists the owner edits as JSON without a release (D-373, D-374): the model
-/// catalog, the cost tables and the browser guard's added sites. Each opens one editor with the
+/// Admin rows for the lists the owner edits as JSON without a release (D-373, D-374, D-426): the
+/// model catalog, the cost tables, the browser guard's added sites and the call limits. Each opens one editor with the
 /// saved value and, folded below it, the built-in values to copy from.
 class AdminJsonSettingTile extends StatelessWidget {
   const AdminJsonSettingTile({super.key, required this.kind});
@@ -41,6 +41,11 @@ class AdminJsonSettingTile extends StatelessWidget {
         LucideIcons.shieldCheck,
         l10n.adminGuardSites,
         l10n.adminGuardSitesHelp,
+      ),
+      AdminJsonSettingKind.callLimits => (
+        LucideIcons.phoneCall,
+        l10n.adminCallLimits,
+        l10n.adminCallLimitsHelp,
       ),
     };
     return GroupedTile(

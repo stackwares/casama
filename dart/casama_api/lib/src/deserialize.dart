@@ -13,6 +13,7 @@ import 'package:casama_api/src/model/add_teach_step_request.dart';
 import 'package:casama_api/src/model/add_user_facts_request.dart';
 import 'package:casama_api/src/model/add_user_facts_request_items_inner.dart';
 import 'package:casama_api/src/model/admin_browser_guard.dart';
+import 'package:casama_api/src/model/admin_call_limits.dart';
 import 'package:casama_api/src/model/admin_credit_pack.dart';
 import 'package:casama_api/src/model/admin_domain.dart';
 import 'package:casama_api/src/model/admin_domain_order.dart';
@@ -592,6 +593,7 @@ import 'package:casama_api/src/model/run_started_event.dart';
 import 'package:casama_api/src/model/run_started_event_payload.dart';
 import 'package:casama_api/src/model/run_usage.dart';
 import 'package:casama_api/src/model/run_usage_items_inner.dart';
+import 'package:casama_api/src/model/save_call_limits_request.dart';
 import 'package:casama_api/src/model/save_credit_pack_request.dart';
 import 'package:casama_api/src/model/save_device_place_request.dart';
 import 'package:casama_api/src/model/save_device_source_request.dart';
@@ -793,6 +795,7 @@ import 'package:casama_api/src/model/voice_heartbeat.dart';
 import 'package:casama_api/src/model/voice_heartbeat_request.dart';
 import 'package:casama_api/src/model/voice_heartbeat_request_usage.dart';
 import 'package:casama_api/src/model/voice_session.dart';
+import 'package:casama_api/src/model/voice_session_limits.dart';
 import 'package:casama_api/src/model/voice_session_request.dart';
 import 'package:casama_api/src/model/voice_tool_request.dart';
 import 'package:casama_api/src/model/voice_tool_result.dart';
@@ -897,6 +900,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return AddUserFactsRequestItemsInner.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AdminBrowserGuard':
           return AdminBrowserGuard.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'AdminCallLimits':
+          return AdminCallLimits.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AdminCreditPack':
           return AdminCreditPack.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AdminDomain':
@@ -2136,6 +2141,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return RunUsage.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'RunUsageItemsInner':
           return RunUsageItemsInner.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'SaveCallLimitsRequest':
+          return SaveCallLimitsRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SaveCreditPackRequest':
           return SaveCreditPackRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SaveDevicePlaceRequest':
@@ -2565,6 +2572,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return VoiceHeartbeatRequestUsage.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'VoiceSession':
           return VoiceSession.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'VoiceSessionLimits':
+          return VoiceSessionLimits.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'VoiceSessionRequest':
           return VoiceSessionRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'VoiceToolRequest':

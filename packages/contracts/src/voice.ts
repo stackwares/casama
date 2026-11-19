@@ -42,6 +42,26 @@ export const VoiceSession = z
       description:
         "The server's record of this call (D-327): send turns, heartbeats and the final transcript with it",
     }),
+    limits: z
+      .object({
+        silence_seconds: z.number().int().openapi({
+          description: "Hang up after this long with nobody speaking and no job running",
+        }),
+        heartbeat_seconds: z.number().int().openapi({
+          description:
+            "Send a heartbeat this often; the server ends a call that stops sending them",
+        }),
+        max_call_seconds: z.number().int().openapi({ description: "The longest the call may run" }),
+        warning_seconds: z.number().int().openapi({
+          description: "How long before max_call_seconds the bot should warn the person",
+        }),
+        app_ends_at_max: z.boolean().openapi({
+          description:
+            "True when the app must end the call at max_call_seconds itself (it isn't relayed); false when the server's relay does",
+        }),
+      })
+      .optional()
+      .openapi({ description: "Call limits (D-426); older servers don't send them" }),
   })
   .openapi("VoiceSession");
 

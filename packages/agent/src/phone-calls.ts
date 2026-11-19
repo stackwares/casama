@@ -5,9 +5,15 @@
  * - Desktop and web: a `call` notification row, which the app shows as a ringing banner.
  * Answering opens the live call (D-065) in the run's conversation and the bot speaks first.
  * A declined or missed call becomes a normal push with the reason. Quiet hours apply.
+ *
+ * Ring limits (D-426): the person can stop a bot from phoning them, a person gets at most
+ * `ring_daily_cap` rings a day (their time zone), and a bot waits `ring_cooldown_minutes` before
+ * ringing the same person again. Over a limit there's no ring: one ordinary notification with the
+ * reason instead (once per cooldown, however often the bot tries), and the bot is told why.
  */
 import { createHmac, timingSafeEqual } from "node:crypto";
 import type { Database } from "@casama/db";
+import { callLimits, isValidTimezone } from "@casama/domain";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { actingUserOf } from "./acting.ts";
@@ -209,12 +215,62 @@ export async function expireCalls(deps: PhoneCallDeps) {
   return due.length;
 }
 
+export type RingBlock = "may_not_call" | "cooldown" | "daily_cap";
+
+/** Why a bot may not ring this person now, or null when it may (D-426). */
+export async function ringBlocked(
+  db: Database,
+  userId: string,
+  botId: string,
+  limits = callLimits(),
+): Promise<{ block: RingBlock; until?: Date } | null> {
+  const [r] = await db.execute<{
+    may_call: boolean | null;
+    timezone: string | null;
+    last_ring: string | null;
+  }>(sql`
+    select
+      (select may_call from public.user_bot_settings where user_id = ${userId}::uuid and bot_id = ${botId}::uuid) as may_call,
+      (select timezone from public.profiles where user_id = ${userId}::uuid) as timezone,
+      (select max(created_at)::text from public.voice_calls
+        where user_id = ${userId}::uuid and bot_id = ${botId}::uuid and blocked is null) as last_ring`);
+  if (r?.may_call === false) return { block: "may_not_call" };
+  // The daily cap first: it lasts longer, so it's the more useful thing to tell the bot.
+  const tz = r?.timezone && isValidTimezone(r.timezone) ? r.timezone : "UTC";
+  const [today] = await db.execute<{ n: number }>(sql`
+    select count(*)::int as n from public.voice_calls
+    where user_id = ${userId}::uuid and blocked is null
+      and created_at >= date_trunc('day', now() at time zone ${tz}) at time zone ${tz}`);
+  if ((today?.n ?? 0) >= limits.ring_daily_cap) return { block: "daily_cap" };
+  if (r?.last_ring && limits.ring_cooldown_minutes > 0) {
+    const until = new Date(Date.parse(r.last_ring) + limits.ring_cooldown_minutes * 60_000);
+    if (until.getTime() > Date.now()) return { block: "cooldown", until };
+  }
+  return null;
+}
+
+/** What the bot is told when a limit stopped its ring. */
+function blockedReply(block: RingBlock, until: Date | undefined, cap: number) {
+  switch (block) {
+    case "may_not_call":
+      return "They've turned off calls from you in your settings, so I didn't ring them; they got a notification with the reason instead. Don't try to call again; message them.";
+    case "cooldown": {
+      const mins = until ? Math.max(1, Math.ceil((until.getTime() - Date.now()) / 60_000)) : 0;
+      return `You rang them a short while ago, so I didn't ring again; they got a notification with the reason instead. You can call again in about ${mins} minute${mins === 1 ? "" : "s"}, but only if it's still worth interrupting them.`;
+    }
+    case "daily_cap":
+      return cap === 0
+        ? "Bots can't phone people on this server, so I didn't ring them; they got a notification with the reason instead. Message them."
+        : `They've had ${cap} call${cap === 1 ? "" : "s"} from bots today, the most a day, so I didn't ring; they got a notification with the reason instead. Don't try to call again today; message them.`;
+  }
+}
+
 export function registerPhoneCallTools(registry: ToolRegistry, deps: PhoneCallDeps) {
   const { db } = deps;
   registry.register({
     name: "voice.call_user",
     description:
-      "Phone the person: their phone rings like a normal call and, if they answer, you talk live in this conversation and speak first. Use only when something is worth interrupting them for and talking is better than a message. Say why in `reason` (shown on the ringing screen). Quiet hours apply; if they're on, a notification is sent instead.",
+      "Phone the person: their phone rings like a normal call and, if they answer, you talk live in this conversation and speak first. Use only when something is worth interrupting them for and talking is better than a message. Say why in `reason` (shown on the ringing screen). Quiet hours apply, and so do ring limits (calls a day, time between calls, and whether they let you call at all); when one stops the call a notification is sent instead and you're told why.",
     risk: "medium",
     category: "send",
     schema: z.object({ reason: z.string().min(1).max(300) }),
@@ -238,6 +294,34 @@ export function registerPhoneCallTools(registry: ToolRegistry, deps: PhoneCallDe
             preview: "quiet hours",
           };
         }
+      }
+      const limits = callLimits();
+      const blocked = await ringBlocked(db, user, ctx.botId, limits);
+      if (blocked) {
+        // One notification per cooldown (at least an hour) for blocked tries, however often the bot
+        // tries: a limit exists so the person isn't pestered.
+        const quietFor = Math.max(60, limits.ring_cooldown_minutes);
+        const [told] = await db.execute<{ id: string }>(sql`
+          select id from public.voice_calls
+          where user_id = ${user}::uuid and bot_id = ${ctx.botId}::uuid and blocked is not null
+            and created_at > now() - make_interval(mins => ${quietFor}) limit 1`);
+        await db.execute(sql`
+          insert into public.voice_calls (org_id, bot_id, user_id, run_id, conversation_id, reason, status, blocked, expires_at, ended_at)
+          values (${ctx.orgId}::uuid, ${ctx.botId}::uuid, ${user}::uuid, ${ctx.runId}::uuid, ${b?.conversation_id ?? null}::uuid,
+                  ${args.reason}, 'cancelled', ${blocked.block}, now(), now())`);
+        if (!told && deps.notifications)
+          await deps.notifications
+            .notify(user, ctx.orgId, "call_missed", {
+              title: `${b?.name ?? "Your bot"} wanted to call`,
+              body: args.reason,
+              link: `/bots/${ctx.botId}/chat${b?.conversation_id ? `?c=${b.conversation_id}` : ""}`,
+              bot_id: ctx.botId,
+            })
+            .catch(() => {});
+        return {
+          content: blockedReply(blocked.block, blocked.until, limits.ring_daily_cap),
+          preview: `not called: ${blocked.block.replace(/_/g, " ")}`,
+        };
       }
       const [ringing] = await db.execute<{ id: string }>(sql`
         select id from public.voice_calls where user_id = ${user}::uuid and status = 'ringing' and expires_at > now() limit 1`);

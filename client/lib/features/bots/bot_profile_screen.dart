@@ -572,6 +572,23 @@ class _BotProfileScreenState extends ConsumerState<BotProfileScreen> {
               },
               onTap: () => showBotQuiet(context, ref, bot.id),
             ),
+            // Rings from this bot (D-426): off sends a notification instead.
+            GroupedTile(
+              icon: LucideIcons.phoneCall,
+              title: l10n.botMayCall,
+              subtitle: l10n.botMayCallHelp,
+              onTap: () => setBotMayCall(
+                context,
+                ref,
+                bot.id,
+                !(ref.read(botMayCallProvider(bot.id)).value ?? true),
+              ),
+              trailing: Switch(
+                key: const Key('botMayCall'),
+                value: ref.watch(botMayCallProvider(bot.id)).value ?? true,
+                onChanged: (v) => setBotMayCall(context, ref, bot.id, v),
+              ),
+            ),
           ],
         ),
 

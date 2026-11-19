@@ -25,6 +25,17 @@ final botQuietProvider = FutureProvider.family<BotQuietView, String>(
   (ref, botId) => ref.watch(backendProvider).botQuiet(botId),
 );
 
+/// Whether this bot may phone the person (D-426); on unless they turned it off.
+final botMayCallProvider = FutureProvider.family<bool, String>(
+  (ref, botId) => ref.watch(backendProvider).botMayCall(botId),
+);
+
+Future<void> setBotMayCall(BuildContext context, WidgetRef ref, String botId, bool mayCall) async {
+  HapticsHelper.light();
+  await runGuarded(context, () => ref.read(backendProvider).setBotMayCall(botId, mayCall));
+  ref.invalidate(botMayCallProvider(botId));
+}
+
 String quietSummary(BuildContext context, QuietHoursView q) =>
     q.enabled ? context.l10n.quietHoursRange(formatClockTime(context, q.start), formatClockTime(context, q.end)) : context.l10n.off;
 

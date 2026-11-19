@@ -534,6 +534,7 @@ class _Services extends ConsumerWidget {
             children: [
               AdminJsonSettingTile(kind: AdminJsonSettingKind.modelCatalog),
               AdminJsonSettingTile(kind: AdminJsonSettingKind.browserGuard),
+              AdminJsonSettingTile(kind: AdminJsonSettingKind.callLimits),
             ],
           ),
         ],

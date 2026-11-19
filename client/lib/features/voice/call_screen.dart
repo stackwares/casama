@@ -44,7 +44,7 @@ class CallScreen extends ConsumerStatefulWidget {
     required this.botId,
     this.conversationId,
     this.callId,
-    this.idleLimit = const Duration(minutes: 2),
+    this.idleLimit = const Duration(minutes: 1),
   });
   final String botId;
   final String? conversationId;

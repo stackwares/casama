@@ -1,6 +1,7 @@
 /**
  * Lists the owner changes in Admin without a release (docs/REMOTE-CONTENT-PLAN.md): the model
- * catalog and cost tables (D-373), and the browser guard's added sites (D-374). Every save is
+ * catalog and cost tables (D-373), the browser guard's added sites (D-374) and the call limits
+ * (D-426). Every save is
  * checked in full and refused with the list of problems; nothing half-valid is stored.
  */
 import {
@@ -14,19 +15,25 @@ import {
 import { routes } from "@casama/contracts";
 import {
   builtInModelCatalog,
+  CALL_LIMIT_RANGES,
   type CostTables,
+  callLimits,
+  checkCallLimits,
   checkCostTables,
   checkGuardAdditions,
   checkModelCatalog,
+  DEFAULT_CALL_LIMITS,
   SENSITIVE_SITE_HOSTS,
 } from "@casama/domain";
 import type { OpenAPIHono } from "@hono/zod-openapi";
 import { sql } from "drizzle-orm";
 import {
   domainSaleSettings,
+  saveCallLimits,
   saveCostTables,
   saveGuardSites,
   saveModelCatalog,
+  storedCallLimits,
   storedCostTables,
   storedGuardSites,
   storedModelCatalog,
@@ -194,5 +201,31 @@ export function registerRemoteSettingsRoutes(app: OpenAPIHono<AppEnv>, deps: App
       added: Object.values(hosts).reduce((n, l) => n + l.length, 0),
     });
     return c.json(await guardOut(), 200);
+  });
+
+  // ------------------------------------------------------------- call limits (D-426)
+
+  const callLimitsOut = async () => ({
+    limits: (await storedCallLimits(db)) as Record<string, number>,
+    built_in: { ...DEFAULT_CALL_LIMITS } as Record<string, number>,
+    in_use: { ...callLimits() } as Record<string, number>,
+    ranges: Object.fromEntries(
+      Object.entries(CALL_LIMIT_RANGES).map(([k, [lo, hi]]) => [k, [lo, hi] as [number, number]]),
+    ),
+  });
+
+  app.openapi(routes.adminCallLimits, async (c) => {
+    await requireOwner(requireClaims(c.get("claims")));
+    return c.json(await callLimitsOut(), 200);
+  });
+
+  app.openapi(routes.saveCallLimits, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    await requireOwner(claims);
+    const { limits, errors } = checkCallLimits(c.req.valid("json").limits);
+    if (errors.length) refuse(errors);
+    await saveCallLimits(db, limits);
+    deps.logger.info("call limits changed", { by: claims.sub, limits });
+    return c.json(await callLimitsOut(), 200);
   });
 }

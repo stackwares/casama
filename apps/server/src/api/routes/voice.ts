@@ -16,11 +16,12 @@ import {
 } from "@casama/agent";
 import { routes } from "@casama/contracts";
 import { contentKeys, type JwtClaims, schema, withUserSession } from "@casama/db";
-import { cloudCharge, isValidTimezone } from "@casama/domain";
+import { callLimits, cloudCharge, isValidTimezone } from "@casama/domain";
 import type { OpenAPIHono } from "@hono/zod-openapi";
 import { eq, sql } from "drizzle-orm";
 import { billsCalls as billsCallsOn } from "../../billing/calls.ts";
 import {
+  callHeadroom,
   claimCallEnd,
   HOLD_MINUTES,
   higherUsage,
@@ -266,6 +267,7 @@ export function registerVoiceRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     // per-workspace lock *before* the provider's token is made, so parallel starts can't all pass
     // one credit check, and only a few can be open at once (billing audit 2026-11-17).
     const hold = HOLD_MINUTES * voicePrices().geminiLivePerMinute;
+    const limits = callLimits();
     const live = await db.transaction(async (tx) => {
       if (billable) {
         await tx.execute(
@@ -275,7 +277,7 @@ export function registerVoiceRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
           select
             (select count(*)::int from public.live_calls
               where org_id = ${bot.orgId}::uuid and billable and ended_at is null
-                and last_seen_at > now() - interval '2 minutes') as n,
+                and last_seen_at > now() - make_interval(secs => ${limits.abandoned_seconds})) as n,
             (select coalesce(sum(cost_usd), 0) from public.usage_ledger
               where org_id = ${bot.orgId}::uuid and billable and billed_at is null)::text as unbilled`);
         if ((open?.n ?? 0) >= MAX_OPEN_BILLABLE_CALLS)
@@ -284,12 +286,39 @@ export function registerVoiceRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
             "too_many_calls",
             `A workspace can have ${MAX_OPEN_BILLABLE_CALLS} live calls at once. End one and try again.`,
           );
-        const left = ((await deps.billing?.balance(bot.orgId)) ?? 0) - Number(open?.unbilled ?? 0);
+        const balance = (await deps.billing?.balance(bot.orgId)) ?? 0;
+        const left = balance - Number(open?.unbilled ?? 0);
         if (left <= 0 || left < cloudCharge(hold))
           throw new ApiError(
             402,
             "out_of_credits",
             "Live calls are paid from your workspace's credits, and there are none left.",
+          );
+        // The other limits the relay stops a call at (D-426): no call starts already past one.
+        const room = await callHeadroom(
+          tx,
+          {
+            id: "00000000-0000-0000-0000-000000000000",
+            orgId: bot.orgId,
+            botId: bot.id,
+            startedAt: new Date().toISOString(),
+          },
+          balance,
+          null,
+        );
+        if (room.reason && room.reason !== "credits" && room.left <= 0)
+          throw new ApiError(
+            402,
+            room.reason === "bot_budget"
+              ? "daily_budget_exceeded"
+              : room.reason === "quota"
+                ? "quota_exceeded"
+                : "cloud_daily_cap",
+            room.reason === "bot_budget"
+              ? "This bot used its daily budget, so it can't take a call until tomorrow (UTC)."
+              : room.reason === "quota"
+                ? "The workspace reached its monthly spending limit."
+                : "This workspace used today's spending limit. It resets at midnight UTC.",
           );
       }
       const [row] = await tx.execute<{ id: string }>(sql`
@@ -347,6 +376,15 @@ export function registerVoiceRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
         tools: s.tools,
         speak_first: true,
         live_call_id: live.id,
+        // Call limits (D-426): the app hangs up on silence and beats at the server's pace; a call
+        // the relay doesn't carry is ended at its longest length by the app (and the sweep).
+        limits: {
+          silence_seconds: limits.silence_seconds,
+          heartbeat_seconds: limits.heartbeat_seconds,
+          max_call_seconds: limits.max_call_minutes * 60,
+          warning_seconds: limits.warning_seconds,
+          app_ends_at_max: !relay,
+        },
       },
       200,
     );

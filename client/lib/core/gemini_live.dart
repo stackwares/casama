@@ -391,8 +391,15 @@ class _GeminiLevels implements CallLevels {
   }
 }
 
+/// The relay's close code for "this call is over, don't reconnect" (D-426).
+const callOverCloseCode = 4410;
+
 class GeminiLiveCall implements VoiceCall {
   GeminiLiveCall._(this._session, this._audio, this._connect, this._resumeDelays, this._connectTimeout);
+
+  String? _overBecause;
+  @override
+  String? get overBecause => _overBecause;
 
   final VoiceSession _session;
   final PcmAudio _audio;
@@ -563,6 +570,14 @@ class GeminiLiveCall implements VoiceCall {
   void _onClosed(WebSocketChannel ws) {
     // A stale socket, or a try that is failing inside the resume loop (the loop handles it).
     if (_ended || ws != _ws || _resuming) return;
+    // The server's relay ended the call at a limit (D-426): over, not dropped, so no resuming.
+    if (ws.closeCode == callOverCloseCode) {
+      final reason = ws.closeReason ?? '';
+      _overBecause = reason.startsWith('call over: ') ? reason.substring(11) : 'limit';
+      _reconnecting.value = false;
+      _state.value = CallState.ended;
+      return;
+    }
     // Dropped mid-call: resume the session if Google gave a handle, else the call is over.
     if (_ev.resumeHandle != null) {
       _reconnecting.value = true;

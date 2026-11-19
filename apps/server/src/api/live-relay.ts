@@ -6,15 +6,27 @@
  *
  * The app needs no change: it connects to the session's `connect_url` with `?access_token=` and
  * speaks the same protocol (setup, audio, session resumption) as it did to Gemini.
+ *
+ * Call limits (D-426): the relay also keeps a call inside its limits while it runs: its longest
+ * length, and the workspace's credits, daily limit, monthly quota and the bot's daily budget (runs
+ * check the same before every step, D-022). About `warning_seconds` before a limit it tells the
+ * bot to warn the person; at the limit it asks the bot for a short goodbye, then closes the stream
+ * with CALL_OVER_CLOSE and ends the call: billed, recap posted. After that it takes no reconnect.
  */
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 import type { IncomingMessage, Server } from "node:http";
 import type { Duplex } from "node:stream";
-import { addGeminiUsage, emptyGeminiUsage, type GeminiLiveUsage } from "@casama/agent";
+import { addGeminiUsage, emptyGeminiUsage, type GeminiLiveUsage, voicePrices } from "@casama/agent";
 import { contentKeys } from "@casama/db";
+import { callLimits, cloudCharge } from "@casama/domain";
 import { sql } from "drizzle-orm";
 import { type RawData, WebSocket, WebSocketServer } from "ws";
-import { relayCounts } from "../billing/live-calls.ts";
+import {
+  type CallLimitReason,
+  callHeadroom,
+  endCallForLimit,
+  relayCounts,
+} from "../billing/live-calls.ts";
 import { OpenSockets } from "./drain.ts";
 import type { AppDeps } from "./types.ts";
 
@@ -25,6 +37,57 @@ const FLUSH_MS = 5_000;
 const CHECK_MS = 15_000;
 /** Frames held while the provider connection opens; more than this means something is wrong. */
 const MAX_PENDING = 256;
+/** The bot's goodbye: about this long is kept for it (D-426). */
+const GOODBYE_SECONDS = 20;
+/** The relay's limit timings (D-426); tests shorten them. */
+export const relayTiming = {
+  /** How often a relayed call checks its limits. */
+  guardMs: 20_000,
+  /** The first check after (re)connecting. */
+  firstGuardMs: 3_000,
+  /** The longest the bot's goodbye may take. */
+  goodbyeMaxMs: 30_000,
+  /** After the stream closes, the app has this long to end the call itself before the relay does. */
+  appEndGraceMs: 8_000,
+};
+/** Close code for "this call is over, don't reconnect" (D-426); the app reads it. */
+export const CALL_OVER_CLOSE = 4410;
+
+/** Words the bot is given when a limit is near or reached (D-426). */
+export function limitNote(
+  reason: CallLimitReason,
+  stage: "warn" | "goodbye",
+  maxMinutes = callLimits().max_call_minutes,
+) {
+  const why: Record<CallLimitReason, [string, string]> = {
+    max_length: [
+      `this call reaches its ${maxMinutes}-minute limit in about a minute`,
+      `this call has reached its ${maxMinutes}-minute limit`,
+    ],
+    credits: [
+      "the workspace is nearly out of credits for this call",
+      "the workspace is out of credits for this call",
+    ],
+    daily_cap: [
+      "the workspace has nearly used today's spending limit",
+      "the workspace has used today's spending limit",
+    ],
+    quota: [
+      "the workspace has nearly reached its monthly spending limit",
+      "the workspace has reached its monthly spending limit",
+    ],
+    bot_budget: ["you've nearly used your daily budget", "you've used your daily budget"],
+  };
+  const sayWhy =
+    reason === "max_length"
+      ? "the call is reaching its time limit"
+      : reason === "credits"
+        ? "you're nearly out of credits"
+        : "you're nearly at the spending limit";
+  return stage === "warn"
+    ? `(Note from Casama, not from the user: ${why[reason][0]}. At the next natural pause, tell the user in one short sentence that ${sayWhy} and you'll have to hang up soon, then carry on.)`
+    : `(Note from Casama, not from the user: ${why[reason][1]}, so the call ends now. Say goodbye in one or two short sentences: say why, and that anything left carries on in the chat. Don't call tools or start anything new.)`;
+}
 
 const hash = (s: string) => createHash("sha256").update(s).digest("hex");
 
@@ -114,7 +177,7 @@ export function attachLiveRelay(server: Server, deps: AppDeps) {
         expired: boolean;
       }>(sql`
         select r.secret_hash, r.provider_url, r.provider_token,
-          lc.ended_at is not null as ended, r.expires_at <= now() as expired
+          (lc.ended_at is not null or lc.limit_closed_at is not null) as ended, r.expires_at <= now() as expired
         from public.live_call_relays r join public.live_calls lc on lc.id = r.live_call_id
         where r.live_call_id = ${id}::uuid`);
       const given = Buffer.from(hash(secret));
@@ -163,6 +226,144 @@ function relay(deps: AppDeps, id: string, client: WebSocket, providerUrl: string
     if (r?.ended) close(1000, "call ended");
   }, CHECK_MS);
 
+  // Limits (D-426) -------------------------------------------------------------------------
+  let wrapping = false;
+  let finishing = false;
+  let goodbyeAt = 0;
+  let goodbyeAudioMs = 0;
+  let goodbyeTimer: ReturnType<typeof setTimeout> | undefined;
+  let wrapReason: CallLimitReason = "max_length";
+  let lastSample: { at: number; charge: number } | null = null;
+
+  /** Speaks to the model as the app's own notes do: a user turn it answers at once. */
+  const inject = (text: string) => {
+    if (upstream.readyState !== WebSocket.OPEN) return false;
+    upstream.send(
+      JSON.stringify({
+        clientContent: { turns: [{ role: "user", parts: [{ text }] }], turnComplete: true },
+      }),
+    );
+    return true;
+  };
+
+  /** Closes the stream for good, then ends the call unless the app does it first. */
+  const finish = async (reason: CallLimitReason) => {
+    if (finishing) return;
+    finishing = true;
+    clearTimeout(goodbyeTimer);
+    await db
+      .execute(
+        sql`update public.live_calls set limit_closed_at = coalesce(limit_closed_at, now()) where id = ${id}::uuid`,
+      )
+      .catch(() => undefined);
+    await close(CALL_OVER_CLOSE, `call over: ${reason}`);
+    // The app posts its transcript and ends the call when the stream closes, so its last turns
+    // land before the recap; an app that doesn't is ended here.
+    setTimeout(
+      () =>
+        void endCallForLimit(db, id, reason).catch((err) =>
+          deps.logger.warn("call limit end failed", { error: (err as Error).message }),
+        ),
+      relayTiming.appEndGraceMs,
+    ).unref?.();
+  };
+
+  const goodbye = async (reason: CallLimitReason) => {
+    if (wrapping) return;
+    wrapping = true;
+    wrapReason = reason;
+    const [mine] = await db.execute<{ id: string }>(sql`
+      update public.live_calls set limit_reason = ${reason}, limit_wrap_at = now()
+      where id = ${id}::uuid and limit_wrap_at is null and ended_at is null returning id`);
+    // Another connection already said goodbye (this one is a reconnect), or the call ended.
+    if (!mine || !inject(limitNote(reason, "goodbye"))) return void (await finish(reason));
+    goodbyeAt = Date.now();
+    goodbyeAudioMs = 0;
+    goodbyeTimer = setTimeout(() => void finish(reason), relayTiming.goodbyeMaxMs);
+    deps.logger.info("call limit reached", { live_call_id: id, reason });
+  };
+
+  /** The bot finished its goodbye: close once the app has played it. */
+  const goodbyeHeard = (text: string) => {
+    // 24 kHz, 16-bit mono PCM: 48 bytes a millisecond.
+    for (const m of text.matchAll(/"data"\s*:\s*"([A-Za-z0-9+/=]+)"/g))
+      goodbyeAudioMs += ((m[1]?.length ?? 0) * 3) / 4 / 48;
+    if (!goodbyeAudioMs || !text.includes('"turnComplete"')) return;
+    const playing = Math.max(0, goodbyeAt + goodbyeAudioMs - Date.now());
+    clearTimeout(goodbyeTimer);
+    goodbyeTimer = setTimeout(
+      () => void finish(wrapReason),
+      Math.min(playing + 1500, Math.max(0, goodbyeAt + relayTiming.goodbyeMaxMs - Date.now())),
+    );
+  };
+
+  const guardTick = async () => {
+    if (closed || wrapping || finishing) return;
+    const [c] = await db.execute<{
+      org_id: string;
+      bot_id: string;
+      billable: boolean;
+      started_at: string;
+      limit_reason: CallLimitReason | null;
+      warned: boolean;
+      wrapped: boolean;
+      ended: boolean;
+    }>(sql`
+      select org_id, bot_id, billable, started_at::text, limit_reason,
+        limit_warned_at is not null as warned, limit_wrap_at is not null as wrapped,
+        ended_at is not null as ended
+      from public.live_calls where id = ${id}::uuid`);
+    if (!c || c.ended) return;
+    // A goodbye already began on an earlier connection: this reconnect only closes the call.
+    if (c.wrapped) return void (await finish(c.limit_reason ?? "max_length"));
+    const limits = callLimits();
+    const elapsed = (Date.now() - Date.parse(c.started_at)) / 1000;
+    const maxSeconds = limits.max_call_minutes * 60;
+    let stop: CallLimitReason | null = elapsed >= maxSeconds ? "max_length" : null;
+    let warn: CallLimitReason | null =
+      !stop && elapsed >= maxSeconds - limits.warning_seconds ? "max_length" : null;
+    if (!stop && c.billable && deps.billing) {
+      await flush();
+      const room = await callHeadroom(
+        db,
+        { id, orgId: c.org_id, botId: c.bot_id, startedAt: c.started_at },
+        await deps.billing.balance(c.org_id),
+        await relayCounts(db, id),
+      );
+      // What the call spends a second: measured between checks, at least the per-minute price.
+      const now = Date.now();
+      const estimate = cloudCharge(voicePrices().geminiLivePerMinute) / 60;
+      const measured = lastSample
+        ? (room.callCharge - lastSample.charge) / Math.max(1, (now - lastSample.at) / 1000)
+        : 0;
+      lastSample = { at: now, charge: room.callCharge };
+      const perSecond = Math.max(estimate, measured);
+      if (room.reason && room.left <= perSecond * GOODBYE_SECONDS) stop = room.reason;
+      else if (
+        room.reason &&
+        room.left <=
+          perSecond * (limits.warning_seconds + relayTiming.guardMs / 1000 + GOODBYE_SECONDS)
+      )
+        warn = room.reason;
+    }
+    if (stop) return void (await goodbye(stop));
+    if (!warn || (c.warned && c.limit_reason === warn) || upstream.readyState !== WebSocket.OPEN)
+      return;
+    const [first] = await db.execute<{ id: string }>(sql`
+      update public.live_calls set limit_warned_at = now(), limit_reason = ${warn}
+      where id = ${id}::uuid and ended_at is null and limit_wrap_at is null
+        and (limit_warned_at is null or limit_reason is distinct from ${warn})
+      returning id`);
+    if (first) inject(limitNote(warn, "warn"));
+  };
+  const runGuard = () =>
+    void guardTick().catch((err) =>
+      deps.logger.warn("call limit check failed", { error: (err as Error).message }),
+    );
+  const guard = setInterval(runGuard, relayTiming.guardMs);
+  // Soon after (re)connecting too: a reconnect after a goodbye began closes at once.
+  const firstGuard = setTimeout(runGuard, relayTiming.firstGuardMs);
+
   const untrack = relayedCalls.add((code, reason) => close(code, reason));
   let saved: Promise<void> = Promise.resolve();
   const close = (code = 1000, reason = "") => {
@@ -171,6 +372,9 @@ function relay(deps: AppDeps, id: string, client: WebSocket, providerUrl: string
     untrack();
     clearInterval(timer);
     clearInterval(check);
+    clearInterval(guard);
+    clearTimeout(firstGuard);
+    if (!finishing) clearTimeout(goodbyeTimer);
     if (upstream.readyState <= WebSocket.OPEN) upstream.close();
     if (client.readyState <= WebSocket.OPEN) client.close(code, reason);
     saved = flush()
@@ -198,6 +402,7 @@ function relay(deps: AppDeps, id: string, client: WebSocket, providerUrl: string
     const text = Array.isArray(data)
       ? Buffer.concat(data).toString("utf8")
       : Buffer.from(data as ArrayBuffer).toString("utf8");
+    if (wrapping && !finishing && goodbyeAt) goodbyeHeard(text);
     if (!text.includes('"usageMetadata"')) return;
     try {
       const m = JSON.parse(text) as { usageMetadata?: unknown };

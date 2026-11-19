@@ -13,6 +13,7 @@ import {
   registerPhoneCallTools,
   ToolRegistry,
 } from "@casama/agent";
+import { setCallLimits } from "@casama/domain";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { type Harness, JWT_SECRET, j, startHarness } from "./helpers.ts";
 
@@ -35,6 +36,8 @@ const ctx = () => ({ runId, botId, orgId, output: async () => {}, emit: async ()
 const call = (reason: string) => reg.get("voice.call_user")!.execute({ reason } as never, ctx());
 
 beforeAll(async () => {
+  // These tests ring several times in a row; the ring limits have their own test below.
+  setCallLimits({ ring_cooldown_minutes: 0, ring_daily_cap: 20 });
   apns = createServer();
   apns.on("stream", (stream: ServerHttp2Stream, headers) => {
     let body = "";
@@ -98,6 +101,7 @@ beforeAll(async () => {
   });
 }, 60_000);
 afterAll(async () => {
+  setCallLimits(null);
   await h?.stop();
   apns?.close();
 });
@@ -329,5 +333,61 @@ describe("phone calls", () => {
       { push_status: string }[]
     >`select push_status from public.notifications where payload->>'body' = 'Quick question about lunch'`;
     expect(n?.push_status).toBe("deferred");
+  });
+
+  it("ring limits (D-426): the person's switch, a cooldown per bot and a daily cap", async () => {
+    await h.tdb.admin`update public.profiles set quiet_hours = null where user_id = ${user.id}`;
+    await h.tdb.admin`delete from public.voice_calls`;
+    setCallLimits({ ring_cooldown_minutes: 30, ring_daily_cap: 2 });
+    const missed = () =>
+      h.tdb
+        .admin`update public.voice_calls set status = 'missed', expires_at = now() where status = 'ringing'`;
+    const noticesFor = async (body: string) =>
+      (
+        await h.tdb
+          .admin`select 1 from public.notifications where kind = 'call_missed' and payload->>'body' = ${body}`
+      ).length;
+
+    // The person turned calls from this bot off: no ring, one notification, the bot is told.
+    await h.tdb.admin`
+      insert into public.user_bot_settings (user_id, bot_id, may_call) values (${user.id}, ${botId}, false)`;
+    let r = await call("Off switch");
+    expect(r.content).toContain("turned off calls from you");
+    expect(await noticesFor("Off switch")).toBe(1);
+    // Trying again rings nothing and doesn't notify again.
+    r = await call("Off switch again");
+    expect(r.content).toContain("turned off calls from you");
+    expect(await noticesFor("Off switch again")).toBe(0);
+    const blocked = await h.tdb.admin<{ status: string; blocked: string }[]>`
+      select status, blocked from public.voice_calls order by created_at`;
+    expect(blocked).toEqual([
+      { status: "cancelled", blocked: "may_not_call" },
+      { status: "cancelled", blocked: "may_not_call" },
+    ]);
+
+    // Switched back on: it rings; a second ring within the cooldown doesn't.
+    await h.tdb
+      .admin`update public.user_bot_settings set may_call = true where user_id = ${user.id}`;
+    await h.tdb.admin`delete from public.voice_calls`;
+    expect((await call("First")).content).toContain("Calling them now");
+    await missed();
+    r = await call("Too soon");
+    expect(r.content).toMatch(/rang them a short while ago.*about 30 minutes/);
+    expect(await noticesFor("Too soon")).toBe(1);
+
+    // No cooldown: the daily cap (2) stops the third ring of the day.
+    setCallLimits({ ring_cooldown_minutes: 0, ring_daily_cap: 2 });
+    expect((await call("Second")).content).toContain("Calling them now");
+    await missed();
+    r = await call("Third");
+    expect(r.content).toContain("had 2 calls from bots today");
+    expect((await h.tdb.admin`select 1 from public.voice_calls where blocked is null`).length).toBe(
+      2,
+    );
+
+    // A cap of 0: bots never ring.
+    setCallLimits({ ring_cooldown_minutes: 30, ring_daily_cap: 0 });
+    expect((await call("Never")).content).toContain("Bots can't phone people on this server");
+    setCallLimits({ ring_cooldown_minutes: 0, ring_daily_cap: 20 });
   });
 });

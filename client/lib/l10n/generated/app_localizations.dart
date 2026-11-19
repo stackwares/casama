@@ -9646,6 +9646,18 @@ abstract class AppLocalizations {
   /// **'Whether this bot follows your quiet hours'**
   String get botNotificationsHelp;
 
+  /// No description provided for @botMayCall.
+  ///
+  /// In en, this message translates to:
+  /// **'Can call me'**
+  String get botMayCall;
+
+  /// No description provided for @botMayCallHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'This bot can phone you when something is worth a call. Off: it sends a notification instead.'**
+  String get botMayCallHelp;
+
   /// No description provided for @quietDefault.
   ///
   /// In en, this message translates to:
@@ -17294,6 +17306,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Built-in values'**
   String get adminBuiltInValues;
+
+  /// No description provided for @adminCallLimits.
+  ///
+  /// In en, this message translates to:
+  /// **'Call limits'**
+  String get adminCallLimits;
+
+  /// No description provided for @adminCallLimitsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Silence before a call hangs up, the longest call, warnings before a limit, and how often bots may ring someone. Values left out use the built-in ones.'**
+  String get adminCallLimitsHelp;
 
   /// No description provided for @paywallBillingPeriod.
   ///

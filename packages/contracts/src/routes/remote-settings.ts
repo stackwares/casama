@@ -2,9 +2,11 @@ import { createRoute } from "@hono/zod-openapi";
 import { jsonBody, jsonResponse, problemResponses } from "../common.ts";
 import {
   AdminBrowserGuard,
+  AdminCallLimits,
   AdminModelCatalog,
   AdminPriceTables,
   BrowserGuardSites,
+  SaveCallLimitsRequest,
   SaveModelCatalogRequest,
   SavePriceTablesRequest,
 } from "../remote-settings.ts";
@@ -82,4 +84,26 @@ export const saveBrowserGuard = createRoute({
   summary: "Replace the added sites; the built-in lists can't be shortened (owner only)",
   request: { body: jsonBody(BrowserGuardSites) },
   responses: { 200: jsonResponse("Saved", AdminBrowserGuard), 400: e400, 401: e401, 403: e403 },
+});
+
+export const adminCallLimits = createRoute({
+  operationId: "adminCallLimits",
+  method: "get",
+  path: "/v1/admin/call-limits",
+  tags: ["admin"],
+  security,
+  summary:
+    "Live-call and ring limits: saved values, defaults and what's in use (owner only; D-426)",
+  responses: { 200: jsonResponse("Call limits", AdminCallLimits), 401: e401, 403: e403 },
+});
+
+export const saveCallLimits = createRoute({
+  operationId: "saveCallLimits",
+  method: "put",
+  path: "/v1/admin/call-limits",
+  tags: ["admin"],
+  security,
+  summary: "Replace the saved call limits; refused when a value is unknown or out of range",
+  request: { body: jsonBody(SaveCallLimitsRequest) },
+  responses: { 200: jsonResponse("Saved", AdminCallLimits), 400: e400, 401: e401, 403: e403 },
 });

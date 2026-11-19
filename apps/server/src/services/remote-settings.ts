@@ -3,7 +3,9 @@
  * - the model catalog (`instance_settings` key `model_catalog`) and the cost tables
  *   (`billing_settings.cost_tables`), D-373;
  * - the browser guard's added sites (`instance_settings` key `browser_guard`), D-374;
- * - the check-in and setup prompts, from the gallery's `prompts.json` (not Admin), D-374.
+ * - the check-in and setup prompts, from the gallery's `prompts.json` (not Admin), D-374;
+ * - call limits: silence, abandoned calls, longest call, warnings, ring limits (`instance_settings`
+ *   key `call_limits`), D-426.
  * They're loaded into the shared modules in @casama/domain, which the gateway, voice, media and
  * computer prices and the browser guard read. Every process loads them at start and every minute;
  * the API process that saves one applies it at once. A value that can't be read, or fails its
@@ -13,12 +15,15 @@
 import { setPrompts } from "@casama/agent";
 import type { Database } from "@casama/db";
 import {
+  type CallLimits,
   type CostTables,
+  checkCallLimits,
   checkCostTables,
   checkGuardAdditions,
   checkModelCatalog,
   DEFAULT_DOMAIN_TLDS,
   type ModelCatalog,
+  setCallLimits,
   setCostTables,
   setModelCatalog,
   setSensitiveSiteAdditions,
@@ -90,6 +95,14 @@ export async function loadRemoteSettings(db: Exec, warn?: (msg: string, e: unkno
     setSensitiveSiteAdditions(row?.value);
   } catch (e) {
     warn?.("browser guard sites not loaded", e);
+  }
+  try {
+    const [row] = await db.execute<{ value: unknown }>(
+      sql`select value from public.instance_settings where key = ${CALL_LIMITS_KEY}`,
+    );
+    setCallLimits(row?.value ?? null);
+  } catch (e) {
+    warn?.("call limits not loaded", e);
   }
 }
 
@@ -199,4 +212,25 @@ export async function saveGuardSites(db: Exec, hosts: Record<string, string[]>) 
     values (${GUARD_SITES_KEY}, ${JSON.stringify(hosts)}::jsonb, now())
     on conflict (key) do update set value = excluded.value, updated_at = now()`);
   setSensitiveSiteAdditions(hosts);
+}
+
+// ---------------------------------------------------------------- call limits (D-426)
+
+export const CALL_LIMITS_KEY = "call_limits";
+
+/** The saved call limits (only the values the owner set). */
+export async function storedCallLimits(db: Exec): Promise<Partial<CallLimits>> {
+  const [row] = await db.execute<{ value: unknown }>(
+    sql`select value from public.instance_settings where key = ${CALL_LIMITS_KEY}`,
+  );
+  return checkCallLimits(row?.value).limits;
+}
+
+/** Saves limits that passed their check, and applies them in this process. */
+export async function saveCallLimits(db: Exec, limits: Partial<CallLimits>) {
+  await db.execute(sql`
+    insert into public.instance_settings (key, value, updated_at)
+    values (${CALL_LIMITS_KEY}, ${JSON.stringify(limits)}::jsonb, now())
+    on conflict (key) do update set value = excluded.value, updated_at = now()`);
+  setCallLimits(limits);
 }

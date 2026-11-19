@@ -2761,7 +2761,9 @@ export const voiceCalls = pgTable("voice_calls", {
 	answeredAt: timestamp("answered_at", { withTimezone: true, mode: 'string' }),
 	endedAt: timestamp("ended_at", { withTimezone: true, mode: 'string' }),
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	blocked: text(),
 }, (table) => [
+	index("voice_calls_bot_user_idx").using("btree", table.botId.asc().nullsLast().op("uuid_ops"), table.userId.asc().nullsLast().op("uuid_ops"), table.createdAt.desc().nullsFirst().op("timestamptz_ops")),
 	index("voice_calls_ringing_idx").using("btree", table.expiresAt.asc().nullsLast().op("timestamptz_ops")).where(sql`(status = 'ringing'::text)`),
 	index("voice_calls_user_idx").using("btree", table.userId.asc().nullsLast().op("timestamptz_ops"), table.createdAt.desc().nullsFirst().op("timestamptz_ops")),
 	foreignKey({
@@ -2792,6 +2794,7 @@ export const voiceCalls = pgTable("voice_calls", {
 	pgPolicy("voice_calls_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`(user_id = ( SELECT auth.uid() AS uid))` }),
 	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	check("voice_calls_reason_check", sql`(char_length(reason) >= 1) AND (char_length(reason) <= 500)`),
+	check("voice_calls_blocked_check", sql`blocked = ANY (ARRAY['may_not_call'::text, 'cooldown'::text, 'daily_cap'::text])`),
 	check("voice_calls_status_check", sql`status = ANY (ARRAY['ringing'::text, 'answered'::text, 'declined'::text, 'missed'::text, 'cancelled'::text])`),
 ]);
 
@@ -4219,6 +4222,10 @@ export const liveCalls = pgTable("live_calls", {
 	endedAt: timestamp("ended_at", { withTimezone: true, mode: 'string' }),
 	endReason: text("end_reason"),
 	seconds: integer(),
+	limitReason: text("limit_reason"),
+	limitWarnedAt: timestamp("limit_warned_at", { withTimezone: true, mode: 'string' }),
+	limitWrapAt: timestamp("limit_wrap_at", { withTimezone: true, mode: 'string' }),
+	limitClosedAt: timestamp("limit_closed_at", { withTimezone: true, mode: 'string' }),
 }, (table) => [
 	index("live_calls_open_idx").using("btree", table.lastSeenAt.asc().nullsLast().op("timestamptz_ops")).where(sql`(ended_at IS NULL)`),
 	index("live_calls_user_idx").using("btree", table.userId.asc().nullsLast().op("timestamptz_ops"), table.startedAt.desc().nullsFirst().op("timestamptz_ops")),
@@ -4250,7 +4257,8 @@ export const liveCalls = pgTable("live_calls", {
 	pgPolicy("live_calls_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`((user_id = ( SELECT auth.uid() AS uid)) AND is_member(org_id))` }),
 	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	check("live_calls_provider_check", sql`provider = ANY (ARRAY['gemini'::text, 'openai'::text])`),
-	check("live_calls_end_reason_check", sql`end_reason = ANY (ARRAY['hung_up'::text, 'silent'::text])`),
+	check("live_calls_end_reason_check", sql`end_reason = ANY (ARRAY['hung_up'::text, 'silent'::text, 'max_length'::text, 'credits'::text, 'daily_cap'::text, 'quota'::text, 'bot_budget'::text])`),
+	check("live_calls_limit_reason_check", sql`limit_reason = ANY (ARRAY['max_length'::text, 'credits'::text, 'daily_cap'::text, 'quota'::text, 'bot_budget'::text])`),
 	check("live_calls_seconds_check", sql`seconds >= 0`),
 ]);
 
@@ -5496,6 +5504,7 @@ export const userBotSettings = pgTable("user_bot_settings", {
 	quiet: text().default('default').notNull(),
 	quietHours: jsonb("quiet_hours"),
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	mayCall: boolean("may_call").default(true).notNull(),
 }, (table) => [
 	foreignKey({
 			columns: [table.userId],

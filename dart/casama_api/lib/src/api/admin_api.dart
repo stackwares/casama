@@ -11,6 +11,7 @@ import 'package:dio/dio.dart';
 
 import 'package:casama_api/src/model/abuse_event_list.dart';
 import 'package:casama_api/src/model/admin_browser_guard.dart';
+import 'package:casama_api/src/model/admin_call_limits.dart';
 import 'package:casama_api/src/model/admin_credit_pack.dart';
 import 'package:casama_api/src/model/admin_domains.dart';
 import 'package:casama_api/src/model/admin_link_server.dart';
@@ -39,6 +40,7 @@ import 'package:casama_api/src/model/replaced_data_keys.dart';
 import 'package:casama_api/src/model/reported_creation.dart';
 import 'package:casama_api/src/model/reported_creation_list.dart';
 import 'package:casama_api/src/model/review_report_request.dart';
+import 'package:casama_api/src/model/save_call_limits_request.dart';
 import 'package:casama_api/src/model/save_credit_pack_request.dart';
 import 'package:casama_api/src/model/save_model_catalog_request.dart';
 import 'package:casama_api/src/model/save_plan_request.dart';
@@ -357,6 +359,82 @@ _responseData = rawData == null ? null : deserialize<AdminBrowserGuard, AdminBro
     }
 
     return Response<AdminBrowserGuard>(
+      data: _responseData,
+      headers: _response.headers,
+      isRedirect: _response.isRedirect,
+      requestOptions: _response.requestOptions,
+      redirects: _response.redirects,
+      statusCode: _response.statusCode,
+      statusMessage: _response.statusMessage,
+      extra: _response.extra,
+    );
+  }
+
+  /// Live-call and ring limits: saved values, defaults and what&#39;s in use (owner only; D-426)
+  /// 
+  ///
+  /// Parameters:
+  /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
+  /// * [headers] - Can be used to add additional headers to the request
+  /// * [extras] - Can be used to add flags to the request
+  /// * [validateStatus] - A [ValidateStatus] callback that can be used to determine request success based on the HTTP status of the response
+  /// * [onSendProgress] - A [ProgressCallback] that can be used to get the send progress
+  /// * [onReceiveProgress] - A [ProgressCallback] that can be used to get the receive progress
+  ///
+  /// Returns a [Future] containing a [Response] with a [AdminCallLimits] as data
+  /// Throws [DioException] if API call or serialization fails
+  Future<Response<AdminCallLimits>> adminCallLimits({ 
+    CancelToken? cancelToken,
+    Map<String, dynamic>? headers,
+    Map<String, dynamic>? extra,
+    ValidateStatus? validateStatus,
+    ProgressCallback? onSendProgress,
+    ProgressCallback? onReceiveProgress,
+  }) async {
+    final _path = r'/v1/admin/call-limits';
+    final _options = Options(
+      method: r'GET',
+      headers: <String, dynamic>{
+        ...?headers,
+      },
+      extra: <String, dynamic>{
+        'secure': <Map<String, String>>[
+          {
+            'type': 'http',
+            'scheme': 'bearer',
+            'name': 'bearerAuth',
+          },
+        ],
+        ...?extra,
+      },
+      validateStatus: validateStatus,
+    );
+
+    final _response = await _dio.request<Object>(
+      _path,
+      options: _options,
+      cancelToken: cancelToken,
+      onSendProgress: onSendProgress,
+      onReceiveProgress: onReceiveProgress,
+    );
+
+    AdminCallLimits? _responseData;
+
+    try {
+final rawData = _response.data;
+_responseData = rawData == null ? null : deserialize<AdminCallLimits, AdminCallLimits>(rawData, 'AdminCallLimits', growable: true);
+
+    } catch (error, stackTrace) {
+      throw DioException(
+        requestOptions: _response.requestOptions,
+        response: _response,
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    return Response<AdminCallLimits>(
       data: _responseData,
       headers: _response.headers,
       isRedirect: _response.isRedirect,
@@ -2620,6 +2698,102 @@ _responseData = rawData == null ? null : deserialize<AdminBrowserGuard, AdminBro
     }
 
     return Response<AdminBrowserGuard>(
+      data: _responseData,
+      headers: _response.headers,
+      isRedirect: _response.isRedirect,
+      requestOptions: _response.requestOptions,
+      redirects: _response.redirects,
+      statusCode: _response.statusCode,
+      statusMessage: _response.statusMessage,
+      extra: _response.extra,
+    );
+  }
+
+  /// Replace the saved call limits; refused when a value is unknown or out of range
+  /// 
+  ///
+  /// Parameters:
+  /// * [saveCallLimitsRequest] 
+  /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
+  /// * [headers] - Can be used to add additional headers to the request
+  /// * [extras] - Can be used to add flags to the request
+  /// * [validateStatus] - A [ValidateStatus] callback that can be used to determine request success based on the HTTP status of the response
+  /// * [onSendProgress] - A [ProgressCallback] that can be used to get the send progress
+  /// * [onReceiveProgress] - A [ProgressCallback] that can be used to get the receive progress
+  ///
+  /// Returns a [Future] containing a [Response] with a [AdminCallLimits] as data
+  /// Throws [DioException] if API call or serialization fails
+  Future<Response<AdminCallLimits>> saveCallLimits({ 
+    required SaveCallLimitsRequest saveCallLimitsRequest,
+    CancelToken? cancelToken,
+    Map<String, dynamic>? headers,
+    Map<String, dynamic>? extra,
+    ValidateStatus? validateStatus,
+    ProgressCallback? onSendProgress,
+    ProgressCallback? onReceiveProgress,
+  }) async {
+    final _path = r'/v1/admin/call-limits';
+    final _options = Options(
+      method: r'PUT',
+      headers: <String, dynamic>{
+        ...?headers,
+      },
+      extra: <String, dynamic>{
+        'secure': <Map<String, String>>[
+          {
+            'type': 'http',
+            'scheme': 'bearer',
+            'name': 'bearerAuth',
+          },
+        ],
+        ...?extra,
+      },
+      contentType: 'application/json',
+      validateStatus: validateStatus,
+    );
+
+    dynamic _bodyData;
+
+    try {
+_bodyData=jsonEncode(saveCallLimitsRequest);
+    } catch(error, stackTrace) {
+      throw DioException(
+         requestOptions: _options.compose(
+          _dio.options,
+          _path,
+        ),
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    final _response = await _dio.request<Object>(
+      _path,
+      data: _bodyData,
+      options: _options,
+      cancelToken: cancelToken,
+      onSendProgress: onSendProgress,
+      onReceiveProgress: onReceiveProgress,
+    );
+
+    AdminCallLimits? _responseData;
+
+    try {
+final rawData = _response.data;
+_responseData = rawData == null ? null : deserialize<AdminCallLimits, AdminCallLimits>(rawData, 'AdminCallLimits', growable: true);
+
+    } catch (error, stackTrace) {
+      throw DioException(
+        requestOptions: _response.requestOptions,
+        response: _response,
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    return Response<AdminCallLimits>(
       data: _responseData,
       headers: _response.headers,
       isRedirect: _response.isRedirect,

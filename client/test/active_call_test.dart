@@ -330,8 +330,9 @@ void main() {
     Future<(ActiveCall, CallsConnector, FakeBackend)> start(
       WidgetTester tester, {
       Duration idle = const Duration(minutes: 2),
+      VoiceSessionLimits? limits,
     }) async {
-      final backend = FakeBackend();
+      final backend = FakeBackend()..sessionLimits = limits;
       final calls = CallsConnector();
       final active = ActiveCall(() => backend, () => calls);
       addTearDown(active.dispose);
@@ -452,6 +453,75 @@ void main() {
         );
       },
     );
+
+    testWidgets("call limits (D-426): the server's silence limit and heartbeat replace the app's", (
+      tester,
+    ) async {
+      final (active, _, backend) = await start(
+        tester,
+        limits: VoiceSessionLimits(
+          silenceSeconds: 30,
+          heartbeatSeconds: 5,
+          maxCallSeconds: 3600,
+          warningSeconds: 60,
+          appEndsAtMax: false,
+        ),
+      );
+      final c = active.live!;
+      expect(c.idleLimit, const Duration(seconds: 30));
+      expect(c.heartbeatEvery, const Duration(seconds: 5));
+      await tester.pump(const Duration(seconds: 11));
+      expect(backend.heartbeats.length, 2);
+      // Thirty seconds of quiet (checked every six) hangs up.
+      await tester.pump(const Duration(seconds: 25));
+      for (var i = 0; i < 5; i++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+      expect(c.endedBy, CallEnd.idle);
+    });
+
+    testWidgets("call limits (D-426): a call the relay doesn't carry warns, says goodbye and ends at its longest length", (
+      tester,
+    ) async {
+      final (active, calls, _) = await start(
+        tester,
+        limits: VoiceSessionLimits(
+          silenceSeconds: 900,
+          heartbeatSeconds: 30,
+          maxCallSeconds: 300,
+          warningSeconds: 60,
+          appEndsAtMax: true,
+        ),
+      );
+      final c = active.live!;
+      final call = calls.last;
+      await tester.pump(const Duration(seconds: 241));
+      expect(call.notes.single, contains('5-minute limit in about a minute'));
+      await tester.pump(const Duration(seconds: 60));
+      expect(call.notes.last, contains('Say goodbye'));
+      expect(c.over, isFalse, reason: 'the bot gets to say goodbye first');
+      call.speakingNow.value = true;
+      await tester.pump(const Duration(seconds: 3));
+      call.speakingNow.value = false;
+      await tester.pump(const Duration(seconds: 1));
+      for (var i = 0; i < 5; i++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+      expect(c.endedBy, CallEnd.limit);
+      expect(call.hungUp, isTrue);
+    });
+
+    testWidgets('call limits (D-426): a call the server ended at a limit ends, for that reason', (
+      tester,
+    ) async {
+      final (active, calls, _) = await start(tester);
+      final c = active.live!;
+      calls.last.endedByServer('credits');
+      for (var i = 0; i < 5; i++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+      expect(c.endedBy, CallEnd.limit);
+    });
   });
 
   testWidgets(

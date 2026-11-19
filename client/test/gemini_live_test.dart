@@ -36,6 +36,10 @@ class _FakeChannel implements WebSocketChannel {
   Future<void> get ready => _ready;
   void server(Map<String, Object?> m) => incoming.add(jsonEncode(m));
   @override
+  int? closeCode;
+  @override
+  String? closeReason;
+  @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
@@ -419,6 +423,19 @@ void main() {
         expect(call.reconnecting.value, isFalse);
         expect(call.state.value, CallState.live);
         await call.hangUp();
+      });
+
+      test('the relay ending the call at a limit (4410) ends it without resuming (D-426)', () async {
+        final (call, channels) = await liveCall([true]);
+        channels.first
+          ..closeCode = callOverCloseCode
+          ..closeReason = 'call over: credits';
+        await channels.first.incoming.close();
+        await Future<void>.delayed(const Duration(milliseconds: 40));
+        expect(channels, hasLength(1), reason: 'no reconnect');
+        expect(call.reconnecting.value, isFalse);
+        expect(call.state.value, CallState.ended);
+        expect(call.overBecause, 'credits');
       });
 
       test('fails the call once every try has failed', () async {

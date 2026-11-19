@@ -190,14 +190,20 @@ What to know:
   talk, open the bot's settings → **Voice** → **Tools on calls** and tick them. Each tool you add
   goes with every call, so it adds a little to each call's cost; pick only the ones you'll use by
   voice.
-- A call with no speech from either side for 2 minutes ends by itself, so a forgotten call doesn't
-  keep running.
+- A call with no speech from either side for a minute ends by itself, so a forgotten call doesn't
+  keep running. It waits while a task it started is still running.
+- A call lasts at most an hour. About a minute before, the bot tells you it'll have to hang up
+  soon; at the hour it says goodbye and the call ends, with the usual recap in the chat.
+- On a call paid from your workspace's credits, the server watches what the call spends. When the
+  credits, the workspace's daily or monthly spending limit, or the bot's daily budget are about a
+  minute from running out, the bot tells you it'll have to hang up soon; when they run out, it says
+  goodbye and the call ends. A call can't start once one of them has run out.
 - On Gemini Live, **Usage** records what the call actually cost, from the token counts Gemini
   reports; other calls are estimated by the minute.
 - You can interrupt. When you start speaking, the bot stops talking and listens.
 - The call's transcript is saved to the conversation as you talk, a turn at a time, so nothing is
   lost if the app closes or crashes. If the app goes away mid-call (swiped away, out of battery, no
-  network for good), the server ends the call after 2 minutes and records its real length.
+  network for good), the server ends the call after a minute and records its real length.
 - Screen tools, such as clicking around the bot's desktop, aren't offered during a call.
 
 ## Start a call with a wake word
@@ -235,6 +241,14 @@ When you answer, the live call opens in the same conversation and the bot speaks
 - On Android, **Calls on the Lock Screen** shows in Settings → App when Android has full-screen
   rings turned off. Without it, a call shows as a notification; **Answer** on it still opens the call.
 - The bot can only call the person it's working for.
+- Bots can ring you at most 3 times a day in all, and the same bot waits 30 minutes before ringing
+  you again. Past either limit nothing rings: you get one notification with the reason, and the bot
+  is told why it couldn't call.
+- To stop a bot from calling you at all, open the bot's settings and turn off **Can call me**. It
+  then sends a notification instead.
+
+The server's owner can change the call and ring limits in the admin console (**Services** → **Call
+limits**); see [Configuration](/self-hosting/configuration).
 
 ### Server setup for ringing phones
 

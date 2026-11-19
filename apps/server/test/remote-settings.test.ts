@@ -4,8 +4,11 @@
  */
 import { capabilitiesOf, voicePrices } from "@casama/agent";
 import {
+  callLimits,
+  DEFAULT_CALL_LIMITS,
   defaultModelFor,
   sensitiveSiteKind,
+  setCallLimits,
   setCostTables,
   setModelCatalog,
   setSensitiveSiteAdditions,
@@ -22,6 +25,7 @@ describe("remote settings in Admin", () => {
     setModelCatalog(undefined);
     setCostTables(undefined);
     setSensitiveSiteAdditions(undefined);
+    setCallLimits(null);
   };
   beforeAll(async () => {
     reset();
@@ -156,5 +160,47 @@ describe("remote settings in Admin", () => {
     await h.request("/v1/admin/browser-guard", { method: "PUT", token, json: { hosts: {} } });
     expect(sensitiveSiteKind("mybank.example")).toBeNull();
     expect(sensitiveSiteKind("paypal.com")).toBe("banking");
+  });
+
+  it("call limits (D-426): defaults, ranges, refused bad saves, applied at once and on load", async () => {
+    const first = await j(await h.request("/v1/admin/call-limits", { token }));
+    expect(first.limits).toEqual({});
+    expect(first.built_in).toEqual(DEFAULT_CALL_LIMITS);
+    expect(first.in_use).toEqual(DEFAULT_CALL_LIMITS);
+    expect(first.ranges.silence_seconds).toEqual([20, 900]);
+
+    const bad = await h.request("/v1/admin/call-limits", {
+      method: "PUT",
+      token,
+      json: { limits: { silence_seconds: 5, ring_cooldown: 10 } },
+    });
+    expect(bad.status).toBe(400);
+    expect((await j(bad)).detail).toMatch(/silence_seconds must be a whole number from 20 to 900/);
+
+    const saved = await j(
+      await h.request("/v1/admin/call-limits", {
+        method: "PUT",
+        token,
+        json: { limits: { silence_seconds: 30, ring_daily_cap: 1, max_call_minutes: null } },
+      }),
+    );
+    expect(saved.limits).toEqual({ silence_seconds: 30, ring_daily_cap: 1 });
+    expect(saved.in_use).toMatchObject({
+      silence_seconds: 30,
+      ring_daily_cap: 1,
+      max_call_minutes: 60,
+    });
+    expect(callLimits().silence_seconds).toBe(30);
+
+    // Another process picks it up on its next load.
+    setCallLimits(null);
+    await loadRemoteSettings(h.handle.db);
+    expect(callLimits().ring_daily_cap).toBe(1);
+
+    // Someone who isn't the owner can't read or change them.
+    const other = (await h.user("not-owner-call-limits@example.com")).token;
+    expect((await h.request("/v1/admin/call-limits", { token: other })).status).toBe(403);
+    await h.request("/v1/admin/call-limits", { method: "PUT", token, json: { limits: {} } });
+    expect(callLimits()).toEqual(DEFAULT_CALL_LIMITS);
   });
 });

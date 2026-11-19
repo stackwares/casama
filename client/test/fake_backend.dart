@@ -1148,6 +1148,12 @@ class FakeBackend implements Backend {
   Future<void> setBotQuiet(String botId, BotQuietView value) async =>
       botQuiets[botId] = value;
 
+  final botMayCalls = <String, bool>{};
+  @override
+  Future<bool> botMayCall(String botId) async => botMayCalls[botId] ?? true;
+  @override
+  Future<void> setBotMayCall(String botId, bool mayCall) async => botMayCalls[botId] = mayCall;
+
   // About you (D-169)
   AboutYouView about = const AboutYouView(displayName: 'Test Person');
   final facts = <UserFactView>[];
@@ -6019,8 +6025,12 @@ class FakeBackend implements Backend {
       tools: 3,
       speakFirst: callId != null,
       liveCallId: 'live-${++voiceSessions}',
+      limits: sessionLimits,
     );
   }
+
+  /// Call limits the session carries (D-426); none, as from an older server, by default.
+  VoiceSessionLimits? sessionLimits;
 
   @override
   Future<VoiceToolResult> voiceTool(

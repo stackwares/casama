@@ -20,7 +20,8 @@ enum CallEnd {
   /// The red button, the bubble, the notification or CallKit.
   hungUp,
 
-  /// Two minutes with nobody speaking and no job running.
+  /// Nobody speaking and no job running for the silence limit (a minute by default, set by the
+  /// server, D-426).
   idle,
 
   /// It couldn't connect, or dropped and couldn't resume.
@@ -31,6 +32,9 @@ enum CallEnd {
 
   /// The server ended it (no heartbeat in time).
   server,
+
+  /// It reached a limit (D-426): its longest length, or the workspace's credits or budgets.
+  limit,
 }
 
 /// A call's finished turns, saved while the call goes on (D-327 §4): each turn is posted once,
@@ -139,8 +143,8 @@ class CallController extends ChangeNotifier {
     required this.botId,
     this.requestedConversationId,
     this.phoneCallId,
-    this.idleLimit = const Duration(minutes: 2),
-    this.heartbeatEvery = const Duration(seconds: 30),
+    this._idleLimit = const Duration(minutes: 1),
+    this._heartbeatEvery = const Duration(seconds: 30),
     this.pauseBeforeNote = const Duration(milliseconds: 1500),
     this.onEnded,
     this.onShowScreen,
@@ -158,8 +162,20 @@ class CallController extends ChangeNotifier {
 
   /// An answered phone-style ring (D-135).
   final String? phoneCallId;
-  final Duration idleLimit;
-  final Duration heartbeatEvery;
+
+  /// Silence before the call hangs up, and how often it tells the server it's open. The server's
+  /// values (Admin → Call limits, D-426) replace these when the session carries them.
+  Duration get idleLimit => _idleLimit;
+  Duration _idleLimit;
+  Duration get heartbeatEvery => _heartbeatEvery;
+  Duration _heartbeatEvery;
+
+  /// A call the relay doesn't carry ends at its longest length here (D-426): the bot is told to
+  /// warn the person, then to say goodbye, and the call hangs up after it.
+  Timer? _maxWarnTimer;
+  Timer? _maxEndTimer;
+  Timer? _goodbyeTimer;
+  var _wrappingUp = false;
 
   /// The bot speaks up about a job only after this long with nobody speaking (decision 8).
   final Duration pauseBeforeNote;
@@ -351,9 +367,10 @@ class CallController extends ChangeNotifier {
       connectedAt ??= DateTime.now();
       _markLive();
     }
-    // Dropped and couldn't resume: the call is over, and saved like any other.
+    // Dropped and couldn't resume: the call is over, and saved like any other. Ended by the
+    // server at a limit (D-426): over too, for that reason.
     if ((s == CallState.failed || s == CallState.ended) && !_ending && !over) {
-      unawaited(end(CallEnd.failed));
+      unawaited(end(_call?.overBecause != null ? CallEnd.limit : CallEnd.failed));
     }
     _changed();
   }
@@ -368,6 +385,11 @@ class CallController extends ChangeNotifier {
       _conversationId = session.conversationId;
       _liveCallId = session.liveCallId;
       _provider = session.provider.value;
+      final limits = session.limits;
+      if (limits != null) {
+        _idleLimit = Duration(seconds: limits.silenceSeconds);
+        _heartbeatEvery = Duration(seconds: limits.heartbeatSeconds);
+      }
       if (over || _ending) {
         await _finishRecord(const [], 0, null);
         return;
@@ -421,6 +443,12 @@ class CallController extends ChangeNotifier {
           : const Duration(seconds: 10);
       _idleTimer = Timer.periodic(_idleTick, (_) => _checkIdle());
       _heartbeat = Timer.periodic(heartbeatEvery, (_) => unawaited(_beat()));
+      if (limits != null && limits.appEndsAtMax) {
+        _armMaxLength(
+          Duration(seconds: limits.maxCallSeconds),
+          Duration(seconds: limits.warningSeconds),
+        );
+      }
       // Tool calls run as agent runs with the bot's approvals, then go back to the model.
       _toolSub = call.toolCalls.listen((t) => unawaited(_runTool(call, t)));
       Analytics.log('call_started', {
@@ -445,6 +473,55 @@ class CallController extends ChangeNotifier {
         unawaited(_finishRecord(const [], 0, null).catchError((_) {}));
       }
     }
+  }
+
+  /// The call's longest length, kept by the app when the relay doesn't (D-426). Counted from when
+  /// the call was asked for, as the server counts it.
+  void _armMaxLength(Duration max, Duration warning) {
+    final left = max - DateTime.now().difference(startedAt);
+    _maxWarnTimer = Timer(left - warning < Duration.zero ? Duration.zero : left - warning, () {
+      // Intentionally not translated: these go to the voice model, not the user.
+      _call?.tellModel(
+        '(Note from Casama, not from the user: this call reaches its ${max.inMinutes}-minute limit '
+        'in about ${_roughly(warning)}. At the next natural pause, tell the user in one short '
+        "sentence that the call is reaching its time limit and you'll have to hang up soon, then "
+        'carry on.)',
+      );
+    });
+    _maxEndTimer = Timer(left < Duration.zero ? Duration.zero : left, _wrapUp);
+  }
+
+  static String _roughly(Duration d) => d.inSeconds < 90
+      ? 'a minute'
+      : '${(d.inSeconds / 60).round()} minutes';
+
+  /// The longest length is up: one goodbye from the bot, then hang up once it has finished.
+  void _wrapUp() {
+    final call = _call;
+    if (call == null || _ending || over || _wrappingUp) return;
+    _wrappingUp = true;
+    call.tellModel(
+      '(Note from Casama, not from the user: this call has reached its time limit, so it ends '
+      'now. Say goodbye in one or two short sentences: say why, and that anything left carries on '
+      "in the chat. Don't call tools or start anything new.)",
+    );
+    var spoke = false;
+    void listen() {
+      if (call.speaking.value) {
+        spoke = true;
+      } else if (spoke) {
+        call.speaking.removeListener(listen);
+        _goodbyeTimer?.cancel();
+        _goodbyeTimer = Timer(const Duration(milliseconds: 800), () => unawaited(end(CallEnd.limit)));
+      }
+    }
+
+    call.speaking.addListener(listen);
+    // However the goodbye goes, the call is over within half a minute.
+    _goodbyeTimer = Timer(const Duration(seconds: 30), () {
+      call.speaking.removeListener(listen);
+      unawaited(end(CallEnd.limit));
+    });
   }
 
   void _markLive() {
@@ -540,7 +617,7 @@ class CallController extends ChangeNotifier {
       final ended = await backend.voiceHeartbeat(id, usage: _call?.usage);
       if (ended && !over && !_ending) unawaited(end(CallEnd.server));
     } catch (e) {
-      // Offline for a moment: the next one tries again; the server waits 2 minutes.
+      // Offline for a moment: the next one tries again; the server waits a few beats.
       debugPrint('call heartbeat failed: $e');
     }
   }
@@ -859,6 +936,9 @@ class CallController extends ChangeNotifier {
     _ending = true;
     _idleTimer?.cancel();
     _heartbeat?.cancel();
+    _maxWarnTimer?.cancel();
+    _maxEndTimer?.cancel();
+    _goodbyeTimer?.cancel();
     _noteTimer?.cancel();
     _tileDoneTimer?.cancel();
     for (final s in _jobSubs) {
@@ -923,6 +1003,9 @@ class CallController extends ChangeNotifier {
     }
     _idleTimer?.cancel();
     _heartbeat?.cancel();
+    _maxWarnTimer?.cancel();
+    _maxEndTimer?.cancel();
+    _goodbyeTimer?.cancel();
     _noteTimer?.cancel();
     _tileDoneTimer?.cancel();
     for (final s in _jobSubs) {
@@ -1056,7 +1139,7 @@ class ActiveCall extends ChangeNotifier {
     String botId, {
     String? conversationId,
     String? phoneCallId,
-    Duration idleLimit = const Duration(minutes: 2),
+    Duration idleLimit = const Duration(minutes: 1),
   }) {
     final now = live;
     if (now != null) return now.botId == botId ? now : null;

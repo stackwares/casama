@@ -139,6 +139,15 @@ class FakeCall implements VoiceCall {
   @override
   CallAudioRoutes? routes;
   @override
+  String? overBecause;
+
+  /// The server ends the call at a limit (D-426).
+  void endedByServer(String reason) {
+    overBecause = reason;
+    _state.value = CallState.ended;
+  }
+
+  @override
   Future<void> hangUp() async {
     hungUp = true;
     _state.value = CallState.ended;

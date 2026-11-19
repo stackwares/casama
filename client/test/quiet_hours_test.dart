@@ -35,4 +35,18 @@ void main() {
     await tester.pumpAndSettle();
     expect(backend.botQuiets[botId]?.mode, 'always');
   });
+
+  testWidgets('a bot can be stopped from calling (D-426)', (tester) async {
+    await setSize(tester, const Size(1000, 3000));
+    final backend = FakeBackend();
+    await tester.pumpWidget(harness(backend, const BotProfileScreen(botId: botId)));
+    await tester.pumpAndSettle();
+    final toggle = find.byKey(const Key('botMayCall'));
+    await tester.ensureVisible(toggle);
+    expect(tester.widget<Switch>(toggle).value, isTrue);
+    await tester.tap(toggle);
+    await tester.pumpAndSettle();
+    expect(backend.botMayCalls[botId], isFalse);
+    expect(tester.widget<Switch>(toggle).value, isFalse);
+  });
 }

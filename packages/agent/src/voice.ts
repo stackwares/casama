@@ -5,7 +5,7 @@
  * local mocks).
  */
 
-import { costTables } from "@casama/domain";
+import { callLifeSeconds, costTables } from "@casama/domain";
 import { ToolRegistry } from "./tools/registry.ts";
 
 /** Dictation and read-aloud run on OpenRouter only (D-261). */
@@ -648,7 +648,8 @@ export async function createGeminiLiveSession(
     },
   };
   const now = Date.now();
-  const expiresAt = new Date(now + 30 * 60_000).toISOString();
+  // The token lives as long as the longest call allows (D-426), plus room for its goodbye.
+  const expiresAt = new Date(now + callLifeSeconds() * 1000).toISOString();
   const res = await ok(
     await f(`${base}/v1beta/auth_tokens`, {
       method: "POST",

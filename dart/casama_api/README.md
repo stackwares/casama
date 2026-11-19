@@ -91,6 +91,7 @@ Class | Method | HTTP request | Description
 [*AdminApi*](doc/AdminApi.md) | [**adminAppConfig**](doc/AdminApi.md#adminappconfig) | **GET** /v1/admin/app-config | Remote app settings (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**adminApproveDomainOrder**](doc/AdminApi.md#adminapprovedomainorder) | **POST** /v1/admin/domain-orders/{id}/approve | Approve a new workspace&#39;s first purchase so it registers (instance owners)
 [*AdminApi*](doc/AdminApi.md) | [**adminBrowserGuard**](doc/AdminApi.md#adminbrowserguard) | **GET** /v1/admin/browser-guard | The browser guard&#39;s added sites and its built-in ones (owner only; D-374)
+[*AdminApi*](doc/AdminApi.md) | [**adminCallLimits**](doc/AdminApi.md#admincalllimits) | **GET** /v1/admin/call-limits | Live-call and ring limits: saved values, defaults and what&#39;s in use (owner only; D-426)
 [*AdminApi*](doc/AdminApi.md) | [**adminCapacity**](doc/AdminApi.md#admincapacity) | **GET** /v1/admin/capacity | Server capacity: host memory, computers&#39; share of their budget, 30-day peaks and a forecast (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**adminCloudModels**](doc/AdminApi.md#admincloudmodels) | **GET** /v1/admin/models | The models Casama Cloud runs (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**adminConnectionSettings**](doc/AdminApi.md#adminconnectionsettings) | **GET** /v1/admin/connections | How apps without their own sign-in connect (owner only)
@@ -120,6 +121,7 @@ Class | Method | HTTP request | Description
 [*AdminApi*](doc/AdminApi.md) | [**listSupportTickets**](doc/AdminApi.md#listsupporttickets) | **GET** /v1/admin/support-tickets | Messages sent to support from the app, newest first (instance owners)
 [*AdminApi*](doc/AdminApi.md) | [**reviewContentReport**](doc/AdminApi.md#reviewcontentreport) | **POST** /v1/admin/content-reports/{id} | Close a report: acted on (optionally suspending the workspace) or dismissed
 [*AdminApi*](doc/AdminApi.md) | [**saveBrowserGuard**](doc/AdminApi.md#savebrowserguard) | **PUT** /v1/admin/browser-guard | Replace the added sites; the built-in lists can&#39;t be shortened (owner only)
+[*AdminApi*](doc/AdminApi.md) | [**saveCallLimits**](doc/AdminApi.md#savecalllimits) | **PUT** /v1/admin/call-limits | Replace the saved call limits; refused when a value is unknown or out of range
 [*AdminApi*](doc/AdminApi.md) | [**saveCreditPack**](doc/AdminApi.md#savecreditpack) | **PUT** /v1/admin/credit-packs/{code} | Create or change a credit pack
 [*AdminApi*](doc/AdminApi.md) | [**saveModelCatalog**](doc/AdminApi.md#savemodelcatalog) | **PUT** /v1/admin/model-catalog | Replace the model catalog; refused when any part fails its check (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**savePlan**](doc/AdminApi.md#saveplan) | **PUT** /v1/admin/plans/{code} | Create or change a plan; workspaces on it get the new limits right away
@@ -595,6 +597,7 @@ Class | Method | HTTP request | Description
  - [AddUserFactsRequest](doc/AddUserFactsRequest.md)
  - [AddUserFactsRequestItemsInner](doc/AddUserFactsRequestItemsInner.md)
  - [AdminBrowserGuard](doc/AdminBrowserGuard.md)
+ - [AdminCallLimits](doc/AdminCallLimits.md)
  - [AdminCreditPack](doc/AdminCreditPack.md)
  - [AdminDomain](doc/AdminDomain.md)
  - [AdminDomainOrder](doc/AdminDomainOrder.md)
@@ -1201,6 +1204,7 @@ Class | Method | HTTP request | Description
  - [RunStatus](doc/RunStatus.md)
  - [RunUsage](doc/RunUsage.md)
  - [RunUsageItemsInner](doc/RunUsageItemsInner.md)
+ - [SaveCallLimitsRequest](doc/SaveCallLimitsRequest.md)
  - [SaveCreditPackRequest](doc/SaveCreditPackRequest.md)
  - [SaveDevicePlaceRequest](doc/SaveDevicePlaceRequest.md)
  - [SaveDeviceSourceRequest](doc/SaveDeviceSourceRequest.md)
@@ -1411,6 +1415,7 @@ Class | Method | HTTP request | Description
  - [VoiceHeartbeatRequest](doc/VoiceHeartbeatRequest.md)
  - [VoiceHeartbeatRequestUsage](doc/VoiceHeartbeatRequestUsage.md)
  - [VoiceSession](doc/VoiceSession.md)
+ - [VoiceSessionLimits](doc/VoiceSessionLimits.md)
  - [VoiceSessionRequest](doc/VoiceSessionRequest.md)
  - [VoiceToolRequest](doc/VoiceToolRequest.md)
  - [VoiceToolResult](doc/VoiceToolResult.md)

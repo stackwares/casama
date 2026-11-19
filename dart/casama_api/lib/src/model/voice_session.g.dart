@@ -27,6 +27,8 @@ abstract class _$VoiceSessionCWProxy {
 
   VoiceSession liveCallId(String liveCallId);
 
+  VoiceSession limits(VoiceSessionLimits? limits);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `VoiceSession(...).copyWith.fieldName(value)`.
@@ -46,6 +48,7 @@ abstract class _$VoiceSessionCWProxy {
     int tools,
     bool speakFirst,
     String liveCallId,
+    VoiceSessionLimits? limits,
   });
 }
 
@@ -89,6 +92,9 @@ class _$VoiceSessionCWProxyImpl implements _$VoiceSessionCWProxy {
   @override
   VoiceSession liveCallId(String liveCallId) => call(liveCallId: liveCallId);
 
+  @override
+  VoiceSession limits(VoiceSessionLimits? limits) => call(limits: limits);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `VoiceSession(...).copyWith.fieldName(value)`.
@@ -109,6 +115,7 @@ class _$VoiceSessionCWProxyImpl implements _$VoiceSessionCWProxy {
     Object? tools = const $CopyWithPlaceholder(),
     Object? speakFirst = const $CopyWithPlaceholder(),
     Object? liveCallId = const $CopyWithPlaceholder(),
+    Object? limits = const $CopyWithPlaceholder(),
   }) {
     return VoiceSession(
       provider: provider == const $CopyWithPlaceholder() || provider == null
@@ -157,6 +164,10 @@ class _$VoiceSessionCWProxyImpl implements _$VoiceSessionCWProxy {
           ? _value.liveCallId
           // ignore: cast_nullable_to_non_nullable
           : liveCallId as String,
+      limits: limits == const $CopyWithPlaceholder()
+          ? _value.limits
+          // ignore: cast_nullable_to_non_nullable
+          : limits as VoiceSessionLimits?,
     );
   }
 }
@@ -212,6 +223,12 @@ VoiceSession _$VoiceSessionFromJson(Map<String, dynamic> json) =>
           tools: $checkedConvert('tools', (v) => (v as num).toInt()),
           speakFirst: $checkedConvert('speak_first', (v) => v as bool),
           liveCallId: $checkedConvert('live_call_id', (v) => v as String),
+          limits: $checkedConvert(
+            'limits',
+            (v) => v == null
+                ? null
+                : VoiceSessionLimits.fromJson(v as Map<String, dynamic>),
+          ),
         );
         return val;
       },
@@ -237,6 +254,7 @@ Map<String, dynamic> _$VoiceSessionToJson(VoiceSession instance) =>
       'tools': instance.tools,
       'speak_first': instance.speakFirst,
       'live_call_id': instance.liveCallId,
+      'limits': ?instance.limits?.toJson(),
     };
 
 const _$VoiceSessionProviderEnumEnumMap = {

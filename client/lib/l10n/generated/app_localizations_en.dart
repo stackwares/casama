@@ -6056,6 +6056,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Whether this bot follows your quiet hours';
 
   @override
+  String get botMayCall => 'Can call me';
+
+  @override
+  String get botMayCallHelp =>
+      'This bot can phone you when something is worth a call. Off: it sends a notification instead.';
+
+  @override
   String get quietDefault => 'Follow my quiet hours';
 
   @override
@@ -10938,6 +10945,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get adminBuiltInValues => 'Built-in values';
+
+  @override
+  String get adminCallLimits => 'Call limits';
+
+  @override
+  String get adminCallLimitsHelp =>
+      'Silence before a call hangs up, the longest call, warnings before a limit, and how often bots may ring someone. Values left out use the built-in ones.';
 
   @override
   String get paywallBillingPeriod => 'Billing period';

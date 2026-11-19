@@ -3,6 +3,7 @@ import type { AddressInfo } from "node:net";
 import { fileURLToPath } from "node:url";
 import { VOICE_PRICES } from "@casama/agent";
 import { contentKeys } from "@casama/db";
+import { setCallLimits } from "@casama/domain";
 import { sql } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { endSilentCalls } from "../src/billing/live-calls.ts";
@@ -367,6 +368,48 @@ describe("live calls (D-327)", () => {
     // The two-minute hold at the per-minute estimate, times the markup: not refunded to zero.
     expect(total).toBeGreaterThan(0);
     expect(total).toBeCloseTo(2 * VOICE_PRICES.geminiLivePerMinute * 1.3, 6);
+  }, 120_000);
+
+  it("call limits (D-426): the sweep waits abandoned_seconds for a heartbeat and ends calls past their longest length", async () => {
+    const w = await workspace("live-limits-sweep@example.com");
+    const quiet = await startCall(w.owner.token, w.botId, w.convId);
+    const recent = await startCall(w.owner.token, w.botId, w.convId);
+    const long = await startCall(w.owner.token, w.botId, w.convId);
+    // Default: a minute without a heartbeat. 70 seconds is over; 45 isn't.
+    await h.handle.db.execute(sql`
+      update public.live_calls set started_at = now() - interval '3 minutes', last_seen_at = now() - interval '70 seconds'
+      where id = ${quiet.live_call_id}::uuid`);
+    await h.handle.db.execute(sql`
+      update public.live_calls set started_at = now() - interval '3 minutes', last_seen_at = now() - interval '45 seconds'
+      where id = ${recent.live_call_id}::uuid`);
+    // Still beating, but an hour and three minutes in: past the longest call and its goodbye.
+    await h.handle.db.execute(sql`
+      update public.live_calls set started_at = now() - interval '63 minutes', last_seen_at = now()
+      where id = ${long.live_call_id}::uuid`);
+    expect(await endSilentCalls(h.handle.db)).toBe(2);
+    const rows = await h.handle.db.execute<{ id: string; end_reason: string | null }>(sql`
+      select id, end_reason from public.live_calls
+      where id in (${quiet.live_call_id}::uuid, ${recent.live_call_id}::uuid, ${long.live_call_id}::uuid)`);
+    const reason = (id: string) => rows.find((r) => r.id === id)?.end_reason ?? null;
+    expect(reason(quiet.live_call_id)).toBe("silent");
+    expect(reason(recent.live_call_id)).toBeNull();
+    expect(reason(long.live_call_id)).toBe("max_length");
+    // The long call's app hears it's over on its next heartbeat.
+    const beat = await j(
+      await h.request(`/v1/voice/live/${long.live_call_id}/heartbeat`, {
+        method: "POST",
+        token: w.owner.token,
+        json: {},
+      }),
+    );
+    expect(beat.ended).toBe(true);
+    // The window follows Admin → Call limits.
+    setCallLimits({ abandoned_seconds: 120 });
+    await h.handle.db.execute(sql`
+      update public.live_calls set last_seen_at = now() - interval '90 seconds' where id = ${recent.live_call_id}::uuid`);
+    expect(await endSilentCalls(h.handle.db)).toBe(0);
+    setCallLimits(null);
+    expect(await endSilentCalls(h.handle.db)).toBe(1);
   }, 120_000);
 
   it("jobs started on a call are the call's: stop_task stops only those, and the recap lists them", async () => {

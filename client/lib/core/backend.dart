@@ -1096,7 +1096,10 @@ enum AdminJsonSettingKind {
   priceTables('/v1/admin/price-tables'),
 
   /// Sites the browser guard keeps out on top of its own lists.
-  browserGuard('/v1/admin/browser-guard');
+  browserGuard('/v1/admin/browser-guard'),
+
+  /// Silence, longest call, warnings and ring limits for live calls (D-426).
+  callLimits('/v1/admin/call-limits');
 
   const AdminJsonSettingKind(this.path);
   final String path;
@@ -1348,6 +1351,10 @@ abstract class Backend {
   Future<void> setPushPrefs(PushPrefs prefs);
   Future<BotQuietView> botQuiet(String botId);
   Future<void> setBotQuiet(String botId, BotQuietView value);
+
+  /// Whether this bot may phone the signed-in person (D-426); yes unless they turned it off.
+  Future<bool> botMayCall(String botId);
+  Future<void> setBotMayCall(String botId, bool mayCall);
   // Invite friends (D-211)
   Future<Referral> referral();
   Future<Referral> redeemReferral(String code);

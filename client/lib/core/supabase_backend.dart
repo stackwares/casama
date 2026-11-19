@@ -1366,6 +1366,28 @@ class SupabaseBackend implements Backend {
     });
   }
 
+  @override
+  Future<bool> botMayCall(String botId) async {
+    final r = await supabase
+        .from('user_bot_settings')
+        .select('may_call')
+        .eq('user_id', _uid)
+        .eq('bot_id', botId)
+        .maybeSingle();
+    return (r?['may_call'] as bool?) ?? true;
+  }
+
+  @override
+  Future<void> setBotMayCall(String botId, bool mayCall) async {
+    // Only this column: the row's quiet-hours settings stay as they are.
+    await supabase.from('user_bot_settings').upsert({
+      'user_id': _uid,
+      'bot_id': botId,
+      'may_call': mayCall,
+      'updated_at': DateTime.now().toUtc().toIso8601String(),
+    });
+  }
+
   // About you (D-169): through the API, which seals the text with the person's own key when a
   // workspace of theirs encrypts (D-136).
   static AboutYouView _about(AboutYou a) => AboutYouView(
@@ -3960,6 +3982,7 @@ class SupabaseBackend implements Backend {
       AdminJsonSettingKind.modelCatalog => {'catalog': value},
       AdminJsonSettingKind.priceTables => value,
       AdminJsonSettingKind.browserGuard => {'hosts': value},
+      AdminJsonSettingKind.callLimits => {'limits': value},
     };
     return _jsonSetting(kind, (await api.api.dio.put<Map<String, dynamic>>(kind.path, data: body)).data!);
   }
@@ -3969,6 +3992,7 @@ class SupabaseBackend implements Backend {
     return switch (kind) {
       AdminJsonSettingKind.modelCatalog => AdminJsonSetting(saved: map(j['catalog']), builtIn: map(j['built_in'])),
       AdminJsonSettingKind.browserGuard => AdminJsonSetting(saved: map(j['hosts']), builtIn: map(j['built_in'])),
+      AdminJsonSettingKind.callLimits => AdminJsonSetting(saved: map(j['limits']), builtIn: map(j['built_in'])),
       AdminJsonSettingKind.priceTables => AdminJsonSetting(
         saved: {
           'cost_tables': map(j['cost_tables']),

@@ -228,6 +228,10 @@ abstract class VoiceCall {
   /// Where the call plays (speaker, earpiece, headset); null where there's no choice (desktop,
   /// web).
   CallAudioRoutes? get routes;
+
+  /// Why the server ended the call (D-426), such as `max_length` or `credits`, once it has; the
+  /// call is then over and isn't resumed. Null otherwise.
+  String? get overBecause;
 }
 
 /// Loudness of a live call, 0 (silent) to 1 (loud), read once per frame by the call screen.

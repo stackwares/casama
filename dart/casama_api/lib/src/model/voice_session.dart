@@ -3,6 +3,7 @@
 //
 
 // ignore_for_file: unused_element
+import 'package:casama_api/src/model/voice_session_limits.dart';
 import 'package:copy_with_extension/copy_with_extension.dart';
 import 'package:json_annotation/json_annotation.dart';
 
@@ -39,6 +40,8 @@ class VoiceSession {
     required  this.speakFirst,
 
     required  this.liveCallId,
+
+     this.limits,
   });
 
       /// Gemini Live over a WebSocket, the only live-call provider (D-260)
@@ -166,6 +169,18 @@ class VoiceSession {
 
 
 
+  @JsonKey(
+    
+    name: r'limits',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final VoiceSessionLimits? limits;
+
+
+
 
 
     @override
@@ -179,7 +194,8 @@ class VoiceSession {
       other.conversationId == conversationId &&
       other.tools == tools &&
       other.speakFirst == speakFirst &&
-      other.liveCallId == liveCallId;
+      other.liveCallId == liveCallId &&
+      other.limits == limits;
 
     @override
     int get hashCode =>
@@ -192,7 +208,8 @@ class VoiceSession {
         conversationId.hashCode +
         tools.hashCode +
         speakFirst.hashCode +
-        liveCallId.hashCode;
+        liveCallId.hashCode +
+        limits.hashCode;
 
   factory VoiceSession.fromJson(Map<String, dynamic> json) => _$VoiceSessionFromJson(json);
 

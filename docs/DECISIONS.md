@@ -2149,7 +2149,6 @@ The full audit is in `docs/AUDIT-2026-11.md`. These are the decisions it made:
 - **Verified live** (2026-11-11, the Casama server key): a 2.8-second clip transcribed correctly for $0.0000093; one embedding returned 1536 dimensions for $0.00000006.
 - **Tests:** the dictation case in `packages/agent/test/openrouter-cloud.test.ts`; `apps/server/test/voice.test.ts`.
 
-
 ## D-195 Only a person keeps a computer awake, not an open screen
 
 - **Problem:** D-178 sleeps computers after 5 idle minutes, but an open live view touched the computer every 5 s and an open terminal every 60 s, and `sleepIdle` also kept any computer with an open terminal awake. A desktop window behind others, a hidden browser tab or a phone left on the table kept a computer (Casama Cloud's biggest cost) running forever.
@@ -2619,7 +2618,6 @@ The full audit is in `docs/AUDIT-2026-11.md`. These are the decisions it made:
     - The in-use check finds a value in any column.
     - App sessions can't run it.
 
-
 ## D-239 Anyone can add an app to the catalog through the gallery
 
 - **Decision** (Oliver asked, 2026-11-12): the app catalog was a list in the server's code (`APP_CATALOG`), so a new vendor server needed a code change and a server deploy, and outside contributors had no clear way in. Apps now also come from the open gallery (D-184): a folder `apps/<id>/` with `item.json`, `app.json` and an optional `logo.svg`, proposed by pull request and approved by a maintainer (Oliver, through CODEOWNERS). A merge reaches every server within the 15-minute cache, with no app build and no server release.
@@ -2854,7 +2852,6 @@ Revises D-244 after comparing Rakazo, MausBot, OpenBot, Claude Duet, Grok Bot an
   `/readyz` and the web app every 5 minutes and emails the owner after two failures in a row (again
   hourly while down) and when it's back, through the same SMTP mailbox as the server. It runs on
   Cloudflare, so it works when the server doesn't; no new account was needed.
-
 
 ## D-253 One main conversation per bot, work in topics; chat history on a fixed budget
 
@@ -3496,7 +3493,6 @@ Oliver asked whether the Library should group work by project ("the user wants t
 - **Abuse fences** (the assistant is free and on our key): signed-in, non-guest accounts only; off-topic requests (code, essays, homework, general questions) get a one-line refusal and a strike, and 3 strikes pause it for that person for 24 hours; one request at a time per person and 6 a minute; 60 messages a person a day (`SUPPORT_MESSAGES_PER_DAY`) and 3× that per address (hashed); $0.50 a person a day and `SUPPORT_DAILY_USD` ($10) for everyone, from OpenRouter's reported cost; only the newest 16 messages and 14,000 characters reach the model, answers stop at 900 tokens and 4 tool rounds. Tickets: 5 a person and 12 an address a day, only ever to the support inbox. Counters live in `public.support_usage` (API only), so deploys don't reset them. Hitting a limit shows a notice that leads to a person, never a dead end.
 - **Support IDs:** the workspace ID (also the RevenueCat app user id, D-297) and the account ID, each copied with a tap, and "Copy all details" (version, platform, ids, plan, server).
 
-
 ## D-299 Production deploys build on the server; images publish from GitHub
 
 - **Decision (2026-11-15, Oliver asked how to deploy faster, then said "go all 3"):** production deploys no longer go through ghcr. `scripts/deploy-prod.sh` runs from the Mac in one command: it checks the commit is on origin/main and the server checkout fast-forwards to it, waits for running runs to finish (restarting the worker mid-run leaves a run stuck), backs up the database and `.env`, fast-forwards, builds `casama-local/server:<sha>` on the server, points the new `CASAMA_SERVER_IMAGE` at it, runs `compose up -d` (migrate first), recreates Caddy when its Caddyfile changed, waits for the API to be healthy and checks https://api.casama.ai/healthz. `--rollback` puts the API and worker back on the previous image (migrations stay); `--registry-image` goes back to the ghcr image; `--dry-run` changes nothing. Deploys are logged in `/root/casama-deploys.log` on the server; the newest 20 deploy dumps and five local builds are kept.
@@ -3580,7 +3576,6 @@ Oliver asked whether the Library should group work by project ("the user wants t
 - **For bots** (`ui.show`, `packages/agent/src/tools/ui.ts`): Map is in the component list and the description, which tells the bot to show a Map for places, maps and routes instead of opening a browser or building a page. Coordinates are checked (numbers, in range, something to show) so a bad call comes back with what to fix. A map needs no button, so no Send or Skip is added.
 - **Older apps** don't know the component and leave it out of the card (the A2UI renderer skips unknown types), so a bot should say a line about the map, not only show it.
 - **Not done:** geocoding (the bot uses coordinates it knows or looks up), search on the map, live location, turn-by-turn routes.
-
 
 ## D-311 The daily limit is on screen, and says its amount
 
@@ -6064,3 +6059,52 @@ cookies and could set cookies on `.casama.ai`.
 - **iPhone, the safe way:** never a VoIP push for the cancel. Apple requires every VoIP push to report a call to CallKit, so a cancel would have to report a fake call and end it, and getting that wrong gets the app killed. Instead the FCM message carries a background APNs part (`content-available`, priority 5, push type `background`; Android ignores it), and firebase_messaging runs it in the app's own isolate, where `stopRing` checks `answeredRings`. The background handler is now registered on iOS as well; there it handles only `call_cancel`. The app runs in the background while CallKit rings after a VoIP wake, so this usually lands. If iOS has suspended the app or throttled the push, the ring runs out at 45 s as before. With the app open, `FirebaseMessaging.onMessage` handles it. iOS's plugin `endCall` after a VoIP ring ends that ring whatever id it's given, so `stopRing` only calls it while CallKit has a call with that id.
 - No new push relay fields: `call_cancel` goes through the relay's existing `call` data. Self-hosters on Casama Cloud's relay get iPhone cancels once the relay runs this code.
 - Docs: guide/voice.md. Tests: `apps/server/test/phone-calls.test.ts` (answer, decline and missed each cancel on both phones and write the banner row; a second decline sends nothing), `client/test/phone_calls_test.dart` (the cancel payload, ending a ring showing here, never a call answered here, a stopped ring's Decline declines nothing). Not checked here: real devices (answer on an iPhone with an Android phone ringing, and the other way round, with the app open, in the background and closed).
+
+## D-426 Call guardrails: silence, longest call, money limits mid-call, ring limits (2026-11-19)
+
+- **What (Oliver: "do this"):** live calls and bot rings get limits that keep a call from running
+  on by itself or past what the workspace can pay, and keep bots from pestering. Every limit is in
+  one owner setting, changed without a deploy or app build.
+- **Setting:** `instance_settings.call_limits`, Admin → Services → Call limits (JSON, the D-373
+  editor) and `GET/PUT /v1/admin/call-limits`; loaded into every process every minute
+  (`setCallLimits`, `packages/domain/src/call-limits.ts`). Defaults and ranges: silence 60 s
+  (20–900), heartbeat 15 s (5–60), abandoned 60 s (60–900), longest call 60 min (5–240), warning
+  60 s (15–300), rings 3 a day (0–20), cooldown 30 min (0–1440). Out-of-range saves are refused;
+  loaded values are clamped, the heartbeat kept to a third of the abandoned wait and the warning to
+  half the longest call. Not the remote app settings (D-241): shipped apps' App settings editor
+  rewrites that JSON through a typed model and would drop a new key.
+- **Silence:** 2 min → 1 min. The app reads `limits.silence_seconds` and `heartbeat_seconds` from
+  the voice session (new optional field); older servers send none and the app keeps its 1-minute
+  default. It still waits while a job started on the call runs. The abandoned-call sweep went from
+  120 s to 60 s with heartbeats every 15 s; 60 s is the floor because apps before D-426 beat every
+  30 s.
+- **Longest call:** the Gemini token now lives the longest call + 5 min (it was 30 min, which
+  silently capped every call at 30). Relayed calls (paid from credits): the relay warns the bot
+  `warning_seconds` before (a `clientContent` note, as the app's own notes are), asks for a goodbye
+  at the limit, waits for the goodbye's audio to play (at most 30 s), closes the stream with code
+  4410 `call over: <reason>`, and after 8 s ends the call itself (billed from the relay's counts and
+  the clock, recap posted) unless the app already did. Reconnects after that get 410. Calls not
+  relayed (the person's own key): the session says `app_ends_at_max: true` and the app warns, asks
+  for the goodbye and hangs up; the worker sweep ends any call still open 2 minutes past the longest
+  length (`end_reason max_length`), which an older app learns from its next heartbeat.
+- **Money mid-call:** the relay checks every 20 s (`callHeadroom` in `billing/live-calls.ts`) the
+  same limits a run checks (D-022): credits less unbilled usage, the workspace's daily limit on
+  Casama's keys, its monthly quota, and the bot's daily budget. The call's own spend is the relay's
+  counts priced as the final bill (at least the listening floor on the clock) less its hold. The
+  rate is the larger of the measured spend between checks and the per-minute price; warn when the
+  room left covers less than the warning plus a check and a goodbye, end when it covers less than
+  20 s. Same goodbye and close. A call also can't start when the daily limit, quota or bot budget
+  is already used (402 with the run's codes). Calls on the person's own key skip the money checks.
+- **Records:** `live_calls.limit_reason`, `limit_warned_at`, `limit_wrap_at`, `limit_closed_at`;
+  `end_reason` adds `max_length`, `credits`, `daily_cap`, `quota`, `bot_budget`, and a call a
+  limit was ending keeps that reason whoever claims the end. The app has `CallEnd.limit`.
+- **Rings (`voice.call_user`):** `user_bot_settings.may_call` (default on; **Can call me** on the
+  bot's profile in the app, written straight to the table under its own-row policy), then the
+  person's daily cap (their time zone), then the bot's cooldown per person, then quiet hours and
+  "already ringing" as before. A blocked ring rings nothing, is kept in `voice_calls` with
+  `status cancelled` and `blocked` (not counted toward the limits), sends one ordinary notification
+  per bot per cooldown (at least an hour) however often the bot retries, and tells the bot why.
+- Migration `20270214100001_call_guardrails.sql`. Docs: docs-site/guide/voice.md,
+  self-hosting/configuration.md, docs/COSTS.md. Tests: `packages/domain/test/call-limits.test.ts`,
+  `apps/server/test/call-limits-relay.test.ts`, `live-calls.test.ts`, `phone-calls.test.ts`,
+  `remote-settings.test.ts`, `client/test/active_call_test.dart`.

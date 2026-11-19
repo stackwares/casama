@@ -6132,6 +6132,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/admin/call-limits": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Live-call and ring limits: saved values, defaults and what's in use (owner only; D-426) */
+        get: operations["adminCallLimits"];
+        /** Replace the saved call limits; refused when a value is unknown or out of range */
+        put: operations["saveCallLimits"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/admin/model-catalog": {
         parameters: {
             query?: never;
@@ -9818,6 +9836,19 @@ export interface components {
              * @description The server's record of this call (D-327): send turns, heartbeats and the final transcript with it
              */
             live_call_id: string;
+            /** @description Call limits (D-426); older servers don't send them */
+            limits?: {
+                /** @description Hang up after this long with nobody speaking and no job running */
+                silence_seconds: number;
+                /** @description Send a heartbeat this often; the server ends a call that stops sending them */
+                heartbeat_seconds: number;
+                /** @description The longest the call may run */
+                max_call_seconds: number;
+                /** @description How long before max_call_seconds the bot should warn the person */
+                warning_seconds: number;
+                /** @description True when the app must end the call at max_call_seconds itself (it isn't relayed); false when the server's relay does */
+                app_ends_at_max: boolean;
+            };
         };
         VoiceSessionRequest: {
             /** Format: uuid */
@@ -13521,6 +13552,27 @@ export interface components {
                 [key: string]: string[];
             };
         };
+        AdminCallLimits: {
+            /** @description The values the owner saved; any left out use the default */
+            limits: {
+                [key: string]: number;
+            };
+            /** @description The defaults in code */
+            built_in: {
+                [key: string]: number;
+            };
+            /** @description What every process uses now: saved values over the defaults, made to fit together */
+            in_use: {
+                [key: string]: number;
+            };
+            /** @description The lowest and highest value each limit may take */
+            ranges: {
+                [key: string]: [
+                    number,
+                    number
+                ];
+            };
+        };
         AdminModelCatalog: {
             /** @description What's saved: default_models, small_models, test_models, featured_models, models (price rows), image_prices. Anything left out uses the value in code; {} is all code. */
             catalog: {
@@ -13551,6 +13603,12 @@ export interface components {
             /** @description Added hosts by kind (banking, health, passwords, government). Kinds this version doesn't know are skipped. */
             hosts: {
                 [key: string]: string[];
+            };
+        };
+        SaveCallLimitsRequest: {
+            /** @description silence_seconds, heartbeat_seconds, abandoned_seconds, max_call_minutes, warning_seconds, ring_daily_cap, ring_cooldown_minutes. Replaces the saved values; a name left out or null uses the default */
+            limits: {
+                [key: string]: number | null;
             };
         };
         /** @description Replaces the saved catalog after it's checked */
@@ -35405,6 +35463,95 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AdminBrowserGuard"];
+                };
+            };
+            /** @description Validation failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    adminCallLimits: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Call limits */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminCallLimits"];
+                };
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    saveCallLimits: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveCallLimitsRequest"];
+            };
+        };
+        responses: {
+            /** @description Saved */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminCallLimits"];
                 };
             };
             /** @description Validation failed */

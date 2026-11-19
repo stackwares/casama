@@ -69,3 +69,30 @@ export const AdminBrowserGuard = z
     built_in: z.record(z.string(), z.array(z.string())),
   })
   .openapi("AdminBrowserGuard");
+
+const CallLimitsShape = z.record(z.string(), z.number().int());
+
+export const AdminCallLimits = z
+  .object({
+    limits: CallLimitsShape.openapi({
+      description: "The values the owner saved; any left out use the default",
+    }),
+    built_in: CallLimitsShape.openapi({ description: "The defaults in code" }),
+    in_use: CallLimitsShape.openapi({
+      description:
+        "What every process uses now: saved values over the defaults, made to fit together",
+    }),
+    ranges: z.record(z.string(), z.tuple([z.number().int(), z.number().int()])).openapi({
+      description: "The lowest and highest value each limit may take",
+    }),
+  })
+  .openapi("AdminCallLimits");
+
+export const SaveCallLimitsRequest = z
+  .object({
+    limits: z.record(z.string(), z.number().int().nullable()).openapi({
+      description:
+        "silence_seconds, heartbeat_seconds, abandoned_seconds, max_call_minutes, warning_seconds, ring_daily_cap, ring_cooldown_minutes. Replaces the saved values; a name left out or null uses the default",
+    }),
+  })
+  .openapi("SaveCallLimitsRequest");
