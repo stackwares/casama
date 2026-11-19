@@ -159,6 +159,46 @@ void main() {
       expect(ev.transcript.value.single.text, 'Let me tell you about');
     });
 
+    test('a call ending mid-sentence keeps the words: the person\'s, then the bot\'s cut off', () {
+      ev.handle(
+        jsonEncode({
+          'serverContent': {
+            'inputTranscription': {'text': 'Thanks, that is all'},
+          },
+        }),
+      );
+      ev.flushPending();
+      expect(ev.transcript.value.map((t) => '${t.role}: ${t.text}'), [
+        'user: Thanks, that is all',
+      ]);
+      ev.handle(
+        jsonEncode({
+          'serverContent': {
+            'modelTurn': {
+              'parts': [
+                {
+                  'inlineData': {'data': _audio(4800)},
+                },
+              ],
+            },
+            'outputTranscription': {'text': 'You are welcome. Before you go,'},
+          },
+        }),
+      );
+      ev.flushPending();
+      expect(ev.transcript.value.last.role, 'assistant');
+      expect(ev.transcript.value.last.text, 'You are welcome. Before you go…');
+      // Nothing left: a second flush adds nothing.
+      ev.flushPending();
+      expect(ev.transcript.value, hasLength(2));
+    });
+
+    test('cutOffTurn ends a reply in one ellipsis', () {
+      expect(cutOffTurn('Before you go,'), 'Before you go…');
+      expect(cutOffTurn('So the plan is'), 'So the plan is…');
+      expect(cutOffTurn('Wait…'), 'Wait…');
+    });
+
     test('tool calls come out as requests and their results go back with the function name', () async {
       final calls = <CallToolRequest>[];
       final sub = ev.tools.stream.listen(calls.add);
@@ -323,6 +363,25 @@ void main() {
       await call.hangUp();
       expect(call.state.value, CallState.ended);
       expect(audio.disposed, isTrue);
+    });
+
+    test('hanging up mid-sentence saves the half-said turn', () async {
+      late _FakeChannel ch;
+      final call = await GeminiLiveCall.open(
+        _session(),
+        audio: _FakeAudio(),
+        connect: (u) => ch = _FakeChannel(u),
+      );
+      ch.server({'setupComplete': {}});
+      ch.server({
+        'serverContent': {
+          'inputTranscription': {'text': 'Great, thanks, bye'},
+        },
+      });
+      await Future<void>.delayed(Duration.zero);
+      expect(call.transcript.value, isEmpty);
+      await call.hangUp();
+      expect(call.transcript.value.single.text, 'Great, thanks, bye');
     });
 
     test('on hold (another call has the audio), the mic sends nothing and the reply is dropped', () async {

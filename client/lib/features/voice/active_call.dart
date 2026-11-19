@@ -980,9 +980,10 @@ class CallController extends ChangeNotifier {
     final call = _call;
     final usage = call?.usage;
     if (call != null) {
+      // Hanging up saves what was still being said (a turn cut off mid-sentence) first.
+      await call.hangUp();
       call.transcript.removeListener(_onTranscript);
       _onTranscript();
-      await call.hangUp();
     }
     await _endSystem();
     final seconds = connectedAt == null

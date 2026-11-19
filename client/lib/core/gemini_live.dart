@@ -35,6 +35,13 @@ const callConnectTimeout = Duration(seconds: 10);
 Duration? callResumeDelay(int attempt, [List<Duration> delays = callResumeDelays]) =>
     attempt >= 0 && attempt < delays.length ? delays[attempt] : null;
 
+/// A reply that stopped mid-way, ending in "…" (no full stop before it).
+String cutOffTurn(String text) {
+  final t = text.trimRight();
+  if (t.endsWith('…')) return t;
+  return '${t.replaceFirst(RegExp(r'[.,;:!?]+$'), '')}…';
+}
+
 /// The server messages of a Gemini Live call, turned into what the call screen shows: the
 /// transcript a turn at a time, tool calls, whether the bot is speaking, and the reply latency.
 /// Audio itself goes to [onAudio]; [onInterrupted] means the person talked over the bot, so its
@@ -124,6 +131,17 @@ class GeminiLiveEvents {
     b.clear();
     if (text.isEmpty) return;
     transcript.value = [...transcript.value, CallTurn(role, text)];
+  }
+
+  /// The call is ending: saves what was still being said as turns, so a hang-up mid-sentence
+  /// keeps the words. The person's words first, then the bot's reply, marked cut off with "…".
+  void flushPending() {
+    _add('user', _user);
+    final said = _bot.toString().trim();
+    _bot.clear();
+    _replying = false;
+    if (said.isEmpty) return;
+    transcript.value = [...transcript.value, CallTurn('assistant', cutOffTurn(said))];
   }
 
   /// The name of the function a tool call id belongs to (Gemini wants it back with the result).
@@ -527,6 +545,7 @@ class GeminiLiveCall implements VoiceCall {
         final wait = callResumeDelay(_resumeAttempt, _resumeDelays);
         if (wait == null) {
           _reconnecting.value = false;
+          _ev.flushPending();
           _state.value = CallState.failed;
           return;
         }
@@ -583,6 +602,7 @@ class GeminiLiveCall implements VoiceCall {
       _reconnecting.value = true;
       _resume();
     } else {
+      _ev.flushPending();
       _state.value = _ev.ready ? CallState.ended : CallState.failed;
     }
   }
@@ -697,6 +717,7 @@ class GeminiLiveCall implements VoiceCall {
   @override
   Future<void> hangUp() async {
     if (_ended) return;
+    _ev.flushPending();
     _ended = true;
     _state.value = CallState.ended;
     _speakingTimer?.cancel();
