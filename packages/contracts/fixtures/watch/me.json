@@ -8,12 +8,7 @@
   "prefs": {
     "allow": "medium",
     "show_details": true,
-    "quick_replies": [
-      "Yes",
-      "No",
-      "Tell me more",
-      "Not now"
-    ]
+    "quick_replies": ["Yes", "No", "Tell me more", "Not now"]
   },
   "hide_reply_text": false,
   "ask_bot_id": "22222222-2222-4222-8222-222222222222",

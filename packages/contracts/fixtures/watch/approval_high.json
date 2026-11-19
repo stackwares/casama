@@ -6,10 +6,7 @@
   "bot_avatar": "mascot:focused",
   "status": "pending",
   "title": "Pay $240.00 to Acme Hosting",
-  "details": [
-    "Card ending 4242",
-    "Monthly plan"
-  ],
+  "details": ["Card ending 4242", "Monthly plan"],
   "risk": "high",
   "payment": true,
   "can_allow": "phone",
