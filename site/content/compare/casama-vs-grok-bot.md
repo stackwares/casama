@@ -66,10 +66,10 @@ It also reaches X, which Casama doesn't.
 
 ## What moving costs
 
-**From Grok Bot to Casama.** We haven't confirmed an export tool on Grok Bot's side, so plan to
-copy by hand. Write down what each Bot does, create a Casama bot per job, and paste the
-instructions in. Recreate schedules as routines. Add your "ask first" rules as action rules.
-Reconnect Slack or Teams. A workflow you taught by recording has to be taught again or described in words.
+**From Grok Bot to Casama.** Grok Bot has no export, so Casama asks your Bot instead: send it the
+prompt from **Paste a Bot's Setup** and paste its reply into Casama. Its instructions, schedules,
+skills, apps and "ask first" rules come over after you review them. Events become a note naming the
+closest Casama trigger. Reconnect Slack or Teams. A workflow you taught by recording has to be taught again or described in words.
 
 **From Casama to Grok Bot.** Your workspace exports in full, and instructions paste across. You
 give up per-bot computers and self-hosting, and you start paying from the first month.

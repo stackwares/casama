@@ -38,7 +38,7 @@ Hark is a polished phone-first assistant for everyday errands. Casama is a team 
 
 ## Moving from Hark Pro to Casama
 
-Set up a Casama bot as your assistant, connect the same accounts (mail, calendar, Slack), and recreate scheduled tasks as routines.
+In Casama, choose **Paste a Bot's Setup** and pick Hark Pro. Send Hark the prompt and paste its reply: what it does for you, its scheduled tasks and what it remembers come over as a bot, routines and memories, and you review each one first. Then connect the same accounts (mail, calendar, Slack).
 
 Start on [Casama Cloud's free plan](https://app.casama.ai), or
 [run Casama on your own server](/self-hosted).

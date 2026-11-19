@@ -204,4 +204,11 @@ Map<String, dynamic> _$AgentImportPlanToJson(AgentImportPlan instance) =>
 const _$AgentImportPlanKindEnumEnumMap = {
   AgentImportPlanKindEnum.openclaw: 'openclaw',
   AgentImportPlanKindEnum.hermes: 'hermes',
+  AgentImportPlanKindEnum.grokBot: 'grok_bot',
+  AgentImportPlanKindEnum.muse: 'muse',
+  AgentImportPlanKindEnum.dots: 'dots',
+  AgentImportPlanKindEnum.duet: 'duet',
+  AgentImportPlanKindEnum.hark: 'hark',
+  AgentImportPlanKindEnum.instinct: 'instinct',
+  AgentImportPlanKindEnum.other: 'other',
 };

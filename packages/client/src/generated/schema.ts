@@ -3924,6 +3924,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/bot-imports/paste/prompt": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The prompt to send a Grok Bot, Muse, Dots, Duet, Hark or Instinct so it describes its own setup */
+        get: operations["getPasteImportPrompt"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/memory-import/parse": {
         parameters: {
             query?: never;
@@ -3934,6 +3951,23 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["parseMemoryImport"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/bot-imports/paste": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Read a pasted bot setup into a bot template for review */
+        post: operations["pasteBotImport"];
         delete?: never;
         options?: never;
         head?: never;
@@ -11190,6 +11224,12 @@ export interface components {
         MemoryImportPrompt: {
             prompt: string;
         };
+        PasteImportPrompt: {
+            prompt: string;
+            version: number;
+        };
+        /** @enum {string} */
+        PasteImportSource: "grok_bot" | "muse" | "dots" | "duet" | "hark" | "instinct" | "other";
         ParsedMemoryImport: {
             memories: components["schemas"]["ImportedMemoryItem"][];
         };
@@ -11201,17 +11241,11 @@ export interface components {
         ParseMemoryImportRequest: {
             text: string;
         };
-        SavedImportedMemories: {
-            saved: number;
-        };
-        SaveImportedMemoriesRequest: {
-            memories: components["schemas"]["ImportedMemoryItem"][];
-        };
         AgentImportPlan: {
             /** Format: uuid */
             id: string;
             /** @enum {string} */
-            kind: "openclaw" | "hermes";
+            kind: "openclaw" | "hermes" | "grok_bot" | "muse" | "dots" | "duet" | "hark" | "instinct" | "other";
             template: components["schemas"]["BotTemplateFile"];
             sources: {
                 skills: string[];
@@ -11227,6 +11261,18 @@ export interface components {
                 reason: string;
             }[];
             notes: string[];
+        };
+        PasteBotImportRequest: {
+            /** Format: uuid */
+            org_id: string;
+            source: components["schemas"]["PasteImportSource"];
+            text: string;
+        };
+        SavedImportedMemories: {
+            saved: number;
+        };
+        SaveImportedMemoriesRequest: {
+            memories: components["schemas"]["ImportedMemoryItem"][];
         };
         StartAgentImportRequest: {
             /** Format: uuid */
@@ -27376,6 +27422,37 @@ export interface operations {
             };
         };
     };
+    getPasteImportPrompt: {
+        parameters: {
+            query: {
+                source: components["schemas"]["PasteImportSource"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Prompt */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasteImportPrompt"];
+                };
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     parseMemoryImport: {
         parameters: {
             query?: never;
@@ -27400,6 +27477,57 @@ export interface operations {
             };
             /** @description Not authenticated */
             401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    pasteBotImport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PasteBotImportRequest"];
+            };
+        };
+        responses: {
+            /** @description The mapping */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgentImportPlan"];
+                };
+            };
+            /** @description Validation failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not found */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

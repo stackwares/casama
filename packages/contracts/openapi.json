@@ -15006,6 +15006,33 @@
           "prompt"
         ]
       },
+      "PasteImportPrompt": {
+        "type": "object",
+        "properties": {
+          "prompt": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "prompt",
+          "version"
+        ]
+      },
+      "PasteImportSource": {
+        "type": "string",
+        "enum": [
+          "grok_bot",
+          "muse",
+          "dots",
+          "duet",
+          "hark",
+          "instinct",
+          "other"
+        ]
+      },
       "ParsedMemoryImport": {
         "type": "object",
         "properties": {
@@ -15054,33 +15081,6 @@
           "text"
         ]
       },
-      "SavedImportedMemories": {
-        "type": "object",
-        "properties": {
-          "saved": {
-            "type": "integer"
-          }
-        },
-        "required": [
-          "saved"
-        ]
-      },
-      "SaveImportedMemoriesRequest": {
-        "type": "object",
-        "properties": {
-          "memories": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ImportedMemoryItem"
-            },
-            "minItems": 1,
-            "maxItems": 500
-          }
-        },
-        "required": [
-          "memories"
-        ]
-      },
       "AgentImportPlan": {
         "type": "object",
         "properties": {
@@ -15092,7 +15092,14 @@
             "type": "string",
             "enum": [
               "openclaw",
-              "hermes"
+              "hermes",
+              "grok_bot",
+              "muse",
+              "dots",
+              "duet",
+              "hark",
+              "instinct",
+              "other"
             ]
           },
           "template": {
@@ -15177,6 +15184,55 @@
           "leftovers",
           "skipped",
           "notes"
+        ]
+      },
+      "PasteBotImportRequest": {
+        "type": "object",
+        "properties": {
+          "org_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "source": {
+            "$ref": "#/components/schemas/PasteImportSource"
+          },
+          "text": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100000
+          }
+        },
+        "required": [
+          "org_id",
+          "source",
+          "text"
+        ]
+      },
+      "SavedImportedMemories": {
+        "type": "object",
+        "properties": {
+          "saved": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "saved"
+        ]
+      },
+      "SaveImportedMemoriesRequest": {
+        "type": "object",
+        "properties": {
+          "memories": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ImportedMemoryItem"
+            },
+            "minItems": 1,
+            "maxItems": 500
+          }
+        },
+        "required": [
+          "memories"
         ]
       },
       "StartAgentImportRequest": {
@@ -45320,6 +45376,52 @@
         }
       }
     },
+    "/v1/bot-imports/paste/prompt": {
+      "get": {
+        "operationId": "getPasteImportPrompt",
+        "tags": [
+          "import"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "The prompt to send a Grok Bot, Muse, Dots, Duet, Hark or Instinct so it describes its own setup",
+        "parameters": [
+          {
+            "schema": {
+              "$ref": "#/components/schemas/PasteImportSource"
+            },
+            "required": true,
+            "name": "source",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Prompt",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PasteImportPrompt"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/memory-import/parse": {
       "post": {
         "operationId": "parseMemoryImport",
@@ -45354,6 +45456,72 @@
           },
           "401": {
             "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/bot-imports/paste": {
+      "post": {
+        "operationId": "pasteBotImport",
+        "tags": [
+          "import"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Read a pasted bot setup into a bot template for review",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasteBotImportRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The mapping",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentImportPlan"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
             "content": {
               "application/problem+json": {
                 "schema": {

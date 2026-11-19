@@ -161,7 +161,21 @@ enum AgentImportPlanKindEnum {
 @JsonValue(r'openclaw')
 openclaw(r'openclaw'),
 @JsonValue(r'hermes')
-hermes(r'hermes');
+hermes(r'hermes'),
+@JsonValue(r'grok_bot')
+grokBot(r'grok_bot'),
+@JsonValue(r'muse')
+muse(r'muse'),
+@JsonValue(r'dots')
+dots(r'dots'),
+@JsonValue(r'duet')
+duet(r'duet'),
+@JsonValue(r'hark')
+hark(r'hark'),
+@JsonValue(r'instinct')
+instinct(r'instinct'),
+@JsonValue(r'other')
+other(r'other');
 
 const AgentImportPlanKindEnum(this.value);
 

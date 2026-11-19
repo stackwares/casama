@@ -3822,6 +3822,23 @@ class SupabaseBackend implements Backend {
       )).data!.written;
 
   @override
+  Future<String> pasteImportPrompt(PasteImportSource source) async =>
+      (await api.imports.getPasteImportPrompt(source_: source)).data!.prompt;
+
+  @override
+  Future<AgentImportPlan> pasteBotImport(
+    String orgId,
+    PasteImportSource source,
+    String text,
+  ) async => (await api.imports.pasteBotImport(
+    pasteBotImportRequest: PasteBotImportRequest(
+      orgId: orgId,
+      source_: source,
+      text: text,
+    ),
+  )).data!;
+
+  @override
   Future<String> memoryImportPrompt() async =>
       (await api.imports.getMemoryImportPrompt()).data!.prompt;
 

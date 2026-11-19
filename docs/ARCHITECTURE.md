@@ -237,7 +237,7 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 
 ## Import an agent (D-122)
 
-- `packages/domain/src/agent-import.ts` (OpenClaw and Hermes Agent folders → a `casama.bot` template; ChatGPT/Claude memory prompt and parser), `agent_imports`/`agent_import_files`, `apps/server/src/api/routes/agent-import.ts`, and `client/lib/features/bots/agent_import.dart` (review screen, memory sheet).
+- `packages/domain/src/agent-import.ts` (OpenClaw and Hermes Agent folders → a `casama.bot` template; ChatGPT/Claude memory prompt and parser), `agent_imports`/`agent_import_files`, `apps/server/src/api/routes/agent-import.ts`, and `client/lib/features/bots/agent_import.dart` (review screen, memory sheet, paste sheet). Pasted setups (D-415): `packages/domain/src/paste-import.ts` (prompt per source, line parser, secret scrubbing, schedule phrases → cron) behind `GET /v1/bot-imports/paste/prompt` and `POST /v1/bot-imports/paste`; nothing is stored.
 
 ## Routines and skills as files (D-124)
 

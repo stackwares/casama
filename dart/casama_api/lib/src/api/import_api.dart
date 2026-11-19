@@ -13,6 +13,9 @@ import 'package:casama_api/src/model/agent_import_plan.dart';
 import 'package:casama_api/src/model/memory_import_prompt.dart';
 import 'package:casama_api/src/model/parse_memory_import_request.dart';
 import 'package:casama_api/src/model/parsed_memory_import.dart';
+import 'package:casama_api/src/model/paste_bot_import_request.dart';
+import 'package:casama_api/src/model/paste_import_prompt.dart';
+import 'package:casama_api/src/model/paste_import_source.dart';
 import 'package:casama_api/src/model/save_imported_memories_request.dart';
 import 'package:casama_api/src/model/saved_imported_memories.dart';
 import 'package:casama_api/src/model/start_agent_import_request.dart';
@@ -90,6 +93,89 @@ _responseData = rawData == null ? null : deserialize<MemoryImportPrompt, MemoryI
     }
 
     return Response<MemoryImportPrompt>(
+      data: _responseData,
+      headers: _response.headers,
+      isRedirect: _response.isRedirect,
+      requestOptions: _response.requestOptions,
+      redirects: _response.redirects,
+      statusCode: _response.statusCode,
+      statusMessage: _response.statusMessage,
+      extra: _response.extra,
+    );
+  }
+
+  /// The prompt to send a Grok Bot, Muse, Dots, Duet, Hark or Instinct so it describes its own setup
+  /// 
+  ///
+  /// Parameters:
+  /// * [source_] 
+  /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
+  /// * [headers] - Can be used to add additional headers to the request
+  /// * [extras] - Can be used to add flags to the request
+  /// * [validateStatus] - A [ValidateStatus] callback that can be used to determine request success based on the HTTP status of the response
+  /// * [onSendProgress] - A [ProgressCallback] that can be used to get the send progress
+  /// * [onReceiveProgress] - A [ProgressCallback] that can be used to get the receive progress
+  ///
+  /// Returns a [Future] containing a [Response] with a [PasteImportPrompt] as data
+  /// Throws [DioException] if API call or serialization fails
+  Future<Response<PasteImportPrompt>> getPasteImportPrompt({ 
+    required PasteImportSource source_,
+    CancelToken? cancelToken,
+    Map<String, dynamic>? headers,
+    Map<String, dynamic>? extra,
+    ValidateStatus? validateStatus,
+    ProgressCallback? onSendProgress,
+    ProgressCallback? onReceiveProgress,
+  }) async {
+    final _path = r'/v1/bot-imports/paste/prompt';
+    final _options = Options(
+      method: r'GET',
+      headers: <String, dynamic>{
+        ...?headers,
+      },
+      extra: <String, dynamic>{
+        'secure': <Map<String, String>>[
+          {
+            'type': 'http',
+            'scheme': 'bearer',
+            'name': 'bearerAuth',
+          },
+        ],
+        ...?extra,
+      },
+      validateStatus: validateStatus,
+    );
+
+    final _queryParameters = <String, dynamic>{
+      r'source': source_,
+    };
+
+    final _response = await _dio.request<Object>(
+      _path,
+      options: _options,
+      queryParameters: _queryParameters,
+      cancelToken: cancelToken,
+      onSendProgress: onSendProgress,
+      onReceiveProgress: onReceiveProgress,
+    );
+
+    PasteImportPrompt? _responseData;
+
+    try {
+final rawData = _response.data;
+_responseData = rawData == null ? null : deserialize<PasteImportPrompt, PasteImportPrompt>(rawData, 'PasteImportPrompt', growable: true);
+
+    } catch (error, stackTrace) {
+      throw DioException(
+        requestOptions: _response.requestOptions,
+        response: _response,
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    return Response<PasteImportPrompt>(
       data: _responseData,
       headers: _response.headers,
       isRedirect: _response.isRedirect,
@@ -186,6 +272,102 @@ _responseData = rawData == null ? null : deserialize<ParsedMemoryImport, ParsedM
     }
 
     return Response<ParsedMemoryImport>(
+      data: _responseData,
+      headers: _response.headers,
+      isRedirect: _response.isRedirect,
+      requestOptions: _response.requestOptions,
+      redirects: _response.redirects,
+      statusCode: _response.statusCode,
+      statusMessage: _response.statusMessage,
+      extra: _response.extra,
+    );
+  }
+
+  /// Read a pasted bot setup into a bot template for review
+  /// 
+  ///
+  /// Parameters:
+  /// * [pasteBotImportRequest] 
+  /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
+  /// * [headers] - Can be used to add additional headers to the request
+  /// * [extras] - Can be used to add flags to the request
+  /// * [validateStatus] - A [ValidateStatus] callback that can be used to determine request success based on the HTTP status of the response
+  /// * [onSendProgress] - A [ProgressCallback] that can be used to get the send progress
+  /// * [onReceiveProgress] - A [ProgressCallback] that can be used to get the receive progress
+  ///
+  /// Returns a [Future] containing a [Response] with a [AgentImportPlan] as data
+  /// Throws [DioException] if API call or serialization fails
+  Future<Response<AgentImportPlan>> pasteBotImport({ 
+    required PasteBotImportRequest pasteBotImportRequest,
+    CancelToken? cancelToken,
+    Map<String, dynamic>? headers,
+    Map<String, dynamic>? extra,
+    ValidateStatus? validateStatus,
+    ProgressCallback? onSendProgress,
+    ProgressCallback? onReceiveProgress,
+  }) async {
+    final _path = r'/v1/bot-imports/paste';
+    final _options = Options(
+      method: r'POST',
+      headers: <String, dynamic>{
+        ...?headers,
+      },
+      extra: <String, dynamic>{
+        'secure': <Map<String, String>>[
+          {
+            'type': 'http',
+            'scheme': 'bearer',
+            'name': 'bearerAuth',
+          },
+        ],
+        ...?extra,
+      },
+      contentType: 'application/json',
+      validateStatus: validateStatus,
+    );
+
+    dynamic _bodyData;
+
+    try {
+_bodyData=jsonEncode(pasteBotImportRequest);
+    } catch(error, stackTrace) {
+      throw DioException(
+         requestOptions: _options.compose(
+          _dio.options,
+          _path,
+        ),
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    final _response = await _dio.request<Object>(
+      _path,
+      data: _bodyData,
+      options: _options,
+      cancelToken: cancelToken,
+      onSendProgress: onSendProgress,
+      onReceiveProgress: onReceiveProgress,
+    );
+
+    AgentImportPlan? _responseData;
+
+    try {
+final rawData = _response.data;
+_responseData = rawData == null ? null : deserialize<AgentImportPlan, AgentImportPlan>(rawData, 'AgentImportPlan', growable: true);
+
+    } catch (error, stackTrace) {
+      throw DioException(
+        requestOptions: _response.requestOptions,
+        response: _response,
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    return Response<AgentImportPlan>(
       data: _responseData,
       headers: _response.headers,
       isRedirect: _response.isRedirect,

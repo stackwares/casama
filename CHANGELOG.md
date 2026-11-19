@@ -9,6 +9,11 @@ The server, apps, CLI, SDK and MCP server share one version number.
 
 ## [Unreleased]
 
+- Paste a bot's setup (D-415): bring a bot over from Grok Bot, Meta Muse, ChatGPT Dots, Claude Duet,
+  Hark Pro, Instinct or another app. Casama gives you a prompt to send your old bot; paste its reply and review its
+  instructions, schedules, skills, apps and memories before the bot is created. Lines that look like
+  keys or card numbers are removed. See [Paste a bot's setup](https://docs.casama.ai/guide/sharing#paste-a-bot-s-setup).
+
 - The `casama` CLI covers most of the app. New commands: `chats` (read, export, share, branch,
   delete), `routines` (list, create, edit, run, delete), `approvals` (answer what bots are waiting
   on), `tasks`, `watchers`, `skills`, `plugins`, `apps`, `secrets`, `knowledge`, `channels`,

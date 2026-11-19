@@ -32,6 +32,7 @@ export * from "./models.ts";
 export * from "./os-permissions.ts";
 export * from "./packs.ts";
 export * from "./pages.ts";
+export * from "./paste-import.ts";
 export * from "./plugin-cards.ts";
 export * from "./push-groups.ts";
 export * from "./quiet-hours.ts";

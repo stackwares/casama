@@ -1,8 +1,8 @@
 # Moving from Grok Bot to Casama
 
-This guide maps Grok Bot's ideas onto Casama's, and walks through recreating your Bots. There is no
-import from Grok Bot, so you rebuild each Bot by hand: copy its instructions, recreate its schedules and
-sign in to its apps again. Most Bots take a few minutes.
+This guide maps Grok Bot's ideas onto Casama's, and walks through moving your Bots. The quickest way
+is to paste each Bot's setup into Casama: its name, instructions, schedules, skills and apps come over,
+and you sign in to its apps again. You can also rebuild a Bot by hand.
 
 Casama is not affiliated with xAI or Grok Bot. Grok Bot is a trademark of its owner.
 
@@ -30,7 +30,23 @@ Casama is not affiliated with xAI or Grok Bot. Grok Bot is a trademark of its ow
 3. **Remove secrets from what you copy.** Don't paste keys or passwords into instructions. Casama
    stores credentials separately, and they never travel inside a template.
 
-## Bots
+## Paste a Bot's setup
+
+1. In Casama, select **Add**, then **Import an Agent**, then **Paste a Bot's Setup**, and pick
+   **Grok Bot**.
+2. **Copy** the prompt and send it to your Grok Bot. It answers with its setup in a fixed format.
+3. Paste the whole reply into Casama and select **Next**.
+4. Review the name, instructions, routines, skills and memories, untick what you don't want, and
+   import.
+
+Schedules become routines. Events don't come over, and a note names the closest Casama trigger for
+each one. Lines that look like keys or passwords are removed. See
+[Paste a bot's setup](/guide/sharing#paste-a-bot-s-setup) for the format and what becomes what.
+
+If your Bot doesn't answer in the format, paste its instructions from Grok Bot instead: they become
+the new bot's instructions.
+
+## Bots by hand
 
 1. In the sidebar, select **Add**, then **New bot**.
 2. Under **Persona**, pick a starting point or leave it on **Blank**, then paste the Grok Bot

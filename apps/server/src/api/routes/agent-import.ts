@@ -2,7 +2,8 @@
  * Import an agent (D-122): reads an OpenClaw or Hermes Agent folder (a ZIP, or the files of a
  * folder the desktop app picked) into a bot template the person reviews; the existing template
  * import (D-110) then creates the bot. Files nothing maps to are kept for a day and copied to
- * ~/imported/ on the new bot's computer on request. Also: ChatGPT or Claude memory, pasted back.
+ * ~/imported/ on the new bot's computer on request. Also: ChatGPT or Claude memory, pasted back,
+ * and a pasted bot setup from Grok Bot, Muse, Dots or Duet (D-415).
  */
 
 import { botComputerId } from "@casama/agent";
@@ -11,8 +12,12 @@ import { contentKeys, type JwtClaims, withUserSession } from "@casama/db";
 import {
   AgentImportError,
   MEMORY_EXPORT_PROMPT,
+  PASTE_PROMPT_VERSION,
+  PASTE_SOURCE_NAMES,
   parseMemoryExport,
+  pasteImportPrompt,
   planAgentImport,
+  planPastedBot,
 } from "@casama/domain";
 import type { OpenAPIHono } from "@hono/zod-openapi";
 import { sql } from "drizzle-orm";
@@ -182,6 +187,56 @@ export function registerAgentImportRoutes(app: OpenAPIHono<AppEnv>, deps: AppDep
   app.openapi(routes.parseMemoryImport, async (c) => {
     claimsOf(c);
     return c.json({ memories: parseMemoryExport(c.req.valid("json").text) }, 200);
+  });
+
+  app.openapi(routes.getPasteImportPrompt, async (c) => {
+    claimsOf(c);
+    const { source } = c.req.valid("query");
+    return c.json({ prompt: pasteImportPrompt(source), version: PASTE_PROMPT_VERSION }, 200);
+  });
+
+  app.openapi(routes.pasteBotImport, async (c) => {
+    const claims = claimsOf(c);
+    const b = c.req.valid("json");
+    const [member] = await withUserSession(db, claims, (tx) =>
+      tx.execute<{ ok: boolean }>(sql`select public.is_member(${b.org_id}::uuid) as ok`),
+    );
+    if (!member?.ok) throw new ApiError(404, "org_not_found", "Workspace not found");
+    const plan = planPastedBot(b.text, b.source);
+    if (!plan.persona_md.trim() && !plan.skills.length && !plan.routines.length)
+      throw new ApiError(
+        400,
+        "import_empty",
+        "Nothing to import was found. Send your bot the prompt and paste its whole reply.",
+      );
+    return c.json(
+      {
+        // Nothing is stored for a paste: the id only fills the shape the review screen reads.
+        id: crypto.randomUUID(),
+        kind: plan.kind,
+        template: {
+          format: "casama.bot" as const,
+          version: 1,
+          name: plan.name || `My ${PASTE_SOURCE_NAMES[plan.kind]}`,
+          description: plan.description,
+          persona_md: plan.persona_md,
+          autonomy: plan.autonomy,
+          skills: plan.skills.map(({ source: _s, ...k }) => k),
+          routines: plan.routines.map(({ source: _s, ...r }) => r),
+          memories: plan.memories.map(({ source: _s, ...m }) => m),
+          connections: plan.connections,
+        },
+        sources: {
+          skills: plan.skills.map((s) => s.source),
+          routines: plan.routines.map((r) => r.source),
+          memories: plan.memories.map((m) => m.source),
+        },
+        leftovers: [],
+        skipped: [],
+        notes: plan.notes,
+      },
+      200,
+    );
   });
 
   app.openapi(routes.saveImportedMemories, async (c) => {

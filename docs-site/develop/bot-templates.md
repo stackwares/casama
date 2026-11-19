@@ -271,6 +271,28 @@ call `POST /v1/agent-imports/{id}/files` with `{"bot_id": "..."}` (for people wh
 It answers `409` while the bot has no computer yet. Uploads are kept for a day. See [Import an agent](/guide/sharing#import-an-agent) for
 what each kind maps to.
 
+## Convert a pasted setup from Grok Bot, Muse, Dots, Duet, Hark or Instinct
+
+`GET /v1/bot-imports/paste/prompt?source=grok_bot` returns `{prompt, version}`: the prompt to send
+the old bot so it describes its own setup. `source` is `grok_bot`, `muse`, `dots`, `duet`, `hark`,
+`instinct` or `other`. Send the bot's reply to `POST /v1/bot-imports/paste`:
+
+```sh
+jq -n --arg org "$ORG" --rawfile text reply.txt \
+  '{org_id: $org, source: "grok_bot", text: $text}' |
+curl -s -X POST "https://casama.example.com/v1/bot-imports/paste" \
+  -H "authorization: Bearer $TOKEN" \
+  -H "content-type: application/json" \
+  -d @-
+```
+
+It answers with the same fields as an agent import, with `kind` set to the source, no `leftovers`
+and no `skipped` files. Nothing is stored, and `id` is only a placeholder. Text up to 100,000
+characters is read with no model call. Lines that look like keys are removed first, and text that
+doesn't follow the format becomes the template's `persona_md`. It answers `400 import_empty` when
+there is nothing to import. See [Paste a bot's setup](/guide/sharing#paste-a-bot-s-setup) for the
+format.
+
 ## Share links
 
 `POST /v1/bots/{id}/share` (for people who manage the bot) saves a snapshot of the template and

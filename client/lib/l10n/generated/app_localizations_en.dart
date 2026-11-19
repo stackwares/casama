@@ -2841,7 +2841,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get importAgentHelp =>
-      'Bring a bot over from OpenClaw or Hermes Agent: its persona, skills, schedules and memories. You\'ll review everything before it\'s created. Keys and settings files are never read.';
+      'Bring a bot over from OpenClaw or Hermes Agent, or paste a setup from Grok Bot, Muse, ChatGPT Dots, Claude Duet, Hark or Instinct: its persona, skills, schedules and memories. You\'ll review everything before it\'s created. Keys and settings files are never read.';
 
   @override
   String get checkForUpdates => 'Check for updates';
@@ -7061,6 +7061,39 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get importAgentPickZip => 'Upload a ZIP of its folder';
+
+  @override
+  String get importPasteChoice => 'Paste a Bot\'s Setup';
+
+  @override
+  String get importPasteChoiceHelp =>
+      'From Grok Bot, Muse, ChatGPT Dots, Claude Duet, Hark, Instinct or another app';
+
+  @override
+  String get importPasteTitle => 'Paste a Bot\'s Setup';
+
+  @override
+  String get importPasteHelp =>
+      'Send your bot the prompt below, then paste its whole reply. You\'ll review everything before the new bot is created.';
+
+  @override
+  String get importPasteSource => 'Where is your bot now?';
+
+  @override
+  String get importPasteOther => 'Somewhere else';
+
+  @override
+  String get importPasteStep1 => '1. Send your bot this prompt';
+
+  @override
+  String get importPasteReply => '2. Paste its reply';
+
+  @override
+  String get importPasteSafety =>
+      'Lines that look like keys, passwords or card numbers are removed. Sign in to its apps again after importing.';
+
+  @override
+  String get importPasteSubtitle => 'Pasted setup';
 
   @override
   String get agentImportReviewHelp =>

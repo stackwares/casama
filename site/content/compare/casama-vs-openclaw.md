@@ -65,9 +65,10 @@ own model keys, a ChatGPT or Claude plan, or local models.
 
 ## What moving costs
 
-**From OpenClaw to Casama.** There is no importer, so it is an afternoon of copying by hand.
-Recreate each agent as a bot, paste its instructions, and re-add its schedules as routines.
-Reconnect each chat app per bot, and check first that the ones you use are among Casama's ten.
+**From OpenClaw to Casama.** Casama imports an OpenClaw folder: pick it in the desktop app, or
+upload a ZIP. Its persona, memories, skills and scheduled jobs come over, and you review each one
+first. Keys and settings files are never read. See
+[Import an agent](https://docs.casama.ai/guide/sharing#import-an-agent). Reconnect each chat app per bot, and check first that the ones you use are among Casama's ten.
 Self-hosting needs a server or computer that runs Docker. Casama Cloud needs nothing installed.
 
 **From Casama to OpenClaw.** Your workspace exports in full, and instructions and schedules are

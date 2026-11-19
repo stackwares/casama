@@ -175,4 +175,82 @@ describe("import an agent", () => {
     >`select kind from public.memories where content = 'Metric units'`;
     expect(m?.kind).toBe("preference");
   });
+
+  it("reads a pasted Grok Bot setup for review, then the template import creates the bot (D-415)", async () => {
+    const { prompt, version } = await j(
+      await h.request("/v1/bot-imports/paste/prompt?source=grok_bot", { token: owner.token }),
+    );
+    expect(prompt).toContain("Grok Bot");
+    expect(version).toBe(1);
+    const res = await h.request("/v1/bot-imports/paste", {
+      method: "POST",
+      token: owner.token,
+      json: {
+        org_id: orgId,
+        source: "grok_bot",
+        text: [
+          "NAME: Scout",
+          'INSTRUCTIONS:\n"""\nFind leads.\nKEY=sk-abcdefghijklmnopqrstuvwx\n"""',
+          "SCHEDULE: weekdays 09:00 | Send me five new leads",
+          "EVENT: New reply | Draft an answer",
+          "SKILL: lead-check | Checks a lead",
+          "APP: HubSpot",
+          "MEMORY: Sells to dentists",
+        ].join("\n"),
+      },
+    });
+    expect(res.status).toBe(200);
+    const plan = await j(res);
+    expect(plan.kind).toBe("grok_bot");
+    expect(plan.leftovers).toEqual([]);
+    expect(plan.template).toMatchObject({
+      name: "Scout",
+      persona_md: "Find leads.",
+      routines: [
+        {
+          name: "Send me five new leads",
+          instructions_md: "Send me five new leads",
+          schedule_cron: "0 9 * * 1-5",
+        },
+      ],
+      connections: [{ kind: "app", name: "HubSpot" }],
+      memories: [{ kind: "fact", content: "Sells to dentists" }],
+    });
+    expect(plan.notes.some((n: string) => n.includes("key, password"))).toBe(true);
+    expect(plan.notes.some((n: string) => n.includes("New reply"))).toBe(true);
+
+    const imported = await j(
+      await h.request("/v1/bots/import", {
+        method: "POST",
+        token: owner.token,
+        json: {
+          org_id: orgId,
+          template: plan.template,
+          credential_id: credId,
+          model: "m",
+          include_memories: true,
+          include_routines: true,
+        },
+      }),
+    );
+    expect(imported).toMatchObject({ skills: 1, routines: 1, memories: 1 });
+    expect(imported.connections_to_add).toEqual([{ kind: "app", name: "HubSpot" }]);
+  });
+
+  it("refuses an empty paste and workspaces the person isn't in", async () => {
+    const empty = await h.request("/v1/bot-imports/paste", {
+      method: "POST",
+      token: owner.token,
+      json: { org_id: orgId, source: "other", text: "NAME: Nobody" },
+    });
+    expect(empty.status).toBe(400);
+    expect((await j(empty)).code).toBe("import_empty");
+    const stranger = await h.user("paste-stranger@example.com");
+    const other = await h.request("/v1/bot-imports/paste", {
+      method: "POST",
+      token: stranger.token,
+      json: { org_id: orgId, source: "grok_bot", text: "INSTRUCTIONS: Hi there" },
+    });
+    expect(other.status).toBe(404);
+  });
 });

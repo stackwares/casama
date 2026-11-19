@@ -17,10 +17,40 @@ export const StartAgentImportRequest = z
   })
   .openapi("StartAgentImportRequest");
 
+/** Where a pasted setup came from (D-415). */
+export const PasteImportSource = z
+  .enum(["grok_bot", "muse", "dots", "duet", "hark", "instinct", "other"])
+  .openapi("PasteImportSource");
+
+export const PasteImportPromptQuery = z.object({ source: PasteImportSource });
+export const PasteImportPrompt = z
+  .object({ prompt: z.string(), version: z.number().int() })
+  .openapi("PasteImportPrompt");
+
+export const PasteBotImportRequest = z
+  .object({
+    org_id: Uuid,
+    source: PasteImportSource,
+    /** The old bot's reply to the prompt, or any pasted setup. */
+    text: z.string().min(1).max(100_000),
+  })
+  .openapi("PasteBotImportRequest");
+
 export const AgentImportPlan = z
   .object({
+    /** For a pasted setup, a one-off id: nothing is stored and there are no files to copy. */
     id: Uuid,
-    kind: z.enum(["openclaw", "hermes"]),
+    kind: z.enum([
+      "openclaw",
+      "hermes",
+      "grok_bot",
+      "muse",
+      "dots",
+      "duet",
+      "hark",
+      "instinct",
+      "other",
+    ]),
     template: BotTemplateFile,
     sources: z.object({
       skills: z.array(z.string()),

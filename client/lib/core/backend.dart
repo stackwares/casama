@@ -1928,6 +1928,9 @@ abstract class Backend {
     Map<String, Uint8List>? files,
   });
   Future<int> writeAgentImportFiles(String importId, String botId);
+  // Paste a bot's setup (D-415)
+  Future<String> pasteImportPrompt(PasteImportSource source);
+  Future<AgentImportPlan> pasteBotImport(String orgId, PasteImportSource source, String text);
   Future<String> memoryImportPrompt();
   Future<List<ImportedMemoryItem>> parseMemoryImport(String text);
   Future<int> saveImportedMemories(

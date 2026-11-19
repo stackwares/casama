@@ -111,9 +111,10 @@ free, and every bot, routine and skill in it is open.
 
 ### Can I use my own template in Casama?
 
-Not directly: there is no import from Grok Bot. You copy over the Bot's instructions and recreate
-its schedules as routines. The [moving guide](https://docs.casama.ai/guide/moving-from-grok-bot)
-shows how.
+Yes, by pasting. Casama gives you a prompt to send your Grok Bot, and the Bot answers with its
+setup. Paste the reply into Casama and its instructions, schedules, skills and apps come over, after
+you review them. Events and sign-ins don't. The
+[moving guide](https://docs.casama.ai/guide/moving-from-grok-bot) shows how.
 
 ### Do Grok Bot templates share my logins?
 

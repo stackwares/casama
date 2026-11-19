@@ -9,6 +9,7 @@ over from another agent app.
 | Give someone a copy of a bot to set up as their own | [Share as template](#share-a-bot-as-a-template) |
 | Let teammates chat with, edit or manage one of your bots | [Sharing](#share-a-bot-with-people) |
 | Move an agent from OpenClaw or Hermes Agent | [Import an agent](#import-an-agent) |
+| Move a bot from Grok Bot, Muse, ChatGPT Dots, Claude Duet, Hark or Instinct | [Paste a bot's setup](#paste-a-bot-s-setup) |
 | Bring what ChatGPT or Claude knows about you | [Import memories](#import-memories-from-chatgpt-or-claude) |
 | Share a page, picture, document or file a bot made | [Share what bots make](#share-what-bots-make) |
 | Share a chat | [Share or export a chat](#share-or-export-a-chat) |
@@ -132,6 +133,72 @@ Along the way:
 
 The import goes through the same review and limits as a template, so there's one way to create a
 bot from outside Casama.
+
+## Paste a bot's setup
+
+Bring a bot over from Grok Bot, Meta Muse, ChatGPT Dots, Claude Duet or Cowork, Hark Pro, Instinct,
+or any other app
+whose bot can describe itself. Your old bot answers a prompt with its setup, and you paste the
+answer into Casama. Nothing is read from the other app's servers.
+
+1. Select **Add** (the **+** button) → **Import an Agent** → **Paste a Bot's Setup**.
+2. Pick where your bot is now. **Copy** the prompt and send it to your old bot.
+3. Paste its whole reply under **2. Paste its reply**, then select **Next**.
+4. Review what was found, untick anything you don't want, and select **Import an Agent**.
+
+The prompt asks for a fixed format:
+
+```
+NAME: Inbox Chief
+ABOUT: Keeps my inbox under control
+INSTRUCTIONS:
+"""
+You are Inbox Chief. Triage email every morning.
+"""
+SCHEDULE: weekdays 08:30 | Summarize unread email
+EVENT: New email from my boss | Flag it and ping me
+SKILL: weekly-report | Builds the Friday report
+"""
+1. Open the sent folder
+2. Write a short report
+"""
+APP: Gmail
+ASK_FIRST: Sending an email
+MEMORY: Works at Stackwares
+PREFERENCE: Likes short answers
+```
+
+What becomes what:
+
+| In the reply | In Casama |
+| --- | --- |
+| `NAME`, `ABOUT` | The bot's name and description |
+| `INSTRUCTIONS` | Its instructions |
+| `ASK_FIRST` | A "Check with me before" list in its instructions; a rule like "anything" sets it to ask every time |
+| `SCHEDULE` | Routines. Times can be `daily 09:00`, `weekdays 09:00`, `weekly mon 08:00`, `monthly 1 09:00`, `every 2 hours` or `every 30 minutes`, and run in your time zone |
+| `EVENT` | Not made into routines. A note names the closest trigger: Meetings, Messages, GitHub or a webhook |
+| `SKILL` | Skills, with the steps as the skill's instructions |
+| `APP` | Shown as apps to connect after importing |
+| `MEMORY`, `PREFERENCE` | Memories |
+
+Along the way:
+
+- **Keys are removed.** Lines that look like keys, tokens, passwords or card numbers are dropped before anything
+  is read, with a note saying how many.
+- **Markdown is fine.** Bold labels, headings such as `## Schedules`, bullet lists and code fences
+  all work.
+- **Any text works.** If the paste doesn't follow the format, for example text copied from a
+  settings page, all of it becomes the bot's instructions, with a note.
+- **What doesn't come over:** the other app's computer, files and sign-ins. Sign in to the bot's
+  apps again in Integrations.
+- **ChatGPT Dots** has no schedules, and you can't list its memories one by one, so a Dots import
+  is mostly its instructions.
+- **Hark Pro** has no memory in the EEA, the UK or Switzerland, so an import from there has no
+  memories.
+- **Instinct** works by text message, so its prompt is short and asks for plain lines with no
+  formatting. If its answer comes as several texts, paste them all into the box together.
+
+The same review and limits as a template apply.
 
 ## Import memories from ChatGPT or Claude
 

@@ -487,6 +487,8 @@ import 'package:casama_api/src/model/password_manager.dart';
 import 'package:casama_api/src/model/password_manager_list.dart';
 import 'package:casama_api/src/model/password_manager_vault.dart';
 import 'package:casama_api/src/model/password_manager_vault_list.dart';
+import 'package:casama_api/src/model/paste_bot_import_request.dart';
+import 'package:casama_api/src/model/paste_import_prompt.dart';
 import 'package:casama_api/src/model/payment_request.dart';
 import 'package:casama_api/src/model/payment_request_list.dart';
 import 'package:casama_api/src/model/payment_settings.dart';
@@ -1891,6 +1893,13 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return PasswordManagerVault.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'PasswordManagerVaultList':
           return PasswordManagerVaultList.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'PasteBotImportRequest':
+          return PasteBotImportRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'PasteImportPrompt':
+          return PasteImportPrompt.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'PasteImportSource':
+          
+          
         case 'PaymentRequest':
           return PaymentRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'PaymentRequestList':

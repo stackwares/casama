@@ -333,7 +333,9 @@ Class | Method | HTTP request | Description
 [*GalleryApi*](doc/GalleryApi.md) | [**updateGalleryRequest**](doc/GalleryApi.md#updategalleryrequest) | **PATCH** /v1/gallery/requests/{id} | Set a request&#39;s status (instance owners)
 [*GalleryApi*](doc/GalleryApi.md) | [**voteGalleryRequest**](doc/GalleryApi.md#votegalleryrequest) | **POST** /v1/gallery/requests/{id}/vote | Vote for a request
 [*ImportApi*](doc/ImportApi.md) | [**getMemoryImportPrompt**](doc/ImportApi.md#getmemoryimportprompt) | **GET** /v1/memory-import/prompt | The prompt to paste into ChatGPT or Claude to get your saved memories
+[*ImportApi*](doc/ImportApi.md) | [**getPasteImportPrompt**](doc/ImportApi.md#getpasteimportprompt) | **GET** /v1/bot-imports/paste/prompt | The prompt to send a Grok Bot, Muse, Dots, Duet, Hark or Instinct so it describes its own setup
 [*ImportApi*](doc/ImportApi.md) | [**parseMemoryImport**](doc/ImportApi.md#parsememoryimport) | **POST** /v1/memory-import/parse | 
+[*ImportApi*](doc/ImportApi.md) | [**pasteBotImport**](doc/ImportApi.md#pastebotimport) | **POST** /v1/bot-imports/paste | Read a pasted bot setup into a bot template for review
 [*ImportApi*](doc/ImportApi.md) | [**saveImportedMemories**](doc/ImportApi.md#saveimportedmemories) | **POST** /v1/bots/{id}/memories/import | Add the memories the person kept
 [*ImportApi*](doc/ImportApi.md) | [**startAgentImport**](doc/ImportApi.md#startagentimport) | **POST** /v1/agent-imports | Read an OpenClaw or Hermes Agent folder into a bot template for review
 [*ImportApi*](doc/ImportApi.md) | [**writeAgentImportFiles**](doc/ImportApi.md#writeagentimportfiles) | **POST** /v1/agent-imports/{id}/files | Copy the files nothing mapped to into ~/imported/ on the bot&#39;s computer
@@ -1083,6 +1085,9 @@ Class | Method | HTTP request | Description
  - [PasswordManagerList](doc/PasswordManagerList.md)
  - [PasswordManagerVault](doc/PasswordManagerVault.md)
  - [PasswordManagerVaultList](doc/PasswordManagerVaultList.md)
+ - [PasteBotImportRequest](doc/PasteBotImportRequest.md)
+ - [PasteImportPrompt](doc/PasteImportPrompt.md)
+ - [PasteImportSource](doc/PasteImportSource.md)
  - [PaymentRequest](doc/PaymentRequest.md)
  - [PaymentRequestList](doc/PaymentRequestList.md)
  - [PaymentSettings](doc/PaymentSettings.md)

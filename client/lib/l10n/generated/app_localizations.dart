@@ -4393,7 +4393,7 @@ abstract class AppLocalizations {
   /// No description provided for @importAgentHelp.
   ///
   /// In en, this message translates to:
-  /// **'Bring a bot over from OpenClaw or Hermes Agent: its persona, skills, schedules and memories. You\'ll review everything before it\'s created. Keys and settings files are never read.'**
+  /// **'Bring a bot over from OpenClaw or Hermes Agent, or paste a setup from Grok Bot, Muse, ChatGPT Dots, Claude Duet, Hark or Instinct: its persona, skills, schedules and memories. You\'ll review everything before it\'s created. Keys and settings files are never read.'**
   String get importAgentHelp;
 
   /// No description provided for @checkForUpdates.
@@ -11211,6 +11211,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Upload a ZIP of its folder'**
   String get importAgentPickZip;
+
+  /// No description provided for @importPasteChoice.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste a Bot\'s Setup'**
+  String get importPasteChoice;
+
+  /// No description provided for @importPasteChoiceHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'From Grok Bot, Muse, ChatGPT Dots, Claude Duet, Hark, Instinct or another app'**
+  String get importPasteChoiceHelp;
+
+  /// No description provided for @importPasteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste a Bot\'s Setup'**
+  String get importPasteTitle;
+
+  /// No description provided for @importPasteHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Send your bot the prompt below, then paste its whole reply. You\'ll review everything before the new bot is created.'**
+  String get importPasteHelp;
+
+  /// No description provided for @importPasteSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Where is your bot now?'**
+  String get importPasteSource;
+
+  /// No description provided for @importPasteOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Somewhere else'**
+  String get importPasteOther;
+
+  /// No description provided for @importPasteStep1.
+  ///
+  /// In en, this message translates to:
+  /// **'1. Send your bot this prompt'**
+  String get importPasteStep1;
+
+  /// No description provided for @importPasteReply.
+  ///
+  /// In en, this message translates to:
+  /// **'2. Paste its reply'**
+  String get importPasteReply;
+
+  /// No description provided for @importPasteSafety.
+  ///
+  /// In en, this message translates to:
+  /// **'Lines that look like keys, passwords or card numbers are removed. Sign in to its apps again after importing.'**
+  String get importPasteSafety;
+
+  /// No description provided for @importPasteSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pasted setup'**
+  String get importPasteSubtitle;
 
   /// No description provided for @agentImportReviewHelp.
   ///

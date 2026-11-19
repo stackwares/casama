@@ -69,9 +69,10 @@ It also reaches more chat apps: more than 20, including Signal, against Casama's
 
 ## What moving costs
 
-**From Hermes Agent to Casama.** Expect to copy by hand. Recreate the agent as one or more bots,
-paste its instructions, and re-create its schedules as routines. Skills that Hermes Agent wrote for
-itself are worth keeping: copy them across as skills for the bot. Reconnect chat apps, and check yours are
+**From Hermes Agent to Casama.** Casama imports a Hermes Agent home folder: pick the folder in the
+desktop app, or upload a ZIP of it. Its persona, memories, skills and scheduled jobs come over, and
+you review each one first. Keys and settings files are never read. See
+[Import an agent](https://docs.casama.ai/guide/sharing#import-an-agent). Reconnect chat apps, and check yours are
 among Casama's ten. Self-hosting needs Docker. Casama Cloud needs nothing installed.
 
 **From Casama to Hermes Agent.** Your workspace exports in full, and instructions are plain text.

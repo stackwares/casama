@@ -38,7 +38,7 @@ Instinct's appeal is that there is nothing to learn: you message it like a perso
 
 ## Moving from Instinct to Casama
 
-Instinct has no export that we could find. Set up a Casama bot as your personal assistant, connect your mail and calendar, and tell it your preferences; it saves them to a memory you can read.
+Instinct has no export that we could find, so Casama asks Instinct instead: in Casama, choose **Paste a Bot's Setup**, text Instinct the prompt, and paste its reply. Its instructions, regular check-ins and what it knows about you come over, and you review each one first. Then connect your mail and calendar.
 
 Start on [Casama Cloud's free plan](https://app.casama.ai), or
 [run Casama on your own server](/self-hosted).

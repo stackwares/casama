@@ -3171,6 +3171,51 @@ class FakeBackend implements Backend {
     return 1;
   }
 
+  final pasted = <String>[];
+  @override
+  Future<String> pasteImportPrompt(PasteImportSource source) async =>
+      'Describe yourself (${source.value}). NAME: … INSTRUCTIONS: …';
+  @override
+  Future<AgentImportPlan> pasteBotImport(
+    String orgId,
+    PasteImportSource source,
+    String text,
+  ) async {
+    pasted.add('${source.value}:$text');
+    return AgentImportPlan(
+      id: 'paste-1',
+      kind: AgentImportPlanKindEnum.grokBot,
+      template: BotTemplateFile(
+        format: BotTemplateFileFormatEnum.casamaPeriodBot,
+        version: 1,
+        name: 'Scout',
+        description: 'Imported from Grok Bot',
+        personaMd: 'Find leads.',
+        autonomy: BotTemplateFileAutonomyEnum.askRisky,
+        skills: const [],
+        routines: [
+          BotTemplateFileRoutinesInner(
+            name: 'Send me five new leads',
+            instructionsMd: 'Send me five new leads',
+            scheduleCron: '0 9 * * 1-5',
+          ),
+        ],
+        memories: const [],
+        connections: [
+          BotTemplateFileConnectionsInner(kind: 'app', name: 'HubSpot'),
+        ],
+      ),
+      sources: AgentImportPlanSources(
+        skills: const [],
+        routines: const ['SCHEDULE, line 3'],
+        memories: const [],
+      ),
+      leftovers: const [],
+      skipped: const [],
+      notes: const ['"New reply" runs on an event, so it wasn\'t brought over.'],
+    );
+  }
+
   @override
   Future<String> memoryImportPrompt() async => 'FACT: … PREFERENCE: …';
   @override

@@ -13,6 +13,7 @@ import '../../core/providers.dart';
 import '../../core/widgets.dart';
 import '../../core/haptics.dart';
 import '../../theme/app_tokens.dart';
+import '../../ui/adaptive_modal.dart';
 import '../../ui/app_card.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/glow_button.dart';
@@ -36,9 +37,11 @@ Future<void> importAgentFolder(BuildContext context, WidgetRef ref, {Future<Map<
       if (desktop || pickFolder != null)
         Choice(key: const Key('importAgentFolder'), value: 'folder', icon: LucideIcons.folderOpen, label: l10n.importAgentPickFolder),
       Choice(key: const Key('importAgentZip'), value: 'zip', icon: LucideIcons.fileArchive, label: l10n.importAgentPickZip),
+      Choice(key: const Key('importAgentPaste'), value: 'paste', icon: LucideIcons.clipboardPaste, label: l10n.importPasteChoice, subtitle: l10n.importPasteChoiceHelp),
     ],
   ))?.value;
   if (how == null || !context.mounted) return;
+  if (how == 'paste') return importPastedBot(context, ref);
   final backend = ref.read(backendProvider);
   final plan = await runGuarded(context, () async {
     if (how == 'folder') {
@@ -80,6 +83,145 @@ Future<Map<String, Uint8List>?> readAgentFolder() async {
     out[rel] = bytes;
   }
   return out;
+}
+
+/// Paste a bot's setup (D-415): the old bot (Grok Bot, Muse, Dots, Duet…) describes itself from a
+/// prompt, and its reply becomes a bot after the same review step as a folder import.
+Future<void> importPastedBot(BuildContext context, WidgetRef ref) async {
+  await ref.read(organizationsProvider.future).catchError((Object _) => const <OrganizationWithRole>[]);
+  final org = ref.read(currentOrgProvider);
+  if (org == null || !context.mounted) return;
+  final plan = await showAdaptiveSheet<AgentImportPlan>(context: context, builder: (_) => PasteBotSheet(orgId: org.id));
+  if (plan == null || !context.mounted) return;
+  await Navigator.of(context).push(MaterialPageRoute(settings: const RouteSettings(name: '/import/paste'), builder: (_) => AgentImportReviewScreen(plan: plan)));
+}
+
+/// Product names, never translated.
+const pasteSourceNames = {
+  PasteImportSource.grokBot: 'Grok Bot',
+  PasteImportSource.muse: 'Meta Muse',
+  PasteImportSource.dots: 'ChatGPT Dots',
+  PasteImportSource.duet: 'Claude Duet',
+  PasteImportSource.hark: 'Hark Pro',
+  PasteImportSource.instinct: 'Instinct',
+};
+
+String agentImportSourceName(BuildContext context, AgentImportPlanKindEnum kind) => switch (kind) {
+  AgentImportPlanKindEnum.openclaw => 'OpenClaw',
+  AgentImportPlanKindEnum.hermes => 'Hermes Agent',
+  AgentImportPlanKindEnum.grokBot => 'Grok Bot',
+  AgentImportPlanKindEnum.muse => 'Meta Muse',
+  AgentImportPlanKindEnum.dots => 'ChatGPT Dots',
+  AgentImportPlanKindEnum.duet => 'Claude Duet',
+  AgentImportPlanKindEnum.hark => 'Hark Pro',
+  AgentImportPlanKindEnum.instinct => 'Instinct',
+  _ => context.l10n.importPasteSubtitle,
+};
+
+/// Pick where the bot lives now, copy the prompt for it, paste the reply.
+class PasteBotSheet extends ConsumerStatefulWidget {
+  const PasteBotSheet({super.key, required this.orgId});
+  final String orgId;
+
+  @override
+  ConsumerState<PasteBotSheet> createState() => _PasteBotSheetState();
+}
+
+class _PasteBotSheetState extends ConsumerState<PasteBotSheet> {
+  final _reply = TextEditingController();
+  var _source = PasteImportSource.grokBot;
+  final _prompts = <PasteImportSource, Future<String>>{};
+  var _busy = false;
+
+  Future<String> _prompt() => _prompts[_source] ??= ref.read(backendProvider).pasteImportPrompt(_source);
+
+  @override
+  void dispose() {
+    _reply.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    setState(() => _busy = true);
+    final plan = await runGuarded(context, () => ref.read(backendProvider).pasteBotImport(widget.orgId, _source, _reply.text));
+    if (!mounted) return;
+    setState(() => _busy = false);
+    if (plan != null) Navigator.pop(context, plan);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final prompt = _prompt();
+    return FormSheet(
+      icon: LucideIcons.clipboardPaste,
+      title: l10n.importPasteTitle,
+      subtitle: l10n.importPasteHelp,
+      submitLabel: l10n.next,
+      submitKey: const Key('pasteImportSubmit'),
+      busy: _busy,
+      onSubmit: _busy || _reply.text.trim().isEmpty ? null : _submit,
+      children: [
+        Text(l10n.importPasteSource, style: Theme.of(context).textTheme.labelLarge),
+        Wrap(
+          spacing: AppSpace.xs,
+          runSpacing: AppSpace.xs,
+          children: [
+            for (final s in PasteImportSource.values)
+              ChoiceChip(
+                key: Key('pasteSource-${s.value}'),
+                label: Text(pasteSourceNames[s] ?? l10n.importPasteOther),
+                selected: _source == s,
+                onSelected: hapticOnChanged((_) => setState(() => _source = s), haptic: HapticsHelper.selection),
+              ),
+          ],
+        ),
+        FutureBuilder<String>(
+          key: ValueKey(_source),
+          future: prompt,
+          builder: (context, snap) => AppCard(
+            padding: const EdgeInsets.all(AppSpace.md),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(l10n.importPasteStep1, style: Theme.of(context).textTheme.labelLarge),
+                const SizedBox(height: AppSpace.xs),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxHeight: 160),
+                  child: SingleChildScrollView(
+                    child: SelectableText(snap.data ?? '…', key: const Key('pastePrompt'), style: const TextStyle(fontSize: 13)),
+                  ),
+                ),
+                Align(
+                  alignment: AlignmentDirectional.centerEnd,
+                  child: TextButton.icon(
+                    key: const Key('copyPastePrompt'),
+                    icon: const Icon(LucideIcons.copy, size: 16),
+                    label: Text(l10n.copy),
+                    onPressed: snap.data == null
+                        ? null
+                        : () {
+                            Clipboard.setData(ClipboardData(text: snap.data!)).catchError((Object _) {});
+                            showMessage(context, l10n.copied);
+                          },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        TextField(
+          key: const Key('pasteReply'),
+          controller: _reply,
+          minLines: 4,
+          maxLines: 12,
+          onChanged: (_) => setState(() {}),
+          decoration: InputDecoration(labelText: l10n.importPasteReply, alignLabelWithHint: true),
+        ),
+        FormNote(l10n.importPasteSafety, icon: LucideIcons.shieldCheck),
+      ],
+    );
+  }
 }
 
 class AgentImportReviewScreen extends ConsumerStatefulWidget {
@@ -133,7 +275,7 @@ class _AgentImportReviewScreenState extends ConsumerState<AgentImportReviewScree
     if (r == null || !mounted) return setState(() => _busy = false);
     ref.invalidate(botsProvider);
     final l10n = context.l10n;
-    var message = l10n.botImported(chosen.name);
+    var message = r.connectionsToAdd.isEmpty ? l10n.botImported(chosen.name) : l10n.botImportedConnect(chosen.name, r.connectionsToAdd.map((c) => c.name).join(', '));
     if (_copyFiles && widget.plan.leftovers.isNotEmpty) {
       try {
         final n = await backend.writeAgentImportFiles(widget.plan.id, r.botId);
@@ -176,7 +318,7 @@ class _AgentImportReviewScreenState extends ConsumerState<AgentImportReviewScree
     final memories = t.memories ?? const <BotTemplateFileMemoriesInner>[];
     return SubPage(
       title: l10n.importAgent,
-      subtitle: p.kind == AgentImportPlanKindEnum.openclaw ? 'OpenClaw' : 'Hermes Agent',
+      subtitle: agentImportSourceName(context, p.kind),
       children: [
         FormNote(l10n.agentImportReviewHelp, icon: LucideIcons.listChecks),
         const SizedBox(height: AppSpace.md),
@@ -194,6 +336,11 @@ class _AgentImportReviewScreenState extends ConsumerState<AgentImportReviewScree
           Padding(
             padding: const EdgeInsets.only(top: AppSpace.xs),
             child: FormNote(n, icon: LucideIcons.info),
+          ),
+        if (t.connections?.isNotEmpty ?? false)
+          Padding(
+            padding: const EdgeInsets.only(top: AppSpace.xs),
+            child: FormNote('${l10n.connectAfterImport}: ${t.connections!.map((c) => c.name).join(', ')}', icon: LucideIcons.plug),
           ),
         if (skills.isNotEmpty) SectionHeader(title: l10n.agentImportSkills(skills.length)),
         for (var i = 0; i < skills.length; i++)

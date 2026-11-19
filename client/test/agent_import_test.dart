@@ -52,6 +52,56 @@ void main() {
     expect(backend.importActions.last, 'files:imp-1:bot-new');
   });
 
+  testWidgets('paste a bot setup: pick the source, paste the reply, review, import (D-415)', (tester) async {
+    await setSize(tester, const Size(900, 1800));
+    final backend = FakeBackend();
+    await tester.pumpWidget(
+      harness(
+        backend,
+        Consumer(
+          builder: (context, ref, _) {
+            ref.watch(currentOrgProvider);
+            return Scaffold(
+              body: TextButton(
+                onPressed: () => importAgentFolder(context, ref),
+                child: const Text('go'),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('go'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('importAgentPaste')));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Describe yourself (grok_bot)'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('pasteSource-muse')));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Describe yourself (muse)'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('pasteSource-grok_bot')));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('pasteReply')), 'NAME: Scout');
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('pasteImportSubmit')));
+    await tester.pumpAndSettle();
+    expect(backend.pasted, ['grok_bot:NAME: Scout']);
+    expect(find.text('Grok Bot'), findsOneWidget);
+    expect(find.text('Find leads.'), findsOneWidget);
+    expect(find.textContaining('HubSpot'), findsOneWidget);
+    expect(find.textContaining('runs on an event'), findsOneWidget);
+    expect(find.byKey(const Key('agentImportFiles')), findsNothing);
+
+    await tester.tap(find.byKey(const Key('agentImportGo')));
+    await tester.pumpAndSettle();
+    final t = backend.importedTemplate!;
+    expect(t.name, 'Scout');
+    expect(t.routines!.single.scheduleCron, '0 9 * * 1-5');
+    expect(t.connections!.single.name, 'HubSpot');
+    expect(backend.importActions.where((a) => a.startsWith('files:')), isEmpty);
+  });
+
   testWidgets('memory from ChatGPT or Claude: copy the prompt, paste the answer, keep some', (tester) async {
     await setSize(tester, const Size(900, 1400));
     final backend = FakeBackend();

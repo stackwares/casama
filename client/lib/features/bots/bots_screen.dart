@@ -169,6 +169,12 @@ class BotsList extends ConsumerWidget {
                             label: Text(l10n.importAgent),
                             onPressed: () => importAgentFolder(context, ref),
                           ),
+                          TextButton.icon(
+                            key: const Key('importPaste'),
+                            icon: const Icon(LucideIcons.clipboardPaste, size: 18),
+                            label: Text(l10n.importPasteChoice),
+                            onPressed: () => importPastedBot(context, ref),
+                          ),
                         ],
                       ),
                     ],

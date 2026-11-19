@@ -575,6 +575,9 @@ lib/src/model/password_manager.dart
 lib/src/model/password_manager_list.dart
 lib/src/model/password_manager_vault.dart
 lib/src/model/password_manager_vault_list.dart
+lib/src/model/paste_bot_import_request.dart
+lib/src/model/paste_import_prompt.dart
+lib/src/model/paste_import_source.dart
 lib/src/model/payment_request.dart
 lib/src/model/payment_request_list.dart
 lib/src/model/payment_settings.dart

@@ -38,7 +38,7 @@ The two projects start from opposite ends. OpenClaw is one powerful agent on you
 
 ## Moving from OpenClaw to Casama
 
-Both use plain-language instructions, skills and schedules, so a setup carries over by hand: recreate each agent as a bot, paste its instructions, and re-add its schedules as routines. Chat apps reconnect per bot. Casama's gallery has ready-made skills and starter bots to fill gaps.
+Casama imports an OpenClaw folder directly: its persona, memories, skills and scheduled jobs come over, and you review each one first. Chat apps reconnect per bot. Casama's gallery has ready-made skills and starter bots to fill gaps.
 
 Start on [Casama Cloud's free plan](https://app.casama.ai), or
 [run Casama on your own server](/self-hosted).

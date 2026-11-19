@@ -4,6 +4,9 @@ import {
   MemoryImportPrompt,
   ParsedMemoryImport,
   ParseMemoryImportRequest,
+  PasteBotImportRequest,
+  PasteImportPrompt,
+  PasteImportPromptQuery,
   SaveImportedMemoriesRequest,
   StartAgentImportRequest,
   WriteAgentImportFilesRequest,
@@ -78,6 +81,34 @@ export const saveImportedMemories = createRoute({
     ),
     401: e401,
     403: e403,
+    404: e404,
+  },
+});
+
+export const getPasteImportPrompt = createRoute({
+  operationId: "getPasteImportPrompt",
+  method: "get",
+  path: "/v1/bot-imports/paste/prompt",
+  tags,
+  security,
+  summary:
+    "The prompt to send a Grok Bot, Muse, Dots, Duet, Hark or Instinct so it describes its own setup",
+  request: { query: PasteImportPromptQuery },
+  responses: { 200: jsonResponse("Prompt", PasteImportPrompt), 401: e401 },
+});
+
+export const pasteBotImport = createRoute({
+  operationId: "pasteBotImport",
+  method: "post",
+  path: "/v1/bot-imports/paste",
+  tags,
+  security,
+  summary: "Read a pasted bot setup into a bot template for review",
+  request: { body: jsonBody(PasteBotImportRequest) },
+  responses: {
+    200: jsonResponse("The mapping", AgentImportPlan),
+    400: e400,
+    401: e401,
     404: e404,
   },
 });
