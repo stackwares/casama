@@ -2416,6 +2416,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/voice/live/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete a call from its chat: its card and every turn of its transcript */
+        delete: operations["deleteLiveCall"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/calls/{id}": {
         parameters: {
             query?: never;
@@ -2511,6 +2528,23 @@ export interface paths {
         put?: never;
         /** Dictation: send recorded audio (raw body, audio/* content type, up to 10 MB) */
         post: operations["transcribeAudio"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/voice/live/{id}/steps/{step_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Start a next step from a call's card as a chat run, or dismiss it */
+        post: operations["updateCallStep"];
         delete?: never;
         options?: never;
         head?: never;
@@ -10069,6 +10103,9 @@ export interface components {
              */
             call_id?: string;
         };
+        DeletedCall: {
+            deleted: number;
+        };
         PhoneCallList: {
             items: components["schemas"]["PhoneCall"][];
         };
@@ -10103,6 +10140,11 @@ export interface components {
                 output_audio_tokens: number;
                 output_text_tokens: number;
             };
+            /**
+             * @description How the call ended, for its card: the person hung up, the bot did (end_call), it dropped, it went quiet, a limit ended it, or another call took its place
+             * @enum {string}
+             */
+            ended?: "person" | "bot" | "dropped" | "idle" | "limit" | "replaced";
         };
         SavedTurns: {
             saved: number;
@@ -10122,6 +10164,17 @@ export interface components {
             text: string;
             provider: string;
             seconds: number;
+        };
+        CallStepResult: {
+            /**
+             * Format: uuid
+             * @description The chat run a started step became
+             */
+            run_id: string | null;
+        };
+        CallStepRequest: {
+            /** @enum {string} */
+            action: "start" | "dismiss";
         };
         VoiceHeartbeat: {
             /** @description The server already ended this call (no heartbeat in time); the app should hang up */
@@ -23134,6 +23187,55 @@ export interface operations {
             };
         };
     };
+    deleteLiveCall: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeletedCall"];
+                };
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     getVoiceCall: {
         parameters: {
             query?: never;
@@ -23364,6 +23466,60 @@ export interface operations {
                 };
                 content: {
                     "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    updateCallStep: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                step_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CallStepRequest"];
+            };
+        };
+        responses: {
+            /** @description Step */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CallStepResult"];
                 };
             };
             /** @description Not authenticated */
