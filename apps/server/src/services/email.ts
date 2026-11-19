@@ -9,6 +9,20 @@ export interface EmailMessage {
   headers?: Record<string, string>;
 }
 
+/**
+ * Whether an address can never receive mail: the names set aside for examples and tests
+ * (RFC 2606, RFC 6761): example.com/.net/.org, and the .example, .test, .invalid and
+ * .localhost top-level names. Sending to them only bounces, and hard bounces count against
+ * the sender (ZeptoMail flagged 22 such bounces from test sign-ups in November 2026).
+ */
+export function isUndeliverableAddress(address: string): boolean {
+  const domain = (address.split("@")[1] ?? "").trim().toLowerCase().replace(/\.$/, "");
+  if (!domain) return true;
+  if (["example.com", "example.net", "example.org", "localhost"].includes(domain)) return true;
+  if (/\.(example|test|invalid|localhost)$/.test(domain)) return true;
+  return /(^|\.)example\.(com|net|org)$/.test(domain);
+}
+
 /** Outbound transactional email. */
 export interface EmailSender {
   readonly enabled: boolean;
@@ -31,6 +45,7 @@ export function resendEmail(
   return {
     enabled: true,
     async send(msg) {
+      if (isUndeliverableAddress(msg.to)) return;
       const res = await fetchImpl("https://api.resend.com/emails", {
         method: "POST",
         headers: { authorization: `Bearer ${apiKey}`, "content-type": "application/json" },
@@ -90,6 +105,7 @@ export async function smtpEmail(
   return {
     enabled: true,
     async send(msg) {
+      if (isUndeliverableAddress(msg.to)) return;
       await mailer.sendMail({
         from,
         to: msg.to,

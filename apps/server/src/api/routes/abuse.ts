@@ -13,6 +13,7 @@ import { routes } from "@casama/contracts";
 import type { OpenAPIHono } from "@hono/zod-openapi";
 import { sql } from "drizzle-orm";
 import { verifyStandardWebhook } from "../../billing/dodo.ts";
+import { isUndeliverableAddress } from "../../services/email.ts";
 import {
   abuseControlsOn,
   newChallenge,
@@ -135,6 +136,12 @@ export function registerAbuseRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     } else if (allow.length && !listed) {
       trackRefused("allowlist");
       return refusal("Sign-up on this server is limited to approved email addresses.");
+    }
+    // Addresses that can never receive mail (example.com, .test, ...): Auth's confirmation email
+    // would only bounce, and bounces count against the sending account. Test sign-ups on the
+    // live service use hello+<tag>@casama.ai instead.
+    if (env.SIGNUP_REFUSE_TEST_DOMAINS && email && isUndeliverableAddress(email)) {
+      return refusal("Use an email address that can receive mail.");
     }
 
     // The sign-up proof (D-094) for email and phone sign-ups. Google, Apple and SSO sign-ins
