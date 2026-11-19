@@ -1105,4 +1105,34 @@ void main() {
       expect(find.byWidget(activeTargets.single), findsOneWidget);
     });
   });
+
+  testWidgets('Credit History lists grants and purchases with their notes, never each charge', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    await setSize(tester, const Size(430, 2400));
+    final backend = FakeBackend()..billingEnabled = true;
+    await tester.pumpWidget(app(backend));
+    await tester.pumpAndSettle();
+    // Nothing yet: no empty card.
+    expect(find.byKey(const Key('creditHistory')), findsNothing);
+
+    backend.creditEntries = [
+      CreditEntry(delta: 2, reason: 'grant', note: 'Invite reward: a friend joined', balanceAfter: 3, createdAt: DateTime.utc(2026, 11, 20)),
+      CreditEntry(delta: -0.0007, reason: 'usage', note: 'Usage', balanceAfter: 1, createdAt: DateTime.utc(2026, 11, 20)),
+      CreditEntry(delta: 10, reason: 'purchase', note: null, balanceAfter: 11, createdAt: DateTime.utc(2026, 11, 19)),
+      CreditEntry(delta: -1, reason: 'expire', note: '', balanceAfter: 1, createdAt: DateTime.utc(2026, 11, 18)),
+    ];
+    await tester.tap(find.byTooltip('Refresh'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(const Key('creditHistory')));
+    expect(find.text('Credit History'), findsOneWidget);
+    expect(find.text('Invite reward: a friend joined'), findsOneWidget);
+    expect(find.text('+\$2.00'), findsOneWidget);
+    // No note: the reason's own words.
+    expect(find.text('Credits bought'), findsOneWidget);
+    expect(find.text('+\$10.00'), findsOneWidget);
+    expect(find.text('Credits expired'), findsOneWidget);
+    expect(find.text('−\$1.00'), findsOneWidget);
+    // Each chat's charge stays in Usage.
+    expect(find.descendant(of: find.byKey(const Key('creditHistory')), matching: find.text('Usage')), findsNothing);
+  });
 }

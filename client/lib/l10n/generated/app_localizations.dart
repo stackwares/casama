@@ -4150,6 +4150,42 @@ abstract class AppLocalizations {
   /// **'Credits'**
   String get credits;
 
+  /// No description provided for @creditHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit History'**
+  String get creditHistory;
+
+  /// No description provided for @creditReasonPurchase.
+  ///
+  /// In en, this message translates to:
+  /// **'Credits bought'**
+  String get creditReasonPurchase;
+
+  /// No description provided for @creditReasonGrant.
+  ///
+  /// In en, this message translates to:
+  /// **'Credits added'**
+  String get creditReasonGrant;
+
+  /// No description provided for @creditReasonRefund.
+  ///
+  /// In en, this message translates to:
+  /// **'Refund'**
+  String get creditReasonRefund;
+
+  /// No description provided for @creditReasonAdjustment.
+  ///
+  /// In en, this message translates to:
+  /// **'Adjustment'**
+  String get creditReasonAdjustment;
+
+  /// No description provided for @creditReasonExpire.
+  ///
+  /// In en, this message translates to:
+  /// **'Credits expired'**
+  String get creditReasonExpire;
+
   /// No description provided for @limitBots.
   ///
   /// In en, this message translates to:

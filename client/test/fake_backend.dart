@@ -1336,8 +1336,12 @@ class FakeBackend implements Backend {
       ),
     );
   }
+  var referralCalls = 0;
   @override
-  Future<Referral> referral() async => referralState;
+  Future<Referral> referral() async {
+    referralCalls++;
+    return referralState;
+  }
   @override
   Future<Referral> redeemReferral(String code) async {
     redeemedReferrals.add(code);
@@ -2283,8 +2287,13 @@ class FakeBackend implements Backend {
   Future<void> trackWallpaperDownload(String downloadLocation) async =>
       wallpaperDownloads.add(downloadLocation);
 
+  var usageCalls = 0;
   @override
-  Future<UsageReport> usage(String orgId, {String period = 'day', UsageFilter filter = UsageFilter.none}) async =>
+  Future<UsageReport> usage(String orgId, {String period = 'day', UsageFilter filter = UsageFilter.none}) async {
+    usageCalls++;
+    return _usage(period, filter);
+  }
+  Future<UsageReport> _usage(String period, UsageFilter filter) async =>
       UsageReport(
         period: period == 'day'
             ? UsageReportPeriodEnum.day
@@ -5605,6 +5614,8 @@ class FakeBackend implements Backend {
     return billing(orgId);
   }
 
+  /// The billing usage call's credit history, newest first.
+  var creditEntries = <CreditEntry>[];
   @override
   Future<BillingUsage> billingUsage(String orgId) async => BillingUsage(
     periodStart: DateTime.utc(2026, 11),
@@ -5617,7 +5628,7 @@ class FakeBackend implements Backend {
       ),
     ],
     totalUsd: 0.1,
-    credits: const [],
+    credits: creditEntries,
   );
   @override
   Future<List<LinkKey>> linkKeys(String orgId) async => [

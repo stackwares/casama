@@ -15,6 +15,7 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
 import '../../ui/app_card.dart';
 import '../../ui/page.dart';
+import '../../ui/shell_header.dart';
 import '../auth/invite_gate.dart' show openHaveInvite;
 import '../workspaces/join_flow.dart' show JoinCard, JoinCardSkeleton;
 
@@ -157,6 +158,15 @@ class _InviteFriendsScreenState extends ConsumerState<InviteFriendsScreen> {
     final referral = ref.watch(referralProvider);
     return SubPage(
       title: l10n.inviteFriends,
+      // Pull to refresh is a phone gesture; the button works on desktop and the web too.
+      actions: [
+        HeaderIconButton(
+          key: const Key('inviteFriendsRefresh'),
+          icon: LucideIcons.rotateCw,
+          tooltip: l10n.refresh,
+          onPressed: () => ref.invalidate(referralProvider),
+        ),
+      ],
       body: referral.when(
         loading: () => const _InviteFriendsSkeleton(),
         error: (_, _) => Center(child: Text(l10n.inviteFriendsUnavailable)),

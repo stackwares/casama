@@ -156,4 +156,16 @@ void main() {
     await _settle(tester);
     expect(find.byKey(const Key('referralInvalid')), findsOneWidget);
   });
+
+  testWidgets('the header button fetches the invite numbers again', (tester) async {
+    await setSize(tester, const Size(500, 1400));
+    final backend = FakeBackend();
+    final c = await _app(tester, backend);
+    c.read(routerProvider).go('/settings/invite');
+    await _settle(tester);
+    final before = backend.referralCalls;
+    await tester.tap(find.byKey(const Key('inviteFriendsRefresh')));
+    await _settle(tester);
+    expect(backend.referralCalls, greaterThan(before));
+  });
 }

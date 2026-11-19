@@ -116,4 +116,15 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('creditsMeter')), findsNothing);
   });
+
+  testWidgets('the header button fetches the numbers again', (tester) async {
+    await setSize(tester, const Size(430, 2400));
+    final backend = _MeterBackend();
+    await tester.pumpWidget(harness(backend, const UsageScreen()));
+    await tester.pumpAndSettle();
+    final before = backend.usageCalls;
+    await tester.tap(find.byKey(const Key('usageRefresh')));
+    await tester.pumpAndSettle();
+    expect(backend.usageCalls, greaterThan(before));
+  });
 }

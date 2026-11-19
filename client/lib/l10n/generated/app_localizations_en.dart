@@ -2652,6 +2652,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get credits => 'Credits';
 
   @override
+  String get creditHistory => 'Credit History';
+
+  @override
+  String get creditReasonPurchase => 'Credits bought';
+
+  @override
+  String get creditReasonGrant => 'Credits added';
+
+  @override
+  String get creditReasonRefund => 'Refund';
+
+  @override
+  String get creditReasonAdjustment => 'Adjustment';
+
+  @override
+  String get creditReasonExpire => 'Credits expired';
+
+  @override
   String limitBots(int count) {
     final intl.NumberFormat countNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);

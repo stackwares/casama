@@ -685,7 +685,8 @@ describe("billing on (Casama Cloud, Phase 7 gate)", () => {
     expect(usage.items).toEqual([
       { kind: "computer_seconds", instance: null, quantity: 3600, cost_usd: 0.4 },
     ]);
-    expect(usage.credits.map((c: { reason: string }) => c.reason)).toEqual(["usage", "grant"]);
+    // The credit history leaves out each charge (they're in items) and keeps grants and purchases.
+    expect(usage.credits.map((c: { reason: string }) => c.reason)).toEqual(["grant"]);
 
     // Spend the rest. On Casama Cloud every bot runs on Casama's key (D-188), so a bot made
     // with the workspace's own key is switched to it, and no credits stops every run.

@@ -259,6 +259,8 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
                   borderRadius: AppRadius.cardAll,
                   child: const _UsageRow(),
                 ),
+                // Where the balance came from: grants (an invite reward, monthly credits), purchases, refunds.
+                const _CreditHistory(),
                 // Each charge with the server it came from, and the keys for your own server
                 // reaching Casama Cloud, fold away (D-182).
                 AdvancedSection(
@@ -727,6 +729,74 @@ class _UsageRow extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// The latest additions to and removals from the balance other than each chat's charge (those are in
+/// Usage): monthly credits, an invite reward or welcome bonus, a credit pack, a refund, an expiry.
+class _CreditHistory extends ConsumerWidget {
+  const _CreditHistory();
+
+  /// How many entries the card shows; the server sends up to 50.
+  static const _shown = 10;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final scheme = context.colorScheme;
+    final usage = ref.watch(billingUsageProvider).value;
+    // An older server also sends each charge; those belong to Usage.
+    final entries = [...?usage?.credits.where((e) => e.reason != 'usage' && e.delta != 0)].take(_shown).toList();
+    if (entries.isEmpty) return const SizedBox.shrink();
+    String label(CreditEntry e) {
+      if (e.note.isUsable) return e.note!;
+      return switch (e.reason) {
+        'purchase' => l10n.creditReasonPurchase,
+        'grant' => l10n.creditReasonGrant,
+        'refund' => l10n.creditReasonRefund,
+        'expire' => l10n.creditReasonExpire,
+        _ => l10n.creditReasonAdjustment,
+      };
+    }
+
+    IconData icon(CreditEntry e) => switch (e.reason) {
+      'purchase' => LucideIcons.shoppingBag,
+      'refund' => LucideIcons.undo2,
+      'expire' => LucideIcons.hourglass,
+      _ when e.delta < 0 => LucideIcons.circleMinus,
+      _ => LucideIcons.gift,
+    };
+
+    String amount(CreditEntry e) {
+      final text = e.delta.abs().humanizedCurrency(l10n.localeName, 'USD', decimalDigits: 2);
+      return e.delta < 0 ? '−$text' : '+$text';
+    }
+
+    return Column(
+      key: const Key('creditHistory'),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SectionHeader(title: l10n.creditHistory),
+        GroupedCard(
+          children: [
+            for (final e in entries)
+              GroupedTile(
+                icon: icon(e),
+                title: label(e),
+                subtitle: e.createdAt.toLocal().formattedDate(context),
+                trailing: Text(
+                  amount(e),
+                  style: context.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    fontFeatures: AppText.tabular,
+                    color: e.delta < 0 ? scheme.onSurfaceVariant : context.appColors.positive,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ],
     );
   }
 }

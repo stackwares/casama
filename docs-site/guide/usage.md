@@ -11,6 +11,9 @@ set your own limits.
 2. Tap **Usage**.
 3. Pick a period: **Today**, **This week**, **This month** or **This year**.
 
+The numbers are fetched each time you open **Usage**. To fetch them again while it's open, tap the
+refresh button at the top or pull down.
+
 On Casama Cloud, a credits meter sits at the top (see [Credits](#credits)). The screen shows:
 
 | Section | What it shows |
@@ -204,6 +207,10 @@ plan card shows your balance (for example **Credits: $7.80**), a bar of how much
 credits you've used, and roughly how many more runs that buys at your usual cost. The bar turns
 amber at 80% and red when nothing is left.
 
+**Credit History** on **Settings → Billing** shows where the balance came from: the latest credits
+added or taken away other than usage, such as the monthly credits, a credit pack, an invite reward
+or welcome bonus, a refund, or credits that expired. Each chat's cost is on **Usage**, not here.
+
 Credits pay for everything Casama Cloud runs for you: AI models on Casama's key, cloud computer
 time, live view, live calls, images and video, read-aloud and dictation, and apps connected
 through Casama's own connector account. Usage is deducted from the balance every minute. Every run
@@ -282,7 +289,9 @@ of the paid period; a refund ends it.
 
 On Casama Cloud, everyone has a personal invite code and link under **Settings → Invite Friends**.
 When a friend signs up with your code and finishes their first chat, you each get $2 of free usage
-as credits. You can earn rewards for up to 20 friends.
+as credits. You can earn rewards for up to 20 friends. The reward shows under **Free Usage Earned**
+on the same screen, and as a line in **Credit History** on **Settings → Billing**. Tap the refresh
+button at the top (or pull down) to see a new reward.
 
 A friend who signed up without your link can still enter your code under **Got a Friend's
 Code?**, within a week of signing up. Self-hosted servers don't show invites.

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:fl_chart/fl_chart.dart';
@@ -25,6 +26,7 @@ import '../../ui/form_sheet.dart';
 import '../../ui/glow_button.dart';
 import '../../ui/page.dart';
 import '../../ui/segmented.dart';
+import '../../ui/shell_header.dart';
 import '../billing/credits_meter.dart';
 import '../chat/widgets/reply_usage.dart' show usageKindIcon, usageKindLabel, usageQuantity;
 
@@ -72,32 +74,53 @@ class _UsageScreenState extends ConsumerState<UsageScreen> {
     final unfiltered = ref.watch(usageReportProvider((period: _period, filter: UsageFilter.none))).value;
     return SubPage(
       title: l10n.usage,
-      children: [
-        // Credits first: what's left and roughly what it buys, in dollars (D-245). Nothing on a
-        // server without billing.
-        if (ref.watch(billingProvider).value?.enabled == true) ...[
-          const AppCard(child: CreditsMeter()),
-          const SizedBox(height: AppSpace.md),
-        ],
-        AppSegmentedControl<UsagePeriod>(
-          values: UsagePeriod.values,
-          labels: {for (final p in UsagePeriod.values) p: _periodLabel(p)},
-          groupValue: _period,
-          onValueChanged: (p) => setState(() => _period = p),
-        ),
-        const SizedBox(height: AppSpace.sm),
-        _FilterBar(filter: _filter, options: unfiltered, onChanged: _setFilter),
-        const SizedBox(height: AppSpace.md),
-        AsyncView(
-          value: report,
-          onRetry: () => ref.invalidate(usageReportProvider(query)),
-          loading: const _ReportSkeleton(),
-          data: (r) => r == null
-              ? const SizedBox.shrink()
-              : _Report(report: r, period: _period, periodLabel: _periodLabel(_period), filter: _filter, onFilter: _setFilter),
+      actions: [
+        HeaderIconButton(
+          key: const Key('usageRefresh'),
+          icon: LucideIcons.rotateCw,
+          tooltip: l10n.refresh,
+          onPressed: () => unawaited(_refresh(query)),
         ),
       ],
+      body: RefreshIndicator(
+        onRefresh: () => _refresh(query),
+        child: PageColumn(
+          children: [
+            // Credits first: what's left and roughly what it buys, in dollars (D-245). Nothing on a
+            // server without billing.
+            if (ref.watch(billingProvider).value?.enabled == true) ...[
+              const AppCard(child: CreditsMeter()),
+              const SizedBox(height: AppSpace.md),
+            ],
+            AppSegmentedControl<UsagePeriod>(
+              values: UsagePeriod.values,
+              labels: {for (final p in UsagePeriod.values) p: _periodLabel(p)},
+              groupValue: _period,
+              onValueChanged: (p) => setState(() => _period = p),
+            ),
+            const SizedBox(height: AppSpace.sm),
+            _FilterBar(filter: _filter, options: unfiltered, onChanged: _setFilter),
+            const SizedBox(height: AppSpace.md),
+            AsyncView(
+              value: report,
+              onRetry: () => ref.invalidate(usageReportProvider(query)),
+              loading: const _ReportSkeleton(),
+              data: (r) => r == null
+                  ? const SizedBox.shrink()
+                  : _Report(report: r, period: _period, periodLabel: _periodLabel(_period), filter: _filter, onFilter: _setFilter),
+            ),
+          ],
+        ),
+      ),
     );
+  }
+
+  /// Fetches the report, the balance and the billed items again (the header button and pull to refresh).
+  Future<void> _refresh(UsageQuery query) async {
+    ref.invalidate(usageReportProvider);
+    ref.invalidate(billingProvider);
+    ref.invalidate(billingUsageProvider);
+    await ref.read(usageReportProvider(query).future).catchError((_) => null);
   }
 }
 

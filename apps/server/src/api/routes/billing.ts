@@ -184,6 +184,8 @@ export function registerBillingRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       from public.usage_ledger
       where org_id = ${id}::uuid and billable and created_at >= ${start.toISOString()}::timestamptz
       group by 1, 2 order by 1, 2`);
+    // Money in and out of the balance (grants, purchases, refunds, expiries), not each chat's charge:
+    // those are many and already summed in `items`, and would push a grant out of the last 50.
     const credits = await db.execute<{
       delta: string;
       reason: string;
@@ -192,7 +194,7 @@ export function registerBillingRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       created_at: Date;
     }>(sql`
       select delta, reason, note, balance_after, created_at from public.credit_ledger
-      where org_id = ${id}::uuid order by seq desc limit 50`);
+      where org_id = ${id}::uuid and reason <> 'usage' order by seq desc limit 50`);
     const out = items.map((i) => ({
       kind: i.kind,
       instance: i.instance,
