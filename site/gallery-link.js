@@ -676,8 +676,8 @@ function trackFunnel(request, env, ctx, name, params = {}, at = refererPage(requ
 }
 
 /** The sites that count through this Worker: casama.ai is "", the others post `h`. */
-const SITE_HOSTS = { "": "casama.ai", docs: "docs.casama.ai", gallery: "gallery.casama.ai", link: "casama.link" };
-const SITE_ORIGINS = { "https://docs.casama.ai": "docs", "https://gallery.casama.ai": "gallery", "https://casama.link": "link" };
+const SITE_HOSTS = { "": "casama.ai", docs: "docs.casama.ai", gallery: "gallery.casama.ai", link: "casama.link", status: "status.casama.ai" };
+const SITE_ORIGINS = { "https://docs.casama.ai": "docs", "https://gallery.casama.ai": "gallery", "https://casama.link": "link", "https://status.casama.ai": "status" };
 /** `h` from a beacon: "" for casama.ai, a known site key, or null for anything else (dropped). */
 export function siteKey(h) {
   if (h === undefined || h === null || h === "") return "";

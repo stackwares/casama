@@ -7,6 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:casama_sdk/casama_sdk.dart';
 import 'package:casama/features/app_lock/app_lock.dart';
+import 'package:casama/core/analytics.dart';
 import 'package:casama/core/billing.dart';
 import 'package:casama/core/providers.dart';
 import 'package:casama/core/widgets.dart';
@@ -840,6 +841,45 @@ void main() {
       expect(store.bought, ['casama_pro@$orgId']);
       expect(backend.verified, ['google_play:casama_pro:play-token']);
       await tester.pump(const Duration(seconds: 5));
+    });
+
+    testWidgets('records paywall_view defaults and paywall_plan_select on tier or period changes', (tester) async {
+      await setSize(tester, const Size(400, 900));
+      final recorded = <Map<String, Object?>>[];
+      Analytics.onCaptureForTest = (event, props) => recorded.add({'event': event, 'props': props});
+      addTearDown(() => Analytics.onCaptureForTest = null);
+
+      final backend = FakeBackend()
+        ..billingEnabled = true
+        ..catalogPlans = [
+          for (final p in pricingPlans()) p.copyWith(paywallDefault: p.code == 'pro'),
+        ];
+      await pumpPaywall(tester, backend);
+
+      expect(recorded.where((e) => e['event'] == 'paywall_view').toList(), [
+        {
+          'event': 'paywall_view',
+          'props': {
+            'source': 'limit',
+            'paywall_kind': 'regular',
+            'default_plan': 'pro',
+            'default_period': 'month',
+          },
+        },
+      ]);
+
+      await revealInPaywall(tester, find.byKey(const Key('paywallInterval-year')));
+      await tester.tap(find.byKey(const Key('paywallInterval-year')));
+      await settle(tester);
+
+      await revealInPaywall(tester, find.byKey(const Key('paywallTier-plus')));
+      await tester.tap(find.byKey(const Key('paywallTier-plus')));
+      await settle(tester);
+
+      expect(recorded.where((e) => e['event'] == 'paywall_plan_select').toList(), [
+        {'event': 'paywall_plan_select', 'props': {'plan': 'pro_yearly', 'interval': 'year'}},
+        {'event': 'paywall_plan_select', 'props': {'plan': 'plus_yearly', 'interval': 'year'}},
+      ]);
     });
   });
 

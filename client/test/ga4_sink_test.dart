@@ -185,8 +185,37 @@ void main() {
       expect(events.last.params, {'content_type': 'referral', 'method': 'copy'});
     });
 
+    test('paywall_view becomes view_item_list with defaults', () {
+      final events = ga4Events('paywall_view', {
+        'source': 'limit',
+        'paywall_kind': 'regular',
+        'default_plan': 'pro',
+        'default_period': 'month',
+      });
+      expect(events.map((e) => e.name), ['paywall_view', 'view_item_list']);
+      expect(events.last.params, {
+        'item_list_id': 'paywall',
+        'item_list_name': 'Casama plans',
+        'source': 'limit',
+        'paywall_kind': 'regular',
+        'default_plan': 'pro',
+        'default_period': 'month',
+      });
+    });
+
+    test('paywall_plan_select becomes select_item with plan and interval', () {
+      final events = ga4Events('paywall_plan_select', {'plan': 'pro_yearly', 'interval': 'year'});
+      expect(events.map((e) => e.name), ['paywall_plan_select', 'select_item']);
+      expect(events.last.params, {
+        'item_list_id': 'paywall',
+        'item_list_name': 'Casama plans',
+        'plan': 'pro_yearly',
+        'interval': 'year',
+      });
+    });
+
     test('an event without a twin goes alone', () {
-      expect(ga4Events('paywall_view', {'source': 'limit'}).map((e) => e.name), ['paywall_view']);
+      expect(ga4Events('paywall_dismiss', {'source': 'limit'}).map((e) => e.name), ['paywall_dismiss']);
     });
   });
 
@@ -199,12 +228,12 @@ void main() {
           sent.add([for (final e in events) e.name]);
         };
       await sink.setEnabled(true);
-      await sink.capture('paywall_view', {'source': 'limit', 'ok': true});
+      await sink.capture('paywall_dismiss', {'source': 'limit', 'ok': true});
       await sink.screen('/chat/:id');
       expect(sink.queued, 2);
       await sink.flush();
       expect(sent, [
-        ['paywall_view', 'screen_view'],
+        ['paywall_dismiss', 'screen_view'],
       ]);
       for (var i = 0; i < 19; i++) {
         await sink.capture('feature_used', {'feature': 'search'});
@@ -216,10 +245,10 @@ void main() {
     test('off: nothing queues, and turning off drops the queue', () async {
       var calls = 0;
       final sink = Ga4RelaySink(platform: 'linux', every: const Duration(hours: 1))..send = (_, _) async => calls++;
-      await sink.capture('paywall_view', null);
+      await sink.capture('paywall_dismiss', null);
       expect(sink.queued, 0);
       await sink.setEnabled(true);
-      await sink.capture('paywall_view', null);
+      await sink.capture('paywall_dismiss', null);
       await sink.setEnabled(false);
       await sink.flush();
       expect(calls, 0);
@@ -229,7 +258,7 @@ void main() {
       final sink = Ga4RelaySink(platform: 'linux', every: const Duration(hours: 1))
         ..send = (_, _) async => throw Exception('401');
       await sink.setEnabled(true);
-      await sink.capture('paywall_view', null);
+      await sink.capture('paywall_dismiss', null);
       await sink.flush();
       expect(sink.queued, 0);
     });

@@ -34,12 +34,6 @@ Future<bool> openPaywall(
   String? reason,
   String source = 'limit',
 }) async {
-  unawaited(
-    Analytics.capture(
-      'paywall_view',
-      properties: {'source': source, 'paywall_kind': 'regular'},
-    ),
-  );
   final upgraded = await Navigator.of(context, rootNavigator: true).push<bool>(
     MaterialPageRoute(
       fullscreenDialog: true,
@@ -179,6 +173,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
   // Null until the person picks a period: then the server's default plan decides (D-332).
   PaywallPeriod? _pickedPeriod;
   var _busy = false;
+  var _viewLogged = false;
   String? _startPlan;
 
   @override
@@ -342,6 +337,15 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
         tiers.where((t) => t.code == defaultPaywallTier(tiers, billing?.planCode)).firstOrNull;
     final selected = tier?.planFor(period);
     final selectedPeriod = selected == null ? null : paywallPeriodOf(selected);
+    if (!_viewLogged && empty == null && selected != null) {
+      _viewLogged = true;
+      Analytics.log('paywall_view', {
+        'source': widget.source,
+        'paywall_kind': 'regular',
+        'default_plan': selected.code,
+        'default_period': (selectedPeriod ?? period).name,
+      });
+    }
     final yearly = selectedPeriod == PaywallPeriod.year;
     final weekly = selectedPeriod == PaywallPeriod.week;
     final isCurrent = selected != null && selected.code == billing?.planCode;
@@ -592,6 +596,13 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
                                 onTap: () {
                                   HapticsHelper.selection();
                                   setState(() => _tier = t.code);
+                                  final picked = t.planFor(period);
+                                  if (picked != null) {
+                                    Analytics.log('paywall_plan_select', {
+                                      'plan': picked.code,
+                                      'interval': picked.interval.value,
+                                    });
+                                  }
                                 },
                               ),
                         ];
@@ -655,6 +666,13 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
                                   onChanged: (v) {
                                     HapticsHelper.selection();
                                     setState(() => _pickedPeriod = v);
+                                    final picked = tier?.planFor(v);
+                                    if (picked != null) {
+                                      Analytics.log('paywall_plan_select', {
+                                        'plan': picked.code,
+                                        'interval': picked.interval.value,
+                                      });
+                                    }
                                   },
                                 ),
                               ),

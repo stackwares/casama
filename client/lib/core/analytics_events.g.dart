@@ -24,6 +24,7 @@ const analyticsClientEvents = <String>{
   'call_card_action',
   'bot_call_answered',
   'paywall_view',
+  'paywall_plan_select',
   'paywall_dismiss',
   'purchase_started',
   'review_prompt_shown',
@@ -90,5 +91,7 @@ const analyticsGa4Twins = <String, ({String name, List<String> params, Map<Strin
   'invite_shared': (name: 'share', params: <String>['method'], set: <String, Object>{'content_type': 'invite'}),
   'referral_shared': (name: 'share', params: <String>['method'], set: <String, Object>{'content_type': 'referral'}),
   'join_completed': (name: 'join_group', params: <String>['via', 'status'], set: <String, Object>{}),
+  'paywall_view': (name: 'view_item_list', params: <String>['source', 'paywall_kind', 'default_plan', 'default_period'], set: <String, Object>{'item_list_id': 'paywall', 'item_list_name': 'Casama plans'}),
+  'paywall_plan_select': (name: 'select_item', params: <String>['plan', 'interval'], set: <String, Object>{'item_list_id': 'paywall', 'item_list_name': 'Casama plans'}),
   'purchase_started': (name: 'begin_checkout', params: <String>['store', 'kind', 'product_id'], set: <String, Object>{'currency': 'USD'}),
 };

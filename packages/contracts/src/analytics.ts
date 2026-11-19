@@ -43,6 +43,8 @@ export const GA4_RECOMMENDED_EVENTS = [
   "search",
   "select_content",
   "view_promotion",
+  "view_item_list",
+  "select_item",
 ] as const;
 
 /** Catalog event name → its GA4 twin, for the server's GA4 sink. */

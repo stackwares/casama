@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'analytics_events.g.dart';
 import 'analytics_sinks.dart';
@@ -10,6 +11,9 @@ import 'telemetry.dart';
 /// All methods are safe no-ops when no provider is on, consent is opted out,
 /// or server_kind is not 'cloud'.
 class Analytics {
+  @visibleForTesting
+  static void Function(String event, Map<String, Object>? properties)? onCaptureForTest;
+
   static final _posthog = PosthogSink();
   static final _ga4 = Ga4Sink();
   static final _ga4Relay = Ga4RelaySink(platform: Telemetry.platformName);
@@ -112,16 +116,17 @@ class Analytics {
 
   /// Records a catalog-typed event if telemetry & consent are active.
   static Future<void> capture(String event, {Map<String, Object?>? properties}) async {
-    final sinks = _sinks;
-    if (sinks.isEmpty) return;
-    final consent = await isConsentEnabled();
-    if (!consent) return;
     final clean = properties != null
         ? {
             for (final e in properties.entries)
               if (e.value != null) e.key: e.value!,
           }
         : null;
+    onCaptureForTest?.call(event, clean);
+    final sinks = _sinks;
+    if (sinks.isEmpty) return;
+    final consent = await isConsentEnabled();
+    if (!consent) return;
     // PostHog filters in its beforeSend; GA4 gets catalog events on Casama Cloud and nothing else, so
     // the self-hosted daily ping never reaches it.
     await _each(

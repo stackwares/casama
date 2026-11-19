@@ -421,8 +421,27 @@ function bullets(ids, field, where) {
 }
 
 function plansTable() {
-  const rows = plans.plans.map((p) => `| **${p.name}** | ${p.price} | ${p.credits} | ${p.bots} | ${p.computers} | ${p.storage} | ${p.seats} |`);
-  return markdown(["| Plan | Price | Credits each month | Bots | Cloud computers | Library | Seats |", "|---|---|---|---|---|---|---|", ...rows].join("\n")).html;
+  const head = ["Plan", "Price", "Credits each month", "Bots", "Cloud computers", "Library", "Seats", ""];
+  const body = plans.plans.map((p) => {
+    const key = p.name.toLowerCase();
+    const cta = `<a class="btn sm${key === "pro" ? " primary" : ""}" href="/get/start?from=pricing" data-plan="${esc(key)}">Join the waitlist</a>`;
+    const cells = [
+      `<th scope="row">${inline(`**${p.name}**`)}</th>`,
+      `<td data-label="${esc(head[1])}">${inline(p.price)}</td>`,
+      `<td data-label="${esc(head[2])}">${inline(p.credits)}</td>`,
+      `<td data-label="${esc(head[3])}">${inline(p.bots)}</td>`,
+      `<td data-label="${esc(head[4])}">${inline(p.computers)}</td>`,
+      `<td data-label="${esc(head[5])}">${inline(p.storage)}</td>`,
+      `<td data-label="${esc(head[6])}">${inline(p.seats)}</td>`,
+      `<td data-label="Get started">${cta}</td>`,
+    ];
+    return `<tr>${cells.join("")}</tr>`;
+  });
+  return `<div class="table-scroll"><table class="compare cols-${head.length}">
+<thead><tr>${head.map((h) => `<th scope="col">${esc(h)}</th>`).join("")}</tr></thead>
+<tbody>
+${body.join("\n")}
+</tbody></table></div>`;
 }
 
 function pageList(sectionNames) {
@@ -508,6 +527,7 @@ const tokensFor = (page) => (name, args) => {
   }
   // waitlist copy: docs/WAITLIST-PLAN.md §12 (back to "Start free" → https://app.casama.ai on launch day)
   if (name === "cta") return `<p class="page-cta"><!-- waitlist copy: docs/WAITLIST-PLAN.md §12 --><a class="btn primary" href="/get/start">Join the waitlist</a> <a class="text-link" href="https://docs.casama.ai/self-hosting/">Run it on your own server</a></p>`;
+  if (name === "selfhosted-cta") return `<p class="page-cta"><a class="btn" href="https://docs.casama.ai/self-hosting/" data-plan="self_hosted">Read the self-hosting guide</a></p>`;
   fail(`${page.file}: unknown token {{${name}}}`);
   return "";
 };
@@ -747,6 +767,7 @@ function twin(page) {
     if (name === "waitlist") return `Casama Cloud is invite-only for now. Join the waitlist with the form at ${SITE}/waitlist, or enter an invite code there. Running Casama on your own server is open to everyone: https://docs.casama.ai/self-hosting/`;
     // waitlist copy: docs/WAITLIST-PLAN.md §12
     if (name === "cta") return `Join the waitlist at ${SITE}/waitlist (Casama Cloud is invite-only for now), or run it on your own server: https://docs.casama.ai/self-hosting/`;
+    if (name === "selfhosted-cta") return `[Read the self-hosting guide](https://docs.casama.ai/self-hosting/)`;
     return "";
   });
   return `# ${meta.h1 ?? meta.title}\n\n${meta.lead ? `${meta.lead}\n\n` : ""}Updated ${meta.updated}. Page: ${page.url}\n\n${body.trim().replace(/\]\((\/[^)\s]*)\)/g, `](${SITE}$1)`)}\n`;

@@ -36,6 +36,8 @@ export const EVENT_DIMENSION_PRIORITY = [
   "server_kind",
   "plan",
   "interval",
+  "default_plan",
+  "default_period",
   "store",
   "kind",
   "method",

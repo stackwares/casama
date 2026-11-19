@@ -48,6 +48,8 @@ a home server or your laptop, and the Mac and Linux app can run a server for you
 
 See [Run Casama on your own server](/self-hosted).
 
+{{selfhosted-cta}}
+
 ## Questions
 
 ### Is there a free plan?
