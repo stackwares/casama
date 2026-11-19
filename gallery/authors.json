@@ -139,6 +139,10 @@
         },
         {
           "type": "app",
+          "id": "higgsfield"
+        },
+        {
+          "type": "app",
           "id": "honeycomb"
         },
         {

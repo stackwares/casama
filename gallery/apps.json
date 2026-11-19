@@ -1228,6 +1228,66 @@
       ]
     },
     {
+      "id": "higgsfield",
+      "type": "app",
+      "name": "Higgsfield",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "image-generation",
+        "video-generation",
+        "creative"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-19",
+      "updated": "2026-11-19",
+      "sha256": "a79505c2bba82f30033850c762115087b5455ab37caebd8fcd65a55aadcb0411",
+      "size": 2667,
+      "description": "Generate images and videos with Higgsfield, and manage your creative assets.",
+      "examples": [
+        "Generate a cinematic video of a rainy Tokyo street at night",
+        "Create three product images with a clean studio background",
+        "Edit this photo to put the product on a beach"
+      ],
+      "access": {
+        "reads": [
+          "your Higgsfield assets"
+        ],
+        "writes": [
+          "uses your Higgsfield credits"
+        ],
+        "credits": "high"
+      },
+      "document": {
+        "description": "Generate images and videos with Higgsfield, and manage your creative assets.",
+        "category": "design",
+        "color": "D1FE17",
+        "homepage": "https://higgsfield.ai",
+        "url": "https://mcp.higgsfield.ai/mcp",
+        "auth": [
+          "oauth"
+        ],
+        "oauthClient": "dcr",
+        "note": "Generations use your Higgsfield credits.",
+        "capabilities": [
+          "Generate images",
+          "Generate video",
+          "Edit photos and video"
+        ]
+      },
+      "files": [
+        "apps/higgsfield/app.json",
+        "apps/higgsfield/item.json",
+        "apps/higgsfield/logo.svg"
+      ]
+    },
+    {
       "id": "honeycomb",
       "type": "app",
       "name": "Honeycomb",
