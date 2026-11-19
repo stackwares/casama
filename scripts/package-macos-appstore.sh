@@ -38,7 +38,12 @@ restore() {
   rm -rf "$tmp"
 }
 trap restore EXIT
-printf 'dependency_overrides:\n  auto_updater:\n    path: tool/appstore/auto_updater_stub\n' >pubspec_overrides.yaml
+# pubspec_overrides.yaml replaces pubspec.yaml's whole dependency_overrides block, so carry that
+# block over (timezone, casama_api, the third_party forks) and add the stub to it.
+{
+  awk '/^dependency_overrides:/{on=1; print; next} on && /^[^ #]/{exit} on' pubspec.yaml
+  printf '  auto_updater:\n    path: tool/appstore/auto_updater_stub\n'
+} >pubspec_overrides.yaml
 flutter pub get
 flutter build macos --release \
   --dart-define=CASAMA_DISTRIBUTION=appstore \
