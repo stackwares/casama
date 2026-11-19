@@ -5232,6 +5232,7 @@
   "waitlistNoteHint": "Optional",
   "waitlistSelfHosting": "I run Casama on my own server",
   "waitlistNewsletter": "Also send me Casama's monthly email (once a month at most)",
+  "waitlistAppleRelay": "This is the private address Apple made for you. Keep it if you'll sign in with Apple; Apple forwards our email to your inbox.",
   "waitlistJoinedTitle": "You're on the list.",
   "waitlistJoinedBody": "We're letting people in every day. You'll get one email when it's your turn, and nothing else unless you asked for the monthly email.",
   "waitlistJoinedCode": "Have an invite code? Enter it here.",

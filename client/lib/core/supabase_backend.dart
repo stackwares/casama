@@ -18,6 +18,7 @@ import 'apple_sign_in.dart';
 import 'apple_token_handoff.dart';
 import 'desktop_sign_in.dart';
 import 'google_sign_in.dart';
+import 'id_token_email.dart';
 import 'passkeys.dart';
 import 'server_reachability.dart';
 import 'web_auth_sheet.dart';
@@ -321,10 +322,14 @@ class SupabaseBackend implements Backend {
   }
 
   Future<void> _finishAppleSignIn(AuthorizationCredentialAppleID credential, String idToken, String rawNonce) async {
-    await supabase.auth.signInWithIdToken(
-      provider: sb.OAuthProvider.apple,
-      idToken: idToken,
-      nonce: rawNonce,
+    // A refusal carries the token's address, for the invite gate's sheets (D-427).
+    await withIdTokenEmail(
+      idToken,
+      () => supabase.auth.signInWithIdToken(
+        provider: sb.OAuthProvider.apple,
+        idToken: idToken,
+        nonce: rawNonce,
+      ),
     );
     // The one-time code goes to the server, which swaps it for a token it can revoke when the
     // account is deleted (D-420, App Store 5.1.1(v)). Never holds up or fails the sign-in.
@@ -362,10 +367,13 @@ class SupabaseBackend implements Backend {
     if (sheet == null) return false;
     final idToken = sheet.idToken;
     if (idToken == null) return true;
-    await supabase.auth.signInWithIdToken(
-      provider: sb.OAuthProvider.google,
-      idToken: idToken,
-      nonce: _googleRawNonce,
+    await withIdTokenEmail(
+      idToken,
+      () => supabase.auth.signInWithIdToken(
+        provider: sb.OAuthProvider.google,
+        idToken: idToken,
+        nonce: _googleRawNonce,
+      ),
     );
     return true;
   }

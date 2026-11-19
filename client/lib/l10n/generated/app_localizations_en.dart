@@ -16070,6 +16070,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Also send me Casama\'s monthly email (once a month at most)';
 
   @override
+  String get waitlistAppleRelay =>
+      'This is the private address Apple made for you. Keep it if you\'ll sign in with Apple; Apple forwards our email to your inbox.';
+
+  @override
   String get waitlistJoinedTitle => 'You\'re on the list.';
 
   @override

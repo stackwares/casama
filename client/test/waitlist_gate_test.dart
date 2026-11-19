@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:casama/core/backend.dart';
+import 'package:casama/core/id_token_email.dart';
 import 'package:casama/features/admin/admin_screen.dart';
 import 'package:casama/features/auth/invite_gate.dart';
 import 'package:casama/features/auth/sign_in_screen.dart';
@@ -29,6 +32,21 @@ class _RefusingBackend extends FakeBackend {
   @override
   Future<void> sendMagicLink(String email) async =>
       throw const sb.AuthException(_refusal, statusCode: '403');
+}
+
+/// An Apple sign-in refused by the gate, as the backend passes it on: with the token's address.
+class _RefusingAppleBackend extends FakeBackend {
+  _RefusingAppleBackend(this.email);
+  final String email;
+  @override
+  Future<void> signInWithProvider(String provider) async =>
+      throw IdTokenAuthException(_refusal, statusCode: '403', email: email);
+}
+
+/// An ID token whose payload is [claims] (unsigned: only the payload is read).
+String _idToken(Map<String, Object?> claims) {
+  String part(Object o) => base64Url.encode(utf8.encode(jsonEncode(o))).replaceAll('=', '');
+  return '${part({'alg': 'RS256'})}.${part(claims)}.sig';
 }
 
 FakeBackend _gated([FakeBackend? backend]) => (backend ?? FakeBackend())
@@ -112,6 +130,63 @@ void main() {
       expect(find.byKey(const Key('inviteRefusal')), findsNothing);
       expect(find.byKey(const Key('haveInviteCode')), findsOneWidget);
     });
+
+    testWidgets('Join the Waitlist after a refusal has the typed address filled in', (
+      tester,
+    ) async {
+      await setSize(tester, const Size(500, 1100));
+      final backend = _gated(_RefusingBackend());
+      await _openSignIn(tester, backend);
+      await tester.tap(find.byKey(const Key('openSignIn')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('continueWithEmail')));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byKey(const Key('email')), 'new@example.com');
+      await tester.tap(find.byKey(const Key('sendMagicLink')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('refusalJoinWaitlist')));
+      await tester.pumpAndSettle();
+      final field = tester.widget<TextField>(find.byKey(const Key('waitlistEmail')));
+      expect(field.controller!.text, 'new@example.com');
+      expect(find.byKey(const Key('waitlistAppleRelay')), findsNothing);
+      await tester.tap(find.byKey(const Key('waitlistSubmit')));
+      await tester.pumpAndSettle();
+      expect(backend.waitlistJoins.single.email, 'new@example.com');
+    });
+
+    testWidgets('an Apple refusal fills in the relay address, and says what it is', (
+      tester,
+    ) async {
+      await setSize(tester, const Size(500, 1100));
+      const relay = 'q9w8e7@privaterelay.appleid.com';
+      final backend = _gated(_RefusingAppleBackend(relay));
+      await _openSignIn(tester, backend);
+      await tester.tap(find.byKey(const Key('openSignIn')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('appleSignIn')));
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 3));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('inviteRefusal')), findsOneWidget);
+      await tester.tap(find.byKey(const Key('refusalJoinWaitlist')));
+      await tester.pumpAndSettle();
+      final field = tester.widget<TextField>(find.byKey(const Key('waitlistEmail')));
+      expect(field.controller!.text, relay);
+      expect(find.byKey(const Key('waitlistAppleRelay')), findsOneWidget);
+      // Typing a real address instead takes the note away.
+      await tester.enterText(find.byKey(const Key('waitlistEmail')), 'ana@example.com');
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('waitlistAppleRelay')), findsNothing);
+    });
+  });
+
+  test('reads the address inside an ID token, and nothing from a bad one', () {
+    expect(emailInIdToken(_idToken({'email': 'ana@gmail.com'})), 'ana@gmail.com');
+    expect(emailInIdToken(_idToken({'sub': '1'})), isNull);
+    expect(emailInIdToken('not-a-token'), isNull);
+    expect(emailInIdToken('a.%%%.c'), isNull);
+    expect(isAppleRelayEmail('X@PrivateRelay.AppleID.com'), isTrue);
+    expect(isAppleRelayEmail('ana@icloud.com'), isFalse);
   });
 
   test('matches only the gate\'s sentences', () {

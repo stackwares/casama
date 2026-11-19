@@ -4,6 +4,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../core/backend.dart';
 import '../../core/haptics.dart';
+import '../../core/id_token_email.dart';
 import '../../core/link_browser.dart';
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
@@ -18,14 +19,18 @@ final selfHostingDocs = Uri.parse('https://docs.casama.ai/self-hosting/');
 /// Join the Waitlist (D-427, WAITLIST-PLAN §5.2, §5.4): email, one optional line, two boxes, then a
 /// calm "You're on the list". The server answers the same for every address, so this does too.
 class JoinWaitlistSheet extends ConsumerStatefulWidget {
-  const JoinWaitlistSheet({super.key});
+  const JoinWaitlistSheet({super.key, this.initialEmail});
+
+  /// The address a refused sign-in used (D-427): typed, or from the Apple or Google sheet.
+  final String? initialEmail;
 
   @override
   ConsumerState<JoinWaitlistSheet> createState() => _JoinWaitlistSheetState();
 }
 
 class _JoinWaitlistSheetState extends ConsumerState<JoinWaitlistSheet> {
-  final _email = TextEditingController();
+  late final _email = TextEditingController(text: widget.initialEmail ?? '');
+  late final _prefilled = (widget.initialEmail ?? '').isNotEmpty;
   final _note = TextEditingController();
   var _selfHosting = false;
   var _newsletter = false;
@@ -129,7 +134,8 @@ class _JoinWaitlistSheetState extends ConsumerState<JoinWaitlistSheet> {
         TextField(
           key: const Key('waitlistEmail'),
           controller: _email,
-          autofocus: true,
+          // Filled in already: the keyboard waits for the one optional line instead.
+          autofocus: !_prefilled,
           autocorrect: false,
           keyboardType: TextInputType.emailAddress,
           autofillHints: const [AutofillHints.email],
@@ -142,10 +148,16 @@ class _JoinWaitlistSheetState extends ConsumerState<JoinWaitlistSheet> {
             prefixIcon: const Icon(LucideIcons.atSign, size: 20),
             errorText: _invalid ? l10n.invalidEmail : null,
           ),
-          onChanged: (_) {
-            if (_invalid) setState(() => _invalid = false);
-          },
+          onChanged: (_) => setState(() => _invalid = false),
         ),
+        // Apple's "Hide My Email": this private address is the one a later Continue with Apple
+        // signs in with, so it is the one to keep on the list.
+        if (isAppleRelayEmail(_email.text))
+          Text(
+            l10n.waitlistAppleRelay,
+            key: const Key('waitlistAppleRelay'),
+            style: muted,
+          ),
         TextField(
           key: const Key('waitlistNote'),
           controller: _note,

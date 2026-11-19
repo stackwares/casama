@@ -239,7 +239,7 @@ class _SignInOptionsState extends ConsumerState<SignInOptions> {
     _started('password', signUp: _signUp);
     setState(() => _busy = true);
     final backend = ref.read(backendProvider);
-    final ok = await runSignInGuarded(context, () async {
+    final ok = await runSignInGuarded(email: _email.text.trim(), context, () async {
       if (_signUp) {
         // Sent once the new account signs in (it may need its address confirmed first).
         if (backend.newsletterAvailable) await NewsletterSignUpChoice.save(_newsletter);
@@ -273,7 +273,7 @@ class _SignInOptionsState extends ConsumerState<SignInOptions> {
     if (_sentTo == null) _started('email_code');
     final email = _sentTo ?? _email.text.trim();
     setState(() => _busy = true);
-    final ok = await runSignInGuarded(context, () async {
+    final ok = await runSignInGuarded(email: email, context, () async {
       final backend = ref.read(backendProvider);
       await (_resetting ? backend.sendPasswordReset(email) : backend.sendMagicLink(email));
       return true;
@@ -312,7 +312,7 @@ class _SignInOptionsState extends ConsumerState<SignInOptions> {
     final code = _code.text;
     if (email == null || code.length != OtpCodeField.length || _busy) return;
     setState(() => _busy = true);
-    final ok = await runSignInGuarded(context, () async {
+    final ok = await runSignInGuarded(email: email, context, () async {
       final backend = ref.read(backendProvider);
       await (_resetting ? backend.verifyPasswordResetCode(email, code) : backend.verifyEmailCode(email, code));
       return true;

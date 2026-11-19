@@ -25809,6 +25809,12 @@ abstract class AppLocalizations {
   /// **'Also send me Casama\'s monthly email (once a month at most)'**
   String get waitlistNewsletter;
 
+  /// No description provided for @waitlistAppleRelay.
+  ///
+  /// In en, this message translates to:
+  /// **'This is the private address Apple made for you. Keep it if you\'ll sign in with Apple; Apple forwards our email to your inbox.'**
+  String get waitlistAppleRelay;
+
   /// No description provided for @waitlistJoinedTitle.
   ///
   /// In en, this message translates to:

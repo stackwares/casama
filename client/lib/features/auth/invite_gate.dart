@@ -5,6 +5,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
+import '../../core/id_token_email.dart';
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
@@ -31,11 +32,13 @@ String? inviteRefusalMessage(Object error) {
 }
 
 /// [runGuarded] for sign-in and sign-up: the gate's refusal opens [showInviteRefusal] instead of a
-/// toast; every other error is shown as usual.
+/// toast; every other error is shown as usual. [email] is the address the person typed, if any;
+/// an Apple or Google refusal brings its own.
 Future<T?> runSignInGuarded<T>(
   BuildContext context,
-  Future<T> Function() action,
-) async {
+  Future<T> Function() action, {
+  String? email,
+}) async {
   try {
     return await action();
   } catch (e, st) {
@@ -43,7 +46,8 @@ Future<T?> runSignInGuarded<T>(
     final refusal = inviteRefusalMessage(e);
     if (refusal != null) {
       // Not awaited: the button behind it stops spinning while the sheet is up.
-      unawaited(showInviteRefusal(context, refusal));
+      final known = e is IdTokenAuthException ? e.email : email;
+      unawaited(showInviteRefusal(context, refusal, email: known));
       return null;
     }
     return runGuarded<T>(context, () => Future<T>.error(e, st));
@@ -62,20 +66,25 @@ String inviteCodeFrom(String input) {
   return code.trim();
 }
 
-/// Opens Join the Waitlist.
-Future<void> openJoinWaitlist(BuildContext context) => showAdaptiveSheet<void>(
-  context: context,
-  dialogMaxWidth: 480,
-  builder: (_) => const JoinWaitlistSheet(),
-);
-
-/// Opens I Have an Invite, with [code] already filled in (an invite link the app opened).
-Future<void> openHaveInvite(BuildContext context, {String? code}) =>
+/// Opens Join the Waitlist, with [email] already filled in (the address a refused sign-in used).
+Future<void> openJoinWaitlist(BuildContext context, {String? email}) =>
     showAdaptiveSheet<void>(
       context: context,
       dialogMaxWidth: 480,
-      builder: (_) => HaveInviteSheet(initialCode: code),
+      builder: (_) => JoinWaitlistSheet(initialEmail: email),
     );
+
+/// Opens I Have an Invite, with [code] already filled in (an invite link the app opened) and
+/// [email] (the address a refused sign-in used).
+Future<void> openHaveInvite(
+  BuildContext context, {
+  String? code,
+  String? email,
+}) => showAdaptiveSheet<void>(
+  context: context,
+  dialogMaxWidth: 480,
+  builder: (_) => HaveInviteSheet(initialCode: code, initialEmail: email),
+);
 
 /// Closes the sheet [context] is in, then opens [next] from the navigator under it.
 void replaceSheet(
@@ -87,8 +96,13 @@ void replaceSheet(
   next(navigator.context);
 }
 
-/// Instead of a toast: the gate's sentence, with the two ways forward.
-Future<void> showInviteRefusal(BuildContext context, String message) {
+/// Instead of a toast: the gate's sentence, with the two ways forward. [email] fills in the next
+/// sheet, so nobody types again the address they just used.
+Future<void> showInviteRefusal(
+  BuildContext context,
+  String message, {
+  String? email,
+}) {
   final l10n = context.l10n;
   // The usual sentence ends with "at casama.ai/waitlist"; in the app the buttons are right here.
   final otherEmail = message.contains(
@@ -104,7 +118,8 @@ Future<void> showInviteRefusal(BuildContext context, String message) {
       subtitle: otherEmail ? null : l10n.inviteRefusedHelp,
       submitLabel: l10n.joinTheWaitlist,
       submitKey: const Key('refusalJoinWaitlist'),
-      onSubmit: () => replaceSheet(sheet, openJoinWaitlist),
+      onSubmit: () =>
+          replaceSheet(sheet, (c) => openJoinWaitlist(c, email: email)),
       cancelLabel: l10n.notNow,
       children: [
         OutlinedButton.icon(
@@ -113,7 +128,14 @@ Future<void> showInviteRefusal(BuildContext context, String message) {
             shape: const StadiumBorder(),
             minimumSize: const Size.fromHeight(48),
           ),
-          onPressed: () => replaceSheet(sheet, openHaveInvite),
+          // A relay address stays out of the email step: Continue with Apple there brings it.
+          onPressed: () => replaceSheet(
+            sheet,
+            (c) => openHaveInvite(
+              c,
+              email: email != null && !isAppleRelayEmail(email) ? email : null,
+            ),
+          ),
           icon: const Icon(LucideIcons.ticket, size: 18),
           label: Text(l10n.iHaveAnInvite),
         ),

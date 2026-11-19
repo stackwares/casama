@@ -28,10 +28,13 @@ enum _Step { code, choose, email, inbox, waitlisted }
 /// sign-in email that carries the code; Apple and Google get the ID token from the system sheet
 /// first and sign in with it only once the server has let that address in.
 class HaveInviteSheet extends ConsumerStatefulWidget {
-  const HaveInviteSheet({super.key, this.initialCode});
+  const HaveInviteSheet({super.key, this.initialCode, this.initialEmail});
 
   /// From an invite link the app opened; checked straight away.
   final String? initialCode;
+
+  /// The address a refused sign-in used, filled in for the email step.
+  final String? initialEmail;
 
   @override
   ConsumerState<HaveInviteSheet> createState() => _HaveInviteSheetState();
@@ -39,7 +42,7 @@ class HaveInviteSheet extends ConsumerStatefulWidget {
 
 class _HaveInviteSheetState extends ConsumerState<HaveInviteSheet> {
   late final _code = TextEditingController(text: widget.initialCode ?? '');
-  final _email = TextEditingController();
+  late final _email = TextEditingController(text: widget.initialEmail ?? '');
   final _otp = TextEditingController();
   var _step = _Step.code;
   var _busy = false;
