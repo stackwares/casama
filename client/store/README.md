@@ -86,6 +86,11 @@ Since D-417 an app runs only one crash reporter at a time (Sentry, Crashlytics o
 remotely. The answers above don't change: declare what any of them may collect, because the owner
 can switch without a store review.
 
+**Checked 2026-11-19:** App Store App Privacy now lists Other Diagnostic Data (App Functionality
+and Analytics, linked like every other type there) and was published again (24 entries). Play Data
+safety already declared Crash logs, Diagnostics and Device or other IDs as collected (and crash
+logs and diagnostics as shared), so it needed no change.
+
 ## Still open
 
 - Screenshots (Play phone 1080x1920, tablets 1440x2560) and the review screenshots for the
