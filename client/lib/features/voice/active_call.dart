@@ -48,6 +48,7 @@ String callEndForCard(CallEnd reason) => switch (reason) {
   CallEnd.idle => 'idle',
   CallEnd.replaced => 'replaced',
   CallEnd.server => 'idle',
+  CallEnd.limit => 'limit',
 };
 
 /// A call's finished turns, saved while the call goes on (D-327 §4): each turn is posted once,
