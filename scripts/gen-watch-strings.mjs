@@ -6,7 +6,7 @@
 //
 //   node scripts/gen-watch-strings.mjs          write both files
 //   node scripts/gen-watch-strings.mjs --check  fail when either is out of date
-import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -16,11 +16,52 @@ const swiftPath = join(root, "client/ios/Shared/WatchStrings.swift");
 const xmlPath = join(root, "client/wear/app/src/main/res/values/watch_strings.xml");
 
 const SWIFT_KEYWORDS = new Set([
-  "as", "break", "case", "catch", "class", "continue", "default", "defer", "do", "else", "enum",
-  "extension", "fallthrough", "false", "for", "func", "guard", "if", "import", "in", "init",
-  "inout", "internal", "is", "let", "nil", "operator", "private", "protocol", "public", "repeat",
-  "return", "self", "static", "struct", "subscript", "super", "switch", "throw", "throws", "true",
-  "try", "typealias", "var", "where", "while",
+  "as",
+  "break",
+  "case",
+  "catch",
+  "class",
+  "continue",
+  "default",
+  "defer",
+  "do",
+  "else",
+  "enum",
+  "extension",
+  "fallthrough",
+  "false",
+  "for",
+  "func",
+  "guard",
+  "if",
+  "import",
+  "in",
+  "init",
+  "inout",
+  "internal",
+  "is",
+  "let",
+  "nil",
+  "operator",
+  "private",
+  "protocol",
+  "public",
+  "repeat",
+  "return",
+  "self",
+  "static",
+  "struct",
+  "subscript",
+  "super",
+  "switch",
+  "throw",
+  "throws",
+  "true",
+  "try",
+  "typealias",
+  "var",
+  "where",
+  "while",
 ]);
 
 /** The watch's keys, in the arb's order: [{ key, text, description, placeholders }]. */
@@ -46,8 +87,7 @@ const snake = (key) =>
     .replace(/([a-z0-9])([A-Z])/g, "$1_$2")
     .replace(/([A-Z])([A-Z][a-z])/g, "$1_$2")
     .toLowerCase();
-const swiftLiteral = (s) =>
-  s.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\n/g, "\\n");
+const swiftLiteral = (s) => s.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\n/g, "\\n");
 
 export function renderSwift(items) {
   const lines = [
@@ -100,7 +140,9 @@ export function renderXml(items) {
       body = body.split(`{${p}}`).join(`%${i + 1}$s`);
     });
     const formatted = unique.length ? "" : ' formatted="false"';
-    lines.push(`    <string name="${snake(key)}"${formatted}>${unique.length ? body : xmlText(text)}</string>`);
+    lines.push(
+      `    <string name="${snake(key)}"${formatted}>${unique.length ? body : xmlText(text)}</string>`,
+    );
   }
   lines.push("</resources>", "");
   return lines.join("\n");
@@ -121,7 +163,9 @@ function main() {
     } catch {}
     if (current === text) continue;
     if (check) {
-      console.error(`out of date: ${path.slice(root.length + 1)} (run node scripts/gen-watch-strings.mjs)`);
+      console.error(
+        `out of date: ${path.slice(root.length + 1)} (run node scripts/gen-watch-strings.mjs)`,
+      );
       stale += 1;
     } else {
       mkdirSync(dirname(path), { recursive: true });
