@@ -6,6 +6,8 @@
 #   scripts/deploy-prod.sh [--ref <commit|branch>] [--yes] [--dry-run] [--wait-runs <minutes>]
 #                          [--registry-image] [--rollback]
 #
+# One deploy at a time: a lock on the server stops a second one while the first runs.
+#
 # Steps on the server, timed: check the checkout is clean and fast-forwards to the commit, say how
 # many runs are going, copy .env, git merge --ff-only, build casama-local/server:<sha> (skipped
 # when no server path changed), point CASAMA_SERVER_IMAGE at it, back up the database, run the
@@ -52,7 +54,7 @@ while [[ $# -gt 0 ]]; do
     --force-runs) wait_runs=0; shift ;;
     --registry-image) mode=registry; shift ;;
     --rollback) mode=rollback; shift ;;
-    -h | --help) sed -n '2,35p' "$0"; exit 0 ;;
+    -h | --help) sed -n '2,37p' "$0"; exit 0 ;;
     *) echo "Unknown option: $1" >&2; exit 2 ;;
   esac
 done
@@ -77,11 +79,34 @@ fi
 start=$(date +%s)
 # The remote half runs as one bash script, so a failure anywhere stops the deploy. ssh joins its
 # arguments into one command line, so each is quoted (DEPLOY_PROFILES has a space in it).
+who="$(whoami)@$(hostname -s) in ${root/#$HOME/~}"
 ssh -o ConnectTimeout=15 "$host" bash -s -- \
-  "$(printf '%q ' "$dir" "$sha" "$mode" "$dry" "$wait_runs" "$profiles")" <<'REMOTE'
+  "$(printf '%q ' "$dir" "$sha" "$mode" "$dry" "$wait_runs" "$profiles" "$who")" <<'REMOTE'
 set -euo pipefail
-dir=$1 sha=$2 mode=$3 dry=$4 wait_runs=$5 profiles=$6
+dir=$1 sha=$2 mode=$3 dry=$4 wait_runs=$5 profiles=$6 who=$7
 cd "$dir"
+
+# One deploy at a time. Several sessions deploy, from different checkouts and machines, so the lock
+# lives here on the server. flock lets go when this script ends, even when ssh drops; a dry run only
+# reports a deploy in progress. A second deploy stops rather than queues: it was approved for a
+# commit that may no longer be the newest one.
+lock_file=/root/casama-deploy.lock
+lock_info=/root/casama-deploy.lock.info
+exec 9>>"$lock_file"
+if ! flock -n 9; then
+  holder=$(cat "$lock_info" 2>/dev/null || echo "unknown")
+  if [[ "$dry" -eq 1 ]]; then
+    echo "    note: a deploy is running now ($holder); a real deploy would stop here"
+  else
+    echo "Another deploy is running on this server: $holder" >&2
+    echo "Wait for it to finish, then run the deploy again (who holds it: $lock_info on the server)." >&2
+    exit 1
+  fi
+elif [[ "$dry" -eq 1 ]]; then
+  flock -u 9
+else
+  echo "$who, ${sha:0:12} ($mode), since $(date -u '+%Y-%m-%d %H:%M:%S') UTC, pid $$" > "$lock_info"
+fi
 env_file=infra/compose/.env
 history=/root/casama-deploys.log
 # APIs handed over and still carrying calls; the next deploy stops any that are left.
@@ -250,8 +275,9 @@ swap_api() {
     docker update --restart=no "$id" >/dev/null
     docker kill -s USR2 "$id" >/dev/null 2>&1 || true
     echo "$id" >> "$draining_file"
+    # 9>&-: it outlives the deploy and must not hold the deploy lock.
     setsid sh -c "timeout $cap docker wait $id >/dev/null 2>&1; docker rm -f $id >/dev/null 2>&1" \
-      </dev/null >/dev/null 2>&1 &
+      </dev/null >/dev/null 2>&1 9>&- &
   done
   api_container=$new
 }
