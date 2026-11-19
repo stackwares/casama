@@ -35,7 +35,7 @@
 	<string>Casama records your voice when you ask a bot something, and sends it to your server to turn into text.</string>
 	<key>WKApplication</key>
 	<true/>
-	<key>WKBackgroundModes</key>
+	<key>UIBackgroundModes</key>
 	<array>
 		<string>remote-notification</string>
 	</array>
