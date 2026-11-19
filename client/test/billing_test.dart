@@ -22,13 +22,16 @@ import 'fake_backend.dart';
 import 'fake_unlockers.dart';
 
 class FakeStore implements StorePurchases {
-  FakeStore(this.source, {this.country, this.priced = false});
+  FakeStore(this.source, {this.country, this.priced = false, this.trials = const {}});
   @override
   final String? source;
   final String? country;
 
   /// Products carry real numbers ($49.99 a month, $489.99 a year), as the stores give them.
   final bool priced;
+
+  /// Free-trial days the store confirms, by product id; empty when unknown or not eligible.
+  final Map<String, int> trials;
   final _purchases = StreamController<StorePurchase>.broadcast();
   final bought = <String>[];
   final completed = <String>[];
@@ -39,6 +42,8 @@ class FakeStore implements StorePurchases {
 
   @override
   Future<String?> storefront() async => country;
+  @override
+  Future<Map<String, int>> freeTrialDays(Set<String> ids) async => {for (final id in ids) if (trials[id] != null) id: trials[id]!};
   @override
   Future<List<StoreProduct>> products(Set<String> ids) async =>
       [for (final id in ids) priced ? _priced(id) : StoreProduct(id: id, price: source == 'app_store' ? r'$9.99' : r'$9.49')];
@@ -650,6 +655,37 @@ void main() {
       expect(tester.widget<Text>(find.byKey(const Key('purchaseDisclosure'))).data, isNot(contains('Free for')));
     });
 
+    testWidgets('a store trial the store confirms is stated: days free then price, a trial button, charging after it', (tester) async {
+      await setSize(tester, const Size(400, 900));
+      final backend = FakeBackend()
+        ..billingEnabled = true
+        ..catalogPlans = pricingPlans();
+      final store = FakeStore('app_store', country: 'GBR', priced: true, trials: const {'ai.casama.pro': 7, 'ai.casama.pro_yearly': 7});
+      await pumpPaywall(tester, backend, store: store, platform: TargetPlatform.iOS);
+      await revealInPaywall(tester, find.byKey(const Key('paywallTier-pro')));
+      await tester.tap(find.byKey(const Key('paywallTier-pro')));
+      await settle(tester);
+      expect(find.text(r'7 days free, then $49.99/mo'), findsOneWidget);
+      expect(find.descendant(of: find.byKey(const Key('paywallBuy')), matching: find.text('Start free trial')), findsOneWidget);
+      final disclosure = tester.widget<Text>(find.byKey(const Key('purchaseDisclosure'))).data!;
+      expect(disclosure, contains('Free for 7 days, then'));
+      expect(disclosure, contains('when the trial ends'));
+    });
+
+    testWidgets('no confirmed store trial (not eligible or unknown): no trial wording at all', (tester) async {
+      await setSize(tester, const Size(400, 900));
+      final backend = FakeBackend()
+        ..billingEnabled = true
+        ..catalogPlans = pricingPlans();
+      await pumpPaywall(tester, backend, store: FakeStore('app_store', country: 'GBR', priced: true), platform: TargetPlatform.iOS);
+      await revealInPaywall(tester, find.byKey(const Key('paywallTier-pro')));
+      await tester.tap(find.byKey(const Key('paywallTier-pro')));
+      await settle(tester);
+      expect(find.textContaining('days free'), findsNothing);
+      expect(find.text('Start free trial'), findsNothing);
+      expect(tester.widget<Text>(find.byKey(const Key('purchaseDisclosure'))).data, isNot(contains('Free for')));
+    });
+
     testWidgets('a store yearly plan leads with the yearly price it charges, the monthly figure after it', (tester) async {
       await setSize(tester, const Size(400, 900));
       final backend = FakeBackend()
@@ -779,7 +815,7 @@ void main() {
       await pumpPaywall(tester, backend, store: FakeStore('app_store', country: 'GBR'), platform: TargetPlatform.iOS, opened: opened);
       final disclosure = tester.widget<Text>(find.byKey(const Key('purchaseDisclosure'))).data!;
       expect(disclosure, contains(r'$9.99 per month'));
-      expect(disclosure, contains('Apple ID'));
+      expect(disclosure, contains('Apple Account'));
       expect(disclosure, contains('24 hours before it renews'));
       expect(find.byKey(const Key('termsOfUse')), findsOneWidget);
       await tester.tap(find.byKey(const Key('privacyPolicy')));

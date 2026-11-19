@@ -3398,6 +3398,26 @@ export interface paths {
         patch: operations["renameTwoStepFactor"];
         trace?: never;
     };
+    "/v1/me/apple-sign-in": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Hand over what Sign in with Apple returned, so deleting the account can revoke it
+         * @description App Store 5.1.1(v) (D-420): deleting an account revokes its Sign in with Apple tokens. The app sends the system sheet's authorization code, or the browser sign-in's refresh token, right after signing in with Apple. The server checks it with Apple against the person's Apple identity and keeps the refresh token in Vault until the account is deleted.
+         */
+        post: operations["saveAppleSignInToken"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/me/analytics-opt-out": {
         parameters: {
             query?: never;
@@ -10669,6 +10689,16 @@ export interface components {
             properties?: {
                 [key: string]: unknown;
             };
+        };
+        AppleSignInTokenResult: {
+            /** @description False when this server doesn't revoke Apple tokens (no Sign in with Apple key) */
+            stored: boolean;
+        };
+        AppleSignInTokenRequest: {
+            /** @description The one-time authorization code from Apple's system sheet (iOS and macOS); the server swaps it for a refresh token */
+            authorization_code?: string;
+            /** @description Apple's refresh token from the browser sign-in (Supabase Auth's provider_refresh_token) */
+            refresh_token?: string;
         };
         UpdateOrgSettingsRequest: {
             run_event_retention_days?: number;
@@ -25643,6 +25673,48 @@ export interface operations {
             };
             /** @description Not found */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    saveAppleSignInToken: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AppleSignInTokenRequest"];
+            };
+        };
+        responses: {
+            /** @description Saved */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AppleSignInTokenResult"];
+                };
+            };
+            /** @description Validation failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not authenticated */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };

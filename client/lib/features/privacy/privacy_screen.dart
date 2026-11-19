@@ -20,6 +20,7 @@ import '../../ui/app_card.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/page.dart';
 import '../app_lock/confirm_identity.dart';
+import 'ai_consent_step.dart';
 
 final _retentionProvider = FutureProvider<int?>((ref) async {
   final org = ref.watch(currentOrgProvider);
@@ -164,6 +165,30 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
                 );
               },
             ),
+            // AI providers (D-421): withdrawing brings the consent step back before anything else is sent.
+            if (ref.watch(aiConsentProvider) != null)
+              GroupedTile(
+                key: const Key('aiConsentTile'),
+                icon: LucideIcons.sparkles,
+                title: l10n.aiConsentTile,
+                subtitle: l10n.aiConsentTileOn,
+                trailing: TextButton(
+                  key: const Key('aiConsentWithdraw'),
+                  onPressed: () async {
+                    final ok = await showConfirm(
+                      context: context,
+                      title: l10n.aiConsentWithdrawQuestion,
+                      message: l10n.aiConsentWithdrawBody,
+                      confirmLabel: l10n.aiConsentWithdraw,
+                      confirmKey: const Key('aiConsentWithdrawConfirm'),
+                      destructive: true,
+                    );
+                    if (!ok || !context.mounted) return;
+                    await runGuarded(context, () => ref.read(aiConsentProvider.notifier).set(false));
+                  },
+                  child: Text(l10n.aiConsentWithdraw),
+                ),
+              ),
           ],
         ),
         if (isAdmin) ...[

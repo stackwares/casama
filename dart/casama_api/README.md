@@ -427,6 +427,7 @@ Class | Method | HTTP request | Description
 [*PrivacyApi*](doc/PrivacyApi.md) | [**getOrgSettings**](doc/PrivacyApi.md#getorgsettings) | **GET** /v1/orgs/{id}/settings | 
 [*PrivacyApi*](doc/PrivacyApi.md) | [**relayAnalytics**](doc/PrivacyApi.md#relayanalytics) | **POST** /v1/analytics/events | Relay the desktop app&#39;s product events to Google Analytics 4
 [*PrivacyApi*](doc/PrivacyApi.md) | [**renameTwoStepFactor**](doc/PrivacyApi.md#renametwostepfactor) | **PATCH** /v1/me/two-step/{id} | Rename one of your authenticator apps (two-step sign-in)
+[*PrivacyApi*](doc/PrivacyApi.md) | [**saveAppleSignInToken**](doc/PrivacyApi.md#saveapplesignintoken) | **POST** /v1/me/apple-sign-in | Hand over what Sign in with Apple returned, so deleting the account can revoke it
 [*PrivacyApi*](doc/PrivacyApi.md) | [**setAnalyticsOptOut**](doc/PrivacyApi.md#setanalyticsoptout) | **POST** /v1/me/analytics-opt-out | Update the user&#39;s analytics opt-out preference
 [*PrivacyApi*](doc/PrivacyApi.md) | [**updateOrgSettings**](doc/PrivacyApi.md#updateorgsettings) | **PATCH** /v1/orgs/{id}/settings | Change workspace settings such as run event retention (admins)
 [*ProjectsApi*](doc/ProjectsApi.md) | [**approveProjectPlan**](doc/ProjectsApi.md#approveprojectplan) | **POST** /v1/projects/{id}/plan/approve | Approve the proposed plan; sessions start
@@ -623,6 +624,8 @@ Class | Method | HTTP request | Description
  - [Announcement](doc/Announcement.md)
  - [AnswerMcpQuestionBody](doc/AnswerMcpQuestionBody.md)
  - [AppCatalog](doc/AppCatalog.md)
+ - [AppleSignInTokenRequest](doc/AppleSignInTokenRequest.md)
+ - [AppleSignInTokenResult](doc/AppleSignInTokenResult.md)
  - [ApplyComputerUpdateRequest](doc/ApplyComputerUpdateRequest.md)
  - [ApplySkillUpdateRequest](doc/ApplySkillUpdateRequest.md)
  - [Approval](doc/Approval.md)

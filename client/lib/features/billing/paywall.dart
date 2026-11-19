@@ -248,6 +248,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
     final products =
         ref.watch(storeProductsProvider).value ??
         const <String, StoreProduct>{};
+    final storeTrials = ref.watch(storeTrialsProvider).value ?? const <String, int>{};
     final source = ref.watch(storeProvider).source;
     final channels = purchaseChannels(
       platform: ref.watch(platformProvider),
@@ -304,6 +305,13 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
 
     String? priceFor(Plan p) => productFor(p)?.price ?? p.priceLabel;
 
+    // Days of free trial the store has confirmed for this person on a plan; null otherwise.
+    int? storeTrialOf(Plan? p) {
+      final product = p == null ? null : productFor(p);
+      final paying = billing != null && billing.planCode != 'free';
+      return product == null || paying ? null : storeTrials[product.id];
+    }
+
     /// What a plan costs as a number: the store's own price, else the web price label. A store
     /// product without a number gives null, never the web's dollars beside the store's price.
     double? amountOf(Plan? p) {
@@ -354,12 +362,15 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
       // A store plan billed yearly leads with what is actually charged, the yearly price; the
       // per-month figure only follows it (App Store 3.1.2: the billed amount is the most prominent
       // price). No struck-through monthly price beside it either.
+      final storeTrial = storeTrialOf(plan);
       if (plan.interval.value == 'year' && product != null) {
         return _CardPrice(
           plan: plan,
           big: product.price,
           suffix: l10n.paywallPerYearShort,
-          billed: amount == null ? l10n.paywallBilledYearlyPlain : l10n.paywallWorksOutTo(money(amount / 12, code)),
+          billed: storeTrial != null
+              ? l10n.paywallTrialThen(storeTrial, product.price, l10n.paywallPerYearShort)
+              : amount == null ? l10n.paywallBilledYearlyPlain : l10n.paywallWorksOutTo(money(amount / 12, code)),
           monthsFree: monthsFreeOf(t),
         );
       }
@@ -380,7 +391,9 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
         plan: plan,
         big: productFor(plan)?.price ?? (amount == null ? (priceFor(plan) ?? '') : money(amount, code)),
         suffix: productFor(plan) != null || amount != null ? l10n.paywallPerMonthShort : '',
-        billed: l10n.paywallBilledMonthly,
+        billed: storeTrial != null
+            ? l10n.paywallTrialThen(storeTrial, product!.price, l10n.paywallPerMonthShort)
+            : l10n.paywallBilledMonthly,
       );
     }
 
@@ -417,6 +430,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
     String buyLabel = l10n.paywallContinue;
     String? note;
     String? termsStore;
+    int? storeTrial;
     if (isCurrent) {
       buyLabel = l10n.currentPlan;
     } else if (selected != null && isAdmin) {
@@ -425,8 +439,10 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
         note = l10n.subscribedInStoreNote(paidVia == 'app_store' ? 'the App Store' : 'Google Play');
       } else if (product != null) {
         buy = () => _store(product);
-        // The store decides who gets its intro offer, so its button promises only the price.
-        buyLabel = switchLabel ?? l10n.subscribeFor(product.price);
+        // The store decides who gets its intro offer: the button promises a trial only when the
+        // store confirmed this person gets it, else only the price.
+        storeTrial = paidVia == null ? storeTrials[product.id] : null;
+        buyLabel = switchLabel ?? (storeTrial != null ? l10n.paywallStartFreeTrial : l10n.subscribeFor(product.price));
         termsStore = source;
       } else if (channels.contains(PurchaseChannel.web) && selected.web) {
         buy = () => _web(selected);
@@ -652,7 +668,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
                       yearly: yearly,
                       store: termsStore,
                       priceHasPeriod: termsStore == null,
-                      trialDays: termsStore == null ? selectedTrial : null,
+                      trialDays: termsStore == null ? selectedTrial : storeTrial,
                     ),
                   ),
                 ],

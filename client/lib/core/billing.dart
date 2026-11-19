@@ -94,6 +94,11 @@ abstract class StorePurchases {
   Future<String?> storefront();
   Future<List<StoreProduct>> products(Set<String> ids);
 
+  /// Free-trial days the store has confirmed this person gets on each of [ids] (product id to
+  /// days). A product with no trial, an unknown or ineligible answer is left out, so the paywall
+  /// never promises a trial it can't confirm (App Store 3.1.2).
+  Future<Map<String, int>> freeTrialDays(Set<String> ids);
+
   /// [consumable] is for credit packs, which can be bought again and again (D-244).
   Future<void> buy(StoreProduct product, {required String orgId, bool consumable = false});
   Future<void> restore({required String orgId});
@@ -109,6 +114,8 @@ class NoStore implements StorePurchases {
   Future<String?> storefront() async => null;
   @override
   Future<List<StoreProduct>> products(Set<String> ids) async => const [];
+  @override
+  Future<Map<String, int>> freeTrialDays(Set<String> ids) async => const {};
   @override
   Future<void> buy(StoreProduct product, {required String orgId, bool consumable = false}) async {}
   @override
@@ -178,6 +185,47 @@ class RevenueCatStore implements StorePurchases {
     } catch (e) {
       debugPrint('store products unavailable: $e');
       return const [];
+    }
+  }
+
+  /// A free trial in whole days (7 days, or 1 week), or null for anything else.
+  static int? _trialDays(rc.PeriodUnit unit, int count) => switch (unit) {
+    rc.PeriodUnit.day => count > 0 ? count : null,
+    rc.PeriodUnit.week => count > 0 ? count * 7 : null,
+    _ => null,
+  };
+
+  /// Apple: the product has a free introductory offer and the person is eligible for it.
+  /// Google Play never reports eligibility, so the subscription option the store would start
+  /// (its default one, which already accounts for who qualifies) must open with a free phase.
+  @override
+  Future<Map<String, int>> freeTrialDays(Set<String> ids) async {
+    try {
+      await _ready();
+      final found = (await rc.Purchases.getProducts(ids.toList())).where((p) => ids.contains(p.identifier)).toList();
+      final out = <String, int>{};
+      if (_android) {
+        for (final p in found) {
+          final phase = p.defaultOption?.freePhase;
+          final period = phase?.billingPeriod;
+          final days = period == null ? null : _trialDays(period.unit, period.value);
+          if (days != null) out[p.identifier] = days;
+        }
+        return out;
+      }
+      final intro = found.where((p) => (p.introductoryPrice?.price ?? 1) == 0).toList();
+      if (intro.isEmpty) return out;
+      final eligibility = await rc.Purchases.checkTrialOrIntroductoryPriceEligibility([for (final p in intro) p.identifier]);
+      for (final p in intro) {
+        if (eligibility[p.identifier]?.status != rc.IntroEligibilityStatus.introEligibilityStatusEligible) continue;
+        final i = p.introductoryPrice!;
+        final days = _trialDays(i.periodUnit, i.periodNumberOfUnits * (i.cycles > 0 ? i.cycles : 1));
+        if (days != null) out[p.identifier] = days;
+      }
+      return out;
+    } catch (e) {
+      debugPrint('store trials unavailable: $e');
+      return const {};
     }
   }
 

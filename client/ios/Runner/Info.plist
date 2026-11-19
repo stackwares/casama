@@ -122,7 +122,7 @@
 	<false/>
 	<key>com.posthog.posthog.CAPTURE_PUSH_NOTIFICATION_OPENED</key>
 	<false/>
-	<!-- Google Analytics (GA4) stays off until Dart turns it on for Casama Cloud with consent (D-397).
+	<!-- Google Analytics (GA4) stays off until Dart turns it on for Casama Cloud; people can turn it off in Settings → Privacy (D-397).
 	     No ad ids, no ad personalization, no automatic screen names (only route templates are sent). -->
 	<!-- Crashlytics (D-416) sends nothing until Dart turns it on: official builds, switch on. -->
 	<key>FirebaseCrashlyticsCollectionEnabled</key>
@@ -130,6 +130,12 @@
 	<key>FIREBASE_ANALYTICS_COLLECTION_ENABLED</key>
 	<false/>
 	<key>GOOGLE_ANALYTICS_DEFAULT_ALLOW_AD_PERSONALIZATION_SIGNALS</key>
+	<false/>
+	<!-- No advertising id and no vendor id (IDFV): GA4 gets only its own app-instance id, which
+	     matches the App Privacy answers (no Device ID for analytics). -->
+	<key>GOOGLE_ANALYTICS_ADID_COLLECTION_ENABLED</key>
+	<false/>
+	<key>GOOGLE_ANALYTICS_IDFV_COLLECTION_ENABLED</key>
 	<false/>
 	<key>FirebaseAutomaticScreenReportingEnabled</key>
 	<false/>

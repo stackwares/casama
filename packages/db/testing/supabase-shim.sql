@@ -43,6 +43,18 @@ create table if not exists auth.mfa_factors (
 create unique index if not exists mfa_factors_user_friendly_name_unique on auth.mfa_factors (friendly_name, user_id)
   where trim(both from friendly_name) <> '';
 
+-- Sign-in identities (the columns the API reads: Sign in with Apple's sub, D-420).
+create table if not exists auth.identities (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users (id) on delete cascade,
+  provider text not null,
+  provider_id text not null,
+  identity_data jsonb not null default '{}'::jsonb,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now(),
+  unique (provider_id, provider)
+);
+
 create or replace function auth.jwt() returns jsonb language sql stable as $$
   select coalesce(
     nullif(current_setting('request.jwt.claim', true), ''),

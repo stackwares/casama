@@ -1098,7 +1098,8 @@ export class BillingService {
       order by (e.valid_until is not null and e.valid_until < now()) desc, e.valid_until nulls last
       limit 500`);
     for (const d of due) await this.recompute(d.org_id);
-    // Included credits lapse after the following month; packs and rewards after 12 months (D-246).
+    // Included credits lapse after the following month; web packs and rewards after 12 months
+    // (D-246); App Store and Google Play packs never (D-418).
     await this.db.execute(sql`select public.expire_credits()`);
     return { orgs: usd.size, usd: [...usd.values()].reduce((a, b) => a + b, 0) };
   }

@@ -15,6 +15,30 @@ export const AccountDeletion = z
   })
   .openapi("AccountDeletion");
 
+export const AppleSignInTokenRequest = z
+  .object({
+    authorization_code: z.string().min(1).max(2000).optional().openapi({
+      description:
+        "The one-time authorization code from Apple's system sheet (iOS and macOS); the server swaps it for a refresh token",
+    }),
+    refresh_token: z.string().min(1).max(2000).optional().openapi({
+      description:
+        "Apple's refresh token from the browser sign-in (Supabase Auth's provider_refresh_token)",
+    }),
+  })
+  .refine((b) => !!b.authorization_code !== !!b.refresh_token, {
+    message: "Send authorization_code or refresh_token",
+  })
+  .openapi("AppleSignInTokenRequest");
+
+export const AppleSignInTokenResult = z
+  .object({
+    stored: z.boolean().openapi({
+      description: "False when this server doesn't revoke Apple tokens (no Sign in with Apple key)",
+    }),
+  })
+  .openapi("AppleSignInTokenResult");
+
 export const OrgSettings = z
   .object({
     run_event_retention_days: z.number().int().min(7).max(3650),

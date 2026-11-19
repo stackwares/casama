@@ -25,6 +25,21 @@ fi
 if [[ "${CASAMA_OFFICIAL_BUILD:-0}" == "1" && -f config/maps.json ]]; then
   defines+=(--dart-define-from-file=config/maps.json)
 fi
+# No Sparkle in this build (App Store 2.4.5(vii)): auto_updater is swapped for a stub with no
+# native plugin, so neither its pod nor Sparkle.framework is linked. The lock files are put back after.
+tmp=$(mktemp -d)
+cp pubspec.lock "$tmp/pubspec.lock"
+cp macos/Podfile.lock "$tmp/Podfile.lock"
+restore() {
+  rm -f pubspec_overrides.yaml
+  cp "$tmp/pubspec.lock" pubspec.lock
+  cp "$tmp/Podfile.lock" macos/Podfile.lock
+  flutter pub get >/dev/null || true
+  rm -rf "$tmp"
+}
+trap restore EXIT
+printf 'dependency_overrides:\n  auto_updater:\n    path: tool/appstore/auto_updater_stub\n' >pubspec_overrides.yaml
+flutter pub get
 flutter build macos --release \
   --dart-define=CASAMA_DISTRIBUTION=appstore \
   --dart-define=CASAMA_SIGNED_MAC=true \
@@ -34,14 +49,18 @@ flutter build macos --release \
 ../scripts/upload-symbols.sh apple build/macos/Build/Products/Release mac
 app="build/macos/Build/Products/Release/Casama.app"
 ../scripts/macos-fix-pdfium.sh "$app"
-# The Mac App Store updates the app, so this build never starts Sparkle (D-159): mark it (the menu
-# leaves out Check for Updates…) and drop Sparkle's helper programs, which aren't sandboxed and
-# would fail App Store validation. The framework itself stays linked, unused.
+# The Mac App Store updates the app (D-159): mark the build (the menu leaves out Check for
+# Updates…), drop Sparkle's Info.plist keys, and fail if Sparkle got in anyway.
 /usr/libexec/PlistBuddy -c "Add :CasamaDistribution string appstore" "$app/Contents/Info.plist" 2>/dev/null ||
   /usr/libexec/PlistBuddy -c "Set :CasamaDistribution appstore" "$app/Contents/Info.plist"
-sparkle="$app/Contents/Frameworks/Sparkle.framework"
-rm -rf "$sparkle/Versions/B/Autoupdate" "$sparkle/Versions/B/Updater.app" "$sparkle/Versions/B/XPCServices" \
-  "$sparkle/Autoupdate" "$sparkle/Updater.app" "$sparkle/XPCServices"
+for key in SUPublicEDKey SUEnableAutomaticChecks SUAutomaticallyUpdate SUScheduledCheckInterval SUFeedURL; do
+  /usr/libexec/PlistBuddy -c "Delete :$key" "$app/Contents/Info.plist" 2>/dev/null || true
+done
+if [[ -e "$app/Contents/Frameworks/Sparkle.framework" ]] ||
+  [[ -e "$app/Contents/Frameworks/auto_updater_macos.framework" ]]; then
+  echo "Sparkle is in the App Store build; the auto_updater stub didn't apply." >&2
+  exit 1
+fi
 if [[ -z "${APP_SIGN_IDENTITY:-}" || -z "${INSTALLER_SIGN_IDENTITY:-}" || -z "${PROVISIONING_PROFILE:-}" ]]; then
   echo "Built $app (App Store flavor). Set APP_SIGN_IDENTITY, INSTALLER_SIGN_IDENTITY and PROVISIONING_PROFILE to sign and package." >&2
   exit 0
@@ -84,6 +103,9 @@ if [[ -d "$widgets" ]]; then
 fi
 /usr/libexec/PlistBuddy -c "Add :com.apple.application-identifier string $prefix.$bundle_id" "$entitlements"
 /usr/libexec/PlistBuddy -c "Add :com.apple.developer.team-identifier string $team" "$entitlements"
+# Push (D-312, D-325) needs aps-environment, which only the provisioning profile can grant.
+aps=$(security cms -D -i "$PROVISIONING_PROFILE" | plutil -extract 'Entitlements.com\.apple\.developer\.aps-environment' raw - 2>/dev/null || true)
+[[ -n "$aps" ]] && /usr/libexec/PlistBuddy -c "Add :com.apple.developer.aps-environment string $aps" "$entitlements"
 codesign --force --timestamp --options runtime --entitlements "$entitlements" \
   --sign "$APP_SIGN_IDENTITY" "$app"
 rm -f "$entitlements"

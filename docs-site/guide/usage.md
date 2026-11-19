@@ -203,12 +203,13 @@ time, live view, live calls, images and video, read-aloud and dictation, and app
 through Casama's own connector account. Usage is deducted from the balance every minute. Every run
 on Casama Cloud needs credits, because even a short run can use some of these.
 
-Credits belong to the workspace, not to a person, and they don't last forever:
+Credits belong to the workspace, not to a person. Most of them don't last forever:
 
 | Credits | Last until |
 | --- | --- |
 | A month's included credits | The end of the following month |
-| Credit packs and rewards | 12 months |
+| Credit packs bought on the web or in the desktop app, and rewards | 12 months |
+| Credit packs bought in the App Store or Google Play | They never expire |
 
 Credits that run out soonest are spent first. Only your oldest Free workspace gets Free's monthly
 credits.

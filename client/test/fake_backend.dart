@@ -1399,6 +1399,15 @@ class FakeBackend implements Backend {
   @override
   String photoUrl(String photoId) => 'http://localhost:8787/v1/photos/$photoId';
 
+  /// Tests start agreed, so the consent step stays out of the way unless a test clears it.
+  DateTime? aiConsent = DateTime.utc(2026, 1, 1);
+  @override
+  DateTime? get aiConsentAt => aiConsent;
+  @override
+  Future<void> setAiConsent(bool allowed) async {
+    aiConsent = allowed ? DateTime.now().toUtc() : null;
+  }
+
   var nameAskedMarked = false;
   @override
   Future<void> markNameAsked() async {

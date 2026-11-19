@@ -75,6 +75,13 @@ x-casama: &casama
     # Casama Cloud only: the app's monthly email switch (D-408). Unset on self-hosted servers.
     NEWSLETTER_RESEND_API_KEY: ${NEWSLETTER_RESEND_API_KEY:-}
     NEWSLETTER_WEBHOOK_SECRET: ${NEWSLETTER_WEBHOOK_SECRET:-}
+    # Sign in with Apple token revocation on account deletion (D-420): the Sign in with Apple key
+    # (.p8 on one line with \n, or a path), its key id and the team id. Unset: off.
+    APPLE_SIGNIN_KEY_P8: ${APPLE_SIGNIN_KEY_P8:-}
+    APPLE_SIGNIN_KEY_ID: ${APPLE_SIGNIN_KEY_ID:-}
+    APPLE_SIGNIN_TEAM_ID: ${APPLE_SIGNIN_TEAM_ID:-}
+    APPLE_SIGNIN_APP_ID: ${APPLE_SIGNIN_APP_ID:-ai.casama.app}
+    APPLE_SIGNIN_SERVICES_ID: ${APPLE_SIGNIN_SERVICES_ID:-ai.casama.app.signin}
     EMAIL_FROM: ${EMAIL_FROM:-Casama <no-reply@localhost>}
     # Invites use the same SMTP server as Auth when there's no Resend key (D-174).
     SMTP_HOST: ${SMTP_HOST:-}

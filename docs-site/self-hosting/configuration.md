@@ -305,6 +305,18 @@ redirect URI of the web client. If Apple and Google reach Auth under another nam
    secret.
 3. Add the values to `infra/compose/.env` and run `casama selfhost up`.
 
+Apple asks apps with Sign in with Apple to revoke a person's Apple tokens when they delete their
+account. Give the server the same Sign in with Apple key and it does so: the app hands over what
+Apple returned at sign-in, and deleting the account revokes it with Apple.
+
+| Name                       | Default                | What it does                                                    |
+| -------------------------- | ---------------------- | --------------------------------------------------------------- |
+| `APPLE_SIGNIN_KEY_P8`      | (empty)                | The Sign in with Apple key: the `.p8` file's contents, or a path. |
+| `APPLE_SIGNIN_KEY_ID`      | (empty)                | The key's id.                                                   |
+| `APPLE_SIGNIN_TEAM_ID`     | (empty)                | Your Apple team id.                                             |
+| `APPLE_SIGNIN_APP_ID`      | `ai.casama.app`        | The app id the system sheet signs in with.                      |
+| `APPLE_SIGNIN_SERVICES_ID` | `ai.casama.app.signin` | The Services ID the browser sign-in uses.                       |
+
 ## Passkeys
 
 People can sign in with a passkey (Face ID, a fingerprint or a screen lock) once they add one in

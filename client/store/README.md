@@ -42,6 +42,14 @@ nothing has been sent for review.
   rankings. The subscription paragraph and the Terms and Privacy links at the end are required.
 - The Mac App Store build is sandboxed: it can't lend this Mac to bots, run a local server or read
   the front app for quick ask, so the Mac text doesn't mention them.
+- Upload the Mac App Store build only from `scripts/package-macos-appstore.sh`. It signs with
+  `macos/Runner/AppStore.entitlements` (sandboxed; Xcode's own Release config is not), adds push
+  from the profile, and builds without Sparkle (auto_updater is swapped for
+  `tool/appstore/auto_updater_stub`). An archive uploaded straight from Xcode would be refused.
+- Before sending for review (preflight 2026-11-19): attach a screen recording of a real iPhone and
+  Mac run to the review notes; keep `review@casama.ai` on Pro with extra credits (the notes say
+  so); the watch and iPhone Duo screenshots need a build that contains the watch app and Duo
+  layout, otherwise remove them.
 
 ## Applying changes
 

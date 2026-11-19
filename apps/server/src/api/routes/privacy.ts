@@ -7,6 +7,15 @@ import { cleanSitePattern } from "@casama/domain";
 import { getProductAnalytics } from "@casama/observability";
 import type { OpenAPIHono } from "@hono/zod-openapi";
 import { sql } from "drizzle-orm";
+import {
+  AppleTokenError,
+  appleSignInConfig,
+  checkAppleRefreshToken,
+  exchangeAppleCode,
+  isAppleIdentity,
+  revokeAppleTokens,
+  saveAppleToken,
+} from "../../services/apple-signin.ts";
 import { newsletterConfig, newsletterOnAccountDeletion } from "../../services/newsletter.ts";
 import { exportUserData, requestAccountDeletion } from "../../services/privacy.ts";
 import { ApiError } from "../errors.ts";
@@ -52,6 +61,33 @@ export function registerPrivacyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     return c.body(null, 204) as never;
   });
 
+  // Sign in with Apple (D-420): keep a refresh token so deleting the account can revoke it.
+  app.openapi(routes.saveAppleSignInToken, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const body = c.req.valid("json");
+    const cfg = appleSignInConfig(env, deps.appleFetch);
+    if (!cfg) return c.json({ stored: false }, 200);
+    let t: { refreshToken: string; sub: string; clientId: string };
+    try {
+      t = body.authorization_code
+        ? await exchangeAppleCode(cfg, body.authorization_code)
+        : await checkAppleRefreshToken(cfg, body.refresh_token as string);
+    } catch (e) {
+      if (e instanceof AppleTokenError && e.status >= 400 && e.status < 500)
+        throw new ApiError(400, "apple_token_refused", "Apple didn't accept that sign-in");
+      deps.logger.warn("apple token not saved", {
+        user_id: claims.sub,
+        error: (e as Error).message,
+      });
+      throw new ApiError(502, "apple_unreachable", "Couldn't reach Apple");
+    }
+    // Only a token for the person's own Apple identity: never someone else's Apple account.
+    if (!(await isAppleIdentity(db, claims.sub, t.sub)))
+      throw new ApiError(400, "apple_identity_mismatch", "That Apple sign-in isn't this account's");
+    await saveAppleToken(db, claims.sub, t);
+    return c.json({ stored: true }, 200);
+  });
+
   app.openapi(routes.deleteMyAccount, async (c) => {
     const claims = requireClaims(c.get("claims"));
     const { confirm_email } = c.req.valid("json");
@@ -61,6 +97,11 @@ export function registerPrivacyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     if (!u?.email || u.email.toLowerCase() !== confirm_email.toLowerCase())
       throw new ApiError(400, "confirm_mismatch", "Type your account's email to confirm");
     const r = await requestAccountDeletion(db, claims.sub, env.ACCOUNT_DELETION_GRACE_DAYS);
+    // Sign in with Apple tokens are revoked now (D-420, App Store 5.1.1(v)). A failure never blocks
+    // the deletion: the token stays for the purge to try again, and the purge drops it either way.
+    await revokeAppleTokens(db, appleSignInConfig(env, deps.appleFetch), claims.sub, {
+      log: (msg, extra) => deps.logger.warn(msg, extra),
+    });
     // The monthly email stops now (D-408). Resend being down never blocks the deletion: the
     // worker keeps trying until the purge.
     const newsletter = newsletterConfig(env, deps.newsletterFetch);

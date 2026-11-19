@@ -110,6 +110,32 @@ describe("billing holes (D-246)", () => {
     expect(await balance(orgId)).toBeCloseTo(0, 6);
   });
 
+  it("App Store and Google Play packs never lapse; web packs keep 12 months (D-418)", async () => {
+    const u = await h.user("store-pack@example.com");
+    const orgId = (
+      await j(
+        await h.request("/v1/orgs", { method: "POST", token: u.token, json: { name: "Store" } }),
+      )
+    ).id as string;
+    await apply(orgId, 10, "purchase", "revenuecat:purch_store");
+    await apply(orgId, 25, "purchase", "dodo:pay_web");
+    const lots = await db().execute<{ reference: string; never: boolean }>(
+      sql`select reference, expires_at is null as never from public.credit_lots
+          where org_id = ${orgId}::uuid and reason = 'purchase' order by created_at`,
+    );
+    expect(lots.map((l) => [l.reference, l.never])).toEqual([
+      ["revenuecat:purch_store", true],
+      ["dodo:pay_web", false],
+    ]);
+    // Everything else lapses; the store pack stays on the balance.
+    await db().execute(
+      sql`update public.credit_lots set expires_at = now() - interval '1 second'
+          where org_id = ${orgId}::uuid and expires_at is not null`,
+    );
+    await db().execute(sql`select public.expire_credits()`);
+    expect(await balance(orgId)).toBeCloseTo(10, 6);
+  });
+
   it("a top-up after a negative balance only adds the part above zero as spendable credit", async () => {
     const u = await h.user("debt@example.com");
     const orgId = (

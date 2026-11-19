@@ -7,9 +7,9 @@ import '../../theme/app_colors.dart';
 import 'billing_screen.dart' show openUrlProvider, platformProvider;
 import '../../core/remote_content.dart';
 
-/// Apple's standard Terms of Use (EULA). The App Store accepts it for subscriptions until Casama
-/// publishes its own terms.
-const appleStandardEula = 'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/';
+/// Casama's Terms of Use. It carries Apple's minimum EULA terms ("Apps from the Apple App Store"),
+/// and the App Store description links the same page, so both Terms links match (3.1.2).
+const casamaTermsUrl = 'https://casama.ai/terms';
 const casamaPrivacyUrl = 'https://casama.ai/privacy';
 
 /// The fine print every subscription offer needs (App Store 3.1.2, Google Play): price and period,
@@ -26,7 +26,7 @@ class PurchaseTerms extends ConsumerWidget {
   /// Web price labels already read "$39 / month".
   final bool priceHasPeriod;
 
-  /// Free-trial days web checkout starts with, or null. The line then says when charging begins.
+  /// Free-trial days the purchase starts with (web checkout, or a store offer the store confirmed), or null. The line then says when charging begins.
   final int? trialDays;
 
   @override
@@ -40,7 +40,9 @@ class PurchaseTerms extends ConsumerWidget {
     final String? disclosure = price == null
         ? null
         : store != null
-        ? l10n.paywallDisclosureStore(price, period, store == 'app_store' ? l10n.storeAccountApple : l10n.storeAccountGoogle)
+        ? trial > 0
+              ? l10n.paywallDisclosureStoreTrial(trial, price, period, store == 'app_store' ? l10n.storeAccountApple : l10n.storeAccountGoogle)
+              : l10n.paywallDisclosureStore(price, period, store == 'app_store' ? l10n.storeAccountApple : l10n.storeAccountGoogle)
         : trial > 0
         ? l10n.paywallDisclosureWebTrial(trial, priceHasPeriod ? price : '$price $period')
         : l10n.paywallDisclosureWeb(priceHasPeriod ? price : '$price $period');
@@ -68,7 +70,7 @@ class PurchaseTerms extends ConsumerWidget {
           crossAxisAlignment: WrapCrossAlignment.center,
           children: [
             if (apple) ...[
-              link(l10n.termsOfUse, remoteLink('terms', appleStandardEula), const Key('termsOfUse')),
+              link(l10n.termsOfUse, remoteLink('terms', casamaTermsUrl), const Key('termsOfUse')),
               Text('·', style: small),
             ],
             link(l10n.privacyPolicy, remoteLink('privacy', casamaPrivacyUrl), const Key('privacyPolicy')),

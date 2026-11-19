@@ -1,0 +1,9 @@
+name: auto_updater
+description: >-
+  Stand-in for auto_updater in the Mac App Store build (scripts/package-macos-appstore.sh). Same
+  Dart API, no native plugin, so Sparkle is never linked into that build (App Store 2.4.5(vii)).
+version: 1.0.0
+publish_to: none
+
+environment:
+  sdk: ^3.13.0

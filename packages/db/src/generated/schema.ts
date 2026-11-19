@@ -5983,3 +5983,22 @@ export const teachSteps = pgTable("teach_steps", {
 	check("teach_steps_kind_check", sql`kind = ANY (ARRAY['click'::text, 'type'::text, 'key'::text, 'scroll'::text, 'open'::text])`),
 	check("teach_steps_target_check", sql`(target IS NULL) OR ((jsonb_typeof(target) = 'object'::text) AND (octet_length((target)::text) <= 600))`),
 ]);
+
+export const appleSignInTokens = pgTable("apple_sign_in_tokens", {
+	userId: uuid("user_id").notNull(),
+	clientId: text("client_id").notNull(),
+	appleSub: text("apple_sub").notNull(),
+	vaultSecretId: uuid("vault_secret_id").notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	foreignKey({
+			columns: [table.userId],
+			foreignColumns: [users.id],
+			name: "apple_sign_in_tokens_user_id_fkey"
+		}).onDelete("cascade"),
+	primaryKey({ columns: [table.userId, table.clientId], name: "apple_sign_in_tokens_pkey"}),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"], using: sql`true`, withCheck: sql`true`  }),
+	check("apple_sign_in_tokens_client_id_check", sql`(char_length(client_id) >= 1) AND (char_length(client_id) <= 200)`),
+	check("apple_sign_in_tokens_apple_sub_check", sql`(char_length(apple_sub) >= 1) AND (char_length(apple_sub) <= 200)`),
+]);
