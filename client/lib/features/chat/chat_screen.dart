@@ -489,6 +489,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     // notifications that arrive while it is.
     ref.listenManual(notificationsProvider, (_, next) {
       final botId = widget.botId;
+      // A run in the chat on screen asks for the person while another run is being followed.
+      final open = ref.read(chatControllerProvider(botId)).conversationId;
+      for (final n in next.value ?? const <NotificationView>[]) {
+        if (n.isRequest && n.readAt == null && open != null && n.conversationId == open && n.runId != null) {
+          final run = n.runId!;
+          Future.microtask(() => ref.read(chatControllerProvider(botId).notifier).followWaiting(open, run));
+        }
+      }
       final fresh = [
         for (final n in next.value ?? const <NotificationView>[])
           if (n.readAt == null && !n.isRequest && n.botId == botId && (n.link?.startsWith('/bots/$botId/chat') ?? false)) n,

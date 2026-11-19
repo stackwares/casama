@@ -147,6 +147,32 @@ void main() {
     expect(File(log).readAsStringSync().trim(), '+15550001|Hi there');
   });
 
+  test('iMessage leaves group chats alone: only one-to-one messages are read (D-413)', () async {
+    final db = '${home.path}/chat.db';
+    // As on a Mac: a message in a group chat carries the group's name; a one-to-one message has none.
+    final mk = await Process.run('sqlite3', [
+      db,
+      "create table handle (ROWID integer primary key, id text); create table message (ROWID integer primary key, handle_id integer, text text, is_from_me integer, cache_roomnames text);"
+          "insert into handle values (1, '+15550001');"
+          "insert into message values (1, 1, 'baseline', 0, null), (2, 1, 'in the family group', 0, 'chat123456789'), (3, 1, 'just to you', 0, null);",
+    ]);
+    expect(mk.exitCode, 0, reason: mk.stderr.toString());
+    server = Computerd(
+      ComputerdConfig(home: home.path, token: token, port: 0, address: '127.0.0.1', allowedRoots: [shared.path], capabilities: {'messages'}, imessageDb: db),
+    );
+    await server.start();
+    base = Uri.parse('http://127.0.0.1:${server.port}');
+    final next = jsonDecode(
+      (await http.get(
+        base.replace(path: '/imessage/new', queryParameters: {'since': '1'}),
+        headers: auth,
+      )).body,
+    );
+    // Before, the group message was read too, and its sender got the bot's answer one-to-one.
+    expect((next['messages'] as List).map((m) => m['text']), ['just to you']);
+    expect(next['latest'], 3);
+  });
+
   test('iMessage attachments: listed with new messages, fetched by id, and files sent (D-342)', () async {
     final db = '${home.path}/chat.db';
     final pic = File('${home.path}/Library/Messages/Attachments/ab/photo.jpg')..createSync(recursive: true);

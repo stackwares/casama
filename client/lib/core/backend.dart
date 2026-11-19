@@ -684,11 +684,15 @@ class NotificationView {
     this.heldReason,
     this.botId,
     this.conversationId,
+    this.runId,
     this.pushStatus,
   });
 
   /// The conversation a reply is in (D-325).
   final String? conversationId;
+
+  /// The run a request (an approval, a takeover) or a reply belongs to.
+  final String? runId;
 
   /// `sent`, `deferred`, `held` or `off` (no push: turned off, or the chat was on screen).
   final String? pushStatus;
@@ -714,6 +718,7 @@ class NotificationView {
     heldReason: heldReason,
     botId: botId,
     conversationId: conversationId,
+    runId: runId,
     pushStatus: pushStatus,
   );
 

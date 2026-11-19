@@ -313,6 +313,11 @@ class Computerd {
     final since = int.tryParse(req.uri.queryParameters['since'] ?? '') ?? 0;
     final latest = await _messagesQuery('select coalesce(max(ROWID), 0) as latest from message');
     final hasAttachments = (await _messagesQuery("select count(*) as n from sqlite_master where name in ('attachment', 'message_attachment_join')")).first['n'] == 2;
+    // Group chats are left alone (D-413): a message there isn't addressed to the bot, and the
+    // answer went to its sender one-to-one, outside the group. Messages names the group on each of
+    // its messages (cache_roomnames); a one-to-one message has none.
+    final hasRooms = (await _messagesQuery("select count(*) as n from pragma_table_info('message') where name = 'cache_roomnames'")).first['n'] == 1;
+    final direct = hasRooms ? "and (m.cache_roomnames is null or m.cache_roomnames = '') " : '';
     final List<dynamic> rows;
     if (since <= 0) {
       rows = const [];
@@ -322,7 +327,8 @@ class Computerd {
         "(select json_group_array(json_object('id', a.ROWID, 'name', a.transfer_name, 'mime', a.mime_type, 'size', a.total_bytes)) "
         'from message_attachment_join j join attachment a on a.ROWID = j.attachment_id where j.message_id = m.ROWID) as attachments '
         'from message m join handle h on h.ROWID = m.handle_id '
-        "where m.is_from_me = 0 and m.ROWID > $since and ((m.text is not null and m.text != '') "
+        "where m.is_from_me = 0 and m.ROWID > $since $direct"
+        "and ((m.text is not null and m.text != '') "
         'or exists (select 1 from message_attachment_join j where j.message_id = m.ROWID)) order by m.ROWID limit 50',
       );
       for (final r in rows.cast<Map<String, dynamic>>()) {
@@ -335,7 +341,8 @@ class Computerd {
     } else {
       rows = await _messagesQuery(
         'select m.ROWID as rowid, h.id as handle, m.text as text from message m join handle h on h.ROWID = m.handle_id '
-        'where m.is_from_me = 0 and m.ROWID > $since and m.text is not null and m.text != \'\' order by m.ROWID limit 50',
+        'where m.is_from_me = 0 and m.ROWID > $since $direct'
+        'and m.text is not null and m.text != \'\' order by m.ROWID limit 50',
       );
     }
     await _json(req.response, 200, {'latest': (latest.isEmpty ? 0 : (latest.first as Map)['latest']) ?? 0, 'messages': rows});

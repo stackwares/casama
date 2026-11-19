@@ -66,6 +66,7 @@ export * from "./redact.ts";
 export * from "./replays.ts";
 export * from "./run.ts";
 export * from "./safe-fetch.ts";
+export * from "./screen-lease.ts";
 export * from "./search.ts";
 export * from "./secret-requests.ts";
 export * from "./secret-store.ts";

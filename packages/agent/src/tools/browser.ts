@@ -224,13 +224,15 @@ function computerBackend(ctx: ToolContext): Backend {
 /** Picks the backend for one call; remembers it for the rest of the run. */
 export async function backendFor(ctx: ToolContext, where?: "mine" | "computer"): Promise<Backend> {
   const b = ctx.browser;
-  const computer = () => {
+  // The computer has one browser: this run takes it, or waits for the run that has it (D-413).
+  const computer = async () => {
     b?.pick("computer");
+    await ctx.claimScreen?.();
     return computerBackend(ctx);
   };
   if (!b) {
     if (where === "mine") throw new ToolError("browser_offline", OFFLINE);
-    return computerBackend(ctx);
+    return computer();
   }
   const want = where ?? b.picked;
   if (want === "computer") return computer();

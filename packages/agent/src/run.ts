@@ -110,6 +110,7 @@ import { REACTION_HISTORY_TURNS, reactionNotes } from "./reactions.ts";
 import { Redactor } from "./redact.ts";
 import { REPLAY_STOPPED } from "./replays.ts";
 import { safeFetch } from "./safe-fetch.ts";
+import { releaseScreen, screenBusyMessage, waitForScreen } from "./screen-lease.ts";
 import {
   createSecretRequest,
   finishSecretRequest,
@@ -120,6 +121,8 @@ import {
 } from "./secret-requests.ts";
 import { learnFromRun } from "./skill-learning.ts";
 import { setupGuide } from "./tools/setup.ts";
+import { WATCHER_NO_MATCH } from "./watcher-match.ts";
+import { watcherAskedIn } from "./watchers.ts";
 import { afterWelcomeRun, WELCOME_GUIDE } from "./welcome.ts";
 
 /** The person's message is for every bot in the group (D-118). */
@@ -241,6 +244,8 @@ export interface RunDeps {
   logger?: Logger;
   /** `contextWindow` caps what a run may send, for models whose real window is smaller than listed. */
   limits?: { maxSteps?: number; wallTimeMs?: number; contextWindow?: number };
+  /** How long a run waits for a computer's screen another run is using (tests shorten it). */
+  screenWait?: { waitMs?: number; pollMs?: number };
   /** Enqueues another run (bots woken by @mentions in group chats, D-118). */
   startRun?: (runId: string) => Promise<void>;
   /** Langfuse generations for every model attempt (D-107); off when unset. */
@@ -1022,7 +1027,11 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
       if (!text.trim()) return null;
       await replyToChannel(
         db,
-        { conversationId: info.conversationId, messageId: said.messageId },
+        {
+          conversationId: info.conversationId,
+          messageId: said.messageId,
+          speakingRunId: info.runId,
+        },
         text,
         deps.fetch ?? safeFetch,
         deps.local,
@@ -1748,8 +1757,8 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
     );
     await completeRun(finalMessage.messageId, [...arrived]);
     // Chat apps (D-134): a reply in a thread from Telegram, email, … goes back there.
-    await step("channel-reply", () =>
-      replyToChannel(
+    await step("channel-reply", async () => {
+      await replyToChannel(
         db,
         {
           conversationId: info.conversationId,
@@ -1762,8 +1771,30 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
         { kept, objects: deps.objects, links: deps.fileLinks },
       ).catch((err) => {
         log?.warn("channel reply failed", { run_id: runId, error: (err as Error).message });
-      }),
-    );
+      });
+      // A watcher asked for from a chat app (D-413): its news goes back there too. It runs in a
+      // chat of its own, so without this "tell me when…" from Telegram was never told there.
+      if (
+        info.trigger === "watcher" &&
+        info.conversationId &&
+        finalMessage.text.trim() !== WATCHER_NO_MATCH
+      ) {
+        const askedIn = await watcherAskedIn(db, info.conversationId).catch(() => null);
+        if (askedIn)
+          await replyToChannel(
+            db,
+            { conversationId: askedIn, messageId: finalMessage.messageId },
+            finalMessage.text,
+            deps.fetch ?? safeFetch,
+            deps.local,
+          ).catch((err) => {
+            log?.warn("watcher channel reply failed", {
+              run_id: runId,
+              error: (err as Error).message,
+            });
+          });
+      }
+    });
     // Welcome chat (D-129): the setup offer after the first value, "What I learned" after setup.
     await step("welcome", () =>
       afterWelcomeRun(db, {
@@ -1933,6 +1964,8 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
     stopTyping();
     // The team computer's desktop is free for other bots once the run ends (D-148).
     await releaseDesktop(db, runId).catch(() => {});
+    // And the computer's browser and screen for the bot's other runs (D-413).
+    await releaseScreen(db, runId).catch(() => {});
   }
 }
 
@@ -3228,6 +3261,17 @@ async function toolStep(
       }
       return computer;
     };
+    // One run at a time drives the computer's browser and desktop (D-413).
+    const takeScreen = async () => {
+      const c = await getComputer();
+      const holder = await waitForScreen(
+        deps.db,
+        c,
+        { runId: info.runId, botId: info.botId },
+        deps.screenWait,
+      );
+      if (holder) throw new ToolError("screen_busy", screenBusyMessage(holder));
+    };
     const takeCheckpoint = async (label: string) => {
       const c = await getComputer();
       const { checkpointId } = await (deps.computers as ComputerService).checkpoint(
@@ -3307,6 +3351,8 @@ async function toolStep(
             `The team computer's desktop is in use by ${holders.join(", ")}. Work without the desktop for now (shell, files, browser tools) or try again in a few minutes.`,
           );
       }
+      // The desktop is the same screen the browser is on (D-413).
+      await takeScreen();
     }
     // Cancelling the run aborts this signal, so a long command (a coding agent, a build) stops too.
     const toolCtrl = new AbortController();
@@ -3354,6 +3400,7 @@ async function toolStep(
               libraryHooks(deps, info),
             )
           : undefined,
+        claimScreen: deps.computers ? takeScreen : undefined,
         checkpoint: deps.computers ? takeCheckpoint : undefined,
         // Before a command that deletes: not when a recent checkpoint already covers it (D-413).
         checkpointBefore: deps.computers
@@ -4416,6 +4463,7 @@ async function approvalGate(
       info.conversationId,
       { id: approval.id, summary: summary.slice(0, 2000) },
       deps.fetch ?? fetch,
+      info.runId,
     ).catch((err) =>
       deps.logger?.warn("approval to chat app failed", { error: (err as Error).message }),
     );
