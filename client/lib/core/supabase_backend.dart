@@ -1857,6 +1857,15 @@ class SupabaseBackend implements Backend {
 
   static List<AttachmentRef> _files(Object? content) => attachmentsOf(content);
 
+  /// The live call a spoken turn was said on (its text part carries `call`).
+  static String? _callIdOf(Object? content) {
+    if (content is! List) return null;
+    for (final p in content) {
+      if (p case {'type': 'text', 'call': final String id}) return id;
+    }
+    return null;
+  }
+
   static List<UiPart> _ui(Object? content) => uiPartsOf(content);
 
   static String? _uiAction(Object? content) {
@@ -1930,6 +1939,7 @@ class SupabaseBackend implements Backend {
           topic: _topic(r['content']),
           gallery: galleryPartsOf(r['content']),
           call: MessageCall.fromContent(r['content']),
+          callId: _callIdOf(r['content']),
         ),
     ];
   }
@@ -2914,6 +2924,14 @@ class SupabaseBackend implements Backend {
               callback: (message) {
                 final data = message['payload'] is Map ? message['payload'] as Map : message;
                 if (data['message_id'] case final String id) out.add(ConversationActivity.message(id));
+              },
+            )
+            // A message the server rewrote (a call card's summary or next steps): reload it.
+            .onBroadcast(
+              event: 'message_changed',
+              callback: (message) {
+                final data = message['payload'] is Map ? message['payload'] as Map : message;
+                if (data['message_id'] case final String id) out.add(ConversationActivity.changed(id));
               },
             )
             // A message's reactions changed (D-331): only that message is refreshed.
@@ -5350,6 +5368,19 @@ class SupabaseBackend implements Backend {
   )).data!.ended;
 
   @override
+  Future<String?> updateCallStep(String liveCallId, String stepId, {bool dismiss = false}) async =>
+      (await api.voice.updateCallStep(
+        id: liveCallId,
+        stepId: stepId,
+        callStepRequest: CallStepRequest(
+          action: dismiss ? CallStepRequestActionEnum.dismiss : CallStepRequestActionEnum.start,
+        ),
+      )).data?.runId;
+
+  @override
+  Future<void> deleteCall(String liveCallId) async => api.voice.deleteLiveCall(id: liveCallId);
+
+  @override
   Future<void> saveVoiceTranscript(
     String conversationId,
     List<(String, String)> turns,
@@ -5358,10 +5389,12 @@ class SupabaseBackend implements Backend {
     Map<String, int>? usage,
     String? liveCallId,
     List<String>? turnIds,
+    String? ended,
   }) async => api.voice.saveVoiceTranscript(
     voiceTranscriptRequest: VoiceTranscriptRequest(
       conversationId: conversationId,
       liveCallId: liveCallId,
+      ended: VoiceTranscriptRequestEndedEnum.values.where((e) => e.value == ended).firstOrNull,
       seconds: seconds,
       provider: VoiceTranscriptRequestProviderEnum.values
           .where((p) => p.value == provider)

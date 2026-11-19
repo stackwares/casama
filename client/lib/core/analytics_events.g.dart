@@ -21,6 +21,7 @@ const analyticsClientEvents = <String>{
   'companion_paired',
   'device_data_toggled',
   'call_started',
+  'call_card_action',
   'bot_call_answered',
   'paywall_view',
   'paywall_dismiss',

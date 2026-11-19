@@ -722,6 +722,9 @@ class _VoiceSettingsDialogState extends ConsumerState<VoiceSettingsDialog> {
   var _callTools = <String>[];
   var _loaded = false;
 
+  /// After each call, its card gets a short summary and next steps (call card plan); on unless off.
+  var _summarize = true;
+
   @override
   void initState() {
     super.initState();
@@ -731,6 +734,7 @@ class _VoiceSettingsDialogState extends ConsumerState<VoiceSettingsDialog> {
       setState(() {
         _voice.text = (v['tts_voice'] as String?) ?? '';
         _callTools = [for (final t in (v['call_tools'] as List?) ?? const []) '$t'];
+        _summarize = v['summarize_calls'] != false;
         _loaded = true;
       });
     }).catchError((_) {
@@ -749,7 +753,13 @@ class _VoiceSettingsDialogState extends ConsumerState<VoiceSettingsDialog> {
     final ok = await runGuarded(context, () async {
       // Read-aloud and calls are Gemini, dictation is OpenAI (D-260): there's no service to pick,
       // so a choice saved before is cleared. The bot's other voice settings are kept.
-      await ref.read(backendProvider).updateBotVoice(widget.botId, {'tts_provider': null, 'stt_provider': null, 'tts_voice': _voice.text.trim().isEmpty ? null : _voice.text.trim()});
+      await ref.read(backendProvider).updateBotVoice(widget.botId, {
+        'tts_provider': null,
+        'stt_provider': null,
+        'tts_voice': _voice.text.trim().isEmpty ? null : _voice.text.trim(),
+        // Stored only when off: on is the default.
+        'summarize_calls': _summarize ? null : false,
+      });
       return true;
     });
     if (!mounted) return;
@@ -799,6 +809,18 @@ class _VoiceSettingsDialogState extends ConsumerState<VoiceSettingsDialog> {
                       );
                       if (chosen != null && mounted) setState(() => _callTools = chosen);
                     },
+            ),
+            GroupedTile(
+              key: const Key('summarizeCallsRow'),
+              icon: LucideIcons.notebookText,
+              title: l10n.summarizeCalls,
+              subtitle: l10n.summarizeCallsHelp,
+              onTap: !_loaded ? null : () => setState(() => _summarize = !_summarize),
+              trailing: Switch(
+                key: const Key('summarizeCallsSwitch'),
+                value: _summarize,
+                onChanged: !_loaded ? null : (v) => setState(() => _summarize = v),
+              ),
             ),
           ],
         ),

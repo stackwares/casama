@@ -123,8 +123,29 @@ starts it as a task in the chat and keeps talking with you.
   take over; the call carries on in the bubble, and tapping the bubble brings you back. The small
   picture updates once a second; video only starts when you open it full size.
 - Say **"stop that"** to stop what the bot started on this call, or **"show me"** to see its screen.
-- After you hang up, the chat shows a short recap: how long the call was and what was started on
-  it, each with a link to what it did.
+- After you hang up, the call's card lists what was started on it, each with a link to what it did.
+
+### After a call
+
+A call shows in its chat as one card instead of a bubble for every sentence:
+
+- **What it was about:** a summary of a sentence or three, written by the bot a few seconds after
+  you hang up. Calls under 30 seconds don't get one.
+- **Next steps:** things that were said would happen next. **Do it** hands one to the bot as a
+  normal chat request; the ✕ puts it away. Nothing starts until you tap.
+- **Done on the call:** tasks the bot started and quick things it did while you talked, such as
+  remembering a fact, setting up a reminder or looking something up. Tap one to open it.
+- **Transcript:** tap **Transcript** to read the call word for word inside the card. Long calls
+  open in a sheet where you can search and copy.
+- **Call back** calls the bot again in the same chat, so it remembers what you just talked about.
+  It's the main button when the call dropped or you missed the bot's call.
+- **⋯** copies or shares the whole call, or deletes it (the card and its transcript).
+
+While a call is on, its card shows **On a call** with the last thing said and **Return to call**.
+A missed call from the bot leaves a card with why it called.
+
+The summary uses a little of the bot's small model, like the starter requests in an empty chat.
+To turn it off for a bot: the bot's settings > **Voice** > **Summarize calls**.
 
 ### Calls with the screen off
 

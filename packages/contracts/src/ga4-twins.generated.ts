@@ -92,6 +92,9 @@ export const ANALYTICS_CLIENT_EVENTS: Record<string, string[]> = {
     "kind",
     "result"
   ],
+  "call_card_action": [
+    "action"
+  ],
   "bot_call_answered": [
     "answer"
   ],

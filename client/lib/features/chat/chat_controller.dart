@@ -217,11 +217,37 @@ class TopicLinkEntry extends ChatEntry {
   final MessageTopic topic;
 }
 
-/// A call's recap (D-327 §8): how long it was and what was started on it, with links to the runs.
+/// A call as one card (D-327 §8, call card plan): its card message once the call is over (null
+/// while it goes on), and the spoken turns that are folded into it instead of showing as bubbles.
 class CallRecapEntry extends ChatEntry {
-  const CallRecapEntry({required this.messageId, required this.call});
+  const CallRecapEntry({
+    required this.messageId,
+    required this.call,
+    this.liveCallId,
+    this.turns = const [],
+    this.at,
+  });
+
+  /// The card message, or null for a call still going on (or one whose card hasn't come yet).
+  final String? messageId;
+  final MessageCall? call;
+  final String? liveCallId;
+  final List<CallTurnView> turns;
+
+  /// When the last thing in it happened.
+  final DateTime? at;
+
+  /// The row's key: the call, so a live card becomes the finished one in place.
+  String get key => liveCallId ?? messageId ?? 'call';
+}
+
+/// One spoken turn of a call, shown inside its card.
+class CallTurnView {
+  const CallTurnView({required this.messageId, required this.role, required this.text, required this.at});
   final String messageId;
-  final MessageCall call;
+  final String role;
+  final String text;
+  final DateTime at;
 }
 
 /// A gallery card in a bot's reply (D-315): an item it suggests, or a skill it drafted.
@@ -522,6 +548,11 @@ class ChatController extends Notifier<ChatState> {
         if (state.conversationId == id) await _loadReactions(id, [message]);
         return;
       }
+      // A call card the server posted or rewrote (its summary, a step): the cards are read again.
+      if (activity.changedMessageId != null) {
+        if (state.conversationId == id) await _refreshCalls(id);
+        return;
+      }
       // A person's message (D-413): from this device it is on screen already; from another one
       // it is put in, also while the bot works (it joined that run, so nothing else will say).
       if (activity.messageId case final message?) {
@@ -617,6 +648,74 @@ class ChatController extends Notifier<ChatState> {
     } finally {
       _catchingUp = false;
     }
+  }
+
+  /// Reads the chat again for its call cards (a summary came, a step started, a call ended) and
+  /// puts each card in place of the one on screen, so the chat doesn't jump or lose a run.
+  Future<void> _refreshCalls(String id) async {
+    final List<ChatMessageView> messages;
+    try {
+      messages = await _backend.messages(id, limit: pageSize);
+    } catch (e) {
+      debugPrint('call card refresh failed: $e');
+      return;
+    }
+    if (state.conversationId != id) return;
+    final fresh = {
+      for (final e in _entriesOf(id, messages))
+        if (e is CallRecapEntry) e.key: e,
+    };
+    final entries = [...state.entries];
+    var changed = false;
+    var missing = false;
+    for (final card in fresh.values) {
+      final at = entries.indexWhere((e) => e is CallRecapEntry && e.key == card.key);
+      if (at < 0) {
+        missing = true;
+      } else {
+        entries[at] = card;
+        changed = true;
+      }
+    }
+    if (changed) state = state.copyWith(entries: entries);
+    // A card that isn't on screen yet (the call just ended): the chat reloads, unless a run is
+    // streaming, whose end reloads it anyway.
+    if (missing && !state.running) {
+      try {
+        await open(id);
+      } catch (e) {
+        debugPrint('chat refresh failed: $e');
+      }
+    }
+  }
+
+  /// Starts a next step from a call's card as a chat run, or puts it away; the card updates when
+  /// the server says so.
+  Future<void> callStep(String liveCallId, String stepId, {bool dismiss = false}) async {
+    final id = state.conversationId;
+    await _backend.updateCallStep(liveCallId, stepId, dismiss: dismiss);
+    if (id == null) return;
+    await _refreshCalls(id);
+    if (!dismiss && !state.running) {
+      try {
+        await open(id);
+      } catch (e) {
+        debugPrint('chat refresh failed: $e');
+      }
+    }
+  }
+
+  /// Deletes a call from the chat: its card and its transcript.
+  Future<void> deleteCall(String liveCallId) async {
+    await _backend.deleteCall(liveCallId);
+    final id = state.conversationId;
+    state = state.copyWith(
+      entries: [
+        for (final e in state.entries)
+          if (!(e is CallRecapEntry && e.liveCallId == liveCallId)) e,
+      ],
+    );
+    if (id != null) unawaited(_refreshCalls(id));
   }
 
   /// Opens a conversation (or the most recent one when null).
@@ -765,8 +864,33 @@ class ChatController extends Notifier<ChatState> {
               if (e is MessageEntry) e.id: e,
           }
         : const <String, MessageEntry>{};
+    // A call's spoken turns fold into its card (call card plan): the card where it is once the call
+    // is over, or a live card where the last turn is while it goes on.
+    final carded = <String>{
+      for (final m in messages) ?m.call?.liveCallId,
+    };
+    final turnsOf = <String, List<CallTurnView>>{};
+    final lastTurn = <String, String>{};
+    for (final m in messages) {
+      final c = m.callId;
+      if (c == null || m.call != null) continue;
+      (turnsOf[c] ??= []).add(
+        CallTurnView(messageId: m.id, role: m.role, text: m.text, at: m.createdAt.toLocal()),
+      );
+      lastTurn[c] = m.id;
+    }
     return [
-        for (final m in messages) ...[
+        for (final m in messages)
+          if (m.callId case final c? when m.call == null) ...[
+            if (!carded.contains(c) && lastTurn[c] == m.id)
+              CallRecapEntry(
+                messageId: null,
+                call: null,
+                liveCallId: c,
+                turns: turnsOf[c] ?? const [],
+                at: m.createdAt.toLocal(),
+              ),
+          ] else ...[
           // A routine's run starts with its instructions; the chat shows that it ran instead.
           if (m.routineName != null)
             NoticeEntry(
@@ -807,7 +931,14 @@ class ChatController extends Notifier<ChatState> {
           if (m.suggestion case final s?) SuggestionEntry(messageId: m.id, suggestion: s),
           if (m.suggestionList.isNotEmpty) SuggestionListEntry(messageId: m.id, items: m.suggestionList),
           if (m.topic case final t?) TopicLinkEntry(messageId: m.id, topic: t),
-          if (m.call case final c?) CallRecapEntry(messageId: m.id, call: c),
+          if (m.call case final c?)
+            CallRecapEntry(
+              messageId: m.id,
+              call: c,
+              liveCallId: c.liveCallId,
+              turns: c.liveCallId == null ? const [] : turnsOf[c.liveCallId] ?? const [],
+              at: m.createdAt.toLocal(),
+            ),
           for (final u in m.ui)
             UiEntry(surfaceId: u.surfaceId, messages: u.messages),
           for (final g in m.gallery) GalleryCardEntry(messageId: m.id, part: g),

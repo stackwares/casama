@@ -1,3 +1,4 @@
+import { track } from "@casama/agent";
 import { contentKeys, type Database as Db } from "@casama/db";
 import { sql } from "drizzle-orm";
 import { type CallStep, readCard, writeCard } from "./call-recap.ts";
@@ -106,6 +107,12 @@ export async function summarizeCall(
     await db.execute(
       sql`update public.live_calls set summary_state = ${status} where id = ${liveCallId}::uuid`,
     );
+    track(db, {
+      event: "call_summary_written",
+      userId: call.user_id,
+      orgId: call.org_id,
+      properties: { status, next_steps: card.part.next_steps.length },
+    });
     return status;
   };
 

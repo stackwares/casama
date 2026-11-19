@@ -95,4 +95,30 @@ void main() {
     expect(find.byKey(const Key('ttsProvider')), findsNothing);
     expect(find.textContaining('This server provides voice'), findsNothing);
   });
+
+  testWidgets('Summarize calls is on unless turned off, and only "off" is stored', (tester) async {
+    await setSize(tester, const Size(700, 1400));
+    final backend = FakeBackend()..botVoice = {'realtime_voice': 'Puck'};
+    await tester.pumpWidget(harness(backend, const Scaffold(body: VoiceSettingsDialog(botId: botId))));
+    await tester.pumpAndSettle();
+    expect(tester.widget<Switch>(find.byKey(const Key('summarizeCallsSwitch'))).value, isTrue);
+    await tester.tap(find.byKey(const Key('summarizeCallsSwitch')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('saveVoice')));
+    await tester.pumpAndSettle();
+    expect(backend.botVoice?['summarize_calls'], isFalse);
+  });
+
+  testWidgets('turning Summarize calls back on removes the setting (on is the default)', (tester) async {
+    await setSize(tester, const Size(700, 1400));
+    final backend = FakeBackend()..botVoice = {'realtime_voice': 'Puck', 'summarize_calls': false};
+    await tester.pumpWidget(harness(backend, const Scaffold(body: VoiceSettingsDialog(botId: botId))));
+    await tester.pumpAndSettle();
+    expect(tester.widget<Switch>(find.byKey(const Key('summarizeCallsSwitch'))).value, isFalse);
+    await tester.tap(find.byKey(const Key('summarizeCallsSwitch')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('saveVoice')));
+    await tester.pumpAndSettle();
+    expect(backend.botVoice?.containsKey('summarize_calls'), isFalse);
+  });
 }

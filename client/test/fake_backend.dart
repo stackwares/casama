@@ -6062,7 +6062,9 @@ class FakeBackend implements Backend {
     Map<String, int>? usage,
     String? liveCallId,
     List<String>? turnIds,
+    String? ended,
   }) async {
+    lastCallEnded = ended;
     lastVoiceUsage = usage;
     savedSeconds = seconds;
     endedLiveCalls.add(liveCallId);
@@ -6073,6 +6075,30 @@ class FakeBackend implements Backend {
       liveTurns.add(t);
     }
     savedTurns = List.of(liveTurns);
+  }
+
+  /// How the last call said it ended (call card plan).
+  String? lastCallEnded;
+
+  /// Next steps started or dismissed from call cards: (liveCallId, stepId, dismissed).
+  final callSteps = <(String, String, bool)>[];
+  Object? callStepError;
+
+  @override
+  Future<String?> updateCallStep(String liveCallId, String stepId, {bool dismiss = false}) async {
+    if (callStepError case final e?) throw e;
+    callSteps.add((liveCallId, stepId, dismiss));
+    return dismiss ? null : 'run-from-$stepId';
+  }
+
+  final deletedCalls = <String>[];
+  @override
+  Future<void> deleteCall(String liveCallId) async {
+    deletedCalls.add(liveCallId);
+    storedMessages = [
+      for (final m in storedMessages)
+        if (m.callId != liveCallId && m.call?.liveCallId != liveCallId) m,
+    ];
   }
 
   /// Turns saved while calls went on and at hang-up (D-327), each once.

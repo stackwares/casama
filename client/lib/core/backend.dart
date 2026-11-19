@@ -126,12 +126,16 @@ class ReactionPerson {
 /// sent a message there ([messageId], D-413: from another device it may join the run already
 /// working, so no run starts to tell this one).
 class ConversationActivity {
-  const ConversationActivity.run(this.runId) : reactionMessageId = null, messageId = null;
-  const ConversationActivity.reaction(String messageId) : runId = null, reactionMessageId = messageId, messageId = null;
-  const ConversationActivity.message(String this.messageId) : runId = null, reactionMessageId = null;
+  const ConversationActivity.run(this.runId) : reactionMessageId = null, messageId = null, changedMessageId = null;
+  const ConversationActivity.reaction(String messageId) : runId = null, reactionMessageId = messageId, messageId = null, changedMessageId = null;
+  const ConversationActivity.message(String this.messageId) : runId = null, reactionMessageId = null, changedMessageId = null;
+
+  /// A message the server rewrote, or a card it posted (a call's card and its summary).
+  const ConversationActivity.changed(String this.changedMessageId) : runId = null, reactionMessageId = null, messageId = null;
   final String? runId;
   final String? reactionMessageId;
   final String? messageId;
+  final String? changedMessageId;
   bool get isReaction => reactionMessageId != null;
 }
 
@@ -493,10 +497,14 @@ class ChatMessageView {
     this.topic,
     this.gallery = const [],
     this.call,
+    this.callId,
   });
 
-  /// A call's recap (D-327 §8): its length and the jobs started on it.
+  /// A call's card (D-327 §8, call card plan).
   final MessageCall? call;
+
+  /// The live call a spoken turn belongs to: it's shown in that call's card, not as a bubble.
+  final String? callId;
 
   /// Set on the message a routine posts to start its run (D-155): shown as a line, not a bubble.
   final String? routineName;
@@ -528,6 +536,8 @@ class ChatMessageView {
     if (suggestion case final s?) 'suggestion': {'id': s.id, 'title': s.title, 'body': s.body},
     if (topic case final t?) 'topic': {'conversation_id': t.conversationId, 'title': t.title},
     if (suggestionList.isNotEmpty) 'suggestions': [for (final s in suggestionList) {'id': s.id, 'title': s.title, 'body': s.body}],
+    if (call case final c?) 'call': c.raw,
+    'call_id': ?callId,
   };
   static ChatMessageView fromJson(Map<String, dynamic> j) => ChatMessageView(
     id: j['id'] as String,
@@ -555,6 +565,8 @@ class ChatMessageView {
       {'conversation_id': final String id, 'title': final String title} => MessageTopic(conversationId: id, title: title),
       _ => null,
     },
+    call: j['call'] is Map ? MessageCall.fromContent([j['call']]) : null,
+    callId: j['call_id'] as String?,
   );
 
   final String id;
@@ -600,25 +612,107 @@ class SuggestionState {
   bool get open => status == SuggestionStatus.pending;
 }
 
-/// A topic's result posted back to General (D-253).
-/// A call's recap in its chat (D-327 §8).
+/// A call's card in its chat (D-327 §8, call card plan): how it ended, what it was about, what's
+/// left to do, what was done on it, and how many turns its transcript has.
 class MessageCall {
-  const MessageCall({required this.seconds, this.tasks = const []});
+  const MessageCall({
+    required this.seconds,
+    this.tasks = const [],
+    this.liveCallId,
+    this.kind = 'app',
+    this.ended = 'hung_up',
+    this.startedAt,
+    this.endedAt,
+    this.turns = 0,
+    this.actions = const [],
+    this.summaryStatus = 'skipped',
+    this.summary,
+    this.steps = const [],
+    this.reason,
+    this.raw = const {},
+  });
   final int seconds;
   final List<MessageCallTask> tasks;
+  final String? liveCallId;
+
+  /// app | phone (the bot rang, D-135).
+  final String kind;
+
+  /// hung_up | bot_hung_up | dropped | idle | silent | limit | missed | failed.
+  final String ended;
+  final DateTime? startedAt;
+  final DateTime? endedAt;
+
+  /// How many turns the call's transcript has (some may not be loaded yet).
+  final int turns;
+  final List<MessageCallAction> actions;
+
+  /// pending | ready | skipped | failed.
+  final String summaryStatus;
+  final String? summary;
+  final List<MessageCallStep> steps;
+
+  /// A missed ring: why the bot called.
+  final String? reason;
+
+  /// The part as it came, for the offline cache.
+  final Map<String, Object?> raw;
+
+  bool get missed => ended == 'missed';
+  bool get summaryPending => summaryStatus == 'pending';
+  List<MessageCallStep> get openSteps => [for (final s in steps) if (s.state == 'open') s];
 
   static MessageCall? fromContent(Object? content) {
     if (content is! List) return null;
     for (final p in content) {
       if (p case {'type': 'call', 'seconds': final num seconds}) {
         final tasks = p['tasks'];
+        final actions = p['actions'];
+        final steps = p['next_steps'];
+        final summary = p['summary'];
         return MessageCall(
           seconds: seconds.toInt(),
+          raw: Map<String, Object?>.from(p),
+          liveCallId: p['live_call_id'] as String?,
+          kind: p['kind'] as String? ?? 'app',
+          ended: p['ended'] as String? ?? 'hung_up',
+          startedAt: DateTime.tryParse(p['started_at'] as String? ?? '')?.toLocal(),
+          endedAt: DateTime.tryParse(p['ended_at'] as String? ?? '')?.toLocal(),
+          turns: (p['turns'] as num?)?.toInt() ?? 0,
+          reason: p['reason'] as String?,
+          summaryStatus: summary is Map ? summary['status'] as String? ?? 'skipped' : 'skipped',
+          summary: summary is Map ? summary['text'] as String? : null,
           tasks: [
             if (tasks is List)
               for (final t in tasks)
                 if (t case {'run_id': final String runId})
                   MessageCallTask(runId: runId, task: t['task'] as String? ?? '', status: t['status'] as String? ?? ''),
+          ],
+          actions: [
+            if (actions is List)
+              for (final a in actions)
+                if (a case {'run_id': final String runId, 'label': final String label})
+                  MessageCallAction(
+                    runId: runId,
+                    tool: a['tool'] as String? ?? '',
+                    label: label,
+                    ok: a['ok'] != false,
+                    targetKind: (a['target'] as Map?)?['kind'] as String? ?? 'run',
+                    targetId: (a['target'] as Map?)?['id'] as String?,
+                  ),
+          ],
+          steps: [
+            if (steps is List)
+              for (final s in steps)
+                if (s case {'id': final String id, 'label': final String label})
+                  MessageCallStep(
+                    id: id,
+                    label: label,
+                    task: s['task'] as String? ?? label,
+                    doable: s['doable'] == true,
+                    state: s['state'] as String? ?? 'open',
+                    runId: s['run_id'] as String?,
+                  ),
           ],
         );
       }
@@ -636,6 +730,47 @@ class MessageCallTask {
   final String status;
 }
 
+/// Something the bot did with a quick tool on a call ("Remembered: …"), and what it opens.
+class MessageCallAction {
+  const MessageCallAction({
+    required this.runId,
+    required this.tool,
+    required this.label,
+    required this.ok,
+    required this.targetKind,
+    this.targetId,
+  });
+  final String runId;
+  final String tool;
+  final String label;
+  final bool ok;
+
+  /// memory | routine | task | run.
+  final String targetKind;
+  final String? targetId;
+}
+
+/// A next step from a call's summary; a tap starts it as a chat run.
+class MessageCallStep {
+  const MessageCallStep({
+    required this.id,
+    required this.label,
+    required this.task,
+    required this.doable,
+    required this.state,
+    this.runId,
+  });
+  final String id;
+  final String label;
+  final String task;
+  final bool doable;
+
+  /// open | started | dismissed.
+  final String state;
+  final String? runId;
+}
+
+/// A topic's result posted back to General (D-253).
 class MessageTopic {
   const MessageTopic({required this.conversationId, required this.title});
   final String conversationId;
@@ -2522,7 +2657,15 @@ abstract class Backend {
     Map<String, int>? usage,
     String? liveCallId,
     List<String>? turnIds,
+    String? ended,
   });
+
+  /// A next step on a call's card (call card plan): starts it as a chat run (its id), or with
+  /// [dismiss] puts it away.
+  Future<String?> updateCallStep(String liveCallId, String stepId, {bool dismiss = false});
+
+  /// Deletes a call from its chat: its card and every turn of its transcript.
+  Future<void> deleteCall(String liveCallId);
 
   /// Saves finished turns of a live call while it goes on (D-327): (id, role, text), each saved
   /// once by its id however often it's sent.

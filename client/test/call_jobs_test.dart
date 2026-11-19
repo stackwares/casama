@@ -355,8 +355,8 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.byKey(const Key('callRecap-m-recap')), findsOneWidget);
-      expect(find.text('Call · 3:12'), findsOneWidget);
+      expect(find.byKey(const Key('callCard-m-recap')), findsOneWidget);
+      expect(find.text('Voice call · 3:12'), findsOneWidget);
       expect(find.text('Call ended · 3:12'), findsNothing);
       expect(find.text('Book the flight to Cebu'), findsOneWidget);
       expect(find.text('Stopped · See what it did'), findsOneWidget);

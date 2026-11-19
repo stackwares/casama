@@ -3400,6 +3400,228 @@ abstract class AppLocalizations {
   /// **'See what it did'**
   String get callRecapOpenRun;
 
+  /// No description provided for @summarizeCalls.
+  ///
+  /// In en, this message translates to:
+  /// **'Summarize calls'**
+  String get summarizeCalls;
+
+  /// No description provided for @summarizeCallsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'After each call, its card says what it was about and what\'s next. Uses a little of the bot\'s small model.'**
+  String get summarizeCallsHelp;
+
+  /// No description provided for @callCardVoice.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice call · {length}'**
+  String callCardVoice(String length);
+
+  /// No description provided for @callCardPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone call · {length}'**
+  String callCardPhone(String length);
+
+  /// No description provided for @callCardDropped.
+  ///
+  /// In en, this message translates to:
+  /// **'Call dropped · {length}'**
+  String callCardDropped(String length);
+
+  /// No description provided for @callCardMissed.
+  ///
+  /// In en, this message translates to:
+  /// **'Missed call from {name}'**
+  String callCardMissed(String name);
+
+  /// No description provided for @callCardLive.
+  ///
+  /// In en, this message translates to:
+  /// **'On a call with {name}'**
+  String callCardLive(String name);
+
+  /// No description provided for @callCardLiveElsewhere.
+  ///
+  /// In en, this message translates to:
+  /// **'On a call on another device'**
+  String get callCardLiveElsewhere;
+
+  /// No description provided for @callCardReturn.
+  ///
+  /// In en, this message translates to:
+  /// **'Return to call'**
+  String get callCardReturn;
+
+  /// No description provided for @callCardBotHungUp.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} hung up'**
+  String callCardBotHungUp(String name);
+
+  /// No description provided for @callCardEndedQuiet.
+  ///
+  /// In en, this message translates to:
+  /// **'Ended after a quiet stretch'**
+  String get callCardEndedQuiet;
+
+  /// No description provided for @callCardEndedLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'Ended at the call limit'**
+  String get callCardEndedLimit;
+
+  /// No description provided for @callCardWritingSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Writing a summary…'**
+  String get callCardWritingSummary;
+
+  /// No description provided for @callCardSummaryBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Summary by {name}'**
+  String callCardSummaryBy(String name);
+
+  /// No description provided for @callCardNextSteps.
+  ///
+  /// In en, this message translates to:
+  /// **'Next steps'**
+  String get callCardNextSteps;
+
+  /// No description provided for @callCardDoIt.
+  ///
+  /// In en, this message translates to:
+  /// **'Do it'**
+  String get callCardDoIt;
+
+  /// No description provided for @callCardDismissStep.
+  ///
+  /// In en, this message translates to:
+  /// **'Dismiss'**
+  String get callCardDismissStep;
+
+  /// No description provided for @callCardStepStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Started'**
+  String get callCardStepStarted;
+
+  /// No description provided for @callCardStepFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t start that. Try again.'**
+  String get callCardStepFailed;
+
+  /// No description provided for @callCardDoneOnCall.
+  ///
+  /// In en, this message translates to:
+  /// **'Done on the call'**
+  String get callCardDoneOnCall;
+
+  /// No description provided for @callCardMore.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} more'**
+  String callCardMore(int count);
+
+  /// No description provided for @callCardTranscript.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Transcript · 1 turn} other{Transcript · {count} turns}}'**
+  String callCardTranscript(int count);
+
+  /// No description provided for @callCardTranscriptTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Transcript'**
+  String get callCardTranscriptTitle;
+
+  /// No description provided for @callCardSearchTranscript.
+  ///
+  /// In en, this message translates to:
+  /// **'Search the transcript'**
+  String get callCardSearchTranscript;
+
+  /// No description provided for @callCardNoMatches.
+  ///
+  /// In en, this message translates to:
+  /// **'No matches'**
+  String get callCardNoMatches;
+
+  /// No description provided for @callCardYou.
+  ///
+  /// In en, this message translates to:
+  /// **'You'**
+  String get callCardYou;
+
+  /// No description provided for @callCardCallBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Call back'**
+  String get callCardCallBack;
+
+  /// No description provided for @callCardCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get callCardCopy;
+
+  /// No description provided for @callCardCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied'**
+  String get callCardCopied;
+
+  /// No description provided for @callCardShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get callCardShare;
+
+  /// No description provided for @callCardMoreActions.
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get callCardMoreActions;
+
+  /// No description provided for @callCardDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete call'**
+  String get callCardDelete;
+
+  /// No description provided for @callCardDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this call?'**
+  String get callCardDeleteTitle;
+
+  /// No description provided for @callCardDeleteBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Its card and transcript are removed from this chat. Jobs it started keep their results.'**
+  String get callCardDeleteBody;
+
+  /// No description provided for @callCardDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Call deleted'**
+  String get callCardDeleted;
+
+  /// No description provided for @callCardDeleteFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t delete the call'**
+  String get callCardDeleteFailed;
+
+  /// No description provided for @callCardSemantics.
+  ///
+  /// In en, this message translates to:
+  /// **'{title}. {summary}'**
+  String callCardSemantics(String title, String summary);
+
   /// No description provided for @replyLatency.
   ///
   /// In en, this message translates to:

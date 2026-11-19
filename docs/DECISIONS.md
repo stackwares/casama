@@ -6148,3 +6148,35 @@ Amends D-322's note that no MapTiler key was configured.
 - **Remaining launch gates:** upgrade the MapTiler Cloud account from Free (100k API requests/month, non-commercial use only) to Flex before shipping commercial builds with the key, and add origin/key restrictions in MapTiler Cloud (`app.casama.ai`, `localhost` for web; note native mobile/desktop `flutter_map` requests do not send an HTTP `Origin`).
 - **Tests:** `client/test/map_card_test.dart` (429 triggers fallback and retains it in full screen; single 404 stays on MapTiler; second `BotMapCard` in the same session starts on OpenStreetMap without requesting MapTiler).
 
+## D-429 After a call: one card holds the whole call (2026-11-19)
+
+- **Why:** a call ended in a card that said only "Call ended · 3:12" (plus jobs when `start_task`
+  ran), with every spoken turn as its own bubble above it, and the last words before hanging up
+  were often lost. Plan: `docs/CALL-RECAP-PLAN.md`; Oliver left every open choice to the defaults.
+- **Lost words:** `GeminiLiveEvents.flushPending()` saves what is still in the transcription
+  buffers when the call hangs up or fails for good; a bot reply cut off ends in "…".
+- **The card:** the recap message's `call` part grows (`services/call-recap.ts`): how it ended
+  (`hung_up`, `bot_hung_up`, `dropped`, `idle`, `silent`, `limit`, `missed`; from `end_reason`
+  and the app's new `ended` on `POST /v1/voice/transcript`), app or phone, turn count, the quick
+  tools done on the call as lines (from `runs.voice_call.live_call_id`; lookups that changed
+  nothing are left out), a summary state and next steps. The text part leads with the summary for
+  older apps, the chat list and the model's history.
+- **Turns fold into the card:** each saved turn's text part carries `call: <live_call_id>`; the app
+  shows those turns inside the card and not as bubbles, as a live card while no card exists yet.
+  Calls from before this keep their bubbles (no backfill).
+- **Summary:** one call on the bot's background model (`backgroundComplete`, `purpose =
+  "call_summary"`), in the worker (`summarizeCall` workflow, id `call-summary:<call>`): enqueued at
+  hang-up, and by the minute tick for calls the sweep or a limit ended. Strict JSON
+  `{summary, next_steps[]}`; skipped for calls under 30 s or 3 worded turns, when the bot's
+  `voice.summarize_calls` is false, or when the model call returns nothing (no credits, over
+  budget). Claimed by moving `summary_state` off `pending`, so never twice.
+- **Next steps:** `POST /v1/voice/live/{id}/steps/{step}` starts one as an ordinary chat run (only
+  steps the bot can do) or dismisses it; used once, and left open if the run can't start.
+  `DELETE /v1/voice/live/{id}` removes a call's card and turns (not while a run is going).
+- **Live updates:** the server sends `message_changed` on the conversation's Realtime topic when it
+  posts or rewrites a card; the app re-reads the call cards in place.
+- **Missed rings** (D-135) leave a slim card with the reason and Call back.
+- **Data:** `live_calls.recap_message_id`, `live_calls.summary_state`
+  (`20270216100001_call_recap.sql`). Analytics: `call_summary_written`, `call_card_action`.
+- **Tests:** `apps/server/test/call-recap.test.ts`, `live-calls.test.ts`, `phone-calls.test.ts`;
+  `client/test/call_card_test.dart`, `call_jobs_test.dart`, `gemini_live_test.dart`.

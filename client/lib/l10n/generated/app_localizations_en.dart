@@ -2155,6 +2155,145 @@ class AppLocalizationsEn extends AppLocalizations {
   String get callRecapOpenRun => 'See what it did';
 
   @override
+  String get summarizeCalls => 'Summarize calls';
+
+  @override
+  String get summarizeCallsHelp =>
+      'After each call, its card says what it was about and what\'s next. Uses a little of the bot\'s small model.';
+
+  @override
+  String callCardVoice(String length) {
+    return 'Voice call · $length';
+  }
+
+  @override
+  String callCardPhone(String length) {
+    return 'Phone call · $length';
+  }
+
+  @override
+  String callCardDropped(String length) {
+    return 'Call dropped · $length';
+  }
+
+  @override
+  String callCardMissed(String name) {
+    return 'Missed call from $name';
+  }
+
+  @override
+  String callCardLive(String name) {
+    return 'On a call with $name';
+  }
+
+  @override
+  String get callCardLiveElsewhere => 'On a call on another device';
+
+  @override
+  String get callCardReturn => 'Return to call';
+
+  @override
+  String callCardBotHungUp(String name) {
+    return '$name hung up';
+  }
+
+  @override
+  String get callCardEndedQuiet => 'Ended after a quiet stretch';
+
+  @override
+  String get callCardEndedLimit => 'Ended at the call limit';
+
+  @override
+  String get callCardWritingSummary => 'Writing a summary…';
+
+  @override
+  String callCardSummaryBy(String name) {
+    return 'Summary by $name';
+  }
+
+  @override
+  String get callCardNextSteps => 'Next steps';
+
+  @override
+  String get callCardDoIt => 'Do it';
+
+  @override
+  String get callCardDismissStep => 'Dismiss';
+
+  @override
+  String get callCardStepStarted => 'Started';
+
+  @override
+  String get callCardStepFailed => 'Couldn\'t start that. Try again.';
+
+  @override
+  String get callCardDoneOnCall => 'Done on the call';
+
+  @override
+  String callCardMore(int count) {
+    return '$count more';
+  }
+
+  @override
+  String callCardTranscript(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Transcript · $count turns',
+      one: 'Transcript · 1 turn',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get callCardTranscriptTitle => 'Transcript';
+
+  @override
+  String get callCardSearchTranscript => 'Search the transcript';
+
+  @override
+  String get callCardNoMatches => 'No matches';
+
+  @override
+  String get callCardYou => 'You';
+
+  @override
+  String get callCardCallBack => 'Call back';
+
+  @override
+  String get callCardCopy => 'Copy';
+
+  @override
+  String get callCardCopied => 'Copied';
+
+  @override
+  String get callCardShare => 'Share';
+
+  @override
+  String get callCardMoreActions => 'More';
+
+  @override
+  String get callCardDelete => 'Delete call';
+
+  @override
+  String get callCardDeleteTitle => 'Delete this call?';
+
+  @override
+  String get callCardDeleteBody =>
+      'Its card and transcript are removed from this chat. Jobs it started keep their results.';
+
+  @override
+  String get callCardDeleted => 'Call deleted';
+
+  @override
+  String get callCardDeleteFailed => 'Couldn\'t delete the call';
+
+  @override
+  String callCardSemantics(String title, String summary) {
+    return '$title. $summary';
+  }
+
+  @override
   String replyLatency(int ms) {
     final intl.NumberFormat msNumberFormat = intl.NumberFormat.decimalPattern(
       localeName,

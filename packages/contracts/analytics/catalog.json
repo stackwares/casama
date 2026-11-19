@@ -971,6 +971,33 @@
       "funnels": ["F8"]
     },
     {
+      "name": "call_summary_written",
+      "by": ["server"],
+      "description": "A finished call's card got its summary, or went without (call card plan).",
+      "properties": {
+        "status": {
+          "type": "string",
+          "values": ["ready", "skipped", "failed"]
+        },
+        "next_steps": {
+          "type": "number"
+        }
+      },
+      "funnels": ["F8"]
+    },
+    {
+      "name": "call_card_action",
+      "by": ["client"],
+      "description": "Someone used a call's card in the chat (call card plan).",
+      "properties": {
+        "action": {
+          "type": "string",
+          "values": ["transcript_opened", "step_started", "step_dismissed", "call_back", "copied", "shared", "deleted"]
+        }
+      },
+      "funnels": ["F8"]
+    },
+    {
       "name": "bot_call_answered",
       "by": ["client"],
       "description": "A call from a bot was answered or declined.",

@@ -43,6 +43,11 @@ The server, apps, CLI, SDK and MCP server share one version number.
   - Fixed: when the sign-up hook refuses someone (the waitlist, `SIGNUP_ALLOWED_EMAILS`,
     `SIGNUP_INVITED_ONLY` and Casama Cloud's sign-up check), the reason now reaches the apps. Before,
     Auth showed "Unexpected status code returned from hook: 403" for every refusal.
+- Calls end in one card in the chat instead of a bubble per sentence (D-428): a short summary,
+  next steps you can hand to the bot with one tap, what the bot did on the call, the transcript
+  folded in (searchable for long calls), Call back, Copy, Share and Delete. A missed call from the
+  bot leaves a card with why it called. The last words before hanging up are no longer lost.
+  Each bot can turn summaries off under Voice > Summarize calls.
 
 - The `casama` CLI covers most of the app. New commands: `chats` (read, export, share, branch,
   delete), `routines` (list, create, edit, run, delete), `approvals` (answer what bots are waiting

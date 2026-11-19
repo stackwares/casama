@@ -40,6 +40,16 @@ enum CallEnd {
   bot,
 }
 
+/// How a call ended, as its card says it (VoiceTranscriptRequest.ended).
+String callEndForCard(CallEnd reason) => switch (reason) {
+  CallEnd.hungUp => 'person',
+  CallEnd.bot => 'bot',
+  CallEnd.failed => 'dropped',
+  CallEnd.idle => 'idle',
+  CallEnd.replaced => 'replaced',
+  CallEnd.server => 'idle',
+};
+
 /// A call's finished turns, saved while the call goes on (D-327 §4): each turn is posted once,
 /// by its id; a failed post stays queued and is tried again a little later.
 class TurnSaver {
@@ -401,7 +411,7 @@ class CallController extends ChangeNotifier {
         _heartbeatEvery = Duration(seconds: limits.heartbeatSeconds);
       }
       if (over || _ending) {
-        await _finishRecord(const [], 0, null);
+        await _finishRecord(const [], 0, null, CallEnd.failed);
         return;
       }
       // The phone's call controls first: on iPhone the mic and player may start only once CallKit
@@ -417,13 +427,13 @@ class CallController extends ChangeNotifier {
       );
       unawaited(interruptions?.begin());
       if (over || _ending) {
-        await _finishRecord(const [], 0, null);
+        await _finishRecord(const [], 0, null, CallEnd.failed);
         return;
       }
       final call = await connector.connect(session);
       if (over || _ending) {
         await call.hangUp();
-        await _finishRecord(const [], 0, null);
+        await _finishRecord(const [], 0, null, CallEnd.failed);
         return;
       }
       _call = call;
@@ -480,7 +490,7 @@ class CallController extends ChangeNotifier {
       unawaited(_endSystem());
       // A session that started but never connected still ends its server record (and its hold).
       if (_liveCallId != null) {
-        unawaited(_finishRecord(const [], 0, null).catchError((_) {}));
+        unawaited(_finishRecord(const [], 0, null, CallEnd.failed).catchError((_) {}));
       }
     }
   }
@@ -995,7 +1005,7 @@ class CallController extends ChangeNotifier {
       // One more try for queued turns; whatever's still unsent goes with the hang-up.
       await _turns.flush();
       try {
-        await _finishRecord(_turns.unsent, seconds, usage);
+        await _finishRecord(_turns.unsent, seconds, usage, reason);
       } catch (e) {
         saveError = e;
       }
@@ -1011,6 +1021,7 @@ class CallController extends ChangeNotifier {
     List<(String, String, String)> unsent,
     int seconds,
     Map<String, int>? usage,
+    CallEnd reason,
   ) async {
     final conv = conversationId;
     if (conv == null) return;
@@ -1022,6 +1033,7 @@ class CallController extends ChangeNotifier {
       usage: usage,
       liveCallId: _liveCallId,
       turnIds: [for (final (id, _, _) in unsent) id],
+      ended: callEndForCard(reason),
     );
   }
 

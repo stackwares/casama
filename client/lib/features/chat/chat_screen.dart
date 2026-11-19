@@ -736,6 +736,19 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   /// Starts the message to one group member (or everyone) from the empty group chat.
+  /// Calls the bot in this chat, or goes back to its call when one is going on, whichever chat
+  /// it's in (D-327).
+  void _callBack(String? conversationId) {
+    final live = ref.read(activeCallProvider).live;
+    unawaited(
+      context.pushOnce(
+        live != null && live.botId == widget.botId
+            ? callScreenPath(live)
+            : '/bots/${widget.botId}/call${conversationId == null ? '' : '?c=$conversationId'}',
+      ),
+    );
+  }
+
   void _startMention(String name) {
     final text = _input.text.trim();
     final value = '${text.isEmpty ? '' : '$text '}@$name ';
@@ -1287,15 +1300,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             key: const Key('callButton'),
             icon: LucideIcons.phone,
             tooltip: l10n.startCall,
-            onPressed: () {
-              // This bot's call going on: back to it, whichever chat it's in (D-327).
-              final live = ref.read(activeCallProvider).live;
-              context.pushOnce(
-                live != null && live.botId == widget.botId
-                    ? callScreenPath(live)
-                    : '/bots/${widget.botId}/call${chat.conversationId == null ? '' : '?c=${chat.conversationId}'}',
-              );
-            },
+            onPressed: () => _callBack(chat.conversationId),
           ),
           // Topics are a bot's own chats (D-253); a new one from a group would leave the group.
           if (!widget.group)
@@ -1955,18 +1960,27 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             ),
           );
         case final CallRecapEntry e:
-          botSide('call-${e.messageId}');
+          // Keyed by the call, so its live card becomes the finished one in place (call card plan).
+          botSide('call-${e.key}');
           rows.add(
             _Row(
-              ValueKey('call-${e.messageId}'),
+              ValueKey('call-${e.key}'),
               AppSpace.sm,
-              () => CallRecapCard(
-                key: Key('callRecap-${e.messageId}'),
-                call: e.call,
+              () => CallCard(
+                key: Key('callCard-${e.key}'),
+                entry: e,
+                botId: widget.botId,
+                botName: name,
+                conversationId: chat.conversationId,
                 onOpenRun: (runId) => context.pushOnce('/bots/${widget.botId}/runs/$runId'),
+                onOpenPath: (path) => context.pushOnce(path),
+                onStep: (call, step, {dismiss = false}) =>
+                    ref.read(chatControllerProvider(widget.botId).notifier).callStep(call, step, dismiss: dismiss),
+                onDelete: (call) => ref.read(chatControllerProvider(widget.botId).notifier).deleteCall(call),
+                onCallBack: () => _callBack(chat.conversationId),
               ),
               fresh: fresh,
-              inputs: e,
+              inputs: (e, name, chat.conversationId),
             ),
           );
         case final DeviceAccessEntry d:
