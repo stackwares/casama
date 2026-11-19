@@ -143,6 +143,31 @@ describe("request words", () => {
       ).status,
     ).toBe("expired");
   });
+
+  it("keeps a paid data call for the phone, in its own words", () => {
+    const v = watchApprovalView(
+      {
+        id: "55555555-5555-4555-8555-555555555555",
+        run_id: "44444444-4444-4444-8444-444444444444",
+        bot_id: "22222222-2222-4222-8222-222222222222",
+        org_id: "11111111-1111-4111-8111-111111111111",
+        bot: "Milo",
+        bot_avatar: null,
+        status: "pending",
+        summary: "Milo wants to run data.call: weather for $0.02",
+        tool_name: "data.call",
+        args_redacted: { endpoint: "weather.now" },
+        risk: "medium",
+        created_at: new Date().toISOString(),
+        expires_at: new Date(Date.now() + 60_000).toISOString(),
+        is_yours: true,
+      },
+      { private: false, level: "medium" },
+    );
+    // It buys something: never a hold on the wrist, whatever its risk says.
+    expect(v).toMatchObject({ payment: true, can_allow: "phone", why_phone: "payment" });
+    expect(v.title).toBe("data.call: weather for $0.02");
+  });
 });
 
 let tdb: TestDatabase;
@@ -269,6 +294,8 @@ describe("a bot's chat", () => {
       true,
     );
     expect(hidden?.messages.find((m) => m.role === "user")?.text).not.toBe("");
+    // Nothing the server would refuse to read aloud is offered for it.
+    expect(hidden?.messages.every((m) => !m.can_speak)).toBe(true);
     const priv = await chat({ private: true });
     expect(priv?.messages.every((m) => m.text === "" && !m.can_speak)).toBe(true);
     expect(priv?.messages.at(-1)?.attachments).toEqual([{ kind: "page", title: "" }]);
@@ -277,6 +304,21 @@ describe("a bot's chat", () => {
   it("is only the person's, in their workspace", async () => {
     expect(await chat({ orgId: "00000000-0000-4000-8000-000000000000" })).toBeNull();
     expect(await chat({ conversationId: "00000000-0000-4000-8000-000000000000" })).toBeNull();
+  });
+
+  it("is the person's own latest chat, not a coworker's newer one with the same bot", async () => {
+    // The bot is shared, so the coworker's chat is visible to the person; it still isn't theirs,
+    // and a reply from the wrist must not land in it.
+    const theirs = await one<{ id: string }>(tdb.admin`
+      insert into public.conversations (org_id, bot_id, created_by, last_message_at)
+      values (${ids.org}, ${ids.bot}, ${ids.other}, now() + interval '1 hour') returning id`);
+    await tdb.admin`insert into public.messages (org_id, conversation_id, role, content)
+      values (${ids.org}, ${theirs.id}, 'assistant', ${tdb.admin.json([{ type: "text", text: "For Ben only" }])})`;
+    const c = await chat();
+    expect(c?.conversation_id).toBe(ids.conv);
+    expect(JSON.stringify(c)).not.toContain("For Ben only");
+    // Asked for by id (a notification about it), a chat the person may see still opens.
+    expect((await chat({ conversationId: theirs.id }))?.conversation_id).toBe(theirs.id);
   });
 });
 

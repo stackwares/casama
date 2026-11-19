@@ -56,7 +56,10 @@ export function apnsWidgetsFromEnv(env: Env): ApnsWidgetSender | undefined {
  * Alerts straight to Apple Watches' own tokens (D-410), with the same Apple key and the watch
  * app's topic (APNS_TOPIC_APP + ".watchkitapp"). Unset without a key.
  */
-export function apnsWatchFromEnv(env: Env): ApnsWatchSender | undefined {
+export function apnsWatchFromEnv(
+  env: Env,
+  logger?: { warn(msg: string, data?: Record<string, unknown>): void },
+): ApnsWatchSender | undefined {
   if (!env.APNS_KEY_P8 || !env.APNS_KEY_ID || !env.APNS_TEAM_ID) return undefined;
   return new ApnsWatchSender(
     new ApnsClient({
@@ -65,7 +68,11 @@ export function apnsWatchFromEnv(env: Env): ApnsWatchSender | undefined {
       teamId: env.APNS_TEAM_ID,
       url: env.APNS_URL,
     }),
-    { appBundleId: env.APNS_TOPIC_APP },
+    {
+      appBundleId: env.APNS_TOPIC_APP,
+      // A refusal that isn't a dead token (a wrong key or topic, too many requests): the reason only.
+      onError: logger ? (info) => logger.warn("watch push", info) : undefined,
+    },
   );
 }
 

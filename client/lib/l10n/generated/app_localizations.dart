@@ -24568,10 +24568,10 @@ abstract class AppLocalizations {
   /// **'New code'**
   String get watchNewCode;
 
-  /// Shown on the watch app (D-410). The key was removed.
+  /// Shown on the watch app (D-410), above its Sign in button: the person signed out here, or the watch was removed or signed out from the phone. It stays signed out until they tap Sign in.
   ///
   /// In en, this message translates to:
-  /// **'Signed out. Open Casama on your phone to sign in again'**
+  /// **'This watch is signed out'**
   String get watchSignedOut;
 
   /// Shown on the watch app (D-410). Complications and tiles when signed out.
@@ -24838,6 +24838,24 @@ abstract class AppLocalizations {
   /// **'That code didn\'t work. Check it on your watch'**
   String get watchPhoneCodeWrong;
 
+  /// Shown in Settings → Watch on the phone (D-410). Signing a watch in with a code failed because its key belongs to another account.
+  ///
+  /// In en, this message translates to:
+  /// **'This watch is still signed in to another account. Remove it there in Settings → Watch, then get a new code'**
+  String get watchPhoneCodeTaken;
+
+  /// Shown in Settings → Watch on the phone (D-410). Under a watch that is still in another workspace than the one selected.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed in to {workspace}'**
+  String watchPhoneElsewhere(String workspace);
+
+  /// Shown in Settings → Watch on the phone (D-410). Under a watch in another workspace whose name isn't known.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed in to another workspace'**
+  String get watchPhoneElsewhereUnknown;
+
   /// Shown in Settings → Watch on the phone (D-410). After a watch signs in.
   ///
   /// In en, this message translates to:
@@ -25077,6 +25095,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Other'**
   String get watchChannelOther;
+
+  /// Shown on the watch app (D-410). A notification about the person's other workspace (the push says which workspace it is from, and it isn't the one this watch is signed in to): only the phone can answer it.
+  ///
+  /// In en, this message translates to:
+  /// **'This is in another workspace. Answer it on your phone'**
+  String get watchOtherWorkspace;
+
+  /// Shown on the watch app (D-410). The tick after a reply typed or dictated from a notification went to the bot.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent'**
+  String get watchReplySent;
+
+  /// Shown on the watch app (D-410). A reply from a notification that the server didn't take; the chat opens so it can be said again.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t send your reply'**
+  String get watchReplyNotSent;
+
+  /// Shown on the watch app (D-410). A kept ask the server refused, or kept failing on, was given up on.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t send what you asked at {time}'**
+  String watchAskDropped(String time);
+
+  /// Shown on the watch app (D-410). The phone signed the watch in to a self-hosted server on plain http that isn't on the local network; the watch can't call it.
+  ///
+  /// In en, this message translates to:
+  /// **'This watch can only reach your server over https or on your home network'**
+  String get watchNeedsHttps;
+
+  /// Shown on the watch app (D-410). Button on a signed-out watch: asks the phone to sign it in again.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in'**
+  String get watchSignIn;
+
+  /// Shown on the watch app (D-410). The server says a request or suggestion isn't in this watch's workspace (or isn't its to answer); it may still be waiting, so never "Already answered".
+  ///
+  /// In en, this message translates to:
+  /// **'This watch can\'t answer this one. Open it on your phone'**
+  String get watchNotOnWatch;
+
+  /// Shown on the watch app (D-410). Under the Needs you list when more things wait than the watch can show (a skill idea, a question).
+  ///
+  /// In en, this message translates to:
+  /// **'{count} more on your phone'**
+  String watchMoreOnPhone(String count);
 
   /// No description provided for @showList.
   ///

@@ -132,6 +132,16 @@ struct RunView: View {
   /// The glance's row, so the screen draws before the stream answers.
   private var seed: Glance.Run? { model.glance?.runs.first { $0.id == runId } }
 
+  /// Where Open on iPhone goes: the server's link for the run, else its bot's chat, else the
+  /// chats. The phone has no page for a run by its id alone.
+  private var phoneLink: String {
+    let run = follower.run
+    let bot = PhoneRoutes.first(run?.botId, seed?.botId, else: "")
+    return PhoneRoutes.first(
+      run?.link, seed?.link,
+      else: bot.isEmpty ? PhoneRoutes.home : PhoneRoutes.chat(bot: bot, conversation: run?.conversationId))
+  }
+
   var body: some View {
     let run = follower.run
     let phase = run?.phase ?? seed?.phase ?? .working
@@ -172,7 +182,7 @@ struct RunView: View {
           Text(WatchL10n.takeOver).font(.watchTitle)
           Text(WatchL10n.continuesOnIphone).font(.watchCaption).foregroundStyle(WatchTheme.secondary)
           Button {
-            Task { await model.openOnPhone(link: run?.link ?? seed?.link ?? "/runs/\(runId)", title: WatchL10n.takeOver) }
+            Task { await model.openOnPhone(link: phoneLink, title: WatchL10n.takeOver) }
           } label: { Label(WatchL10n.openOnIphone, systemImage: "iphone") }
           .buttonStyle(PillStyle(tone: .main))
         case .finished:
@@ -189,7 +199,7 @@ struct RunView: View {
         case .problem:
           BotMarkView(name: bot, avatar: avatar, size: 44)
           Text(WatchL10n.couldntFinish).font(.watchTitle).foregroundStyle(WatchTheme.red).multilineTextAlignment(.center)
-          Button { Task { await model.openOnPhone(link: run?.link ?? "/runs/\(runId)", title: WatchL10n.problem) } } label: {
+          Button { Task { await model.openOnPhone(link: phoneLink, title: WatchL10n.problem) } } label: {
             Label(WatchL10n.openOnIphone, systemImage: "iphone")
           }
           .buttonStyle(PillStyle(tone: .plain, small: true))

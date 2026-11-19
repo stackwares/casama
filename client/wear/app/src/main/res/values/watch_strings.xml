@@ -97,7 +97,7 @@
     <string name="watch_use_code" formatted="false">Sign in with a code</string>
     <string name="watch_code_help" formatted="false">Type it in Casama on your phone or computer: Settings → Watch</string>
     <string name="watch_new_code" formatted="false">New code</string>
-    <string name="watch_signed_out" formatted="false">Signed out. Open Casama on your phone to sign in again</string>
+    <string name="watch_signed_out" formatted="false">This watch is signed out</string>
     <string name="watch_open_to_sign_in" formatted="false">Open Casama to sign in</string>
     <string name="watch_as_of">as of %1$s</string>
     <string name="watch_offline" formatted="false">Offline</string>
@@ -136,4 +136,12 @@
     <string name="watch_channel_replies" formatted="false">Replies</string>
     <string name="watch_channel_runs" formatted="false">Working bots</string>
     <string name="watch_channel_other" formatted="false">Other</string>
+    <string name="watch_other_workspace" formatted="false">This is in another workspace. Answer it on your phone</string>
+    <string name="watch_reply_sent" formatted="false">Sent</string>
+    <string name="watch_reply_not_sent" formatted="false">Couldn\'t send your reply</string>
+    <string name="watch_ask_dropped">Couldn\'t send what you asked at %1$s</string>
+    <string name="watch_needs_https" formatted="false">This watch can only reach your server over https or on your home network</string>
+    <string name="watch_sign_in" formatted="false">Sign in</string>
+    <string name="watch_not_on_watch" formatted="false">This watch can\'t answer this one. Open it on your phone</string>
+    <string name="watch_more_on_phone">%1$s more on your phone</string>
 </resources>

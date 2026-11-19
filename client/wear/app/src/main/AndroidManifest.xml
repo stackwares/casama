@@ -25,7 +25,13 @@
         android:icon="@mipmap/ic_launcher"
         android:label="@string/watch_comp_casama"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Casama.Wear">
+        android:theme="@style/Theme.Casama.Wear"
+        android:usesCleartextTraffic="true">
+        <!-- Cleartext is on only so a self-hosted server on the home network works over plain
+             http (http://192.168.1.10:8787). A network security config can't name address
+             ranges, so the gate is in code: every call goes through WatchApi.base(), which
+             refuses anything LinkMessage.isServerUrl doesn't accept (https, or http to
+             localhost, *.local or a private address). Firebase and Play services use https. -->
 
         <!-- Works without the phone once signed in (§2.2, decision 8's twin on Wear OS). -->
         <meta-data

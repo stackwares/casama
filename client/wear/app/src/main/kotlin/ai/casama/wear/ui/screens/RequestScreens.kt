@@ -53,20 +53,35 @@ import kotlinx.coroutines.launch
 /** Needs you (§6.1 B), the list: every request and suggestion, most urgent first. */
 @Composable
 fun NeedsScreen(nav: NavHostController) {
-    val session = LocalContext.current.graph.session
+    val context = LocalContext.current
+    val session = context.graph.session
+    val scope = rememberCoroutineScope()
     val state by session.glance.collectAsState()
     val needs = state.glance?.needs.orEmpty()
+    // The count also has things the watch gets no item for (a skill idea): they are on the phone.
+    val more = (state.glance?.needsCount ?: 0) - needs.size
+    // A need sent to the phone: its id, and whether that worked.
+    var sent by remember { mutableStateOf<Pair<String, Boolean>?>(null) }
     ListScreen { spec ->
         item {
             Text(stringResource(R.string.watch_needs_you), color = CasamaColors.Needs, style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(bottom = 4.dp))
         }
-        if (needs.isEmpty()) {
+        if (needs.isEmpty() && more <= 0) {
             item { Message(stringResource(R.string.watch_all_clear), stringResource(R.string.watch_nothing_waiting)) }
         }
         needs.forEach { n ->
             item {
+                val answerable = n.kind == NeedKind.APPROVAL || n.kind == NeedKind.SUGGESTION
+                val title = needText(n)
                 Card(
-                    onClick = { openNeed(nav, n) },
+                    onClick = {
+                        if (answerable) {
+                            openNeed(nav, n)
+                        } else {
+                            // A takeover, a password, a question: the phone's to answer.
+                            scope.launch { sent = n.id to openOnPhone(context, n.link, title.ifBlank { n.bot }) }
+                        }
+                    },
                     modifier = Modifier.fillMaxWidth().transformedHeight(this, spec),
                     transformation = SurfaceTransformation(spec),
                 ) {
@@ -74,12 +89,67 @@ fun NeedsScreen(nav: NavHostController) {
                         BotFace(n.bot, n.botAvatar, 24.dp)
                         Spacer(Modifier.width(8.dp))
                         Column {
-                            Words(needText(n), maxLines = 2, style = MaterialTheme.typography.titleSmall)
+                            Words(title, maxLines = 2, style = MaterialTheme.typography.titleSmall)
                             Text(listOfNotNull(n.bot, riskLabel(n.risk)).joinToString(" · "), style = MaterialTheme.typography.bodySmall, color = CasamaColors.Secondary, maxLines = 1)
+                            if (!answerable) {
+                                val line = when (sent?.takeIf { it.first == n.id }?.second) {
+                                    true -> R.string.watch_sent_to_phone
+                                    false -> R.string.watch_couldnt_reach
+                                    null -> R.string.watch_open_on_phone
+                                }
+                                Text(stringResource(line), style = MaterialTheme.typography.bodySmall, color = CasamaColors.Orchid, maxLines = 1)
+                            }
                         }
                     }
                 }
             }
+        }
+        if (more > 0) {
+            item {
+                Text(
+                    stringResource(R.string.watch_more_on_phone, more.toString()),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = CasamaColors.Secondary,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Something this watch can't answer: it is in another workspace than the watch is signed in to
+ * ([otherWorkspace], a push that said so), or the server says it isn't this watch's (a 404
+ * `not_found`). Never "Already answered": it may still be waiting. The phone can answer it.
+ */
+@Composable
+fun ElsewhereScreen(nav: NavHostController, link: String, title: String, otherWorkspace: Boolean) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var done by remember(link) { mutableStateOf<Boolean?>(null) }
+    done?.let { ok ->
+        DoneScreen(stringResource(if (ok) R.string.watch_sent_to_phone else R.string.watch_couldnt_reach), null, good = ok) { nav.popBackStack() }
+        return
+    }
+    ListScreen(edgeButton = {
+        EdgeButton(onClick = { scope.launch { done = openOnPhone(context, link, title) } }) {
+            Icon(painterResource(R.drawable.ic_phone), contentDescription = null, modifier = Modifier.size(18.dp))
+            Spacer(Modifier.width(6.dp))
+            Text(stringResource(R.string.watch_open_on_phone), maxLines = 1)
+        }
+    }) { _ ->
+        if (title.isNotBlank()) {
+            item { Words(title, maxLines = 3, style = MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) }
+        }
+        item {
+            Text(
+                stringResource(if (otherWorkspace) R.string.watch_other_workspace else R.string.watch_not_on_watch),
+                style = MaterialTheme.typography.bodySmall,
+                color = CasamaColors.Secondary,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth(),
+            )
         }
     }
 }
@@ -101,11 +171,15 @@ fun RequestScreen(nav: NavHostController, approvalId: String) {
     val graph = context.graph
     val session = graph.session
     val scope = rememberCoroutineScope()
-    var approval by remember { mutableStateOf<WatchApproval?>(null) }
-    var failed by remember { mutableStateOf(false) }
-    var done by remember { mutableStateOf<Pair<String, String?>?>(null) }
-    var confirming by remember { mutableStateOf(false) }
-    var busy by remember { mutableStateOf(false) }
+    // Every piece of state is the request's it was loaded for. Opening another request over this
+    // one (a notification tapped while a request is on screen) reuses this screen with a new id:
+    // without the key the old request's words and buttons would stay over the new id.
+    var approval by remember(approvalId) { mutableStateOf<WatchApproval?>(null) }
+    var failed by remember(approvalId) { mutableStateOf(false) }
+    var done by remember(approvalId) { mutableStateOf<Pair<String, String?>?>(null) }
+    var confirming by remember(approvalId) { mutableStateOf(false) }
+    var busy by remember(approvalId) { mutableStateOf(false) }
+    var elsewhere by remember(approvalId) { mutableStateOf(false) }
     // Before the details load, show what the glance knows (never a spinner).
     val fromGlance = session.glance.collectAsState().value.glance?.needs?.firstOrNull { it.id == approvalId }
 
@@ -113,7 +187,7 @@ fun RequestScreen(nav: NavHostController, approvalId: String) {
         try {
             approval = session.call { approval(approvalId) }
         } catch (e: ApiError.NotFound) {
-            done = context.getString(R.string.watch_already_answered) to null
+            if (e.elsewhere) elsewhere = true else done = context.getString(R.string.watch_already_answered) to null
         } catch (_: ApiError) {
             failed = true
         }
@@ -123,9 +197,14 @@ fun RequestScreen(nav: NavHostController, approvalId: String) {
         DoneScreen(title, sub) { nav.popBackStack() }
         return
     }
+    if (elsewhere) {
+        ElsewhereScreen(nav, approval?.link ?: fromGlance?.link ?: "/approvals/$approvalId", approval?.title ?: fromGlance?.text.orEmpty(), otherWorkspace = false)
+        return
+    }
 
     fun answer(allow: Boolean) {
-        if (busy) return
+        // Only the request that is on screen, loaded: never a tap meant for another one.
+        if (busy || approval?.id?.equals(approvalId, ignoreCase = true) != true) return
         busy = true
         scope.launch {
             try {
@@ -137,10 +216,13 @@ fun RequestScreen(nav: NavHostController, approvalId: String) {
                 session.refresh()
             } catch (e: ApiError.Conflict) {
                 done = context.getString(R.string.watch_already_answered) to null
+            } catch (e: ApiError.NotFound) {
+                // `not_found`: not in this watch's workspace. Anything else: it is gone.
+                if (e.elsewhere) elsewhere = true else done = context.getString(R.string.watch_already_answered) to null
             } catch (e: ApiError.Forbidden) {
                 graph.haptics.problem()
-                // The server's limits said no: only the phone can answer it now.
-                approval = approval?.let { it.copy(canAllow = ai.casama.wear.core.CanAllow.PHONE, whyPhone = it.whyPhone ?: WhyPhone.SETTING) }
+                // The server's limits said no: only the phone can answer it now, for its reason.
+                approval = approval?.let { it.copy(canAllow = ai.casama.wear.core.CanAllow.PHONE, whyPhone = Logic.whyPhone(e.detail) ?: it.whyPhone ?: WhyPhone.SETTING) }
             } catch (_: ApiError) {
                 graph.haptics.problem()
                 failed = true
@@ -279,12 +361,20 @@ fun SuggestionScreen(nav: NavHostController, suggestionId: String) {
     val session = graph.session
     val scope = rememberCoroutineScope()
     val need = session.glance.collectAsState().value.glance?.needs?.firstOrNull { it.id == suggestionId }
-    var done by remember { mutableStateOf<String?>(null) }
-    var failed by remember { mutableStateOf(false) }
-    var busy by remember { mutableStateOf(false) }
+    var done by remember(suggestionId) { mutableStateOf<String?>(null) }
+    var failed by remember(suggestionId) { mutableStateOf(false) }
+    // A limit was reached (402): nothing started, and the suggestion is still there.
+    var outOfCredits by remember(suggestionId) { mutableStateOf(false) }
+    var busy by remember(suggestionId) { mutableStateOf(false) }
+    var elsewhere by remember(suggestionId) { mutableStateOf(false) }
 
     done?.let {
         DoneScreen(it, null) { nav.popBackStack() }
+        return
+    }
+    if (elsewhere) {
+        // The glance's own link for it, else where suggestions wait on the phone.
+        ElsewhereScreen(nav, need?.link ?: Logic.PHONE_NEEDS, need?.text.orEmpty(), otherWorkspace = false)
         return
     }
 
@@ -299,12 +389,24 @@ fun SuggestionScreen(nav: NavHostController, suggestionId: String) {
                 if (accept) graph.haptics.done()
                 done = context.getString(if (accept) R.string.watch_started else R.string.watch_done)
                 session.refresh()
-            } catch (_: ApiError.Conflict) {
-                done = context.getString(R.string.watch_already_answered)
-            } catch (_: ApiError.NotFound) {
-                done = context.getString(R.string.watch_already_answered)
+            } catch (e: ApiError.Conflict) {
+                if (Logic.conflict(e.code) == Logic.ConflictKind.OVER) {
+                    done = context.getString(R.string.watch_already_answered)
+                } else {
+                    // The server couldn't start it (the bot has no model, say) and kept the
+                    // suggestion: not "Already answered". The phone shows why.
+                    graph.haptics.problem()
+                    elsewhere = true
+                }
+            } catch (e: ApiError.NotFound) {
+                if (e.elsewhere) elsewhere = true else done = context.getString(R.string.watch_already_answered)
+            } catch (e: ApiError.Refused) {
+                graph.haptics.problem()
+                outOfCredits = e.status == 402
+                failed = !outOfCredits
             } catch (_: ApiError) {
                 graph.haptics.problem()
+                outOfCredits = false
                 failed = true
             } finally {
                 busy = false
@@ -322,8 +424,8 @@ fun SuggestionScreen(nav: NavHostController, suggestionId: String) {
             item { Text(stringResource(R.string.watch_suggests, need.bot), style = MaterialTheme.typography.bodySmall, color = CasamaColors.Secondary, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) }
             item { Words(need.text, maxLines = 3, style = MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) }
         }
-        if (failed) {
-            item { Text(stringResource(R.string.watch_couldnt_reach), color = CasamaColors.Stop, style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) }
+        if (failed || outOfCredits) {
+            item { Text(stringResource(if (outOfCredits) R.string.watch_out_of_credits else R.string.watch_couldnt_reach), color = CasamaColors.Stop, style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) }
         }
         item {
             FilledTonalButton(

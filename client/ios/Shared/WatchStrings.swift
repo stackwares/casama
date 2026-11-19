@@ -193,8 +193,8 @@ enum WatchL10n {
   static let codeHelp = "Type it in Casama on your phone or computer: Settings → Watch"
   /// Shown on the watch app (D-410). Get another code.
   static let newCode = "New code"
-  /// Shown on the watch app (D-410). The key was removed.
-  static let signedOut = "Signed out. Open Casama on your phone to sign in again"
+  /// Shown on the watch app (D-410), above its Sign in button: the person signed out here, or the watch was removed or signed out from the phone. It stays signed out until they tap Sign in.
+  static let signedOut = "This watch is signed out"
   /// Shown on the watch app (D-410). Complications and tiles when signed out.
   static let openToSignIn = "Open Casama to sign in"
   /// Shown on the watch app (D-410). How old what is shown is.
@@ -271,4 +271,20 @@ enum WatchL10n {
   static let channelRuns = "Working bots"
   /// Shown on the watch app (D-410). Notification channel name (Wear OS): everything else.
   static let channelOther = "Other"
+  /// Shown on the watch app (D-410). A notification about the person's other workspace (the push says which workspace it is from, and it isn't the one this watch is signed in to): only the phone can answer it.
+  static let otherWorkspace = "This is in another workspace. Answer it on your phone"
+  /// Shown on the watch app (D-410). The tick after a reply typed or dictated from a notification went to the bot.
+  static let replySent = "Sent"
+  /// Shown on the watch app (D-410). A reply from a notification that the server didn't take; the chat opens so it can be said again.
+  static let replyNotSent = "Couldn't send your reply"
+  /// Shown on the watch app (D-410). A kept ask the server refused, or kept failing on, was given up on.
+  static func askDropped(_ time: String) -> String { "Couldn't send what you asked at \(time)" }
+  /// Shown on the watch app (D-410). The phone signed the watch in to a self-hosted server on plain http that isn't on the local network; the watch can't call it.
+  static let needsHttps = "This watch can only reach your server over https or on your home network"
+  /// Shown on the watch app (D-410). Button on a signed-out watch: asks the phone to sign it in again.
+  static let signIn = "Sign in"
+  /// Shown on the watch app (D-410). The server says a request or suggestion isn't in this watch's workspace (or isn't its to answer); it may still be waiting, so never "Already answered".
+  static let notOnWatch = "This watch can't answer this one. Open it on your phone"
+  /// Shown on the watch app (D-410). Under the Needs you list when more things wait than the watch can show (a skill idea, a question).
+  static func moreOnPhone(_ count: String) -> String { "\(count) more on your phone" }
 }

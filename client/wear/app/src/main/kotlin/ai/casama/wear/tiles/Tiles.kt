@@ -134,6 +134,14 @@ class NeedsYouTileService : CasamaTile() {
     override fun MaterialScope.signedIn(g: Glance?, note: String?): LayoutElement {
         val first = g?.let { Logic.firstNeed(it) }
         val count = g?.needsCount ?: 0
+        if (first == null && count > 0) {
+            // Things the watch gets no item for (a skill idea): they wait on the phone.
+            return primaryLayout(
+                titleSlot = { line(if (count == 1) getString(R.string.watch_needs_you_one) else getString(R.string.watch_needs_you_many, count.toString()), Typography.TITLE_SMALL, TileColors.needs, 1) },
+                mainSlot = { line(note ?: getString(R.string.watch_more_on_phone, count.toString()), Typography.BODY_LARGE, lines = 3) },
+                onClick = open(Routes.NEEDS, "needs"),
+            )
+        }
         if (first == null) {
             return primaryLayout(
                 titleSlot = { line(getString(R.string.watch_needs_you), Typography.TITLE_SMALL) },
@@ -155,6 +163,8 @@ class NeedsYouTileService : CasamaTile() {
                 when (ui) {
                     Logic.NeedUi.ALLOW -> textEdgeButton(action("allow:${first.id}")) { text(LayoutString(getString(R.string.watch_allow))) }
                     Logic.NeedUi.SUGGESTION -> textEdgeButton(open(route, "open_need")) { text(LayoutString(getString(R.string.watch_do_it))) }
+                    // A takeover, a password, a question: the watch has no screen for it.
+                    Logic.NeedUi.OPEN_ON_PHONE -> textEdgeButton(action("phone:${first.id}")) { text(LayoutString(getString(R.string.watch_open_on_phone))) }
                     else -> textEdgeButton(open(route, "open_need")) { text(LayoutString(getString(R.string.watch_review))) }
                 }
             },
@@ -164,6 +174,13 @@ class NeedsYouTileService : CasamaTile() {
 
     override suspend fun act(clickId: String): String? {
         val (kind, id) = clickId.split(':', limit = 2)
+        if (kind == "phone") {
+            val g = applicationContext.graph.cache.glance()?.glance
+            val need = g?.needs?.firstOrNull { it.id == id } ?: return getString(R.string.watch_already_answered)
+            val title = if (showWords(g)) need.text.ifBlank { need.bot } else need.bot
+            val ok = ai.casama.wear.ui.screens.openOnPhone(applicationContext, need.link, title)
+            return getString(if (ok) R.string.watch_sent_to_phone else R.string.watch_couldnt_reach)
+        }
         if (kind != "allow") return null
         val session = applicationContext.graph.session
         // Only a request the server still lets this watch allow with a tap.
@@ -176,8 +193,8 @@ class NeedsYouTileService : CasamaTile() {
             getString(R.string.watch_allowed)
         } catch (_: ApiError.Conflict) {
             getString(R.string.watch_already_answered)
-        } catch (_: ApiError.NotFound) {
-            getString(R.string.watch_already_answered)
+        } catch (e: ApiError.NotFound) {
+            getString(if (e.elsewhere) R.string.watch_not_on_watch else R.string.watch_already_answered)
         } catch (_: ApiError) {
             getString(R.string.watch_couldnt_reach)
         }

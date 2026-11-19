@@ -54,6 +54,10 @@ struct PushInfo {
   let conversationId: String?
   let messageId: String?
   let runId: String?
+  /// The workspace the push is about (newer servers send it).
+  let orgId: String?
+  /// What this watch may do with the request, when the server said: tap, hold or phone.
+  let canAllow: String?
   let title: String
   let body: String
 
@@ -77,12 +81,45 @@ struct PushInfo {
     conversationId = s("conversation_id")
     messageId = s("message_id")
     runId = s("run_id")
+    orgId = s("org_id")
+    canAllow = s("can_allow")
     title = content.title
     body = content.body
   }
 
   /// No words: private notifications, or Hide reply text (§6.2). The watch loads what it may.
   var isPrivate: Bool { title.isEmpty && body.isEmpty }
+
+  /// About another workspace than the one this watch is signed in to (a notification the iPhone
+  /// mirrored): this watch's key can't answer it, the phone can.
+  var isElsewhere: Bool { PushScope.isElsewhere(pushOrg: orgId, watchOrg: WatchAccount.orgId) }
+
+  /// Whether the watch's own layouts must leave the words out: Show details is off for this
+  /// person's watches, or the workspace's glance is private. The mirrored iPhone copy still
+  /// carries them, so the layout decides.
+  static var wordsHidden: Bool {
+    if GlanceCache.me()?.prefs?.showDetails == false { return true }
+    return GlanceCache.glance()?.glance.flags.isPrivate ?? false
+  }
+
+  /// The phone's route for it, for Open on iPhone.
+  var phoneLink: String {
+    if !link.isEmpty { return link }
+    if let approvalId { return PhoneRoutes.approval(approvalId) }
+    if let botId { return PhoneRoutes.chat(bot: botId, conversation: conversationId) }
+    return PhoneRoutes.home
+  }
+
+  /// What a screen about it starts from when it can only be opened on the phone. [known]: the
+  /// push itself says it is from another workspace; otherwise the server only said "not found
+  /// in this watch's workspace", and the screen says so without guessing more.
+  func elsewhereSeed(known: Bool) -> NeedSeed {
+    // The words follow the same switches as everywhere else: Show details, and Hide reply text.
+    let hide = PushInfo.wordsHidden || (kind == "reply" && (GlanceCache.me()?.hideReplyText ?? false))
+    return NeedSeed(
+      id: approvalId ?? suggestionId ?? messageId ?? "", kind: known ? NeedSeed.elsewhere : NeedSeed.notHere, botId: botId ?? "", bot: botName,
+      avatar: botAvatar, text: hide ? "" : (body.isEmpty ? title : body), risk: risk, link: phoneLink)
+  }
 
   /// Where a plain tap goes.
   var destination: WatchLink {
@@ -104,24 +141,38 @@ struct PushInfo {
 enum NotificationRouter {
   static func handle(_ response: UNNotificationResponse) async {
     let model = AppModel.shared
+    // A button can be the thing that launches the app: the model must know it is signed in before
+    // the first screen has appeared (start() does nothing the second time).
+    model.start()
+    // Started before the watch was first unlocked, the key couldn't be read then; it can now.
+    model.adoptKeyIfReadable()
     guard model.phase == .signedIn else { return }
     let info = PushInfo(response.notification.request.content)
-    switch response.actionIdentifier {
+    let action = response.actionIdentifier
+    if action == WatchNotifications.Action.notNow || action == "later" { return }
+    // From the person's other workspace: this watch's key would only get "not found" for it.
+    if info.isElsewhere {
+      if action != UNNotificationDismissActionIdentifier { model.showElsewhere(info.elsewhereSeed(known: true)) }
+      return
+    }
+    switch action {
     case WatchNotifications.Action.allow, "approve":
       guard let id = info.approvalId else { return model.open(info.destination) }
-      await allow(id, model: model)
+      await allow(id, info: info, model: model)
     case WatchNotifications.Action.deny, "deny":
       guard let id = info.approvalId else { return model.open(info.destination) }
-      flash(await model.deny(id), success: .denied, model: model)
+      settle(await model.deny(id, surface: WatchSurface.notification), success: .denied, id: id, info: info, model: model) {
+        model.open(.approval(id))
+      }
     case WatchNotifications.Action.doIt, "accept":
       guard let id = info.suggestionId else { return model.open(info.destination) }
-      flash(await model.doIt(id), success: .done, model: model)
-    case WatchNotifications.Action.notNow, "later":
-      break
+      settle(await model.doIt(id, surface: WatchSurface.notification), success: .done, id: id, info: info, model: model) {
+        model.open(.suggestion(id))
+      }
     case WatchNotifications.Action.reply:
       guard let text = (response as? UNTextInputNotificationResponse)?.userText.trimmingCharacters(in: .whitespacesAndNewlines),
             !text.isEmpty, let bot = info.botId else { return model.open(info.destination) }
-      await sendReply(text, bot: bot, conversation: info.conversationId, model: model)
+      await sendReply(text, bot: bot, conversation: info.conversationId, info: info, model: model)
     case UNNotificationDefaultActionIdentifier:
       model.open(info.destination)
     default:
@@ -131,39 +182,64 @@ enum NotificationRouter {
 
   /// Allow from a notification: done here only when the server says a tap is enough; a hold or
   /// the phone opens the request instead (§6.2).
-  private static func allow(_ id: String, model: AppModel) async {
+  private static func allow(_ id: String, info: PushInfo, model: AppModel) async {
     guard let api = WatchAPI.current() else { return }
     do {
       let approval = try await api.approval(id)
       guard approval.isPending else { return model.showFlash(.alreadyAnswered, pop: false) }
       guard approval.canAllow == .tap else { return model.open(.approval(id)) }
-      let result = await model.allow(approval)
-      if result == .noPasscode || result == .failed { return model.open(.approval(id)) }
-      flash(result, success: .allowed, model: model)
+      settle(await model.allow(approval, surface: WatchSurface.notification), success: .allowed, id: id, info: info, model: model) {
+        model.open(.approval(id))
+      }
     } catch WatchAPIError.notFound {
-      model.showFlash(.alreadyAnswered, pop: false)
+      // The server has no such request for this watch: it is in the person's other workspace (a
+      // push without `org_id` can't say so), or it isn't theirs to see. Never "Already answered":
+      // a request that was answered still comes back, with how it went.
+      model.showElsewhere(info.elsewhereSeed(known: false))
+    } catch WatchAPIError.signedOut {
+      model.keyGone()
     } catch {
       model.open(.approval(id))
     }
   }
 
-  static func sendReply(_ text: String, bot: String, conversation: String?, model: AppModel) async {
+  static func sendReply(_ text: String, bot: String, conversation: String?, info: PushInfo, model: AppModel) async {
     guard let api = WatchAPI.current() else { return }
     let key = UUID().uuidString
-    let body = WatchAskBody(botId: bot, conversationId: conversation, text: text, surface: "notification")
+    let body = WatchAskBody(botId: bot, conversationId: conversation, text: text, surface: WatchSurface.notification)
     do {
       _ = try await api.ask(body, idempotencyKey: key)
-      model.showFlash(.sent, pop: false)
+      model.online = true
+      model.showFlash(.replied, pop: false)
     } catch WatchAPIError.offline {
-      model.keep(QueuedAsk(id: UUID().uuidString, botId: bot, botName: "", conversationId: conversation, text: text, askedAt: Date(), idempotencyKey: key))
-    } catch {}
+      // Kept with the same key, and sent when the watch is back online.
+      model.online = false
+      model.keep(QueuedAsk(id: key, botId: bot, botName: info.botName, conversationId: conversation, text: text, askedAt: Date(), idempotencyKey: key))
+      model.say(WatchL10n.keptOffline)
+    } catch WatchAPIError.signedOut {
+      model.keyGone()
+    } catch WatchAPIError.notFound {
+      // The bot or the chat isn't in this watch's workspace (or is gone).
+      model.showElsewhere(info.elsewhereSeed(known: false))
+    } catch {
+      // Not sent, and not kept: open the chat so it can be said again, and say so.
+      model.open(.chat(bot: bot, conversation: conversation))
+      model.say(WatchL10n.replyNotSent)
+    }
   }
 
-  private static func flash(_ result: ActionResult, success: Flash.Kind, model: AppModel) {
+  /// Shows how an answer from a notification went. Anything but a clear yes or "already answered"
+  /// opens the request ([fallback]) with what went wrong, so a failed Deny is never silent.
+  private static func settle(_ result: ActionResult, success: Flash.Kind, id: String, info: PushInfo, model: AppModel, fallback: () -> Void) {
     switch result {
     case .done: model.showFlash(success, pop: false)
     case .alreadyAnswered: model.showFlash(.alreadyAnswered, pop: false)
-    default: break
+    case .elsewhere: model.showElsewhere(info.elsewhereSeed(known: false))
+    default:
+      // A key the server no longer knows already put the watch on the signed-out screen.
+      guard model.phase == .signedIn else { return }
+      model.leaveNote(result.note, for: id)
+      fallback()
     }
   }
 }
@@ -178,6 +254,19 @@ final class NotificationState: ObservableObject {
   @Published var risk: WatchRisk?
   @Published var quickReplies: [String] = []
   @Published var sent = false
+  /// About another workspace: the watch can't answer it, so the layout says so and has no buttons.
+  @Published var elsewhere = false
+}
+
+/// "In another workspace. Answer it on your phone", under a mirrored notification this watch's key
+/// can't answer.
+private struct ElsewhereLine: View {
+  var body: some View {
+    Text(WatchL10n.otherWorkspace)
+      .font(.watchCaption)
+      .foregroundStyle(WatchTheme.secondary)
+      .fixedSize(horizontal: false, vertical: true)
+  }
 }
 
 private struct NotificationHeader: View {
@@ -209,6 +298,7 @@ struct ApprovalNotificationView: View {
         Text(state.detail).font(.watchCaption).foregroundStyle(WatchTheme.secondary).lineLimit(3)
       }
       if let risk = state.risk { RiskChip(risk: risk) }
+      if state.elsewhere { ElsewhereLine() }
     }
     .frame(maxWidth: .infinity, alignment: .leading)
   }
@@ -221,18 +311,26 @@ final class ApprovalNotificationController: WKUserNotificationHostingController<
 
   override func didReceive(_ notification: UNNotification) {
     let info = PushInfo(notification.request.content)
+    let hidden = PushInfo.wordsHidden
     state.info = info
-    state.title = info.title
-    state.detail = info.body
+    state.title = hidden ? "" : info.title
+    state.detail = hidden ? "" : info.body
     state.risk = WatchRisk(raw: info.risk)
+    // From the person's other workspace: nothing here can answer it. A tap opens Open on iPhone.
+    if info.isElsewhere {
+      state.elsewhere = true
+      notificationActions = []
+      return
+    }
     // High risk is never allowed from the wrist: only Deny here, a tap opens Review on iPhone.
-    if state.risk == .high {
+    // The same when the server already said this one is for the phone.
+    if state.risk == .high || info.canAllow == "phone" {
       notificationActions = notificationActions.filter { $0.identifier != WatchNotifications.Action.allow }
     }
     guard let id = info.approvalId, let api = WatchAPI.current() else { return }
     Task { @MainActor in
       guard let approval = try? await api.approval(id) else { return }
-      if info.isPrivate || state.title.isEmpty {
+      if !hidden, info.isPrivate || state.title.isEmpty {
         state.title = approval.title
         state.detail = approval.details.first ?? ""
       }
@@ -253,6 +351,7 @@ struct SuggestionNotificationView: View {
         .foregroundStyle(WatchTheme.orchid)
       if !state.title.isEmpty { Text(state.title).font(.watchTitle).fixedSize(horizontal: false, vertical: true) }
       if !state.detail.isEmpty { Text(state.detail).font(.watchCaption).foregroundStyle(WatchTheme.secondary).lineLimit(2) }
+      if state.elsewhere { ElsewhereLine() }
     }
     .frame(maxWidth: .infinity, alignment: .leading)
   }
@@ -264,10 +363,16 @@ final class SuggestionNotificationController: WKUserNotificationHostingControlle
 
   override func didReceive(_ notification: UNNotification) {
     let info = PushInfo(notification.request.content)
+    let hidden = PushInfo.wordsHidden
     state.info = info
-    state.title = info.title
-    state.detail = info.body
-    guard info.isPrivate, let id = info.suggestionId else { return }
+    state.title = hidden ? "" : info.title
+    state.detail = hidden ? "" : info.body
+    if info.isElsewhere {
+      state.elsewhere = true
+      notificationActions = []
+      return
+    }
+    guard !hidden, info.isPrivate, let id = info.suggestionId else { return }
     if let need = GlanceCache.glance()?.glance.needs.first(where: { $0.id == id }) { state.title = need.text }
   }
 }
@@ -284,7 +389,9 @@ struct ReplyNotificationView: View {
         .font(.watchBody)
         .lineLimit(4)
         .fixedSize(horizontal: false, vertical: true)
-      if state.sent {
+      if state.elsewhere {
+        ElsewhereLine()
+      } else if state.sent {
         Image(systemName: "checkmark")
           .font(.title3.weight(.bold))
           .foregroundStyle(WatchTheme.green)
@@ -314,8 +421,14 @@ final class ReplyNotificationController: WKUserNotificationHostingController<Rep
     let info = PushInfo(notification.request.content)
     state.info = info
     let me = GlanceCache.me()
-    // Hide reply text (D-325) hides the words on the watch as on the phone.
-    state.detail = (me?.hideReplyText ?? false) ? "" : info.body
+    // Hide reply text (D-325) hides the words on the watch as on the phone; so does Show details off.
+    state.detail = (me?.hideReplyText ?? false) || PushInfo.wordsHidden ? "" : info.body
+    // A reply from the person's other workspace can't be answered with this watch's key.
+    if info.isElsewhere {
+      state.elsewhere = true
+      notificationActions = []
+      return
+    }
     state.quickReplies = Array((me?.quickReplies ?? [WatchL10n.quickYes, WatchL10n.quickNo, WatchL10n.quickTellMore, WatchL10n.quickNotNow]).prefix(4))
   }
 
@@ -323,7 +436,7 @@ final class ReplyNotificationController: WKUserNotificationHostingController<Rep
     guard let info = state.info, let bot = info.botId, let api = WatchAPI.current() else { return }
     let key = UUID().uuidString
     Task { @MainActor in
-      let body = WatchAskBody(botId: bot, conversationId: info.conversationId, text: text, surface: "notification")
+      let body = WatchAskBody(botId: bot, conversationId: info.conversationId, text: text, surface: WatchSurface.notification)
       do {
         _ = try await api.ask(body, idempotencyKey: key)
         state.sent = true

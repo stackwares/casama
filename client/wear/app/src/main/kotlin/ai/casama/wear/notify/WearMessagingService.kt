@@ -2,12 +2,14 @@ package ai.casama.wear.notify
 
 import ai.casama.wear.BuildConfig
 import ai.casama.wear.R
+import ai.casama.wear.core.Logic
 import ai.casama.wear.core.WatchPush
 import ai.casama.wear.data.ApiError
 import ai.casama.wear.graph
 import ai.casama.wear.live.OngoingRun
 import android.content.Context
 import android.os.Build
+import androidx.core.app.NotificationManagerCompat
 import androidx.wear.phone.interactions.notifications.BridgingConfig
 import androidx.wear.phone.interactions.notifications.BridgingManager
 import com.google.firebase.FirebaseApp
@@ -38,59 +40,79 @@ class WearMessagingService : FirebaseMessagingService() {
     private suspend fun handle(context: Context, push: WatchPush) {
         val graph = context.graph
         val session = graph.session
-        // Tiles and complications follow every push; a "glance" push is only that.
-        session.refresh()
-        if (push.kind == WatchPush.Kind.GLANCE) return
+        // Notifications may have been turned off (or on) since the app was last open.
+        PushSetup.syncBridging(context)
+        // A "glance" push is only a nudge for tiles and complications.
+        if (push.kind == WatchPush.Kind.GLANCE) {
+            session.refresh()
+            return
+        }
 
-        val self = session.self.value
-        var title = push.title
-        var body = push.body
+        val elsewhere = Logic.elsewhere(push.orgId, graph.settings.orgId)
         when (push.kind) {
-            WatchPush.Kind.APPROVAL -> {
-                if (title == null) {
-                    // Private notifications: load the request's words with the watch's own key.
-                    runCatching { session.call { approval(push.approvalId!!) } }.getOrNull()?.let { a ->
-                        title = context.getString(R.string.watch_needs_ok_from, a.bot)
-                        body = a.title
-                    }
-                }
-                graph.haptics.needsYou()
-            }
-            WatchPush.Kind.REPLY, WatchPush.Kind.FAILED -> {
+            WatchPush.Kind.APPROVAL -> graph.haptics.needsYou()
+            WatchPush.Kind.REPLY -> {
                 push.runId?.let { OngoingRun.end(context, it) }
-                val hide = self?.hideReplyText == true
-                if (body == null && !hide && push.botId != null) {
-                    runCatching { session.call { chat(push.botId, push.conversationId) } }.getOrNull()?.let { (chat, raw) ->
-                        session.cache.saveChat(push.botId, raw)
-                        body = chat.messages.lastOrNull { !it.fromUser }?.text
-                    }
+                graph.haptics.done()
+            }
+            WatchPush.Kind.FAILED -> {
+                push.runId?.let { OngoingRun.end(context, it) }
+                graph.haptics.problem()
+            }
+            else -> Unit
+        }
+        // What is on the wrist for this push now, so a later look only redraws when it would differ.
+        var shown: Pair<String, String>? = null
+        fun draw(title: String?, body: String?, quiet: Boolean) {
+            val words = PushWords.of(context, push, title, body)
+            if (quiet && words == shown) return
+            shown = words
+            // Quiet: only over the first drawing while it is still there (Notifier.draw), never
+            // bringing back one the person already answered or swiped away.
+            Notifier.draw(
+                context,
+                push,
+                title = words.first,
+                body = words.second,
+                allow = session.self.value?.prefs?.allow,
+                quickReplies = PushSetup.quickReplies(context),
+                elsewhere = elsewhere,
+                quiet = quiet,
+            )
+        }
+        // Drawn first, from what the push itself says and the settings saved here: on a slow link
+        // the calls below can take longer than this service is given, and nothing else would show
+        // it (bridging is off).
+        draw(push.title, push.body, quiet = false)
+
+        // What this watch may show can have changed on the phone since its app was last open (Show
+        // details, Hide reply text). Ask, and take back words that shouldn't be there any more.
+        session.refreshSelf()
+        if (!session.isSignedIn) return
+        draw(push.title, push.body, quiet = true)
+
+        // Tiles and complications follow every push; the glance also says when it is private.
+        session.refresh()
+        if (!session.isSignedIn) return
+        draw(push.title, push.body, quiet = true)
+
+        // Private notifications leave the words out: load them with the watch's own key, unless
+        // details are off here or the push is about another workspace (the key can't read it).
+        if (!PushWords.showDetails(context) || elsewhere) return
+        when (push.kind) {
+            WatchPush.Kind.APPROVAL -> if (push.title == null) {
+                runCatching { session.call { approval(push.approvalId!!) } }.getOrNull()?.let { a ->
+                    draw(context.getString(R.string.watch_needs_ok_from, a.bot), a.title, quiet = true)
                 }
-                if (hide) body = null
-                if (push.kind == WatchPush.Kind.FAILED) {
-                    title = title ?: context.getString(R.string.watch_couldnt_finish)
-                    graph.haptics.problem()
-                } else {
-                    graph.haptics.done()
+            }
+            WatchPush.Kind.REPLY, WatchPush.Kind.FAILED -> if (push.body == null && session.self.value?.hideReplyText != true && push.botId != null) {
+                runCatching { session.call { chat(push.botId, push.conversationId) } }.getOrNull()?.let { (chat, raw) ->
+                    session.cache.saveChat(push.botId, raw)
+                    chat.messages.lastOrNull { !it.fromUser }?.text?.takeIf { it.isNotBlank() }?.let { draw(push.title, it, quiet = true) }
                 }
             }
             else -> Unit
         }
-        val fallbackTitle = when (push.kind) {
-            WatchPush.Kind.APPROVAL -> context.getString(R.string.watch_needs_ok_from, push.botName.orEmpty())
-            WatchPush.Kind.SUGGESTION -> context.getString(R.string.watch_suggests, push.botName.orEmpty())
-            WatchPush.Kind.REPLY -> push.botName ?: context.getString(R.string.watch_reply_ready)
-            WatchPush.Kind.BRIEF -> context.getString(R.string.watch_brief)
-            WatchPush.Kind.TAKEOVER -> context.getString(R.string.watch_take_over)
-            else -> context.getString(R.string.watch_comp_casama)
-        }
-        Notifier.draw(
-            context,
-            push,
-            title = title ?: fallbackTitle,
-            body = body.orEmpty(),
-            allow = self?.prefs?.allow,
-            quickReplies = PushSetup.quickReplies(context),
-        )
     }
 
     // FCM 26 deprecates the token calls for register()/onRegistered; both paths hand over the same
@@ -104,6 +126,40 @@ class WearMessagingService : FirebaseMessagingService() {
         val graph = applicationContext.graph
         if (!graph.session.isSignedIn || graph.settings.registeredPushToken == token) return
         runBlocking { withTimeoutOrNull(8_000) { PushSetup.send(applicationContext, token) } }
+    }
+}
+
+/**
+ * The words a push is drawn with, without the network. With details off on this watch (Settings →
+ * Watch on the phone) or a private glance (app lock), never the push's own words: the bot's name
+ * and general words from the app's strings (WATCH-PLAN §10). "Hide reply text" hides a reply's.
+ */
+internal object PushWords {
+    fun showDetails(context: Context): Boolean {
+        val graph = context.graph
+        return graph.session.self.value?.prefs?.showDetails != false && graph.cache.glance()?.glance?.private != true
+    }
+
+    /** (title, body) for [push]; [title] and [body] are the push's own or ones the watch loaded. */
+    fun of(context: Context, push: WatchPush, title: String? = push.title, body: String? = push.body): Pair<String, String> {
+        val show = showDetails(context)
+        val reply = push.kind == WatchPush.Kind.REPLY || push.kind == WatchPush.Kind.FAILED
+        val hideReply = reply && context.graph.session.self.value?.hideReplyText == true
+        val t = title?.takeIf { show && it.isNotBlank() }
+        val b = body?.takeIf { show && !hideReply && it.isNotBlank() }
+        val bot = push.botName.orEmpty()
+        return when (push.kind) {
+            WatchPush.Kind.APPROVAL -> (t ?: context.getString(R.string.watch_needs_ok_from, bot)) to b.orEmpty()
+            WatchPush.Kind.SUGGESTION -> (t ?: context.getString(R.string.watch_suggests, bot)) to b.orEmpty()
+            WatchPush.Kind.REPLY ->
+                if (t != null) t to b.orEmpty()
+                else if (push.botName != null) push.botName to (b ?: context.getString(R.string.watch_reply_ready))
+                else context.getString(R.string.watch_reply_ready) to b.orEmpty()
+            WatchPush.Kind.FAILED -> (t ?: context.getString(R.string.watch_couldnt_finish)) to b.orEmpty()
+            WatchPush.Kind.BRIEF -> (t ?: context.getString(R.string.watch_brief)) to b.orEmpty()
+            WatchPush.Kind.TAKEOVER -> (t ?: context.getString(R.string.watch_take_over)) to b.orEmpty()
+            else -> (t ?: context.getString(R.string.watch_comp_casama)) to b.orEmpty()
+        }
     }
 }
 
@@ -148,7 +204,7 @@ object PushSetup {
         try {
             graph.session.call { updateSelf(token, BuildConfig.VERSION_NAME, Build.VERSION.RELEASE) }
             graph.settings.registeredPushToken = token
-            setBridging(context, on = false)
+            syncBridging(context)
         } catch (_: ApiError) {
             // Offline: the next sign-in or app start tries again; bridging stays on meanwhile.
         }
@@ -158,7 +214,8 @@ object PushSetup {
     @Suppress("DEPRECATION")
     suspend fun unregister(context: Context) {
         context.graph.settings.registeredPushToken = null
-        setBridging(context, on = true)
+        bridgingOff = null
+        syncBridging(context)
         if (!configured) return
         runCatching {
             val messaging = FirebaseMessaging.getInstance()
@@ -170,6 +227,23 @@ object PushSetup {
     /** Re-sends the token at app start when the server may not have it yet. */
     suspend fun ensureRegistered(context: Context) {
         if (context.graph.settings.registeredPushToken == null) register(context)
+    }
+
+    /** What was last asked of the system in this process; null until the first time. */
+    @Volatile private var bridgingOff: Boolean? = null
+
+    /**
+     * The phone's copies of Casama's notifications stop being bridged only while this watch draws
+     * its own: the server has its token AND notifications are allowed here. In every other case
+     * they are bridged, so an alert still reaches the wrist. Checked whenever that can have
+     * changed: a token registered, sign-out, the app coming forward, a push arriving.
+     */
+    fun syncBridging(context: Context) {
+        val off = context.graph.settings.registeredPushToken != null &&
+            NotificationManagerCompat.from(context).areNotificationsEnabled()
+        if (bridgingOff == off) return
+        bridgingOff = off
+        setBridging(context, on = !off)
     }
 
     private fun setBridging(context: Context, on: Boolean) {

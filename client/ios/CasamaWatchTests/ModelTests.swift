@@ -33,6 +33,10 @@ struct ModelTests {
     links()
     sse()
     queue()
+    signIns()
+    phoneRoutes()
+    problems()
+    scope()
     print("\(checks) checks, \(failures) failed")
     exit(failures == 0 ? 0 : 1)
   }
@@ -236,5 +240,138 @@ struct ModelTests {
     } else {
       check(false, "queue encodes")
     }
+    // An ask kept by an older build has no try count.
+    let old = #"[{"id":"x","botId":"b","botName":"B","askedAt":0,"idempotencyKey":"k"}]"#
+    eq((try? JSONDecoder().decode([QueuedAsk].self, from: Data(old.utf8)))?.first?.tries, nil, "an older kept ask still reads")
+    // A refusal that won't change ends a kept ask; a server that failed keeps it for a few tries.
+    eq(AskQueuePolicy.afterFailure(status: 400, tries: 1), .drop, "nothing heard is dropped")
+    eq(AskQueuePolicy.afterFailure(status: 402, tries: 1), .drop, "out of credits is dropped")
+    eq(AskQueuePolicy.afterFailure(status: 404, tries: 1), .drop, "no such bot is dropped")
+    eq(AskQueuePolicy.afterFailure(status: 500, tries: 1), .keep, "a server error is kept")
+    eq(AskQueuePolicy.afterFailure(status: 502, tries: 3), .keep, "and kept again")
+    eq(AskQueuePolicy.afterFailure(status: 409, tries: 1), .keep, "a voice service that is down is kept")
+    eq(AskQueuePolicy.afterFailure(status: nil, tries: 1), .keep, "an answer that couldn't be read is kept")
+    eq(AskQueuePolicy.afterFailure(status: 500, tries: AskQueuePolicy.maxTries), .drop, "but not for ever")
+  }
+
+  // MARK: Sign-in requests to the phone
+
+  static func signIns() {
+    let a = IssuedSignIns.none.adding("r1", for: "fp-a")
+    check(a.accepts("r1", for: "fp-a"), "an answer to this watch's request signs it in")
+    check(!a.accepts("r2", for: "fp-a"), "an answer to a request it never made doesn't")
+    check(!a.accepts("r1", for: "fp-b"), "nor one made for a key it no longer holds")
+    check(!a.accepts(nil, for: "fp-a"), "nor one with no request id")
+    check(!IssuedSignIns.none.accepts("r1", for: ""), "nothing is accepted with no key")
+    // Asking again keeps the earlier ids for the same key (the phone may answer an older one).
+    let b = a.adding("r2", for: "fp-a")
+    check(b.accepts("r1", for: "fp-a") && b.accepts("r2", for: "fp-a"), "both requests for one key count")
+    // A new key starts over: the old key's requests are forgotten.
+    let c = b.adding("r3", for: "fp-b")
+    eq(c.ids, ["r3"], "a new key forgets the old key's requests")
+    check(!c.accepts("r1", for: "fp-b"), "an old request can't sign a new key in")
+    // Only the last few are kept.
+    var many = IssuedSignIns.none
+    for i in 0..<10 { many = many.adding("r\(i)", for: "fp") }
+    eq(many.ids.count, IssuedSignIns.kept, "the last few requests are kept")
+    check(many.accepts("r9", for: "fp") && !many.accepts("r0", for: "fp"), "the newest stay, the oldest go")
+    if let data = try? JSONEncoder().encode(b), let back = try? JSONDecoder().decode(IssuedSignIns.self, from: data) {
+      eq(back, b, "requests round trip")
+    } else {
+      check(false, "requests encode")
+    }
+
+    // Asking the phone again by itself, when the app comes forward while it is still waiting.
+    let now = Date(timeIntervalSince1970: 2_000_000_000)
+    let longAgo = now.addingTimeInterval(-120)
+    func reask(waiting: Bool = true, last: Date = longAgo, reason: String? = nil, https: Bool = false, code: Bool = false) -> Bool {
+      PhoneReask.allowed(waiting: waiting, lastAsk: last, now: now, lastReason: reason, needsHttps: https, fetchingCode: code)
+    }
+    check(reask(), "still waiting, and it has been a while: ask again")
+    check(reask(reason: "signed_out") && reask(reason: "error"), "a phone that wasn't signed in, or failed, is asked again")
+    check(!reask(reason: "declined"), "a No on the phone is not asked again")
+    check(!reask(waiting: false), "not while the first ask is still out, or on another screen")
+    check(!reask(last: now.addingTimeInterval(-5)), "not on every wrist raise")
+    check(!reask(https: true), "not while the screen says the phone's server can't be reached")
+    check(!reask(code: true), "not while a code is being fetched")
+  }
+
+  // MARK: Links for Open on iPhone
+
+  static func phoneRoutes() {
+    eq(PhoneRoutes.first("/approvals/a1", "/x", else: "/bots"), "/approvals/a1", "the server's link comes first")
+    eq(PhoneRoutes.first(nil, "", "/bots/b1/chat", else: "/bots"), "/bots/b1/chat", "empty and missing links are skipped")
+    eq(PhoneRoutes.first(nil, "", else: PhoneRoutes.needsYou), "/inbox?tab=0", "with none, the fallback")
+    // Fallbacks are routes the phone's router has (client/lib/core/router.dart).
+    eq(PhoneRoutes.needsYou, "/inbox?tab=0", "Needs you on the phone, as the glance links a suggestion")
+    eq(PhoneRoutes.home, "/bots", "the chats")
+    eq(PhoneRoutes.approval("a1"), "/approvals/a1", "a request")
+    eq(PhoneRoutes.chat(bot: "b1", conversation: "c1"), "/bots/b1/chat?c=c1", "a chat")
+    eq(PhoneRoutes.call(bot: "b1"), "/bots/b1/call", "a call")
+  }
+
+  // MARK: What a refusal means
+
+  static func problems() {
+    func problem(_ json: String) -> WatchProblem? { WatchProblem.parse(Data(json.utf8)) }
+    let elsewhere = problem(#"{"type":"https://casama.ai/problems/not_found","title":"Not Found","status":404,"code":"not_found","detail":"Not found in this watch's workspace"}"#)
+    eq(elsewhere?.code, "not_found", "the problem's code is read")
+    eq(elsewhere?.detail, "Not found in this watch's workspace", "and its detail")
+    eq(problem(#"{"title":"Conflict"}"#)?.detail, "Conflict", "the title stands in for a missing detail")
+    check(WatchProblem.parse(Data("not json".utf8)) == nil && WatchProblem.parse(nil) == nil, "no problem in an answer that isn't one")
+
+    eq(WatchRefusal.of(status: 404, problem: elsewhere), .elsewhere, "404 not_found is another workspace")
+    eq(WatchRefusal.of(status: 404, problem: WatchProblem(code: "approval_not_found", detail: nil)), .alreadyAnswered, "a request that is gone was answered")
+    eq(WatchRefusal.of(status: 404, problem: nil), .alreadyAnswered, "a bare 404 too")
+    eq(WatchRefusal.of(status: 409, problem: WatchProblem(code: "approval_already_decided", detail: "x")), .alreadyAnswered, "already decided")
+    eq(WatchRefusal.of(status: 409, problem: WatchProblem(code: "suggestion_closed", detail: "x")), .alreadyAnswered, "a closed suggestion")
+    eq(WatchRefusal.of(status: 409, problem: nil), .alreadyAnswered, "a bare 409")
+    // Stop on a run that ended a moment ago (POST /v1/runs/{id}/cancel): over already, not a refusal.
+    eq(WatchRefusal.of(status: 409, problem: WatchProblem(code: "run_finished", detail: "The run is already completed")), .alreadyAnswered, "a run that already ended")
+    eq(WatchRefusal.of(status: 409, problem: WatchProblem(code: "something_finished", detail: "x")), .alreadyAnswered, "anything else that is over")
+    eq(WatchRefusal.of(status: 409, problem: WatchProblem(code: "no_model_configured", detail: "This bot has no model.")),
+       .refused("This bot has no model."), "a run that couldn't start says why, not 'already answered'")
+    // Do It on a suggestion whose run can't start for another reason (startVerdict's codes): its words.
+    for code in ["run_not_found", "max_steps_exceeded", "wall_time_exceeded"] {
+      eq(WatchRefusal.of(status: 409, problem: WatchProblem(code: code, detail: "Why")), .refused("Why"), "\(code) says why")
+    }
+    // The limits the server answers 402 for, whatever their code.
+    for code in ["out_of_credits", "quota_exceeded", "cloud_daily_cap", "computer_hours_exceeded", "plan_limit"] {
+      eq(WatchRefusal.of(status: 402, problem: WatchProblem(code: code, detail: "x")), .outOfCredits, "\(code) is a limit")
+    }
+    eq(WatchRefusal.of(status: 402, problem: WatchProblem(code: "out_of_credits", detail: "x")), .outOfCredits, "402 is out of credits")
+    eq(WatchRefusal.of(status: 400, problem: WatchProblem(code: "nothing_heard", detail: "Nothing was heard")), .refused("Nothing was heard"), "another refusal keeps its words")
+
+    // The reason a watch may not allow is never shown as the server's word.
+    for reason in ["high_risk", "payment", "setting", "workspace", "not_yours"] {
+      let text = WatchWhy.text(reason)
+      check(text != nil && text != reason, "\(reason) is said in the person's words")
+    }
+    eq(WatchWhy.text("something_new"), nil, "an unknown reason has no words here")
+    eq(WatchWhy.text(nil), nil, "no reason, no words")
+  }
+
+  // MARK: Workspaces, servers, staleness
+
+  static func scope() {
+    check(PushScope.isElsewhere(pushOrg: "aaaa", watchOrg: "bbbb"), "a push about another workspace")
+    check(!PushScope.isElsewhere(pushOrg: "AAAA", watchOrg: "aaaa"), "the same workspace, whatever the case")
+    check(!PushScope.isElsewhere(pushOrg: nil, watchOrg: "aaaa"), "an older server's push has no workspace: this one's")
+    check(!PushScope.isElsewhere(pushOrg: "", watchOrg: "aaaa"), "an empty workspace too")
+    check(!PushScope.isElsewhere(pushOrg: "aaaa", watchOrg: nil), "a watch that doesn't know its workspace guesses nothing")
+
+    func usable(_ s: String) -> Bool { URL(string: s).map(WatchServer.usable) ?? false }
+    check(usable("https://api.casama.ai"), "https anywhere")
+    check(usable("http://192.168.1.20:8787"), "http to an address on the network")
+    check(usable("http://casama.local:8787"), "http to a .local name")
+    check(usable("http://localhost:8787") && usable("http://nas"), "http to a bare name")
+    check(!usable("http://casama.example.com"), "not plain http to a public name")
+    check(!usable("http://1.2.3.4.example.com") && !usable("http://300.1.1.1.com"), "a name that only looks like an address")
+    check(!usable("ftp://192.168.1.20"), "nothing but http and https")
+
+    let now = Date(timeIntervalSince1970: 2_000_000_000)
+    check(!GlanceAge.isStale(savedAt: now.addingTimeInterval(-10 * 60), now: now), "ten minutes old is still now")
+    check(GlanceAge.isStale(savedAt: now.addingTimeInterval(-31 * 60), now: now), "half an hour old is dated")
+    check(GlanceAge.isStale(savedAt: nil, now: now), "never saved is dated")
   }
 }

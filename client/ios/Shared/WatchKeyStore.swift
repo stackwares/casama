@@ -41,6 +41,20 @@ enum WatchKeyStore {
     return nil
   }
 
+  /// Whether the keychain can't be read right now: the watch hasn't been unlocked since it
+  /// restarted (the key is readable after the first unlock). As against holding no key at all,
+  /// which `read()` also answers nil for.
+  static var isLocked: Bool {
+    for group in [true, false] {
+      var q = query(group: group)
+      q[kSecReturnData as String] = true
+      q[kSecMatchLimit as String] = kSecMatchLimitOne
+      var out: CFTypeRef?
+      if SecItemCopyMatching(q as CFDictionary, &out) == errSecInteractionNotAllowed { return true }
+    }
+    return false
+  }
+
   /// The key, made now when there is none. Nil only if the keychain refuses to keep one.
   static func readOrCreate() -> String? {
     if let key = read() { return key }

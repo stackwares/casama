@@ -278,11 +278,132 @@ class CoreTest {
         assertEquals(signIn, LinkMessage.decode(signIn.encode().toByteArray()))
         val ok = LinkMessage.decode("""{"type":"signed_in","request_id":"r1","server":"https://api.casama.ai/","org_id":"o","org_name":"Home","person_name":"Oliver"}""")
         assertEquals(LinkMessage.SignedIn("r1", "https://api.casama.ai", "o", "Home", "Oliver"), ok)
-        assertNull(LinkMessage.decode("""{"type":"signed_in","server":"http://evil.example.com"}"""), "no plain http over the internet")
+        // No plain http over the internet: the watch is told, so it can say why instead of waiting.
+        assertEquals(
+            LinkMessage.SignedInBadServer("r9"),
+            LinkMessage.decode("""{"type":"signed_in","request_id":"r9","server":"http://evil.example.com"}"""),
+        )
         assertNotNull(LinkMessage.decode("""{"type":"context","server":"http://192.168.1.5:8080","org_id":"o"}"""))
         assertEquals(LinkMessage.SignOut, LinkMessage.decode("""{"type":"sign_out"}"""))
         assertNull(LinkMessage.decode("""{"type":"later_thing"}"""))
         assertNull(LinkMessage.decode("{{"))
+    }
+
+    @Test
+    fun serverAddresses() {
+        for (ok in listOf("https://api.casama.ai", "http://192.168.1.10:8787", "http://10.0.2.2:8787/", "http://172.16.0.4", "http://172.31.255.1", "http://127.0.0.1:8787", "http://localhost:8787", "http://nas.local:8787")) {
+            assertTrue(LinkMessage.isServerUrl(ok), ok)
+        }
+        // A name that only starts like a private address is a name on the internet.
+        for (bad in listOf("http://10.evil.example", "http://192.168.evil.example", "http://127.evil.example:80", "http://172.16.evil.example", "http://172.32.0.1", "http://8.8.8.8", "http://10.0.0", "http://10.0.0.256", "http://.local", "http://example.com", "ftp://192.168.1.1", "https://", "")) {
+            assertFalse(LinkMessage.isServerUrl(bad), bad)
+        }
+    }
+
+    @Test
+    fun signInAnswers() {
+        val fp = "a".repeat(64)
+        var out = SignInRequests.decode(null)
+        assertTrue(out.isEmpty())
+        out = SignInRequests.add(out, "r1", fp)
+        out = SignInRequests.add(out, "r2", fp)
+        assertEquals(out, SignInRequests.decode(SignInRequests.encode(out)))
+        assertTrue(SignInRequests.issued(out, "r1", fp))
+        assertTrue(SignInRequests.issued(out, "r2", fp))
+        assertFalse(SignInRequests.issued(out, "r3", fp), "a request this watch never made")
+        assertFalse(SignInRequests.issued(out, "r1", "b".repeat(64)), "the key it was made for is gone")
+        assertFalse(SignInRequests.issued(out, "r1", null), "no key")
+        assertFalse(SignInRequests.issued(out, "", fp))
+        // A new key forgets the old key's requests; only the newest few are kept.
+        val other = SignInRequests.add(out, "n1", "b".repeat(64))
+        assertEquals(listOf(SignInRequests.Issued("n1", "b".repeat(64))), other)
+        var many = out
+        for (i in 1..20) many = SignInRequests.add(many, "m$i", fp)
+        assertEquals(SignInRequests.MAX, many.size)
+        assertTrue(SignInRequests.issued(many, "m20", fp))
+        assertFalse(SignInRequests.issued(many, "r1", fp))
+        assertTrue(SignInRequests.decode("garbage\n\nx y z").isEmpty())
+    }
+
+    @Test
+    fun pushesFromOtherWorkspacesAndTheServersWord() {
+        val base = mapOf("watch_kind" to "approval", "approval_id" to "a1", "risk" to "low", "link" to "/approvals/a1", "notification_id" to "n1")
+        val plain = WatchPush.parse(base)!!
+        assertNull(plain.orgId)
+        assertNull(plain.canAllow)
+        assertEquals("n1", plain.notificationId)
+        // An older server: today's rule, low risk only.
+        assertTrue(Logic.pushAllows(plain, AllowLevel.MEDIUM))
+        assertFalse(Logic.pushHolds(plain, AllowLevel.MEDIUM))
+        assertTrue(Logic.pushHolds(plain.copy(risk = Risk.MEDIUM), AllowLevel.MEDIUM))
+        assertFalse(Logic.pushHolds(plain.copy(risk = Risk.MEDIUM), AllowLevel.LOW))
+        // The server says what this watch may do: that decides, whatever the risk reads.
+        val tap = WatchPush.parse(base + ("can_allow" to "tap") + ("risk" to "medium"))!!
+        assertEquals(CanAllow.TAP, tap.canAllow)
+        assertTrue(Logic.pushAllows(tap, AllowLevel.MEDIUM))
+        assertFalse(Logic.pushAllows(tap, AllowLevel.NONE), "the watch's own setting still says never")
+        val hold = WatchPush.parse(base + ("can_allow" to "hold"))!!
+        assertFalse(Logic.pushAllows(hold, AllowLevel.MEDIUM), "low risk, but the server says hold")
+        assertTrue(Logic.pushHolds(hold, AllowLevel.MEDIUM))
+        val phone = WatchPush.parse(base + ("can_allow" to "phone"))!!
+        assertFalse(Logic.pushAllows(phone, AllowLevel.MEDIUM))
+        assertFalse(Logic.pushHolds(phone, AllowLevel.MEDIUM))
+        assertNull(WatchPush.parse(base + ("can_allow" to "later_word"))!!.canAllow)
+
+        val there = WatchPush.parse(base + ("org_id" to "org-b"))!!
+        assertTrue(Logic.elsewhere(there.orgId, "org-a"))
+        assertFalse(Logic.elsewhere(there.orgId, "org-b"))
+        assertFalse(Logic.elsewhere(null, "org-a"), "a server that doesn't say: this workspace")
+        assertFalse(Logic.elsewhere("org-b", null))
+
+        // The same notification and words give the same key; anything else, another.
+        assertEquals(Logic.replyKey("n1", "Yes"), Logic.replyKey("n1", "Yes"))
+        assertTrue(Logic.replyKey("n1", "Yes") != Logic.replyKey("n1", "No"))
+        assertTrue(Logic.replyKey("n1", "Yes") != Logic.replyKey("n2", "Yes"))
+        assertTrue(Logic.replyKey("n1", "Yes").length <= 255)
+
+        assertEquals(WhyPhone.SETTING, Logic.whyPhone("setting"))
+        assertEquals(WhyPhone.HIGH_RISK, Logic.whyPhone("high_risk"))
+        assertEquals(WhyPhone.PAYMENT, Logic.whyPhone("payment"))
+        assertEquals(WhyPhone.NOT_YOURS, Logic.whyPhone("not_yours"))
+        assertNull(Logic.whyPhone("This request is high risk"))
+
+        val open = LinkMessage.Open("/approvals/a1", "Send an email to Sam")
+        assertEquals(open, LinkMessage.decode(open.encode()))
+        assertEquals(LinkMessage.Open("/x", null), LinkMessage.decode(LinkMessage.Open("/x").encode()), "no title: as before")
+    }
+
+    /** The server's 409s on the watch's own actions (decision, Do It, Not now, Stop), by code. */
+    @Test
+    fun conflictsByCode() {
+        // Answered or ended before the tap: nothing is wrong.
+        for (code in listOf("approval_already_decided", "suggestion_closed", "run_finished")) {
+            assertEquals(Logic.ConflictKind.OVER, Logic.conflict(code), code)
+        }
+        // An older server, or an answer with no body.
+        assertEquals(Logic.ConflictKind.OVER, Logic.conflict(null))
+        assertEquals(Logic.ConflictKind.OVER, Logic.conflict(""))
+        // Do It on a run the server couldn't start: the suggestion is kept, never "Already answered".
+        for (code in listOf("no_model_configured", "run_not_found", "max_steps_exceeded", "wall_time_exceeded")) {
+            assertEquals(Logic.ConflictKind.CANT_START, Logic.conflict(code), code)
+        }
+    }
+
+    /** Links sent to the phone are always routes it has. */
+    @Test
+    fun phoneRoutes() {
+        assertEquals("/approvals/a1", Logic.phoneRoute("/approvals/a1"))
+        assertEquals("/inbox?tab=0", Logic.phoneRoute(Logic.PHONE_NEEDS))
+        assertEquals("/computer/live?c=c1&takeover=t1", Logic.phoneRoute("/computer/live?c=c1&takeover=t1"))
+        // A push with no link carries "/", which isn't a screen on the phone.
+        assertEquals("/bots", Logic.phoneRoute("/"))
+        assertEquals("/bots", Logic.phoneRoute(""))
+        assertEquals("/bots", Logic.phoneRoute(null))
+        assertEquals("/bots", Logic.phoneRoute("//evil.example/x"))
+        assertEquals("/bots", Logic.phoneRoute("https://evil.example"))
+        // Open on phone and the server handoff both go through it.
+        assertEquals("/bots", Decode.parse(Encode.handoff("/", "t")).str("link"))
+        assertEquals("/settings/billing", Decode.parse(Encode.handoff("/settings/billing", "t")).str("link"))
     }
 
     @Test
@@ -304,7 +425,7 @@ class CoreTest {
         assertEquals("c", audio.str("conversation_id"))
         assertEquals("approved", Decode.parse(Encode.decision(true)).str("decision"))
         assertNull(Decode.parse(Encode.decision(true))["always_allow"], "never Always Allow from a watch")
-        assertEquals("/", Decode.parse(Encode.handoff("https://x", "t")).str("link"))
+        assertEquals("/bots", Decode.parse(Encode.handoff("https://x", "t")).str("link"), "never a link out of the app")
         val code = Decode.parse(Encode.codeRequest("f", Encode.Device("", null, "0.1.0", null)))
         assertEquals("wearos", code.str("platform"))
         assertEquals("Wear OS", code.str("name"))

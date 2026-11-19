@@ -149,6 +149,16 @@ class WatchCodeView {
   );
 }
 
+/// Allowing a code failed because the watch showing it is still signed in to another account: its
+/// key belongs to someone else (`409 watch_key_taken`). A new code from the same watch won't help
+/// until it is removed there.
+class WatchKeyTaken implements Exception {
+  const WatchKeyTaken();
+
+  @override
+  String toString() => 'This watch is signed in to another account';
+}
+
 /// The code as the person typed it ("KQ7M 2XAB", "kq7m-2xab"), as the server reads it, or null
 /// when it can't be one: eight letters and digits.
 String? normalizeWatchCode(String input) {

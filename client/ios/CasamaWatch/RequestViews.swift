@@ -11,7 +11,8 @@ struct ApprovalView: View {
   @EnvironmentObject private var model: AppModel
   @Environment(\.hideWords) private var hideWords
   @State private var approval: WatchApproval?
-  @State private var gone = false
+  /// Not on this watch (another workspace, or not this person's to see): only the phone answers it.
+  @State private var elsewhere = false
   @State private var busy = false
   @State private var note: String?
 
@@ -19,7 +20,7 @@ struct ApprovalView: View {
   private var avatar: String { approval?.botAvatar ?? seed?.avatar ?? "" }
   private var title: String { approval?.title ?? seed?.text ?? "" }
   private var risk: WatchRisk? { approval?.risk ?? WatchRisk(raw: seed?.risk) }
-  private var link: String { approval?.link ?? seed?.link ?? "/approvals/\(id)" }
+  private var link: String { PhoneRoutes.first(approval?.link, seed?.link, else: PhoneRoutes.approval(id)) }
 
   var body: some View {
     ScrollView {
@@ -48,11 +49,24 @@ struct ApprovalView: View {
     .navigationTitle(WatchL10n.needsYou)
     .disabled(busy)
     .task { await load() }
+    // What went wrong when it was answered from its notification: read when this screen opens for
+    // it, and when it was open already.
+    .onChange(of: model.pendingNotes[id], initial: true) { _, left in
+      if left != nil, let text = model.takeNote(for: id) { note = text }
+    }
   }
 
   @ViewBuilder
   private var actions: some View {
-    if gone || (approval.map { !$0.isPending } ?? false) {
+    if elsewhere {
+      Text(WatchL10n.notOnWatch).font(.watchCaption).foregroundStyle(WatchTheme.secondary).fixedSize(horizontal: false, vertical: true)
+      Button {
+        Task { await model.openOnPhone(link: link, title: title) }
+      } label: {
+        Label(WatchL10n.openOnIphone, systemImage: "iphone")
+      }
+      .buttonStyle(PillStyle(tone: .main))
+    } else if approval.map({ !$0.isPending }) ?? false {
       Text(WatchL10n.alreadyAnswered).font(.watchCaption).foregroundStyle(WatchTheme.secondary)
     } else if let approval {
       switch approval.canAllow {
@@ -93,7 +107,10 @@ struct ApprovalView: View {
     do {
       approval = try await api.approval(id)
     } catch WatchAPIError.notFound {
-      gone = true
+      // The server has no such request for this watch. It may be waiting in the person's other
+      // workspace (a push without `org_id` can't say so), so never "Already answered": a request
+      // that was answered still comes back, with how it went.
+      elsewhere = true
     } catch {
       // Offline: the seed stays on screen and Deny still tries.
     }
@@ -117,12 +134,12 @@ struct ApprovalView: View {
         Haptic.problem()
         note = why ?? approval?.whyPhoneText ?? WatchL10n.reviewOnIphone
         await load()
-      case .offline:
+      case .elsewhere:
         Haptic.problem()
-        note = WatchL10n.offline
-      case .failed:
+        elsewhere = true
+      case .offline, .outOfCredits, .refused, .failed:
         Haptic.problem()
-        note = WatchL10n.couldntReach
+        note = result.note
       }
     }
   }
@@ -136,6 +153,8 @@ struct SuggestionView: View {
   @Environment(\.hideWords) private var hideWords
   @State private var busy = false
   @State private var note: String?
+  /// It couldn't start from here (out of credits, another workspace): offer the phone.
+  @State private var offerPhone = false
 
   var body: some View {
     ScrollView {
@@ -147,10 +166,19 @@ struct SuggestionView: View {
         .accessibilityElement(children: .combine)
         PrivateText(seed.text, font: .watchTitle, lines: nil)
         if let note {
-          Text(note).font(.watchCaption).foregroundStyle(WatchTheme.amber)
+          Text(note).font(.watchCaption).foregroundStyle(WatchTheme.amber).fixedSize(horizontal: false, vertical: true)
         }
-        Button(WatchL10n.doIt) { act(accept: true) }
+        if offerPhone {
+          Button {
+            Task { await model.openOnPhone(link: PhoneRoutes.first(seed.link, else: PhoneRoutes.needsYou), title: seed.text) }
+          } label: {
+            Label(WatchL10n.openOnIphone, systemImage: "iphone")
+          }
           .buttonStyle(PillStyle(tone: .main))
+        } else {
+          Button(WatchL10n.doIt) { act(accept: true) }
+            .buttonStyle(PillStyle(tone: .main))
+        }
         Button(WatchL10n.notNow) { act(accept: false) }
           .buttonStyle(PillStyle(tone: .plain))
       }
@@ -158,6 +186,11 @@ struct SuggestionView: View {
     }
     .navigationTitle(WatchL10n.needsYou)
     .disabled(busy)
+    // What went wrong when it was answered from its notification: read when this screen opens for
+    // it, and when it was open already.
+    .onChange(of: model.pendingNotes[seed.id], initial: true) { _, left in
+      if left != nil, let text = model.takeNote(for: seed.id) { note = text }
+    }
   }
 
   private func act(accept: Bool) {
@@ -169,12 +202,18 @@ struct SuggestionView: View {
       switch result {
       case .done: model.showFlash(accept ? .started : .done, pop: true)
       case .alreadyAnswered: model.showFlash(.alreadyAnswered, pop: true)
-      case .offline:
+      case .elsewhere:
         Haptic.problem()
-        note = WatchL10n.offline
+        note = WatchL10n.notOnWatch
+        offerPhone = true
+      case .outOfCredits:
+        // Nothing started and the suggestion is kept: the phone is where credits are topped up.
+        Haptic.problem()
+        note = WatchL10n.outOfCredits
+        offerPhone = true
       default:
         Haptic.problem()
-        note = WatchL10n.couldntReach
+        note = result.note ?? WatchL10n.couldntReach
       }
     }
   }
@@ -187,18 +226,29 @@ struct PhoneOnlyView: View {
   @EnvironmentObject private var model: AppModel
   @Environment(\.hideWords) private var hideWords
 
+  /// From a notification this watch's key can't answer (another workspace): it may be a reply as
+  /// well as a request, so the screen names the bot and doesn't say "Needs you".
+  private var notMine: Bool { seed.kind == NeedSeed.elsewhere || seed.kind == NeedSeed.notHere }
+
   var body: some View {
     ScrollView {
       VStack(alignment: .leading, spacing: 8) {
         HStack(spacing: 6) {
           BotMarkView(name: seed.bot, avatar: seed.avatar, size: 26, muted: hideWords)
-          Eyebrow(text: seed.kind == "takeover" ? WatchL10n.takeOver : WatchL10n.needsYou, color: WatchTheme.needs(model.online))
+          if notMine {
+            Eyebrow(text: seed.bot.isEmpty ? WatchL10n.compCasama : seed.bot, color: WatchTheme.secondary)
+          } else {
+            Eyebrow(text: seed.kind == "takeover" ? WatchL10n.takeOver : WatchL10n.needsYou, color: WatchTheme.needs(model.online))
+          }
         }
         .accessibilityElement(children: .combine)
-        PrivateText(seed.text, font: .watchTitle, lines: nil)
-        Text(WatchL10n.continuesOnIphone).font(.watchCaption).foregroundStyle(WatchTheme.secondary)
+        if !seed.text.isEmpty { PrivateText(seed.text, font: .watchTitle, lines: nil) }
+        Text(seed.kind == NeedSeed.elsewhere ? WatchL10n.otherWorkspace : seed.kind == NeedSeed.notHere ? WatchL10n.notOnWatch : WatchL10n.continuesOnIphone)
+          .font(.watchCaption)
+          .foregroundStyle(WatchTheme.secondary)
+          .fixedSize(horizontal: false, vertical: true)
         Button {
-          Task { await model.openOnPhone(link: seed.link, title: seed.text) }
+          Task { await model.openOnPhone(link: PhoneRoutes.first(seed.link, else: PhoneRoutes.needsYou), title: seed.text.isEmpty ? seed.bot : seed.text) }
         } label: {
           Label(WatchL10n.openOnIphone, systemImage: "iphone")
         }
@@ -206,6 +256,6 @@ struct PhoneOnlyView: View {
       }
       .padding(.horizontal, 2)
     }
-    .navigationTitle(WatchL10n.needsYou)
+    .navigationTitle(notMine ? WatchL10n.compCasama : WatchL10n.needsYou)
   }
 }

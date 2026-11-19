@@ -24,6 +24,11 @@ object Routes {
     const val WORKING = "working/{run}"
     const val CHAT = "chat/{bot}/{conv}"
     const val TALK = "talk/{bot}"
+    /**
+     * Something this watch can't answer: its link and title, as hex, and "1" when it is known to
+     * be in another workspace ("0": the server only said it isn't this watch's).
+     */
+    const val ELSEWHERE = "elsewhere/{link}/{title}/{other}"
 
     fun request(id: String) = "request/${enc(id)}"
     fun suggestion(id: String) = "suggestion/${enc(id)}"
@@ -31,6 +36,19 @@ object Routes {
     fun working(runId: String) = "working/${enc(runId)}"
     fun chat(botId: String, conversationId: String?) = "chat/${enc(botId)}/${enc(conversationId)}"
     fun talk(botId: String?) = "talk/${enc(botId)}"
+    fun elsewhere(link: String, title: String?, otherWorkspace: Boolean) =
+        "elsewhere/${hex(link.take(300))}/${hex(title.orEmpty().take(120))}/${if (otherWorkspace) 1 else 0}"
+
+    /** Free text (a link, a title) as a route argument: hex of its UTF-8, "_" when empty. */
+    private fun hex(text: String): String =
+        text.toByteArray(Charsets.UTF_8).joinToString("") { "%02x".format(it.toInt() and 0xff) }.ifEmpty { "_" }
+
+    /** The text of a [hex] argument; null when empty or not hex. */
+    fun text(value: String?): String? {
+        val h = arg(value) ?: return null
+        if (h.length % 2 != 0) return null
+        return runCatching { String(ByteArray(h.length / 2) { h.substring(it * 2, it * 2 + 2).toInt(16).toByte() }, Charsets.UTF_8) }.getOrNull()
+    }
 
     fun arg(value: String?): String? = value?.takeIf { it.isNotEmpty() && it != "_" }
 

@@ -39,6 +39,9 @@ final class WatchAppDelegate: NSObject, WKApplicationDelegate, UNUserNotificatio
     UNUserNotificationCenter.current().delegate = self
     WatchNotifications.registerCategories()
     scheduleRefresh()
+    // Before any screen: a notification's button or a complication can be what launches the app,
+    // and its handler needs the model to know whether the watch is signed in.
+    Task { @MainActor in AppModel.shared.start() }
   }
 
   func didRegisterForRemoteNotifications(withDeviceToken deviceToken: Data) {
@@ -52,7 +55,7 @@ final class WatchAppDelegate: NSObject, WKApplicationDelegate, UNUserNotificatio
   /// A push that asks the app to refresh (Phase 5 sends these with content-available).
   func didReceiveRemoteNotification(_ userInfo: [AnyHashable: Any], fetchCompletionHandler completionHandler: @escaping (WKBackgroundFetchResult) -> Void) {
     Task {
-      let outcome = await WatchSync.refreshGlance()
+      let outcome = await WatchSync.refreshGlance(quick: true)
       if outcome == .fresh { WatchSync.reloadWidgets() }
       switch outcome {
       case .fresh: completionHandler(.newData)
@@ -67,8 +70,9 @@ final class WatchAppDelegate: NSObject, WKApplicationDelegate, UNUserNotificatio
       switch task {
       case let refresh as WKApplicationRefreshBackgroundTask:
         Task {
-          // The glance is small and usually "not changed": well within the few seconds a refresh gets.
-          let outcome = await WatchSync.refreshGlance()
+          // The glance is small and usually "not changed": well within the few seconds a refresh
+          // gets, and the call gives up early when the connection is slow.
+          let outcome = await WatchSync.refreshGlance(quick: true)
           if outcome == .fresh || outcome == .signedOut { WatchSync.reloadWidgets() }
           self.scheduleRefresh()
           refresh.setTaskCompletedWithSnapshot(false)
@@ -89,6 +93,9 @@ final class WatchAppDelegate: NSObject, WKApplicationDelegate, UNUserNotificatio
   // MARK: UNUserNotificationCenterDelegate
 
   func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification) async -> UNNotificationPresentationOptions {
+    // "Open on iPhone" leaves a notification on the phone, and a locked phone mirrors it straight
+    // back here while the app is still open: nothing to show, this watch asked for it.
+    if (notification.request.content.userInfo["tag"] as? String) == "watch-handoff" { return [] }
     // Something changed: the glance behind Now and the complications should show it.
     Task { @MainActor in AppModel.shared.refresh() }
     return [.banner, .list, .sound]

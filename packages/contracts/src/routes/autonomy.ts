@@ -26,7 +26,7 @@ import {
 import { IdempotencyKeyHeader, jsonBody, jsonResponse, problemResponses, Uuid } from "../common.ts";
 
 const security = [{ bearerAuth: [] }];
-const { 400: e400, 401: e401, 403: e403, 404: e404, 409: e409 } = problemResponses;
+const { 400: e400, 401: e401, 403: e403, 404: e404, 409: e409, 429: e429 } = problemResponses;
 const list = <T extends z.ZodType>(name: string, item: T) =>
   z.object({ items: z.array(item) }).openapi(name);
 const idParam = z.object({ id: Uuid });
@@ -52,9 +52,17 @@ export const decideApproval = createRoute({
   path: "/v1/approvals/{id}/decision",
   tags: ["approvals"],
   security,
-  summary: "Approve or deny; denying cancels that step only",
+  summary:
+    "Approve or deny; denying cancels that step only. A watch key is refused an allow it may not give (403 watch_allow_refused, watch_always_allow) and is held to its minute (429)",
   request: { params: idParam, body: jsonBody(ApprovalDecisionRequest) },
-  responses: { 200: jsonResponse("Decided", Approval), 401: e401, 404: e404, 409: e409 },
+  responses: {
+    200: jsonResponse("Decided", Approval),
+    401: e401,
+    403: e403,
+    404: e404,
+    409: e409,
+    429: e429,
+  },
 });
 
 export const listSecrets = createRoute({

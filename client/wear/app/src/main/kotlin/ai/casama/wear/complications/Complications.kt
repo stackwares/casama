@@ -5,6 +5,7 @@ import ai.casama.wear.core.Format
 import ai.casama.wear.core.Glance
 import ai.casama.wear.core.Logic
 import ai.casama.wear.graph
+import ai.casama.wear.surfaces.Surfaces
 import ai.casama.wear.ui.Routes
 import android.app.PendingIntent
 import android.graphics.drawable.Icon
@@ -24,13 +25,15 @@ import androidx.wear.watchface.complications.datasource.SuspendingComplicationDa
 
 private fun plain(text: String) = PlainComplicationText.Builder(text).build()
 
-/** Shared by the three: read the saved glance, never wait on the network (§6.3). */
+/** Shared by the three: read the saved glance, never wait on the network (§6.3); an old one starts a refresh. */
 abstract class CasamaComplication : SuspendingComplicationDataSourceService() {
     protected fun glance(): Pair<Glance?, Boolean> {
         val graph = applicationContext.graph
         if (!graph.session.isSignedIn) return null to false
         val saved = graph.cache.glance()
-        return saved?.glance to Format.isStale(saved?.savedAt, System.currentTimeMillis())
+        val stale = Format.isStale(saved?.savedAt, System.currentTimeMillis())
+        if (stale) Surfaces.refreshIfStale(applicationContext)
+        return saved?.glance to stale
     }
 
     protected fun tap(route: String): PendingIntent = Routes.pending(applicationContext, route)

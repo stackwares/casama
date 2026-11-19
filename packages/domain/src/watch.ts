@@ -14,7 +14,7 @@ export type WatchWhyPhone = "high_risk" | "payment" | "setting" | "workspace" | 
 
 export interface WatchAllowanceInput {
   risk: Risk;
-  /** A payment (payments.request): always the phone, whatever its risk. */
+  /** It spends money (spendsMoney: a payment, a paid data call): always the phone, whatever its risk. */
   payment: boolean;
   /** The person's watch setting; medium by default. */
   level: WatchAllowLevel;
@@ -46,7 +46,7 @@ const phone = (why: WatchWhyPhone): WatchAllowance => ({ can_allow: "phone", why
 export function watchAllowance(i: WatchAllowanceInput): WatchAllowance {
   if (i.workspaceOff) return phone("workspace");
   if (!i.isYours) return phone("not_yours");
-  if (i.payment) return phone("payment");
+  if (i.payment || (i.tool && spendsMoney(i.tool))) return phone("payment");
   if (i.risk === "high") return phone("high_risk");
   if (i.tool && isOutsideTool(i.tool) && (i.risk !== "low" || isMoneyLike(i.tool)))
     return phone("high_risk");
@@ -56,9 +56,24 @@ export function watchAllowance(i: WatchAllowanceInput): WatchAllowance {
   return { can_allow: "tap", why_phone: null };
 }
 
-/** Tools that spend money: never allowed from a watch (§7). */
+/** A payment (payments.request): never allowed from a watch (§7). */
 export function isPaymentTool(tool: string): boolean {
   return tool === "payments.request" || tool.startsWith("payments.");
+}
+
+/**
+ * Built-in tools that buy something without being a payment by name. `data.call` buys one call to
+ * a paid data service at medium risk, up to 1.5 times its quote. (Publishing a site and connecting
+ * a domain are high risk, so they are phone-only already.)
+ */
+const SPENDING_TOOLS = new Set(["data.call"]);
+
+/**
+ * Whether allowing this tool spends money: a payment, or a built-in tool that buys something. The
+ * one rule for "never allowed from a watch"; a watch is told `payment` for these.
+ */
+export function spendsMoney(tool: string): boolean {
+  return isPaymentTool(tool) || SPENDING_TOOLS.has(tool);
 }
 
 /** Where tools from outside Casama come from: connected apps, MCP servers, other agents. */

@@ -55,10 +55,26 @@ struct RootView: View {
         .transition(.move(edge: .top).combined(with: .opacity))
         .zIndex(3)
         .accessibilityAddTraits(.isStaticText)
+      } else if let notice = model.notice {
+        // An ask that was kept, or one that couldn't be sent: said once, across the top.
+        VStack {
+          Text(notice)
+            .font(.watchCaption.weight(.semibold))
+            .foregroundStyle(.white)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(WatchTheme.cardRaised))
+            .multilineTextAlignment(.center)
+          Spacer()
+        }
+        .transition(.move(edge: .top).combined(with: .opacity))
+        .zIndex(3)
+        .accessibilityAddTraits(.isStaticText)
       }
     }
     .animation(.easeOut(duration: 0.2), value: model.flash)
     .animation(.easeOut(duration: 0.25), value: model.welcome)
+    .animation(.easeOut(duration: 0.25), value: model.notice)
     .environment(\.hideWords, wristDown && model.hideWhenWristDown)
     .alert(
       model.confirmAsk.map { WatchL10n.keptOld(WatchTime.past($0.askedAt)) } ?? "",
@@ -128,6 +144,9 @@ struct SigningInView: View {
         if model.codeFailed {
           Text(WatchL10n.couldntReach).font(.watchCaption).foregroundStyle(WatchTheme.red).multilineTextAlignment(.center)
         }
+        if model.needsHttps {
+          Text(WatchL10n.needsHttps).font(.watchCaption).foregroundStyle(WatchTheme.amber).multilineTextAlignment(.center)
+        }
       }
       .frame(maxWidth: .infinity)
       .padding(.horizontal, 6)
@@ -176,7 +195,8 @@ struct SignedOutView: View {
   var body: some View {
     MessageScreen(mascot: "sleepy", title: WatchL10n.signedOut) {
       VStack(spacing: 6) {
-        Button(WatchL10n.tryAgain) { model.askPhoneToSignIn() }
+        // Signed out stays signed out until the person asks: this asks the phone.
+        Button(WatchL10n.signIn) { model.askPhoneToSignIn() }
           .buttonStyle(PillStyle(tone: .main))
         Button(WatchL10n.useCode) { model.startCode() }
           .buttonStyle(PillStyle(tone: .plain, small: true))

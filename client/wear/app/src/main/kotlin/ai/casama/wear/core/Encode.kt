@@ -64,9 +64,9 @@ object Encode {
     /** POST /v1/suggestions/{id}/dismiss. */
     fun dismiss(): String = buildJsonObject { put("dont_suggest_again", false) }.toString()
 
-    /** POST /v1/watch/handoff. Links must be app routes ("/…"). */
+    /** POST /v1/watch/handoff. Links must be app routes ("/…") the phone has (Logic.phoneRoute). */
     fun handoff(link: String, title: String): String = buildJsonObject {
-        put("link", if (link.startsWith("/")) link.take(300) else "/")
+        put("link", Logic.phoneRoute(link).take(300))
         put("title", title.take(100).ifBlank { "Casama" })
     }.toString()
 

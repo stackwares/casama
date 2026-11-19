@@ -11,6 +11,7 @@ import {
 import { sql } from "drizzle-orm";
 import { attentionHold, type HoldReason, type Why } from "./attention.ts";
 import type { LiveTarget, LiveUpdate } from "./live-runs.ts";
+import { watchCanAllow, watchPrefsFor } from "./watch.ts";
 import { WATCHER_NO_MATCH } from "./watcher-match.ts";
 
 export interface PushMessage {
@@ -486,6 +487,26 @@ export function watchKind(kind: string, message: Record<string, unknown> = {}): 
   }
 }
 
+/** What a watch's copy of a push says when "Show details on the watch" is off, by watch kind. */
+const WATCH_GENERAL_BODY: Record<string, string> = {
+  approval: "Needs your OK",
+  suggestion: "Has a suggestion",
+  reply: "Replied",
+  failed: "Couldn't finish",
+  routine: "Finished a routine",
+  brief: "Your brief is ready",
+  takeover: "Needs you to take over",
+};
+
+/**
+ * A watch push's words with details off (D-410 §10): the bot's name (else "Casama") and what kind
+ * of thing happened, never what it was about.
+ */
+export function watchGeneralText(watchKindValue: string, botName?: string | null) {
+  const name = botName?.replace(/\s+/g, " ").trim().slice(0, 80);
+  return { title: name || "Casama", body: WATCH_GENERAL_BODY[watchKindValue] ?? "New activity" };
+}
+
 /** Inbox kinds whose push names the reply it is about (message_id, §4). */
 const REPLY_KINDS = new Set(["reply", "routine_result", "checkin_summary"]);
 
@@ -617,20 +638,29 @@ export class NotificationService {
     }>(
       sql`select fcm_token, platform, data_pushes, push_version from public.devices where user_id = ${userId}::uuid`,
     );
-    // The person's watches with their own push token (D-410), in the workspace this is about.
-    const watches = await this.db
-      .execute<{ push_token: string; push_kind: "apns" | "fcm"; push_sandbox: boolean | null }>(sql`
-        select distinct on (push_token) push_token, push_kind, push_sandbox from public.watch_keys
-        where user_id = ${userId}::uuid and push_token is not null
-          ${orgId ? sql`and org_id = ${orgId}::uuid` : sql``}`)
-      .catch(
-        () =>
-          [] as Array<{
-            push_token: string;
-            push_kind: "apns" | "fcm";
-            push_sandbox: boolean | null;
-          }>,
-      );
+    // The person's watches with their own push token (D-410). An Apple Watch hears about the
+    // workspace its key is in (the iPhone mirrors the rest). A Wear OS watch hears about every
+    // workspace: it turns the phone's bridging off, so nothing else would reach the wrist; the
+    // push's `org_id` tells it which requests it can answer.
+    type WatchToken = {
+      push_token: string;
+      push_kind: "apns" | "fcm";
+      push_sandbox: boolean | null;
+      org_id: string;
+    };
+    // The workspace is checked per key row before a token is counted once: the same token can sit
+    // on two rows (an old key and the one that replaced it, in different workspaces).
+    const seenTokens = new Set<string>();
+    const watches = (
+      await this.db
+        .execute<WatchToken>(sql`
+          select push_token, push_kind, push_sandbox, org_id from public.watch_keys
+          where user_id = ${userId}::uuid and push_token is not null
+          order by coalesce(last_used_at, created_at) desc, push_token`)
+        .catch(() => [] as WatchToken[])
+    )
+      .filter((w) => w.push_kind === "fcm" || !orgId || w.org_id === orgId)
+      .filter((w) => !seenTokens.has(w.push_token) && seenTokens.add(w.push_token));
     if (!devices.length && !watches.length) return;
     prefs ??= await this.prefs(userId);
     const str = (v: unknown) => (typeof v === "string" && v ? v : null);
@@ -692,6 +722,8 @@ export class NotificationService {
         kind,
         // The watch's kinds (D-410, §4); `kind` keeps the values phones already read.
         watch_kind: watchKind(kind, message),
+        // Which workspace it is about: a watch answers only requests in its key's own.
+        ...(orgId ? { org_id: orgId } : {}),
         link: str(message.link) ?? "/",
         ...(tag ? { tag } : {}),
         ...(conversationId ? { conversation_id: conversationId } : {}),
@@ -736,14 +768,49 @@ export class NotificationService {
     }
     for (const t of invalid)
       await this.db.execute(sql`delete from public.devices where fcm_token = ${t}`);
-    if (watches.length) await this.pushToWatches(watches, base, userId);
+    if (watches.length)
+      await this.pushToWatches(
+        watches,
+        await this.watchCopy(userId, base, {
+          kind: watchKind(kind, message),
+          botName: bot?.name,
+          approvalId,
+        }),
+        userId,
+      );
   }
 
   /**
-   * The same push to the person's watches' own tokens (D-410, §4): a Wear OS watch gets a
-   * data-only message it draws itself (title and body in the data), an Apple Watch an alert straight
-   * to Apple with the phone copy's category, data and collapse id. Tokens Apple or Firebase say are
-   * gone are cleared from their keys.
+   * A push as the person's watches get it (D-410 §4, §10). A request says whether this person's
+   * watch may allow it (`can_allow`, the rule GET /v1/watch/approvals/{id} answers with), so a
+   * watch offers Allow only when the server would take it. With "Show details on the watch" off
+   * the words are general: the bot's name and what kind of thing happened. Settings that can't be
+   * read count as off.
+   */
+  private async watchCopy(
+    userId: string,
+    base: PushMessage,
+    o: { kind: string; botName?: string | null; approvalId: string | null },
+  ): Promise<PushMessage> {
+    const prefs = await watchPrefsFor(this.db, userId).catch(() => null);
+    let data = base.data ?? {};
+    if (o.approvalId) {
+      const canAllow = await watchCanAllow(this.db, o.approvalId, {
+        userId,
+        level: prefs?.allow ?? "none",
+      }).catch(() => "phone" as const);
+      data = { ...data, can_allow: canAllow };
+    }
+    const words = prefs?.show_details === true ? {} : watchGeneralText(o.kind, o.botName);
+    return { ...base, ...words, data };
+  }
+
+  /**
+   * The watch copy to the person's watches' own tokens (D-410, §4): a Wear OS watch gets a
+   * data-only message it draws itself (the sender puts the title and body in its data, so they
+   * aren't repeated here, where the relay's "no text" couldn't reach them), an Apple Watch an alert
+   * straight to Apple with the phone copy's category, data and collapse id. Tokens Apple or Firebase
+   * say are gone are cleared from their keys.
    */
   private async pushToWatches(
     watches: Array<{ push_token: string; push_kind: "apns" | "fcm"; push_sandbox: boolean | null }>,
@@ -757,7 +824,7 @@ export class NotificationService {
         .send(wear, {
           ...base,
           dataOnly: true,
-          data: { ...base.data, title: base.title, body: base.body, user_id: userId },
+          data: { ...base.data, user_id: userId },
         })
         .catch(() => ({ invalidTokens: [] as string[] }));
       invalid.push(...invalidTokens);

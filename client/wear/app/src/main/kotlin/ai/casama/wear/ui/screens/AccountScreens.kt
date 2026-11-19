@@ -127,7 +127,10 @@ private fun androidx.wear.compose.foundation.lazy.TransformingLazyColumnItemScop
 fun SignInScreen(auth: Session.Auth.SignedOut) {
     val context = LocalContext.current
     val session = context.graph.session
-    LaunchedEffect(Unit) { if (auth.step == null) session.startSignIn() }
+    // Only a watch that was never signed in asks the phone by itself; after a sign-out it waits
+    // for the Sign in button below (Session.autoSignIn).
+    LaunchedEffect(Unit) { if (auth.step == null) session.autoSignIn() }
+    val manual = auth.step == null && auth.reason != Session.OutReason.FIRST_RUN
 
     val reasonLine = when (auth.reason) {
         Session.OutReason.REMOVED, Session.OutReason.FROM_PHONE, Session.OutReason.BY_PERSON -> stringResource(R.string.watch_signed_out)
@@ -154,8 +157,33 @@ fun SignInScreen(auth: Session.Auth.SignedOut) {
         }
         reasonLine?.let { r -> item { Text(r, style = MaterialTheme.typography.bodySmall, color = CasamaColors.Secondary, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) } }
         when (val step = auth.step) {
-            null, Session.SignIn.AskingPhone -> item { Message(stringResource(R.string.watch_signing_in), null) }
-            Session.SignIn.WaitingForPhone -> item { Message(stringResource(R.string.watch_open_phone_to_finish), null) }
+            null -> if (manual) {
+                item {
+                    FilledTonalButton(onClick = { session.startSignIn() }, modifier = Modifier.fillMaxWidth().transformedHeight(this, spec), transformation = SurfaceTransformation(spec)) {
+                        Text(stringResource(R.string.watch_sign_in))
+                    }
+                }
+            } else {
+                item { Message(stringResource(R.string.watch_signing_in), null) }
+            }
+            Session.SignIn.AskingPhone -> item { Message(stringResource(R.string.watch_signing_in), null) }
+            Session.SignIn.ServerRefused -> {
+                item { Message(stringResource(R.string.watch_needs_https), null) }
+                item {
+                    FilledTonalButton(onClick = { session.startSignIn() }, modifier = Modifier.fillMaxWidth().transformedHeight(this, spec), transformation = SurfaceTransformation(spec)) {
+                        Text(stringResource(R.string.watch_try_again))
+                    }
+                }
+            }
+            Session.SignIn.WaitingForPhone -> {
+                item { Message(stringResource(R.string.watch_open_phone_to_finish), null) }
+                // The phone holds a request for a while only; this asks it again.
+                item {
+                    FilledTonalButton(onClick = { session.startSignIn() }, modifier = Modifier.fillMaxWidth().transformedHeight(this, spec), transformation = SurfaceTransformation(spec)) {
+                        Text(stringResource(R.string.watch_try_again))
+                    }
+                }
+            }
             Session.SignIn.GettingCode -> item { Message(stringResource(R.string.watch_use_code), null) }
             is Session.SignIn.Code -> {
                 val shown = Format.code(step.code.code)

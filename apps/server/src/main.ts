@@ -539,7 +539,7 @@ function apiNotifications(db: import("@casama/db").Database) {
   });
   const notifications = new NotificationService(db, push);
   notifications.watch =
-    apnsWatchFromEnv(env) ?? (push instanceof CloudRelayPushSender ? push : undefined);
+    apnsWatchFromEnv(env, logger) ?? (push instanceof CloudRelayPushSender ? push : undefined);
   return notifications;
 }
 

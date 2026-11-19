@@ -401,7 +401,10 @@ export async function startWorker(opts: WorkerOptions) {
   // Apple Watches' own tokens (D-410): this server's Apple key, else the cloud's relay, since only
   // Casama's key can reach the store's watch app.
   notifications.watch = opts.apns
-    ? new ApnsWatchSender(new ApnsClient(opts.apns), { appBundleId: opts.apnsAppTopic })
+    ? new ApnsWatchSender(new ApnsClient(opts.apns), {
+        appBundleId: opts.apnsAppTopic,
+        onError: (info) => opts.logger.warn("watch push", info),
+      })
     : push instanceof CloudRelayPushSender
       ? push
       : undefined;

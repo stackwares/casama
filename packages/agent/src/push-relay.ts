@@ -26,9 +26,18 @@ export interface CloudRelayOptions {
 export const PRIVATE_PUSH_TITLE = "Casama";
 export const PRIVATE_PUSH_BODY = "New activity";
 
-/** The same message with nothing to read in it. */
+/**
+ * The same message with nothing to read in it: not in its title and body, and not in a copy of
+ * them in its data (a message an app draws itself gets them there from the sender, D-410).
+ */
 export function withoutText(message: PushMessage): PushMessage {
-  return { ...message, title: PRIVATE_PUSH_TITLE, body: PRIVATE_PUSH_BODY };
+  const { title: _title, body: _body, ...data } = message.data ?? {};
+  return {
+    ...message,
+    title: PRIVATE_PUSH_TITLE,
+    body: PRIVATE_PUSH_BODY,
+    ...(message.data ? { data } : {}),
+  };
 }
 
 /**

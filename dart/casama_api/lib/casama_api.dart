@@ -295,6 +295,7 @@ export 'package:casama_api/src/model/deleted_rule.dart';
 export 'package:casama_api/src/model/deleted_teach.dart';
 export 'package:casama_api/src/model/deleted_user_fact.dart';
 export 'package:casama_api/src/model/deleted_watch_key.dart';
+export 'package:casama_api/src/model/deleted_watch_keys.dart';
 export 'package:casama_api/src/model/deleted_watcher.dart';
 export 'package:casama_api/src/model/deleted_widget_key.dart';
 export 'package:casama_api/src/model/device_access_requested_event.dart';

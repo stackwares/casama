@@ -22,10 +22,11 @@ import 'watch_state.dart';
 /// workspace, registers the watch's fingerprint, and answers. It never sees a watch's key.
 ///
 /// - native → Dart `request {request_id, platform, fingerprint, name, model?, app_version?,
-///   os_version?}`: a watch asks to be signed in.
+///   os_version?, at?}`: a watch asks to be signed in.
 /// - native → Dart `open {link}`: Open on phone, from the watch.
-/// - Dart → native `takeRequests` (held while Flutter wasn't running), `answer`, `setContext`
-///   (another workspace), `signOut`, `status`.
+/// - Dart → native `takeRequests` (the requests native code holds, one per watch, until each is
+///   answered; taking them doesn't clear them), `answer` (which does), `setContext` (another
+///   workspace), `signOut`, `status`.
 const watchChannelName = 'casama/watch';
 
 final watchChannelProvider = Provider<MethodChannel>(
@@ -78,6 +79,15 @@ class WatchStatus {
 
 final _fingerprintPattern = RegExp(r'^[0-9a-f]{64}$');
 
+/// The newest request of a watch whose sign-in is under way.
+class _Asking {
+  _Asking(this.requestId, this.at);
+  String requestId;
+
+  /// When native code got it (epoch ms); null from a native side that doesn't say.
+  int? at;
+}
+
 class WatchBridge {
   WatchBridge(this._ref, this._channel);
 
@@ -87,12 +97,24 @@ class WatchBridge {
   /// False once the channel turned out to have no native side (desktop, web, an older build).
   var _native = true;
 
-  /// Requests being answered or answered already: native code may pass the same one live and
-  /// again from `takeRequests`.
+  /// Requests being answered or answered already in this run of the app: native code passes the
+  /// same one live and again from every `takeRequests` until it is answered.
   final _seen = <String>{};
 
-  /// Workspace moves and sign-outs one at a time, so two quick switches can't interleave.
+  /// The sign-ins under way, by the watch's fingerprint.
+  final _asking = <String, _Asking>{};
+
+  /// Whatever writes the watches' records or their keys on the server runs one at a time:
+  /// registering a watch, a workspace move, taking keys back. Interleaved, a move could lose a
+  /// watch that was signed in meanwhile, or a key could be deleted just after it was registered
+  /// again.
   Future<void> _queue = Future.value();
+
+  Future<T> _serial<T>(Future<T> Function() task) {
+    final run = _queue.then((_) => task());
+    _queue = run.then<void>((_) {}, onError: (Object _) {});
+    return run;
+  }
 
   void start() => _channel.setMethodCallHandler(handle);
 
@@ -111,7 +133,8 @@ class WatchBridge {
         // Only places inside the app.
         if (link is String && link.startsWith('/') && !link.startsWith('//')) {
           try {
-            _ref.read(watchOpenProvider)(link);
+            // A bare "/" (an older watch app, a push with no link) isn't a page: the chats are.
+            _ref.read(watchOpenProvider)(link == '/' ? '/bots' : link);
           } catch (e) {
             debugPrint('watch open failed: $e');
           }
@@ -120,8 +143,21 @@ class WatchBridge {
     return null;
   }
 
-  /// Answers the requests native code held while Flutter wasn't running (at launch, on resume,
-  /// once signed in).
+  /// At launch, on resume and once someone is signed in: finishes taking back the keys a sign-out
+  /// couldn't delete, moves the watches a workspace switch left behind (it failed offline, say),
+  /// and answers the requests native code holds.
+  Future<void> catchUp() async {
+    await _serial(_retryRemovals).catchError((Object e) {
+      debugPrint('watch key removal failed: $e');
+    });
+    final orgId = _ref.mounted ? _ref.read(currentOrgIdProvider) : null;
+    if (orgId != null) await workspaceChanged(orgId);
+    await takeRequests();
+  }
+
+  /// Answers the requests native code holds (a watch asked while Flutter wasn't running, or while
+  /// nobody was signed in). Native code keeps each one until it is answered, so one that is being
+  /// answered already is skipped here.
   Future<void> takeRequests() async {
     final held = await _invoke<List<Object?>>('takeRequests');
     for (final r in held ?? const []) {
@@ -130,10 +166,37 @@ class WatchBridge {
   }
 
   /// Signs a watch in and answers it. Never throws: a failure answers `reason: "error"`.
+  ///
+  /// With nobody signed in the request isn't answered at all: native code keeps holding it and it
+  /// is taken again once someone is ([catchUp]), so a watch that asked first is still signed in.
   Future<void> answerRequest(Map<String, Object?> args) async {
     final requestId = args['request_id'];
-    if (requestId is! String || requestId.isEmpty || !_seen.add(requestId)) {
+    if (requestId is! String ||
+        requestId.isEmpty ||
+        _seen.contains(requestId) ||
+        !_signedIn) {
       return;
+    }
+    _seen.add(requestId);
+    final fingerprint = args['fingerprint'] is String
+        ? args['fingerprint'] as String
+        : null;
+    final at = args['at'] is num ? (args['at'] as num).toInt() : null;
+    if (fingerprint != null) {
+      // A watch asks again with a new id on every Try again and every time its app opens. It
+      // joins the sign-in already under way (one question on screen, one registration), and the
+      // answer goes to its newest request.
+      final asking = _asking[fingerprint];
+      if (asking != null) {
+        final was = asking.at;
+        if (at == null || was == null || at >= was) {
+          asking
+            ..requestId = requestId
+            ..at = at ?? was;
+        }
+        return;
+      }
+      _asking[fingerprint] = _Asking(requestId, at);
     }
     Map<String, Object?> answer;
     try {
@@ -142,7 +205,15 @@ class WatchBridge {
       debugPrint('watch sign-in failed: $e');
       answer = const {'ok': false, 'reason': 'error'};
     }
-    await _invoke<void>('answer', {'request_id': requestId, ...answer});
+    final newest = fingerprint == null
+        ? null
+        : _asking.remove(fingerprint)?.requestId;
+    await _invoke<void>('answer', {
+      'request_id': newest ?? requestId,
+      // So native code can drop whatever it still holds for this watch.
+      'fingerprint': ?fingerprint,
+      ...answer,
+    });
   }
 
   bool get _signedIn {
@@ -173,44 +244,77 @@ class WatchBridge {
     if (!_signedIn) return const {'ok': false, 'reason': 'signed_out'};
     final backend = _ref.read(backendProvider);
     final userId = backend.userId!;
-    final org = await _currentOrg();
-    if (org == null || !_ref.mounted) return error;
-    // With the app lock on, a watch never signs in without the person saying so (§10).
+    if (await _currentOrg() == null || !_ref.mounted) return error;
+    // With the app lock on, a watch never signs in without the person saying so (§10), and it
+    // starts with general words only.
     if (_ref.read(appLockSettingsProvider).activeFor(userId) ||
         _ref.read(appLockRequiredByProvider) != null) {
       final yes = await _ref.read(watchLockAskProvider)(name);
       if (!_ref.mounted) return error;
       if (!yes) return const {'ok': false, 'reason': 'declined'};
+      await _startPrivate(userId);
+      if (!_ref.mounted) return error;
     }
-    final key = await backend.registerWatchKey(
-      orgId: org.id,
-      fingerprint: fingerprint,
-      platform: platform,
-      name: name,
-      model: text('model'),
-      appVersion: text('app_version'),
-      osVersion: text('os_version'),
-    );
-    await WatchKeyStore.upsert(
-      WatchRecord(
+    final org = await _serial(() async {
+      // The question can wait under the lock screen for a while: who is signed in and which
+      // workspace is selected are read now, not from before it.
+      if (!_signedIn || backend.userId != userId) return null;
+      final org = await _currentOrg();
+      if (org == null || !_ref.mounted) return null;
+      final key = await backend.registerWatchKey(
+        orgId: org.id,
         fingerprint: fingerprint,
         platform: platform,
         name: name,
         model: text('model'),
         appVersion: text('app_version'),
         osVersion: text('os_version'),
-        keyId: key.id,
-        orgId: org.id,
-        userId: userId,
-      ),
-    );
-    if (!_ref.mounted) return error;
-    _ref.invalidate(watchKeysProvider);
+      );
+      await WatchKeyStore.upsert(
+        WatchRecord(
+          fingerprint: fingerprint,
+          platform: platform,
+          name: name,
+          model: text('model'),
+          appVersion: text('app_version'),
+          osVersion: text('os_version'),
+          keyId: key.id,
+          orgId: org.id,
+          userId: userId,
+        ),
+      );
+      return org;
+    });
+    if (org == null || !_ref.mounted) return error;
+    _invalidateLists();
     final context = await _context(org);
     try {
       _ref.read(watchNoticeProvider)(_l10n().watchPhoneSignedIn(name));
     } catch (_) {}
     return {'ok': true, ...context};
+  }
+
+  /// With the app lock on a watch starts with general words only (§10): Show details goes off on
+  /// the server before the watch is signed in. Once per person on this device, and marked only
+  /// once the server has taken it; after that the switch in Settings → Watch is theirs.
+  Future<void> _startPrivate(String userId) async {
+    try {
+      if (await WatchDetailsSettled.check(userId)) return;
+      await _ref
+          .read(backendProvider)
+          .updateWatchPrefs(showDetails: false)
+          .timeout(const Duration(seconds: 10));
+      await WatchDetailsSettled.mark(userId);
+      if (_ref.mounted) _ref.invalidate(watchPrefsProvider);
+    } catch (e) {
+      debugPrint('watch details off failed: $e');
+    }
+  }
+
+  /// The lists Settings → Watch shows, after the records or the server's keys changed.
+  void _invalidateLists() {
+    _ref.invalidate(watchKeysProvider);
+    _ref.invalidate(watchesElsewhereProvider);
   }
 
   /// What a watch needs to know about the phone's workspace: `server`, `org_id`, `org_name`,
@@ -253,7 +357,7 @@ class WatchBridge {
   /// The phone switched to [orgId]: each watch it signed in follows, its fingerprint registered
   /// for the new workspace, and the watches are told (§2 `context`).
   Future<void> workspaceChanged(String orgId) =>
-      _queue = _queue.then((_) => _moveTo(orgId)).catchError((Object e) {
+      _serial(() => _moveTo(orgId)).catchError((Object e) {
         debugPrint('watch workspace move failed: $e');
       });
 
@@ -261,14 +365,20 @@ class WatchBridge {
     if (!_signedIn || !_ref.mounted) return;
     final backend = _ref.read(backendProvider);
     final userId = backend.userId;
-    final records = await WatchKeyStore.load();
-    if (!records.any((r) => r.userId == userId && r.orgId != orgId)) return;
+    bool elsewhere(WatchRecord r) =>
+        r.userId == userId && r.active && r.orgId != orgId;
+    final saved = await WatchKeyStore.load();
+    if (!saved.any(elsewhere)) return;
     final org = await _currentOrg();
     if (org == null || org.id != orgId || !_ref.mounted) return;
-    var moved = false;
+    // A watch removed somewhere else is never signed in again by a move: its record goes first.
+    // One the server had already moved here (the answer never reached this phone) is taken as
+    // moved, and told so like the others.
+    final records = await _withoutGone(saved, userId, first: orgId);
+    var moved = _cameTo(orgId, saved, records);
     final next = <WatchRecord>[];
     for (final r in records) {
-      if (r.userId != userId || r.orgId == orgId) {
+      if (!elsewhere(r)) {
         next.add(r);
         continue;
       }
@@ -297,31 +407,180 @@ class WatchBridge {
       }
     }
     await WatchKeyStore.save(next);
-    if (!moved || !_ref.mounted) return;
-    _ref.invalidate(watchKeysProvider);
+    if (!_ref.mounted) return;
+    if (moved || next.length != saved.length) _invalidateLists();
+    if (!moved) return;
     await _invoke<void>('setContext', await _context(org));
   }
 
-  /// The phone signed out: the watches it signed in are removed on the server (best effort; the
-  /// backend's sign-out already tried while the session worked) and told to sign out.
-  Future<void> signedOut() =>
-      _queue = _queue.then((_) => _signOut()).catchError((Object e) {
-        debugPrint('watch sign-out failed: $e');
+  /// Whether [next] has a watch in [orgId] that [before] had in another workspace.
+  static bool _cameTo(
+    String orgId,
+    List<WatchRecord> before,
+    List<WatchRecord> next,
+  ) {
+    final was = {for (final r in before) r.fingerprint: r.orgId};
+    return next.any((r) => r.orgId == orgId && was[r.fingerprint] != orgId);
+  }
+
+  /// [records] checked against the server, so a fingerprint the server dropped (the watch was
+  /// removed on another device, or signed itself out) is never registered again by a move, and a
+  /// watch the server still has is never forgotten.
+  ///
+  /// A record whose key isn't in its recorded workspace is looked for in the person's other
+  /// workspaces, [first] before the rest: the server keeps one key per watch and moves it, so a
+  /// move whose answer never reached this phone left the key there. Found, the record follows it.
+  /// It is dropped only when every workspace answered and none has it. Whenever one couldn't be
+  /// asked (offline, a server that can't say), or its own workspace was left, the record stays.
+  Future<List<WatchRecord>> _withoutGone(
+    List<WatchRecord> records,
+    String? userId, {
+    String? first,
+  }) async {
+    final orgs = _ref.read(organizationsProvider).value;
+    if (orgs == null) return records;
+    final mine = [
+      for (final o in orgs)
+        if (o.id == first) o.id,
+      for (final o in orgs)
+        if (o.id != first) o.id,
+    ];
+    final backend = _ref.read(backendProvider);
+    // What each workspace answered: its key ids, or null when the person isn't in it any more.
+    // One that couldn't be asked is in [unknown].
+    final answered = <String, Set<String>?>{};
+    final unknown = <String>{};
+    Future<void> ask(String orgId) async {
+      if (answered.containsKey(orgId) || unknown.contains(orgId)) return;
+      try {
+        answered[orgId] = await backend
+            .watchKeyIdsIn(orgId)
+            .timeout(const Duration(seconds: 10));
+      } catch (_) {
+        unknown.add(orgId);
+      }
+    }
+
+    final next = <WatchRecord>[];
+    for (final r in records) {
+      if (r.userId != userId || !r.active) {
+        next.add(r);
+        continue;
+      }
+      final listedHome = mine.contains(r.orgId);
+      if (listedHome) await ask(r.orgId);
+      if (unknown.contains(r.orgId) ||
+          answered[r.orgId]?.contains(r.keyId) == true) {
+        next.add(r);
+        continue;
+      }
+      // Not where the record says (or that workspace was left): somewhere else, or gone.
+      String? found;
+      var everyoneAnswered = true;
+      for (final o in mine) {
+        if (o == r.orgId) continue;
+        await ask(o);
+        if (unknown.contains(o)) {
+          everyoneAnswered = false;
+        } else if (answered[o]?.contains(r.keyId) == true) {
+          found = o;
+          break;
+        }
+      }
+      // Its own workspace gave no answer about it when the person has left it.
+      final homeAnswered = listedHome && answered[r.orgId] != null;
+      if (found != null) {
+        next.add(r.copyWith(orgId: found));
+      } else if (!everyoneAnswered || !homeAnswered) {
+        next.add(r);
+      }
+    }
+    return next;
+  }
+
+  /// Checks this phone's records against the server: forgets the watches it no longer has, and
+  /// follows one it moved. Settings → Watch asks for it when it opens.
+  Future<void> prune() =>
+      _serial(() async {
+        if (!_signedIn || !_ref.mounted) return;
+        final records = await WatchKeyStore.load();
+        if (records.isEmpty) return;
+        final here = _ref.read(currentOrgProvider);
+        final next = await _withoutGone(
+          records,
+          _ref.read(backendProvider).userId,
+          first: here?.id,
+        );
+        // The check only drops records or changes their workspace, and keeps their order.
+        var same = next.length == records.length;
+        for (var i = 0; same && i < next.length; i++) {
+          same = next[i].orgId == records[i].orgId;
+        }
+        if (same) return;
+        await WatchKeyStore.save(next);
+        if (!_ref.mounted) return;
+        _invalidateLists();
+        // A watch the server had moved to this workspace may not have heard: tell it.
+        if (here != null && _cameTo(here.id, records, next)) {
+          await _invoke<void>(
+            'setContext',
+            await _context((id: here.id, name: here.name)),
+          );
+        }
+      }).catchError((Object e) {
+        debugPrint('watch records check failed: $e');
       });
 
-  Future<void> _signOut() async {
-    final records = await WatchKeyStore.load();
-    if (records.isEmpty) return;
-    await WatchKeyStore.clear();
+  /// A sign-out that couldn't delete a watch's key (the session had ended by itself, or the phone
+  /// was offline) left its record waiting. The same account is signed in again: the key goes now.
+  Future<void> _retryRemovals() async {
+    if (!_signedIn || !_ref.mounted) return;
     final backend = _ref.read(backendProvider);
+    final userId = backend.userId;
+    bool waiting(WatchRecord r) =>
+        r.userId == userId && r.removal == WatchRemoval.pending;
+    final records = await WatchKeyStore.load();
+    if (!records.any(waiting)) return;
+    final next = <WatchRecord>[];
     for (final r in records) {
+      if (!waiting(r)) {
+        next.add(r);
+        continue;
+      }
       try {
         await backend
             .deleteWatchKey(r.keyId)
             .timeout(const Duration(seconds: 5));
-      } catch (_) {}
+      } catch (_) {
+        next.add(r);
+      }
     }
-    await _invoke<void>('signOut', const <String, Object?>{});
+    await WatchKeyStore.save(next);
+  }
+
+  /// The phone signed out: the watches it signed in are told to sign out, always, whether or not
+  /// their keys could be deleted. The backend's sign-out deleted the keys it could while the
+  /// session worked and marked those records done ([WatchKeyStore.signingOut]). A key it couldn't
+  /// delete (offline, a slow server), or any key when the session ended by itself, is still on
+  /// record as signed in: it is kept, waiting, and deleted when the same account is signed in here
+  /// again ([catchUp]), since there is no session to delete it with now.
+  Future<void> signedOut() => _serial(_signOut).catchError((Object e) {
+    debugPrint('watch sign-out failed: $e');
+  });
+
+  Future<void> _signOut() async {
+    final records = await WatchKeyStore.load();
+    if (records.isEmpty) return;
+    // The watches signed in until now: the ones whose key just went (done) and the ones whose key
+    // couldn't be deleted (still marked signed in). One already waiting from an earlier sign-out
+    // was told then.
+    final tell = records.any((r) => r.removal != WatchRemoval.pending);
+    await WatchKeyStore.save([
+      for (final r in records)
+        if (r.removal != WatchRemoval.done)
+          r.copyWith(removal: WatchRemoval.pending),
+    ]);
+    if (tell) await _invoke<void>('signOut', const <String, Object?>{});
   }
 
   /// Whether a watch is paired and has Casama, for the one nudge (§6.10). Null when native code
@@ -365,14 +624,14 @@ final watchBridgeProvider = Provider<WatchBridge?>((ref) {
     if (next.value == false) {
       unawaited(bridge.signedOut());
     } else if (next.value == true) {
-      unawaited(bridge.takeRequests());
+      unawaited(bridge.catchUp());
     }
   }, fireImmediately: true);
   ref.listen(currentOrgIdProvider, (prev, next) {
     if (next != null && next != prev) unawaited(bridge.workspaceChanged(next));
   }, fireImmediately: true);
   final lifecycle = AppLifecycleListener(
-    onResume: () => unawaited(bridge.takeRequests()),
+    onResume: () => unawaited(bridge.catchUp()),
   );
   ref.onDispose(lifecycle.dispose);
   unawaited(bridge.takeRequests());

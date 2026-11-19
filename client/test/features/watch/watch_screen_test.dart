@@ -1,8 +1,13 @@
 // Settings → Watch (D-410 §6.10): the signed-in watches and Remove, signing one in with a code,
 // what a watch may allow, Show details with the app lock, quick replies and the how-to.
+import 'dart:async';
+import 'dart:convert';
+
 import 'package:casama/core/backend.dart';
 import 'package:casama/features/app_lock/app_lock.dart';
+import 'package:casama/features/watch/watch_key_store.dart';
 import 'package:casama/features/watch/watch_screen.dart';
+import 'package:casama_sdk/casama_sdk.dart' show OrganizationWithRole, OrgRole;
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
@@ -95,6 +100,55 @@ void main() {
   });
 
   testWidgets(
+    'a watch this phone signed in that is still in another workspace is listed, with where',
+    (tester) async {
+      const other = '66666666-6666-4666-8666-666666666666';
+      backend.extraOrgs.add(
+        OrganizationWithRole(
+          id: other,
+          name: 'Second',
+          slug: 'second',
+          plan: 'selfhost',
+          region: 'local',
+          createdAt: DateTime(2026),
+          role: OrgRole.owner,
+        ),
+      );
+      backend.watchKeys = [_watch('w9', 'Kitchen watch', org: other)];
+      // The phone switched workspace offline: the watch couldn't follow yet.
+      backend.watchRegisterError = Exception('offline');
+      SharedPreferences.setMockInitialValues({
+        WatchKeyStore.prefKey: jsonEncode([
+          const WatchRecord(
+            fingerprint: 'dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd',
+            platform: WatchSystem.watchos,
+            name: 'Kitchen watch',
+            model: 'Apple Watch Series 10',
+            keyId: 'w9',
+            orgId: other,
+            userId: 'me',
+          ).toJson(),
+        ]),
+      });
+      await open(tester);
+      expect(find.byKey(const Key('watchNone')), findsNothing);
+      expect(find.text('Kitchen watch'), findsOneWidget);
+      expect(
+        find.text('Apple Watch Series 10 · Signed in to Second'),
+        findsOneWidget,
+      );
+      // It can be removed from here too.
+      await tester.tap(find.byKey(const Key('removeWatch-w9')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('watchRemoveConfirm')));
+      await tester.pumpAndSettle();
+      expect(backend.watchKeysDeleted, ['w9']);
+      expect(find.text('Kitchen watch'), findsNothing);
+      expect(await WatchKeyStore.load(), isEmpty);
+    },
+  );
+
+  testWidgets(
     'a code: shows which watch is asking, then signs it in to this workspace',
     (tester) async {
       backend.watchCodes['KQ7M2XAB'] = WatchCodeView(
@@ -153,6 +207,79 @@ void main() {
     expect(backend.watchCodesClaimed, isEmpty);
   });
 
+  testWidgets(
+    'a code that could not be checked (no connection, too many tries) is not called wrong',
+    (tester) async {
+      backend.watchCodeError = Exception(
+        'Too many wrong codes; try again later',
+      );
+      await open(tester);
+      await tester.tap(find.byKey(const Key('watchUseCode')));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const Key('watchCodeField')),
+        'KQ7M 2XAB',
+      );
+      await tester.tap(find.byKey(const Key('watchCodeNext')));
+      await tester.pumpAndSettle();
+      expect(
+        find.text("That code didn't work. Check it on your watch"),
+        findsNothing,
+      );
+      expect(find.byKey(const Key('watchCodeField')), findsOneWidget);
+      // Let the error message go before the test ends.
+      await tester.pump(const Duration(seconds: 10));
+    },
+  );
+
+  testWidgets('a second Go while the code is being checked does nothing', (
+    tester,
+  ) async {
+    await open(tester);
+    await tester.tap(find.byKey(const Key('watchUseCode')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('watchCodeField')),
+      'ZZZZ 9999',
+    );
+    await tester.testTextInput.receiveAction(TextInputAction.go);
+    await tester.testTextInput.receiveAction(TextInputAction.go);
+    await tester.pumpAndSettle();
+    expect(backend.watchCodeLookups, 1, reason: 'one try spent, not two');
+  });
+
+  testWidgets(
+    'a watch still signed in to another account says so, and nothing is signed in',
+    (tester) async {
+      backend.watchCodes['KQ7M2XAB'] = WatchCodeView(
+        platform: WatchSystem.watchos,
+        name: 'Old watch',
+        expiresAt: DateTime.now().add(const Duration(minutes: 9)),
+      );
+      backend.watchCodeTaken = true;
+      await open(tester);
+      await tester.tap(find.byKey(const Key('watchUseCode')));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const Key('watchCodeField')),
+        'KQ7M 2XAB',
+      );
+      await tester.tap(find.byKey(const Key('watchCodeNext')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('watchCodeAllow')));
+      await tester.pumpAndSettle();
+      expect(
+        find.textContaining('still signed in to another account'),
+        findsOneWidget,
+      );
+      expect(
+        find.text("That code didn't work. Check it on your watch"),
+        findsNothing,
+      );
+      expect(backend.watchCodesClaimed, isEmpty);
+    },
+  );
+
   testWidgets('Allow from the watch: picking a level saves it', (tester) async {
     await open(tester);
     expect(find.text('Low and medium risk'), findsOneWidget);
@@ -195,6 +322,175 @@ void main() {
       isTrue,
     );
   });
+
+  testWidgets(
+    'Show details: a visit with the lock off spends nothing, so turning the lock on later still turns it off',
+    (tester) async {
+      await open(tester);
+      expect(backend.watchPrefsUpdates, isEmpty);
+      await tester.pumpWidget(const SizedBox());
+      await open(tester, lockOn: true);
+      expect(backend.watchPrefsUpdates.single.showDetails, false);
+    },
+  );
+
+  testWidgets(
+    'Show details: once the person turned it back on, the app lock leaves it',
+    (tester) async {
+      await open(tester, lockOn: true);
+      expect(backend.storedWatchPrefs!.showDetails, isFalse);
+      await tester.tap(find.byKey(const Key('watchShowDetails')));
+      await tester.pumpAndSettle();
+      expect(backend.storedWatchPrefs!.showDetails, isTrue);
+      await tester.pumpWidget(const SizedBox());
+      await open(tester, lockOn: true);
+      expect(backend.storedWatchPrefs!.showDetails, isTrue);
+      expect(
+        find.textContaining('Turned off because the app lock is on'),
+        findsNothing,
+      );
+    },
+  );
+
+  testWidgets(
+    'two quick changes are saved one at a time, and a refused one puts back only what it changed',
+    (tester) async {
+      await open(tester);
+      final first = backend.watchPrefsGate = Completer<void>();
+      await tester.tap(find.byKey(const Key('watchAllow-low')));
+      await tester.pump();
+      await tester.tap(find.byKey(const Key('watchShowDetails')));
+      await tester.pump();
+      expect(
+        backend.watchPrefsUpdates,
+        hasLength(1),
+        reason: 'the second waits for the first',
+      );
+      // The server refuses the first.
+      first.completeError(Exception('offline'));
+      await tester.pumpAndSettle();
+      expect(backend.watchPrefsUpdates, hasLength(2));
+      expect(backend.storedWatchPrefs!.allow, WatchAllowance.medium);
+      expect(backend.storedWatchPrefs!.showDetails, isFalse);
+      // The screen shows what the server has: the level back, the switch still off.
+      expect(
+        tester
+            .widget<RadioGroup<WatchAllowance>>(
+              find.byType(RadioGroup<WatchAllowance>),
+            )
+            .groupValue,
+        WatchAllowance.medium,
+      );
+      expect(
+        tester.widget<Switch>(find.byKey(const Key('watchShowDetails'))).value,
+        isFalse,
+      );
+      // Let the error message go before the test ends.
+      await tester.pump(const Duration(seconds: 10));
+    },
+  );
+
+  testWidgets(
+    'a change made just before leaving Settings → Watch is still sent',
+    (tester) async {
+      await open(tester);
+      final first = backend.watchPrefsGate = Completer<void>();
+      await tester.tap(find.byKey(const Key('watchAllow-low')));
+      await tester.pump();
+      await tester.tap(find.byKey(const Key('watchShowDetails')));
+      await tester.pump();
+      expect(
+        backend.watchPrefsUpdates,
+        hasLength(1),
+        reason: 'the second waits for the first',
+      );
+      // The person goes back while the first save is still out.
+      await tester.pumpWidget(const SizedBox());
+      first.complete();
+      await tester.pumpAndSettle();
+      expect(backend.watchPrefsUpdates, hasLength(2));
+      expect(backend.storedWatchPrefs!.allow, WatchAllowance.low);
+      expect(
+        backend.storedWatchPrefs!.showDetails,
+        isFalse,
+        reason: 'what the screen showed as chosen reached the server',
+      );
+    },
+  );
+
+  testWidgets(
+    'two refused changes to one setting go back to what the server has, not to the first unsaved one',
+    (tester) async {
+      await open(tester);
+      final first = backend.watchPrefsGate = Completer<void>();
+      await tester.tap(find.byKey(const Key('watchAllow-low')));
+      await tester.pump();
+      await tester.tap(find.byKey(const Key('watchAllow-none')));
+      await tester.pump();
+      // Offline: both are refused, one after the other.
+      backend.watchPrefsError = Exception('offline');
+      first.completeError(Exception('offline'));
+      await tester.pumpAndSettle();
+      expect(backend.watchPrefsUpdates, hasLength(2));
+      expect(backend.storedWatchPrefs!.allow, WatchAllowance.medium);
+      expect(
+        tester
+            .widget<RadioGroup<WatchAllowance>>(
+              find.byType(RadioGroup<WatchAllowance>),
+            )
+            .groupValue,
+        WatchAllowance.medium,
+        reason: 'Low was never saved either',
+      );
+      // Let the error messages go before the test ends.
+      await tester.pump(const Duration(seconds: 10));
+    },
+  );
+
+  testWidgets(
+    'a refused change waits for a later change to the same setting instead of undoing it',
+    (tester) async {
+      await open(tester);
+      final first = backend.watchPrefsGate = Completer<void>();
+      await tester.tap(find.byKey(const Key('watchAllow-low')));
+      await tester.pump();
+      await tester.tap(find.byKey(const Key('watchAllow-none')));
+      await tester.pump();
+      // The first is refused; the second goes through.
+      first.completeError(Exception('offline'));
+      await tester.pumpAndSettle();
+      expect(backend.storedWatchPrefs!.allow, WatchAllowance.none);
+      expect(
+        tester
+            .widget<RadioGroup<WatchAllowance>>(
+              find.byType(RadioGroup<WatchAllowance>),
+            )
+            .groupValue,
+        WatchAllowance.none,
+      );
+      await tester.pump(const Duration(seconds: 10));
+    },
+  );
+
+  testWidgets(
+    'Show details: an earlier build already settled it on this device, so the app lock leaves it as the person set it',
+    (tester) async {
+      // What the first builds kept after the first visit to Settings → Watch.
+      SharedPreferences.setMockInitialValues({
+        WatchDetailsSettled.legacyKey: true,
+      });
+      await open(tester, lockOn: true);
+      expect(backend.watchPrefsUpdates, isEmpty);
+      expect(
+        tester.widget<Switch>(find.byKey(const Key('watchShowDetails'))).value,
+        isTrue,
+      );
+      expect(
+        find.textContaining('Turned off because the app lock is on'),
+        findsNothing,
+      );
+    },
+  );
 
   testWidgets(
     'quick replies: add up to six, each at most 40 characters, move, delete, reset',

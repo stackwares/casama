@@ -102,11 +102,22 @@ enum WatchLink: Equatable, Hashable {
   var url: URL? { URL(string: "\(WatchLink.scheme)://app\(route)") }
 }
 
-/// The phone app's route for a call with a bot (the Talk control, until Phase 6).
+/// The phone app's own routes, for Open on iPhone when the server gave no link. Only routes the
+/// phone's router has (client/lib/core/router.dart): it shows an error page for any other.
 enum PhoneRoutes {
+  /// Where the app opens: the chats.
+  static let home = "/bots"
+  /// Needs you: where requests and suggestions are listed (the link the glance gives a suggestion).
+  static let needsYou = "/inbox?tab=0"
   static func call(bot: String) -> String { "/bots/\(bot)/call" }
   static func chat(bot: String, conversation: String?) -> String {
     "/bots/\(bot)/chat" + (conversation.map { "?c=\($0)" } ?? "")
   }
   static func approval(_ id: String) -> String { "/approvals/\(id)" }
+
+  /// The first link the server gave that isn't empty, else [fallback].
+  static func first(_ links: String?..., else fallback: String) -> String {
+    for link in links { if let link, !link.isEmpty { return link } }
+    return fallback
+  }
 }

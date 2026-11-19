@@ -38,7 +38,7 @@ final class Recorder: NSObject, ObservableObject, AVAudioRecorderDelegate {
       state = .denied
       return
     }
-    let url = FileManager.default.temporaryDirectory.appendingPathComponent("ask-\(UUID().uuidString).m4a")
+    let url = AskQueueStore.tempRecordingURL()
     let settings: [String: Any] = [
       AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
       AVSampleRateKey: 16_000,
@@ -114,6 +114,8 @@ final class Recorder: NSObject, ObservableObject, AVAudioRecorderDelegate {
       self.level = 0
       try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
       let url = flag && self.heardSpeech ? self.fileURL : nil
+      // Not handed over (nothing was said, or the recording failed): it doesn't stay in the temp folder.
+      if url == nil, let left = self.fileURL { try? FileManager.default.removeItem(at: left) }
       self.recorder = nil
       self.onFinish?(url)
       self.onFinish = nil
@@ -292,26 +294,38 @@ struct AskView: View {
   }
 
   private func send(text: String?, audio: URL?) {
-    guard let botId = chosenBot ?? botId else { return }
+    guard let botId = chosenBot ?? botId else {
+      if let audio { try? FileManager.default.removeItem(at: audio) }
+      return
+    }
     stage = .sending
     let askedAt = Date()
     let key = UUID().uuidString
     Task {
       var body = WatchAskBody(botId: botId, conversationId: conversationId, text: text, askedAt: askedAt, surface: "app")
       var audioData: Data?
+      // The recording leaves the temp folder on every way out of here: sent, refused, or moved
+      // into the kept asks. Nothing from it stays behind (§10).
+      func discardRecording() {
+        if let audio { try? FileManager.default.removeItem(at: audio) }
+      }
       if let audio {
         audioData = try? Data(contentsOf: audio)
         guard let audioData else {
+          discardRecording()
           stage = .problem(WatchL10n.didntCatch)
           return
         }
         body.audio = .init(data: audioData.base64EncodedString(), mime: "audio/mp4")
         body.language = WatchDevice.languageHint
       }
-      guard let api = WatchAPI.current() else { return }
+      guard let api = WatchAPI.current() else {
+        discardRecording()
+        return
+      }
       do {
         let asked = try await api.ask(body, idempotencyKey: key)
-        if let audio { try? FileManager.default.removeItem(at: audio) }
+        discardRecording()
         WatchAccount.lastAskBot = botId
         model.online = true
         Haptic.done()
@@ -328,10 +342,26 @@ struct AskView: View {
         }
       } catch WatchAPIError.offline {
         keep(botId: botId, text: text, audio: audio, askedAt: askedAt, key: key)
+      } catch WatchAPIError.signedOut {
+        discardRecording()
+        model.keyGone()
       } catch WatchAPIError.forbidden {
+        discardRecording()
         Haptic.problem()
         stage = .problem(WatchL10n.outOfCredits)
+      } catch WatchAPIError.refused(let status, let problem) {
+        discardRecording()
+        Haptic.problem()
+        // The recording had no words in it, or a limit was reached: neither is "couldn't reach".
+        if problem?.code == "nothing_heard" || problem?.code == "bad_audio" {
+          stage = .problem(WatchL10n.didntCatch)
+        } else if status == 402 {
+          stage = .problem(WatchL10n.outOfCredits)
+        } else {
+          stage = .problem(WatchL10n.couldntReach)
+        }
       } catch {
+        discardRecording()
         Haptic.problem()
         stage = .problem(WatchL10n.couldntReach)
       }
@@ -349,6 +379,8 @@ struct AskView: View {
       } catch {}
     }
     guard text != nil || fileName != nil else {
+      // The recording couldn't be moved into the kept asks: it isn't left in the temp folder.
+      if let audio { try? FileManager.default.removeItem(at: audio) }
       stage = .problem(WatchL10n.couldntReach)
       return
     }

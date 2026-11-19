@@ -137,7 +137,7 @@ Class | Method | HTTP request | Description
 [*AdminApi*](doc/AdminApi.md) | [**unsuspendOrg**](doc/AdminApi.md#unsuspendorg) | **DELETE** /v1/admin/orgs/{id}/suspend | Lift a workspace&#39;s suspension
 [*AppearanceApi*](doc/AppearanceApi.md) | [**searchWallpapers**](doc/AppearanceApi.md#searchwallpapers) | **GET** /v1/wallpapers | Search wallpaper photos. Only when the server has a photo source configured (config.wallpapers_enabled); 404 otherwise
 [*AppearanceApi*](doc/AppearanceApi.md) | [**trackWallpaperDownload**](doc/AppearanceApi.md#trackwallpaperdownload) | **POST** /v1/wallpapers/download | Tell the photo source a photo was chosen (Unsplash requires this)
-[*ApprovalsApi*](doc/ApprovalsApi.md) | [**decideApproval**](doc/ApprovalsApi.md#decideapproval) | **POST** /v1/approvals/{id}/decision | Approve or deny; denying cancels that step only
+[*ApprovalsApi*](doc/ApprovalsApi.md) | [**decideApproval**](doc/ApprovalsApi.md#decideapproval) | **POST** /v1/approvals/{id}/decision | Approve or deny; denying cancels that step only. A watch key is refused an allow it may not give (403 watch_allow_refused, watch_always_allow) and is held to its minute (429)
 [*ApprovalsApi*](doc/ApprovalsApi.md) | [**listApprovals**](doc/ApprovalsApi.md#listapprovals) | **GET** /v1/approvals | 
 [*AuthApi*](doc/AuthApi.md) | [**createSignInCode**](doc/AuthApi.md#createsignincode) | **POST** /v1/auth/pairing-codes | A one-time code that signs another device in to this account (shown as a QR code)
 [*AuthApi*](doc/AuthApi.md) | [**redeemSignInCode**](doc/AuthApi.md#redeemsignincode) | **POST** /v1/auth/pairing-codes/redeem | Trade a scanned code for a one-time sign-in token (no sign-in needed)
@@ -519,10 +519,11 @@ Class | Method | HTTP request | Description
 [*VoiceApi*](doc/VoiceApi.md) | [**voiceHeartbeat**](doc/VoiceApi.md#voiceheartbeat) | **POST** /v1/voice/live/{id}/heartbeat | Keep a live call&#39;s server record open; calls silent for 2 minutes are ended and billed
 [*VoiceApi*](doc/VoiceApi.md) | [**voiceTool**](doc/VoiceApi.md#voicetool) | **POST** /v1/voice/tool | Run a tool call from a live call as an agent run (same approvals); waits up to 25 s
 [*WatchApi*](doc/WatchApi.md) | [**claimWatchCode**](doc/WatchApi.md#claimwatchcode) | **POST** /v1/watch-codes/{code}/claim | Allow the watch showing this code: it is signed in to this workspace as the caller
+[*WatchApi*](doc/WatchApi.md) | [**deleteAllWatchKeys**](doc/WatchApi.md#deleteallwatchkeys) | **DELETE** /v1/watch-keys | Remove every watch the person signed in, in every workspace (Sign Out Everywhere): their keys stop working at once
 [*WatchApi*](doc/WatchApi.md) | [**deleteWatchKey**](doc/WatchApi.md#deletewatchkey) | **DELETE** /v1/watch-keys/{id} | Remove a watch: its key stops working at once
 [*WatchApi*](doc/WatchApi.md) | [**getWatchApproval**](doc/WatchApi.md#getwatchapproval) | **GET** /v1/watch/approvals/{id} | A request in everyday words, and whether this watch may allow it (tap, hold, phone)
 [*WatchApi*](doc/WatchApi.md) | [**getWatchChat**](doc/WatchApi.md#getwatchchat) | **GET** /v1/watch/chats/{bot_id} | A bot&#39;s latest chat as plain text, cut to fit a watch; cards, pages and files as one line
-[*WatchApi*](doc/WatchApi.md) | [**getWatchCode**](doc/WatchApi.md#getwatchcode) | **GET** /v1/watch-codes/{code} | Which watch shows this code, before allowing it. Five wrong tries end a code
+[*WatchApi*](doc/WatchApi.md) | [**getWatchCode**](doc/WatchApi.md#getwatchcode) | **GET** /v1/watch-codes/{code} | Which watch shows this code, before allowing it. Looking a code up doesn&#39;t use it up; after five wrong codes in an hour the person waits
 [*WatchApi*](doc/WatchApi.md) | [**getWatchPrefs**](doc/WatchApi.md#getwatchprefs) | **GET** /v1/watch-prefs | The person&#39;s watch settings: what a watch may allow, details, quick replies
 [*WatchApi*](doc/WatchApi.md) | [**getWatchRun**](doc/WatchApi.md#getwatchrun) | **GET** /v1/watch/runs/{id} | A run&#39;s whole state. With &#x60;stream&#x3D;1&#x60; (or &#x60;Accept: text/event-stream&#x60;): server-sent &#x60;run&#x60; events, each a whole WatchRun, ended by the server after 110 seconds or when the run ends; ask again to go on
 [*WatchApi*](doc/WatchApi.md) | [**getWatchSelf**](doc/WatchApi.md#getwatchself) | **GET** /v1/watch/me | Who this watch is signed in as, its settings and what the server can do for it
@@ -802,6 +803,7 @@ Class | Method | HTTP request | Description
  - [DeletedTeach](doc/DeletedTeach.md)
  - [DeletedUserFact](doc/DeletedUserFact.md)
  - [DeletedWatchKey](doc/DeletedWatchKey.md)
+ - [DeletedWatchKeys](doc/DeletedWatchKeys.md)
  - [DeletedWatcher](doc/DeletedWatcher.md)
  - [DeletedWidgetKey](doc/DeletedWidgetKey.md)
  - [DeviceAccessRequestedEvent](doc/DeviceAccessRequestedEvent.md)

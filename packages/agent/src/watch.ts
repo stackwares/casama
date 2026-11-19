@@ -23,7 +23,9 @@ import type {
 import { contentKeys, type Database, withUserSession } from "@casama/db";
 import {
   isPaymentTool,
+  spendsMoney,
   WATCH_QUICK_REPLIES,
+  type WatchAllowance,
   type WatchAllowLevel,
   watchAllowance,
 } from "@casama/domain";
@@ -270,24 +272,67 @@ export interface WatchViewOptions {
 const RISKS = new Set(["low", "medium", "high"]);
 const APPROVAL_STATUSES = new Set(["pending", "approved", "denied", "expired"]);
 
+/**
+ * What a watch may do with a request, from the request's own row: the one place its risk (an
+ * unknown one counts as high), whether it spends money, whose run it is and the person's level are
+ * put together, for the watch's view and for the push that announces it.
+ */
+function approvalAllowance(
+  row: Pick<WatchApprovalRow, "risk" | "tool_name" | "is_yours">,
+  o: { level: WatchAllowLevel; workspaceOff?: boolean },
+): WatchAllowance & { risk: WatchApproval["risk"]; payment: boolean } {
+  const risk = (RISKS.has(row.risk) ? row.risk : "high") as WatchApproval["risk"];
+  // A payment, or a built-in tool that buys something (a paid data call): the phone's.
+  const payment = spendsMoney(row.tool_name);
+  return {
+    risk,
+    payment,
+    ...watchAllowance({
+      risk,
+      payment,
+      level: o.level,
+      workspaceOff: o.workspaceOff,
+      isYours: row.is_yours,
+      tool: row.tool_name,
+    }),
+  };
+}
+
+/**
+ * Whether this person's watch may allow a request (tap, hold or only the phone), for the push that
+ * announces it (docs/WATCH-PROTOCOL.md §4, `can_allow`). The same answer GET
+ * /v1/watch/approvals/{id} gives a watch key, read without the person's session: the worker, which
+ * sends the push, can't take one. "Yours" is as a watch key sees it: the person started the run, or
+ * is an owner or admin of a workspace that doesn't ask them for a second sign-in step (a watch
+ * key has none). A request that isn't there is the phone's.
+ */
+export async function watchCanAllow(
+  db: Database,
+  approvalId: string,
+  o: { userId: string; level: WatchAllowLevel; workspaceOff?: boolean },
+): Promise<WatchAllowance["can_allow"]> {
+  const [row] = await db.execute<Pick<WatchApprovalRow, "risk" | "tool_name" | "is_yours">>(sql`
+    select a.risk, a.tool_name,
+           (r.created_by = ${o.userId}::uuid or exists (
+              select 1 from public.memberships m
+              join public.organizations org on org.id = m.org_id
+              where m.org_id = a.org_id and m.user_id = ${o.userId}::uuid
+                and m.role in ('owner', 'admin') and not org.require_mfa)) as is_yours
+    from public.approvals a
+    join public.runs r on r.id = a.run_id
+    where a.id = ${approvalId}::uuid`);
+  return row ? approvalAllowance(row, o).can_allow : "phone";
+}
+
 /** A request as a watch shows it. */
 export function watchApprovalView(row: WatchApprovalRow, o: WatchViewOptions): WatchApproval {
-  const risk = (RISKS.has(row.risk) ? row.risk : "high") as WatchApproval["risk"];
-  const payment = isPaymentTool(row.tool_name);
+  const { risk, payment, ...allowance } = approvalAllowance(row, o);
   const args =
     row.args_redacted && typeof row.args_redacted === "object" && !Array.isArray(row.args_redacted)
       ? (row.args_redacted as Record<string, unknown>)
       : {};
   const expired =
     row.status === "pending" && new Date(row.expires_at).getTime() <= Date.now() ? "expired" : null;
-  const allowance = watchAllowance({
-    risk,
-    payment,
-    level: o.level,
-    workspaceOff: o.workspaceOff,
-    isYours: row.is_yours,
-    tool: row.tool_name,
-  });
   const summary = row.summary.replace(new RegExp(`^${escapeRe(row.bot)} wants to run `), "");
   return {
     id: row.id,
@@ -466,7 +511,8 @@ export function watchMessageView(
     cut,
     attachments: messageAttachments(opened, o.private),
     at: iso(m.created_at),
-    can_speak: role === "assistant" && raw.trim().length > 0 && o.speech && !o.private,
+    // Never offered for a reply whose words are hidden: the server refuses to read it aloud.
+    can_speak: role === "assistant" && raw.trim().length > 0 && o.speech && !hidden,
   };
 }
 
@@ -506,9 +552,12 @@ export async function buildWatchChat(db: Database, o: WatchChatOptions): Promise
       ? await tx.execute<{ id: string; kind: string }>(sql`
           select c.id, c.kind from public.conversations c
           where c.id = ${o.conversationId}::uuid and c.bot_id = ${bot.id}::uuid`)
-      : await tx.execute<{ id: string; kind: string }>(sql`
+      : // The person's own latest chat: on a bot the team shares, row-level security also shows
+        // coworkers' chats, and a reply from the wrist must never land in one of those.
+        await tx.execute<{ id: string; kind: string }>(sql`
           select c.id, c.kind from public.conversations c
           where c.bot_id = ${bot.id}::uuid and c.kind = 'direct' and c.last_message_at is not null
+            and c.created_by = (select auth.uid())
           order by c.last_message_at desc limit 1`);
     if (o.conversationId && !conv) return null;
     if (!conv) return { bot, conv: null, messages: [], runId: null };

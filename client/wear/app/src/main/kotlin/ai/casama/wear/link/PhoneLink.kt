@@ -47,8 +47,13 @@ object PhoneLink {
     /** Asks the phone to sign this watch in. False when no phone with Casama is in reach. */
     suspend fun requestSignIn(context: Context, message: LinkMessage.SignIn): Boolean = send(context, message)
 
-    /** Open on phone: opens the app at [link] on the phone. False when no phone answered. */
-    suspend fun openOnPhone(context: Context, link: String): Boolean = send(context, LinkMessage.Open(link))
+    /**
+     * Open on phone: the phone opens [link], or leaves a notification named [title] that does when
+     * its app isn't in front. False when no phone took the message.
+     */
+    suspend fun openOnPhone(context: Context, link: String, title: String? = null): Boolean =
+        // Always a route the phone has: a bare "/" would open nothing there (Logic.phoneRoute).
+        send(context, LinkMessage.Open(ai.casama.wear.core.Logic.phoneRoute(link), title))
 }
 
 /**

@@ -50,6 +50,18 @@ final class PhoneLink: NSObject, WCSessionDelegate {
     }
   }
 
+  /// Sends [message] to the iPhone app and waits for what it says back. Nil when the phone isn't
+  /// in reach, the send fails, or nothing comes back in [timeout] seconds; the message is not
+  /// queued for later in that case (the caller has another way: the server).
+  func ask(_ message: [String: Any], timeout: TimeInterval = 3) async -> [String: Any]? {
+    guard let session, session.activationState == .activated, session.isReachable else { return nil }
+    return await withCheckedContinuation { (continuation: CheckedContinuation<[String: Any]?, Never>) in
+      let once = ReplyOnce(continuation)
+      session.sendMessage(message, replyHandler: { once.resume($0) }, errorHandler: { _ in once.resume(nil) })
+      DispatchQueue.global().asyncAfter(deadline: .now() + timeout) { once.resume(nil) }
+    }
+  }
+
   /// Messages asked for before activation finished.
   private var pending: [[String: Any]] = []
 
@@ -88,5 +100,24 @@ final class PhoneLink: NSObject, WCSessionDelegate {
   private func deliver(_ message: [String: Any]) {
     guard message["type"] is String else { return }
     DispatchQueue.main.async { self.onMessage?(message) }
+  }
+}
+
+/// Resumes a continuation with whichever comes first: the phone's reply, a failed send, or the
+/// wait running out. The later ones are dropped.
+private final class ReplyOnce: @unchecked Sendable {
+  private let lock = NSLock()
+  private var continuation: CheckedContinuation<[String: Any]?, Never>?
+
+  init(_ continuation: CheckedContinuation<[String: Any]?, Never>) {
+    self.continuation = continuation
+  }
+
+  func resume(_ value: [String: Any]?) {
+    lock.lock()
+    let c = continuation
+    continuation = nil
+    lock.unlock()
+    c?.resume(returning: value)
   }
 }

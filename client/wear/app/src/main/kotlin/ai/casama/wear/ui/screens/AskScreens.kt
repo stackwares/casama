@@ -51,6 +51,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -97,6 +98,8 @@ private sealed interface Stage {
     /** Offline: saved, it sends when the watch is back online. */
     data object Kept : Stage
     data object Silent : Stage
+    /** The server has no voice service for this ask: Type instead. */
+    data object NoVoice : Stage
     data object MicDenied : Stage
     data object Failed : Stage
     data object OutOfCredits : Stage
@@ -165,8 +168,26 @@ fun AskScreen(nav: NavHostController, botId: String?, listen: Boolean, conversat
                 graph.outbox.keep(item)
                 Stage.Kept
             } catch (_: ApiError.Server) {
+                // 5xx only: the server had a problem, so it is worth sending again later.
                 graph.outbox.keep(item)
                 Stage.Kept
+            } catch (_: ApiError.RateLimited) {
+                graph.outbox.keep(item)
+                Stage.Kept
+            } catch (e: ApiError.Refused) {
+                // The server won't take it, and would answer the same to every retry: never kept.
+                audioFile?.delete()
+                when {
+                    e.code == "nothing_heard" -> Stage.Silent
+                    e.status == 402 -> Stage.OutOfCredits
+                    else -> {
+                        graph.haptics.problem()
+                        Stage.Failed
+                    }
+                }
+            } catch (e: ApiError.Conflict) {
+                audioFile?.delete()
+                if (e.code == "voice_unavailable") Stage.NoVoice else Stage.Failed
             } catch (_: ApiError.Forbidden) {
                 audioFile?.delete()
                 // Out of credits, or the bot is no longer this person's to ask.
@@ -217,8 +238,14 @@ fun AskScreen(nav: NavHostController, botId: String?, listen: Boolean, conversat
         typeLauncher.launch(intent)
     }
 
+    // "Open listening" is used once. Saved with the screen, so an activity the system re-creates
+    // doesn't open the microphone again by itself.
+    var listenUsed by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(Unit) {
-        if (listen && stage == Stage.Choose && dictation && bot != null) listenNow()
+        if (listen && !listenUsed && stage == Stage.Choose && dictation && bot != null) {
+            listenUsed = true
+            listenNow()
+        }
     }
 
     when (val s = stage) {
@@ -261,6 +288,7 @@ fun AskScreen(nav: NavHostController, botId: String?, listen: Boolean, conversat
             item { Text(askLabel, style = MaterialTheme.typography.titleSmall, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) }
             val note = when (s) {
                 Stage.Silent -> R.string.watch_didnt_catch
+                Stage.NoVoice -> R.string.watch_no_dictation
                 Stage.MicDenied -> R.string.watch_mic_denied
                 Stage.Failed -> R.string.watch_couldnt_reach
                 else -> if (!dictation) R.string.watch_no_dictation else null
@@ -383,9 +411,10 @@ fun WorkingScreen(nav: NavHostController, runId: String) {
     val session = graph.session
     val scope = rememberCoroutineScope()
     val fromGlance = session.glance.collectAsState().value.glance?.runs?.firstOrNull { it.id == runId }
-    var run by remember { mutableStateOf<WatchRun?>(null) }
-    var stopped by remember { mutableStateOf(false) }
-    var stopping by remember { mutableStateOf(false) }
+    // The run's own state: another run opened over this one starts clean (see RequestScreen).
+    var run by remember(runId) { mutableStateOf<WatchRun?>(null) }
+    var stopped by remember(runId) { mutableStateOf(false) }
+    var stopping by remember(runId) { mutableStateOf(false) }
 
     LaunchedEffect(runId) {
         runCatching { run = session.call { run(runId) } }
@@ -444,6 +473,16 @@ fun WorkingScreen(nav: NavHostController, runId: String) {
                                 session.call { cancelRun(runId, "w-stop-$runId") }
                                 OngoingRun.end(context, runId)
                                 stopped = true
+                            } catch (e: ApiError.Conflict) {
+                                if (Logic.conflict(e.code) == Logic.ConflictKind.OVER) {
+                                    // It ended by itself a moment before the tap (409 run_finished):
+                                    // nothing to stop and nothing wrong. Show how it ended.
+                                    OngoingRun.end(context, runId)
+                                    runCatching { session.call { run(runId) } }.getOrNull()?.let { run = it }
+                                    session.refresh()
+                                } else {
+                                    graph.haptics.problem()
+                                }
                             } catch (_: ApiError) {
                                 graph.haptics.problem()
                             } finally {

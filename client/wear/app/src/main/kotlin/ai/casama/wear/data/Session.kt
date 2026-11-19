@@ -4,7 +4,9 @@ import ai.casama.wear.BuildConfig
 import ai.casama.wear.core.Decode
 import ai.casama.wear.core.Glance
 import ai.casama.wear.core.LinkMessage
+import ai.casama.wear.core.SignInRequests
 import ai.casama.wear.core.WatchCode
+import ai.casama.wear.core.WatchKey
 import ai.casama.wear.core.WatchSelf
 import ai.casama.wear.link.PhoneLink
 import ai.casama.wear.live.OngoingRun
@@ -23,6 +25,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * Who the watch is signed in as, the glance every screen reads, and signing in and out
@@ -51,6 +54,8 @@ class Session(
         data object CodeExpired : SignIn()
         /** The code couldn't be fetched (offline, rate limited). */
         data object CodeFailed : SignIn()
+        /** The phone signed the watch in to a server address this watch won't call (not https). */
+        data object ServerRefused : SignIn()
     }
 
     sealed class Auth {
@@ -150,7 +155,19 @@ class Session(
 
     // --- signing in ---------------------------------------------------------------------------------
 
-    /** First open: ask the phone (§8.2). With no phone app in reach, go straight to a code. */
+    /**
+     * The app opened signed out. Only a watch that was never signed in on this install asks the
+     * phone by itself. After Sign out here, a removal on the phone or a refused key, it waits for
+     * the person to tap Sign in: a watch that was signed out stays signed out (the phone signs in
+     * a watch that asks without a question, unless its app lock is on).
+     */
+    fun autoSignIn() {
+        val out = _auth.value as? Auth.SignedOut ?: return
+        if (out.reason != OutReason.FIRST_RUN || out.step is SignIn.ServerRefused) return
+        startSignIn()
+    }
+
+    /** Ask the phone (§8.2). With no phone app in reach, go straight to a code. */
     fun startSignIn() {
         if (isSignedIn || signInJob?.isActive == true) return
         // Showing a code: keep it (reopening the app shouldn't swap the code being typed).
@@ -158,8 +175,12 @@ class Session(
         signInJob = scope.launch {
             setStep(SignIn.AskingPhone)
             val requestId = UUID.randomUUID().toString()
-            settings.signInRequestId = requestId
-            val sent = PhoneLink.requestSignIn(context, LinkMessage.SignIn(requestId, keys.fingerprint(), Device.describe(context)))
+            val fingerprint = keys.fingerprint()
+            // Remembered with the key it is for: only an answer to one of these is taken.
+            settings.signInRequests = SignInRequests.encode(
+                SignInRequests.add(SignInRequests.decode(settings.signInRequests), requestId, fingerprint),
+            )
+            val sent = PhoneLink.requestSignIn(context, LinkMessage.SignIn(requestId, fingerprint, Device.describe(context)))
             if (!sent) {
                 startCodeNow()
                 return@launch
@@ -212,30 +233,74 @@ class Session(
     fun onPhoneMessage(message: LinkMessage) {
         when (message) {
             is LinkMessage.SignedIn -> {
-                // Accept an answer to the open request, or any answer while signed out (the phone
-                // may answer a request held since before this app restarted).
-                if (isSignedIn && message.requestId != settings.signInRequestId) return
-                scope.launch { completeSignIn(message.server, message.orgId, message.orgName, message.personName) }
+                // Only an answer to a request this watch made for the key it still has: never one
+                // made before a sign-out, for a key since wiped, or by another watch.
+                if (!issued(message.requestId)) return
+                if (!isSignedIn) {
+                    scope.launch { completeSignIn(message.server, message.orgId, message.orgName, message.personName) }
+                } else if (settings.server == message.server && settings.orgId != message.orgId) {
+                    // Signed in already (with a code) when the phone answered a request it held:
+                    // the server moved the key to the phone's workspace, so the watch follows.
+                    moveTo(message.server, message.orgId, message.orgName, message.personName)
+                }
+            }
+            is LinkMessage.SignedInBadServer -> {
+                if (!issued(message.requestId) || isSignedIn || !askingPhone()) return
+                signInJob?.cancel()
+                setStep(SignIn.ServerRefused)
             }
             is LinkMessage.SignInFailed -> {
-                if (message.requestId == settings.signInRequestId && !isSignedIn) setStep(SignIn.WaitingForPhone)
+                if (issued(message.requestId) && !isSignedIn && askingPhone()) {
+                    // The phone said no (nobody signed in there, or the person declined). The job
+                    // would otherwise sit out its eight seconds and swallow a tap on Try again.
+                    signInJob?.cancel()
+                    setStep(SignIn.WaitingForPhone)
+                }
             }
             is LinkMessage.Context -> {
                 if (!isSignedIn) return
-                settings.server = message.server
-                settings.orgId = message.orgId
-                settings.orgName = message.orgName
-                settings.personName = message.personName
-                _auth.value = Auth.SignedIn(message.personName, message.orgName)
-                cache.wipe()
-                _glance.value = GlanceState(null, null, offline = false, loading = true, serverTooOld = false)
+                moveTo(message.server, message.orgId, message.orgName, message.personName)
+            }
+            LinkMessage.SignOut -> {
+                // Signed out already (or never in): nothing to do, and a code on screen stays.
+                if (!isSignedIn) return
                 scope.launch {
-                    refreshSelf()
-                    refresh()
+                    // The phone removes the key itself when it can; a phone whose session had
+                    // already ended can't, so the watch removes its own before forgetting it.
+                    runCatching { withTimeoutOrNull(5_000) { api.signOut() } }
+                    wipe(OutReason.FROM_PHONE)
                 }
             }
-            LinkMessage.SignOut -> scope.launch { wipe(OutReason.FROM_PHONE) }
             else -> Unit
+        }
+    }
+
+    /** Whether [requestId] is one this watch sent for the key it has now (WATCH-PROTOCOL §2). */
+    private fun issued(requestId: String): Boolean =
+        SignInRequests.issued(
+            SignInRequests.decode(settings.signInRequests),
+            requestId,
+            keys.get()?.let { WatchKey.fingerprint(it) },
+        )
+
+    /** Waiting on the phone (not showing or fetching a code, which a late answer must not replace). */
+    private fun askingPhone(): Boolean = when ((_auth.value as? Auth.SignedOut)?.step) {
+        null, SignIn.AskingPhone, SignIn.WaitingForPhone -> true
+        else -> false
+    }
+
+    /** The phone switched workspace (or server): the key was re-registered there. */
+    private fun moveTo(server: String, orgId: String, orgName: String, person: String) {
+        settings.server = server
+        settings.orgId = orgId
+        settings.orgName = orgName
+        settings.personName = person
+        _auth.value = Auth.SignedIn(person, orgName)
+        cache.wipe()
+        _glance.value = GlanceState(null, null, offline = false, loading = true, serverTooOld = false)
+        scope.launch {
+            refreshSelf()
+            refresh()
         }
     }
 
@@ -247,7 +312,6 @@ class Session(
         settings.personName = person
         settings.signedIn = true
         settings.signedOutReason = null
-        settings.signInRequestId = null
         settings.greetPending = true
         _auth.value = Auth.SignedIn(person, orgName)
         scope.launch {

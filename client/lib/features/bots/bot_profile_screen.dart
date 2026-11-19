@@ -19,6 +19,7 @@ import '../../ui/glow_button.dart';
 import '../../ui/mascot.dart';
 import '../../ui/motion.dart';
 import '../../ui/page.dart';
+import '../../ui/shell_header.dart' show HeaderTextAction;
 import '../chat/delete_chat.dart';
 import '../notifications/checkins_sheet.dart';
 import '../notifications/quiet_hours.dart';
@@ -186,12 +187,16 @@ class _BotProfileScreenState extends ConsumerState<BotProfileScreen> {
     return SubPage(
       title: l10n.botProfile,
       actions: [
+        // Words, so it stays in the title row on a folding phone's side strip (D-411).
         if (dirty)
-          Padding(
-            padding: const EdgeInsets.only(right: 4),
-            child: GlowButton(
-              onPressed: _busy ? null : () => _save(bot),
-              child: Text(l10n.save),
+          HeaderTextAction(
+            child: Padding(
+              padding: const EdgeInsets.only(right: 4),
+              child: GlowButton(
+                key: const Key('botProfileSave'),
+                onPressed: _busy ? null : () => _save(bot),
+                child: Text(l10n.save),
+              ),
             ),
           ),
       ],

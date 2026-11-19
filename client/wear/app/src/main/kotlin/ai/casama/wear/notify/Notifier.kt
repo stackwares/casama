@@ -4,7 +4,6 @@ import ai.casama.wear.R
 import ai.casama.wear.art.BotArt
 import ai.casama.wear.core.AllowLevel
 import ai.casama.wear.core.Logic
-import ai.casama.wear.core.Risk
 import ai.casama.wear.core.WatchPush
 import ai.casama.wear.ui.Routes
 import android.app.NotificationChannel
@@ -46,6 +45,21 @@ object Notifier {
 
     fun id(push: WatchPush): Int = push.key.hashCode()
 
+    /** Marks a notification drawn from a push, as opposed to the short note left after an answer. */
+    private const val EXTRA_FROM_PUSH = "casama_from_push"
+
+    /**
+     * Whether [push]'s own notification is on the wrist right now: not answered (the short
+     * "Allowed" note took its place under the same id), not swiped away, not opened.
+     */
+    fun showing(context: Context, push: WatchPush): Boolean {
+        val m = context.getSystemService(NotificationManager::class.java) ?: return false
+        val nid = id(push)
+        return runCatching {
+            m.activeNotifications.any { it.id == nid && it.tag == null && it.notification.extras.getBoolean(EXTRA_FROM_PUSH) }
+        }.getOrDefault(false)
+    }
+
     /**
      * Draws [push]. [title] and [body] are the words to show (the push's own, or what the watch
      * loaded itself when the push carried none); [quickReplies] are the person's (§6.2).
@@ -58,8 +72,19 @@ object Notifier {
         allow: AllowLevel?,
         quickReplies: List<String>,
         note: String? = null,
+        /** Not this watch's to answer: read here, answered on the phone. No buttons but that. */
+        elsewhere: Boolean = false,
+        /** Known to be in another workspace (the push said so), not only refused by the server. */
+        otherWorkspace: Boolean = elsewhere,
+        /**
+         * A second drawing of one already shown (its words arrived, or had to be taken back): no
+         * second tap on the wrist, and only while the first is still there. One the person has
+         * answered, opened or swiped away never comes back.
+         */
+        quiet: Boolean = false,
     ) {
         if (!NotificationManagerCompat.from(context).areNotificationsEnabled()) return
+        if (quiet && !showing(context, push)) return
         val nid = id(push)
         val channel = when (push.kind) {
             WatchPush.Kind.APPROVAL, WatchPush.Kind.SUGGESTION, WatchPush.Kind.TAKEOVER -> CH_NEEDS
@@ -67,7 +92,8 @@ object Notifier {
             WatchPush.Kind.BRIEF, WatchPush.Kind.ROUTINE -> CH_ROUTINES
             else -> CH_OTHER
         }
-        val text = listOfNotNull(body.takeIf { it.isNotBlank() }, note).joinToString("\n")
+        val elsewhereNote = if (elsewhere && otherWorkspace && note == null) context.getString(R.string.watch_other_workspace) else null
+        val text = listOfNotNull(body.takeIf { it.isNotBlank() }, elsewhereNote, note).joinToString("\n")
         val b = NotificationCompat.Builder(context, channel)
             .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle(title)
@@ -75,7 +101,8 @@ object Notifier {
             .setStyle(NotificationCompat.BigTextStyle().bigText(text))
             .setAutoCancel(true)
             .setGroup(GROUP)
-            .setOnlyAlertOnce(note != null)
+            .setOnlyAlertOnce(note != null || quiet)
+            .addExtras(Bundle().apply { putBoolean(EXTRA_FROM_PUSH, true) })
             .setCategory(
                 when (push.kind) {
                     WatchPush.Kind.REPLY -> NotificationCompat.CATEGORY_MESSAGE
@@ -84,6 +111,13 @@ object Notifier {
                 },
             )
         push.botName?.let { b.setLargeIcon(BotArt.bitmap(context, it, push.botAvatar, 96)) }
+        if (elsewhere) {
+            // This watch's key can't answer it: no buttons that would fail, only the way to the phone.
+            b.setContentIntent(Routes.pending(context, Routes.elsewhere(push.link, title, otherWorkspace)))
+            b.addAction(R.drawable.ic_phone, context.getString(R.string.watch_open_on_phone), action(context, ActionReceiver.OPEN_ON_PHONE, push, nid))
+            notify(context, nid, b)
+            return
+        }
         b.setContentIntent(Routes.pending(context, contentRoute(push)))
 
         when (push.kind) {
@@ -93,7 +127,7 @@ object Notifier {
                     Logic.pushAllows(push, allow) ->
                         b.addAction(R.drawable.ic_check, context.getString(R.string.watch_allow), action(context, ActionReceiver.ALLOW, push, nid))
                     // Medium risk opens the request, where Allow is a hold (§6.2).
-                    push.risk == Risk.MEDIUM && allow == AllowLevel.MEDIUM ->
+                    Logic.pushHolds(push, allow) ->
                         b.addAction(R.drawable.ic_check, context.getString(R.string.watch_allow), Routes.pending(context, Routes.request(id)))
                     else ->
                         b.addAction(R.drawable.ic_phone, context.getString(R.string.watch_review), Routes.pending(context, Routes.request(id)))
@@ -143,6 +177,20 @@ object Notifier {
         notify(context, nid, b)
     }
 
+    /** A kept ask the server wouldn't take was removed (§6.1 C): said once, quietly. */
+    fun askDropped(context: Context, askedAt: Long) {
+        if (!NotificationManagerCompat.from(context).areNotificationsEnabled()) return
+        val time = android.text.format.DateFormat.getTimeFormat(context).format(java.util.Date(askedAt))
+        val b = NotificationCompat.Builder(context, CH_OTHER)
+            .setSmallIcon(R.drawable.ic_notification)
+            .setContentTitle(context.getString(R.string.watch_ask_dropped, time))
+            .setSilent(true)
+            .setAutoCancel(true)
+            .setGroup(GROUP)
+            .setContentIntent(Routes.pending(context, Routes.NOW))
+        notify(context, "dropped:$askedAt".hashCode(), b)
+    }
+
     fun cancel(context: Context, nid: Int) = NotificationManagerCompat.from(context).cancel(nid)
 
     fun cancelAll(context: Context) = NotificationManagerCompat.from(context).cancelAll()
@@ -187,6 +235,9 @@ object Notifier {
         putString("run_id", p.runId)
         putString("title", p.title)
         putString("body", p.body)
+        putString("org_id", p.orgId)
+        putString("can_allow", p.canAllow?.name?.lowercase())
+        putString("notification_id", p.notificationId)
     }
 
     fun fromBundle(b: Bundle?): WatchPush? {

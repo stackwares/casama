@@ -102,6 +102,127 @@ void main() {
   );
 
   test(
+    'signing out marks the watches whose key went; one whose key could not be deleted stays signed in for the bridge to tell; a sign-out that failed undoes the marks',
+    () async {
+      WatchRecord record(
+        String fp,
+        String keyId,
+        String user, {
+        WatchRemoval? removal,
+      }) => WatchRecord(
+        fingerprint: fp * 64,
+        platform: WatchSystem.wearos,
+        name: 'Watch',
+        keyId: keyId,
+        orgId: orgId,
+        userId: user,
+        removal: removal,
+      );
+      await WatchKeyStore.save([
+        record('a', 'k1', 'me'),
+        record('b', 'k2', 'me'),
+        record('c', 'k3', 'someone-else'),
+        // Waiting since an earlier sign-out (their watches were told then).
+        record('d', 'k4', 'me', removal: WatchRemoval.pending),
+        record('e', 'k5', 'me', removal: WatchRemoval.pending),
+      ]);
+      final asked = <String>[];
+      await WatchKeyStore.signingOut('me', (id) async {
+        asked.add(id);
+        if (id == 'k2' || id == 'k5') throw Exception('offline');
+      });
+      expect(asked, [
+        'k1',
+        'k2',
+        'k4',
+        'k5',
+      ], reason: "another account's key is not ours");
+      expect((await WatchKeyStore.load()).map((r) => (r.keyId, r.removal)), [
+        ('k1', WatchRemoval.done),
+        // Not marked: the bridge must still see a signed-in watch to tell.
+        ('k2', null),
+        ('k3', null),
+        // k4's key went and its watch was told long ago: finished. k5 keeps waiting.
+        ('k5', WatchRemoval.pending),
+      ]);
+      await WatchKeyStore.signOutFailed('me');
+      expect((await WatchKeyStore.load()).map((r) => (r.keyId, r.removal)), [
+        ('k1', null),
+        ('k2', null),
+        ('k3', null),
+        ('k5', WatchRemoval.pending),
+      ]);
+    },
+  );
+
+  test(
+    "the first builds' device-wide Show details flag becomes the signed-in person's, once",
+    () async {
+      SharedPreferences.setMockInitialValues({
+        WatchDetailsSettled.legacyKey: true,
+      });
+      expect(await WatchDetailsSettled.check(null), isFalse);
+      expect(await WatchDetailsSettled.check('me'), isTrue);
+      expect(
+        await WatchDetailsSettled.check('someone-else'),
+        isFalse,
+        reason: 'it was one person who made that visit',
+      );
+      expect(await WatchDetailsSettled.check('me'), isTrue);
+    },
+  );
+
+  test(
+    "fake backend, as the server: the key ids of a workspace, none, a workspace left, and one that can't be asked",
+    () async {
+      final backend = FakeBackend();
+      final key = await backend.registerWatchKey(
+        orgId: orgId,
+        fingerprint: _fp,
+        platform: WatchSystem.watchos,
+        name: 'Watch',
+      );
+      expect(await backend.watchKeyIdsIn(orgId), {key.id});
+      expect(await backend.watchKeyIdsIn('other'), isEmpty);
+      backend.watchOrgsLeft.add('other');
+      expect(await backend.watchKeyIdsIn('other'), isNull);
+      backend.watchListDown.add(orgId);
+      await expectLater(backend.watchKeyIdsIn(orgId), throwsException);
+      // Deleting can fail while signed in (offline).
+      backend.watchDeleteError = Exception('offline');
+      await expectLater(backend.deleteWatchKey(key.id), throwsException);
+      await expectLater(backend.deleteAllWatchKeys(), throwsException);
+      expect((await backend.listWatchKeys(orgId)).single.id, key.id);
+    },
+  );
+
+  test('fake backend, as the server: the same watch keeps its key, and deleting needs a session', () async {
+    final backend = FakeBackend();
+    Future<WatchKeyView> register(String org) => backend.registerWatchKey(
+      orgId: org,
+      fingerprint: _fp,
+      platform: WatchSystem.watchos,
+      name: 'Watch',
+    );
+    final first = await register(orgId);
+    final moved = await register('other');
+    expect(moved.id, first.id);
+    expect(await backend.listWatchKeys(orgId), isEmpty);
+    expect((await backend.listWatchKeys('other')).single.id, first.id);
+
+    backend.signedIn = false;
+    await expectLater(backend.deleteWatchKey(first.id), throwsException);
+    await expectLater(backend.deleteAllWatchKeys(), throwsException);
+    backend.signedIn = true;
+    expect(await backend.deleteAllWatchKeys(), 1);
+    expect(await backend.listWatchKeys('other'), isEmpty);
+    // A removed watch that signs in again gets a new key.
+    expect((await register(orgId)).id, isNot(first.id));
+    backend.watchDeleteAllSupported = false;
+    expect(await backend.deleteAllWatchKeys(), isNull);
+  });
+
+  test(
     'fake backend: register, list by workspace, prefs, codes, delete',
     () async {
       final backend = FakeBackend();

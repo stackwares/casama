@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart' show DioException, RequestOptions, Response;
 
 import 'package:casama/core/backend.dart';
+import 'package:casama/features/watch/watch_key_store.dart';
 // The generated client's gallery models share names with core/gallery_models.dart (D-315).
 import 'package:casama_sdk/casama_sdk.dart' hide GalleryItem, GalleryRef, GalleryAccess, GalleryNeeds, GalleryInput, GalleryChange, GalleryStats, GalleryAccessDiff, GalleryInstalledItem, GalleryMissing, GalleryInstallResult, GalleryRequest, GallerySubmission;
 
@@ -51,8 +52,10 @@ class FakeBackend implements Backend {
   bool get isSignedIn => signedIn;
   @override
   String? get userEmail => 'tester@example.com';
+  /// Who is signed in; a test of a second account on the same phone changes it.
+  String? signedInAs = 'me';
   @override
-  String? get userId => 'me';
+  String? get userId => signedInAs;
   @override
   Future<void> signIn(String email, String password) async {
     signedIn = true;
@@ -80,6 +83,19 @@ class FakeBackend implements Backend {
       providerSignIns.add(provider);
   @override
   Future<void> signOut() async {
+    // Like the real one (D-410): the watches this phone signed in go while the session works.
+    if (_watchesInPlay) await WatchKeyStore.signingOut(userId, deleteWatchKey);
+    signedIn = false;
+    _auth.add(false);
+  }
+
+  /// Whether this test has watches at all. The records are in SharedPreferences, which a widget
+  /// test that never set it up can't read, so tests without watches don't go there.
+  bool get _watchesInPlay => watchKeys.isNotEmpty || watchKeysRegistered.isNotEmpty;
+
+  /// The session ended by itself (signed out from another device, a changed password): nothing
+  /// is taken back on the way out.
+  void endSession() {
     signedIn = false;
     _auth.add(false);
   }
@@ -771,8 +787,25 @@ class FakeBackend implements Backend {
   final watchKeysRegistered = <(String, String, String)>[];
   final watchKeysDeleted = <String>[];
 
+  /// The key each fingerprint has, as the server keeps one row per key (its id stays when the same
+  /// watch is registered again, for another workspace say).
+  final _watchKeyIds = <String, String>{};
+  var _watchKeysMade = 0;
+
   /// Fails registrations while set.
   Object? watchRegisterError;
+
+  /// False: a server from before `DELETE /v1/watch-keys` (Sign Out Everywhere falls back).
+  var watchDeleteAllSupported = true;
+
+  /// How many times every watch key was deleted in one go.
+  var watchKeysDeletedAll = 0;
+
+  /// Fails looking a code up or allowing it while set (no connection, too many tries).
+  Object? watchCodeError;
+
+  /// Allowing a code answers "this watch is signed in to another account" while true.
+  var watchCodeTaken = false;
 
   /// What [watchPrefs] answers; null is a server from before watches.
   WatchPrefsView? storedWatchPrefs = const WatchPrefsView(quickReplies: ['On my way', 'Thanks', 'Yes', 'No']);
@@ -784,6 +817,21 @@ class FakeBackend implements Backend {
 
   @override
   Future<List<WatchKeyView>> listWatchKeys(String orgId) async => [for (final k in watchKeys) if (k.orgId == orgId) k];
+
+  /// Workspaces whose watch keys can't be asked for right now (offline), and ones the person has
+  /// left (the server answers 404 org_not_found).
+  final watchListDown = <String>{};
+  final watchOrgsLeft = <String>{};
+
+  @override
+  Future<Set<String>?> watchKeyIdsIn(String orgId) async {
+    if (watchListDown.contains(orgId)) throw Exception('offline');
+    if (watchOrgsLeft.contains(orgId)) return null;
+    return {for (final k in watchKeys) if (k.orgId == orgId) k.id};
+  }
+
+  /// Fails deleting watch keys while set, one by one and all at once (offline, a slow server).
+  Object? watchDeleteError;
 
   @override
   Future<WatchKeyView> registerWatchKey({
@@ -798,30 +846,62 @@ class FakeBackend implements Backend {
     final error = watchRegisterError;
     if (error != null) throw error;
     watchKeysRegistered.add((orgId, fingerprint, name));
+    // The same watch again keeps its key (and id); a key that was removed is made anew.
+    final had = _watchKeyIds[fingerprint];
+    final id = had != null && watchKeys.any((k) => k.id == had) ? had : 'watch${++_watchKeysMade}';
+    _watchKeyIds[fingerprint] = id;
     final key = WatchKeyView(
-      id: 'watch${watchKeysRegistered.length}',
+      id: id,
       orgId: orgId,
       platform: platform,
       name: name,
       model: model,
       createdAt: DateTime.utc(2026, 11, 19),
     );
-    watchKeys = [...watchKeys, key];
+    watchKeys = [for (final k in watchKeys) if (k.id != id) k, key];
     return key;
   }
 
   @override
   Future<void> deleteWatchKey(String id) async {
+    // No session, no delete: the server answers 401.
+    if (!signedIn) throw Exception('401: not signed in');
+    final error = watchDeleteError;
+    if (error != null) throw error;
     watchKeysDeleted.add(id);
     watchKeys = [for (final k in watchKeys) if (k.id != id) k];
   }
 
   @override
+  Future<int?> deleteAllWatchKeys() async {
+    if (!signedIn) throw Exception('401: not signed in');
+    final error = watchDeleteError;
+    if (error != null) throw error;
+    if (!watchDeleteAllSupported) return null;
+    watchKeysDeletedAll++;
+    final n = watchKeys.length;
+    watchKeys = [];
+    return n;
+  }
+
+  @override
   Future<WatchPrefsView?> watchPrefs() async => storedWatchPrefs;
+
+  /// While set, a settings save waits here (taken by that save); completing it with an error
+  /// fails the save.
+  Completer<void>? watchPrefsGate;
+
+  /// Fails every settings save while set (offline).
+  Object? watchPrefsError;
 
   @override
   Future<WatchPrefsView> updateWatchPrefs({WatchAllowance? allow, bool? showDetails, List<String>? quickReplies}) async {
     watchPrefsUpdates.add((allow: allow, showDetails: showDetails, quickReplies: quickReplies));
+    final gate = watchPrefsGate;
+    watchPrefsGate = null;
+    if (gate != null) await gate.future;
+    final error = watchPrefsError;
+    if (error != null) throw error;
     final now = storedWatchPrefs ?? const WatchPrefsView();
     return storedWatchPrefs = now.copyWith(
       allow: allow,
@@ -831,11 +911,22 @@ class FakeBackend implements Backend {
     );
   }
 
+  /// How many times a code was looked up (each one spends a try on the server).
+  var watchCodeLookups = 0;
+
   @override
-  Future<WatchCodeView?> watchCodeInfo(String code) async => watchCodes[code];
+  Future<WatchCodeView?> watchCodeInfo(String code) async {
+    watchCodeLookups++;
+    final error = watchCodeError;
+    if (error != null) throw error;
+    return watchCodes[code];
+  }
 
   @override
   Future<WatchKeyView?> claimWatchCode(String code, String orgId) async {
+    final error = watchCodeError;
+    if (error != null) throw error;
+    if (watchCodeTaken && watchCodes.containsKey(code)) throw const WatchKeyTaken();
     final info = watchCodes.remove(code);
     if (info == null) return null;
     watchCodesClaimed.add((code, orgId));
@@ -5291,7 +5382,19 @@ class FakeBackend implements Backend {
   @override
   Future<void> signOutEverywhere() async {
     signedOutEverywhere = true;
-    await signOut();
+    // Like the real one (D-410): every watch the person has, where the server can; else the ones
+    // this phone signed in.
+    if (_watchesInPlay) {
+      var all = false;
+      try {
+        all = await deleteAllWatchKeys() != null;
+      } catch (_) {}
+      await WatchKeyStore.signingOut(userId, (id) async {
+        if (!all) await deleteWatchKey(id);
+      });
+    }
+    signedIn = false;
+    _auth.add(false);
   }
 
   // --- Phase 7: billing -----------------------------------------------------

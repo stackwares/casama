@@ -4,6 +4,7 @@ import ai.casama.wear.core.AskQueue
 import ai.casama.wear.core.Encode
 import ai.casama.wear.core.QueuedAsk
 import ai.casama.wear.graph
+import ai.casama.wear.notify.Notifier
 import android.content.Context
 import android.util.Base64
 import androidx.core.content.edit
@@ -50,11 +51,22 @@ class AskOutbox(private val context: Context) {
 
     private fun save(list: List<QueuedAsk>) = prefs.edit { putString(K_ITEMS, AskQueue.encode(list)) }
 
+    /** How sending a kept ask went. */
+    enum class Sent {
+        /** It went, or the server already had it. */
+        YES,
+        /** No connection, a busy server or a rate limit: it stays and is tried again. */
+        LATER,
+        /** The server won't take it (and answers the same to every retry): removed. */
+        DROPPED,
+    }
+
     /**
-     * Sends [item] with its own idempotency key. True when it went (or the server already had
-     * it); false when still offline. Other refusals drop it: retrying won't change the answer.
+     * Sends [item] with its own idempotency key. The server stores its answer to a key, so a
+     * refusal (nothing heard, a bad recording, a bot that's gone) would be replayed on every
+     * retry: those are dropped, never kept to fail forever.
      */
-    suspend fun send(item: QueuedAsk): Boolean {
+    suspend fun send(item: QueuedAsk): Sent {
         val session = context.graph.session
         val body = Encode.ask(
             botId = item.botId,
@@ -69,16 +81,23 @@ class AskOutbox(private val context: Context) {
         return try {
             session.call { ask(body, item.id) }
             remove(item.id)
-            true
+            Sent.YES
         } catch (e: ApiError.Offline) {
-            false
+            Sent.LATER
         } catch (e: ApiError.RateLimited) {
-            false
+            Sent.LATER
         } catch (e: ApiError.Server) {
-            false
+            Sent.LATER
+        } catch (e: ApiError.SignedOut) {
+            // The session wiped everything, this ask with it.
+            Sent.LATER
+        } catch (e: ApiError.Bad) {
+            // The server took it; only its answer couldn't be read.
+            remove(item.id)
+            Sent.YES
         } catch (e: ApiError) {
             remove(item.id)
-            true
+            Sent.DROPPED
         }
     }
 
@@ -103,7 +122,12 @@ class OutboxWorker(context: Context, params: WorkerParameters) : CoroutineWorker
         val split = AskQueue.split(outbox.items(), System.currentTimeMillis())
         split.dropped.forEach { outbox.remove(it.id) }
         for (item in split.sendNow) {
-            if (!outbox.send(item)) return Result.retry()
+            when (outbox.send(item)) {
+                AskOutbox.Sent.YES -> Unit
+                AskOutbox.Sent.LATER -> return Result.retry()
+                // Nobody is looking at a screen: say it where it will be seen.
+                AskOutbox.Sent.DROPPED -> Notifier.askDropped(applicationContext, item.askedAt)
+            }
         }
         return Result.success()
     }

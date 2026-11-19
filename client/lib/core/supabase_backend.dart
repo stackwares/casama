@@ -379,8 +379,42 @@ class SupabaseBackend implements Backend {
         await removeLiveStartToken(start).timeout(const Duration(seconds: 5));
       } catch (_) {}
     }
-    // This device's widget key goes too (D-405 §10), while the session can still delete it. The
-    // app wipes what the widgets show once it sees the sign-out (glance_sync.dart).
+    final me = userId;
+    await _takeBackKeys();
+    // Forget the Google account too, so the next Continue with Google offers every account.
+    if (_googleSetUp != null) {
+      try {
+        await GoogleSignIn.instance.signOut();
+      } catch (_) {}
+    }
+    await _endSession(me, supabase.auth.signOut);
+  }
+
+  /// Ends the session with [signOut], after [_takeBackKeys]. If it fails and [me] is still signed
+  /// in (offline, say), their watches' records go back to signed in: they were marked on the way
+  /// out, and a watch mustn't be taken back later for a sign-out that never happened.
+  Future<void> _endSession(String? me, Future<void> Function() signOut) async {
+    try {
+      await signOut();
+    } catch (_) {
+      if (isSignedIn) await WatchKeyStore.signOutFailed(me);
+      rethrow;
+    }
+  }
+
+  /// The keys this device handed out go with the session, while it can still delete them. Used by
+  /// both sign-outs.
+  ///
+  /// - This device's widget key (D-405 §10). The app wipes what the widgets show once it sees the
+  ///   sign-out (glance_sync.dart).
+  /// - The watches this phone signed in (D-410 §8.2). Their records stay, each saying whether the
+  ///   server deleted its key: the watch bridge tells the watches, forgets the ones that went and
+  ///   tries the others again when this account is back (watch_bridge.dart).
+  ///
+  /// [everywhere] (Sign Out Everywhere, "use this if you lost a device") takes back every watch
+  /// the person has, in every workspace: a watch key isn't a session, so signing every session out
+  /// doesn't stop it. A server without that route falls back to the watches this phone knows.
+  Future<void> _takeBackKeys({bool everywhere = false}) async {
     final widgetKey = await WidgetKeyStore.load();
     if (widgetKey != null) {
       await WidgetKeyStore.clear();
@@ -388,20 +422,15 @@ class SupabaseBackend implements Backend {
         await deleteWidgetKey(widgetKey.id).timeout(const Duration(seconds: 5));
       } catch (_) {}
     }
-    // So do the watches this phone signed in (D-410 §8.2). The list stays: the watch bridge
-    // forgets it and tells the watches once it sees the sign-out (watch_bridge.dart).
-    for (final watch in await WatchKeyStore.load()) {
+    var all = false;
+    if (everywhere) {
       try {
-        await deleteWatchKey(watch.keyId).timeout(const Duration(seconds: 5));
+        all = await deleteAllWatchKeys().timeout(const Duration(seconds: 5)) != null;
       } catch (_) {}
     }
-    // Forget the Google account too, so the next Continue with Google offers every account.
-    if (_googleSetUp != null) {
-      try {
-        await GoogleSignIn.instance.signOut();
-      } catch (_) {}
-    }
-    await supabase.auth.signOut();
+    await WatchKeyStore.signingOut(userId, (keyId) async {
+      if (!all) await deleteWatchKey(keyId).timeout(const Duration(seconds: 5));
+    });
   }
 
   /// The Auth server's public settings say which sign-ins are on (SAML SSO, passkeys).
@@ -476,8 +505,12 @@ class SupabaseBackend implements Backend {
   );
 
   @override
-  Future<void> signOutEverywhere() =>
-      supabase.auth.signOut(scope: sb.SignOutScope.global);
+  Future<void> signOutEverywhere() async {
+    // First, while this session still works: the watches' and this device's widget keys.
+    final me = userId;
+    await _takeBackKeys(everywhere: true);
+    await _endSession(me, () => supabase.auth.signOut(scope: sb.SignOutScope.global));
+  }
 
   // --- passkeys ---------------------------------------------------------------
 
@@ -4318,6 +4351,30 @@ class SupabaseBackend implements Backend {
   }
 
   @override
+  Future<Set<String>?> watchKeyIdsIn(String orgId) async {
+    try {
+      final res = await api.api.dio.get<Map<String, dynamic>>(
+        '/v1/watch-keys',
+        queryParameters: {'org_id': orgId},
+        options: Options(headers: authHeaders),
+      );
+      final items = res.data?['items'];
+      // An answer without the list says nothing about which keys are there.
+      if (items is! List) throw const FormatException('no watch key list');
+      return {
+        for (final i in items)
+          if (i is Map && i['id'] is String) i['id'] as String,
+      };
+    } on DioException catch (e) {
+      // 404 org_not_found: the person isn't in that workspace any more. Any other 404 is a server
+      // without watches, which can't say: that one is rethrown with every other failure.
+      final body = e.response?.data;
+      if (e.response?.statusCode == 404 && body is Map && body['code'] == 'org_not_found') return null;
+      rethrow;
+    }
+  }
+
+  @override
   Future<WatchKeyView> registerWatchKey({
     required String orgId,
     required String fingerprint,
@@ -4350,6 +4407,20 @@ class SupabaseBackend implements Backend {
       await api.api.dio.delete<Object>('/v1/watch-keys/$id', options: Options(headers: authHeaders));
     } on DioException catch (e) {
       if (e.response?.statusCode != 404) rethrow;
+    }
+  }
+
+  @override
+  Future<int?> deleteAllWatchKeys() async {
+    try {
+      final res = await api.api.dio.delete<Map<String, dynamic>>('/v1/watch-keys', options: Options(headers: authHeaders));
+      final deleted = res.data?['deleted'];
+      return deleted is int ? deleted : 0;
+    } on DioException catch (e) {
+      // A server from before this route has nothing at that address for DELETE.
+      final status = e.response?.statusCode;
+      if (status == 404 || status == 405) return null;
+      rethrow;
     }
   }
 
@@ -4395,9 +4466,11 @@ class SupabaseBackend implements Backend {
       );
       return WatchKeyView.fromJson(Map<String, Object?>.from(res.data!));
     } on DioException catch (e) {
-      // Wrong, expired, or used by another watch a moment ago.
       final status = e.response?.statusCode;
-      if (status == 404 || status == 409) return null;
+      // Wrong, expired, or used a moment ago.
+      if (status == 404) return null;
+      // 409 watch_key_taken: the watch's key belongs to another account.
+      if (status == 409) throw const WatchKeyTaken();
       rethrow;
     }
   }

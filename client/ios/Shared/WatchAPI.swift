@@ -10,17 +10,50 @@ import Foundation
 enum WatchAPIError: Error, Equatable {
   /// 401: the key was removed. Wipe and show "signed out".
   case signedOut
-  case notFound
-  /// 409: already answered, already running.
-  case conflict
-  /// 403, with the server's reason when it gave one.
-  case forbidden(String?)
+  /// 404, with the server's code: `not_found` means "not in this watch's workspace".
+  case notFound(WatchProblem?)
+  /// 409: already answered, already running, or couldn't start (the code says which).
+  case conflict(WatchProblem?)
+  /// 403, with the server's code and reason when it gave them.
+  case forbidden(WatchProblem?)
+  /// Another 4xx (400 nothing heard, 402 out of credits): the server understood and said no.
+  case refused(Int, WatchProblem?)
   /// 429, with how long to wait when the server said.
   case rateLimited(TimeInterval?)
   /// No connection, or it dropped.
   case offline
   case server(Int)
   case badResponse
+
+  /// The HTTP status behind this error, when the server answered at all.
+  var status: Int? {
+    switch self {
+    case .signedOut: return 401
+    case .notFound: return 404
+    case .conflict: return 409
+    case .forbidden: return 403
+    case .refused(let status, _): return status
+    case .rateLimited: return 429
+    case .server(let status): return status
+    case .offline, .badResponse: return nil
+    }
+  }
+
+  var problem: WatchProblem? {
+    switch self {
+    case .notFound(let p), .conflict(let p), .forbidden(let p), .refused(_, let p): return p
+    default: return nil
+    }
+  }
+}
+
+/// Where on the watch an answer was made, for the server's counting (`X-Casama-Surface`).
+enum WatchSurface {
+  static let app = "app"
+  static let notification = "notification"
+  static let complication = "complication"
+  static let control = "control"
+  static let siri = "siri"
 }
 
 struct WatchAPI {
@@ -37,6 +70,30 @@ struct WatchAPI {
     let c = URLSessionConfiguration.ephemeral
     c.timeoutIntervalForRequest = 20
     c.timeoutIntervalForResource = 45
+    c.waitsForConnectivity = false
+    c.requestCachePolicy = .reloadIgnoringLocalCacheData
+    c.httpAdditionalHeaders = ["User-Agent": "CasamaWatch/\(WatchDeviceInfo.appVersion)"]
+    return URLSession(configuration: c)
+  }()
+
+  /// A spoken ask: up to a minute of audio through the phone's Bluetooth link, then the server's
+  /// own wait for the words (up to 60 s), so the whole exchange gets longer than a plain call.
+  static let askSession: URLSession = {
+    let c = URLSessionConfiguration.ephemeral
+    c.timeoutIntervalForRequest = 75
+    c.timeoutIntervalForResource = 120
+    c.waitsForConnectivity = false
+    c.requestCachePolicy = .reloadIgnoringLocalCacheData
+    c.httpAdditionalHeaders = ["User-Agent": "CasamaWatch/\(WatchDeviceInfo.appVersion)"]
+    return URLSession(configuration: c)
+  }()
+
+  /// Background refresh and signing out: the system gives a refresh a few seconds, so it gives up
+  /// early and the saved glance stays.
+  static let quickSession: URLSession = {
+    let c = URLSessionConfiguration.ephemeral
+    c.timeoutIntervalForRequest = 8
+    c.timeoutIntervalForResource = 10
     c.waitsForConnectivity = false
     c.requestCachePolicy = .reloadIgnoringLocalCacheData
     c.httpAdditionalHeaders = ["User-Agent": "CasamaWatch/\(WatchDeviceInfo.appVersion)"]
@@ -63,7 +120,7 @@ struct WatchAPI {
   }
 
   private func request(_ path: String, method: String = "GET", query: [URLQueryItem] = [], body: Data? = nil,
-                       idempotencyKey: String? = nil, accept: String = "application/json") throws -> URLRequest {
+                       idempotencyKey: String? = nil, accept: String = "application/json", surface: String? = nil) throws -> URLRequest {
     guard let u = url(path, query: query) else { throw WatchAPIError.badResponse }
     var r = URLRequest(url: u)
     r.httpMethod = method
@@ -74,6 +131,7 @@ struct WatchAPI {
       r.setValue("application/json", forHTTPHeaderField: "Content-Type")
     }
     if let idempotencyKey { r.setValue(idempotencyKey, forHTTPHeaderField: "Idempotency-Key") }
+    if let surface { r.setValue(surface, forHTTPHeaderField: "X-Casama-Surface") }
     return r
   }
 
@@ -98,20 +156,15 @@ struct WatchAPI {
     switch http.statusCode {
     case 200..<300, 304: return nil
     case 401: return .signedOut
-    case 403: return .forbidden(data.flatMap(problemDetail))
-    case 404: return .notFound
-    case 409: return .conflict
+    case 403: return .forbidden(WatchProblem.parse(data))
+    case 404: return .notFound(WatchProblem.parse(data))
+    case 409: return .conflict(WatchProblem.parse(data))
     case 429:
       let wait = (http.value(forHTTPHeaderField: "Retry-After")).flatMap { TimeInterval($0.trimmingCharacters(in: .whitespaces)) }
       return .rateLimited(wait)
+    case 400..<500: return .refused(http.statusCode, WatchProblem.parse(data))
     default: return .server(http.statusCode)
     }
-  }
-
-  /// The `detail` (or `title`) of a problem+json answer.
-  private static func problemDetail(_ data: Data) -> String? {
-    guard let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return nil }
-    return (obj["detail"] as? String) ?? (obj["title"] as? String)
   }
 
   private func send(_ r: URLRequest, session: URLSession = WatchAPI.session) async throws -> (Data, HTTPURLResponse) {
@@ -148,11 +201,13 @@ struct WatchAPI {
     case notModified
   }
 
-  /// GET /v1/glance, answering "not changed" when [etag] still holds.
-  func glance(orgId: String?, etag: String?) async throws -> GlanceResult {
-    var r = try request("v1/glance", query: orgId.map { [URLQueryItem(name: "org_id", value: $0)] } ?? [])
+  /// GET /v1/glance, answering "not changed" when [etag] still holds. No `org_id`: the server
+  /// answers for the key's own workspace, so a watch whose phone switched workspace while it was
+  /// away still gets an answer (and learns the new workspace from /v1/watch/me).
+  func glance(etag: String?, quick: Bool = false) async throws -> GlanceResult {
+    var r = try request("v1/glance")
     if let etag, !etag.isEmpty { r.setValue(etag, forHTTPHeaderField: "If-None-Match") }
-    let (data, http) = try await send(r)
+    let (data, http) = try await send(r, session: quick ? WatchAPI.quickSession : WatchAPI.session)
     if http.statusCode == 304 { return .notModified }
     let g = try decode(Glance.self, data)
     let tag = http.value(forHTTPHeaderField: "ETag") ?? (g.version.isEmpty ? nil : "\"\(g.version)\"")
@@ -169,9 +224,10 @@ struct WatchAPI {
 
   func ask(_ body: WatchAskBody, idempotencyKey: String) async throws -> WatchAsked {
     var r = try request("v1/watch/ask", method: "POST", body: try json(body), idempotencyKey: idempotencyKey)
-    // A minute of audio through the phone's Bluetooth link takes a while.
-    r.timeoutInterval = body.audio == nil ? 20 : 60
-    let (data, _) = try await send(r)
+    // A minute of audio through the phone's Bluetooth link takes a while, and the server may wait
+    // up to a minute for the words: the plain session's 45 s for the whole exchange is too short.
+    r.timeoutInterval = body.audio == nil ? 20 : 75
+    let (data, _) = try await send(r, session: body.audio == nil ? WatchAPI.session : WatchAPI.askSession)
     return try decode(WatchAsked.self, data)
   }
 
@@ -237,8 +293,8 @@ struct WatchAPI {
     }
   }
 
-  func cancelRun(_ id: String, idempotencyKey: String = UUID().uuidString) async throws {
-    _ = try await send(try request("v1/runs/\(id)/cancel", method: "POST", body: Data("{}".utf8), idempotencyKey: idempotencyKey))
+  func cancelRun(_ id: String, surface: String = WatchSurface.app, idempotencyKey: String = UUID().uuidString) async throws {
+    _ = try await send(try request("v1/runs/\(id)/cancel", method: "POST", body: Data("{}".utf8), idempotencyKey: idempotencyKey, surface: surface))
   }
 
   // MARK: Requests and suggestions
@@ -249,9 +305,9 @@ struct WatchAPI {
   }
 
   /// POST /v1/approvals/{id}/decision. Never Always Allow: that is a phone decision (§6.1 B).
-  func decide(_ id: String, allow: Bool, idempotencyKey: String = UUID().uuidString) async throws {
+  func decide(_ id: String, allow: Bool, surface: String = WatchSurface.app, idempotencyKey: String = UUID().uuidString) async throws {
     let body = try JSONSerialization.data(withJSONObject: ["decision": allow ? "approved" : "denied"])
-    _ = try await send(try request("v1/approvals/\(id)/decision", method: "POST", body: body, idempotencyKey: idempotencyKey))
+    _ = try await send(try request("v1/approvals/\(id)/decision", method: "POST", body: body, idempotencyKey: idempotencyKey, surface: surface))
   }
 
   struct Started: Decodable {
@@ -259,20 +315,20 @@ struct WatchAPI {
     var conversationId: String?
   }
 
-  func acceptSuggestion(_ id: String, idempotencyKey: String = UUID().uuidString) async throws -> Started? {
-    let (data, _) = try await send(try request("v1/suggestions/\(id)/accept", method: "POST", body: Data("{}".utf8), idempotencyKey: idempotencyKey))
+  func acceptSuggestion(_ id: String, surface: String = WatchSurface.app, idempotencyKey: String = UUID().uuidString) async throws -> Started? {
+    let (data, _) = try await send(try request("v1/suggestions/\(id)/accept", method: "POST", body: Data("{}".utf8), idempotencyKey: idempotencyKey, surface: surface))
     return try? WatchJSON.decoder().decode(Started.self, from: data)
   }
 
-  func dismissSuggestion(_ id: String, idempotencyKey: String = UUID().uuidString) async throws {
+  func dismissSuggestion(_ id: String, surface: String = WatchSurface.app, idempotencyKey: String = UUID().uuidString) async throws {
     let body = try JSONSerialization.data(withJSONObject: ["dont_suggest_again": false])
-    _ = try await send(try request("v1/suggestions/\(id)/dismiss", method: "POST", body: body, idempotencyKey: idempotencyKey))
+    _ = try await send(try request("v1/suggestions/\(id)/dismiss", method: "POST", body: body, idempotencyKey: idempotencyKey, surface: surface))
   }
 
   // MARK: Routines
 
-  func runRoutine(_ id: String, idempotencyKey: String = UUID().uuidString) async throws -> Started? {
-    let (data, _) = try await send(try request("v1/routines/\(id)/run", method: "POST", body: Data("{}".utf8), idempotencyKey: idempotencyKey))
+  func runRoutine(_ id: String, surface: String = WatchSurface.app, idempotencyKey: String = UUID().uuidString) async throws -> Started? {
+    let (data, _) = try await send(try request("v1/routines/\(id)/run", method: "POST", body: Data("{}".utf8), idempotencyKey: idempotencyKey, surface: surface))
     return try? WatchJSON.decoder().decode(Started.self, from: data)
   }
 
@@ -282,9 +338,10 @@ struct WatchAPI {
     _ = try await send(try request("v1/watch-keys/current", method: "PUT", body: try json(body), idempotencyKey: UUID().uuidString))
   }
 
-  /// DELETE /v1/watch-keys/current: Sign out of this watch.
+  /// DELETE /v1/watch-keys/current: Sign out of this watch. A short wait: signing out mustn't
+  /// hang on a bad connection.
   func signOut() async throws {
-    _ = try await send(try request("v1/watch-keys/current", method: "DELETE"))
+    _ = try await send(try request("v1/watch-keys/current", method: "DELETE"), session: WatchAPI.quickSession)
   }
 
   /// Open on iPhone when the phone isn't in reach: the person's phones get a notification.
