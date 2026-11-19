@@ -134,6 +134,104 @@ class _ConsentPageState extends ConsumerState<_ConsentPage> {
         ],
       ),
     );
+    // What it says: the mascot, the title, and the three answers grouped on one card.
+    final content = Column(
+      children: [
+        const MascotImage(Mascot.winky, size: 88),
+        const SizedBox(height: AppSpace.lg),
+        Text(
+          l10n.aiConsentTitle,
+          textAlign: TextAlign.center,
+          style: context.textTheme.headlineSmall?.copyWith(
+            fontWeight: FontWeight.w700,
+            letterSpacing: -0.4,
+          ),
+        ),
+        const SizedBox(height: AppSpace.sm),
+        Text(
+          l10n.aiConsentBody,
+          textAlign: TextAlign.center,
+          style: context.textTheme.titleMedium?.copyWith(
+            color: scheme.onSurfaceVariant,
+            fontWeight: FontWeight.w400,
+            height: 1.4,
+          ),
+        ),
+        const SizedBox(height: AppSpace.xl),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.fromLTRB(
+            AppSpace.lg,
+            AppSpace.lg,
+            AppSpace.lg,
+            0,
+          ),
+          decoration: BoxDecoration(
+            color: scheme.surfaceContainerHigh,
+            borderRadius: AppRadius.cardAll,
+          ),
+          child: Column(
+            children: [
+              section(
+                LucideIcons.messageSquare,
+                l10n.aiConsentWhatTitle,
+                l10n.aiConsentWhat,
+              ),
+              section(
+                LucideIcons.building2,
+                l10n.aiConsentWhoTitle,
+                l10n.aiConsentWho,
+              ),
+              section(
+                LucideIcons.shieldCheck,
+                l10n.aiConsentWhyTitle,
+                l10n.aiConsentWhy,
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: AppSpace.sm),
+        TextButton(
+          key: const Key('aiConsentPrivacy'),
+          onPressed: () => ref.read(openUrlProvider)(
+            remoteLink('privacy', casamaPrivacyUrl),
+          ),
+          child: Text(l10n.privacyPolicy),
+        ),
+      ],
+    );
+    final actions = Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(
+          width: double.infinity,
+          child: FilledButton(
+            key: const Key('aiConsentAgree'),
+            style: FilledButton.styleFrom(
+              backgroundColor: scheme.onSurface,
+              foregroundColor: scheme.surface,
+              shape: const StadiumBorder(),
+              minimumSize: const Size.fromHeight(56),
+              textStyle: context.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            onPressed: _busy ? null : _agree,
+            child: Text(l10n.aiConsentAgree),
+          ),
+        ),
+        const SizedBox(height: AppSpace.xs),
+        TextButton(
+          key: const Key('aiConsentSignOut'),
+          onPressed: _busy ? null : _signOut,
+          child: Text(
+            l10n.signOut,
+            style: TextStyle(color: scheme.onSurfaceVariant),
+          ),
+        ),
+      ],
+    );
+    final bottom = BottomPadding.of(context, minimum: AppSpace.md);
     return Scaffold(
       key: const Key('aiConsentStep'),
       backgroundColor: scheme.surface,
@@ -141,110 +239,73 @@ class _ConsentPageState extends ConsumerState<_ConsentPage> {
         child: SafeArea(
           top: false,
           bottom: false,
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 480),
-              child: Column(
-                children: [
-                  // What it says scrolls; the answer stays in reach at the bottom.
-                  Expanded(
-                    child: SingleChildScrollView(
-                      padding: EdgeInsets.fromLTRB(
-                        AppSpace.xl,
-                        statusBar + AppSpace.xl,
-                        AppSpace.xl,
-                        AppSpace.md,
-                      ),
-                      child: Column(
-                        children: [
-                          const MascotImage(Mascot.winky, size: 88),
-                          const SizedBox(height: AppSpace.lg),
-                          Text(
-                            l10n.aiConsentTitle,
-                            textAlign: TextAlign.center,
-                            style: context.textTheme.headlineSmall?.copyWith(
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: -0.4,
-                            ),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              // A phone keeps the answer pinned at the bottom while the text scrolls. A big
+              // window (Mac, iPad) shows it all as one block in the middle, buttons right under
+              // the text, instead of a gap the height of the window between them.
+              final roomy = constraints.maxWidth >= 600;
+              if (roomy) {
+                return SingleChildScrollView(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: constraints.maxHeight,
+                    ),
+                    child: Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 480),
+                        child: Padding(
+                          padding: EdgeInsets.fromLTRB(
+                            AppSpace.xl,
+                            statusBar + AppSpace.xl,
+                            AppSpace.xl,
+                            bottom + AppSpace.lg,
                           ),
-                          const SizedBox(height: AppSpace.sm),
-                          Text(
-                            l10n.aiConsentBody,
-                            textAlign: TextAlign.center,
-                            style: context.textTheme.titleMedium?.copyWith(
-                              color: scheme.onSurfaceVariant,
-                              fontWeight: FontWeight.w400,
-                              height: 1.4,
-                            ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              content,
+                              const SizedBox(height: AppSpace.lg),
+                              actions,
+                            ],
                           ),
-                          const SizedBox(height: AppSpace.xl),
-                          section(
-                            LucideIcons.messageSquare,
-                            l10n.aiConsentWhatTitle,
-                            l10n.aiConsentWhat,
-                          ),
-                          section(
-                            LucideIcons.building2,
-                            l10n.aiConsentWhoTitle,
-                            l10n.aiConsentWho,
-                          ),
-                          section(
-                            LucideIcons.shieldCheck,
-                            l10n.aiConsentWhyTitle,
-                            l10n.aiConsentWhy,
-                          ),
-                          TextButton(
-                            key: const Key('aiConsentPrivacy'),
-                            onPressed: () => ref.read(openUrlProvider)(
-                              remoteLink('privacy', casamaPrivacyUrl),
-                            ),
-                            child: Text(l10n.privacyPolicy),
-                          ),
-                        ],
+                        ),
                       ),
                     ),
                   ),
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(
-                      AppSpace.xl,
-                      0,
-                      AppSpace.xl,
-                      BottomPadding.of(context, minimum: AppSpace.md),
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        SizedBox(
-                          width: double.infinity,
-                          child: FilledButton(
-                            key: const Key('aiConsentAgree'),
-                            style: FilledButton.styleFrom(
-                              backgroundColor: scheme.onSurface,
-                              foregroundColor: scheme.surface,
-                              shape: const StadiumBorder(),
-                              minimumSize: const Size.fromHeight(56),
-                              textStyle: context.textTheme.titleMedium
-                                  ?.copyWith(fontWeight: FontWeight.w700),
-                            ),
-                            onPressed: _busy ? null : _agree,
-                            child: Text(l10n.aiConsentAgree),
+                );
+              }
+              return Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 480),
+                  child: Column(
+                    children: [
+                      // What it says scrolls; the answer stays in reach at the bottom.
+                      Expanded(
+                        child: SingleChildScrollView(
+                          padding: EdgeInsets.fromLTRB(
+                            AppSpace.xl,
+                            statusBar + AppSpace.xl,
+                            AppSpace.xl,
+                            AppSpace.md,
                           ),
+                          child: content,
                         ),
-                        const SizedBox(height: AppSpace.xs),
-                        TextButton(
-                          key: const Key('aiConsentSignOut'),
-                          onPressed: _busy ? null : _signOut,
-                          child: Text(
-                            l10n.signOut,
-                            style: TextStyle(color: scheme.onSurfaceVariant),
-                          ),
+                      ),
+                      Padding(
+                        padding: EdgeInsets.fromLTRB(
+                          AppSpace.xl,
+                          0,
+                          AppSpace.xl,
+                          bottom,
                         ),
-                      ],
-                    ),
+                        child: actions,
+                      ),
+                    ],
                   ),
-                ],
-              ),
-            ),
+                ),
+              );
+            },
           ),
         ),
       ),
