@@ -64,6 +64,15 @@ final storeProductsProvider = FutureProvider<Map<String, StoreProduct>>((ref) as
   return {for (final p in await store.products(ids)) p.id: p};
 });
 
+/// Free-trial days the store confirms for this person, by store product id. Empty when unknown.
+final storeTrialsProvider = FutureProvider<Map<String, int>>((ref) async {
+  final store = ref.watch(storeProvider);
+  final source = store.source;
+  if (source == null) return const {};
+  final catalog = await ref.watch(planCatalogProvider.future);
+  return store.freeTrialDays({for (final p in catalog.plans) ?p.storeProductIds[source]});
+});
+
 /// Overridable in tests (which platform the paywall rules apply to).
 final platformProvider = Provider<TargetPlatform>((ref) => defaultTargetPlatform);
 

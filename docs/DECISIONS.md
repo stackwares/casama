@@ -5951,6 +5951,56 @@ cookies and could set cookies on `.casama.ai`.
 - **Still declared on Play:** phone call (incoming bot calls, `flutter_callkit_incoming`) and microphone (`CallService`, live calls in the background). Both need a short video each.
 - Docs: guide/devices.md, guide/routines.md. Tests: `packages/domain/test/os-permissions.test.ts`; `client/test/device_connections_test.dart` fake.
 
+## D-418 Credits bought in the App Store or Google Play never expire (2026-11-19)
+
+- **Why:** App Store guideline 3.1.1 says credits bought with in-app purchase may not expire. Since D-246 every credit pack lasted 12 months (`public.credit_lot_expiry`), store packs included.
+- **Decision:** a credit pack bought through RevenueCat (D-297: the App Store, the Mac App Store and Google Play alike, ledger reason `purchase`, reference `revenuecat:<RevenueCat purchase id>`) gets a lot with no expiry. Packs bought on the web or in the desktop app (Dodo, reference `dodo:<payment id>`), rewards and opening balances keep 12 months; a month's included credits still last until the end of the following month. Google Play has no such rule, but RevenueCat gives both stores the same reference, and one rule for both is simpler to explain.
+- **Spending:** credits that lapse first are still spent first, so store packs, which never lapse, are used last.
+- **Migration** `20270212100001_store_credits_never_expire.sql` redefines `credit_lot_expiry` and clears `expires_at` on lots from store packs already bought. None had lapsed yet: store packs have been on sale since 2026-11-15.
+- **Where it shows:** the terms (credits section), the FAQ (docs and casama.ai/pricing), docs guide/usage.md "Credits", and the app's `creditsExplainerShort` and `outOfCreditsPaidBody`.
+- Tests: `supabase/tests/store_credits_never_expire.test.sql`; `apps/server/test/billing-holes.test.ts`; `client/test/credits_meter_test.dart`.
+
+## D-419 Casama checks image and video requests itself (2026-11-19)
+
+- **Why:** App Store guidelines 1.1.4 and 1.2 expect an app that generates images to stop objectionable content itself. Casama relied on the provider's filters, and a workspace's own key or a future provider may have weaker ones.
+- **Decision:** `media.image.generate` and `media.video.generate` run `checkMediaRequest` (`packages/agent/src/media-safety.ts`) before credits are checked or the provider is called, on every key. It refuses three things: sexual content involving minors, sexual or nude pictures of real people (a named person, or the person in a photo being animated), and graphic violence or gore. A refusal is a `content_refused` tool error whose message tells the bot to say plainly and politely why, and not to rephrase and retry.
+- **Classifier:** one call on the bot's background model through `backgroundComplete` (D-338), so the same model checks whatever key or local model the bot runs on, and on Casama Cloud it is the small model already on the guardrail allowlist (D-364). Its cost goes in the usage ledger as `tokens_in`/`tokens_out` with `meta.purpose = "media_safety"` (docs/COSTS.md). The prompt is wrapped as data, and a photo being animated is flagged so whoever is in it counts as a real person.
+- **Failing:** minors fail closed. A prompt with both a word for a child and a sexual word is refused before any model call; while the check is down (no model, an error, an answer that isn't one of the categories), a prompt that mentions a child is refused with "try again in a minute". The other two fail open while the check is down, logged as "media safety check unavailable", so a provider outage doesn't stop all pictures; the provider's own filters still apply.
+- **Not covered:** `media.image.edit` only crops, resizes and converts (no model), and the app's photo editor runs on the device; neither makes new content.
+- Docs: guide/chat.md. Tests: `packages/agent/test/media-safety.test.ts`.
+
+## D-420 Deleting an account revokes its Sign in with Apple tokens (2026-11-19)
+
+- **Why:** App Store guideline 5.1.1(v): an app that offers Sign in with Apple must revoke the person's Apple tokens through Apple's REST API (`POST https://appleid.apple.com/auth/revoke`) when they delete their account. Casama deleted accounts (D-072) without telling Apple. Supabase Auth signs people in with Apple's ID token (the iOS and macOS sheet, D-167) or its own OAuth flow (the browser), and keeps no Apple token the server can use.
+- **Decision:** the app hands the server what Apple gave it, right after an Apple sign-in, through `POST /v1/me/apple-sign-in`:
+  - **The system sheet** (iOS, macOS): `credential.authorizationCode`. The server swaps it at `https://appleid.apple.com/auth/token` (client id: the app, `ai.casama.app`) for a refresh token.
+  - **The browser** (Android, web, Windows, Linux, a Mac without the sheet): Supabase Auth's `provider_refresh_token` from the PKCE exchange (client id: the Services ID, `ai.casama.app.signin`). The server checks it with Apple (`grant_type=refresh_token`). The app sends it only when it started an Apple sign-in within 15 minutes (a flag in SharedPreferences, so it survives the web page's reload), never another provider's token.
+  - Either way the server keeps the refresh token only when the `sub` in Apple's id_token is the person's own Apple identity (`auth.identities`, provider `apple`). The token lives in Vault; `public.apple_sign_in_tokens` (person, client id, Apple `sub`, Vault id) has RLS with no policies for people (only the API and the worker read it). Triggers delete the Vault secret when a row is replaced or deleted, or cascades away with the user.
+- **On deletion:** `DELETE /v1/me` revokes every kept token (`token_type_hint=refresh_token`, with a client secret for the client id the token belongs to), which also takes Casama off the person's "Sign in with Apple" list. A failed revoke never fails the deletion: it is logged and sent to Sentry, the row stays, and the purge after the grace period tries again and then drops the row either way. Apple's `invalid_grant` (already revoked or expired) counts as done.
+- **Client secret:** the server signs its own short-lived ES256 JWT (five minutes, `kid` = key id, `iss` = team, `sub` = client id, `aud` = `https://appleid.apple.com`) with the Sign in with Apple key, so it never expires the way Supabase Auth's six-month `SUPABASE_AUTH_EXTERNAL_APPLE_SECRET` does.
+- **Settings** (API and worker; `infra/compose/docker-compose.yml`, `.env.example`, docs-site self-hosting configuration): `APPLE_SIGNIN_KEY_P8` (the `.p8`, inline with `\n` or a path), `APPLE_SIGNIN_KEY_ID`, `APPLE_SIGNIN_TEAM_ID`, and `APPLE_SIGNIN_APP_ID` / `APPLE_SIGNIN_SERVICES_ID` (defaults `ai.casama.app` / `ai.casama.app.signin`). Casama Cloud uses the existing Sign in with Apple key `928HPX454R`, team `V8V5US964Z` (Vaultwarden: "Casama Sign in with Apple AuthKey 928HPX454R"). Unset: the route answers `stored: false` and deletion does what it did before.
+- **Limits:** people who signed in with Apple before this app build have no kept token until they sign in with Apple again, so their deletion can't revoke anything. The browser path depends on Supabase Auth returning `provider_refresh_token` for Apple.
+- **Migration** `20270213100001_apple_sign_in_tokens.sql`. Tests: `apps/server/test/apple-signin.test.ts`, `supabase/tests/apple_sign_in_tokens.test.sql`, `client/test/apple_token_handoff_test.dart`.
+
+## D-421 People agree before their chats go to outside AI providers (2026-11-19)
+
+- **Why:** App Store guideline 5.1.2(i): an app must say which third-party AI receives personal data and get permission before sending it. Casama sent the first message to OpenRouter (and the model makers behind it) with no such step; the privacy policy was the only place that named them.
+- **Decision:** a full-screen step, "Your chats go to AI companies" (`client/lib/features/privacy/ai_consent_step.dart`), covers the app after sign-in and before every other first-run step, the welcome chat and the guided setup. It says what is sent (messages, files, photos, call audio, memories, phone data that was turned on) and to whom (OpenRouter and the model makers behind it, Google Gemini for calls, the web search providers, or the person's own provider for their own key). "Agree and Continue" or "Sign Out"; nothing reaches a model before agreeing, because the welcome chat waits for it (`nameStepNeededProvider` stays null until then).
+- **Stored** in the account's Supabase user metadata (`ai_consent_at`), so it follows the person to every device; existing accounts see the step once. Settings > Privacy > AI providers withdraws it ("Stop Sharing"), which brings the step back before anything else is sent.
+- **Not done:** the server doesn't refuse runs for people who haven't agreed; chat apps and routines are set up from the app, after the step.
+- Tests: `client/test/ai_consent_test.dart`.
+
+## D-422 App Store preflight fixes for the iOS and Mac 1.0 submission (2026-11-19)
+
+- **Why:** a preflight against Apple's review guidelines (the app-store-preflight skill) before the first App Store review found these alongside D-418..D-421.
+- **Mac App Store build without Sparkle (2.4.5(vii)):** `scripts/package-macos-appstore.sh` swaps `auto_updater` for `client/tool/appstore/auto_updater_stub` (same Dart API, no native plugin) through a temporary `pubspec_overrides.yaml`, so neither Sparkle nor its plugin is linked; it drops the `SU*` Info.plist keys and fails if Sparkle got in anyway. The lock files are put back afterwards. The direct download keeps Sparkle (D-159).
+- **Mac App Store entitlements (2.4.5(i)):** dropped `network.server` and `files.downloads.read-write`, which only features turned off in that build used; the script adds `aps-environment` from the provisioning profile, so pushes (D-312, D-325) work there.
+- **Privacy manifests (5.1.1):** the watch app and watch complications have their own (UserDefaults `CA92.1`, `1C8F.1`); the iPhone and Mac apps add `1C8F.1` (app-group defaults shared with widgets) and declare the phone number calls keep.
+- **No advertising or vendor ids for GA4:** `GOOGLE_ANALYTICS_ADID_COLLECTION_ENABLED` and `GOOGLE_ANALYTICS_IDFV_COLLECTION_ENABLED` are false on iOS and macOS.
+- **Purchase terms (3.1.2):** the Terms of Use link on Apple devices is casama.ai/terms (which carries Apple's minimum EULA terms), the same page the App Store description links; "Apple ID" became "Apple Account".
+- **Sign in with Apple (4.8):** when Apple gives the name, the name step is marked answered, so the app doesn't ask for it again.
+- **Review notes** (`client/store/app_store/review_notes.txt`) cover every feature's path, external services, the AI providers step, regional differences (US-only web checkout and domain buying), remote kill switches and the demo account's plan.
+
 ## D-423 The bot can hang up an in-app call itself (2026-11-19)
 
 - **What:** in-app voice calls get the `end_call` tool that phone calls already have (D-141). The

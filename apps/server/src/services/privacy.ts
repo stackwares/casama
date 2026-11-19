@@ -15,6 +15,7 @@ import { captureError } from "@casama/observability";
 import { sql } from "drizzle-orm";
 import { strToU8, zipSync } from "fflate";
 import { eraseAnalyticsPerson } from "./analytics-erase.ts";
+import { type AppleSignInConfig, appleSignInConfig, revokeAppleTokens } from "./apple-signin.ts";
 import { forgetNewsletterContact, newsletterConfig } from "./newsletter.ts";
 
 /** Per-workspace tables in the export, in a readable order. */
@@ -229,8 +230,11 @@ export async function purgeDueAccounts(
     erase?: (userId: string) => Promise<unknown>;
     /** Removes the person's address from the monthly email's list (D-408); tests replace it. */
     forgetNewsletter?: (userId: string) => Promise<boolean>;
+    /** Sign in with Apple revocation (D-420); default: from process.env. Tests pass their own. */
+    apple?: AppleSignInConfig | null;
   } = {},
 ) {
+  const apple = opts.apple !== undefined ? opts.apple : appleSignInConfig(process.env);
   const due = await db.execute<{ user_id: string }>(sql`
     select user_id from public.account_deletions where completed_at is null and purge_after <= now() limit 50`);
   for (const { user_id } of due) {
@@ -284,6 +288,9 @@ export async function purgeDueAccounts(
         step: "purge-newsletter",
         user_id,
       });
+    // Sign in with Apple tokens still kept (D-420): usually revoked at the deletion request already.
+    // One more try; the rows go either way, and a failure never blocks erasing the account.
+    await revokeAppleTokens(db, apple, user_id, { forget: true });
     await withoutTimeouts(db, (tx) =>
       tx.execute(sql`select public.worker_purge_user(${user_id}::uuid)`),
     );

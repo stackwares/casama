@@ -15,6 +15,7 @@ import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'apple_sign_in.dart';
+import 'apple_token_handoff.dart';
 import 'desktop_sign_in.dart';
 import 'google_sign_in.dart';
 import 'passkeys.dart';
@@ -38,7 +39,21 @@ class SupabaseBackend implements Backend {
         _setNewPasswordNeeded(true);
       }
       if (e.event == sb.AuthChangeEvent.signedOut) _setNewPasswordNeeded(false);
+      _handOverAppleBrowserToken(e);
     });
+  }
+
+  /// A browser sign-in with Apple came back with Apple's refresh token: hand it to the server, so
+  /// deleting the account can revoke it (D-420). Only when this app started an Apple sign-in.
+  Future<void> _handOverAppleBrowserToken(sb.AuthState e) async {
+    if (e.event != sb.AuthChangeEvent.signedIn &&
+        e.event != sb.AuthChangeEvent.initialSession) {
+      return;
+    }
+    final refresh = e.session?.providerRefreshToken;
+    if (refresh == null || refresh.isEmpty) return;
+    if (!await AppleTokenHandoff.takeBrowserSignIn()) return;
+    await AppleTokenHandoff.send(api.api.dio, authHeaders, refreshToken: refresh);
   }
 
   final sb.SupabaseClient supabase;
@@ -155,6 +170,12 @@ class SupabaseBackend implements Backend {
     final oauthProvider = provider == 'apple'
         ? sb.OAuthProvider.apple
         : sb.OAuthProvider.google;
+    // The token the browser brings back is handed to the server only after an Apple sign-in (D-420).
+    if (provider == 'apple') {
+      await AppleTokenHandoff.markBrowserSignInStarted();
+    } else {
+      await AppleTokenHandoff.clearBrowserSignIn();
+    }
     if (_loopback) {
       return _signInThroughLoopback(
         (redirect) async => (await supabase.auth.getOAuthSignInUrl(
@@ -287,6 +308,15 @@ class SupabaseBackend implements Backend {
       idToken: idToken,
       nonce: rawNonce,
     );
+    // The one-time code goes to the server, which swaps it for a token it can revoke when the
+    // account is deleted (D-420, App Store 5.1.1(v)). Never holds up or fails the sign-in.
+    unawaited(
+      AppleTokenHandoff.send(
+        api.api.dio,
+        authHeaders,
+        authorizationCode: credential.authorizationCode,
+      ),
+    );
     await _saveAppleName(credential.givenName, credential.familyName);
     return true;
   }
@@ -365,6 +395,14 @@ class SupabaseBackend implements Backend {
       );
     } catch (_) {
       // Already signed in. If this write fails, the profile keeps the email prefix.
+      return;
+    }
+    // Apple already gave the name, so "What should bots call you?" doesn't ask for it again
+    // (App Store 4.8): bots use the first name, and About you can still change it.
+    try {
+      await markNameAsked();
+    } catch (_) {
+      // The name step shows instead, filled in with the Apple name.
     }
   }
 
@@ -1543,6 +1581,23 @@ class SupabaseBackend implements Backend {
         about: value.about.trim(),
         replyStyle: value.replyStyle.trim(),
         learn: value.learn,
+      ),
+    );
+  }
+
+  @override
+  DateTime? get aiConsentAt {
+    final v = supabase.auth.currentUser?.userMetadata?['ai_consent_at'];
+    return v is String ? DateTime.tryParse(v) : null;
+  }
+
+  @override
+  Future<void> setAiConsent(bool allowed) async {
+    await supabase.auth.updateUser(
+      sb.UserAttributes(
+        data: {
+          'ai_consent_at': allowed ? DateTime.now().toUtc().toIso8601String() : null,
+        },
       ),
     );
   }

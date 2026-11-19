@@ -9,6 +9,7 @@ import '../../ui/bottom_padding.dart';
 import '../../ui/mascot.dart';
 import '../../ui/progressive_fade.dart';
 import 'about_you_screen.dart';
+import '../privacy/ai_consent_step.dart';
 import '../../core/analytics.dart';
 
 /// This session already finished the name step, so it hides at once instead of waiting for the
@@ -33,6 +34,8 @@ final _nameStepDoneProvider = NotifierProvider<_NameStepDone, bool>(
 /// can't load, the step stays out of the way.
 final nameStepNeededProvider = Provider.autoDispose<bool?>((ref) {
   if (!ref.watch(signInFinishedProvider)) return false;
+  // The AI consent step comes first; until it's answered, everything after it waits.
+  if (ref.watch(aiConsentNeededProvider)) return null;
   if (ref.watch(_nameStepDoneProvider)) return false;
   return ref
       .watch(aboutYouProvider)

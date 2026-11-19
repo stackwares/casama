@@ -2,6 +2,8 @@ import { createRoute, z } from "@hono/zod-openapi";
 import { jsonBody, jsonResponse, problemResponses, Uuid } from "../common.ts";
 import {
   AccountDeletion,
+  AppleSignInTokenRequest,
+  AppleSignInTokenResult,
   DeleteAccountRequest,
   OrgSettings,
   RelayAnalyticsRequest,
@@ -38,6 +40,19 @@ export const deleteMyAccount = createRoute({
     "Delete your account: you are signed out now, and your data, workspaces you solely own and their computer snapshots are purged after the grace period",
   request: { body: jsonBody(DeleteAccountRequest) },
   responses: { 200: jsonResponse("Scheduled", AccountDeletion), 400: e400, 401: e401 },
+});
+
+export const saveAppleSignInToken = createRoute({
+  operationId: "saveAppleSignInToken",
+  method: "post",
+  path: "/v1/me/apple-sign-in",
+  tags,
+  security,
+  summary: "Hand over what Sign in with Apple returned, so deleting the account can revoke it",
+  description:
+    "App Store 5.1.1(v) (D-420): deleting an account revokes its Sign in with Apple tokens. The app sends the system sheet's authorization code, or the browser sign-in's refresh token, right after signing in with Apple. The server checks it with Apple against the person's Apple identity and keeps the refresh token in Vault until the account is deleted.",
+  request: { body: jsonBody(AppleSignInTokenRequest) },
+  responses: { 200: jsonResponse("Saved", AppleSignInTokenResult), 400: e400, 401: e401 },
 });
 
 export const renameTwoStepFactor = createRoute({

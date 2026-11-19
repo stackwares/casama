@@ -4948,8 +4948,8 @@ export async function backgroundComplete(
   input: {
     orgId: string;
     botId: string;
-    /** The person it's for: a ChatGPT plan serves only its owner. */
-    userId: string;
+    /** The person it's for: a ChatGPT plan serves only its owner. Null for work with no person. */
+    userId: string | null;
     system: string;
     text: string;
     maxOutputTokens?: number;

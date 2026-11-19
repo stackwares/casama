@@ -101,6 +101,8 @@
 		D4C11A0D2F00000000000050 /* WatchBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4C11A0D2F00000000000023 /* WatchBridge.swift */; };
 		D4C11A0D2F00000000000051 /* CasamaWatchWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = D4C11A0D2F00000000000025 /* CasamaWatchWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		D4C11A0D2F00000000000052 /* CasamaWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = D4C11A0D2F00000000000024 /* CasamaWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		D5E11A0D2F00000000000002 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = D5E11A0D2F00000000000001 /* PrivacyInfo.xcprivacy */; };
+		D5E11A0D2F00000000000004 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = D5E11A0D2F00000000000003 /* PrivacyInfo.xcprivacy */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -286,6 +288,8 @@
 		D4C11A0D2F00000000000023 /* WatchBridge.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WatchBridge.swift; sourceTree = "<group>"; };
 		D4C11A0D2F00000000000024 /* CasamaWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CasamaWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D4C11A0D2F00000000000025 /* CasamaWatchWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = CasamaWatchWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		D5E11A0D2F00000000000001 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		D5E11A0D2F00000000000003 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -534,6 +538,7 @@
 				D4C11A0D2F0000000000001B /* Info.plist */,
 				D4C11A0D2F0000000000001C /* CasamaWatch.entitlements */,
 				D4C11A0D2F0000000000001D /* Watch.xcconfig */,
+				D5E11A0D2F00000000000001 /* PrivacyInfo.xcprivacy */,
 			);
 			path = CasamaWatch;
 			sourceTree = "<group>";
@@ -546,6 +551,7 @@
 				D4C11A0D2F00000000000020 /* WatchTimeline.swift */,
 				D4C11A0D2F00000000000021 /* Info.plist */,
 				D4C11A0D2F00000000000022 /* CasamaWatchWidgets.entitlements */,
+				D5E11A0D2F00000000000003 /* PrivacyInfo.xcprivacy */,
 			);
 			path = CasamaWatchWidgets;
 			sourceTree = "<group>";
@@ -761,6 +767,7 @@
 			files = (
 				D4C11A0D2F0000000000003E /* WatchAssets.xcassets in Resources */,
 				D4C11A0D2F0000000000004C /* Assets.xcassets in Resources */,
+				D5E11A0D2F00000000000002 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -769,6 +776,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				D4C11A0D2F0000000000003F /* WatchAssets.xcassets in Resources */,
+				D5E11A0D2F00000000000004 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -1400,6 +1400,11 @@ abstract class Backend {
   Future<AboutYouView> aboutYou();
   Future<void> saveAboutYou(AboutYouView value);
   Future<void> markNameAsked();
+  // AI providers (App Store 5.1.2(i), D-421)
+  /// When the person agreed that what they share with bots goes to outside AI providers, or null.
+  /// Kept in the account, so it follows them to every device.
+  DateTime? get aiConsentAt;
+  Future<void> setAiConsent(bool allowed);
   // Profile photo (D-202)
   /// Sets the person's photo from a JPEG, PNG or WebP of at most 1 MB.
   Future<AboutYouView> setProfilePhoto(Uint8List bytes, String contentType);

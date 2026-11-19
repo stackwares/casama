@@ -110,7 +110,8 @@ fails because of Casama or a model provider doesn't cost model credits. A self-h
 no credits: you pay your providers directly.
 
 Credits belong to the workspace. A month's included credits last until the end of the following
-month, and credit packs and rewards last 12 months. Credits that run out soonest are spent first.
+month, and credit packs bought on the web and rewards last 12 months. Credit packs bought in the
+App Store or Google Play never expire. Credits that run out soonest are spent first.
 See [Credits](/guide/usage#credits).
 
 ### What happens when I run out of credits?

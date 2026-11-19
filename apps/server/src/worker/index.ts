@@ -5,6 +5,7 @@ import {
   ApnsVoipSender,
   ApnsWatchSender,
   ApnsWidgetSender,
+  backgroundComplete,
   builtinTools,
   CloudRelayPushSender,
   ComputerService,
@@ -488,6 +489,29 @@ export async function startWorker(opts: WorkerOptions) {
       const payer = opts.billing?.enabled === true && !or?.key ? "openrouter" : null;
       return new MediaRouter(openrouter, openrouter, { image: payer, video: payer });
     },
+    // The check on image and video prompts (D-419): the bot's background model, whatever key or
+    // local model it runs on, its cost in the usage ledger like other background calls.
+    mediaSafetyFor: (ctx) => (input) =>
+      backgroundComplete(
+        {
+          db,
+          gateway,
+          credentials,
+          billCloudModels: Boolean(opts.billing && opts.platformOpenRouterKey),
+          cloudLockedModel: opts.cloudLockedModel,
+          cloudModels: opts.billing ? () => getCloudModels(db) : undefined,
+        },
+        {
+          orgId: ctx.orgId,
+          botId: ctx.botId,
+          userId: ctx.actingUserId ?? null,
+          system: input.system,
+          text: input.text,
+          maxOutputTokens: 200,
+          purpose: input.purpose,
+        },
+      ),
+    log: (message, fields) => opts.logger.warn(message, fields),
     // Spoken audio (D-284): Gemini TTS on OpenRouter, like read-aloud (D-261).
     speechFor: async (orgId) => {
       const assigned = opts.billing ? await getCloudModels(db) : null;

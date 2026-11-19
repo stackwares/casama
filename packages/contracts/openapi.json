@@ -12989,6 +12989,35 @@
           "name"
         ]
       },
+      "AppleSignInTokenResult": {
+        "type": "object",
+        "properties": {
+          "stored": {
+            "type": "boolean",
+            "description": "False when this server doesn't revoke Apple tokens (no Sign in with Apple key)"
+          }
+        },
+        "required": [
+          "stored"
+        ]
+      },
+      "AppleSignInTokenRequest": {
+        "type": "object",
+        "properties": {
+          "authorization_code": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000,
+            "description": "The one-time authorization code from Apple's system sheet (iOS and macOS); the server swaps it for a refresh token"
+          },
+          "refresh_token": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000,
+            "description": "Apple's refresh token from the browser sign-in (Supabase Auth's provider_refresh_token)"
+          }
+        }
+      },
       "UpdateOrgSettingsRequest": {
         "type": "object",
         "properties": {
@@ -42811,6 +42840,63 @@
           },
           "404": {
             "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/me/apple-sign-in": {
+      "post": {
+        "operationId": "saveAppleSignInToken",
+        "tags": [
+          "privacy"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Hand over what Sign in with Apple returned, so deleting the account can revoke it",
+        "description": "App Store 5.1.1(v) (D-420): deleting an account revokes its Sign in with Apple tokens. The app sends the system sheet's authorization code, or the browser sign-in's refresh token, right after signing in with Apple. The server checks it with Apple against the person's Apple identity and keeps the refresh token in Vault until the account is deleted.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AppleSignInTokenRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Saved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppleSignInTokenResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
             "content": {
               "application/problem+json": {
                 "schema": {

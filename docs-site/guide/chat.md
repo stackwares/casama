@@ -99,6 +99,10 @@ Images and videos a bot generates show under its reply by themselves, even when 
 computer. Videos on a bot's computer show a first frame and their length once the computer is
 awake; looking at them never wakes a sleeping computer.
 
+Casama checks every image and video request itself before making it, whichever key or model the
+bot uses: it won't make sexual content involving minors, sexual or nude pictures of real people
+(including from a photo you send), or graphic violence and gore, and the bot tells you why.
+
 Tap a file to open the preview, then choose **Open**, **Save** or **Share**. Files without a
 preview can still be opened or saved. Everything a bot makes on its computer also stays in its
 **Files**; see [Computers](/guide/computers). Files a reply links to are also kept in the

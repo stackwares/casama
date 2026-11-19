@@ -166,7 +166,16 @@
     <h2 id="models">4. AI models and what they see</h2>
     <p>To answer you, a bot sends the conversation and relevant context (such as memories, skills, tool results, your profile, and device data you allowed) to an AI model provider. Health summaries are part of that context unless you have marked Health as <strong>Private models only</strong>.</p>
     <ul>
-      <li><strong>Casama Cloud.</strong> On Casama Cloud we choose the models, and requests go through our accounts: bots' replies, images, dictation and memory search through OpenRouter, and live calls, read aloud and video through Google (Gemini). When a bot searches the web, only the search words go to DeepSeek, or to Parallel or Serper when DeepSeek doesn't answer; pages the bot then opens are fetched by our own servers. We send only what the request needs.</li>
+      <li><strong>Casama Cloud.</strong> On Casama Cloud we choose the models, and requests go through our accounts. We send only what the request needs. These are the AI providers your content may be sent to, and what each one gets:
+        <ul>
+          <li><strong>OpenRouter</strong> (the routing service we send model requests through). It receives the conversation and context for bots' replies, your prompts for images, audio for dictation and text for read aloud, memory search and video, and passes them to the model maker that runs the model. We set every request to use only providers that don't collect or train on prompts, and our account is set to block providers that train on prompts or publish them.</li>
+          <li><strong>DeepSeek</strong> (through OpenRouter). Its model writes bots' replies and does background work such as summaries and Casama Help answers. It receives the conversation and context described above, to write the reply.</li>
+          <li><strong>Google</strong> (through OpenRouter). Its models make images, read replies aloud and make video. They receive your prompt, or the text to read aloud, to produce the result.</li>
+          <li><strong>OpenAI</strong> (through OpenRouter). Its models turn your dictation into text and turn memories and search words into numbers for memory search. They receive your audio, or the text of a memory, for that purpose only.</li>
+          <li><strong>Google Gemini Live</strong> (directly, not through OpenRouter). Live voice calls: your app connects to Google with a short-lived key, and your voice and the call's context go to Google to produce the spoken reply.</li>
+          <li><strong>Web search: DeepSeek, Parallel and Serper.</strong> When a bot searches the web, only the search words are sent, to one of these providers (the next is tried if one doesn't answer). Pages the bot then opens are fetched by our own servers.</li>
+        </ul>
+        Each provider processes what it receives to produce its result for us, under its own terms. This list changes when we change models; the models Casama uses today are all from the makers named here.</li>
       <li><strong>Your own key.</strong> If you add your own key for a provider (on Casama Cloud, for maps or data services), requests to it go to that provider under your account and their terms and privacy policy.</li>
       <li><strong>Local models.</strong> If you point a bot at a model on your own machine or network, the content stays there.</li>
     </ul>
@@ -218,8 +227,9 @@
         <tr><td>Cloudflare</td><td>DNS, content delivery, the secure tunnel to our servers, protection from attacks, and file storage</td><td>Always</td></tr>
         <tr><td>Zoho</td><td>Sending sign-in and account emails, and our email inboxes</td><td>When we email you or you email us</td></tr>
         <tr><td>Resend</td><td>Holding the list for Casama's monthly email and sending it</td><td>Only if you opt in</td></tr>
-        <tr><td>OpenRouter (Casama Cloud's models), or AI model providers you add a key for</td><td>Generating your bots' replies and actions, images, dictation and memory search</td><td>When a bot runs or you use those features</td></tr>
-        <tr><td>Google (Gemini) on Casama Cloud, or voice providers you add a key for (such as OpenAI, Google, Deepgram, ElevenLabs, Cartesia, Fish Audio)</td><td>Live calls, read aloud and video; dictation with your own key</td><td>When you use voice. For live calls, your app connects to the provider directly with a short-lived key.</td></tr>
+        <tr><td>OpenRouter, and through it DeepSeek, Google and OpenAI (Casama Cloud's models), or AI model providers you add a key for</td><td>Generating your bots' replies and actions, images, dictation, read aloud, video and memory search</td><td>When a bot runs or you use those features</td></tr>
+        <tr><td>Google (Gemini Live) on Casama Cloud, or voice providers you add a key for (such as OpenAI, Google, Deepgram, ElevenLabs, Cartesia, Fish Audio)</td><td>Live calls; read aloud, dictation and video with your own key</td><td>When you use voice. For live calls, your app connects to the provider directly with a short-lived key.</td></tr>
+        <tr><td>Parallel, Serper, DeepSeek</td><td>Web search for bots: the search words only</td><td>When a bot searches the web on Casama Cloud</td></tr>
         <tr><td>Google (Firebase Cloud Messaging, Firebase App Check)</td><td>Push notifications to Android, and checking sign-ups come from a genuine app</td><td>Push: when you allow notifications. App Check: at sign-up.</td></tr>
         <tr><td>Apple (Apple Push Notification service)</td><td>Push notifications and incoming bot calls on Apple devices</td><td>When you allow notifications</td></tr>
         <tr><td>Apple and Google sign-in</td><td>Signing in with your Apple or Google account</td><td>When you choose that sign-in</td></tr>

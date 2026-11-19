@@ -24,6 +24,7 @@ import 'core/push.dart';
 import 'core/updater.dart';
 import 'features/notifications/notifications_primer.dart';
 import 'features/settings/name_step.dart';
+import 'features/privacy/ai_consent_step.dart';
 import 'features/welcome/gallery_picks_step.dart';
 import 'features/companion/companion_controller.dart';
 import 'features/companion/companion_overlay.dart';
@@ -179,6 +180,8 @@ class _FirstRunSteps extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // Sign-in finishes first: the two-step code and a new password come before these pages.
     final signInDone = ref.watch(signInFinishedProvider);
+    // Consent to send chats to AI providers (D-421) comes before everything, the guided setup too.
+    final consent = ref.watch(aiConsentNeededProvider);
     final name = ref.watch(nameStepNeededProvider) ?? false;
     // "Picks for you" (D-315) follows the name step on first run, when the gallery has sets.
     final picks = ref.watch(galleryPicksNeededProvider);
@@ -187,6 +190,7 @@ class _FirstRunSteps extends ConsumerWidget {
       listenable: Listenable.merge([push.needsAsk, GuidedSetup.active]),
       builder: (context, _) {
         final ask = push.needsAsk.value;
+        if (consent) return Stack(children: [child, _cover(context, const AiConsentStep())]);
         if (GuidedSetup.active.value) return child;
         return Stack(
         children: [

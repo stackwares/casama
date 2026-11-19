@@ -4288,7 +4288,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get creditsExplainerShort =>
-      '1 credit = \$1. Credits from packs last 12 months.';
+      '1 credit = \$1. Packs from the App Store or Google Play never expire; web packs last 12 months.';
 
   @override
   String get creditsDailyLabel => 'Today\'s limit';
@@ -10148,6 +10148,30 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String paywallDisclosureStoreTrial(
+    int days,
+    String price,
+    String period,
+    String store,
+  ) {
+    return 'Free for $days days, then $price $period, renewing automatically until you cancel. Payment is charged to your $store account when the trial ends. Cancel in your $store account settings at least 24 hours before the trial ends and you won\'t be charged.';
+  }
+
+  @override
+  String get paywallStartFreeTrial => 'Start free trial';
+
+  @override
+  String paywallTrialThen(int days, String price, String period) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days days',
+      one: '1 day',
+    );
+    return '$_temp0 free, then $price$period';
+  }
+
+  @override
   String paywallDisclosureWeb(String price) {
     return '$price, renewing automatically until you cancel. Cancel anytime from Billing; you keep the plan until the period ends.';
   }
@@ -10164,7 +10188,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pricePerYear => 'per year';
 
   @override
-  String get storeAccountApple => 'Apple ID';
+  String get storeAccountApple => 'Apple Account';
 
   @override
   String get storeAccountGoogle => 'Google Play';
@@ -10174,6 +10198,54 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get privacyPolicy => 'Privacy Policy';
+
+  @override
+  String get aiConsentTitle => 'Your chats go to AI companies';
+
+  @override
+  String get aiConsentBody =>
+      'To write replies, Casama sends what you share with your bots to outside AI providers. Nothing is sent until you agree.';
+
+  @override
+  String get aiConsentWhatTitle => 'What is sent';
+
+  @override
+  String get aiConsentWhat =>
+      'Your messages, files and photos, your voice in calls, what bots remember about you, and any phone data you turn on, such as calendar or health.';
+
+  @override
+  String get aiConsentWhoTitle => 'Who gets it';
+
+  @override
+  String get aiConsentWho =>
+      'OpenRouter, which passes it to the company that makes the model you use, such as DeepSeek, Google or OpenAI. Calls use Google Gemini. Web searches go to Parallel, Serper or DeepSeek. With your own API key, it goes to that provider instead.';
+
+  @override
+  String get aiConsentWhyTitle => 'What they do with it';
+
+  @override
+  String get aiConsentWhy =>
+      'They use it to write the reply. You can stop this any time in Settings › Privacy, and the privacy policy has the details.';
+
+  @override
+  String get aiConsentAgree => 'Agree and Continue';
+
+  @override
+  String get aiConsentTile => 'AI providers';
+
+  @override
+  String get aiConsentTileOn =>
+      'Allowed. What you share with bots goes to outside AI providers to write replies.';
+
+  @override
+  String get aiConsentWithdrawQuestion => 'Stop sharing with AI providers?';
+
+  @override
+  String get aiConsentWithdrawBody =>
+      'Bots can\'t reply without them. Casama asks again before anything else is sent.';
+
+  @override
+  String get aiConsentWithdraw => 'Stop Sharing';
 
   @override
   String get planChanged => 'Plan changed';
@@ -10240,7 +10312,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get outOfCreditsPaidBody =>
-      'Your bots pause until you add credits. Credits from a pack last 12 months.';
+      'Your bots pause until you add credits. Packs from the App Store or Google Play never expire; web packs last 12 months.';
 
   @override
   String get outOfCreditsFreeBody =>

@@ -110,6 +110,8 @@ export async function startHarness(
     supportFetch?: typeof fetch;
     /** Resend calls for the monthly email (D-408). */
     newsletterFetch?: typeof fetch;
+    /** Apple's Sign in with Apple endpoints (D-420). */
+    appleFetch?: typeof fetch;
   } = {},
 ): Promise<Harness> {
   const tdb = await startTestDatabase();
@@ -218,6 +220,7 @@ export async function startHarness(
     objects: opts.objects,
     supportFetch: opts.supportFetch,
     newsletterFetch: opts.newsletterFetch,
+    appleFetch: opts.appleFetch,
     env,
     db: handle.db,
     logger: createLogger("test", "error"),

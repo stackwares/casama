@@ -37,6 +37,11 @@ import {
   type MediaResult,
   mediaPrices,
 } from "../media.ts";
+import {
+  checkMediaRequest,
+  type MediaClassifier,
+  type MediaSafetyRequest,
+} from "../media-safety.ts";
 import type { NotificationService } from "../notifications.ts";
 import { runSearch, type SearchProvider } from "../search.ts";
 import { startTicketWork } from "../tickets.ts";
@@ -57,6 +62,13 @@ export interface AutonomyToolDeps {
   fetch: typeof fetch;
   notifications?: NotificationService;
   mediaFor?: (orgId: string) => Promise<MediaProvider | null>;
+  /**
+   * The small-model call that checks image and video prompts (D-419): the bot's background model,
+   * its cost in the usage ledger. Unset or failing: minors fail closed, the rest open.
+   */
+  mediaSafetyFor?: (ctx: ToolContext) => MediaClassifier | undefined;
+  /** Where the media check's outages and refusals are logged. */
+  log?: (message: string, fields: Record<string, unknown>) => void;
   searchFor?: (orgId: string) => Promise<SearchProvider | null>;
   /** Where generated media's bytes go (D-290); unset: Postgres. */
   objects?: import("@casama/sandbox").ObjectStore;
@@ -1351,6 +1363,16 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
       throw err;
     };
 
+  /** Refuses a request Casama doesn't make (D-419), before any credits are checked or spent. */
+  const mediaSafety = async (ctx: ToolContext, req: MediaSafetyRequest) => {
+    const log = (message: string, fields: Record<string, unknown>) =>
+      deps.log?.(message, { ...fields, run_id: ctx.runId, org_id: ctx.orgId });
+    const verdict = await checkMediaRequest(req, deps.mediaSafetyFor?.(ctx), log);
+    if (verdict.ok) return;
+    log("media request refused", { category: verdict.category, kind: req.kind });
+    throw new ToolError("content_refused", verdict.message);
+  };
+
   registry.register({
     name: "media.image.generate",
     description:
@@ -1376,6 +1398,7 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
           "no_media_provider",
           "No image generation key is configured. Add an OpenRouter key in Model keys.",
         );
+      await mediaSafety(ctx, { kind: "image", prompt: args.prompt });
       const payer = provider.paidBy?.("image") ?? null;
       if (payer) await needCredits(db, ctx.orgId, mediaCharge(payer, mediaPrices().image));
       const [img] = await provider
@@ -1514,6 +1537,7 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
           "invalid_arguments",
           `${args.image} is ${image.contentType}, not a picture. Pass an image to animate.`,
         );
+      await mediaSafety(ctx, { kind: "video", prompt: args.prompt, fromPhoto: !!image });
       const payer = provider.paidBy?.("video") ?? null;
       if (payer)
         await needCredits(

@@ -6739,7 +6739,7 @@ abstract class AppLocalizations {
   /// No description provided for @creditsExplainerShort.
   ///
   /// In en, this message translates to:
-  /// **'1 credit = \$1. Credits from packs last 12 months.'**
+  /// **'1 credit = \$1. Packs from the App Store or Google Play never expire; web packs last 12 months.'**
   String get creditsExplainerShort;
 
   /// No description provided for @creditsDailyLabel.
@@ -16036,6 +16036,29 @@ abstract class AppLocalizations {
   /// **'{price} {period}, renewing automatically until you cancel. Payment is charged to your {store} account. Cancel anytime in your {store} account settings at least 24 hours before it renews.'**
   String paywallDisclosureStore(String price, String period, String store);
 
+  /// No description provided for @paywallDisclosureStoreTrial.
+  ///
+  /// In en, this message translates to:
+  /// **'Free for {days} days, then {price} {period}, renewing automatically until you cancel. Payment is charged to your {store} account when the trial ends. Cancel in your {store} account settings at least 24 hours before the trial ends and you won\'t be charged.'**
+  String paywallDisclosureStoreTrial(
+    int days,
+    String price,
+    String period,
+    String store,
+  );
+
+  /// No description provided for @paywallStartFreeTrial.
+  ///
+  /// In en, this message translates to:
+  /// **'Start free trial'**
+  String get paywallStartFreeTrial;
+
+  /// No description provided for @paywallTrialThen.
+  ///
+  /// In en, this message translates to:
+  /// **'{days, plural, =1{1 day} other{{days} days}} free, then {price}{period}'**
+  String paywallTrialThen(int days, String price, String period);
+
   /// No description provided for @paywallDisclosureWeb.
   ///
   /// In en, this message translates to:
@@ -16063,7 +16086,7 @@ abstract class AppLocalizations {
   /// No description provided for @storeAccountApple.
   ///
   /// In en, this message translates to:
-  /// **'Apple ID'**
+  /// **'Apple Account'**
   String get storeAccountApple;
 
   /// No description provided for @storeAccountGoogle.
@@ -16083,6 +16106,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Privacy Policy'**
   String get privacyPolicy;
+
+  /// No description provided for @aiConsentTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your chats go to AI companies'**
+  String get aiConsentTitle;
+
+  /// No description provided for @aiConsentBody.
+  ///
+  /// In en, this message translates to:
+  /// **'To write replies, Casama sends what you share with your bots to outside AI providers. Nothing is sent until you agree.'**
+  String get aiConsentBody;
+
+  /// No description provided for @aiConsentWhatTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What is sent'**
+  String get aiConsentWhatTitle;
+
+  /// No description provided for @aiConsentWhat.
+  ///
+  /// In en, this message translates to:
+  /// **'Your messages, files and photos, your voice in calls, what bots remember about you, and any phone data you turn on, such as calendar or health.'**
+  String get aiConsentWhat;
+
+  /// No description provided for @aiConsentWhoTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Who gets it'**
+  String get aiConsentWhoTitle;
+
+  /// No description provided for @aiConsentWho.
+  ///
+  /// In en, this message translates to:
+  /// **'OpenRouter, which passes it to the company that makes the model you use, such as DeepSeek, Google or OpenAI. Calls use Google Gemini. Web searches go to Parallel, Serper or DeepSeek. With your own API key, it goes to that provider instead.'**
+  String get aiConsentWho;
+
+  /// No description provided for @aiConsentWhyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What they do with it'**
+  String get aiConsentWhyTitle;
+
+  /// No description provided for @aiConsentWhy.
+  ///
+  /// In en, this message translates to:
+  /// **'They use it to write the reply. You can stop this any time in Settings › Privacy, and the privacy policy has the details.'**
+  String get aiConsentWhy;
+
+  /// No description provided for @aiConsentAgree.
+  ///
+  /// In en, this message translates to:
+  /// **'Agree and Continue'**
+  String get aiConsentAgree;
+
+  /// No description provided for @aiConsentTile.
+  ///
+  /// In en, this message translates to:
+  /// **'AI providers'**
+  String get aiConsentTile;
+
+  /// No description provided for @aiConsentTileOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Allowed. What you share with bots goes to outside AI providers to write replies.'**
+  String get aiConsentTileOn;
+
+  /// No description provided for @aiConsentWithdrawQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop sharing with AI providers?'**
+  String get aiConsentWithdrawQuestion;
+
+  /// No description provided for @aiConsentWithdrawBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Bots can\'t reply without them. Casama asks again before anything else is sent.'**
+  String get aiConsentWithdrawBody;
+
+  /// No description provided for @aiConsentWithdraw.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop Sharing'**
+  String get aiConsentWithdraw;
 
   /// No description provided for @planChanged.
   ///
@@ -16171,7 +16278,7 @@ abstract class AppLocalizations {
   /// No description provided for @outOfCreditsPaidBody.
   ///
   /// In en, this message translates to:
-  /// **'Your bots pause until you add credits. Credits from a pack last 12 months.'**
+  /// **'Your bots pause until you add credits. Packs from the App Store or Google Play never expire; web packs last 12 months.'**
   String get outOfCreditsPaidBody;
 
   /// No description provided for @outOfCreditsFreeBody.

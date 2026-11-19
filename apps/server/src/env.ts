@@ -495,6 +495,19 @@ export const EnvSchema = z.object({
   SLACK_CLIENT_SECRET: z.string().optional(),
   SLACK_SIGNING_SECRET: z.string().optional(),
   SLACK_API_BASE: z.string().optional(),
+  /**
+   * Sign in with Apple token revocation (D-420, App Store 5.1.1(v)): the Sign in with Apple key
+   * (.p8, inline or a path), its key id and the team id. The API swaps the app's authorization code
+   * for a refresh token and revokes it when the account is deleted. APP_ID is the iOS/macOS bundle
+   * id (the system sheet), SERVICES_ID the Services ID (the browser sign-in). Unset: off.
+   */
+  APPLE_SIGNIN_KEY_P8: z.string().optional(),
+  APPLE_SIGNIN_KEY_ID: z.string().optional(),
+  APPLE_SIGNIN_TEAM_ID: z.string().optional(),
+  APPLE_SIGNIN_APP_ID: z.string().default("ai.casama.app"),
+  APPLE_SIGNIN_SERVICES_ID: z.string().default("ai.casama.app.signin"),
+  /** Tests: another host for Apple's token and revoke endpoints. */
+  APPLE_SIGNIN_URL: z.url().optional(),
   /** Days between an account deletion request and the purge (D-072). */
   ACCOUNT_DELETION_GRACE_DAYS: z.coerce.number().int().min(0).max(30).default(7),
   /** Opt-in anonymous telemetry (D-074): off unless set to "on". */

@@ -31,8 +31,9 @@ final canBuyDomainsProvider = Provider<bool>((ref) {
   final org = ref.watch(currentOrgProvider);
   if (org == null || org.role == OrgRole.member) return false;
   final platform = ref.watch(platformProvider);
-  // `buy_domains_app_store: false` (Admin → remote settings) hides buying in the App Store builds
-  // only, without a release, if App Review objects; web, desktop and Android are unaffected.
+  // `buy_domains_app_store: false` (Admin → remote settings) turns domain buying off in the App
+  // Store builds only; web, desktop and Android are unaffected. It can only remove the feature,
+  // never add one, and the App Review notes describe it.
   final appStoreBuild =
       !kIsWeb &&
       (platform == TargetPlatform.iOS ||
