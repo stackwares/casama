@@ -40,6 +40,7 @@ void main() {
     ('tablet', Size(820, 1180), FakeViewPadding(top: 24, bottom: 20)),
     ('desktop', Size(1280, 820), FakeViewPadding.zero),
     ('desktop-wide', Size(1680, 1050), FakeViewPadding.zero),
+    ('desktop-tall', Size(1830, 1400), FakeViewPadding.zero),
   ];
 
   for (final (name, size, padding) in sizes) {
