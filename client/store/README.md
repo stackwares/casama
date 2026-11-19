@@ -34,6 +34,8 @@ nothing has been sent for review.
 - **App Review.** The demo account `review@casama.ai` exists on Casama Cloud (email and password,
   no two-step, Free plan, one workspace with the bot Casama). Its password is in Vaultwarden as
   "Casama · store review account (review@casama.ai)". Play's sign-in details use the same account.
+  `review_notes.txt` shows its invite code as `REVIEW-XXXXXX` because this repo is public: the real
+  code (Admin → Waitlist) is only in App Store Connect, so put it back when you push the notes.
 
 ## Rules for the text
 

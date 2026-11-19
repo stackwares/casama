@@ -21,7 +21,7 @@ Talk, text or call
 Dictate a message, have replies read aloud, or call a bot live. Bots can also answer you in WhatsApp, Telegram, Slack, Discord and email.
 
 Works with your apps
-Connect Gmail, Google Calendar, Notion, Slack, Drive and many more. Logins from your password manager are filled in for the bot and never shown to the AI.
+Connect Gmail, Google Calendar, Notion, Slack, Drive and many more. Logins from your password manager are filled in for the bot and never shown to the AI. With your OK, a bot can read Apple Health data such as steps and sleep to help with your routines.
 
 Open source, and yours
 Casama is open source. Use Casama Cloud, where the AI models are picked for you and no keys are needed, or connect the app to a server you run yourself, with any model you like.
