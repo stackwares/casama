@@ -36,6 +36,10 @@ nothing has been sent for review.
   "Casama · store review account (review@casama.ai)". Play's sign-in details use the same account.
   `review_notes.txt` shows its invite code as `REVIEW-XXXXXX` because this repo is public: the real
   code (Admin → Waitlist) is only in App Store Connect, so put it back when you push the notes.
+  The Mac version's notes end differently: its last two lines (the iPhone recording and the
+  contact) are replaced by "A recording of this Mac app is attached: sign-in, AI consent, chat,
+  report, billing, privacy. The iOS submission has an iPhone one." App Store Connect allows one
+  attachment per review, so the Mac review has the Mac recording and iOS has the iPhone one.
 
 ## Rules for the text
 
