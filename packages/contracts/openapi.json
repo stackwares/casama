@@ -2490,6 +2490,21 @@
           "signups_by_invitation": {
             "type": "boolean"
           },
+          "signup_gate": {
+            "type": "object",
+            "properties": {
+              "mode": {
+                "type": "string"
+              },
+              "waitlist_url": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "mode",
+              "waitlist_url"
+            ]
+          },
           "push_sender_id": {
             "type": "string"
           },
@@ -23555,6 +23570,29 @@
               "null"
             ],
             "format": "date-time"
+          },
+          "invites": {
+            "type": "object",
+            "properties": {
+              "total": {
+                "type": "integer"
+              },
+              "used": {
+                "type": "integer"
+              },
+              "left": {
+                "type": "integer"
+              },
+              "unlocked": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "total",
+              "used",
+              "left",
+              "unlocked"
+            ]
           }
         },
         "required": [
@@ -23605,6 +23643,707 @@
         },
         "required": [
           "code"
+        ]
+      },
+      "WaitlistChanged": {
+        "type": "object",
+        "properties": {
+          "count": {
+            "type": "integer"
+          },
+          "skipped": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "count"
+        ]
+      },
+      "AddWaitlistEntriesRequest": {
+        "type": "object",
+        "properties": {
+          "emails": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 3,
+              "maxLength": 254
+            },
+            "minItems": 1,
+            "maxItems": 500
+          },
+          "notify": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "emails"
+        ]
+      },
+      "AdmitWaitlistRequest": {
+        "type": "object",
+        "properties": {
+          "ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "maxItems": 500
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5000
+          },
+          "source": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "ref": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "self_hosting": {
+            "type": "boolean"
+          }
+        }
+      },
+      "InviteCampaign": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "max_uses": {
+            "type": "integer"
+          },
+          "used": {
+            "type": "integer"
+          },
+          "per_day": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "starts_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "expires_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "disabled": {
+            "type": "boolean"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "link": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "label",
+          "max_uses",
+          "used",
+          "per_day",
+          "starts_at",
+          "expires_at",
+          "disabled",
+          "created_at",
+          "link"
+        ]
+      },
+      "CreateInviteCampaignRequest": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "minLength": 4,
+            "maxLength": 32
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "max_uses": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1000000
+          },
+          "per_day": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 1,
+            "maximum": 1000000
+          },
+          "starts_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "expires_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "code",
+          "label",
+          "max_uses"
+        ]
+      },
+      "InviteCampaignList": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InviteCampaign"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "SignupGateState": {
+        "type": "object",
+        "properties": {
+          "gate": {
+            "$ref": "#/components/schemas/SignupGate"
+          },
+          "closed": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "gate",
+          "closed"
+        ]
+      },
+      "SignupGate": {
+        "type": "object",
+        "properties": {
+          "mode": {
+            "type": "string",
+            "enum": [
+              "open",
+              "invite_only"
+            ]
+          },
+          "opens_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "invites_per_person": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "daily_admit": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10000
+          },
+          "daily_emails_max": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100000
+          }
+        },
+        "required": [
+          "mode",
+          "opens_at",
+          "invites_per_person",
+          "daily_admit",
+          "daily_emails_max"
+        ]
+      },
+      "SetSignupGateRequest": {
+        "type": "object",
+        "properties": {
+          "mode": {
+            "type": "string",
+            "enum": [
+              "open",
+              "invite_only"
+            ]
+          },
+          "opens_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "invites_per_person": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "daily_admit": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10000
+          },
+          "daily_emails_max": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100000
+          }
+        }
+      },
+      "UpdateInviteCampaignRequest": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "max_uses": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1000000
+          },
+          "per_day": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 1,
+            "maximum": 1000000
+          },
+          "starts_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "expires_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "disabled": {
+            "type": "boolean"
+          }
+        }
+      },
+      "WaitlistPage": {
+        "type": "object",
+        "properties": {
+          "stats": {
+            "$ref": "#/components/schemas/WaitlistStats"
+          },
+          "gate": {
+            "$ref": "#/components/schemas/SignupGateState"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WaitlistEntry"
+            }
+          }
+        },
+        "required": [
+          "stats",
+          "gate",
+          "items"
+        ]
+      },
+      "WaitlistStats": {
+        "type": "object",
+        "properties": {
+          "waiting": {
+            "type": "integer"
+          },
+          "queued": {
+            "type": "integer"
+          },
+          "admitted": {
+            "type": "integer"
+          },
+          "joined": {
+            "type": "integer"
+          },
+          "first_chat": {
+            "type": "integer"
+          },
+          "listed_today": {
+            "type": "integer"
+          },
+          "admitted_today": {
+            "type": "integer"
+          },
+          "emails_today": {
+            "type": "integer"
+          },
+          "by_source": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "key": {
+                  "type": "string"
+                },
+                "listed": {
+                  "type": "integer"
+                },
+                "admitted": {
+                  "type": "integer"
+                },
+                "joined": {
+                  "type": "integer"
+                },
+                "first_chat": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "key",
+                "listed",
+                "admitted",
+                "joined",
+                "first_chat"
+              ]
+            }
+          },
+          "by_via": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "key": {
+                  "type": "string"
+                },
+                "listed": {
+                  "type": "integer"
+                },
+                "admitted": {
+                  "type": "integer"
+                },
+                "joined": {
+                  "type": "integer"
+                },
+                "first_chat": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "key",
+                "listed",
+                "admitted",
+                "joined",
+                "first_chat"
+              ]
+            }
+          }
+        },
+        "required": [
+          "waiting",
+          "queued",
+          "admitted",
+          "joined",
+          "first_chat",
+          "listed_today",
+          "admitted_today",
+          "emails_today",
+          "by_source",
+          "by_via"
+        ]
+      },
+      "WaitlistEntry": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "waiting",
+              "queued",
+              "admitted",
+              "joined"
+            ]
+          },
+          "source": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "ref": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "self_hosting": {
+            "type": "boolean"
+          },
+          "note": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "priority": {
+            "type": "integer"
+          },
+          "invite_code": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "admitted_via": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "admitted_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "joined_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "status",
+          "source",
+          "ref",
+          "self_hosting",
+          "note",
+          "priority",
+          "invite_code",
+          "admitted_via",
+          "admitted_at",
+          "joined_at",
+          "created_at"
+        ]
+      },
+      "WaitlistJoined": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          }
+        },
+        "required": [
+          "ok"
+        ]
+      },
+      "JoinWaitlistRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 254
+          },
+          "proof": {
+            "$ref": "#/components/schemas/WaitlistProof"
+          },
+          "source": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "ref": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 280
+          },
+          "self_hosting": {
+            "type": "boolean"
+          },
+          "newsletter": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "email",
+          "proof"
+        ]
+      },
+      "WaitlistProof": {
+        "type": "object",
+        "properties": {
+          "challenge": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 300
+          },
+          "nonce": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          }
+        },
+        "required": [
+          "challenge",
+          "nonce"
+        ]
+      },
+      "LeaveWaitlistRequest": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 200
+          }
+        },
+        "required": [
+          "token"
+        ]
+      },
+      "InviteCodePreview": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "personal",
+              "campaign"
+            ]
+          },
+          "label": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "inviter_name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "available": {
+            "type": "boolean"
+          },
+          "welcome_usd": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "kind",
+          "label",
+          "inviter_name",
+          "available",
+          "welcome_usd"
+        ]
+      },
+      "InviteRedeemed": {
+        "type": "object",
+        "properties": {
+          "outcome": {
+            "type": "string",
+            "enum": [
+              "admitted",
+              "waitlisted"
+            ]
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "personal",
+              "campaign"
+            ]
+          }
+        },
+        "required": [
+          "outcome",
+          "kind"
+        ]
+      },
+      "RedeemInviteRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 254
+          },
+          "code": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "proof": {
+            "$ref": "#/components/schemas/WaitlistProof"
+          },
+          "source": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "newsletter": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "email",
+          "code",
+          "proof"
         ]
       },
       "AdminBrowserGuard": {
@@ -56230,6 +56969,970 @@
           },
           "409": {
             "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/waitlist/entries": {
+      "post": {
+        "operationId": "adminAddWaitlistEntries",
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Let addresses in by hand (owner only)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddWaitlistEntriesRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Let in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WaitlistChanged"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/waitlist/admit": {
+      "post": {
+        "operationId": "adminAdmitWaitlist",
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Let people in: chosen entries, or the next N (owner only)",
+        "description": "They are let in as their “You're in” emails go out, a few a minute and never more than the day's number.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdmitWaitlistRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Chosen",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WaitlistChanged"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/invite-campaigns": {
+      "post": {
+        "operationId": "adminCreateInviteCampaign",
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Make a campaign invite code with a total (owner only)",
+        "description": "Errors: 400 bad_code, 409 conflict when the code exists.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateInviteCampaignRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Campaign",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InviteCampaign"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "adminInviteCampaigns",
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Campaign invite codes (owner only)",
+        "responses": {
+          "200": {
+            "description": "Campaigns",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InviteCampaignList"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/waitlist/entries/{id}": {
+      "delete": {
+        "operationId": "adminRemoveWaitlistEntry",
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Remove an entry; a removed address can no longer sign up (owner only)",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Removed"
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/signup-gate": {
+      "put": {
+        "operationId": "adminSetSignupGate",
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Turn the gate on or off, set its opening time and numbers (owner only)",
+        "description": "Fields left out keep their value. Takes effect within 15 seconds, with no deploy.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetSignupGateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Gate",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignupGateState"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "adminSignupGate",
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "The sign-up gate (owner only)",
+        "responses": {
+          "200": {
+            "description": "Gate",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignupGateState"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/invite-campaigns/{code}": {
+      "patch": {
+        "operationId": "adminUpdateInviteCampaign",
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Change a campaign code's total, dates or name, or turn it off (owner only)",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 4,
+              "maxLength": 32
+            },
+            "required": true,
+            "name": "code",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateInviteCampaignRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Campaign",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InviteCampaign"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/waitlist": {
+      "get": {
+        "operationId": "adminWaitlist",
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "The waitlist: numbers, the gate and a page of entries (owner only)",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "waiting",
+                "queued",
+                "admitted",
+                "joined"
+              ]
+            },
+            "required": false,
+            "name": "status",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 64
+            },
+            "required": false,
+            "name": "source",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 64
+            },
+            "required": false,
+            "name": "ref",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ]
+            },
+            "required": false,
+            "name": "self_hosting",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 100
+            },
+            "required": false,
+            "name": "q",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "required": false,
+            "name": "offset",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Waitlist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WaitlistPage"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/waitlist": {
+      "post": {
+        "operationId": "joinWaitlist",
+        "tags": [
+          "waitlist"
+        ],
+        "summary": "Join the waitlist (no sign-in; needs a solved sign-up puzzle)",
+        "description": "Sends no email. Answers the same for every address, so nobody can find out who is on the list. Errors: 400 bad_email, 400 disposable_email, 403 proof_required, 404 waitlist_off, 429 too_many_attempts.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JoinWaitlistRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "On the list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WaitlistJoined"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/waitlist/leave": {
+      "post": {
+        "operationId": "leaveWaitlist",
+        "tags": [
+          "waitlist"
+        ],
+        "summary": "Take an address off the waitlist, with the token from its email (no sign-in)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LeaveWaitlistRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Removed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WaitlistJoined"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/invites/preview": {
+      "get": {
+        "operationId": "previewInviteCode",
+        "tags": [
+          "waitlist"
+        ],
+        "summary": "What an invite code is, and whether it has an invite left (no sign-in)",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "required": true,
+            "name": "code",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Invite",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InviteCodePreview"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/waitlist/redeem": {
+      "post": {
+        "operationId": "redeemInvite",
+        "tags": [
+          "waitlist"
+        ],
+        "summary": "Claim an invite code for an email address (no sign-in; needs a solved puzzle)",
+        "description": "The address can then sign up with any sign-in method. Errors: 400 bad_email, 400 disposable_email, 403 proof_required, 404 invite_not_found, 404 waitlist_off, 429 too_many_attempts.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RedeemInviteRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "What the code did",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InviteRedeemed"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
             "content": {
               "application/problem+json": {
                 "schema": {

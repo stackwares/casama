@@ -13,6 +13,12 @@ import {
   normalizeReferralCode,
   referralConfig,
 } from "../../services/referrals.ts";
+import {
+  gateClosed,
+  getSignupGate,
+  memberInvites,
+  waitlistAvailable,
+} from "../../services/waitlist.ts";
 import { ApiError } from "../errors.ts";
 import type { AppDeps, AppEnv } from "../types.ts";
 import { clientIp, iso } from "../util.ts";
@@ -116,6 +122,13 @@ export function registerReferralRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
       };
     }
     const until = new Date(new Date(row.signed_up).getTime() + cfg.redeemDays * 86_400_000);
+    // While new accounts are by invitation (docs/WAITLIST-PLAN.md), the code also lets people in.
+    let invites: Awaited<ReturnType<typeof memberInvites>> | undefined;
+    if (waitlistAvailable(deps.env)) {
+      const gate = await getSignupGate(db).catch(() => null);
+      if (gate && gateClosed(gate))
+        invites = await memberInvites(db, claims.sub, gate.invites_per_person);
+    }
     return {
       enabled: true,
       code,
@@ -129,6 +142,7 @@ export function registerReferralRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
       earned_usd: Number(row.earned ?? 0),
       invited_by: invitedBy,
       redeem_until: !row.has_referral && until > new Date() ? iso(until) : null,
+      ...(invites ? { invites } : {}),
     };
   };
 

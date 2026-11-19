@@ -6,7 +6,7 @@ import type { AddressInfo } from "node:net";
 import { CredentialResolver, loadSecrets } from "@casama/agent";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { standardWebhookSignature } from "../src/billing/dodo.ts";
-import { type Harness, j, startHarness } from "./helpers.ts";
+import { type Harness, hookVerdict, j, startHarness } from "./helpers.ts";
 
 const HOOK_SECRET = `whsec_${Buffer.from("allowlist-hook-secret-0123").toString("base64")}`;
 let h: Harness;
@@ -83,12 +83,12 @@ const hook = (email: string, provider = "email") => {
 
 describe("ops extras", () => {
   it("the sign-up allowlist admits listed emails and domains, by any sign-in method", async () => {
-    expect((await hook("ana@example.com")).status).toBe(200);
-    expect((await hook("Lee@ACME.com", "google")).status).toBe(200);
+    expect(await hookVerdict(await hook("ana@example.com"))).toBe(200);
+    expect(await hookVerdict(await hook("Lee@ACME.com", "google"))).toBe(200);
     const no = await hook("eve@example.com");
-    expect(no.status).toBe(403);
+    expect(await hookVerdict(no)).toBe(403);
     expect((await j(no)).error.message).toContain("approved email addresses");
-    expect((await hook("bob@notacme.com", "google")).status).toBe(403);
+    expect(await hookVerdict(await hook("bob@notacme.com", "google"))).toBe(403);
   });
 
   it("model calls go through a Cloudflare AI Gateway when set, unless a credential has its own address", async () => {

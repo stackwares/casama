@@ -6,7 +6,7 @@ import { randomUUID } from "node:crypto";
 import { sql } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { standardWebhookSignature } from "../src/billing/dodo.ts";
-import { type Harness, j, startHarness } from "./helpers.ts";
+import { type Harness, hookVerdict, j, startHarness } from "./helpers.ts";
 
 const HOOK_SECRET = `whsec_${Buffer.from("invited-only-hook-secret-01").toString("base64")}`;
 
@@ -58,16 +58,16 @@ describe("sign-up by invitation only", () => {
 
   it("lets in an email with a standing invitation, however it is capitalized", async () => {
     await invite("Ana@Example.com");
-    expect((await hook(h, "ana@example.com")).status).toBe(200);
-    expect((await hook(h, "ANA@example.COM")).status).toBe(200);
+    expect(await hookVerdict(await hook(h, "ana@example.com"))).toBe(200);
+    expect(await hookVerdict(await hook(h, "ANA@example.COM"))).toBe(200);
   });
 
   it("refuses everyone else, and says why", async () => {
     const no = await hook(h, "stranger@example.com");
-    expect(no.status).toBe(403);
+    expect(await hookVerdict(no)).toBe(403);
     expect((await j(no)).error.message).toContain("by invitation only");
     // No email at all (a phone sign-up) has no invitation to match.
-    expect((await hook(h, "")).status).toBe(403);
+    expect(await hookVerdict(await hook(h, ""))).toBe(403);
   });
 
   it("an invitation that ran out or was already used doesn't count", async () => {
@@ -75,21 +75,21 @@ describe("sign-up by invitation only", () => {
     await h.handle.db.execute(
       sql`update public.invites set expires_at = now() - interval '1 minute' where email = 'late@example.com'`,
     );
-    expect((await hook(h, "late@example.com")).status).toBe(403);
+    expect(await hookVerdict(await hook(h, "late@example.com"))).toBe(403);
     await invite("used@example.com");
     await h.handle.db.execute(
       sql`update public.invites set accepted_at = now() where email = 'used@example.com'`,
     );
-    expect((await hook(h, "used@example.com")).status).toBe(403);
+    expect(await hookVerdict(await hook(h, "used@example.com"))).toBe(403);
   });
 
   it("the allowlist still lets its emails in", async () => {
-    expect((await hook(h, "boss@example.com")).status).toBe(200);
+    expect(await hookVerdict(await hook(h, "boss@example.com"))).toBe(200);
   });
 
   it("a request that Auth didn't sign is refused", async () => {
     await invite("signed@example.com");
-    expect((await hook(h, "signed@example.com", false)).status).toBe(401);
+    expect(await hookVerdict(await hook(h, "signed@example.com", false))).toBe(401);
   });
 
   it("the apps are told accounts are by invitation", async () => {
@@ -106,6 +106,6 @@ describe("sign-up by invitation, with the hook's secret missing", () => {
 
   it("refuses rather than trusting whoever calls", async () => {
     const res = await hook(h, "anyone@example.com", false);
-    expect(res.status).toBe(500);
+    expect(await hookVerdict(res)).toBe(500);
   });
 });

@@ -45,6 +45,8 @@ abstract class _$PublicConfigCWProxy {
 
   PublicConfig signupsByInvitation(bool? signupsByInvitation);
 
+  PublicConfig signupGate(PublicConfigSignupGate? signupGate);
+
   PublicConfig pushSenderId(String? pushSenderId);
 
   PublicConfig sites(SitesConfig? sites);
@@ -78,6 +80,7 @@ abstract class _$PublicConfigCWProxy {
     bool? signInCodes,
     bool? signupsOpen,
     bool? signupsByInvitation,
+    PublicConfigSignupGate? signupGate,
     String? pushSenderId,
     SitesConfig? sites,
     PublicConfigKeyProviders? keyProviders,
@@ -160,6 +163,10 @@ class _$PublicConfigCWProxyImpl implements _$PublicConfigCWProxy {
       call(signupsByInvitation: signupsByInvitation);
 
   @override
+  PublicConfig signupGate(PublicConfigSignupGate? signupGate) =>
+      call(signupGate: signupGate);
+
+  @override
   PublicConfig pushSenderId(String? pushSenderId) =>
       call(pushSenderId: pushSenderId);
 
@@ -198,6 +205,7 @@ class _$PublicConfigCWProxyImpl implements _$PublicConfigCWProxy {
     Object? signInCodes = const $CopyWithPlaceholder(),
     Object? signupsOpen = const $CopyWithPlaceholder(),
     Object? signupsByInvitation = const $CopyWithPlaceholder(),
+    Object? signupGate = const $CopyWithPlaceholder(),
     Object? pushSenderId = const $CopyWithPlaceholder(),
     Object? sites = const $CopyWithPlaceholder(),
     Object? keyProviders = const $CopyWithPlaceholder(),
@@ -285,6 +293,10 @@ class _$PublicConfigCWProxyImpl implements _$PublicConfigCWProxy {
           ? _value.signupsByInvitation
           // ignore: cast_nullable_to_non_nullable
           : signupsByInvitation as bool?,
+      signupGate: signupGate == const $CopyWithPlaceholder()
+          ? _value.signupGate
+          // ignore: cast_nullable_to_non_nullable
+          : signupGate as PublicConfigSignupGate?,
       pushSenderId: pushSenderId == const $CopyWithPlaceholder()
           ? _value.pushSenderId
           // ignore: cast_nullable_to_non_nullable
@@ -377,6 +389,12 @@ PublicConfig _$PublicConfigFromJson(
         'signups_by_invitation',
         (v) => v as bool?,
       ),
+      signupGate: $checkedConvert(
+        'signup_gate',
+        (v) => v == null
+            ? null
+            : PublicConfigSignupGate.fromJson(v as Map<String, dynamic>),
+      ),
       pushSenderId: $checkedConvert('push_sender_id', (v) => v as String?),
       sites: $checkedConvert(
         'sites',
@@ -409,6 +427,7 @@ PublicConfig _$PublicConfigFromJson(
     'signInCodes': 'sign_in_codes',
     'signupsOpen': 'signups_open',
     'signupsByInvitation': 'signups_by_invitation',
+    'signupGate': 'signup_gate',
     'pushSenderId': 'push_sender_id',
     'keyProviders': 'key_providers',
   },
@@ -440,6 +459,7 @@ Map<String, dynamic> _$PublicConfigToJson(PublicConfig instance) =>
       'sign_in_codes': ?instance.signInCodes,
       'signups_open': ?instance.signupsOpen,
       'signups_by_invitation': ?instance.signupsByInvitation,
+      'signup_gate': ?instance.signupGate?.toJson(),
       'push_sender_id': ?instance.pushSenderId,
       'sites': ?instance.sites?.toJson(),
       'key_providers': ?instance.keyProviders?.toJson(),

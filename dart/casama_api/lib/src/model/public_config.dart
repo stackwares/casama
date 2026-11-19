@@ -3,6 +3,7 @@
 //
 
 // ignore_for_file: unused_element
+import 'package:casama_api/src/model/public_config_signup_gate.dart';
 import 'package:casama_api/src/model/sites_config.dart';
 import 'package:casama_api/src/model/public_config_key_providers.dart';
 import 'package:copy_with_extension/copy_with_extension.dart';
@@ -57,6 +58,8 @@ class PublicConfig {
      this.signupsOpen,
 
      this.signupsByInvitation,
+
+     this.signupGate,
 
      this.pushSenderId,
 
@@ -284,6 +287,18 @@ class PublicConfig {
 
   @JsonKey(
     
+    name: r'signup_gate',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final PublicConfigSignupGate? signupGate;
+
+
+
+  @JsonKey(
+    
     name: r'push_sender_id',
     required: false,
     includeIfNull: false,
@@ -340,6 +355,7 @@ class PublicConfig {
       other.signInCodes == signInCodes &&
       other.signupsOpen == signupsOpen &&
       other.signupsByInvitation == signupsByInvitation &&
+      other.signupGate == signupGate &&
       other.pushSenderId == pushSenderId &&
       other.sites == sites &&
       other.keyProviders == keyProviders;
@@ -364,6 +380,7 @@ class PublicConfig {
         signInCodes.hashCode +
         signupsOpen.hashCode +
         signupsByInvitation.hashCode +
+        signupGate.hashCode +
         pushSenderId.hashCode +
         sites.hashCode +
         keyProviders.hashCode;

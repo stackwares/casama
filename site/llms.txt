@@ -46,6 +46,7 @@ Each link is the page's markdown copy. Facts about other products carry the date
 - [Casama pricing](https://casama.ai/pricing.md): Casama Cloud is free to start, then $15, $49 or $99 a month with credits included. Self-hosting is free with no limit on users or bots.
 - [How Casama keeps a bot from doing what you didn't want](https://casama.ai/security.md): Casama bots work on locked-down computers, ask before risky steps, never see your passwords, and save a checkpoint before anything destructive.
 - [Self-hosted AI agents, on a server you own](https://casama.ai/self-hosted.md): Run Casama's AI agents on your own VPS, home server or laptop with one command. Free, open source, any model, and reachable from your phone.
+- [Casama Cloud is invite-only for now](https://casama.ai/waitlist.md): Casama Cloud is invite-only for now. Join the waitlist and we'll email you once when it's your turn. Running Casama on your own server is open to everyone.
 - [Changelog](https://casama.ai/changelog.md): Every change to Casama's server, apps, CLI, SDK and MCP server, version by version, newest first.
 
 ### Alternatives

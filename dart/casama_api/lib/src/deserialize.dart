@@ -12,6 +12,7 @@ import 'package:casama_api/src/model/action_rule_target.dart';
 import 'package:casama_api/src/model/add_teach_step_request.dart';
 import 'package:casama_api/src/model/add_user_facts_request.dart';
 import 'package:casama_api/src/model/add_user_facts_request_items_inner.dart';
+import 'package:casama_api/src/model/add_waitlist_entries_request.dart';
 import 'package:casama_api/src/model/admin_browser_guard.dart';
 import 'package:casama_api/src/model/admin_credit_pack.dart';
 import 'package:casama_api/src/model/admin_domain.dart';
@@ -35,6 +36,7 @@ import 'package:casama_api/src/model/admin_service.dart';
 import 'package:casama_api/src/model/admin_service_list.dart';
 import 'package:casama_api/src/model/admin_user.dart';
 import 'package:casama_api/src/model/admin_user_list.dart';
+import 'package:casama_api/src/model/admit_waitlist_request.dart';
 import 'package:casama_api/src/model/agent_import_plan.dart';
 import 'package:casama_api/src/model/agent_import_plan_leftovers_inner.dart';
 import 'package:casama_api/src/model/agent_import_plan_skipped_inner.dart';
@@ -162,6 +164,7 @@ import 'package:casama_api/src/model/create_gallery_request.dart';
 import 'package:casama_api/src/model/create_gallery_submission.dart';
 import 'package:casama_api/src/model/create_highlight_request.dart';
 import 'package:casama_api/src/model/create_integration_request.dart';
+import 'package:casama_api/src/model/create_invite_campaign_request.dart';
 import 'package:casama_api/src/model/create_invite_code_request.dart';
 import 'package:casama_api/src/model/create_invite_link_request.dart';
 import 'package:casama_api/src/model/create_invite_request.dart';
@@ -361,16 +364,21 @@ import 'package:casama_api/src/model/integration_list.dart';
 import 'package:casama_api/src/model/integration_test_result.dart';
 import 'package:casama_api/src/model/integration_tools_inner.dart';
 import 'package:casama_api/src/model/invite.dart';
+import 'package:casama_api/src/model/invite_campaign.dart';
+import 'package:casama_api/src/model/invite_campaign_list.dart';
+import 'package:casama_api/src/model/invite_code_preview.dart';
 import 'package:casama_api/src/model/invite_link.dart';
 import 'package:casama_api/src/model/invite_link_list.dart';
 import 'package:casama_api/src/model/invite_list.dart';
 import 'package:casama_api/src/model/invite_preview.dart';
 import 'package:casama_api/src/model/invite_preview_workspace.dart';
+import 'package:casama_api/src/model/invite_redeemed.dart';
 import 'package:casama_api/src/model/join_domains.dart';
 import 'package:casama_api/src/model/join_request.dart';
 import 'package:casama_api/src/model/join_request_body.dart';
 import 'package:casama_api/src/model/join_request_list.dart';
 import 'package:casama_api/src/model/join_result.dart';
+import 'package:casama_api/src/model/join_waitlist_request.dart';
 import 'package:casama_api/src/model/joinable_workspace.dart';
 import 'package:casama_api/src/model/joinable_workspace_list.dart';
 import 'package:casama_api/src/model/knowledge_source.dart';
@@ -378,6 +386,7 @@ import 'package:casama_api/src/model/knowledge_source_list.dart';
 import 'package:casama_api/src/model/lease.dart';
 import 'package:casama_api/src/model/lease_changed_event.dart';
 import 'package:casama_api/src/model/lease_changed_event_payload.dart';
+import 'package:casama_api/src/model/leave_waitlist_request.dart';
 import 'package:casama_api/src/model/library_starter.dart';
 import 'package:casama_api/src/model/link_exchange.dart';
 import 'package:casama_api/src/model/link_exchange_list.dart';
@@ -530,15 +539,18 @@ import 'package:casama_api/src/model/provider_connect_request.dart';
 import 'package:casama_api/src/model/provider_connect_response.dart';
 import 'package:casama_api/src/model/public_config.dart';
 import 'package:casama_api/src/model/public_config_key_providers.dart';
+import 'package:casama_api/src/model/public_config_signup_gate.dart';
 import 'package:casama_api/src/model/publish_site_request.dart';
 import 'package:casama_api/src/model/purchase_request.dart';
 import 'package:casama_api/src/model/reaction_summary.dart';
+import 'package:casama_api/src/model/redeem_invite_request.dart';
 import 'package:casama_api/src/model/redeem_referral_request.dart';
 import 'package:casama_api/src/model/redeem_sign_in_code_request.dart';
 import 'package:casama_api/src/model/redeemed_sign_in_code.dart';
 import 'package:casama_api/src/model/redirect_url.dart';
 import 'package:casama_api/src/model/referral.dart';
 import 'package:casama_api/src/model/referral_invited_by.dart';
+import 'package:casama_api/src/model/referral_invites.dart';
 import 'package:casama_api/src/model/referral_preview.dart';
 import 'package:casama_api/src/model/relay_analytics_request.dart';
 import 'package:casama_api/src/model/relayed_analytics_event.dart';
@@ -639,6 +651,7 @@ import 'package:casama_api/src/model/set_profile_space_request.dart';
 import 'package:casama_api/src/model/set_reaction_request.dart';
 import 'package:casama_api/src/model/set_remote_access_settings_request.dart';
 import 'package:casama_api/src/model/set_secret_store_request.dart';
+import 'package:casama_api/src/model/set_signup_gate_request.dart';
 import 'package:casama_api/src/model/set_support_ticket_status.dart';
 import 'package:casama_api/src/model/set_telephony_request.dart';
 import 'package:casama_api/src/model/share_conversation_request.dart';
@@ -646,6 +659,8 @@ import 'package:casama_api/src/model/share_conversation_response.dart';
 import 'package:casama_api/src/model/share_pack_request.dart';
 import 'package:casama_api/src/model/sign_in_code.dart';
 import 'package:casama_api/src/model/signup_challenge.dart';
+import 'package:casama_api/src/model/signup_gate.dart';
+import 'package:casama_api/src/model/signup_gate_state.dart';
 import 'package:casama_api/src/model/site.dart';
 import 'package:casama_api/src/model/site_address_check.dart';
 import 'package:casama_api/src/model/site_host.dart';
@@ -754,6 +769,7 @@ import 'package:casama_api/src/model/update_default_invite_request.dart';
 import 'package:casama_api/src/model/update_domain_request.dart';
 import 'package:casama_api/src/model/update_gallery_request.dart';
 import 'package:casama_api/src/model/update_integration_request.dart';
+import 'package:casama_api/src/model/update_invite_campaign_request.dart';
 import 'package:casama_api/src/model/update_local_device_request.dart';
 import 'package:casama_api/src/model/update_memory_request.dart';
 import 'package:casama_api/src/model/update_notice.dart';
@@ -798,6 +814,13 @@ import 'package:casama_api/src/model/voice_transcript_request_turns_inner.dart';
 import 'package:casama_api/src/model/voice_transcript_request_usage.dart';
 import 'package:casama_api/src/model/voice_turns_request.dart';
 import 'package:casama_api/src/model/voice_turns_request_turns_inner.dart';
+import 'package:casama_api/src/model/waitlist_changed.dart';
+import 'package:casama_api/src/model/waitlist_entry.dart';
+import 'package:casama_api/src/model/waitlist_joined.dart';
+import 'package:casama_api/src/model/waitlist_page.dart';
+import 'package:casama_api/src/model/waitlist_proof.dart';
+import 'package:casama_api/src/model/waitlist_stats.dart';
+import 'package:casama_api/src/model/waitlist_stats_by_source_inner.dart';
 import 'package:casama_api/src/model/wallpaper_download_request.dart';
 import 'package:casama_api/src/model/wallpaper_photo.dart';
 import 'package:casama_api/src/model/wallpaper_photo_list.dart';
@@ -892,6 +915,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return AddUserFactsRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AddUserFactsRequestItemsInner':
           return AddUserFactsRequestItemsInner.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'AddWaitlistEntriesRequest':
+          return AddWaitlistEntriesRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AdminBrowserGuard':
           return AdminBrowserGuard.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AdminCreditPack':
@@ -938,6 +963,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return AdminUser.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AdminUserList':
           return AdminUserList.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'AdmitWaitlistRequest':
+          return AdmitWaitlistRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AgentImportPlan':
           return AgentImportPlan.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AgentImportPlanLeftoversInner':
@@ -1204,6 +1231,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return CreateHighlightRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CreateIntegrationRequest':
           return CreateIntegrationRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'CreateInviteCampaignRequest':
+          return CreateInviteCampaignRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CreateInviteCodeRequest':
           return CreateInviteCodeRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CreateInviteLinkRequest':
@@ -1629,6 +1658,12 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return IntegrationToolsInner.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Invite':
           return Invite.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'InviteCampaign':
+          return InviteCampaign.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'InviteCampaignList':
+          return InviteCampaignList.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'InviteCodePreview':
+          return InviteCodePreview.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'InviteLink':
           return InviteLink.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'InviteLinkList':
@@ -1639,6 +1674,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return InvitePreview.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'InvitePreviewWorkspace':
           return InvitePreviewWorkspace.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'InviteRedeemed':
+          return InviteRedeemed.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'InviteRole':
           
           
@@ -1652,6 +1689,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return JoinRequestList.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'JoinResult':
           return JoinResult.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'JoinWaitlistRequest':
+          return JoinWaitlistRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'JoinableWorkspace':
           return JoinableWorkspace.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'JoinableWorkspaceList':
@@ -1666,6 +1705,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return LeaseChangedEvent.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'LeaseChangedEventPayload':
           return LeaseChangedEventPayload.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'LeaveWaitlistRequest':
+          return LeaveWaitlistRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'LibraryStarter':
           return LibraryStarter.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'LinkExchange':
@@ -1985,6 +2026,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return PublicConfig.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'PublicConfigKeyProviders':
           return PublicConfigKeyProviders.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'PublicConfigSignupGate':
+          return PublicConfigSignupGate.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'PublishSiteRequest':
           return PublishSiteRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'PurchaseRequest':
@@ -1994,6 +2037,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
         case 'ReasoningEffort':
           
           
+        case 'RedeemInviteRequest':
+          return RedeemInviteRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'RedeemReferralRequest':
           return RedeemReferralRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'RedeemSignInCodeRequest':
@@ -2006,6 +2051,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return Referral.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ReferralInvitedBy':
           return ReferralInvitedBy.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ReferralInvites':
+          return ReferralInvites.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ReferralPreview':
           return ReferralPreview.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'RelayAnalyticsRequest':
@@ -2230,6 +2277,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return SetRemoteAccessSettingsRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SetSecretStoreRequest':
           return SetSecretStoreRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'SetSignupGateRequest':
+          return SetSignupGateRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SetSupportTicketStatus':
           return SetSupportTicketStatus.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SetTelephonyRequest':
@@ -2244,6 +2293,10 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return SignInCode.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SignupChallenge':
           return SignupChallenge.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'SignupGate':
+          return SignupGate.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'SignupGateState':
+          return SignupGateState.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Site':
           return Site.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SiteAddressCheck':
@@ -2475,6 +2528,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return UpdateGalleryRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'UpdateIntegrationRequest':
           return UpdateIntegrationRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'UpdateInviteCampaignRequest':
+          return UpdateInviteCampaignRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'UpdateLocalDeviceRequest':
           return UpdateLocalDeviceRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'UpdateMemoryRequest':
@@ -2569,6 +2624,20 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return VoiceTurnsRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'VoiceTurnsRequestTurnsInner':
           return VoiceTurnsRequestTurnsInner.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'WaitlistChanged':
+          return WaitlistChanged.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'WaitlistEntry':
+          return WaitlistEntry.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'WaitlistJoined':
+          return WaitlistJoined.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'WaitlistPage':
+          return WaitlistPage.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'WaitlistProof':
+          return WaitlistProof.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'WaitlistStats':
+          return WaitlistStats.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'WaitlistStatsBySourceInner':
+          return WaitlistStatsBySourceInner.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'WallpaperDownloadRequest':
           return WallpaperDownloadRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'WallpaperPhoto':

@@ -2,7 +2,9 @@
  * Casama Cloud abuse controls (D-094):
  * - GET /v1/signup/challenge: a proof-of-work puzzle for clients without App Check.
  * - POST /hooks/auth/before-user-created: Supabase Auth's hook; a new email account must carry a
- *   valid `signup_proof` in its user metadata (App Check token or solved puzzle).
+ *   valid `signup_proof` in its user metadata (App Check token or solved puzzle). The same hook
+ *   holds the sign-up gates: the allowlist (D-145), invited only (D-296) and Casama Cloud's
+ *   waitlist (docs/WAITLIST-PLAN.md).
  * - POST /internal/abuse: the egress proxy reports abuse; mining stops the computer and suspends
  *   the workspace.
  */
@@ -20,6 +22,15 @@ import {
   verifyAppCheck,
   verifyPow,
 } from "../../services/abuse.ts";
+import {
+  gateClosed,
+  getSignupGate,
+  inviteOnlyMessage,
+  isAppleRelay,
+  RELAY_MESSAGE,
+  signupAllowed,
+  waitlistAvailable,
+} from "../../services/waitlist.ts";
 import type { AppDeps, AppEnv } from "../types.ts";
 import { internalToken } from "./local.ts";
 
@@ -37,16 +48,41 @@ export function registerAbuseRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     return c.json({ ...ch, expires_at: ch.expires_at.toISOString() }, 200);
   });
 
-  // Supabase Auth hook: answer 200 {} to allow, or an error object to refuse the sign-up.
+  // Whether Casama Cloud's waitlist gate is on. A setting that can't be read counts as "can't
+  // tell", and the hook then refuses rather than letting everyone in.
+  const waitlistGate = async (): Promise<"open" | "closed" | "unknown"> => {
+    if (!waitlistAvailable(env)) return "open";
+    try {
+      return gateClosed(await getSignupGate(db)) ? "closed" : "open";
+    } catch (err) {
+      deps.logger.error("signup gate could not be read", { error: (err as Error).message });
+      return "unknown";
+    }
+  };
+
+  // Supabase Auth hook: answer 200 {} to allow, or 200 with an error object to refuse the sign-up.
   app.post("/hooks/auth/before-user-created", async (c) => {
+    /**
+     * A refusal the person should read. Auth passes the message on word for word, with
+     * `http_code` as the status, only when the hook itself answers 200. Any other status from
+     * the hook reaches the app as "Unexpected status code returned from hook" (checked against
+     * Auth v2.197.0 on 2026-11-19; refusals here answered 403 until then and were never shown).
+     */
+    const refusal = (message: string) => c.json({ error: { http_code: 403, message } }, 200);
     const body = await c.req.text();
+    const gate = await waitlistGate();
     if (env.AUTH_HOOK_SECRET) {
       try {
         verifyStandardWebhook(env.AUTH_HOOK_SECRET.replace(/^v1,/, ""), c.req.raw.headers, body);
       } catch {
         return c.json({ error: { http_code: 401, message: "Bad hook signature" } }, 401);
       }
-    } else if (abuseControlsOn(env) || env.SIGNUP_ALLOWED_EMAILS || env.SIGNUP_INVITED_ONLY) {
+    } else if (
+      abuseControlsOn(env) ||
+      env.SIGNUP_ALLOWED_EMAILS ||
+      env.SIGNUP_INVITED_ONLY ||
+      gate !== "open"
+    ) {
       // The gate is on but nobody configured the hook secret: refuse rather than trust anyone.
       return c.json({ error: { http_code: 500, message: "Sign-up hook is not configured" } }, 500);
     }
@@ -73,26 +109,33 @@ export function registerAbuseRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
             where lower(email::text) = ${email} and accepted_at is null and expires_at > now() limit 1`)
         : [];
       if (!invited?.ok && !listed)
-        return c.json(
-          {
-            error: {
-              http_code: 403,
-              message:
-                "This server takes new accounts by invitation only. Ask whoever runs it to invite this email address.",
-            },
-          },
-          403,
+        return refusal(
+          "This server takes new accounts by invitation only. Ask whoever runs it to invite this email address.",
         );
     } else if (allow.length && !listed) {
-      return c.json(
-        {
-          error: {
-            http_code: 403,
-            message: "Sign-up on this server is limited to approved email addresses.",
-          },
-        },
-        403,
-      );
+      return refusal("Sign-up on this server is limited to approved email addresses.");
+    }
+    // Casama Cloud's waitlist (docs/WAITLIST-PLAN.md): while the gate is on, a new account is
+    // made only for an address that was let in, or invited to a workspace with a seat for it.
+    // This runs before Auth sends anything, so a refused person costs no sign-in email.
+    if (gate === "unknown") {
+      // Auth tries a 503 again (up to three times in five seconds) before giving up.
+      c.header("retry-after", "1");
+      return c.json({ error: { http_code: 503, message: "Sign-up is paused for a moment" } }, 503);
+    }
+    if (gate === "closed" && !listed) {
+      let allowed = false;
+      try {
+        allowed = await signupAllowed(db, email);
+      } catch (err) {
+        deps.logger.error("signup gate lookup failed", { error: (err as Error).message });
+        c.header("retry-after", "1");
+        return c.json(
+          { error: { http_code: 503, message: "Sign-up is paused for a moment" } },
+          503,
+        );
+      }
+      if (!allowed) return refusal(isAppleRelay(email) ? RELAY_MESSAGE : inviteOnlyMessage(env));
     }
     if (!abuseControlsOn(env)) return c.json({}, 200);
     const payload = JSON.parse(body || "{}") as {
@@ -114,15 +157,7 @@ export function registerAbuseRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       await db.execute(sql`
         insert into public.abuse_events (kind, detail)
         values ('signup_blocked', ${JSON.stringify({ reason, email_domain: (user.email ?? "").split("@")[1] ?? null })}::jsonb)`);
-      return c.json(
-        {
-          error: {
-            http_code: 403,
-            message: "Sign-up needs a check from the app. Update the app and try again.",
-          },
-        },
-        403,
-      );
+      return refusal("Sign-up needs a check from the app. Update the app and try again.");
     };
     if (!proof?.kind || !kinds.includes(proof.kind as "pow")) return refuse("missing_proof");
     if (proof.kind === "pow") {

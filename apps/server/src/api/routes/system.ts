@@ -5,6 +5,7 @@ import { type Env, modelOverrides } from "../../env.ts";
 import { abuseControlsOn, signupProofKinds } from "../../services/abuse.ts";
 import { getCloudModels } from "../../services/cloud-models.ts";
 import { newsletterConfig } from "../../services/newsletter.ts";
+import { gateClosed, getSignupGate, waitlistAvailable } from "../../services/waitlist.ts";
 import { sitesSettings } from "../../sites/config.ts";
 import type { AppDeps, AppEnv } from "../types.ts";
 import { chatGptSignInEnabled } from "./chatgpt.ts";
@@ -38,6 +39,15 @@ export function registerSystemRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       ]),
     );
     if (deps.env.BILLING_ENABLED) defaults.openrouter = (await getCloudModels(deps.db)).chat;
+    // Casama Cloud's waitlist (docs/WAITLIST-PLAN.md): while its gate is on, the apps say new
+    // accounts are by invitation. A setting that can't be read counts as on, as it does in the
+    // sign-up hook, which refuses then.
+    const invitationOnly = waitlistAvailable(deps.env)
+      ? await getSignupGate(deps.db).then(
+          (gate) => gateClosed(gate),
+          () => true,
+        )
+      : false;
     return c.json(
       {
         product_name: PRODUCT_NAME,
@@ -63,7 +73,10 @@ export function registerSystemRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
         ...(deps.env.DISABLE_SIGNUP === undefined
           ? {}
           : { signups_open: !deps.env.DISABLE_SIGNUP }),
-        ...(deps.env.SIGNUP_INVITED_ONLY ? { signups_by_invitation: true } : {}),
+        ...(deps.env.SIGNUP_INVITED_ONLY || invitationOnly ? { signups_by_invitation: true } : {}),
+        ...(invitationOnly
+          ? { signup_gate: { mode: "invite_only", waitlist_url: deps.env.WAITLIST_URL } }
+          : {}),
         ...(deps.env.FCM_SENDER_ID ? { push_sender_id: deps.env.FCM_SENDER_ID } : {}),
         ...(deps.env.CASAMA_SITES_ZONE ? { sites: await sitesSettings(deps.env, deps.db) } : {}),
       },

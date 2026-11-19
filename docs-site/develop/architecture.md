@@ -132,6 +132,12 @@ Model keys and named secrets live in Supabase Vault. Tables hold only a referenc
   all Linux capabilities dropped, `no-new-privileges` and a process limit, on its own internal
   network. Its only way out is the egress proxy, with per-computer credentials. Only the
   supervisor holds the Docker socket.
+- **Casama Cloud's sign-up gate sits in one place.** Supabase Auth's "before user created" hook
+  holds a rule that lets a new account in only for an address in `waitlist_entries` (let in by a
+  batch, an invite code or by hand), or with a standing workspace invite and a free seat. Campaign
+  codes are in `invite_campaigns`, the on/off switch is the `signup_gate` setting, and a worker
+  loop sends the "You're in" emails and ties sign-ups to their entries. It exists only where
+  billing is on, so a self-hosted server never meets it.
 - **Risky actions need a person.** The approval rules in `packages/domain` combine the bot's
   autonomy level, each tool's risk and standing "always allow" grants.
 - **Bot pages get their own origin.** Pages bots publish are served from a separate address with a

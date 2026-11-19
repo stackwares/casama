@@ -80,6 +80,7 @@ import { registerSystemRoutes } from "./routes/system.ts";
 import { registerTeachRoutes } from "./routes/teach.ts";
 import { registerTelephonyRoutes } from "./routes/telephony.ts";
 import { registerVoiceRoutes } from "./routes/voice.ts";
+import { registerWaitlistRoutes } from "./routes/waitlist.ts";
 import {
   registerWatchRoutes,
   watchAction,
@@ -281,6 +282,31 @@ export function createApp(deps: AppDeps) {
       maxAge: 86_400,
     }),
   );
+  // The waitlist's pages on casama.ai (docs/WAITLIST-PLAN.md): visitors with no account join,
+  // claim an invite code and fetch the sign-up puzzle those two need.
+  // The apps call the puzzle route too, so these allow the same headers as every other route.
+  for (const path of [
+    "/v1/waitlist",
+    "/v1/waitlist/*",
+    "/v1/invites/preview",
+    "/v1/signup/challenge",
+  ])
+    app.use(
+      path,
+      cors({
+        origin: (origin) => (webOrigins.has(origin) ? origin : allowedOrigin(origin)),
+        allowMethods: ["GET", "POST", "OPTIONS"],
+        allowHeaders: [
+          "authorization",
+          "content-type",
+          "idempotency-key",
+          "x-request-id",
+          "x-casama-surface",
+        ],
+        exposeHeaders: ["x-request-id", "retry-after"],
+        maxAge: 600,
+      }),
+    );
   app.use(
     "*",
     cors({
@@ -443,6 +469,7 @@ export function createApp(deps: AppDeps) {
   registerWorkspaceRoutes(app, deps);
   registerJoiningRoutes(app, deps);
   registerReferralRoutes(app, deps);
+  registerWaitlistRoutes(app, deps);
   registerBotRoutes(app, deps);
   registerReactionRoutes(app, deps);
   registerBrowserRoutes(app, deps);

@@ -213,6 +213,7 @@ export default defineConfig({
           { text: "What is Casama", link: "/introduction" },
           { text: "Quick start", link: "/quick-start" },
           { text: "FAQ", link: "/faq" },
+          { text: "Getting an invite", link: "/guide/getting-an-invite" },
         ],
       },
       {

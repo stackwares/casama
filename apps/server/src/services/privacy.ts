@@ -143,6 +143,18 @@ export async function exportUserData(db: Database, claims: JwtClaims) {
           sql`select status, reward_usd, created_at, decided_at from public.referrals where inviter_id = ${claims.sub}::uuid order by created_at`,
         ),
       },
+      // The waitlist (docs/WAITLIST-PLAN.md): what you told us when you joined it and how you got
+      // in (through someone's invite, never whose). Only the API can read that table.
+      waitlist:
+        clean(
+          (await db.execute<Record<string, unknown>>(sql`
+            select source, ref, self_hosting, note, newsletter_opt_in, newsletter_consent_at,
+              case when admitted_via like 'invite:%' then 'invite' else admitted_via end as admitted_via,
+              created_at, admitted_at, joined_at
+            from public.waitlist_entries where user_id = ${claims.sub}::uuid`)) as Array<
+            Record<string, unknown>
+          >,
+        )[0] ?? null,
     });
     const orgs = await q(sql`
       select o.*, m.role from public.organizations o

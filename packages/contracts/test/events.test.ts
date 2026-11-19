@@ -114,6 +114,12 @@ describe("openapi", () => {
             "/v1/support/web/session",
             // A watch with no phone app at hand asks for a sign-in code before it has a key (D-410).
             "/v1/watch/codes",
+            // The waitlist is for people who have no account yet: joining it, claiming an invite
+            // code, looking a code up and leaving the list (docs/WAITLIST-PLAN.md).
+            "/v1/waitlist",
+            "/v1/waitlist/redeem",
+            "/v1/waitlist/leave",
+            "/v1/invites/preview",
           ].includes(path)
         )
           expect(Object.keys(op.responses)).toContain("401");
