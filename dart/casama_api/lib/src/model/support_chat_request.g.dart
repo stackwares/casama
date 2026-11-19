@@ -11,6 +11,8 @@ abstract class _$SupportChatRequestCWProxy {
 
   SupportChatRequest messages(List<SupportMessage> messages);
 
+  SupportChatRequest features(List<String>? features);
+
   SupportChatRequest appVersion(String? appVersion);
 
   SupportChatRequest platform(String? platform);
@@ -26,6 +28,7 @@ abstract class _$SupportChatRequestCWProxy {
   SupportChatRequest call({
     String? orgId,
     List<SupportMessage> messages,
+    List<String>? features,
     String? appVersion,
     String? platform,
   });
@@ -46,6 +49,10 @@ class _$SupportChatRequestCWProxyImpl implements _$SupportChatRequestCWProxy {
       call(messages: messages);
 
   @override
+  SupportChatRequest features(List<String>? features) =>
+      call(features: features);
+
+  @override
   SupportChatRequest appVersion(String? appVersion) =>
       call(appVersion: appVersion);
 
@@ -64,6 +71,7 @@ class _$SupportChatRequestCWProxyImpl implements _$SupportChatRequestCWProxy {
   SupportChatRequest call({
     Object? orgId = const $CopyWithPlaceholder(),
     Object? messages = const $CopyWithPlaceholder(),
+    Object? features = const $CopyWithPlaceholder(),
     Object? appVersion = const $CopyWithPlaceholder(),
     Object? platform = const $CopyWithPlaceholder(),
   }) {
@@ -76,6 +84,10 @@ class _$SupportChatRequestCWProxyImpl implements _$SupportChatRequestCWProxy {
           ? _value.messages
           // ignore: cast_nullable_to_non_nullable
           : messages as List<SupportMessage>,
+      features: features == const $CopyWithPlaceholder()
+          ? _value.features
+          // ignore: cast_nullable_to_non_nullable
+          : features as List<String>?,
       appVersion: appVersion == const $CopyWithPlaceholder()
           ? _value.appVersion
           // ignore: cast_nullable_to_non_nullable
@@ -111,6 +123,10 @@ SupportChatRequest _$SupportChatRequestFromJson(Map<String, dynamic> json) =>
               .map((e) => SupportMessage.fromJson(e as Map<String, dynamic>))
               .toList(),
         ),
+        features: $checkedConvert(
+          'features',
+          (v) => (v as List<dynamic>?)?.map((e) => e as String).toList(),
+        ),
         appVersion: $checkedConvert('app_version', (v) => v as String?),
         platform: $checkedConvert('platform', (v) => v as String?),
       );
@@ -121,6 +137,7 @@ Map<String, dynamic> _$SupportChatRequestToJson(SupportChatRequest instance) =>
     <String, dynamic>{
       'org_id': ?instance.orgId,
       'messages': instance.messages.map((e) => e.toJson()).toList(),
+      'features': ?instance.features,
       'app_version': ?instance.appVersion,
       'platform': ?instance.platform,
     };

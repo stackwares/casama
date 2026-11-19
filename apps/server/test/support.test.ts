@@ -441,6 +441,103 @@ describe("support assistant and tickets (D-298)", () => {
     ]);
     expect(mi.open_workspace).toBeUndefined();
   });
+
+  it("links places only when requested, gates roles/botIds, and keeps legacy clients safe", async () => {
+    // Without features: ["places"], places aren't in the prompt and stray place links are stripped.
+    model.script.push({
+      content:
+        "Open [Privacy](place:privacy?highlight=export) or [Raw](casama://app/settings/privacy).",
+    });
+    const legacy = await j(await ask(person.token, "where do I export my data?"));
+    expect(model.calls[0]?.messages[0]?.content).not.toContain("Clickable places");
+    expect(legacy.reply).toBe("Open Privacy or Raw.");
+    expect(legacy.places).toEqual([]);
+
+    // With features: ["places"], owner gets privacy + domains + verified bot from get_bot,
+    // while unverified botIds and raw casama:// links are stripped.
+    model.script.length = 0;
+    model.calls.length = 0;
+    // First find Ledger Bot's id from DB so scripted reply can cite it.
+    const [ledger] = await h.handle.db.execute<{ id: string }>(
+      sql`select id from public.bots where org_id = ${orgId}::uuid and name = 'Ledger Bot' limit 1`,
+    );
+    const botId = ledger?.id ?? "";
+    const forgedId = "99999999-9999-4999-8999-999999999999";
+    // Self-hosted (billing disabled) omits cloudOnly places like domains, while allowing bot_settings & privacy.
+    model.script.length = 0;
+    model.calls.length = 0;
+    model.script.push(tool("get_bot", { name: "Ledger Bot" }), {
+      content:
+        `Check [Bot Settings](place:bot_settings?botId=${botId}), [Domains](place:domains), ` +
+        `[Secret](place:bot_settings?botId=${forgedId}), and [Privacy](place:privacy?highlight=export).`,
+    });
+    const selfHosted = await j(
+      await ask(person.token, "where do I rename Ledger Bot?", { features: ["places"] }),
+    );
+    expect(model.calls[0]?.messages[0]?.content).toContain("Clickable places");
+    expect(selfHosted.reply).toBe(
+      `Check [Bot Settings](casama://app/bots/${botId}/settings), Domains, Secret, and [Privacy](casama://app/settings/privacy?highlight=export).`,
+    );
+    expect(selfHosted.places).toEqual([
+      {
+        id: "bot_settings",
+        label: "Bot settings",
+        route: `/bots/${botId}/settings`,
+        url: `casama://app/bots/${botId}/settings`,
+      },
+      {
+        id: "privacy",
+        label: "Privacy & data",
+        route: "/settings/privacy?highlight=export",
+        url: "casama://app/settings/privacy?highlight=export",
+      },
+    ]);
+
+    // On Casama Cloud, owners/admins see cloudOnly + admin-only places like domains, while members don't.
+    const billingMut = h.deps.billing as { enabled: boolean };
+    const prevBilling = billingMut.enabled;
+    billingMut.enabled = true;
+    try {
+      model.script.length = 0;
+      model.calls.length = 0;
+      model.script.push({ content: "Open [Domains](place:domains)." });
+      const ownerCloud = await j(
+        await ask(person.token, "how do I verify a domain?", { features: ["places"] }),
+      );
+      expect(ownerCloud.reply).toBe("Open [Domains](casama://app/settings/domains).");
+      expect(ownerCloud.places).toEqual([
+        {
+          id: "domains",
+          label: "Domains",
+          route: "/settings/domains",
+          url: "casama://app/settings/domains",
+        },
+      ]);
+
+      const mate2 = await h.user("teammate2@example.com");
+      await h.handle.db.execute(
+        sql`insert into public.memberships (org_id, user_id, role) values (${orgId}::uuid, ${mate2.id}::uuid, 'member')`,
+      );
+      model.script.length = 0;
+      model.calls.length = 0;
+      model.script.push({ content: "See [Domains](place:domains) or [Privacy](place:privacy)." });
+      const memberRes = await j(
+        await ask(mate2.token, "how do I verify a domain?", { features: ["places"] }),
+      );
+      expect(model.calls[0]?.messages[0]?.content).not.toContain("`domains`");
+      expect(memberRes.reply).toBe("See Domains or [Privacy](casama://app/settings/privacy).");
+      expect(memberRes.places).toEqual([
+        {
+          id: "privacy",
+          label: "Privacy & data",
+          route: "/settings/privacy",
+          url: "casama://app/settings/privacy",
+        },
+      ]);
+    } finally {
+      billingMut.enabled = prevBilling;
+    }
+  });
 });
 
 describe("support docs index", () => {

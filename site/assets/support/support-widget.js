@@ -374,6 +374,29 @@
       return el("div", "cmh-msg cmh-bot cmh-error", "<p>" + esc(m.content) + "</p>" + helpLinks());
     }
     var b = el("div", "cmh-msg cmh-bot", markdown(m.content));
+    var seenPlaces = {};
+    var places = (m.places || []).filter(function (p) {
+      if (!p || typeof p.id !== "string" || typeof p.url !== "string" || !/^https?:\/\/[^\s]+$/i.test(p.url)) return false;
+      if (seenPlaces[p.id]) return false;
+      seenPlaces[p.id] = true;
+      return true;
+    }).slice(0, 2);
+    if (places.length) {
+      var pbox = el("div", "cmh-places");
+      pbox.appendChild(el("p", "cmh-sources-title", "Open in Casama"));
+      var list = el("div", "cmh-place-list");
+      places.forEach(function (p) {
+        var a = document.createElement("a");
+        a.className = "cmh-place";
+        a.href = p.url;
+        a.target = "_blank";
+        a.rel = "noopener noreferrer";
+        a.textContent = p.label || p.url;
+        list.appendChild(a);
+      });
+      pbox.appendChild(list);
+      b.appendChild(pbox);
+    }
     var sources = (m.sources || []).filter(function (s) { return s && typeof s.url === "string" && safeUrl(s.url); });
     if (sources.length) {
       var box = el("div", "cmh-sources");
@@ -439,7 +462,12 @@
 
     getConfig().then(send).then(function (res) {
       var reply = typeof res.reply === "string" && res.reply.trim() ? res.reply : "I couldn't find an answer to that in our docs.";
-      messages.push({ role: "assistant", content: reply, sources: Array.isArray(res.sources) ? res.sources : [] });
+      messages.push({
+        role: "assistant",
+        content: reply,
+        places: Array.isArray(res.places) ? res.places : [],
+        sources: Array.isArray(res.sources) ? res.sources : []
+      });
       announce("Casama Help answered: " + reply.slice(0, 400));
     }, function (err) {
       if (err.status === 403 && err.code === "assistant_off" && config) config.assistant = false;

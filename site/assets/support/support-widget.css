@@ -90,6 +90,11 @@ html.cmh-locked, html.cmh-locked body { overflow: hidden; }
 .cmh-error p:first-child { color: var(--cmh-ink); }
 .cmh-help-links { margin-top: 8px !important; font-size: 14px; color: var(--cmh-ink-2); }
 .cmh-off { display: flex; flex-direction: column; gap: 10px; }
+.cmh-places { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--cmh-line); }
+.cmh-place-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.cmh-place { display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px; border: 1px solid var(--cmh-line); border-radius: 999px; background: var(--cmh-bg-2); color: var(--cmh-ink); font-size: 13px; font-weight: 600; text-decoration: none; }
+.cmh-place::after { content: "→"; color: var(--cmh-accent); }
+@media (hover: hover) { .cmh-place:hover { border-color: var(--cmh-accent); text-decoration: none; } }
 .cmh-sources { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--cmh-line); font-size: 14px; }
 .cmh-sources-title { font-weight: 700; color: var(--cmh-ink-2); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; }
 .cmh-sources ul { list-style: none !important; padding: 0 !important; margin-top: 4px !important; }

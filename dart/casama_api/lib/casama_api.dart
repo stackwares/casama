@@ -812,6 +812,7 @@ export 'package:casama_api/src/model/support_chat_reply_handoff.dart';
 export 'package:casama_api/src/model/support_chat_request.dart';
 export 'package:casama_api/src/model/support_config.dart';
 export 'package:casama_api/src/model/support_message.dart';
+export 'package:casama_api/src/model/support_place.dart';
 export 'package:casama_api/src/model/support_source.dart';
 export 'package:casama_api/src/model/support_ticket.dart';
 export 'package:casama_api/src/model/support_ticket_list.dart';

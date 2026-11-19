@@ -31,6 +31,8 @@ COPY --from=deps /app /app
 COPY --from=fonts /usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc /usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc /usr/share/fonts/opentype/noto/
 COPY packages/agent/src packages/agent/src
 COPY packages/contracts/src packages/contracts/src
+# Casama Help's place list (D-431), read at runtime by loadSupportPlaces().
+COPY packages/contracts/support packages/contracts/support
 COPY packages/db/src packages/db/src
 COPY packages/domain/src packages/domain/src
 COPY packages/mcp/src packages/mcp/src

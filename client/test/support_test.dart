@@ -6,6 +6,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
 import 'app_test.dart' show setSize;
@@ -283,6 +284,151 @@ void main() {
       expect(query, contains('The app froze'));
       expect(query, contains('Account ID: me'));
       expect(query, isNot(contains('+')));
+    },
+  );
+
+  testWidgets(
+    'Casama Help sends features: [places], renders up to 2 deduplicated Go to chips before sources, and pushes over Help with Back preserved',
+    (tester) async {
+      await setSize(tester, const Size(800, 1200));
+      final backend = FakeBackend();
+      final launched = <Uri>[];
+      backend.supportReplies.add(
+        SupportChatReply(
+          reply:
+              'Tap [Billing → Restore Purchases](casama://app/settings/billing?highlight=restore) or check privacy.',
+          sources: [
+            SupportSource(
+              title: 'Payments › Restore',
+              url: 'https://docs.casama.ai/guide/payments#restore',
+            ),
+          ],
+          places: [
+            SupportPlace(
+              id: 'billing_restore',
+              label: 'Restore Purchases',
+              route: '/settings/billing?highlight=restore',
+              url: 'casama://app/settings/billing?highlight=restore',
+            ),
+            SupportPlace(
+              id: 'billing_restore',
+              label: 'Restore Purchases',
+              route: '/settings/billing?highlight=restore',
+              url: 'casama://app/settings/billing?highlight=restore',
+            ),
+            SupportPlace(
+              id: 'privacy',
+              label: 'Privacy & data',
+              route: '/settings/privacy',
+              url: 'casama://app/settings/privacy',
+            ),
+            SupportPlace(
+              id: 'billing',
+              label: 'Billing',
+              route: '/settings/billing',
+              url: 'casama://app/settings/billing',
+            ),
+          ],
+          handoff: null,
+        ),
+      );
+      final router = GoRouter(
+        initialLocation: '/support',
+        routes: [
+          GoRoute(
+            path: '/support',
+            builder: (_, _) => const SupportChatScreen(),
+          ),
+          GoRoute(
+            path: '/settings/billing',
+            builder: (_, s) => Scaffold(
+              appBar: AppBar(title: const Text('Billing Target')),
+              body: Text('highlight:${s.uri.queryParameters['highlight']}'),
+            ),
+          ),
+          GoRoute(
+            path: '/settings/privacy',
+            builder: (_, _) => const Scaffold(body: Text('Privacy Target')),
+          ),
+        ],
+      );
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            backendProvider.overrideWithValue(backend),
+            supportLaunchProvider.overrideWithValue((uri) async {
+              launched.add(uri);
+              return true;
+            }),
+          ],
+          child: MaterialApp.router(
+            routerConfig: router,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('supportStarter-0')));
+      await tester.pumpAndSettle();
+
+      final asked = backend.supportAsked.single;
+      expect(asked.features, ['places']);
+
+      // Deduplicated and capped at 2 Go to chips, placed above sources.
+      final restoreChip = find.byKey(const Key('supportPlace-billing_restore'));
+      final privacyChip = find.byKey(const Key('supportPlace-privacy'));
+      final billingChip = find.byKey(const Key('supportPlace-billing'));
+      final sourceChip = find.text('Restore');
+      expect(restoreChip, findsOneWidget);
+      expect(privacyChip, findsOneWidget);
+      expect(billingChip, findsNothing);
+      expect(sourceChip, findsOneWidget);
+      expect(
+        tester.getTopLeft(restoreChip).dy,
+        lessThan(tester.getTopLeft(sourceChip).dy),
+      );
+
+      // Tapping Go to chip pushes Billing with ?highlight=restore over Help.
+      await tester.tap(restoreChip);
+      await tester.pumpAndSettle();
+      expect(find.text('highlight:restore'), findsOneWidget);
+
+      // Back returns to Help with the conversation preserved.
+      router.pop();
+      await tester.pumpAndSettle();
+      expect(restoreChip, findsOneWidget);
+
+      // An external place (route: null) opens via supportLaunchProvider.
+      backend.supportReplies.add(
+        SupportChatReply(
+          reply: 'Manage your Apple subscription directly.',
+          sources: const [],
+          places: [
+            SupportPlace(
+              id: 'store_subscriptions_apple',
+              label: 'Apple subscriptions',
+              route: null,
+              url: 'https://apps.apple.com/account/subscriptions',
+            ),
+          ],
+          handoff: null,
+        ),
+      );
+      await tester.enterText(
+        find.byType(TextField).last,
+        'How do I cancel on iPhone?',
+      );
+      await tester.testTextInput.receiveAction(TextInputAction.send);
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.byKey(const Key('supportPlace-store_subscriptions_apple')),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        launched.map((u) => u.toString()),
+        contains('https://apps.apple.com/account/subscriptions'),
+      );
     },
   );
 }

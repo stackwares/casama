@@ -3000,6 +3000,12 @@
               "$ref": "#/components/schemas/SupportSource"
             }
           },
+          "places": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SupportPlace"
+            }
+          },
           "handoff": {
             "type": [
               "object",
@@ -3040,6 +3046,28 @@
           "url"
         ]
       },
+      "SupportPlace": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "route": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "label",
+          "url"
+        ]
+      },
       "SupportChatRequest": {
         "type": "object",
         "properties": {
@@ -3054,6 +3082,14 @@
             },
             "minItems": 1,
             "maxItems": 40
+          },
+          "features": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 32
+            },
+            "maxItems": 10
           },
           "app_version": {
             "type": "string",
@@ -3078,6 +3114,12 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/SupportSource"
+            }
+          },
+          "places": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SupportPlace"
             }
           }
         },

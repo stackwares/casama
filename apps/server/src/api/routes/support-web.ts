@@ -33,6 +33,7 @@ import { clientIp } from "../util.ts";
 import { instanceOwnerCheck } from "./admin.ts";
 import { billingFor } from "./billing.ts";
 import { bump, citedSources, pausedUntil, SHARED_RULES, usage } from "./support.ts";
+import { filterPlaces, linkPlaces, placesPromptSection } from "./support-places.ts";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
@@ -326,13 +327,22 @@ export function registerSupportWebRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps
     let spent = 0;
     let strike = false;
     const sources = new Map<string, string>();
+    let allowedPlaces: ReturnType<typeof filterPlaces> = [];
     try {
+      allowedPlaces = filterPlaces({
+        publicOnly: true,
+        cloud: true,
+        platform: null,
+        build: null,
+        role: null,
+      });
+      const placesPrompt = placesPromptSection(allowedPlaces, "web");
       const index = await docs.current();
       const page = body.page?.replace(/[^\w/.#-]/g, "").slice(0, 120);
       const convo: Record<string, unknown>[] = [
         {
           role: "system",
-          content: `${SYSTEM}\n\nToday is ${new Date().toISOString().slice(0, 10)}.${page ? ` The visitor is on ${page}.` : ""}\n\nThe docs (search them for details):\n${index.outline()}`,
+          content: `${SYSTEM}\n\nToday is ${new Date().toISOString().slice(0, 10)}.${page ? ` The visitor is on ${page}.` : ""}${placesPrompt ? `\n\n${placesPrompt}` : ""}\n\nThe docs (search them for details):\n${index.outline()}`,
         },
         ...history,
       ];
@@ -450,7 +460,19 @@ export function registerSupportWebRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps
         reply =
           "Sorry, I couldn't answer that. The FAQ may help, or email support@casama.ai and a person will reply.";
       const cited = citedSources(reply, sources);
-      return c.json({ reply: cited.reply || reply, sources: strike ? [] : cited.sources }, 200);
+      const linked = linkPlaces(cited.reply || reply, {
+        mode: "web",
+        enabled: !strike,
+        allowed: allowedPlaces,
+      });
+      return c.json(
+        {
+          reply: linked.reply,
+          sources: strike ? [] : cited.sources,
+          places: strike ? [] : linked.places,
+        },
+        200,
+      );
     } finally {
       busy.delete(me);
       const after = await bump(db, me, { messages: 1, usd: spent, strikes: strike ? 1 : 0 });

@@ -51,6 +51,7 @@ export * from "./skill-learning.ts";
 export * from "./skills.ts";
 export * from "./starters.ts";
 export * from "./support.ts";
+export * from "./support-places.ts";
 export * from "./teach.ts";
 export * from "./telephony.ts";
 export * from "./voice.ts";

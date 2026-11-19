@@ -365,6 +365,7 @@ export function supportLookups(
       const primary = (b.model_policy?.primary ?? null) as { model?: string } | null;
       const maxBots = lim.limits.max_bots;
       return {
+        id: b.id,
         name: b.name,
         status: b.status,
         setup: b.setup_status,

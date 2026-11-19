@@ -244,6 +244,34 @@ describe("Casama Help on the websites (D-401)", () => {
     });
     expect(r.status).toBe(400);
   });
+
+  it("links only public places using https://casama.ai/open and strips private ones", async () => {
+    const s = await session();
+    up.script.push({
+      content:
+        "Open [Privacy & data](place:privacy?highlight=export), check [Apple](place:store_subscriptions_apple), or [Bot](place:bot_settings?botId=11111111-1111-4111-8111-111111111111).",
+    });
+    const r = await ask(s, "how do I export my data or cancel?");
+    expect(r.status).toBe(200);
+    const body = await j(r);
+    expect(up.calls[0]?.messages[0]?.content).toContain("Clickable places");
+    expect(up.calls[0]?.messages[0]?.content).not.toContain("`bot_settings`");
+    expect(body.reply).toBe(
+      "Open [Privacy & data](https://casama.ai/open/settings/privacy?highlight=export), check [Apple](https://apps.apple.com/account/subscriptions), or Bot.",
+    );
+    expect(body.places).toEqual([
+      {
+        id: "privacy",
+        label: "Privacy & data",
+        url: "https://casama.ai/open/settings/privacy?highlight=export",
+      },
+      {
+        id: "store_subscriptions_apple",
+        label: "Apple subscriptions",
+        url: "https://apps.apple.com/account/subscriptions",
+      },
+    ]);
+  });
 });
 
 describe("website assistant helpers (D-401)", () => {

@@ -4,6 +4,7 @@
 
 // ignore_for_file: unused_element
 import 'package:casama_api/src/model/support_source.dart';
+import 'package:casama_api/src/model/support_place.dart';
 import 'package:copy_with_extension/copy_with_extension.dart';
 import 'package:json_annotation/json_annotation.dart';
 
@@ -24,6 +25,8 @@ class SupportWebChatReply {
     required  this.reply,
 
     required  this.sources,
+
+     this.places,
   });
 
   @JsonKey(
@@ -50,17 +53,31 @@ class SupportWebChatReply {
 
 
 
+  @JsonKey(
+    
+    name: r'places',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final List<SupportPlace>? places;
+
+
+
 
 
     @override
     bool operator ==(Object other) => identical(this, other) || other is SupportWebChatReply &&
       other.reply == reply &&
-      other.sources == sources;
+      other.sources == sources &&
+      other.places == places;
 
     @override
     int get hashCode =>
         reply.hashCode +
-        sources.hashCode;
+        sources.hashCode +
+        places.hashCode;
 
   factory SupportWebChatReply.fromJson(Map<String, dynamic> json) => _$SupportWebChatReplyFromJson(json);
 

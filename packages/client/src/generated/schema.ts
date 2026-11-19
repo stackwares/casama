@@ -8058,6 +8058,7 @@ export interface components {
         SupportChatReply: {
             reply: string;
             sources: components["schemas"]["SupportSource"][];
+            places?: components["schemas"]["SupportPlace"][];
             handoff: {
                 topic: components["schemas"]["SupportTopic"];
                 summary: string;
@@ -8067,16 +8068,24 @@ export interface components {
             title: string;
             url: string;
         };
+        SupportPlace: {
+            id: string;
+            label: string;
+            route?: string;
+            url: string;
+        };
         SupportChatRequest: {
             /** Format: uuid */
             org_id?: string;
             messages: components["schemas"]["SupportMessage"][];
+            features?: string[];
             app_version?: string;
             platform?: string;
         };
         SupportWebChatReply: {
             reply: string;
             sources: components["schemas"]["SupportSource"][];
+            places?: components["schemas"]["SupportPlace"][];
         };
         SupportWebChatRequest: {
             session: string;

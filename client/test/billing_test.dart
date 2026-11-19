@@ -14,6 +14,7 @@ import 'package:casama/features/billing/billing_screen.dart';
 import 'package:casama/features/billing/out_of_credits.dart';
 import 'package:casama/features/billing/paywall.dart';
 import 'package:casama/ui/adaptive_modal.dart';
+import 'package:casama/ui/highlight_target.dart';
 import 'package:casama/l10n/generated/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -950,6 +951,74 @@ void main() {
       await pumpOutOfCredits(tester, free, opened);
       expect(find.byType(PaywallScreen), findsOneWidget);
       expect(find.text("You're out of credits"), findsOneWidget);
+    });
+  });
+
+  group('BillingScreen ?highlight= targets', () {
+    testWidgets('highlight=credits activates the credits HighlightTarget without triggering purchases', (tester) async {
+      await setSize(tester, const Size(900, 1400));
+      final backend = FakeBackend()..billingEnabled = true;
+      final store = FakeStore('app_store', country: 'USA');
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            backendProvider.overrideWithValue(backend),
+            unlockersProvider.overrideWithValue(FakeUnlockers()),
+            storeProvider.overrideWithValue(store),
+            platformProvider.overrideWithValue(TargetPlatform.iOS),
+          ],
+          child: const MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: BillingScreen(highlight: 'credits'),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final activeTargets = tester
+          .widgetList<HighlightTarget>(find.byType(HighlightTarget))
+          .where((w) => w.active)
+          .toList();
+      expect(activeTargets, hasLength(1));
+      expect(
+        find.descendant(
+          of: find.byWidget(activeTargets.single),
+          matching: find.byKey(const Key('creditsBalance')),
+        ),
+        findsOneWidget,
+      );
+      expect(backend.verified, isEmpty);
+      expect(store.restoredWith, isEmpty);
+    });
+
+    testWidgets('highlight=link_cloud expands AdvancedSection and respects reduced motion', (tester) async {
+      await setSize(tester, const Size(900, 1400));
+      final backend = FakeBackend()..billingEnabled = true;
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            backendProvider.overrideWithValue(backend),
+            unlockersProvider.overrideWithValue(FakeUnlockers()),
+            storeProvider.overrideWithValue(const NoStore()),
+            platformProvider.overrideWithValue(TargetPlatform.macOS),
+          ],
+          child: const MediaQuery(
+            data: MediaQueryData(disableAnimations: true),
+            child: MaterialApp(
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: BillingScreen(highlight: 'link_cloud'),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final activeTargets = tester
+          .widgetList<HighlightTarget>(find.byType(HighlightTarget))
+          .where((w) => w.active)
+          .toList();
+      expect(activeTargets, hasLength(1));
+      expect(find.byWidget(activeTargets.single), findsOneWidget);
     });
   });
 }

@@ -9,6 +9,7 @@ import 'package:casama/core/providers.dart';
 import 'package:casama/core/server_address.dart';
 import 'package:casama/features/auth/sign_in_screen.dart';
 import 'package:casama/features/privacy/privacy_screen.dart';
+import 'package:casama/ui/highlight_target.dart';
 import 'package:casama/l10n/generated/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -128,5 +129,38 @@ void main() {
     expect((await ServerAddress.load()).apiUrl, 'http://localhost:8787');
     await ServerAddress.save('k.example.com');
     expect((await ServerAddress.load()).apiUrl, 'https://k.example.com');
+  });
+
+  testWidgets('PrivacyScreen ?highlight= targets the matching control without executing destructive or export actions', (tester) async {
+    await setSize(tester, const Size(800, 1000));
+    final backend = FakeBackend();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          backendProvider.overrideWithValue(backend),
+          unlockersProvider.overrideWithValue(FakeUnlockers()),
+        ],
+        child: const MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: PrivacyScreen(highlight: 'delete'),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final activeTargets = tester
+        .widgetList<HighlightTarget>(find.byType(HighlightTarget))
+        .where((w) => w.active)
+        .toList();
+    expect(activeTargets, hasLength(1));
+    expect(
+      find.descendant(
+        of: find.byWidget(activeTargets.single),
+        matching: find.byKey(const Key('deleteAccount')),
+      ),
+      findsOneWidget,
+    );
+    expect(backend.exported, 0);
+    expect(backend.deletedWith, isNull);
   });
 }

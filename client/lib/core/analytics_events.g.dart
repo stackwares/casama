@@ -42,6 +42,7 @@ const analyticsClientEvents = <String>{
   'widget_action',
   'enable_analytics_sharing',
   'disable_analytics_sharing',
+  'help_place_opened',
 };
 
 /// The closed list of `feature_used` features.

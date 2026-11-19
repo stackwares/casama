@@ -6,6 +6,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../core/analytics.dart';
 import '../../core/billing.dart';
 import '../../core/crash_reporter.dart';
 import '../../core/dev_server.dart';
@@ -371,6 +372,7 @@ class HelpLine {
     required this.fromMe,
     required this.text,
     this.sources = const [],
+    this.places = const [],
     this.handoff,
     this.error = false,
     this.limit = false,
@@ -378,6 +380,7 @@ class HelpLine {
   final bool fromMe;
   final String text;
   final List<SupportSource> sources;
+  final List<SupportPlace> places;
   final SupportChatReplyHandoff? handoff;
   final bool error;
 
@@ -436,6 +439,7 @@ class HelpChatNotifier extends Notifier<HelpChat> {
                   .toList(),
               appVersion: version,
               platform: supportPlatform(),
+              features: const ['places'],
             ),
           );
       state = HelpChat(
@@ -445,6 +449,7 @@ class HelpChatNotifier extends Notifier<HelpChat> {
             fromMe: false,
             text: r.reply,
             sources: r.sources,
+            places: r.places ?? const [],
             handoff: r.handoff,
           ),
         ],
@@ -829,12 +834,66 @@ class _HelpBubble extends ConsumerWidget {
       );
     }
     final launch = ref.read(supportLaunchProvider);
+    final seenPlaces = <String>{};
+    final places = [
+      for (final p in line.places)
+        if (seenPlaces.add(p.id)) p,
+    ].take(2).toList();
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpace.md, right: AppSpace.lg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ChatMarkdown(data: line.text),
+          ChatMarkdown(
+            data: line.text,
+            appLinks: true,
+            onLinkTap: (url) {
+              for (final p in line.places) {
+                final matches = p.url == url ||
+                    (p.route != null &&
+                        (url == 'casama://app${p.route}' ||
+                            url == 'https://casama.ai/open${p.route}'));
+                if (matches) {
+                  Analytics.log('help_place_opened', {
+                    'place_id': p.id,
+                    'from': 'link',
+                  });
+                  break;
+                }
+              }
+            },
+          ),
+          if (places.isNotEmpty) ...[
+            const SizedBox(height: AppSpace.xs),
+            Wrap(
+              spacing: AppSpace.xs,
+              runSpacing: AppSpace.xs,
+              children: [
+                for (final p in places)
+                  ActionChip(
+                    key: Key('supportPlace-${p.id}'),
+                    avatar: const Icon(LucideIcons.arrowRight, size: 14),
+                    label: Text(
+                      'Go to ${p.label}',
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    visualDensity: VisualDensity.compact,
+                    onPressed: () {
+                      Analytics.log('help_place_opened', {
+                        'place_id': p.id,
+                        'from': 'chip',
+                      });
+                      final route = p.route;
+                      if (route != null && route.isNotEmpty) {
+                        context.pushOnce(route);
+                      } else {
+                        launch(Uri.parse(p.url));
+                      }
+                    },
+                  ),
+              ],
+            ),
+          ],
           if (line.sources.isNotEmpty) ...[
             const SizedBox(height: AppSpace.xs),
             Wrap(

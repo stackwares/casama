@@ -1339,6 +1339,7 @@ Class | Method | HTTP request | Description
  - [SupportChatRequest](doc/SupportChatRequest.md)
  - [SupportConfig](doc/SupportConfig.md)
  - [SupportMessage](doc/SupportMessage.md)
+ - [SupportPlace](doc/SupportPlace.md)
  - [SupportSource](doc/SupportSource.md)
  - [SupportTicket](doc/SupportTicket.md)
  - [SupportTicketList](doc/SupportTicketList.md)

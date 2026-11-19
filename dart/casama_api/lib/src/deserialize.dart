@@ -709,6 +709,7 @@ import 'package:casama_api/src/model/support_chat_reply_handoff.dart';
 import 'package:casama_api/src/model/support_chat_request.dart';
 import 'package:casama_api/src/model/support_config.dart';
 import 'package:casama_api/src/model/support_message.dart';
+import 'package:casama_api/src/model/support_place.dart';
 import 'package:casama_api/src/model/support_source.dart';
 import 'package:casama_api/src/model/support_ticket.dart';
 import 'package:casama_api/src/model/support_ticket_list.dart';
@@ -2412,6 +2413,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return SupportConfig.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SupportMessage':
           return SupportMessage.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'SupportPlace':
+          return SupportPlace.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SupportSource':
           return SupportSource.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SupportTicket':

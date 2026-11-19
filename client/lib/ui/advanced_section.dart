@@ -136,17 +136,22 @@ class AdvancedSection extends ConsumerWidget {
               ),
             ),
     );
+    final body = open
+        ? Column(crossAxisAlignment: CrossAxisAlignment.stretch, mainAxisSize: MainAxisSize.min, children: children)
+        : const SizedBox(width: double.infinity);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: [
         toggle,
-        AnimatedSize(
-          duration: duration,
-          curve: Curves.easeOutCubic,
-          alignment: Alignment.topCenter,
-          child: open ? Column(crossAxisAlignment: CrossAxisAlignment.stretch, mainAxisSize: MainAxisSize.min, children: children) : const SizedBox(width: double.infinity),
-        ),
+        duration == Duration.zero
+            ? body
+            : AnimatedSize(
+                duration: duration,
+                curve: Curves.easeOutCubic,
+                alignment: Alignment.topCenter,
+                child: body,
+              ),
       ],
     );
   }

@@ -11,6 +11,8 @@ abstract class _$SupportChatReplyCWProxy {
 
   SupportChatReply sources(List<SupportSource> sources);
 
+  SupportChatReply places(List<SupportPlace>? places);
+
   SupportChatReply handoff(SupportChatReplyHandoff? handoff);
 
   /// Creates a new instance with the provided field values.
@@ -24,6 +26,7 @@ abstract class _$SupportChatReplyCWProxy {
   SupportChatReply call({
     String reply,
     List<SupportSource> sources,
+    List<SupportPlace>? places,
     SupportChatReplyHandoff? handoff,
   });
 }
@@ -43,6 +46,9 @@ class _$SupportChatReplyCWProxyImpl implements _$SupportChatReplyCWProxy {
       call(sources: sources);
 
   @override
+  SupportChatReply places(List<SupportPlace>? places) => call(places: places);
+
+  @override
   SupportChatReply handoff(SupportChatReplyHandoff? handoff) =>
       call(handoff: handoff);
 
@@ -58,6 +64,7 @@ class _$SupportChatReplyCWProxyImpl implements _$SupportChatReplyCWProxy {
   SupportChatReply call({
     Object? reply = const $CopyWithPlaceholder(),
     Object? sources = const $CopyWithPlaceholder(),
+    Object? places = const $CopyWithPlaceholder(),
     Object? handoff = const $CopyWithPlaceholder(),
   }) {
     return SupportChatReply(
@@ -69,6 +76,10 @@ class _$SupportChatReplyCWProxyImpl implements _$SupportChatReplyCWProxy {
           ? _value.sources
           // ignore: cast_nullable_to_non_nullable
           : sources as List<SupportSource>,
+      places: places == const $CopyWithPlaceholder()
+          ? _value.places
+          // ignore: cast_nullable_to_non_nullable
+          : places as List<SupportPlace>?,
       handoff: handoff == const $CopyWithPlaceholder()
           ? _value.handoff
           // ignore: cast_nullable_to_non_nullable
@@ -99,6 +110,12 @@ SupportChatReply _$SupportChatReplyFromJson(Map<String, dynamic> json) =>
               .map((e) => SupportSource.fromJson(e as Map<String, dynamic>))
               .toList(),
         ),
+        places: $checkedConvert(
+          'places',
+          (v) => (v as List<dynamic>?)
+              ?.map((e) => SupportPlace.fromJson(e as Map<String, dynamic>))
+              .toList(),
+        ),
         handoff: $checkedConvert(
           'handoff',
           (v) => v == null
@@ -113,5 +130,6 @@ Map<String, dynamic> _$SupportChatReplyToJson(SupportChatReply instance) =>
     <String, dynamic>{
       'reply': instance.reply,
       'sources': instance.sources.map((e) => e.toJson()).toList(),
+      'places': ?instance.places?.map((e) => e.toJson()).toList(),
       'handoff': instance.handoff?.toJson(),
     };

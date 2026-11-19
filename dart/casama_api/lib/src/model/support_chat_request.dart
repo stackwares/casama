@@ -25,6 +25,8 @@ class SupportChatRequest {
 
     required  this.messages,
 
+     this.features,
+
      this.appVersion,
 
      this.platform,
@@ -51,6 +53,18 @@ class SupportChatRequest {
 
 
   final List<SupportMessage> messages;
+
+
+
+  @JsonKey(
+    
+    name: r'features',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final List<String>? features;
 
 
 
@@ -84,6 +98,7 @@ class SupportChatRequest {
     bool operator ==(Object other) => identical(this, other) || other is SupportChatRequest &&
       other.orgId == orgId &&
       other.messages == messages &&
+      other.features == features &&
       other.appVersion == appVersion &&
       other.platform == platform;
 
@@ -91,6 +106,7 @@ class SupportChatRequest {
     int get hashCode =>
         orgId.hashCode +
         messages.hashCode +
+        features.hashCode +
         appVersion.hashCode +
         platform.hashCode;
 

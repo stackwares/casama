@@ -9,6 +9,8 @@ import '../../files/file_preview.dart';
 import '../media/markdown_image.dart';
 import 'mentions.dart';
 import '../../../core/link_browser.dart';
+import '../../../core/nav.dart';
+import '../../../core/open_links.dart';
 
 /// Bot replies as Markdown in the app's type and surfaces: comfortable paragraphs, Fraunces headings,
 /// and code in rounded panels with the language and a copy button.
@@ -17,9 +19,21 @@ import '../../../core/link_browser.dart';
 /// a chat rebuilding on every streamed word reuses every message as it was, and the message still
 /// streaming parses only its last run (see [markdownChunks]).
 class ChatMarkdown extends StatefulWidget {
-  const ChatMarkdown({super.key, required this.data, this.selectable = true});
+  const ChatMarkdown({
+    super.key,
+    required this.data,
+    this.selectable = true,
+    this.appLinks = false,
+    this.onLinkTap,
+  });
   final String data;
   final bool selectable;
+
+  /// Opens `casama://app/<route>` and `casama.ai/open/<route>` links inside the app. Only for
+  /// text whose links the server already checked against the place list (Casama Help, D-431):
+  /// in bot replies these stay off, since routes like `/runs/<id>/stop` act when opened.
+  final bool appLinks;
+  final void Function(String url)? onLinkTap;
 
   @override
   State<ChatMarkdown> createState() => _ChatMarkdownState();
@@ -104,7 +118,24 @@ class _ChatMarkdownState extends State<ChatMarkdown> {
           style: TextStyle(color: scheme.primary, decoration: TextDecoration.underline, decorationColor: scheme.primary.withValues(alpha: 0.4)),
           onTap: (url) {
             final uri = Uri.tryParse(url);
+            if (widget.appLinks && uri != null && uri.scheme == 'casama' && uri.host == 'app') {
+              final target = macLinkLocation(uri);
+              if (target != null) {
+                widget.onLinkTap?.call(url);
+                context.pushOnce(target);
+                return;
+              }
+            }
+            if (widget.appLinks && uri != null && (uri.scheme == 'https' || uri.scheme == 'http') && (uri.host == 'casama.ai' || uri.host == 'www.casama.ai')) {
+              final target = openLinkTarget(uri);
+              if (target != null) {
+                widget.onLinkTap?.call(url);
+                context.pushOnce(target);
+                return;
+              }
+            }
             if (uri != null && (uri.scheme == 'http' || uri.scheme == 'https')) {
+              widget.onLinkTap?.call(url);
               openWebLink(uri);
               return;
             }

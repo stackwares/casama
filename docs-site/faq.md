@@ -530,7 +530,7 @@ Open **Settings > Help & support**. On Casama Cloud, **Casama Help** answers str
 knows these guides and can check your account and the workspace you have open: your plan and its
 limits, purchases, this month's usage, credit history, connected apps and chat channels, invites,
 and a bot's settings, routines and recent errors. It sees what the app would show you and never
-reads your chats.
+reads your chats. Answers can link straight to the screen or store page you need.
 When a person should take over, it writes up the problem and you send it to our support team with
 one tap; we reply by email. You can also choose **Contact support** there at any time.
 

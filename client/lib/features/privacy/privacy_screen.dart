@@ -18,6 +18,7 @@ import '../../theme/app_tokens.dart';
 import '../../ui/adaptive_modal.dart';
 import '../../ui/app_card.dart';
 import '../../ui/form_sheet.dart';
+import '../../ui/highlight_target.dart';
 import '../../ui/page.dart';
 import '../app_lock/confirm_identity.dart';
 import 'ai_consent_step.dart';
@@ -43,7 +44,10 @@ final saveExportProvider = Provider<Future<void> Function(Uint8List bytes, Strin
 
 /// Privacy (Phase 8, D-072): export your data, delete your account, and workspace retention.
 class PrivacyScreen extends ConsumerStatefulWidget {
-  const PrivacyScreen({super.key});
+  const PrivacyScreen({super.key, this.highlight});
+
+  final String? highlight;
+
   @override
   ConsumerState<PrivacyScreen> createState() => _PrivacyScreenState();
 }
@@ -131,62 +135,71 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
         SectionHeader(title: l10n.yourData),
         GroupedCard(
           children: [
-            KeyedSubtree(
-              key: _exportKey,
-              child: GroupedTile(
-                key: const Key('exportData'),
-                icon: LucideIcons.download,
-                title: l10n.exportMyData,
-                subtitle: l10n.exportMyDataHelp,
-                onTap: _busy ? null : _export,
-                trailing: _busy
-                    ? const SizedBox.square(dimension: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                    : Icon(LucideIcons.chevronRight, color: scheme.onSurfaceVariant.withValues(alpha: 0.7)),
+            HighlightTarget(
+              active: widget.highlight == 'export',
+              child: KeyedSubtree(
+                key: _exportKey,
+                child: GroupedTile(
+                  key: const Key('exportData'),
+                  icon: LucideIcons.download,
+                  title: l10n.exportMyData,
+                  subtitle: l10n.exportMyDataHelp,
+                  onTap: _busy ? null : _export,
+                  trailing: _busy
+                      ? const SizedBox.square(dimension: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                      : Icon(LucideIcons.chevronRight, color: scheme.onSurfaceVariant.withValues(alpha: 0.7)),
+                ),
               ),
             ),
-            FutureBuilder<bool>(
-              future: Analytics.isConsentEnabled(),
-              builder: (context, snapshot) {
-                final enabled = snapshot.data ?? true;
-                return GroupedTile(
-                  key: const Key('shareAnalyticsTile'),
-                  icon: LucideIcons.chartColumn,
-                  title: l10n.shareAnalytics,
-                  subtitle: l10n.shareAnalyticsHelp,
-                  trailing: Switch(
-                    key: const Key('shareAnalyticsSwitch'),
-                    value: enabled,
-                    onChanged: (val) async {
-                      await Analytics.setConsentEnabled(val);
-                      await Analytics.syncOptOut(ref.read(backendProvider).setAnalyticsOptOut);
-                      setState(() {});
-                    },
-                  ),
-                );
-              },
+            HighlightTarget(
+              active: widget.highlight == 'analytics',
+              child: FutureBuilder<bool>(
+                future: Analytics.isConsentEnabled(),
+                builder: (context, snapshot) {
+                  final enabled = snapshot.data ?? true;
+                  return GroupedTile(
+                    key: const Key('shareAnalyticsTile'),
+                    icon: LucideIcons.chartColumn,
+                    title: l10n.shareAnalytics,
+                    subtitle: l10n.shareAnalyticsHelp,
+                    trailing: Switch(
+                      key: const Key('shareAnalyticsSwitch'),
+                      value: enabled,
+                      onChanged: (val) async {
+                        await Analytics.setConsentEnabled(val);
+                        await Analytics.syncOptOut(ref.read(backendProvider).setAnalyticsOptOut);
+                        setState(() {});
+                      },
+                    ),
+                  );
+                },
+              ),
             ),
             // AI providers (D-421): withdrawing brings the consent step back before anything else is sent.
             if (ref.watch(aiConsentAskedHereProvider) && ref.watch(aiConsentProvider) != null)
-              GroupedTile(
-                key: const Key('aiConsentTile'),
-                icon: LucideIcons.sparkles,
-                title: l10n.aiConsentTile,
-                subtitle: l10n.aiConsentTileOn,
-                trailing: TextButton(
-                  key: const Key('aiConsentWithdraw'),
-                  onPressed: () async {
-                    final ok = await showConfirm(
-                      context: context,
-                      title: l10n.aiConsentWithdrawQuestion,
-                      message: l10n.aiConsentWithdrawBody,
-                      confirmLabel: l10n.aiConsentWithdraw,
-                      confirmKey: const Key('aiConsentWithdrawConfirm'),
-                      destructive: true,
-                    );
-                    if (!ok || !context.mounted) return;
-                    await runGuarded(context, () => ref.read(aiConsentProvider.notifier).set(false));
-                  },
-                  child: Text(l10n.aiConsentWithdraw),
+              HighlightTarget(
+                active: widget.highlight == 'ai_consent',
+                child: GroupedTile(
+                  key: const Key('aiConsentTile'),
+                  icon: LucideIcons.sparkles,
+                  title: l10n.aiConsentTile,
+                  subtitle: l10n.aiConsentTileOn,
+                  trailing: TextButton(
+                    key: const Key('aiConsentWithdraw'),
+                    onPressed: () async {
+                      final ok = await showConfirm(
+                        context: context,
+                        title: l10n.aiConsentWithdrawQuestion,
+                        message: l10n.aiConsentWithdrawBody,
+                        confirmLabel: l10n.aiConsentWithdraw,
+                        confirmKey: const Key('aiConsentWithdrawConfirm'),
+                        destructive: true,
+                      );
+                      if (!ok || !context.mounted) return;
+                      await runGuarded(context, () => ref.read(aiConsentProvider.notifier).set(false));
+                    },
+                    child: Text(l10n.aiConsentWithdraw),
+                  ),
                 ),
               ),
           ],
@@ -195,46 +208,52 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
           SectionHeader(title: l10n.workspace),
           GroupedCard(
             children: [
-              GroupedTile(
-                icon: LucideIcons.history,
-                title: l10n.runHistoryRetention,
-                subtitle: l10n.runHistoryRetentionHelp,
-                trailing: retention == null
-                    ? null
-                    : DropdownButton<int>(
-                        key: const Key('retention'),
-                        value: [30, 90, 180, 365, 730].contains(retention) ? retention : null,
-                        hint: Text(l10n.days(retention)),
-                        underline: const SizedBox.shrink(),
-                        borderRadius: AppRadius.tileAll,
-                        items: [
-                          for (final d in [30, 90, 180, 365, 730]) DropdownMenuItem(value: d, child: Text(l10n.days(d))),
-                        ],
-                        onChanged: hapticOnChanged((d) async {
-                          if (d == null) return;
-                          await runGuarded(context, () => ref.read(backendProvider).setRetentionDays(org.id, d));
-                          ref.invalidate(_retentionProvider);
-                        }, haptic: HapticsHelper.selection),
-                      ),
+              HighlightTarget(
+                active: widget.highlight == 'retention',
+                child: GroupedTile(
+                  icon: LucideIcons.history,
+                  title: l10n.runHistoryRetention,
+                  subtitle: l10n.runHistoryRetentionHelp,
+                  trailing: retention == null
+                      ? null
+                      : DropdownButton<int>(
+                          key: const Key('retention'),
+                          value: [30, 90, 180, 365, 730].contains(retention) ? retention : null,
+                          hint: Text(l10n.days(retention)),
+                          underline: const SizedBox.shrink(),
+                          borderRadius: AppRadius.tileAll,
+                          items: [
+                            for (final d in [30, 90, 180, 365, 730]) DropdownMenuItem(value: d, child: Text(l10n.days(d))),
+                          ],
+                          onChanged: hapticOnChanged((d) async {
+                            if (d == null) return;
+                            await runGuarded(context, () => ref.read(backendProvider).setRetentionDays(org.id, d));
+                            ref.invalidate(_retentionProvider);
+                          }, haptic: HapticsHelper.selection),
+                        ),
+                ),
               ),
-              Consumer(
-                builder: (context, ref, _) {
-                  final off = ref.watch(_workspaceAnalyticsOffProvider(org.id)).value ?? false;
-                  return GroupedTile(
-                    key: const Key('workspaceAnalyticsTile'),
-                    icon: LucideIcons.chartColumn,
-                    title: l10n.workspaceAnalytics,
-                    subtitle: l10n.workspaceAnalyticsHelp,
-                    trailing: Switch(
-                      key: const Key('workspaceAnalyticsSwitch'),
-                      value: !off,
-                      onChanged: (val) async {
-                        await runGuarded(context, () => ref.read(backendProvider).setOrgAnalyticsOptOut(org.id, !val));
-                        ref.invalidate(_workspaceAnalyticsOffProvider(org.id));
-                      },
-                    ),
-                  );
-                },
+              HighlightTarget(
+                active: widget.highlight == 'workspace_analytics',
+                child: Consumer(
+                  builder: (context, ref, _) {
+                    final off = ref.watch(_workspaceAnalyticsOffProvider(org.id)).value ?? false;
+                    return GroupedTile(
+                      key: const Key('workspaceAnalyticsTile'),
+                      icon: LucideIcons.chartColumn,
+                      title: l10n.workspaceAnalytics,
+                      subtitle: l10n.workspaceAnalyticsHelp,
+                      trailing: Switch(
+                        key: const Key('workspaceAnalyticsSwitch'),
+                        value: !off,
+                        onChanged: (val) async {
+                          await runGuarded(context, () => ref.read(backendProvider).setOrgAnalyticsOptOut(org.id, !val));
+                          ref.invalidate(_workspaceAnalyticsOffProvider(org.id));
+                        },
+                      ),
+                    );
+                  },
+                ),
               ),
             ],
           ),
@@ -242,25 +261,31 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
         // Blocking (D-301): who can't invite you or link agents with you.
         GroupedCard(
           children: [
-            GroupedTile(
-              key: const Key('blockedPeople'),
-              icon: LucideIcons.userX,
-              title: l10n.blockedPeople,
-              subtitle: l10n.blockedPeopleRow,
-              onTap: () => context.pushOnce('/settings/blocked'),
+            HighlightTarget(
+              active: widget.highlight == 'blocked',
+              child: GroupedTile(
+                key: const Key('blockedPeople'),
+                icon: LucideIcons.userX,
+                title: l10n.blockedPeople,
+                subtitle: l10n.blockedPeopleRow,
+                onTap: () => context.pushOnce('/settings/blocked'),
+              ),
             ),
           ],
         ),
         SectionHeader(title: l10n.dangerZone),
         GroupedCard(
           children: [
-            GroupedTile(
-              key: const Key('deleteAccount'),
-              icon: LucideIcons.trash2,
-              destructive: true,
-              title: l10n.deleteAccount,
-              subtitle: l10n.deleteAccountHelp,
-              onTap: _busy ? null : _delete,
+            HighlightTarget(
+              active: widget.highlight == 'delete',
+              child: GroupedTile(
+                key: const Key('deleteAccount'),
+                icon: LucideIcons.trash2,
+                destructive: true,
+                title: l10n.deleteAccount,
+                subtitle: l10n.deleteAccountHelp,
+                onTap: _busy ? null : _delete,
+              ),
             ),
           ],
         ),

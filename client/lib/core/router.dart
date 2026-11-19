@@ -999,11 +999,11 @@ final routerProvider = Provider<GoRouter>((ref) {
               ),
               GoRoute(
                 path: 'billing',
-                pageBuilder: _page((_, _) => const BillingScreen()),
+                pageBuilder: _page((_, s) => BillingScreen(highlight: s.uri.queryParameters['highlight'])),
               ),
               GoRoute(
                 path: 'privacy',
-                pageBuilder: _page((_, _) => const PrivacyScreen()),
+                pageBuilder: _page((_, s) => PrivacyScreen(highlight: s.uri.queryParameters['highlight'])),
               ),
               GoRoute(
                 path: 'blocked',

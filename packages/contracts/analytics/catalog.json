@@ -1666,6 +1666,21 @@
       },
       "funnels": [],
       "personless": true
+    },
+    {
+      "name": "help_place_opened",
+      "by": ["client"],
+      "description": "Someone tapped a clickable place link or Go to chip inside Casama Help.",
+      "properties": {
+        "place_id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "string",
+          "values": ["link", "chip"]
+        }
+      },
+      "funnels": []
     }
   ]
 }

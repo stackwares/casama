@@ -34,6 +34,8 @@ export const SupportChatRequest = z
     /** The workspace open in the app; the assistant looks only at this one. */
     org_id: Uuid.optional(),
     messages: z.array(SupportMessage).min(1).max(40),
+    /** Client capabilities, e.g. `["places"]` so the assistant can emit clickable in-app place links. */
+    features: z.array(z.string().max(32)).max(10).optional(),
     ...ClientInfo,
   })
   .openapi("SupportChatRequest");
@@ -42,11 +44,24 @@ export const SupportSource = z
   .object({ title: z.string(), url: z.string() })
   .openapi("SupportSource");
 
+export const SupportPlace = z
+  .object({
+    id: z.string(),
+    label: z.string(),
+    /** GoRouter location when the place is inside the app, e.g. `/settings/billing?highlight=restore`. */
+    route: z.string().optional(),
+    /** `casama://app/<route>` inside the app, `https://casama.ai/open/<route>` on the website, or an external URL. */
+    url: z.string(),
+  })
+  .openapi("SupportPlace");
+
 export const SupportChatReply = z
   .object({
     reply: z.string(),
     /** Docs pages the answer drew on. */
     sources: z.array(SupportSource),
+    /** In-app screens or store pages the answer linked to (at most two). */
+    places: z.array(SupportPlace).optional(),
     /** Set when the assistant thinks a person should take over: a summary to send them. */
     handoff: z.object({ topic: SupportTopic, summary: z.string() }).nullable(),
   })
@@ -133,7 +148,12 @@ export const SupportWebChatRequest = z
   .openapi("SupportWebChatRequest");
 
 export const SupportWebChatReply = z
-  .object({ reply: z.string(), sources: z.array(SupportSource) })
+  .object({
+    reply: z.string(),
+    sources: z.array(SupportSource),
+    /** Public in-app destinations (`https://casama.ai/open/...`) or store pages (at most two). */
+    places: z.array(SupportPlace).optional(),
+  })
   .openapi("SupportWebChatReply");
 
 /** Today's use of the website assistant, for instance owners. */

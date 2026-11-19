@@ -22,6 +22,7 @@ import '../../ui/adaptive_modal.dart';
 import '../../ui/advanced_section.dart';
 import '../../ui/app_card.dart';
 import '../../ui/form_sheet.dart';
+import '../../ui/highlight_target.dart';
 import '../../ui/page.dart';
 import '../../ui/shell_header.dart';
 import '../../ui/mascot.dart';
@@ -87,7 +88,9 @@ final openUrlProvider = Provider<Future<void> Function(String url)>(
 Future<void> showPaywall(BuildContext context, String message) => openPaywall(context, reason: message);
 
 class BillingScreen extends ConsumerStatefulWidget {
-  const BillingScreen({super.key});
+  const BillingScreen({super.key, this.highlight});
+
+  final String? highlight;
 
   @override
   ConsumerState<BillingScreen> createState() => _BillingScreenState();
@@ -201,13 +204,23 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
                 // A web subscription's portal can change and pay for plans, so it is linked only where
                 // web checkout may be (not in the stores outside the US storefront: App Store 3.1.1,
                 // Google Play payments policy).
-                _CurrentPlan(
-                  summary: b,
-                  onManage: isAdmin && b.source_.value != 'default' && (b.source_.value != 'dodo' || channels.contains(PurchaseChannel.web))
-                      ? () => _manage(b)
-                      : null,
+                HighlightTarget(
+                  active: widget.highlight == 'plan',
+                  borderRadius: AppRadius.cardAll,
+                  child: _CurrentPlan(
+                    summary: b,
+                    highlight: widget.highlight,
+                    onManage: isAdmin && b.source_.value != 'default' && (b.source_.value != 'dodo' || channels.contains(PurchaseChannel.web))
+                        ? () => _manage(b)
+                        : null,
+                  ),
                 ).appCardEntrance(),
-                if (isAdmin && b.planCode == 'free') const _UpgradeBanner().appCardEntrance(),
+                if (isAdmin && b.planCode == 'free')
+                  HighlightTarget(
+                    active: widget.highlight == 'change_plan',
+                    borderRadius: AppRadius.cardAll,
+                    child: const _UpgradeBanner(),
+                  ).appCardEntrance(),
                 if (isAdmin) ..._plans(context, b),
                 // Extra people are bought on the web subscription, so only where web checkout may be.
                 if (isAdmin && b.source_.value == 'dodo' && b.limits['extra_seat_usd'] != null && channels.contains(PurchaseChannel.web))
@@ -228,22 +241,39 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
                         : Padding(
                             padding: const EdgeInsets.only(top: AppSpace.sm),
                             child: Center(
-                              child: TextButton.icon(
-                                key: const Key('restorePurchases'),
-                                onPressed: _restore,
-                                icon: const Icon(LucideIcons.rotateCcw, size: 18),
-                                label: Text(l10n.restorePurchases),
+                              child: HighlightTarget(
+                                active: widget.highlight == 'restore',
+                                borderRadius: BorderRadius.circular(AppRadius.pill),
+                                child: TextButton.icon(
+                                  key: const Key('restorePurchases'),
+                                  onPressed: _restore,
+                                  icon: const Icon(LucideIcons.rotateCcw, size: 18),
+                                  label: Text(l10n.restorePurchases),
+                                ),
                               ),
                             ),
                           ),
                   ),
-                const _UsageRow(),
+                HighlightTarget(
+                  active: widget.highlight == 'usage',
+                  borderRadius: AppRadius.cardAll,
+                  child: const _UsageRow(),
+                ),
                 // Each charge with the server it came from, and the keys for your own server
                 // reaching Casama Cloud, fold away (D-182).
                 AdvancedSection(
                   id: 'billing',
+                  forceOpen: widget.highlight == 'link_cloud',
                   summary: isAdmin ? l10n.billingAdvancedSummary : l10n.billingChargesSummary,
-                  children: [const _BilledItems(), if (isAdmin) const _LinkCloudSection()],
+                  children: [
+                    const _BilledItems(),
+                    if (isAdmin)
+                      HighlightTarget(
+                        active: widget.highlight == 'link_cloud',
+                        borderRadius: AppRadius.cardAll,
+                        child: const _LinkCloudSection(),
+                      ),
+                  ],
                 ),
                 // Help with a purchase (D-298): Casama Help can check the plan and purchases.
                 const PurchaseHelpLink(),
@@ -269,14 +299,17 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
       SectionHeader(title: l10n.plans),
       GroupedCard(
         children: [
-          GroupedTile(
-            key: const Key('changePlan'),
-            icon: LucideIcons.gem,
-            iconColor: scheme.primary,
-            title: l10n.billingChangePlan,
-            subtitle: l10n.billingChangePlanBody,
-            trailing: Icon(LucideIcons.chevronRight, size: 18, color: scheme.onSurfaceVariant),
-            onTap: () => openPaywall(context, source: 'settings'),
+          HighlightTarget(
+            active: widget.highlight == 'change_plan',
+            child: GroupedTile(
+              key: const Key('changePlan'),
+              icon: LucideIcons.gem,
+              iconColor: scheme.primary,
+              title: l10n.billingChangePlan,
+              subtitle: l10n.billingChangePlanBody,
+              trailing: Icon(LucideIcons.chevronRight, size: 18, color: scheme.onSurfaceVariant),
+              onTap: () => openPaywall(context, source: 'settings'),
+            ),
           ),
         ],
       ),
@@ -497,8 +530,9 @@ class _BillingSkeleton extends StatelessWidget {
 }
 
 class _CurrentPlan extends StatelessWidget {
-  const _CurrentPlan({required this.summary, this.onManage});
+  const _CurrentPlan({required this.summary, this.highlight, this.onManage});
   final BillingSummary summary;
+  final String? highlight;
   final VoidCallback? onManage;
 
   @override
@@ -558,38 +592,46 @@ class _CurrentPlan extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AppSpace.md),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            decoration: BoxDecoration(color: scheme.surfaceContainer, borderRadius: BorderRadius.circular(AppRadius.row)),
-            child: Row(
-              children: [
-                Icon(LucideIcons.wallet, size: 20, color: context.appColors.positive),
-                const SizedBox(width: AppSpace.sm),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        l10n.creditsBalance(b.creditsUsd.humanizedCurrency(context.l10n.localeName, 'USD', decimalDigits: 2)),
-                        key: const Key('creditsBalance'),
-                        style: context.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700, fontFeatures: AppText.tabular),
-                      ),
-                      if (b.limits.isNotEmpty) Text(_limitsText(context, b.limits), style: muted),
-                    ],
+          HighlightTarget(
+            active: highlight == 'credits',
+            borderRadius: BorderRadius.circular(AppRadius.row),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(color: scheme.surfaceContainer, borderRadius: BorderRadius.circular(AppRadius.row)),
+              child: Row(
+                children: [
+                  Icon(LucideIcons.wallet, size: 20, color: context.appColors.positive),
+                  const SizedBox(width: AppSpace.sm),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          l10n.creditsBalance(b.creditsUsd.humanizedCurrency(context.l10n.localeName, 'USD', decimalDigits: 2)),
+                          key: const Key('creditsBalance'),
+                          style: context.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700, fontFeatures: AppText.tabular),
+                        ),
+                        if (b.limits.isNotEmpty) Text(_limitsText(context, b.limits), style: muted),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
           const SizedBox(height: AppSpace.md),
           const CreditsMeter(showBalance: false),
           if (onManage != null) ...[
             const SizedBox(height: AppSpace.md),
-            OutlinedButton.icon(
-              key: const Key('manageSubscription'),
-              onPressed: onManage,
-              icon: const Icon(LucideIcons.slidersHorizontal, size: 18),
-              label: Text(l10n.manageSubscription),
+            HighlightTarget(
+              active: highlight == 'manage',
+              borderRadius: BorderRadius.circular(AppRadius.pill),
+              child: OutlinedButton.icon(
+                key: const Key('manageSubscription'),
+                onPressed: onManage,
+                icon: const Icon(LucideIcons.slidersHorizontal, size: 18),
+                label: Text(l10n.manageSubscription),
+              ),
             ),
           ],
         ],

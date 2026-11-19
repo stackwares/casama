@@ -6182,3 +6182,16 @@ Amends D-322's note that no MapTiler key was configured.
   (`20270216100001_call_recap.sql`). Analytics: `call_summary_written`, `call_card_action`.
 - **Tests:** `apps/server/test/call-recap.test.ts`, `live-calls.test.ts`, `phone-calls.test.ts`;
   `client/test/call_card_test.dart`, `call_jobs_test.dart`, `gemini_live_test.dart`.
+
+## D-431 Casama Help links straight to the screen (2026-11-19)
+
+- **Problem:** Casama Help (D-298) told people where to go in words ("Open Settings → Billing", "tap Restore Purchases"), so they had to leave the help chat and find the screen themselves.
+- **Decision (Oliver, 2026-11-19: "it should use clickable links to let the user click where they should go", then "build it now" on `docs/HELP-LINKS-PLAN.md` with its defaults):**
+  - **One place list**, `packages/contracts/support/places.json` (schema in `packages/contracts/src/support-places.ts`): each screen or store page Help may link to, with its label, route or https url, params, highlights, and when it applies (`public`, `platforms`, `minBuild`, `cloudOnly`, `roles`). The server image copies the folder (`apps/server/Dockerfile`; a contracts test checks the line), and a Flutter test matches every route against the real router.
+  - **The model links by id**, `[Billing](place:billing)` or `[Ava's settings](place:bot_settings?botId=<id>)`. The prompt lists only the places that apply to this person (platform, build, Cloud or self-hosted, role). `linkPlaces` (`apps/server/src/api/routes/support-places.ts`) turns good ids into `casama://app/<route>` and turns anything else into plain text: unknown ids, unknown params or highlights, a bot id `get_bot` didn't return this turn, and raw `casama://` links the model wrote itself. Up to two places come back as `places[]`.
+  - **Old app builds:** the app sends `features: ["places"]`. Without it the prompt has no places and any `place:` link becomes plain text, so builds already in the stores keep today's answers and the server can deploy first.
+  - **In the app**, Help answers open their links over the help chat (`context.pushOnce`), so Back returns to the conversation, and show up to two **Go to** chips before the docs chips. `help_place_opened {place_id, from}` counts taps.
+  - **Highlights, never actions:** `?highlight=<name>` on Billing and Privacy scrolls to that control and pulses it once (`HighlightTarget`, a still outline with reduced motion). Help never presses anything for the person.
+  - **Help only.** `ChatMarkdown` opens app links only when asked (`appLinks: true`, set by Help). In bot replies `casama://app/…` does nothing and `casama.ai/open/…` opens the browser as before, because some routes act when opened (`/runs/<id>/stop`, `/suggestions/<id>/accept`, `/permissions?do=…`) and a bot can be fed a link by a page or email it read.
+  - **Website assistant (D-401):** public places only, as `https://casama.ai/open/<route>` links (D-326) and **Open in Casama** buttons.
+- **Plan:** `docs/HELP-LINKS-PLAN.md`.

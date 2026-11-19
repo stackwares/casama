@@ -25,6 +25,14 @@ import type { AppDeps, AppEnv } from "../types.ts";
 import { clientIp } from "../util.ts";
 import { instanceOwnerCheck } from "./admin.ts";
 import { billingFor } from "./billing.ts";
+import {
+  filterPlaces,
+  linkPlaces,
+  normalizePlatform,
+  normalizeRole,
+  parseBuildNumber,
+  placesPromptSection,
+} from "./support-places.ts";
 import { LOOKUP_TOOLS, supportLookups } from "./support-tools.ts";
 
 type Topic = "billing" | "broken" | "account" | "question" | "other";
@@ -323,6 +331,14 @@ export function registerSupportRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     return r?.ok ? orgId : null;
   };
 
+  const workspaceRole = async (claims: JwtClaims, orgId: string | null) => {
+    if (!orgId) return null;
+    const [r] = await db.execute<{ role: string }>(sql`
+      select role::text as role from public.memberships
+      where org_id = ${orgId}::uuid and user_id = ${claims.sub}::uuid limit 1`);
+    return normalizeRole(r?.role);
+  };
+
   const accountFacts = async (claims: JwtClaims, orgId: string | null) => {
     const [u] = await db.execute<{
       email: string | null;
@@ -397,7 +413,12 @@ export function registerSupportRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
   const runTool = async (
     name: string,
     args: Record<string, unknown>,
-    ctx: { claims: JwtClaims; orgId: string | null; sources: Map<string, string> },
+    ctx: {
+      claims: JwtClaims;
+      orgId: string | null;
+      sources: Map<string, string>;
+      verifiedBotIds: Set<string>;
+    },
   ): Promise<unknown> => {
     switch (name) {
       case "search_docs": {
@@ -456,8 +477,13 @@ export function registerSupportRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
         return lookups.creditHistory(ctx.claims, ctx.orgId);
       case "get_connections":
         return lookups.connections(ctx.claims, ctx.orgId);
-      case "get_bot":
-        return lookups.bot(ctx.claims, ctx.orgId, String(args.name ?? ""));
+      case "get_bot": {
+        const out = await lookups.bot(ctx.claims, ctx.orgId, String(args.name ?? ""));
+        if (out && typeof out === "object" && "id" in out && typeof out.id === "string") {
+          ctx.verifiedBotIds.add(out.id);
+        }
+        return out;
+      }
       case "get_invites":
         return lookups.invites(ctx.claims, ctx.orgId);
       case "get_plans": {
@@ -552,8 +578,20 @@ export function registerSupportRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     let strike = false;
     let handoff: { topic: Topic; summary: string } | null = null;
     const sources = new Map<string, string>();
+    const verifiedBotIds = new Set<string>();
+    const supportsPlaces = body.features?.includes("places") ?? false;
     try {
       const orgId = await workspaceOf(claims, body.org_id);
+      const role = supportsPlaces ? await workspaceRole(claims, orgId) : null;
+      const allowedPlaces = supportsPlaces
+        ? filterPlaces({
+            cloud: billing.enabled,
+            platform: normalizePlatform(body.platform),
+            build: parseBuildNumber(body.app_version),
+            role,
+          })
+        : [];
+      const placesPrompt = supportsPlaces ? placesPromptSection(allowedPlaces, "app") : "";
       const outline = (await docs.current()).outline();
       const client = [body.app_version && `app ${body.app_version}`, body.platform]
         .filter(Boolean)
@@ -561,7 +599,7 @@ export function registerSupportRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       const convo: Record<string, unknown>[] = [
         {
           role: "system",
-          content: `${SYSTEM}\n\nToday is ${new Date().toISOString().slice(0, 10)}. ${client ? `The person uses Casama ${client}. ` : ""}${billing.enabled ? "This is Casama Cloud." : "This server is self-hosted: accounts and plans belong to whoever runs it."}\n\nThe docs (search them for details):\n${outline}`,
+          content: `${SYSTEM}\n\nToday is ${new Date().toISOString().slice(0, 10)}. ${client ? `The person uses Casama ${client}. ` : ""}${billing.enabled ? "This is Casama Cloud." : "This server is self-hosted: accounts and plans belong to whoever runs it."}${placesPrompt ? `\n\n${placesPrompt}` : ""}\n\nThe docs (search them for details):\n${outline}`,
         },
         ...history.map((m) => ({ role: m.role, content: m.content })),
       ];
@@ -640,7 +678,12 @@ export function registerSupportRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
             result = "Recorded. Decline in one sentence.";
           } else {
             try {
-              result = await runTool(call.function.name, args, { claims, orgId, sources });
+              result = await runTool(call.function.name, args, {
+                claims,
+                orgId,
+                sources,
+                verifiedBotIds,
+              });
             } catch {
               result = "That lookup failed. Don't retry it; answer with what you have.";
             }
@@ -657,8 +700,19 @@ export function registerSupportRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
           ? "I've written a summary for our support team. Send it with the button below and they'll reply by email."
           : "Sorry, I couldn't answer that. You can write to the support team below.";
       const cited = citedSources(reply, sources);
+      const linked = linkPlaces(cited.reply || reply, {
+        mode: "app",
+        enabled: supportsPlaces && !strike,
+        allowed: allowedPlaces,
+        verifiedBotIds,
+      });
       return c.json(
-        { reply: cited.reply || reply, sources: strike ? [] : cited.sources, handoff },
+        {
+          reply: linked.reply,
+          sources: strike ? [] : cited.sources,
+          places: strike ? [] : linked.places,
+          handoff,
+        },
         200,
       );
     } finally {

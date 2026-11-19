@@ -9,6 +9,12 @@ The server, apps, CLI, SDK and MCP server share one version number.
 
 ## [Unreleased]
 
+- Clickable links in Casama Help (D-431): answers from the support assistant in the app and on
+  casama.ai/docs can now link straight to the exact screen, section or store page you need
+  (`casama://app/...` in the app, `https://casama.ai/open/...` on the web) with up to two **Go to**
+  action chips (**Open in Casama** on the web). Tapping a link or chip pushes the screen over Help
+  so Back returns to your conversation, and Billing and Privacy links scroll to and briefly
+  highlight the relevant control (read-only, honoring reduced motion).
 - One crash reporter at a time (D-417): an app runs Sentry, Firebase Crashlytics or PostHog error
   tracking, never two, and the server owner switches which one in Admin → App settings
   (`crash_reporter`, per platform over a default) without a release. Apps take a change on their

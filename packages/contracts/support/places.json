@@ -1,0 +1,338 @@
+{
+  "version": 1,
+  "places": [
+    {
+      "id": "billing",
+      "label": "Billing",
+      "route": "/settings/billing",
+      "highlights": ["plan", "manage", "change_plan", "credits", "restore", "usage", "link_cloud"],
+      "cloudOnly": true,
+      "public": true,
+      "description": "View plan, upgrade or change plan, manage subscription, restore purchases, credits, and Link Cloud."
+    },
+    {
+      "id": "usage",
+      "label": "Usage",
+      "route": "/settings/usage",
+      "public": true,
+      "description": "Monthly spending, token usage, and limits."
+    },
+    {
+      "id": "privacy",
+      "label": "Privacy & data",
+      "route": "/settings/privacy",
+      "highlights": [
+        "export",
+        "analytics",
+        "ai_consent",
+        "retention",
+        "workspace_analytics",
+        "blocked",
+        "delete"
+      ],
+      "public": true,
+      "description": "Export data, analytics sharing, AI consent, retention, blocked people, and delete account."
+    },
+    {
+      "id": "blocked",
+      "label": "Blocked people",
+      "route": "/settings/blocked",
+      "public": false,
+      "description": "View and unblock people you blocked."
+    },
+    {
+      "id": "account",
+      "label": "Account",
+      "route": "/settings/account",
+      "public": true,
+      "description": "Email, sign-in methods, connected accounts, and sign out."
+    },
+    {
+      "id": "about_you",
+      "label": "About you",
+      "route": "/settings/about-you",
+      "public": false,
+      "description": "Preferred name, pronouns, and reply style bots see."
+    },
+    {
+      "id": "two_step",
+      "label": "Two-step verification",
+      "route": "/settings/two-step",
+      "public": true,
+      "description": "Set up or manage authenticator two-factor authentication."
+    },
+    {
+      "id": "passkeys",
+      "label": "Passkeys",
+      "route": "/settings/passkeys",
+      "public": true,
+      "description": "Add or remove passkeys for sign-in."
+    },
+    {
+      "id": "app_lock",
+      "label": "App lock",
+      "route": "/settings/app-lock",
+      "platforms": ["ios", "android", "macos"],
+      "public": false,
+      "description": "Require Face ID, Touch ID, or device PIN to open Casama."
+    },
+    {
+      "id": "appearance",
+      "label": "Appearance",
+      "route": "/settings/appearance",
+      "public": true,
+      "description": "Theme, light or dark mode, colors, fonts, and background."
+    },
+    {
+      "id": "keys",
+      "label": "Model keys",
+      "route": "/settings/keys",
+      "public": true,
+      "description": "Add or test your own AI provider API keys."
+    },
+    {
+      "id": "integrations",
+      "label": "Connected apps",
+      "route": "/settings/integrations",
+      "public": true,
+      "description": "Connect workspace apps and external services such as Slack, GitHub, or Google."
+    },
+    {
+      "id": "secrets",
+      "label": "Secrets",
+      "route": "/settings/secrets",
+      "public": false,
+      "description": "Stored credentials and secret values bots can use."
+    },
+    {
+      "id": "skills",
+      "label": "Skills",
+      "route": "/settings/skills",
+      "public": true,
+      "description": "Manage installed bot skills."
+    },
+    {
+      "id": "gallery",
+      "label": "Gallery",
+      "route": "/settings/gallery",
+      "public": true,
+      "description": "Browse templates, skills, and packs."
+    },
+    {
+      "id": "workspace",
+      "label": "Workspace settings",
+      "route": "/settings/workspace",
+      "public": false,
+      "description": "Workspace name, defaults, and settings."
+    },
+    {
+      "id": "people",
+      "label": "People",
+      "route": "/settings/people",
+      "public": false,
+      "description": "Workspace members, roles, and invitations."
+    },
+    {
+      "id": "invite",
+      "label": "Invite friends",
+      "route": "/settings/invite",
+      "cloudOnly": true,
+      "public": true,
+      "description": "Referral link, invite code, and rewards."
+    },
+    {
+      "id": "domains",
+      "label": "Domains",
+      "route": "/settings/domains",
+      "cloudOnly": true,
+      "roles": ["owner", "admin"],
+      "public": false,
+      "description": "Custom domains for published pages and sites."
+    },
+    {
+      "id": "computers",
+      "label": "Computers",
+      "route": "/settings/computers",
+      "public": true,
+      "description": "Cloud and paired computers bots can use."
+    },
+    {
+      "id": "devices",
+      "label": "Device connections",
+      "route": "/settings/devices",
+      "public": false,
+      "description": "Data this device shares with bots (location, health, reminders, calendar)."
+    },
+    {
+      "id": "device_permissions",
+      "label": "System permissions",
+      "route": "/settings/permissions",
+      "public": false,
+      "description": "OS permissions granted to Casama on this device."
+    },
+    {
+      "id": "widgets",
+      "label": "Widgets",
+      "route": "/settings/widgets",
+      "platforms": ["ios", "android", "macos"],
+      "public": true,
+      "description": "Home Screen, Lock Screen, and desktop widgets."
+    },
+    {
+      "id": "watch",
+      "label": "Watch",
+      "route": "/settings/watch",
+      "public": true,
+      "description": "Pair and configure Apple Watch or Wear OS."
+    },
+    {
+      "id": "link_device",
+      "label": "Link a device",
+      "route": "/settings/link",
+      "public": false,
+      "description": "Sign in on another phone, computer, or watch with a link code."
+    },
+    {
+      "id": "bots",
+      "label": "Chats",
+      "route": "/bots",
+      "public": true,
+      "description": "Your bots and conversations."
+    },
+    {
+      "id": "inbox",
+      "label": "Inbox",
+      "route": "/inbox",
+      "public": false,
+      "description": "Items needing your attention and updates feed."
+    },
+    {
+      "id": "library",
+      "label": "Library",
+      "route": "/library",
+      "public": true,
+      "description": "Files, pages, sites, and creations your bots made."
+    },
+    {
+      "id": "tasks",
+      "label": "Tasks",
+      "route": "/tasks",
+      "public": false,
+      "description": "Workspace task board."
+    },
+    {
+      "id": "projects",
+      "label": "Projects",
+      "route": "/projects",
+      "public": false,
+      "description": "Your projects."
+    },
+    {
+      "id": "search",
+      "label": "Search",
+      "route": "/search",
+      "public": false,
+      "description": "Search across chats, bots, and library."
+    },
+    {
+      "id": "bot_chat",
+      "label": "Open bot chat",
+      "route": "/bots/{botId}/chat",
+      "params": ["botId"],
+      "public": false,
+      "description": "Open the conversation with a specific bot returned by get_bot."
+    },
+    {
+      "id": "bot_settings",
+      "label": "Bot settings",
+      "route": "/bots/{botId}/settings",
+      "params": ["botId"],
+      "public": false,
+      "description": "Settings, model, autonomy, and profile for a specific bot returned by get_bot."
+    },
+    {
+      "id": "bot_routines",
+      "label": "Bot routines",
+      "route": "/bots/{botId}/routines",
+      "params": ["botId"],
+      "public": false,
+      "description": "Scheduled and event-driven routines for a specific bot returned by get_bot."
+    },
+    {
+      "id": "bot_integrations",
+      "label": "Bot apps",
+      "route": "/bots/{botId}/integrations",
+      "params": ["botId"],
+      "public": false,
+      "description": "Apps and tools connected to a specific bot returned by get_bot."
+    },
+    {
+      "id": "bot_chat_apps",
+      "label": "Bot chat apps",
+      "route": "/bots/{botId}/chat-apps",
+      "params": ["botId"],
+      "public": false,
+      "description": "WhatsApp, Telegram, Discord, or Slack channels for a specific bot returned by get_bot."
+    },
+    {
+      "id": "bot_knowledge",
+      "label": "Bot knowledge",
+      "route": "/bots/{botId}/knowledge",
+      "params": ["botId"],
+      "public": false,
+      "description": "Files and knowledge uploaded for a specific bot returned by get_bot."
+    },
+    {
+      "id": "bot_memory",
+      "label": "Bot memory",
+      "route": "/bots/{botId}/memory",
+      "params": ["botId"],
+      "public": false,
+      "description": "Memories saved for a specific bot returned by get_bot."
+    },
+    {
+      "id": "bot_activity",
+      "label": "Bot activity",
+      "route": "/bots/{botId}/activity",
+      "params": ["botId"],
+      "public": false,
+      "description": "Recent runs and activity for a specific bot returned by get_bot."
+    },
+    {
+      "id": "store_subscriptions_apple",
+      "label": "Apple subscriptions",
+      "url": "https://apps.apple.com/account/subscriptions",
+      "platforms": ["ios", "macos"],
+      "cloudOnly": true,
+      "public": true,
+      "description": "Manage or cancel an App Store subscription in Apple settings."
+    },
+    {
+      "id": "store_subscriptions_google",
+      "label": "Google Play subscriptions",
+      "url": "https://play.google.com/store/account/subscriptions",
+      "platforms": ["android"],
+      "cloudOnly": true,
+      "public": true,
+      "description": "Manage or cancel a Google Play subscription."
+    },
+    {
+      "id": "apple_refund",
+      "label": "Apple refund request",
+      "url": "https://reportaproblem.apple.com",
+      "platforms": ["ios", "macos"],
+      "cloudOnly": true,
+      "public": true,
+      "description": "Request a refund for an App Store purchase from Apple."
+    },
+    {
+      "id": "google_refund",
+      "label": "Google Play refund",
+      "url": "https://support.google.com/googleplay/workflow/9813244",
+      "platforms": ["android"],
+      "cloudOnly": true,
+      "public": true,
+      "description": "Request a refund for a Google Play purchase from Google."
+    }
+  ]
+}

@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:casama/app.dart';
@@ -36,9 +39,36 @@ void main() {
   testWidgets('a casama.ai/open link opens its route', (tester) async {
     await setSize(tester, const Size(500, 1000));
     final c = await _app(tester, FakeBackend());
-    c.read(routerProvider).go('/open/settings/billing');
+    c.read(routerProvider).go('/open/settings/billing?highlight=credits');
     await _settle(tester);
-    expect(c.read(routerProvider).state.uri.toString(), '/settings/billing');
+    expect(
+      c.read(routerProvider).state.uri.toString(),
+      '/settings/billing?highlight=credits',
+    );
+  });
+
+  testWidgets('every in-app route in packages/contracts/support/places.json resolves in routerProvider', (tester) async {
+    await setSize(tester, const Size(500, 1000));
+    final c = await _app(tester, FakeBackend());
+    final router = c.read(routerProvider);
+    final decoded = jsonDecode(
+      File('../packages/contracts/support/places.json').readAsStringSync(),
+    ) as Map<String, dynamic>;
+    final places = (decoded['places'] as List).cast<Map<String, dynamic>>();
+    final routes = [
+      for (final p in places)
+        if (p['route'] is String)
+          (p['route'] as String).replaceAll(
+            '{botId}',
+            '00000000-0000-0000-0000-000000000001',
+          ),
+    ];
+    expect(routes, isNotEmpty);
+    for (final r in routes) {
+      final matches = router.configuration.findMatch(Uri.parse(r));
+      expect(matches.isNotEmpty, isTrue, reason: 'Unmatched route: $r');
+      expect(matches.error, isNull, reason: 'Router error on route: $r');
+    }
   });
 
   testWidgets('signed out, the link waits through sign-in', (tester) async {
