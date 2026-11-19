@@ -263,6 +263,10 @@
         <meta-data
             android:name="com.posthog.posthog.CAPTURE_PUSH_NOTIFICATION_OPENED"
             android:value="false" />
+        <!-- Crashlytics (D-416) sends nothing until Dart turns it on: official builds, switch on. -->
+        <meta-data
+            android:name="firebase_crashlytics_collection_enabled"
+            android:value="false" />
         <!-- Google Analytics (GA4) stays off until Dart turns it on for Casama Cloud with consent (D-397). No ad id. -->
         <meta-data
             android:name="firebase_analytics_collection_enabled"

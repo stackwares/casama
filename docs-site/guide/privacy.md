@@ -280,8 +280,15 @@ input and output, with secrets and model keys removed. Workspaces can opt out wi
   workspace, never as a person being active. Deleting your account also deletes your analytics.
 - **On someone else's server:** the official app connected to a self-hosted server sends crash
   reports and one anonymous "the app was used today" ping a day. No screens, no events, no account id.
-- **Error reports:** Sent to Sentry/PostHog when configured. When on, reports never carry message
-  text, prompts, secrets, personal device data, or email addresses.
+- **Error reports:** Sent to Sentry/PostHog when configured. The official iOS, Android and macOS apps
+  also send crash reports to Firebase Crashlytics, without your account id. Reports never carry
+  message text, prompts, secrets, personal device data, or email addresses. Turning off **Share
+  Usage Data** stops crash reports too, and deletes Crashlytics reports not yet sent. Builds you make
+  yourself send nothing to Crashlytics (it needs `CRASHLYTICS_ENABLED` and your own Firebase project).
+- **Casama's websites:** casama.ai, these docs, the gallery and the web app's page send script errors
+  to Sentry: the error, the page address without its query, and your browser. Nothing loads until a
+  page breaks, nothing is stored on your device, and nothing is sent when your browser sends Do Not
+  Track or Global Privacy Control.
 
 ## Limits
 

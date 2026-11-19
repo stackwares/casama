@@ -13,6 +13,13 @@ The server, apps, CLI, SDK and MCP server share one version number.
   Hark Pro, Instinct or another app. Casama gives you a prompt to send your old bot; paste its reply and review its
   instructions, schedules, skills, apps and memories before the bot is created. Lines that look like
   keys or card numbers are removed. See [Paste a bot's setup](https://docs.casama.ai/guide/sharing#paste-a-bot-s-setup).
+- Crash reports (D-416): the official iOS, Android and macOS apps also report crashes to Firebase
+  Crashlytics, and the "Share usage data and crash reports" switch in Settings → Privacy now turns
+  every crash reporter off (Sentry included), deleting Crashlytics reports not yet sent. casama.ai,
+  the docs, the gallery and the web app's page report script errors to Sentry; nothing loads until
+  something breaks, no cookie, and Do Not Track or Global Privacy Control turns it off.
+  iOS crash symbols reach PostHog again: an archive holds some dSYMs twice, and the upload now
+  sends each one once. Packaging scripts also upload dSYMs and the Android R8 mapping to Crashlytics.
 
 - The `casama` CLI covers most of the app. New commands: `chats` (read, export, share, branch,
   delete), `routines` (list, create, edit, run, delete), `approvals` (answer what bots are waiting

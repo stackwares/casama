@@ -182,6 +182,7 @@ ${body}
 </footer>
 ${data ? `<script type="application/json" id="page-data">${json(data)}</script>\n` : ""}<script src="/gallery.js"></script>
 <script src="/page.js"></script>
+<script src="/errors.js" data-dsn="https://86edd9eaf9c8b7f88c6a1cf3b71a1e94@o219011.ingest.us.sentry.io/4512413457776640" data-surface="gallery"></script>
 <script src="/count.js" defer></script>
 <script src="/assets/brand/casama-mark.js"></script>
 </body>

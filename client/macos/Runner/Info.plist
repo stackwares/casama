@@ -82,6 +82,9 @@
 	<false/>
 	<!-- Google Analytics (GA4) stays off until Dart turns it on for Casama Cloud with consent (D-397).
 	     No ad ids, no ad personalization, no automatic screen names (only route templates are sent). -->
+	<!-- Crashlytics (D-416) sends nothing until Dart turns it on: official builds, switch on. -->
+	<key>FirebaseCrashlyticsCollectionEnabled</key>
+	<false/>
 	<key>FIREBASE_ANALYTICS_COLLECTION_ENABLED</key>
 	<false/>
 	<key>GOOGLE_ANALYTICS_DEFAULT_ALLOW_AD_PERSONALIZATION_SIGNALS</key>

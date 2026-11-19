@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'analytics_events.g.dart';
 import 'analytics_sinks.dart';
+import 'crashlytics.dart';
 import 'telemetry.dart';
 
 /// Facade for product analytics (ANALYTICS-PLAN.md §4.2). Events fan out to every provider that is on,
@@ -59,9 +60,11 @@ class Analytics {
     return _consentCache!;
   }
 
-  /// Updates local consent preference and notifies PostHog.
+  /// Updates local consent preference and notifies PostHog, GA4 and the crash reporters.
   static Future<void> setConsentEnabled(bool enabled) async {
     _consentCache = enabled;
+    Telemetry.crashConsent = enabled;
+    await CrashlyticsReporter.setEnabled(enabled);
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool(_consentKey, enabled);

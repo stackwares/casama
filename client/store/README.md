@@ -65,6 +65,23 @@ gplay edits commit --package ai.casama.app --edit "$E"
 Play's Data safety form and app category are changed in Play Console, not through the API: the
 Data safety API replaces the whole form.
 
+## Crash reports to Firebase Crashlytics (D-416)
+
+From the build after 2026-11-19 the iOS, Android and macOS apps also send crash reports to Firebase
+Crashlytics (opt-out with the same Settings → Privacy switch; not linked to the account). Before
+that build goes out for review, check the store forms still match:
+
+- **App Store, App Privacy:** Crash Data and Performance Data are already declared (App
+  Functionality, Analytics). Crashlytics adds Other Diagnostic Data (free memory, disk, battery
+  state) and a per-install Crashlytics id: add **Other Diagnostic Data** (App Functionality, not
+  linked, no tracking) if it isn't listed. The Firebase SDK ships its own privacy manifest, so
+  `PrivacyInfo.xcprivacy` needs no change.
+- **Google Play, Data safety:** App info and performance → **Crash logs** and **Diagnostics**
+  (collected, not shared, optional for the user, purpose App functionality and Analytics). **Device
+  or other IDs** is needed for the Crashlytics installation id if it isn't already declared for
+  Firebase Cloud Messaging. Google is a service provider here, so it is not "shared".
+- The privacy policy (casama.ai/privacy) names Firebase Crashlytics in the processors table.
+
 ## Still open
 
 - Screenshots (Play phone 1080x1920, tablets 1440x2560) and the review screenshots for the

@@ -742,7 +742,9 @@ events and the daily summaries stay with PostHog. Apps you build yourself send a
 `client/config/telemetry.json` names a provider (see the client README).
 
 **Error reports** are scrubbed before they leave: request bodies, headers, cookies and users are
-dropped, and secret-looking values and emails are redacted.
+dropped, and secret-looking values and emails are redacted. Apps you build yourself can also report to your own Firebase
+Crashlytics with `CRASHLYTICS_ENABLED=true` in `client/config/telemetry.json` (iOS, Android and macOS);
+it follows the app's "Share usage data and crash reports" switch.
 
 ## Backups and alerts
 

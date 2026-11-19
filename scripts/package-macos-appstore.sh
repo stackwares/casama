@@ -30,6 +30,8 @@ flutter build macos --release \
   --dart-define=CASAMA_SIGNED_MAC=true \
   --dart-define=CASAMA_API_URL="${CASAMA_API_URL:-https://api.casama.ai}" \
   "${defines[@]}"
+# dSYMs to PostHog error tracking and (official builds) Crashlytics; never fails the build.
+../scripts/upload-symbols.sh apple build/macos/Build/Products/Release mac
 app="build/macos/Build/Products/Release/Casama.app"
 ../scripts/macos-fix-pdfium.sh "$app"
 # The Mac App Store updates the app, so this build never starts Sparkle (D-159): mark it (the menu

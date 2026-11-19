@@ -14,3 +14,6 @@ GeneratedPluginRegistrant.java
 key.properties
 **/*.keystore
 **/*.jks
+
+# Crashlytics mapping file id, written by scripts/package-android.sh for each official build (D-416).
+app/src/main/res/values/crashlytics_mapping_id.xml

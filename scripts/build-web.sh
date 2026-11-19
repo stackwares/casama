@@ -123,6 +123,17 @@ fi
 BOOT_FILES="window.casamaBoot && casamaBoot.files($boot_files);" MARKER="$marker" \
   perl -0pi -e 's/\Q$ENV{MARKER}\E/$ENV{BOOT_FILES}/' "$boot"
 grep -q 'casamaBoot.files({"sizes"' "$boot"
+# The page's own error reports (web/errors.js, D-416) go to the app's Sentry project in official
+# builds only; a self-host build keeps data-dsn empty and the script does nothing.
+if [[ "${CASAMA_OFFICIAL_BUILD:-0}" == "1" && -f config/telemetry.json ]]; then
+  dsn=$(node -e 'try{process.stdout.write(require(process.argv[1]).SENTRY_DSN||"")}catch(e){}' "$PWD/config/telemetry.json")
+  if [[ "$dsn" =~ ^https://[A-Za-z0-9]+@[A-Za-z0-9.-]+/[0-9]+$ ]]; then
+    version=$(grep '^version:' pubspec.yaml | awk '{print $2}')
+    sed -i.bak "s#<script src=\"errors.js\" data-dsn=\"\" data-surface=\"app\">#<script src=\"errors.js\" data-dsn=\"$dsn\" data-surface=\"app\" data-release=\"casama-app@${version%%+*}\">#" build/web/index.html
+    rm -f build/web/index.html.bak
+    grep -q "data-dsn=\"$dsn\"" build/web/index.html || echo "build-web: warning: couldn't turn on the page's error reports." >&2
+  fi
+fi
 echo "Wasm web build is ready (build/web/main.dart.wasm)."
 # Source maps to PostHog error tracking when a key is set; otherwise a note and nothing else.
 "$root/scripts/upload-symbols.sh" web build/web

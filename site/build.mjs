@@ -689,6 +689,7 @@ ${(page.section === "blog" && !page.isIndex) || page.slug === "changelog" ? news
 
   ${FOOTER}
 
+  <script src="/errors.js" data-dsn="https://86edd9eaf9c8b7f88c6a1cf3b71a1e94@o219011.ingest.us.sentry.io/4512413457776640" data-surface="site"></script>
   <script src="/site.js"></script>
   <script src="/assets/brand/casama-mark.js"></script>
 ${(page.scripts ?? []).map((src) => `  <script src="${src}"></script>\n`).join("")}</body>

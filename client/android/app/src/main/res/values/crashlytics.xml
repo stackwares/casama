@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Crashlytics (D-416). Official builds get a mapping file id from scripts/package-android.sh
+     (crashlytics_mapping_id.xml, gitignored), which ties crashes to the R8 mapping it uploads.
+     Other builds have none, and Crashlytics must still start (it sends nothing there anyway). -->
+<resources>
+    <bool name="com.crashlytics.RequireBuildId">false</bool>
+</resources>

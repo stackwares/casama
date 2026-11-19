@@ -100,6 +100,8 @@ export default defineConfig({
   },
   head: [
     ["link", { rel: "icon", type: "image/svg+xml", href: "/casama-winky-animated.svg" }],
+    // Error reports (D-416): loads Sentry only when a page breaks; no cookie (docs-site/public/errors.js).
+    ["script", { src: "/errors.js", "data-dsn": "https://86edd9eaf9c8b7f88c6a1cf3b71a1e94@o219011.ingest.us.sentry.io/4512413457776640", "data-surface": "docs" }],
     ["meta", { name: "theme-color", content: "#ffffff", media: "(prefers-color-scheme: light)" }],
     ["meta", { name: "theme-color", content: "#1c1c1e", media: "(prefers-color-scheme: dark)" }],
     [

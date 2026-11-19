@@ -7,6 +7,7 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 
 import 'billing.dart' show defaultStore, RevenueCatStore;
 import 'config.dart';
+import 'crashlytics.dart';
 import 'distribution.dart';
 import 'telemetry_web_stub.dart' if (dart.library.js_interop) 'telemetry_web.dart';
 import 'analytics.dart';
@@ -23,6 +24,8 @@ import 'push.dart' show PushConfig;
 ///   --dart-define=ANALYTICS_PROVIDERS=posthog,ga4  product analytics providers (empty: every configured one)
 ///   --dart-define=GA4_ENABLED=true                  Google Analytics 4 when ANALYTICS_PROVIDERS is empty
 ///   --dart-define=FIREBASE_WEB_MEASUREMENT_ID=...   the web app's GA4 stream (D-397)
+///   --dart-define=CRASHLYTICS_ENABLED=true          Firebase Crashlytics as well, iOS/Android/macOS (D-416)
+/// The "Share usage data and crash reports" switch turns every crash reporter off with the analytics.
 /// Payloads never carry message text, prompts, secrets or emails.
 ///
 /// Native PostHog auto-init is disabled in the iOS and macOS Info.plists and the Android
@@ -78,6 +81,10 @@ class Telemetry {
   /// while posthog-js is still downloading (see [run]), and the plugin silently drops calls made
   /// before that.
   static Future<void> posthogReady = Future.value();
+  /// The switch's state for crash reports: Sentry drops reports while it's off (PostHog opts out as a
+  /// whole, Crashlytics stops collecting; see [Analytics.setConsentEnabled]).
+  static bool crashConsent = true;
+
   static bool get sentryErrors => sentryDsn.isNotEmpty && (mode == 'auto' || mode == 'sentry');
   static bool get posthogErrors => posthogOn && (mode == 'posthog' || (mode == 'auto' && sentryDsn.isEmpty));
 
@@ -181,9 +188,10 @@ class Telemetry {
 
   /// Registers or updates server_kind super property once server configuration is known.
   static Future<void> updateServerKind({required String apiUrl, required bool billingEnabled}) async {
-    if (!posthogOn && !ga4On) return;
+    if (!posthogOn && !ga4On && !CrashlyticsReporter.on) return;
     final kind = resolveServerKind(apiUrl: apiUrl, billingEnabled: billingEnabled);
     serverKind = kind;
+    unawaited(CrashlyticsReporter.setKey('server_kind', kind));
     if (posthogOn) {
       try {
         await posthogReady;
@@ -202,6 +210,17 @@ class Telemetry {
       // setup is local and quick, so it still finishes first and catches the earliest errors.
       if (!kIsWeb) await posthogReady;
     }
+    if (sentryErrors || CrashlyticsReporter.on) {
+      crashConsent = await Analytics.isConsentEnabled();
+    }
+    if (CrashlyticsReporter.on) {
+      // Handlers now (they wait for setup and the switch), Firebase setup without holding the first frame.
+      CrashlyticsReporter.installHandlers(scrub: scrub);
+      unawaited(CrashlyticsReporter.start(
+        consent: crashConsent,
+        keys: {'distribution': distributionName, 'environment': posthogEnv, 'server_kind': serverKind},
+      ));
+    }
     if (sentryErrors) {
       await SentryFlutter.init((o) {
         o.dsn = sentryDsn;
@@ -213,6 +232,7 @@ class Telemetry {
           return b;
         };
         o.beforeSend = (event, _) {
+          if (!crashConsent) return null;
           for (final e in event.exceptions ?? const <SentryException>[]) {
             if (e.value != null) e.value = scrub(e.value!);
           }
@@ -325,6 +345,8 @@ class Telemetry {
     }
 
     final scrubbedContext = (_deep(context) as Map?)?.cast<String, Object>();
+
+    if (!warning) unawaited(CrashlyticsReporter.record(error, stackTrace, scrub: scrub, reason: 'handled'));
 
     if (posthogErrors) {
       try {

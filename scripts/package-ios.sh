@@ -20,5 +20,5 @@ flutter build ipa --release \
   --dart-define=CASAMA_API_URL="${CASAMA_API_URL:-https://api.casama.ai}" \
   "${defines[@]}" \
   "$@"
-# dSYMs to PostHog error tracking when a key is set (never fails the build).
+# dSYMs to PostHog error tracking and (official builds) Crashlytics; never fails the build.
 ../scripts/upload-symbols.sh apple build/ios/archive/Runner.xcarchive/dSYMs
