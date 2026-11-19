@@ -65,6 +65,8 @@ Yes, along with Telegram, WhatsApp, iMessage, Discord and others.
 
 {{sources: grok-bot}}
 
+More on Grok Bot: [pricing](/compare/grok-bot-pricing), [is it free?](/compare/is-grok-bot-free), [templates](/compare/grok-bot-templates) and [moving to Casama](https://docs.casama.ai/guide/moving-from-grok-bot).
+
 See eight [Grok Bot alternatives](/compare/grok-bot-alternatives) side by side, or how Casama compares with [other AI agents](/alternatives/).
 
 {{cta}}

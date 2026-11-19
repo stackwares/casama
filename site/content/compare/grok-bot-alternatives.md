@@ -157,6 +157,8 @@ Grok Bot, Rakazo and Casama list apps for Mac, Windows, Linux, iPhone and Androi
 
 {{sources: grok-bot, rakazo, mausbot, openbot, agent-zero, manus, chatgpt-agent, claude-cowork}}
 
+More on Grok Bot: [pricing](/compare/grok-bot-pricing), [is it free?](/compare/is-grok-bot-free), [templates](/compare/grok-bot-templates) and [moving to Casama](https://docs.casama.ai/guide/moving-from-grok-bot).
+
 One at a time: [Casama vs Grok Bot](/compare/casama-vs-grok-bot), or
 [Grok Bot vs Instinct vs Hark Pro](/compare/grok-bot-vs-instinct-vs-hark).
 

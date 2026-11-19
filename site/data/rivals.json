@@ -649,7 +649,7 @@
       "name": "Grok Bot",
       "maker": "xAI / SpaceXSI (app published by X Corp.; accounts and billing run through Cursor)",
       "homepage": "https://x.ai/bot",
-      "checked": "2026-11-18",
+      "checked": "2026-11-19",
       "facts": {
         "license": {
           "value": "Closed",
@@ -692,11 +692,11 @@
           "source": "https://docs.x.ai/grok-bot/security"
         },
         "pricing": {
-          "value": "Paid plans at $30, $100 or $200 a month; a weekly usage pool, then pay per use",
+          "value": "Paid plans at $30, $100 or $200 a month; a weekly usage pool, then billed at token cost",
           "source": "https://x.ai/bot"
         },
         "free": {
-          "value": "No free plan",
+          "value": "No free plan; some accounts get a 7-day trial credit",
           "source": "https://docs.x.ai/grok-bot/faq"
         },
         "access": {

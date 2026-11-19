@@ -33,7 +33,7 @@ priced as a project.
 | **OpenBot** | Free for personal use; Business up to $29 per active user a month | Yes, for one person on their own laptop |
 | **n8n** | Self-hosted Community: free. Cloud: €20 or €50 a month by executions; Business €667 | A self-hosted free edition; Cloud has a trial only |
 | **Manus** | Credits: Free; Pro from $20 a month for 4,000 credits, up to $200; Team from $20 a seat | Yes: 300 credits a day |
-| **Grok Bot** | Paid plans at $30, $100 or $200 a month; a weekly usage pool, then pay per use | No free plan |
+| **Grok Bot** | Paid plans at $30, $100 or $200 a month; a weekly usage pool, then billed at token cost. [Details](/compare/grok-bot-pricing) | No free plan; some accounts get a 7-day trial credit |
 | **Hark Pro** | Free; $20 or $100 a month for more usage | Yes, with every feature; the cap isn't published |
 | **Meta Muse** | Free for most use; paid plans add usage (reported at $20 and $100 a month) | Yes; a card is reportedly needed to sign up |
 | **Lindy** | From $29.99 a month per seat for 3,000 credits; Enterprise custom | $50 of credits for 7 days |

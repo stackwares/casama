@@ -225,6 +225,7 @@ export default defineConfig({
           { text: "Templates, sharing and import", link: "/guide/sharing" },
           { text: "Packs", link: "/guide/packs" },
           { text: "Bots working together", link: "/guide/bots-together" },
+          { text: "Moving from Grok Bot", link: "/guide/moving-from-grok-bot" },
         ],
       },
       {
