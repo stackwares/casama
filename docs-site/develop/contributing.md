@@ -147,7 +147,8 @@ pnpm --filter @casama/docs build    # fails on broken links
 
 ## Run the tests
 
-Run everything that applies to your change before you push. CI runs all of it.
+Run everything that applies to your change before you push. CI runs all of it on pull requests;
+pushes to `main` don't run CI, so on `main` these local runs are the only check.
 
 ```sh
 pnpm lint                              # Biome

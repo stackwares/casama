@@ -1,10 +1,10 @@
 name: CI
 on:
-  pull_request:
-  push:
-    branches: [main]
-  # Run by hand on a branch nobody pushes to when main moves too fast for a run to finish:
+  # Pull requests only (outside contributors). Pushes to main don't run CI: several sessions push
+  # many times an hour, so runs only cancelled each other; the checks run locally through
+  # scripts/heavy.sh before a push instead. Run it by hand on any branch:
   # gh workflow run CI --ref <branch>
+  pull_request:
   workflow_dispatch:
 
 concurrency:
