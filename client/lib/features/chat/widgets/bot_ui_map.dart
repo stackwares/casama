@@ -88,9 +88,30 @@ final mapComponent = ComponentImplementation(
 
 /// A map in a bot's card: one finger scrolls the chat past it, two fingers move and zoom it, and
 /// the corner button opens it full screen.
-class BotMapCard extends StatelessWidget {
-  const BotMapCard({super.key, required this.spec});
+class BotMapCard extends StatefulWidget {
+  const BotMapCard({
+    super.key,
+    required this.spec,
+    this.mapTilerKey = kMapTilerKey,
+    this.tileProvider,
+  });
+
   final MapCardSpec spec;
+  final String mapTilerKey;
+  final TileProvider? tileProvider;
+
+  @override
+  State<BotMapCard> createState() => _BotMapCardState();
+}
+
+class _BotMapCardState extends State<BotMapCard> {
+  final ValueNotifier<bool> _osmFallback = ValueNotifier<bool>(false);
+
+  @override
+  void dispose() {
+    _osmFallback.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -98,17 +119,20 @@ class BotMapCard extends StatelessWidget {
     return ClipRRect(
       borderRadius: BorderRadius.circular(AppRadius.tile),
       child: SizedBox(
-        height: spec.height,
+        height: widget.spec.height,
         child: Stack(
           children: [
             Positioned.fill(
               child: _MapView(
-                spec: spec,
+                spec: widget.spec,
                 flags:
                     InteractiveFlag.pinchZoom |
                     InteractiveFlag.pinchMove |
                     InteractiveFlag.doubleTapZoom |
                     InteractiveFlag.scrollWheelZoom,
+                mapTilerKey: widget.mapTilerKey,
+                tileProvider: widget.tileProvider,
+                osmFallback: _osmFallback,
               ),
             ),
             Positioned(
@@ -124,8 +148,11 @@ class BotMapCard extends StatelessWidget {
                     builder: (context) => Scaffold(
                       appBar: AppBar(title: Text(l10n.mapTitle)),
                       body: _MapView(
-                        spec: spec,
+                        spec: widget.spec,
                         flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
+                        mapTilerKey: widget.mapTilerKey,
+                        tileProvider: widget.tileProvider,
+                        osmFallback: _osmFallback,
                       ),
                     ),
                   ),
@@ -140,9 +167,29 @@ class BotMapCard extends StatelessWidget {
 }
 
 class _MapView extends StatelessWidget {
-  const _MapView({required this.spec, required this.flags});
+  const _MapView({
+    required this.spec,
+    required this.flags,
+    required this.mapTilerKey,
+    required this.tileProvider,
+    required this.osmFallback,
+  });
+
   final MapCardSpec spec;
   final int flags;
+  final String mapTilerKey;
+  final TileProvider? tileProvider;
+  final ValueNotifier<bool> osmFallback;
+
+  void _handleMapTilerError(TileImage tile, Object error, StackTrace? _) {
+    // A single missing tile shouldn't abandon MapTiler; 401/403/429/5xx or
+    // connection failures trigger the OpenStreetMap fallback.
+    if (error is NetworkImageLoadException && error.statusCode == 404) return;
+    if (osmFallback.value) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!osmFallback.value) osmFallback.value = true;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -157,67 +204,76 @@ class _MapView extends StatelessWidget {
             maxZoom: 16,
           )
         : null;
-    return FlutterMap(
-      options: MapOptions(
-        initialCenter:
-            spec.center ??
-            (points.isNotEmpty ? points.first : const LatLng(0, 0)),
-        initialZoom: spec.zoom,
-        initialCameraFit: fit,
-        interactionOptions: InteractionOptions(flags: flags),
-      ),
-      children: [
-        TileLayer(
-          urlTemplate: kMapTilerKey.isEmpty
-              ? 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
-              : 'https://api.maptiler.com/maps/${dark ? 'streets-v2-dark' : 'streets-v2'}/256/{z}/{x}/{y}{r}.png?key=$kMapTilerKey',
-          retinaMode:
-              kMapTilerKey.isNotEmpty && RetinaMode.isHighDensity(context),
-          userAgentPackageName: 'ai.casama.app',
-          maxZoom: 19,
-        ),
-        if (spec.path.length > 1)
-          PolylineLayer(
-            polylines: [
-              Polyline(
-                points: spec.path,
-                strokeWidth: 4,
-                color: scheme.primary,
-              ),
-            ],
+    return ValueListenableBuilder<bool>(
+      valueListenable: osmFallback,
+      builder: (context, useOsmFallback, _) {
+        final useMapTiler = mapTilerKey.isNotEmpty && !useOsmFallback;
+        return FlutterMap(
+          options: MapOptions(
+            initialCenter:
+                spec.center ??
+                (points.isNotEmpty ? points.first : const LatLng(0, 0)),
+            initialZoom: spec.zoom,
+            initialCameraFit: fit,
+            interactionOptions: InteractionOptions(flags: flags),
           ),
-        if (spec.markers.isNotEmpty)
-          MarkerLayer(
-            markers: [
-              for (final m in spec.markers)
-                Marker(
-                  point: m.point,
-                  width: 160,
-                  height: 64,
-                  alignment: Alignment.topCenter,
-                  child: _Pin(label: m.label),
+          children: [
+            TileLayer(
+              key: ValueKey(useMapTiler),
+              urlTemplate: useMapTiler
+                  ? 'https://api.maptiler.com/maps/${dark ? 'streets-v2-dark' : 'streets-v2'}/256/{z}/{x}/{y}{r}.png?key=$mapTilerKey'
+                  : 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+              retinaMode: useMapTiler && RetinaMode.isHighDensity(context),
+              userAgentPackageName: 'ai.casama.app',
+              maxZoom: 19,
+              tileProvider: tileProvider,
+              errorTileCallback: useMapTiler ? _handleMapTilerError : null,
+            ),
+            if (spec.path.length > 1)
+              PolylineLayer(
+                polylines: [
+                  Polyline(
+                    points: spec.path,
+                    strokeWidth: 4,
+                    color: scheme.primary,
+                  ),
+                ],
+              ),
+            if (spec.markers.isNotEmpty)
+              MarkerLayer(
+                markers: [
+                  for (final m in spec.markers)
+                    Marker(
+                      point: m.point,
+                      width: 160,
+                      height: 64,
+                      alignment: Alignment.topCenter,
+                      child: _Pin(label: m.label),
+                    ),
+                ],
+              ),
+            RichAttributionWidget(
+              alignment: AttributionAlignment.bottomLeft,
+              showFlutterMapAttribution: false,
+              attributions: [
+                if (useMapTiler)
+                  TextSourceAttribution(
+                    'MapTiler',
+                    onTap: () => openWebLink(
+                      Uri.parse('https://www.maptiler.com/copyright/'),
+                    ),
+                  ),
+                TextSourceAttribution(
+                  'OpenStreetMap contributors',
+                  onTap: () => openWebLink(
+                    Uri.parse('https://www.openstreetmap.org/copyright'),
+                  ),
                 ),
-            ],
-          ),
-        RichAttributionWidget(
-          alignment: AttributionAlignment.bottomLeft,
-          showFlutterMapAttribution: false,
-          attributions: [
-            if (kMapTilerKey.isNotEmpty)
-              TextSourceAttribution(
-                'MapTiler',
-                onTap: () =>
-                    openWebLink(Uri.parse('https://www.maptiler.com/copyright/')),
-              ),
-            TextSourceAttribution(
-              'OpenStreetMap contributors',
-              onTap: () => openWebLink(
-                Uri.parse('https://www.openstreetmap.org/copyright'),
-              ),
+              ],
             ),
           ],
-        ),
-      ],
+        );
+      },
     );
   }
 }
