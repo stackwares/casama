@@ -1,4 +1,4 @@
-Casama is an app for AI assistants ("bots"). Bots run on Casama's servers and their own sandboxed cloud computers; nothing runs on the device.
+Casama is an app for AI assistants ("bots"). Bots run on Casama's servers and their own cloud computers; nothing runs on the device.
 
 SIGN IN WITH THE DEMO ACCOUNT
 1. Tap "Continue with Email", then "Use a Password Instead".
@@ -8,39 +8,40 @@ The workspace shows the Free plan but has Pro limits and $50 of credits for revi
 
 WHAT TO TRY
 - Chat: open the bot "Casama" and ask, e.g. "Find three well-reviewed Italian restaurants in Lisbon and compare them in a table."
-- Its computer: while it works, tap the monitor icon in the chat header, then "Open Live View"; "Take Control" lets you use it yourself.
+- Its computer: while it works, tap the monitor icon in the chat header (idle: chat title > Bot profile > Computer), then "Open Live View". "Take Control" asks for Face ID or your passcode, then pauses the bot; "Hand Back" returns control.
 - Approvals: sending, booking, paying or deleting shows a card with Allow / Not Now first.
-- Calls: the phone icon in a chat ("Start a voice call") starts a live voice call.
-- Schedules: ask "Every morning at 8, send me a short news brief." Tap the chat title > Bot profile > Routines to see it.
+- Calls: the phone icon in a chat starts a live voice call (needs a microphone).
+- Schedules: a "Morning brief" routine is already set up: chat title > Bot profile > Routines. To add one, just ask for it in chat.
 - Ready-made bots: Bots > New bot, then pick a persona.
-- Group chats: Chats > New group chat; @everyone asks the lead bot to share out the work. Settings > People > Invite by Email adds a person.
+- Group chats: Chats > Group chats > + (needs two bots; the demo has Casama and Anna and a group already). @everyone asks the lead bot to share out the work. Settings > People > Invite by Email adds a person.
 - Library (bottom tab) keeps what bots make. Settings has Billing, Privacy and Help & support.
-- Optional, needs the reviewer's own outside account: replies in WhatsApp, Telegram, Slack, SMS or email (chat title > Bot profile > Chat apps), Gmail/Calendar/Notion (Settings > Integrations), password managers (Settings > Workspace settings > Advanced).
+- Needs your own outside account (optional): chat apps (chat title > Bot profile > Chat apps), Gmail/Calendar/Notion (Settings > Integrations).
 
 AI PROVIDERS (5.1.2(i))
-Before anything is sent, a full-screen step names who receives what people share with bots: OpenRouter and the model makers behind it (DeepSeek, Google, OpenAI), Google Gemini for calls, and Parallel/Serper/DeepSeek for web search. Nothing is sent until "Agree and Continue". It can be withdrawn in Settings > Privacy > AI providers. Image and video requests are checked by a moderation step first.
+Before anything is sent, a full-screen step names who receives what people share with bots: OpenRouter and the model makers behind it (DeepSeek, Google, OpenAI), Google Gemini for calls, Parallel/Serper/DeepSeek for web search. Nothing is sent until "Agree and Continue". It can be withdrawn in Settings > Privacy > AI providers. Image and video requests are moderated first.
 
 EXTERNAL SERVICES
-OpenRouter (AI models), Google Gemini Live (calls), RevenueCat (in-app purchases), Sign in with Apple, Google Sign-In and passkeys, Composio (connections to Gmail etc.), Firebase (push, crash reports), PostHog (analytics; can be turned off in Settings > Privacy), ZeptoMail (account email).
+OpenRouter (AI models), Google Gemini Live (calls), RevenueCat (purchases), Sign in with Apple, Google Sign-In, Composio (Gmail etc.), Firebase (push, crashes), PostHog (analytics; off in Settings > Privacy), ZeptoMail (email).
 
 PURCHASES
-Plus, Pro and Max (monthly or yearly) are auto-renewing subscriptions; credit packs are consumables. All are in-app purchases in Settings > Billing. Credit packs show once a workspace subscribes to any plan (a sandbox purchase shows them). Credits from the App Store never expire. Pro has a 1-week free trial for eligible new subscribers.
+Plus, Pro and Max (monthly or yearly) are auto-renewing subscriptions; credit packs are consumables. All are in-app purchases in Settings > Billing. Credit packs show once a workspace subscribes to any plan. Credits from the App Store never expire. Pro has a 1-week free trial for eligible new subscribers.
 
 REGIONAL DIFFERENCES
 - United States storefront only: the paywall also offers web checkout next to in-app purchase, and a workspace admin can buy a website domain with a web payment (Settings > Domains > Find a Domain). Everywhere else: in-app purchase only, and domain buying is hidden.
 - Not available in China mainland.
 
 REMOTE SETTINGS
-Our server can switch features off without a release (domain buying in App Store builds, the rating prompt, maintenance mode, a minimum version). They only remove features; none turns on anything that isn't in this build.
+Our server can switch some features off without a release (e.g. domain buying, rating prompt). They only remove features.
 
 ACCOUNT DELETION
-Settings > Privacy > Danger Zone > Delete My Account (also https://casama.ai/delete-account). Please don't delete the demo account.
+Settings > Privacy > Danger Zone > Delete My Account (also casama.ai/delete-account). Please don't delete the demo account.
 
 USER CONTENT
 Long-press a reply (right-click on a Mac) > "Report reply". People, bots, gallery items and shared pages can be reported; people can be blocked (Settings > Privacy > Blocked people). Reports go to abuse@casama.ai.
 
 OTHER
-- Casama is open source; the app can also connect to a self-run server. The demo uses Casama Cloud.
+- Casama is open source; it can also use a self-run server (the demo uses Casama Cloud).
 - Microphone is used for dictation and calls, only when started. Calendar, contacts, health and location go to a bot only if turned on in Settings.
 
+A screen recording from a physical iPhone is attached: registration, permission prompts, chat, report and block.
 Contact: support@casama.ai
