@@ -99,7 +99,9 @@ for f in "${FILES_WASM[@]}" "${FILES_FALLBACK[@]}"; do
   got=$(curl -s -o /dev/null -w '%{http_code} %{content_type}' -H 'Accept-Encoding: br' "$URL/$f")
   if [[ "$got" == "200 $want"* ]]; then echo "OK /$f"; else echo "FAILED /$f: $got" >&2; fail=1; fi
 done
-curl -fsS "$URL/flutter_bootstrap.js" | grep -q '"compileTarget":"dart2js"' || {
+# Read into a variable first: `curl | grep -q` fails under pipefail when grep stops early (curl 23).
+live_boot=$(curl -fsS "$URL/flutter_bootstrap.js" || true)
+[[ "$live_boot" == *'"compileTarget":"dart2js"'* ]] || {
   echo "FAILED: the live flutter_bootstrap.js doesn't offer the JavaScript fallback." >&2
   fail=1
 }
