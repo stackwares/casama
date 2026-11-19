@@ -5,7 +5,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/backend.dart';
 import '../../core/haptics.dart';
@@ -19,6 +18,7 @@ import '../../ui/app_card.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/page.dart';
 import '../app_lock/app_lock.dart';
+import 'watch_bridge.dart';
 import 'watch_key_store.dart';
 import 'watch_state.dart';
 
@@ -29,9 +29,6 @@ import 'watch_state.dart';
 class WatchScreen extends ConsumerStatefulWidget {
   const WatchScreen({super.key});
 
-  /// Set once the first visit checked Show details against the app lock.
-  static const detailsCheckedKey = 'casama.watch.details_checked';
-
   @override
   ConsumerState<WatchScreen> createState() => _WatchScreenState();
 }
@@ -40,9 +37,23 @@ class _WatchScreenState extends ConsumerState<WatchScreen> {
   /// The settings as last saved from here, ahead of the provider.
   WatchPrefsView? _prefs;
 
-  /// Show details was turned off on this first visit because the app lock is on.
+  /// Show details was turned off on this visit because the app lock is on.
   var _detailsAutoOff = false;
   var _detailsChecked = false;
+
+  /// The settings the server last answered with (a save from here, or the load): what a refused
+  /// save goes back to.
+  WatchPrefsView? _confirmed;
+
+  /// Saves go to the server one at a time, in the order they were made.
+  Future<void> _saves = Future.value();
+  var _lastSave = 0;
+
+  /// The newest save that changed each setting: a refused one puts a setting back only when no
+  /// later change to it is on its way.
+  var _allowSave = 0;
+  var _detailsSave = 0;
+  var _repliesSave = 0;
 
   @override
   void initState() {
@@ -51,29 +62,37 @@ class _WatchScreenState extends ConsumerState<WatchScreen> {
       final p = next.value;
       if (p != null) unawaited(_checkDetails(p));
     }, fireImmediately: true);
+    // A watch removed on another device goes from this phone's records too, so a workspace
+    // switch can't sign it in again.
+    unawaited(ref.read(watchBridgeProvider)?.prune());
   }
 
   /// With the app lock on, watches start private (§10): the first visit turns Show details off,
-  /// once, and says why. The person can turn it back on.
+  /// once per person on this device, and says why. The person can turn it back on. Nothing is
+  /// marked while the lock is off or before the server has taken the change, so turning the lock
+  /// on later still does it.
   Future<void> _checkDetails(WatchPrefsView p) async {
     if (_detailsChecked) return;
     _detailsChecked = true;
     final backend = ref.read(backendProvider);
+    final userId = backend.userId;
     final lockOn =
-        ref.read(appLockSettingsProvider).activeFor(backend.userId) ||
+        ref.read(appLockSettingsProvider).activeFor(userId) ||
         ref.read(appLockRequiredByProvider) != null;
+    if (!lockOn) return;
     try {
-      final prefs = await SharedPreferences.getInstance();
-      if (prefs.getBool(WatchScreen.detailsCheckedKey) == true) return;
-      await prefs.setBool(WatchScreen.detailsCheckedKey, true);
-      if (!lockOn || !p.showDetails) return;
-      final saved = await backend.updateWatchPrefs(showDetails: false);
-      if (mounted) {
-        setState(() {
-          _prefs = saved;
-          _detailsAutoOff = true;
-        });
+      if (await WatchDetailsSettled.check(userId)) return;
+      if (p.showDetails) {
+        final saved = await backend.updateWatchPrefs(showDetails: false);
+        if (mounted) {
+          setState(() {
+            _prefs = saved;
+            _confirmed = saved;
+            _detailsAutoOff = true;
+          });
+        }
       }
+      await WatchDetailsSettled.mark(userId);
     } catch (_) {}
   }
 
@@ -83,9 +102,9 @@ class _WatchScreenState extends ConsumerState<WatchScreen> {
     WatchAllowance? allow,
     bool? showDetails,
     List<String>? quickReplies,
-  }) async {
+  }) {
     final before = _current;
-    if (before == null) return;
+    if (before == null) return Future.value();
     // Shown at once; put back if the server says no.
     setState(() {
       _prefs = before.copyWith(
@@ -95,24 +114,67 @@ class _WatchScreenState extends ConsumerState<WatchScreen> {
       );
       if (showDetails != null) _detailsAutoOff = false;
     });
-    final saved = await runGuarded(
-      context,
-      () => ref
-          .read(backendProvider)
-          .updateWatchPrefs(
-            allow: allow,
-            showDetails: showDetails,
-            quickReplies: quickReplies,
-          ),
+    final save = ++_lastSave;
+    if (allow != null) _allowSave = save;
+    if (showDetails != null) _detailsSave = save;
+    if (quickReplies != null) _repliesSave = save;
+    // Taken now: the save may run after the person has left this screen, when `ref` is gone.
+    final backend = ref.read(backendProvider);
+    final userId = backend.userId;
+    Future<WatchPrefsView> send() => backend.updateWatchPrefs(
+      allow: allow,
+      showDetails: showDetails,
+      quickReplies: quickReplies,
     );
-    if (mounted) setState(() => _prefs = saved ?? before);
+    // One at a time: two changes made quickly reach the server in order, and an answer to an
+    // earlier one never replaces what was changed since.
+    return _saves = _saves.then((_) async {
+      WatchPrefsView? saved;
+      if (mounted) {
+        saved = await runGuarded(context, send);
+      } else {
+        // The person left Settings → Watch while an earlier save was still out. What they chose
+        // showed as chosen, so it is still sent; there is just no screen to say how it went.
+        try {
+          saved = await send();
+        } catch (e) {
+          debugPrint('watch settings save failed: $e');
+        }
+      }
+      // The person chose: the app lock doesn't turn Show details off for them again.
+      if (saved != null && showDetails != null) {
+        await WatchDetailsSettled.mark(userId);
+      }
+      if (!mounted) return;
+      final answer = saved;
+      setState(() {
+        if (answer != null) {
+          _confirmed = answer;
+          if (save == _lastSave) _prefs = answer;
+          return;
+        }
+        // Refused: what this change touched goes back to what the server last confirmed (never to
+        // an earlier change that wasn't saved either), unless a later change to it is on its way.
+        final server = _confirmed ?? ref.read(watchPrefsProvider).value ?? before;
+        final now = _prefs ?? before;
+        _prefs = WatchPrefsView(
+          allow: allow != null && _allowSave == save ? server.allow : now.allow,
+          showDetails: showDetails != null && _detailsSave == save
+              ? server.showDetails
+              : now.showDetails,
+          quickReplies: quickReplies != null && _repliesSave == save
+              ? server.quickReplies
+              : now.quickReplies,
+        );
+      });
+    });
   }
 
-  Future<void> _remove(WatchKeyView key) async {
+  Future<void> _remove(String keyId, String name) async {
     final l10n = context.l10n;
     final ok = await showConfirm(
       context: context,
-      title: l10n.watchPhoneRemoveTitle(key.name),
+      title: l10n.watchPhoneRemoveTitle(name),
       message: l10n.watchPhoneRemoveBody,
       confirmLabel: l10n.watchPhoneRemove,
       destructive: true,
@@ -120,11 +182,14 @@ class _WatchScreenState extends ConsumerState<WatchScreen> {
     );
     if (!ok || !mounted) return;
     final done = await runGuarded(context, () async {
-      await ref.read(backendProvider).deleteWatchKey(key.id);
+      await ref.read(backendProvider).deleteWatchKey(keyId);
       return true;
     });
-    if (done == true) await WatchKeyStore.removeKey(key.id);
-    if (mounted) ref.invalidate(watchKeysProvider);
+    if (done == true) await WatchKeyStore.removeKey(keyId);
+    if (mounted) {
+      ref.invalidate(watchKeysProvider);
+      ref.invalidate(watchesElsewhereProvider);
+    }
   }
 
   Future<void> _signInWithCode() async {
@@ -160,6 +225,13 @@ class _WatchScreenState extends ConsumerState<WatchScreen> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final keys = ref.watch(watchKeysProvider);
+    // Watches this phone signed in that haven't followed it to this workspace yet.
+    final elsewhere =
+        ref.watch(watchesElsewhereProvider).value ?? const <WatchRecord>[];
+    final orgNames = {
+      for (final o in ref.watch(organizationsProvider).value ?? const [])
+        o.id: o.name,
+    };
     final loaded = ref.watch(watchPrefsProvider);
     final prefs = _prefs ?? loaded.value;
     final hasOrg = ref.watch(currentOrgIdProvider) != null;
@@ -171,7 +243,7 @@ class _WatchScreenState extends ConsumerState<WatchScreen> {
         AsyncView(
           value: keys,
           onRetry: () => ref.invalidate(watchKeysProvider),
-          data: (list) => list.isEmpty
+          data: (list) => list.isEmpty && elsewhere.isEmpty
               ? Padding(
                   padding: const EdgeInsets.symmetric(horizontal: AppSpace.xxs),
                   child: Text(
@@ -185,7 +257,27 @@ class _WatchScreenState extends ConsumerState<WatchScreen> {
               : GroupedCard(
                   children: [
                     for (final k in list)
-                      _WatchTile(watch: k, onRemove: () => _remove(k)),
+                      _WatchTile(
+                        watch: k,
+                        onRemove: () => _remove(k.id, k.name),
+                      ),
+                    for (final r in elsewhere)
+                      GroupedTile(
+                        key: Key('watchElsewhere-${r.keyId}'),
+                        icon: LucideIcons.watch,
+                        title: r.name,
+                        subtitle: [
+                          ?r.model,
+                          orgNames[r.orgId] == null
+                              ? l10n.watchPhoneElsewhereUnknown
+                              : l10n.watchPhoneElsewhere(orgNames[r.orgId]!),
+                        ].join(' · '),
+                        trailing: TextButton(
+                          key: Key('removeWatch-${r.keyId}'),
+                          onPressed: () => _remove(r.keyId, r.name),
+                          child: Text(l10n.watchPhoneRemove),
+                        ),
+                      ),
                   ],
                 ),
         ),
@@ -485,6 +577,8 @@ class _WatchCodeSheetState extends ConsumerState<WatchCodeSheet> {
   }
 
   Future<void> _lookUp() async {
+    // The keyboard's Go can come twice; each look-up spends one of the code's tries.
+    if (_busy) return;
     final l10n = context.l10n;
     final code = normalizeWatchCode(_controller.text);
     if (code == null) {
@@ -495,35 +589,57 @@ class _WatchCodeSheetState extends ConsumerState<WatchCodeSheet> {
       _busy = true;
       _error = null;
     });
-    final found = await runGuarded(
-      context,
-      () => ref.read(backendProvider).watchCodeInfo(code),
-    );
+    // "That code didn't work" is only for a code no watch shows. Too many tries or no
+    // connection say what they are (runGuarded shows the server's words).
+    var failed = false;
+    final found = await runGuarded(context, () async {
+      try {
+        return await ref.read(backendProvider).watchCodeInfo(code);
+      } catch (_) {
+        failed = true;
+        rethrow;
+      }
+    });
     if (!mounted) return;
     setState(() {
       _busy = false;
       _watch = found;
       _code = found == null ? null : code;
-      if (found == null) _error = l10n.watchPhoneCodeWrong;
+      if (found == null && !failed) _error = l10n.watchPhoneCodeWrong;
     });
   }
 
   Future<void> _allow() async {
     final code = _code;
-    if (code == null) return;
+    if (code == null || _busy) return;
+    final l10n = context.l10n;
     setState(() => _busy = true);
-    final key = await runGuarded(
-      context,
-      () => ref.read(backendProvider).claimWatchCode(code, widget.orgId),
-    );
+    var failed = false;
+    var taken = false;
+    final key = await runGuarded(context, () async {
+      try {
+        return await ref
+            .read(backendProvider)
+            .claimWatchCode(code, widget.orgId);
+      } on WatchKeyTaken {
+        taken = true;
+        return null;
+      } catch (_) {
+        failed = true;
+        rethrow;
+      }
+    });
     if (!mounted) return;
     if (key == null) {
-      // Expired, used, or too many tries: start again with a new code from the watch.
       setState(() {
         _busy = false;
+        // No connection or too many tries (said already): the watch stays on screen to try again.
+        if (failed) return;
+        // Expired or used: start again with a new code from the watch. A watch still signed in
+        // to another account says so, since a new code won't help it.
         _watch = null;
         _code = null;
-        _error = context.l10n.watchPhoneCodeWrong;
+        _error = taken ? l10n.watchPhoneCodeTaken : l10n.watchPhoneCodeWrong;
       });
       return;
     }

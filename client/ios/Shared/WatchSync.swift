@@ -31,19 +31,26 @@ enum WatchSync {
     case failed
   }
 
-  /// Asks the server for the glance (or "not changed") and saves it. Never throws.
+  /// Asks the server for the glance (or "not changed") and saves it. Never throws. [quick] gives
+  /// up after a few seconds, for a background refresh.
   @discardableResult
-  static func refreshGlance(api: WatchAPI? = WatchAPI.current()) async -> Outcome {
+  static func refreshGlance(api: WatchAPI? = WatchAPI.current(), quick: Bool = false) async -> Outcome {
     guard let api else { return .signedOut }
     let saved = GlanceCache.glance()
     do {
-      switch try await api.glance(orgId: WatchAccount.orgId, etag: saved?.etag) {
+      switch try await api.glance(etag: saved?.etag, quick: quick) {
       case .notModified:
         GlanceCache.touchGlance()
         return .unchanged
       case .fresh(let g, let data, let etag):
-        // Keep the newest: another process may have saved a newer one while this was in flight.
-        if let s = saved?.glance.madeAt, let m = g.madeAt, s > m {
+        if !g.orgId.isEmpty, g.orgId != WatchAccount.orgId {
+          // The key answers for its own workspace, and it isn't the one saved here: the phone
+          // moved this watch while it was away. Take the server's word and drop the old one's
+          // glance and chats (the app picks up the new name from /v1/watch/me).
+          GlanceCache.wipe(keepMe: true)
+          WatchAccount.orgId = g.orgId
+        } else if let s = saved?.glance.madeAt, let m = g.madeAt, s > m {
+          // Keep the newest: another process may have saved a newer one while this was in flight.
           GlanceCache.touchGlance()
           return .unchanged
         }

@@ -36,6 +36,155 @@ enum WatchKeyMaker {
   }
 }
 
+// MARK: Sign-in requests to the phone (docs/WATCH-PROTOCOL.md §2)
+
+/// The request ids this watch sent the phone for one key. A `signed_in` answer counts only when
+/// its id is one of them: an answer to a request made for an older key, or for another watch,
+/// must not sign this one in.
+struct IssuedSignIns: Codable, Equatable {
+  static let kept = 6
+
+  var fingerprint: String
+  var ids: [String]
+
+  static let none = IssuedSignIns(fingerprint: "", ids: [])
+
+  /// This list with [id] added for the key with [fingerprint]; ids of another key are dropped.
+  func adding(_ id: String, for fingerprint: String) -> IssuedSignIns {
+    let mine = self.fingerprint == fingerprint ? ids.filter { $0 != id } : []
+    return IssuedSignIns(fingerprint: fingerprint, ids: Array((mine + [id]).suffix(Self.kept)))
+  }
+
+  /// Whether an answer with [id] is to a request this watch made for the key with [fingerprint].
+  func accepts(_ id: String?, for fingerprint: String) -> Bool {
+    guard let id, !id.isEmpty, !fingerprint.isEmpty, self.fingerprint == fingerprint else { return false }
+    return ids.contains(id)
+  }
+}
+
+/// Whether a watch that is still waiting on the phone asks it again by itself when its app comes
+/// forward (the first request may never have arrived, or the phone has only now been signed in).
+/// Not after the person said no on the phone, not while the screen explains that the phone's
+/// server can't be reached from a watch, not while a code is being fetched, and not on every
+/// wrist raise: each ask the phone can't take now is queued for it.
+enum PhoneReask {
+  static let every: TimeInterval = 30
+
+  static func allowed(waiting: Bool, lastAsk: Date, now: Date, lastReason: String?, needsHttps: Bool, fetchingCode: Bool) -> Bool {
+    guard waiting, !needsHttps, !fetchingCode, lastReason != "declined" else { return false }
+    return now.timeIntervalSince(lastAsk) > every
+  }
+}
+
+// MARK: What the server said went wrong (docs/WATCH-PROTOCOL.md §1)
+
+/// A problem+json answer's `code` and `detail`.
+struct WatchProblem: Equatable {
+  var code: String?
+  var detail: String?
+
+  static func parse(_ data: Data?) -> WatchProblem? {
+    guard let data, let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return nil }
+    func s(_ key: String) -> String? {
+      guard let v = obj[key] as? String, !v.isEmpty else { return nil }
+      return v
+    }
+    let problem = WatchProblem(code: s("code"), detail: s("detail") ?? s("title"))
+    return problem.code == nil && problem.detail == nil ? nil : problem
+  }
+}
+
+/// What a refused answer (Allow, Deny, Do It, Run, Stop) means to the person.
+enum WatchRefusal: Equatable {
+  /// Someone answered it already, or it is gone.
+  case alreadyAnswered
+  /// It isn't in this watch's workspace (404 `not_found`): the phone answers it.
+  case elsewhere
+  /// A limit was reached (402): nothing started.
+  case outOfCredits
+  /// The server said no, in its own words when it gave any.
+  case refused(String?)
+
+  /// 409 codes that mean "this was answered already" or "this is over already": a request
+  /// someone decided, a suggestion someone took or dismissed, a run that ended before Stop got
+  /// there (`POST /v1/runs/{id}/cancel`).
+  private static let closed: Set<String> = ["approval_already_decided", "suggestion_closed", "run_finished"]
+
+  static func of(status: Int, problem: WatchProblem?) -> WatchRefusal {
+    switch status {
+    case 404:
+      return problem?.code == "not_found" ? .elsewhere : .alreadyAnswered
+    case 409:
+      guard let code = problem?.code else { return .alreadyAnswered }
+      if closed.contains(code) || code.hasSuffix("_closed") || code.hasSuffix("_decided") || code.hasSuffix("_finished") {
+        return .alreadyAnswered
+      }
+      return .refused(problem?.detail)
+    case 402:
+      return .outOfCredits
+    default:
+      return .refused(problem?.detail)
+    }
+  }
+}
+
+/// Why a request is answered on the phone (`why_phone`, or `watch_allow_refused`'s detail), in
+/// the person's words. Nil for a reason the watch doesn't know.
+enum WatchWhy {
+  static func text(_ reason: String?) -> String? {
+    switch reason {
+    case "high_risk": return WatchL10n.whyHighRisk
+    case "payment": return WatchL10n.whyPayment
+    case "setting": return WatchL10n.whySetting
+    case "workspace": return WatchL10n.whyWorkspace
+    case "not_yours": return WatchL10n.whyNotYours
+    default: return nil
+    }
+  }
+}
+
+/// Whether a notification is about another workspace than this watch's. Only when both are
+/// known: a push without `org_id` (an older server) is treated as this workspace's.
+enum PushScope {
+  static func isElsewhere(pushOrg: String?, watchOrg: String?) -> Bool {
+    guard let pushOrg, !pushOrg.isEmpty, let watchOrg, !watchOrg.isEmpty else { return false }
+    return pushOrg.lowercased() != watchOrg.lowercased()
+  }
+}
+
+/// Which servers the watch can call. The phone app reaches a self-hosted server on plain http
+/// anywhere (its own sockets); the watch goes through the system, which allows http only on the
+/// local network (NSAllowsLocalNetworking: an address, a bare name, or a `.local` name).
+enum WatchServer {
+  static func usable(_ url: URL) -> Bool {
+    switch url.scheme?.lowercased() {
+    case "https": return true
+    case "http": return isLocal(url.host ?? "")
+    default: return false
+    }
+  }
+
+  static func isLocal(_ host: String) -> Bool {
+    let h = host.lowercased()
+    guard !h.isEmpty else { return false }
+    // A bare name ("casama", "localhost") or an IPv6 address.
+    if !h.contains(".") { return true }
+    if h.hasSuffix(".local") { return true }
+    let parts = h.split(separator: ".", omittingEmptySubsequences: false)
+    return parts.count == 4 && parts.allSatisfy { UInt8($0) != nil }
+  }
+}
+
+/// How old a saved glance may be before a complication stops drawing it as now (§6.3).
+enum GlanceAge {
+  static let staleAfter: TimeInterval = 30 * 60
+
+  static func isStale(savedAt: Date?, now: Date) -> Bool {
+    guard let savedAt else { return true }
+    return now.timeIntervalSince(savedAt) > staleAfter
+  }
+}
+
 // MARK: Sign-in codes
 
 enum WatchCodeFormat {
@@ -158,6 +307,9 @@ struct QueuedAsk: Codable, Equatable, Identifiable {
   var askedAt: Date
   /// The same key on every try, so a retry on a bad connection can't send twice.
   var idempotencyKey: String
+  /// How many times the server answered a try with something it may get over (a 5xx, an answer
+  /// that couldn't be read, a voice service that was down).
+  var tries: Int?
 }
 
 enum AskQueuePolicy {
@@ -166,6 +318,18 @@ enum AskQueuePolicy {
   /// Kept asks older than this are dropped: nobody wants yesterday's question answered.
   static let dropAfter: TimeInterval = 24 * 3600
   static let maxKept = 5
+  /// Tries the server failed before a kept ask is given up on.
+  static let maxTries = 4
+
+  enum AfterFailure: Equatable { case keep, drop }
+
+  /// What to do with a kept ask the server didn't take. [status] is the HTTP status, nil when the
+  /// answer couldn't be read. A refusal that won't change (nothing heard, no such bot, out of
+  /// credits) drops it; a server that failed or was busy keeps it, up to [maxTries] such tries.
+  static func afterFailure(status: Int?, tries: Int) -> AfterFailure {
+    if let status, (400..<500).contains(status), status != 408, status != 409, status != 429 { return .drop }
+    return tries >= maxTries ? .drop : .keep
+  }
 
   static func needsConfirm(_ ask: QueuedAsk, now: Date = Date()) -> Bool {
     now.timeIntervalSince(ask.askedAt) > confirmAfter

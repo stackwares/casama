@@ -1169,7 +1169,7 @@ abstract class Backend {
   /// Starts an email change; both addresses get a confirmation link.
   Future<void> changeEmail(String email);
 
-  /// Signs out this device and every other one.
+  /// Signs out this device and every other one, and every watch the person signed in (D-410).
   Future<void> signOutEverywhere();
 
   /// The server's default model for a provider (GPT-6 Luna on OpenRouter and OpenAI), if any.
@@ -2186,6 +2186,12 @@ abstract class Backend {
   /// has no watch keys yet.
   Future<List<WatchKeyView>> listWatchKeys(String orgId);
 
+  /// The ids of the person's watch keys in [orgId], for checking this phone's records against the
+  /// server. Unlike [listWatchKeys] it tells "none" from "couldn't ask": null when the person is no
+  /// longer in that workspace, and it throws when the server can't say (offline, or a server from
+  /// before watches).
+  Future<Set<String>?> watchKeyIdsIn(String orgId);
+
   /// Signs a watch in from the phone: registers the fingerprint of the key the watch made (§8.2).
   /// Registering the same fingerprint again updates it (another workspace, a new name).
   Future<WatchKeyView> registerWatchKey({
@@ -2201,6 +2207,11 @@ abstract class Backend {
   /// Removes a watch: its key stops working at once. A key already gone is fine.
   Future<void> deleteWatchKey(String id);
 
+  /// Removes every watch the person has signed in, in every workspace (Sign Out Everywhere): how
+  /// many went. Null when the server can't do it in one go (an older server); the caller then
+  /// removes the ones it knows.
+  Future<int?> deleteAllWatchKeys();
+
   /// The person's watch settings. Null when the server has none yet.
   Future<WatchPrefsView?> watchPrefs();
 
@@ -2212,7 +2223,8 @@ abstract class Backend {
   Future<WatchCodeView?> watchCodeInfo(String code);
 
   /// Allows the watch showing [code]: it is signed in to [orgId] as the person. Null for a wrong,
-  /// expired or used code.
+  /// expired or used code. Throws [WatchKeyTaken] when that watch is still signed in to another
+  /// account.
   Future<WatchKeyView?> claimWatchCode(String code, String orgId);
   Future<void> dismissSuggestion(String id, {bool dontSuggestAgain = false});
 

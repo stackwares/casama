@@ -31,6 +31,11 @@
 			</array>
 		</dict>
 	</array>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Casama records your voice when you ask a bot something, and sends it to your server to turn into text.</string>
 	<key>WKApplication</key>

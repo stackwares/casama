@@ -13,6 +13,13 @@ import WatchKit
 
 /// A request as the glance first describes it, so its screen draws before the server answers.
 struct NeedSeed: Hashable {
+  /// The kind of something the push says is from the person's other workspace: only the phone
+  /// can answer it.
+  static let elsewhere = "elsewhere"
+  /// The kind of something the server said isn't in this watch's workspace (404 `not_found`,
+  /// from a server that doesn't put the workspace in its pushes): the same, said neutrally.
+  static let notHere = "not_here"
+
   var id: String
   var kind: String
   var botId: String
@@ -63,7 +70,14 @@ enum Screen: Hashable {
 
 /// The full-screen tick after an answer (§6.1 B).
 struct Flash: Identifiable, Equatable {
-  enum Kind: Equatable { case allowed, denied, done, started, sent, alreadyAnswered }
+  enum Kind: Equatable {
+    case allowed, denied, done, started
+    /// Open on iPhone: the phone has it.
+    case sent
+    /// A reply went to the bot.
+    case replied
+    case alreadyAnswered
+  }
   let id = UUID()
   let kind: Kind
   /// Close the screen it came from once the tick has shown.
@@ -76,7 +90,27 @@ enum ActionResult: Equatable {
   case noPasscode
   case offline
   case forbidden(String?)
+  /// Not in this watch's workspace: the phone answers it.
+  case elsewhere
+  /// A limit was reached, so nothing started.
+  case outOfCredits
+  /// The server said no for a reason of its own (its words, when it gave any).
+  case refused(String?)
   case failed
+
+  /// What to say under the buttons when it didn't work. Nil when there is nothing to explain
+  /// (done, already answered) or the screen says it its own way (another workspace).
+  var note: String? {
+    switch self {
+    case .done, .alreadyAnswered, .elsewhere: return nil
+    case .noPasscode: return WatchL10n.lockToAllow
+    case .offline: return WatchL10n.offline
+    case .forbidden(let why): return why
+    case .outOfCredits: return WatchL10n.outOfCredits
+    case .refused(let why): return why ?? WatchL10n.couldntReach
+    case .failed: return WatchL10n.couldntReach
+    }
+  }
 }
 
 @MainActor
@@ -106,6 +140,16 @@ final class AppModel: ObservableObject {
   /// A kept ask older than ten minutes, waiting for the person to say send or discard.
   @Published var confirmAsk: QueuedAsk?
   @Published var codeFailed = false
+  /// The phone gave a server this watch can't call (plain http that isn't on the local network).
+  @Published var needsHttps = false
+  /// A short line across the top: an ask that was kept, or one that couldn't be sent.
+  @Published var notice: String?
+  /// One that came up while nobody was looking (the app in the background): said when the app is
+  /// next in front.
+  private var heldNotice: String?
+  /// What went wrong answering from a notification, by request or suggestion id. Its screen takes
+  /// it when it opens, or at once when it is open already; one nobody took is dropped after a while.
+  @Published private(set) var pendingNotes: [String: String] = [:]
   @Published var hideWhenWristDown = WatchAccount.hideWhenWristDown {
     didSet { WatchAccount.hideWhenWristDown = hideWhenWristDown }
   }
@@ -117,8 +161,19 @@ final class AppModel: ObservableObject {
   }
 
   private var signInRequest: String?
+  /// When the phone was last asked to sign this watch in.
+  private var lastPhoneAsk = Date.distantPast
+  /// Why the phone last said no (`sign_in_failed`'s reason), until the person asks again.
+  private var lastFailReason: String?
+  /// A sign-in code is being fetched: the screen still says it is waiting on the phone.
+  private var fetchingCode = false
+  /// The app started while the keychain couldn't be read (woken before the watch's first unlock
+  /// since it restarted). It may well be signed in, so it looks again when it comes forward.
+  private var keyLocked = false
   private var codeTask: Task<Void, Never>?
   private var refreshTask: Task<Void, Never>?
+  /// A refresh was asked for while one was running: run once more after it.
+  private var refreshAgain = false
   private let pathMonitor = NWPathMonitor()
   private var started = false
   private var pushToken: String?
@@ -129,6 +184,8 @@ final class AppModel: ObservableObject {
     guard !started else { return }
     started = true
     loadSaved()
+    // A recording left by an ask that never finished (the app was closed mid-send).
+    AskQueueStore.purgeTemp()
     PhoneLink.shared.onMessage = { [weak self] in self?.handlePhone($0) }
     PhoneLink.shared.activate()
     WatchOpen.handler = { [weak self] in self?.open($0) }
@@ -142,6 +199,13 @@ final class AppModel: ObservableObject {
       phase = .signedIn
       refresh()
       registerForPushes()
+    } else if WatchAccount.accepted, WatchKeyStore.isLocked || WKApplication.shared().applicationState == .background {
+      // Signed in, but the key can't be read right now: a push or a refresh woke the app before
+      // the watch was first unlocked since it restarted. That isn't "never signed in": nothing is
+      // asked of the phone, no new key is made and nothing is wiped. becameActive() looks again,
+      // when the person has the watch open (and so unlocked).
+      keyLocked = true
+      phase = .signingIn(waiting: false)
     } else if WatchAccount.removed {
       phase = .signedOut
     } else {
@@ -152,7 +216,13 @@ final class AppModel: ObservableObject {
         return
       }
       #endif
-      askPhoneToSignIn()
+      if WKApplication.shared().applicationState == .background {
+        // Woken in the background (a refresh, a push): the phone is asked when the person opens
+        // the app (becameActive), not behind their back.
+        phase = .signingIn(waiting: true)
+      } else {
+        askPhoneToSignIn()
+      }
     }
     if let link = WatchOpen.takePending() { open(link) }
     #if DEBUG
@@ -167,8 +237,41 @@ final class AppModel: ObservableObject {
 
   /// The app came forward: refresh, and pick up anything an intent left.
   func becameActive() {
-    if phase == .signedIn { refresh() }
+    if phase == .signedIn {
+      refresh()
+    } else if keyLocked {
+      // Started before the key could be read. The person is looking now, so the watch is unlocked.
+      if !adoptKeyIfReadable(), !WatchKeyStore.isLocked {
+        // The key really is gone: sign in again.
+        keyLocked = false
+        askPhoneToSignIn()
+      }
+    } else if PhoneReask.allowed(
+      waiting: phase == .signingIn(waiting: true), lastAsk: lastPhoneAsk, now: Date(),
+      lastReason: lastFailReason, needsHttps: needsHttps, fetchingCode: fetchingCode) {
+      // Still waiting on the phone: ask again, in case the first request never arrived or the
+      // phone has only now been signed in. Same key, a new request id; the screen stays as it is.
+      askPhoneToSignIn(quiet: true)
+    }
     if let link = WatchOpen.takePending() { open(link) }
+    // Something that went wrong while nobody was looking (a kept ask that was given up on).
+    if let held = heldNotice {
+      heldNotice = nil
+      show(held)
+    }
+  }
+
+  /// Started before the key could be read (`keyLocked`): when it reads now, the watch was signed
+  /// in all along. Answers whether it is. Also asked before a notification's button is handled,
+  /// which can come before the app is in front.
+  @discardableResult
+  func adoptKeyIfReadable() -> Bool {
+    guard keyLocked, phase != .signedIn, WatchAccount.accepted, WatchKeyStore.read() != nil else { return false }
+    keyLocked = false
+    phase = .signedIn
+    refresh()
+    registerForPushes()
+    return true
   }
 
   private func loadSaved() {
@@ -197,9 +300,17 @@ final class AppModel: ObservableObject {
   // MARK: Refreshing
 
   func refresh() {
-    guard refreshTask == nil else { return }
+    guard refreshTask == nil else {
+      // Something changed while this one was in flight (the phone switched workspace, an answer
+      // was just given): it may have read the old state, so run once more when it ends.
+      refreshAgain = true
+      return
+    }
     refreshTask = Task { [weak self] in
-      await self?.doRefresh()
+      repeat {
+        self?.refreshAgain = false
+        await self?.doRefresh()
+      } while self?.refreshAgain == true && self?.phase == .signedIn
       self?.refreshTask = nil
     }
   }
@@ -231,6 +342,15 @@ final class AppModel: ObservableObject {
     }
     do {
       let (fresh, data) = try await api.me()
+      // The key answers for its own workspace. When that isn't the one saved here (the phone moved
+      // this watch while it was away), take the server's word and drop what was saved for the old one.
+      if !fresh.orgId.isEmpty, fresh.orgId != WatchAccount.orgId {
+        WatchAccount.orgId = fresh.orgId
+        GlanceCache.wipe(keepMe: true)
+        glance = nil
+        savedAt = nil
+        refreshAgain = true
+      }
       GlanceCache.saveMe(data)
       me = fresh
       WatchAccount.orgName = fresh.orgName
@@ -257,20 +377,32 @@ final class AppModel: ObservableObject {
 
   // MARK: Signing in (§8.2)
 
-  func askPhoneToSignIn() {
+  /// Asks the iPhone to sign this watch in. [quiet] asks again without changing the screen.
+  func askPhoneToSignIn(quiet: Bool = false) {
     WatchAccount.removed = false
-    codeTask?.cancel()
+    if !quiet {
+      // The person asked: a code on its way is dropped, and what the screen said about the last
+      // try goes. A quiet ask leaves all of that as it is.
+      codeTask?.cancel()
+      fetchingCode = false
+      needsHttps = false
+      lastFailReason = nil
+    }
     guard let key = WatchKeyStore.readOrCreate() else {
       phase = .signingIn(waiting: true)
       return
     }
     let id = UUID().uuidString
+    let fingerprint = WatchKeyMaker.fingerprint(key)
+    // Remembered with the key it is for: only an answer to one of these signs the watch in.
+    WatchAccount.signIns = WatchAccount.signIns.adding(id, for: fingerprint)
     signInRequest = id
-    phase = .signingIn(waiting: false)
+    lastPhoneAsk = Date()
+    if !quiet { phase = .signingIn(waiting: false) }
     var message: [String: Any] = [
       "type": "sign_in",
       "request_id": id,
-      "fingerprint": WatchKeyMaker.fingerprint(key),
+      "fingerprint": fingerprint,
       "platform": "watchos",
       "name": WatchDevice.name,
       "app_version": WatchDeviceInfo.appVersion,
@@ -278,6 +410,7 @@ final class AppModel: ObservableObject {
     ]
     if let model = WatchDevice.model { message["model"] = model }
     PhoneLink.shared.send(message)
+    guard !quiet else { return }
     // Said at once when there is no phone app to answer, else after a moment's wait.
     let delay: UInt64 = PhoneLink.shared.reachable ? 4_000_000_000 : 1_500_000_000
     Task { [weak self] in
@@ -294,13 +427,28 @@ final class AppModel: ObservableObject {
       guard phase != .signedIn,
             let raw = message["server"] as? String, let server = URL(string: raw), server.scheme != nil,
             let org = message["org_id"] as? String, !org.isEmpty else { return }
+      // Only an answer to a request this watch made for the key it holds now: one made for a key
+      // since wiped, or for another watch, would mark this watch signed in with a key the server
+      // doesn't know.
+      guard let key = WatchKeyStore.read(),
+            WatchAccount.signIns.accepts(message["request_id"] as? String, for: WatchKeyMaker.fingerprint(key)) else { return }
+      // The phone app reaches a plain-http server anywhere; the watch only one on the local network.
+      guard WatchServer.usable(server) else {
+        needsHttps = true
+        phase = .signingIn(waiting: true)
+        return
+      }
       codeTask?.cancel()
       finishSignIn(server: server, orgId: org, orgName: message["org_name"] as? String ?? "", person: message["person_name"] as? String ?? "")
     case "sign_in_failed":
-      if case .signingIn = phase { phase = .signingIn(waiting: true) }
+      // Why, so a No on the phone (`declined`) isn't asked again by itself (becameActive).
+      if case .signingIn = phase {
+        lastFailReason = message["reason"] as? String
+        phase = .signingIn(waiting: true)
+      }
     case "context":
       guard phase == .signedIn else { return }
-      if let raw = message["server"] as? String, let server = URL(string: raw), server.scheme != nil { WatchAccount.server = server }
+      if let raw = message["server"] as? String, let server = URL(string: raw), WatchServer.usable(server) { WatchAccount.server = server }
       if let org = message["org_id"] as? String, !org.isEmpty, org != WatchAccount.orgId {
         WatchAccount.orgId = org
         GlanceCache.wipe()
@@ -319,6 +467,10 @@ final class AppModel: ObservableObject {
 
   private func finishSignIn(server: URL, orgId: String, orgName: String, person: String) {
     WatchAccount.signIn(server: server, orgId: orgId, orgName: orgName, person: person)
+    needsHttps = false
+    lastFailReason = nil
+    fetchingCode = false
+    keyLocked = false
     phase = .signedIn
     online = true
     if !person.isEmpty {
@@ -338,6 +490,7 @@ final class AppModel: ObservableObject {
   func startCode() {
     codeTask?.cancel()
     codeFailed = false
+    needsHttps = false
     guard let key = WatchKeyStore.readOrCreate(), let base = WatchAccount.serverOrDefault else {
       codeFailed = true
       return
@@ -345,15 +498,25 @@ final class AppModel: ObservableObject {
     let device = WatchDeviceBody(
       fingerprint: WatchKeyMaker.fingerprint(key), name: WatchDevice.name, model: WatchDevice.model,
       appVersion: WatchDeviceInfo.appVersion, osVersion: WatchDeviceInfo.osVersion)
+    fetchingCode = true
     codeTask = Task { [weak self] in
       let code: WatchCode
       do {
         code = try await WatchAPI.requestCode(base: base, device: device)
       } catch {
-        await MainActor.run { self?.codeFailed = true }
+        // Dropped for another way in (Try again, a newer code request): that one owns the screen.
+        if Task.isCancelled { return }
+        await MainActor.run {
+          self?.fetchingCode = false
+          self?.codeFailed = true
+        }
         return
       }
-      await MainActor.run { self?.phase = .code(code) }
+      if Task.isCancelled { return }
+      await MainActor.run {
+        self?.fetchingCode = false
+        self?.phase = .code(code)
+      }
       let api = WatchAPI(base: base, key: key)
       while !Task.isCancelled, Date() < code.expiresAt {
         try? await Task.sleep(nanoseconds: UInt64(code.pollEveryS) * 1_000_000_000)
@@ -368,6 +531,7 @@ final class AppModel: ObservableObject {
         }
         return
       }
+      if Task.isCancelled { return }
       await MainActor.run {
         if case .code = self?.phase { self?.phase = .codeExpired }
       }
@@ -379,11 +543,17 @@ final class AppModel: ObservableObject {
     askPhoneToSignIn()
   }
 
-  /// Sign out of this watch: the server forgets the key, the watch forgets everything.
+  /// Sign out of this watch: the server forgets the key, the watch forgets everything. The server
+  /// is told first, with a short wait: once the key is wiped there is nothing left to tell it with.
   func signOut() async {
     if let api = WatchAPI.current() { try? await api.signOut() }
     WatchSync.wipe(removed: true)
     resetToSignedOut()
+  }
+
+  /// The server said this watch's key is gone (a 401 from anywhere).
+  func keyGone() {
+    handleSignedOut()
   }
 
   private func handleSignedOut() {
@@ -393,6 +563,16 @@ final class AppModel: ObservableObject {
 
   private func resetToSignedOut() {
     codeTask?.cancel()
+    fetchingCode = false
+    lastFailReason = nil
+    keyLocked = false
+    heldNotice = nil
+    // Stop this watch's own pushes too: if the server couldn't be told (signed out offline), its
+    // copy of the token would otherwise keep delivering this account's alerts here.
+    WKApplication.shared().unregisterForRemoteNotifications()
+    pushToken = nil
+    pendingNotes = [:]
+    notice = nil
     glance = nil
     savedAt = nil
     me = nil
@@ -471,6 +651,53 @@ final class AppModel: ObservableObject {
     glance?.needs.first { $0.id == id }.map(NeedSeed.init)
   }
 
+  /// Something from the person's other workspace (a notification the iPhone mirrored): this
+  /// watch's key can't answer it, so say so and offer Open on iPhone.
+  func showElsewhere(_ seed: NeedSeed) {
+    guard phase == .signedIn else { return }
+    path = [.phoneOnly(seed)]
+  }
+
+  /// Leaves what went wrong for the screen of the request or suggestion with [id]. A screen that
+  /// is open already sees it at once (it watches `pendingNotes`); one nobody opened in a while is
+  /// dropped, so it can't turn up under that request much later.
+  func leaveNote(_ text: String?, for id: String) {
+    guard let text, !text.isEmpty else {
+      pendingNotes[id] = nil
+      return
+    }
+    pendingNotes[id] = text
+    Task { [weak self] in
+      try? await Task.sleep(nanoseconds: 20_000_000_000)
+      guard let self, self.pendingNotes[id] == text else { return }
+      self.pendingNotes[id] = nil
+    }
+  }
+
+  func takeNote(for id: String) -> String? {
+    pendingNotes.removeValue(forKey: id)
+  }
+
+  /// Says a short line across the top for a few seconds, when the person can see it: one that
+  /// comes up while the app isn't in front (a kept ask given up on during a background refresh)
+  /// waits until it is (becameActive).
+  func say(_ text: String) {
+    guard WKApplication.shared().applicationState == .active else {
+      heldNotice = text
+      return
+    }
+    show(text)
+  }
+
+  private func show(_ text: String) {
+    notice = text
+    Task { [weak self] in
+      try? await Task.sleep(nanoseconds: 3_500_000_000)
+      guard let self, self.notice == text else { return }
+      self.notice = nil
+    }
+  }
+
   /// Replaces the top screen (Ask becomes the run it started).
   func replaceTop(with screen: Screen) {
     if !path.isEmpty { path.removeLast() }
@@ -500,7 +727,7 @@ final class AppModel: ObservableObject {
   // MARK: Actions every screen shares
 
   /// Allow: the server's word on whether this watch may, the wrist check, then the answer.
-  func allow(_ approval: WatchApproval) async -> ActionResult {
+  func allow(_ approval: WatchApproval, surface: String = WatchSurface.app) async -> ActionResult {
     guard approval.isPending else { return .alreadyAnswered }
     guard approval.canAllow != .phone else { return .forbidden(approval.whyPhoneText) }
     switch await WristCheck.check() {
@@ -508,19 +735,19 @@ final class AppModel: ObservableObject {
     case .noPasscode: return .noPasscode
     case .failed: return .failed
     }
-    return await perform { try await $0.decide(approval.id, allow: true) }
+    return await perform { try await $0.decide(approval.id, allow: true, surface: surface) }
   }
 
-  func deny(_ approvalId: String) async -> ActionResult {
-    await perform { try await $0.decide(approvalId, allow: false) }
+  func deny(_ approvalId: String, surface: String = WatchSurface.app) async -> ActionResult {
+    await perform { try await $0.decide(approvalId, allow: false, surface: surface) }
   }
 
-  func doIt(_ suggestionId: String) async -> ActionResult {
-    await perform { _ = try await $0.acceptSuggestion(suggestionId) }
+  func doIt(_ suggestionId: String, surface: String = WatchSurface.app) async -> ActionResult {
+    await perform { _ = try await $0.acceptSuggestion(suggestionId, surface: surface) }
   }
 
-  func notNow(_ suggestionId: String) async -> ActionResult {
-    await perform { try await $0.dismissSuggestion(suggestionId) }
+  func notNow(_ suggestionId: String, surface: String = WatchSurface.app) async -> ActionResult {
+    await perform { try await $0.dismissSuggestion(suggestionId, surface: surface) }
   }
 
   func runRoutine(_ routineId: String) async -> ActionResult {
@@ -546,8 +773,22 @@ final class AppModel: ObservableObject {
       case .signedOut:
         handleSignedOut()
         return .failed
-      case .conflict, .notFound: refresh(); return .alreadyAnswered
-      case .forbidden(let why): return .forbidden(why)
+      case .conflict(let problem), .notFound(let problem), .refused(_, let problem):
+        // The code says which it is: answered already, in another workspace, out of credits, or
+        // a run the server couldn't start (docs/WATCH-PROTOCOL.md §1).
+        online = true
+        refresh()
+        switch WatchRefusal.of(status: e.status ?? 409, problem: problem) {
+        case .alreadyAnswered: return .alreadyAnswered
+        case .elsewhere: return .elsewhere
+        case .outOfCredits: return .outOfCredits
+        case .refused(let why): return .refused(why)
+        }
+      case .forbidden(let problem):
+        // `watch_allow_refused` gives its reason as a word (high_risk, setting…): say it in the
+        // person's words, never the word itself.
+        if let why = WatchWhy.text(problem?.detail) { return .forbidden(why) }
+        return .forbidden(problem?.code == "watch_allow_refused" ? nil : problem?.detail)
       case .offline:
         online = false
         return .offline
@@ -558,27 +799,37 @@ final class AppModel: ObservableObject {
     }
   }
 
-  /// Open on iPhone (§6.10): straight to the phone app when it is in reach, else the server
-  /// leaves a notification on the person's phones.
+  /// Open on iPhone (§6.10). The phone app is told the link, and says whether it is open in front
+  /// of the person. If it is, that's all. If it isn't (in a pocket, not running, an older app that
+  /// doesn't say, or out of reach) the server leaves a notification on the person's phones, so
+  /// there is something to tap when they pick the phone up.
   @discardableResult
   func openOnPhone(link: String, title: String) async -> Bool {
     guard !link.isEmpty else { return false }
     let route = link.hasPrefix("/") ? link : "/" + link
-    if PhoneLink.shared.reachable {
-      PhoneLink.shared.send(["type": "open", "link": route])
+    let reply = await PhoneLink.shared.ask(["type": "open", "link": route])
+    if (reply?["front"] as? Bool) == true {
       showFlash(.sent, pop: false)
       return true
     }
-    guard let api = WatchAPI.current() else { return false }
-    do {
-      try await api.handoff(link: route, title: title.isEmpty ? WatchL10n.openOnIphone : title)
+    if let api = WatchAPI.current() {
+      do {
+        try await api.handoff(link: route, title: title.isEmpty ? WatchL10n.openOnIphone : title)
+        showFlash(.sent, pop: false)
+        return true
+      } catch WatchAPIError.signedOut {
+        handleSignedOut()
+        return false
+      } catch WatchAPIError.offline {
+        online = false
+      } catch {}
+    }
+    // No notification could be left, but the phone app has the link and opens there when it
+    // comes forward.
+    if reply != nil {
       showFlash(.sent, pop: false)
       return true
-    } catch WatchAPIError.signedOut {
-      handleSignedOut()
-    } catch WatchAPIError.offline {
-      online = false
-    } catch {}
+    }
     return false
   }
 
@@ -629,9 +880,17 @@ final class AppModel: ObservableObject {
     } catch WatchAPIError.rateLimited {
       return false
     } catch {
-      // The server refused it for good (no such bot, out of credits): don't keep retrying.
+      // A refusal that won't change (nothing heard, no such bot, out of credits) ends it. A server
+      // that failed, or a voice service that was down, may be fine next time: keep it for a few
+      // more tries. Either way the person is told when what they asked is given up on.
+      let tries = AskQueueStore.noteTry(ask.id)
+      if AskQueuePolicy.afterFailure(status: WatchAPI.map(error).status, tries: tries) == .keep {
+        queue = AskQueueStore.all()
+        return false
+      }
       AskQueueStore.remove(ask.id)
       queue = AskQueueStore.all()
+      say(WatchL10n.askDropped(WatchTime.past(ask.askedAt)))
       return true
     }
   }

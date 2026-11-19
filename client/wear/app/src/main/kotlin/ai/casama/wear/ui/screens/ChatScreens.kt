@@ -68,9 +68,9 @@ fun ChatScreen(nav: NavHostController, botId: String, conversationId: String?, r
     val switches by graph.settings.switches.collectAsState()
     val self by session.self.collectAsState()
     val hideText = self?.hideReplyText == true || session.glance.collectAsState().value.glance?.hideReplyText == true
-    var chat by remember { mutableStateOf<WatchChat?>(session.cache.chat(botId)?.takeIf { conversationId == null || it.conversationId == conversationId }) }
-    var offline by remember { mutableStateOf(false) }
-    var savedAt by remember { mutableStateOf<Long?>(null) }
+    var chat by remember(botId, conversationId) { mutableStateOf<WatchChat?>(session.cache.chat(botId)?.takeIf { conversationId == null || it.conversationId == conversationId }) }
+    var offline by remember(botId, conversationId) { mutableStateOf(false) }
+    var savedAt by remember(botId, conversationId) { mutableStateOf<Long?>(null) }
 
     DisposableEffect(Unit) { onDispose { speaker.shutdown() } }
 

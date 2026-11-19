@@ -79,7 +79,8 @@ class Recorder(private val context: Context) {
             file.delete()
             return Result.Silent
         }
-        if (!heard && !stopAsked) {
+        // Nothing loud enough was heard, even when the person tapped to stop: don't send silence.
+        if (!heard) {
             file.delete()
             return Result.Silent
         }

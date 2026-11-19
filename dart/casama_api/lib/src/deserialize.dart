@@ -218,6 +218,7 @@ import 'package:casama_api/src/model/deleted_rule.dart';
 import 'package:casama_api/src/model/deleted_teach.dart';
 import 'package:casama_api/src/model/deleted_user_fact.dart';
 import 'package:casama_api/src/model/deleted_watch_key.dart';
+import 'package:casama_api/src/model/deleted_watch_keys.dart';
 import 'package:casama_api/src/model/deleted_watcher.dart';
 import 'package:casama_api/src/model/deleted_widget_key.dart';
 import 'package:casama_api/src/model/device_access_requested_event.dart';
@@ -1319,6 +1320,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return DeletedUserFact.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeletedWatchKey':
           return DeletedWatchKey.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'DeletedWatchKeys':
+          return DeletedWatchKeys.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeletedWatcher':
           return DeletedWatcher.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeletedWidgetKey':

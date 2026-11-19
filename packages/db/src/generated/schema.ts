@@ -5167,6 +5167,7 @@ export const watchKeyRequests = pgTable("watch_key_requests", {
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 }, (table) => [
 	index("watch_key_requests_expires_idx").using("btree", table.expiresAt.asc().nullsLast().op("timestamptz_ops")),
+	index("watch_key_requests_key_hash_idx").using("btree", table.keyHash.asc().nullsLast().op("text_ops")).where(sql`(claimed_at IS NULL)`),
 	foreignKey({
 			columns: [table.claimedBy],
 			foreignColumns: [users.id],

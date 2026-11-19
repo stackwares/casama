@@ -311,20 +311,27 @@ private fun TransformingLazyColumnItemScope.KeptAsk(k: QueuedAsk, spec: Transfor
     val context = LocalContext.current
     val graph = context.graph
     val scope = rememberCoroutineScope()
+    // The server wouldn't take it and it was removed: said here until the person has seen it.
+    var dropped by remember(k.id) { mutableStateOf(false) }
     Card(
         onClick = {},
         enabled = false,
         modifier = Modifier.fillMaxWidth().transformedHeight(this, spec),
         transformation = SurfaceTransformation(spec),
     ) {
+        if (dropped) {
+            Text(stringResource(R.string.watch_ask_dropped, clockTime(k.askedAt)), style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Start)
+            Spacer(Modifier.height(4.dp))
+            FilledTonalButton(onClick = onDone, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.watch_done), maxLines = 1) }
+            return@Card
+        }
         Text(stringResource(R.string.watch_kept_old, clockTime(k.askedAt)), style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Start)
         k.text?.let { Words("“$it”", maxLines = 2, style = MaterialTheme.typography.bodySmall, color = CasamaColors.Secondary) }
         Spacer(Modifier.height(4.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             Button(onClick = {
                 scope.launch {
-                    graph.outbox.send(k)
-                    onDone()
+                    if (graph.outbox.send(k) == ai.casama.wear.data.AskOutbox.Sent.DROPPED) dropped = true else onDone()
                 }
             }, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.watch_send), maxLines = 1) }
             FilledTonalButton(onClick = {
@@ -343,8 +350,11 @@ fun untilText(at: Long): String = when (val u = Format.until(System.currentTimeM
     is Format.Until.At -> clockTime(at)
 }
 
-/** Open on phone (§6.1 E): the phone link first, else a notification on the phone via the server. */
+/**
+ * Open on phone (§6.1 E): the phone link first (the phone opens it, or leaves a notification named
+ * [title] when its app isn't in front), else a notification on the phone via the server.
+ */
 suspend fun openOnPhone(context: android.content.Context, link: String, title: String): Boolean {
-    if (ai.casama.wear.link.PhoneLink.openOnPhone(context, link)) return true
+    if (ai.casama.wear.link.PhoneLink.openOnPhone(context, link, title)) return true
     return runCatching { context.graph.session.call { handoff(link, title) } }.isSuccess
 }

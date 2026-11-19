@@ -199,8 +199,10 @@ export async function buildGlance(db: Database, o: BuildGlanceOptions): Promise<
         where r.bot_id = b.id and r.ended_at is not null and r.parent_run_id is null
         order by r.created_at desc limit 1) fin on true
       left join lateral (
+        -- The person's own latest chat (a shared bot's chats with coworkers aren't theirs).
         select c.id from public.conversations c
         where c.bot_id = b.id and c.kind = 'direct' and c.last_message_at is not null
+          and c.created_by = ${me}::uuid
         order by c.last_message_at desc limit 1) lc on true
       left join lateral (
         select json_agg(json_build_object('content', m.content, 'at', m.created_at)

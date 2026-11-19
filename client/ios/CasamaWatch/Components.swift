@@ -249,6 +249,7 @@ struct DoneOverlay: View {
     case .done: return WatchL10n.done
     case .started: return WatchL10n.started
     case .sent: return WatchL10n.sentToPhone
+    case .replied: return WatchL10n.replySent
     case .alreadyAnswered: return WatchL10n.alreadyAnswered
     }
   }

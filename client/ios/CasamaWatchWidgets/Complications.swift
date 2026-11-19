@@ -10,6 +10,8 @@ import WidgetKit
 
 private extension GlanceEntry {
   var hideWords: Bool { glance?.flags.isPrivate ?? false }
+  /// Signed in, with a saved copy too old to draw as now (the watch couldn't refresh it).
+  var dated: Bool { signedIn && glance != nil && isStale }
   var needsLine: String {
     guard let g = glance else { return WatchL10n.needsYou }
     return g.needsCount == 1 ? WatchL10n.needsYouOne : WatchL10n.needsYouMany("\(g.needsCount)")
@@ -32,7 +34,7 @@ struct InlineView: View {
   let entry: GlanceEntry
   var body: some View {
     Group {
-      if !entry.signedIn || entry.glance == nil {
+      if !entry.signedIn || entry.glance == nil || entry.dated {
         Text(WatchL10n.compCasama)
       } else if let g = entry.glance, g.needsCount > 0 {
         Label(entry.needsLine, systemImage: "exclamationmark.circle.fill")
@@ -56,7 +58,7 @@ struct NeedsCircularView: View {
     let count = entry.glance?.needsCount ?? 0
     ZStack {
       AccessoryWidgetBackground()
-      if !entry.signedIn {
+      if !entry.signedIn || entry.dated {
         CasamaMark(size: 30)
       } else if count > 0 {
         VStack(spacing: -2) {
@@ -77,7 +79,7 @@ struct NeedsCircularView: View {
       }
     }
     .widgetURL(link(entry, count > 0 ? .needs : .now))
-    .accessibilityLabel(count > 0 ? entry.needsLine : WatchL10n.allClear)
+    .accessibilityLabel(entry.dated ? (entry.asOf ?? WatchL10n.compCasama) : (count > 0 ? entry.needsLine : WatchL10n.allClear))
   }
 }
 
@@ -85,12 +87,16 @@ struct NeedsCornerView: View {
   let entry: GlanceEntry
   var body: some View {
     let count = entry.glance?.needsCount ?? 0
-    Image(systemName: count > 0 ? "exclamationmark.bubble.fill" : "checkmark.bubble.fill")
+    Image(systemName: entry.dated ? "bubble.fill" : (count > 0 ? "exclamationmark.bubble.fill" : "checkmark.bubble.fill"))
       .font(.system(size: 20, weight: .semibold))
-      .foregroundStyle(count > 0 ? WatchTheme.amber : WatchTheme.green)
+      .foregroundStyle(entry.dated ? WatchTheme.secondary : (count > 0 ? WatchTheme.amber : WatchTheme.green))
       .widgetAccentable()
       .widgetLabel {
-        Text(entry.signedIn ? (count > 0 ? entry.needsLine : WatchL10n.allClear) : WatchL10n.compCasama)
+        if entry.dated {
+          Text(entry.asOf ?? WatchL10n.compCasama)
+        } else {
+          Text(entry.signedIn ? (count > 0 ? entry.needsLine : WatchL10n.allClear) : WatchL10n.compCasama)
+        }
       }
       .widgetURL(link(entry, count > 0 ? .needs : .now))
   }
@@ -105,6 +111,12 @@ struct NeedsRectView: View {
       if !entry.signedIn {
         Text(WatchL10n.compCasama).font(.headline).widgetAccentable()
         Text(WatchL10n.openToSignIn).font(.caption2).foregroundStyle(.secondary)
+      } else if let g, entry.dated {
+        // Couldn't be refreshed for a while: what was last known, said as old, with no button.
+        Text(g.needsCount > 0 ? "\(WatchL10n.needsYou.uppercased()) · \(g.needsCount)" : WatchL10n.compCasama)
+          .font(.system(.caption2, design: .rounded).weight(.heavy))
+          .foregroundStyle(.secondary)
+        if let asOf = entry.asOf { Text(asOf).font(.caption2).foregroundStyle(.secondary) }
       } else if let g, g.needsCount > 0 {
         Text("\(WatchL10n.needsYou.uppercased()) · \(g.needsCount)")
           .font(.system(.caption2, design: .rounded).weight(.heavy))
@@ -118,13 +130,21 @@ struct NeedsRectView: View {
           if !entry.hideWords {
             Text(first.text).font(.caption2).lineLimit(1).privacySensitive()
           }
-          // Allow in place: AllowRequestIntent asks the server first and only allows what it says
-          // a tap may; anything else waits for the app.
-          if first.kind == "approval", first.risk == .low || first.risk == .medium, g.needsCount == 1 {
-            Button(intent: AllowRequestIntent(approvalId: first.id)) {
-              Text(WatchL10n.allow).font(.caption2.weight(.semibold))
+          // Allow in place only for what a tap may allow: low risk, and the person's watches set
+          // to allow at all. AllowRequestIntent still asks the server first. A medium-risk request
+          // needs a hold and a high-risk one the phone, so those say Review: a tap opens the request.
+          if first.kind == "approval", g.needsCount == 1 {
+            if first.risk == .low, GlanceCache.me()?.prefs?.allow != "none" {
+              Button(intent: AllowRequestIntent(approvalId: first.id)) {
+                Text(WatchL10n.allow).font(.caption2.weight(.semibold))
+              }
+              .tint(WatchTheme.amber)
+            } else {
+              Text(WatchL10n.review)
+                .font(.caption2.weight(.semibold))
+                .foregroundStyle(WatchTheme.amber)
+                .widgetAccentable()
             }
-            .tint(WatchTheme.amber)
           }
         }
       } else {
@@ -208,6 +228,9 @@ struct BotRectView: View {
           Text(bot.name).font(.headline).lineLimit(1).widgetAccentable()
         }
         switch bot.status {
+        case .working where entry.dated, .waiting where entry.dated:
+          // Working or waiting when last seen, a while ago: not said as if it were now.
+          Text(entry.asOf ?? WatchL10n.idle).font(.caption2).foregroundStyle(.secondary)
         case .working:
           Text(WatchL10n.working).font(.caption2.weight(.semibold)).foregroundStyle(WatchTheme.green)
           if let step = bot.step, !entry.hideWords { Text(step).font(.caption2).lineLimit(1).privacySensitive() }
@@ -266,7 +289,8 @@ struct UpNextRectView: View {
 struct WorkingRectView: View {
   let entry: GlanceEntry
   var body: some View {
-    let run = entry.glance?.liveRuns.first
+    // A dated copy can't say who is working now: the neutral card, with how old it is.
+    let run = entry.dated ? nil : entry.glance?.liveRuns.first
     VStack(alignment: .leading, spacing: 2) {
       if let run, entry.signedIn {
         HStack(spacing: 5) {
@@ -281,7 +305,9 @@ struct WorkingRectView: View {
         }
       } else {
         Text(WatchL10n.compCasama).font(.headline).widgetAccentable()
-        Text(entry.signedIn ? WatchL10n.allClear : WatchL10n.openToSignIn).font(.caption2).foregroundStyle(.secondary)
+        Text(entry.dated ? (entry.asOf ?? WatchL10n.allClear) : (entry.signedIn ? WatchL10n.allClear : WatchL10n.openToSignIn))
+          .font(.caption2)
+          .foregroundStyle(.secondary)
       }
     }
     .frame(maxWidth: .infinity, alignment: .leading)

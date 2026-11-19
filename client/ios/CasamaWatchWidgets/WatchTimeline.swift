@@ -24,11 +24,11 @@ struct GlanceEntry: TimelineEntry {
     return glance.bots.first
   }
 
-  /// Older than half an hour: draw it as dated.
-  var isStale: Bool {
-    guard let savedAt else { return true }
-    return date.timeIntervalSince(savedAt) > 30 * 60
-  }
+  /// Older than half an hour: draw it as dated ("as of 9:12"), with nothing that ticks.
+  var isStale: Bool { GlanceAge.isStale(savedAt: savedAt, now: date) }
+
+  /// "as of 9:12", for a dated complication with room for a line.
+  var asOf: String? { savedAt.map { WatchTime.asOf($0, now: date) } }
 
   static let placeholder = GlanceEntry(date: Date(), glance: nil, savedAt: nil, signedIn: true)
 }
@@ -68,6 +68,12 @@ enum GlanceLoader {
     if let at = now.glance?.nextRoutine?.nextAt, at > now.date, at.timeIntervalSince(now.date) < nextReload {
       entries.append(saved(at: at.addingTimeInterval(1), botId: botId))
     }
+    // The moment the saved copy turns dated: if no refresh has replaced this timeline by then
+    // (offline for a while), the complication stops drawing it as now by itself.
+    if now.signedIn, let savedAt = now.savedAt, !now.isStale {
+      entries.append(saved(at: savedAt.addingTimeInterval(GlanceAge.staleAfter + 1), botId: botId))
+    }
+    entries.sort { $0.date < $1.date }
     return Timeline(entries: entries, policy: .after(Date().addingTimeInterval(nextReload)))
   }
 

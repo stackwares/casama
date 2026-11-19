@@ -19,6 +19,12 @@ data class WatchPush(
     val runId: String?,
     val title: String?,
     val body: String?,
+    /** The workspace the push is about (`org_id`); null from a server that doesn't say. */
+    val orgId: String? = null,
+    /** What the server lets this watch do with the request (`can_allow`); null when it doesn't say. */
+    val canAllow: CanAllow? = null,
+    /** The inbox notification this push is for (`notification_id`). */
+    val notificationId: String? = null,
 ) {
     enum class Kind { APPROVAL, SUGGESTION, REPLY, FAILED, BRIEF, ROUTINE, TAKEOVER, OTHER, GLANCE }
 
@@ -69,6 +75,14 @@ data class WatchPush(
                 runId = s("run_id"),
                 title = s("title"),
                 body = s("body"),
+                orgId = s("org_id"),
+                canAllow = when (s("can_allow")) {
+                    "tap" -> CanAllow.TAP
+                    "hold" -> CanAllow.HOLD
+                    "phone" -> CanAllow.PHONE
+                    else -> null
+                },
+                notificationId = s("notification_id"),
             )
             // Without its id an approval or suggestion can't be answered: show it as "open on phone".
             return when {

@@ -109,12 +109,13 @@ struct UpNextView: View {
       busy = nil
       switch result {
       case .done: model.showFlash(.started, pop: false)
-      case .offline:
+      case .elsewhere:
         Haptic.problem()
-        note = WatchL10n.offline
+        note = WatchL10n.notOnWatch
       default:
+        // Out of credits, a bot with no model: the server's reason, not "couldn't reach".
         Haptic.problem()
-        note = WatchL10n.couldntReach
+        note = result.note ?? WatchL10n.couldntReach
       }
     }
   }

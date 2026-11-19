@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { isMoneyLike, isOutsideTool, isPaymentTool, watchAllowance } from "../src/watch.ts";
+import {
+  isMoneyLike,
+  isOutsideTool,
+  isPaymentTool,
+  spendsMoney,
+  watchAllowance,
+} from "../src/watch.ts";
 
 const base = { risk: "low", payment: false, level: "medium", isYours: true } as const;
 
@@ -46,6 +52,18 @@ describe("watchAllowance (D-410)", () => {
   it("knows payment tools", () => {
     expect(isPaymentTool("payments.request")).toBe(true);
     expect(isPaymentTool("web.search")).toBe(false);
+  });
+
+  it("keeps a paid data call on the phone: it buys something at medium risk", () => {
+    expect(spendsMoney("data.call")).toBe(true);
+    expect(spendsMoney("payments.request")).toBe(true);
+    expect(spendsMoney("data.search")).toBe(false);
+    expect(spendsMoney("mail.send")).toBe(false);
+    // By the tool's name alone, whatever the caller passed as `payment`.
+    expect(watchAllowance({ ...base, risk: "medium", tool: "data.call" })).toEqual({
+      can_allow: "phone",
+      why_phone: "payment",
+    });
   });
 
   it("lets a tool from outside allow in one tap only when it is low risk and not about money", () => {

@@ -200,15 +200,31 @@ struct NeedsListView: View {
 
   var body: some View {
     let needs = model.glance?.needs ?? []
+    // Things that wait but aren't listed here: the server counts more than it sends a watch (a
+    // skill idea, a question from a connected app, the ones past the first few).
+    let more = max(0, (model.glance?.needsCount ?? 0) - needs.count)
     ScrollView {
       VStack(alignment: .leading, spacing: 6) {
         if !model.online { DatedBanner(savedAt: model.savedAt) }
-        if needs.isEmpty {
+        if needs.isEmpty, more == 0 {
           AllClear()
         }
         ForEach(needs) { need in
           Button { model.path.append(model.screen(for: need)) } label: { NeedRow(need: need) }
             .buttonStyle(.plain)
+        }
+        if more > 0 {
+          Text(WatchL10n.moreOnPhone("\(more)"))
+            .font(.watchCaption)
+            .foregroundStyle(WatchTheme.secondary)
+            .frame(maxWidth: .infinity, alignment: needs.isEmpty ? .center : .leading)
+            .padding(.top, needs.isEmpty ? 8 : 2)
+          Button {
+            Task { await model.openOnPhone(link: PhoneRoutes.needsYou, title: WatchL10n.needsYou) }
+          } label: {
+            Label(WatchL10n.openOnIphone, systemImage: "iphone")
+          }
+          .buttonStyle(PillStyle(tone: .plain, small: true))
         }
       }
     }

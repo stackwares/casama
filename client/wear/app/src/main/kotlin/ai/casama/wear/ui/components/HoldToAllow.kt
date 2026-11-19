@@ -34,6 +34,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.material3.Icon
 import androidx.wear.compose.material3.Text
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /**
@@ -74,8 +75,13 @@ fun HoldToAllowButton(
                         if (talkBack) return@detectTapGestures
                         var filled = false
                         val fill = scope.launch {
-                            progress.animateTo(1f, tween(durationMillis = HOLD_MS, easing = LinearEasing))
-                            // Full while still held: allow now, with the click on the wrist.
+                            // The fill is for looks. The hold itself is timed in real time: with
+                            // "Remove animations" on the fill jumps to full at once, and a touch
+                            // must still not allow.
+                            launch { progress.animateTo(1f, tween(durationMillis = HOLD_MS, easing = LinearEasing)) }
+                            delay(HOLD_MS.toLong())
+                            progress.snapTo(1f)
+                            // Held the whole time: allow now, with the click on the wrist.
                             filled = true
                             onFilled()
                             onAllow()

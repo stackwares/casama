@@ -295,6 +295,7 @@ lib/src/model/deleted_rule.dart
 lib/src/model/deleted_teach.dart
 lib/src/model/deleted_user_fact.dart
 lib/src/model/deleted_watch_key.dart
+lib/src/model/deleted_watch_keys.dart
 lib/src/model/deleted_watcher.dart
 lib/src/model/deleted_widget_key.dart
 lib/src/model/device_access_requested_event.dart

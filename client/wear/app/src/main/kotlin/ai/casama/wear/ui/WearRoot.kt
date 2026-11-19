@@ -7,6 +7,7 @@ import ai.casama.wear.ui.screens.AskScreen
 import ai.casama.wear.ui.screens.BotsScreen
 import ai.casama.wear.ui.screens.BriefScreen
 import ai.casama.wear.ui.screens.ChatScreen
+import ai.casama.wear.ui.screens.ElsewhereScreen
 import ai.casama.wear.ui.screens.GreetingScreen
 import ai.casama.wear.ui.screens.NeedsScreen
 import ai.casama.wear.ui.screens.NowScreen
@@ -115,6 +116,14 @@ private fun AppNav(activity: MainActivity) {
         }
         composable(Routes.TALK) { e -> TalkScreen(nav, Routes.arg(e.arguments?.getString("bot"))) }
         composable(Routes.SETTINGS) { SettingsScreen(nav) }
+        composable(Routes.ELSEWHERE) { e ->
+            ElsewhereScreen(
+                nav,
+                Routes.text(e.arguments?.getString("link")) ?: "/",
+                Routes.text(e.arguments?.getString("title")).orEmpty(),
+                otherWorkspace = e.arguments?.getString("other") == "1",
+            )
+        }
     }
 }
 

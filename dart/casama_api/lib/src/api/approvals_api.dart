@@ -19,7 +19,7 @@ class ApprovalsApi {
 
   const ApprovalsApi(this._dio);
 
-  /// Approve or deny; denying cancels that step only
+  /// Approve or deny; denying cancels that step only. A watch key is refused an allow it may not give (403 watch_allow_refused, watch_always_allow) and is held to its minute (429)
   /// 
   ///
   /// Parameters:

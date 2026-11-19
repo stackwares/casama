@@ -1,5 +1,6 @@
 import Flutter
 import Foundation
+import UIKit
 import WatchConnectivity
 
 // MARK: - The Apple Watch's link to this phone (D-410, docs/WATCH-PROTOCOL.md §2–3)
@@ -10,13 +11,20 @@ import WatchConnectivity
 // the watch talks to the server itself.
 //
 // Sign-in requests can arrive while Flutter isn't running (the system wakes the app for
-// WatchConnectivity in the background), so they are held in UserDefaults until Dart answers or
-// takes them (`takeRequests`). Dart ignores a request it has already seen.
+// WatchConnectivity in the background), so they are held in UserDefaults until Dart answers them.
+// One request is held per watch key (its fingerprint): a watch that asks again replaces its
+// earlier request, so one watch is one question. Each is stamped with when it came (`at`, epoch
+// milliseconds) and dropped after fifteen minutes; a watch still waiting asks again. `takeRequests`
+// reads the list without clearing it (Dart ignores a request it has already seen), so a request
+// isn't lost when the app is closed before the person answers; `answer` is what removes it.
 
 final class WatchBridge: NSObject, WCSessionDelegate {
   static let shared = WatchBridge()
 
   private static let heldKey = "casama.watch.requests"
+  /// A held request older than this is dropped: the watch asks again while it still wants in.
+  private static let heldFor: TimeInterval = 15 * 60
+  private static let maxHeld = 5
   private var channel: FlutterMethodChannel?
   private var queued: [[String: Any]] = []
 
@@ -43,14 +51,21 @@ final class WatchBridge: NSObject, WCSessionDelegate {
     let args = call.arguments as? [String: Any] ?? [:]
     switch call.method {
     case "takeRequests":
-      let held = Self.held()
-      Self.saveHeld([])
-      result(held)
+      // A read: the requests stay held until each is answered.
+      result(Self.held())
     case "answer":
       guard let id = args["request_id"] as? String, !id.isEmpty else {
         return result(FlutterError(code: "bad_args", message: "request_id is needed", details: nil))
       }
-      Self.saveHeld(Self.held().filter { ($0["request_id"] as? String) != id })
+      // Answered: it goes, and so does any other request from the same watch key. Dart says which
+      // key it answered for (`fingerprint`): the held request may by now be a newer one from the
+      // same watch, with another id. Without it (an older Dart side), the held request's own.
+      let held = Self.held()
+      let named = (args["fingerprint"] as? String).flatMap { $0.isEmpty ? nil : $0 }
+      let fingerprint = named ?? (held.first { ($0["request_id"] as? String) == id }?["fingerprint"] as? String)
+      Self.saveHeld(held.filter {
+        ($0["request_id"] as? String) != id && (fingerprint == nil || ($0["fingerprint"] as? String) != fingerprint)
+      })
       var message: [String: Any] = ["request_id": id]
       if (args["ok"] as? Bool) == true {
         message["type"] = "signed_in"
@@ -124,9 +139,13 @@ final class WatchBridge: NSObject, WCSessionDelegate {
       for key in ["model", "app_version", "os_version"] {
         if let v = message[key] as? String, !v.isEmpty { request[key] = v }
       }
-      var held = Self.held().filter { ($0["request_id"] as? String) != id }
+      request["at"] = Self.nowMs()
+      // One request per watch key: this one replaces what the same watch asked before.
+      var held = Self.held().filter {
+        ($0["request_id"] as? String) != id && ($0["fingerprint"] as? String) != fingerprint
+      }
       held.append(request)
-      Self.saveHeld(Array(held.suffix(5)))
+      Self.saveHeld(Array(held.suffix(Self.maxHeld)))
       channel?.invokeMethod("request", arguments: request)
     case "open":
       guard let link = message["link"] as? String, link.hasPrefix("/"), !link.hasPrefix("//") else { return }
@@ -141,8 +160,28 @@ final class WatchBridge: NSObject, WCSessionDelegate {
     }
   }
 
+  private static func nowMs() -> Int64 { Int64((Date().timeIntervalSince1970 * 1000).rounded()) }
+
+  /// The held requests that are still fresh. One held by an older build has no `at`: it is
+  /// stamped now, so it gets its fifteen minutes from here.
   private static func held() -> [[String: Any]] {
-    (UserDefaults.standard.array(forKey: heldKey) as? [[String: Any]]) ?? []
+    let saved = (UserDefaults.standard.array(forKey: heldKey) as? [[String: Any]]) ?? []
+    guard !saved.isEmpty else { return [] }
+    let now = nowMs()
+    let oldest = now - Int64(heldFor * 1000)
+    var changed = false
+    var fresh: [[String: Any]] = []
+    for var request in saved {
+      guard let at = (request["at"] as? NSNumber)?.int64Value else {
+        request["at"] = now
+        fresh.append(request)
+        changed = true
+        continue
+      }
+      if at >= oldest { fresh.append(request) } else { changed = true }
+    }
+    if changed { saveHeld(fresh) }
+    return fresh
   }
 
   private static func saveHeld(_ list: [[String: Any]]) {
@@ -172,8 +211,17 @@ final class WatchBridge: NSObject, WCSessionDelegate {
   }
 
   func session(_ session: WCSession, didReceiveMessage message: [String: Any], replyHandler: @escaping ([String: Any]) -> Void) {
-    replyHandler([:])
-    DispatchQueue.main.async { self.receive(message) }
+    DispatchQueue.main.async {
+      // "Open on iPhone" is told whether the app is in front of the person right now. When it
+      // isn't (the system woke it in the background for this message), the watch asks the server
+      // to leave a notification, so there is something to tap. Every message gets one reply.
+      if (message["type"] as? String) == "open" {
+        replyHandler(["front": UIApplication.shared.applicationState == .active])
+      } else {
+        replyHandler([:])
+      }
+      self.receive(message)
+    }
   }
 
   func session(_ session: WCSession, didReceiveUserInfo userInfo: [String: Any] = [:]) {

@@ -430,6 +430,17 @@ describe("the glance", () => {
     expect(g.brief).toBeNull();
     expect(g.lately).toEqual([]);
   });
+
+  it("takes a shared bot's last line from the person's own chat, not a coworker's newer one", async () => {
+    const theirs = await one<{ id: string }>(tdb.admin`
+      insert into public.conversations (org_id, bot_id, created_by, last_message_at)
+      values (${ids.org}, ${ids.ada}, ${ids.other}, now() + interval '1 hour') returning id`);
+    await tdb.admin`insert into public.messages (org_id, conversation_id, role, content)
+      values (${ids.org}, ${theirs.id}, 'assistant', ${tdb.admin.json([{ type: "text", text: "For the coworker only" }])})`;
+    const mine = await build();
+    expect(mine.bots[0]?.last_text).toBe("Found three flights under $400.");
+    expect(JSON.stringify(mine.bots)).not.toContain("For the coworker only");
+  });
 });
 
 describe("words and cuts", () => {

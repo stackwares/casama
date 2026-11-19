@@ -334,14 +334,8 @@ struct WatchApproval: Decodable, Equatable, Identifiable {
 
   /// Why only the phone can allow it, in the person's words.
   var whyPhoneText: String? {
-    switch whyPhone {
-    case "high_risk": return WatchL10n.whyHighRisk
-    case "payment": return WatchL10n.whyPayment
-    case "setting": return WatchL10n.whySetting
-    case "workspace": return WatchL10n.whyWorkspace
-    case "not_yours": return WatchL10n.whyNotYours
-    default: return canAllow == .phone ? (payment ? WatchL10n.whyPayment : (risk == .high ? WatchL10n.whyHighRisk : nil)) : nil
-    }
+    if let why = WatchWhy.text(whyPhone) { return why }
+    return canAllow == .phone ? (payment ? WatchL10n.whyPayment : (risk == .high ? WatchL10n.whyHighRisk : nil)) : nil
   }
 }
 

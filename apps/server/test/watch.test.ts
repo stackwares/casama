@@ -3,6 +3,7 @@ import { randomBytes } from "node:crypto";
 import { NotificationService, RecordingPushSender } from "@casama/agent";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
+  addressKey,
   hashWatchKey,
   normalizeWatchCode,
   WATCH_FAILED_KEYS_PER_MINUTE,
@@ -10,6 +11,7 @@ import {
   WATCH_STREAM,
   WATCH_STREAMS_PER_KEY,
   watchCaller,
+  windowCounter,
 } from "../src/api/routes/watch.ts";
 import { type Harness, j, startHarness } from "./helpers.ts";
 
@@ -262,6 +264,10 @@ describe("signing in with a code", () => {
     const info = await h.request(`/v1/watch-codes/${shown}`, { token: me.token });
     expect(info.status).toBe(200);
     expect(await j(info)).toMatchObject({ platform: "wearos", name: "Pixel Watch 3", model: null });
+    // Looking the right code up doesn't use it up, however often (a sheet opened twice, a retry).
+    for (let i = 0; i < 6; i++)
+      expect((await h.request(`/v1/watch-codes/${code}`, { token: me.token })).status).toBe(200);
+    expect((await j(await watch("/v1/watch/me", {}, codeKey))).code).toBe("watch_code_pending");
     const claimed = await h.request(`/v1/watch-codes/${code}/claim`, {
       method: "POST",
       token: me.token,
@@ -279,6 +285,39 @@ describe("signing in with a code", () => {
     });
     expect(again.status).toBe(404);
     expect((await j(again)).code).toBe("watch_code_not_found");
+    // The phone registering the watch again later (a workspace switch) keeps how it was signed in.
+    const later = await j(
+      await h.request("/v1/watch-keys", {
+        method: "POST",
+        token: me.token,
+        json: {
+          org_id: orgId,
+          fingerprint: hashWatchKey(codeKey),
+          platform: "wearos",
+          name: "Pixel Watch 3",
+        },
+      }),
+    );
+    expect(later.paired_by).toBe("code");
+  });
+
+  it("stops telling a watch to wait once its code ran out", async () => {
+    const k = newKey();
+    const made = await h.request("/v1/watch/codes", {
+      method: "POST",
+      headers: { "x-forwarded-for": "203.0.113.77" },
+      json: { fingerprint: hashWatchKey(k), platform: "watchos", name: "Late" },
+    });
+    expect(made.status).toBe(201);
+    expect((await j(await watch("/v1/watch/me", {}, k))).code).toBe("watch_code_pending");
+    await h.tdb.admin`update public.watch_key_requests set expires_at = now() - interval '1 second'
+      where key_hash = ${hashWatchKey(k)}`;
+    const late = await watch("/v1/watch/me", {}, k);
+    expect(late.status).toBe(401);
+    expect((await j(late)).code).toBe("invalid_watch_key");
+    expect(
+      (await h.request(`/v1/watch-codes/${(await j(made)).code}`, { token: me.token })).status,
+    ).toBe(404);
   });
 
   it("stops after five wrong codes in an hour", async () => {
@@ -334,6 +373,7 @@ describe("a watch key", () => {
       ["GET", `/v1/watch-keys?org_id=${orgId}`],
       ["POST", "/v1/watch-keys"],
       ["DELETE", `/v1/watch-keys/${keyId}`],
+      ["DELETE", "/v1/watch-keys"],
       ["GET", "/v1/me"],
     ] as const) {
       const res = await watch(path, { method });
@@ -363,6 +403,90 @@ describe("a watch key", () => {
     // Working keys are given back: they never use up an address's budget.
     for (let i = 0; i < WATCH_FAILED_KEYS_PER_MINUTE + 5; i++)
       await call("GET", "/v1/watch/me", key, "192.0.2.3");
+  });
+
+  it("doesn't lock out a watch that works when junk keys come from its address", async () => {
+    const call = watchCaller({ db: h.handle.db }, { now: () => 0 });
+    // The watch is in use at this address (shared Wi-Fi, a carrier's network)...
+    await call("GET", "/v1/watch/me", key, "192.0.2.10");
+    // ...then someone there sends junk until the address is over its limit.
+    for (let i = 0; i < WATCH_FAILED_KEYS_PER_MINUTE; i++)
+      await expect(call("GET", "/v1/glance", newKey(), "192.0.2.10")).rejects.toMatchObject({
+        status: 401,
+      });
+    await expect(call("GET", "/v1/glance", newKey(), "192.0.2.10")).rejects.toMatchObject({
+      status: 429,
+    });
+    // The watch that worked a moment ago still does; a key never seen here waits like the junk.
+    await expect(call("GET", "/v1/watch/me", key, "192.0.2.10")).resolves.toMatchObject({
+      id: keyId,
+    });
+    const fresh = newKey();
+    await h.request("/v1/watch-keys", {
+      method: "POST",
+      token: me.token,
+      json: { org_id: orgId, fingerprint: hashWatchKey(fresh), platform: "wearos", name: "New" },
+    });
+    await expect(call("GET", "/v1/watch/me", fresh, "192.0.2.10")).rejects.toMatchObject({
+      status: 429,
+    });
+    // Once removed, a key that worked counts like any other again.
+    const [gone] = await h.tdb.admin<{ id: string }[]>`
+      select id from public.watch_keys where key_hash = ${hashWatchKey(fresh)}`;
+    await call("GET", "/v1/watch/me", fresh, "192.0.2.11");
+    await h.request(`/v1/watch-keys/${gone?.id}`, { method: "DELETE", token: me.token });
+    await expect(call("GET", "/v1/watch/me", fresh, "192.0.2.11")).rejects.toMatchObject({
+      status: 401,
+      code: "invalid_watch_key",
+    });
+  });
+
+  it("doesn't count watches waiting on a code against their address", async () => {
+    const call = watchCaller({ db: h.handle.db }, { now: () => 0 });
+    const waiting = newKey();
+    await h.tdb.admin`insert into public.watch_key_requests (code_hash, key_hash, platform, name)
+      values (${"c".repeat(64)}, ${hashWatchKey(waiting)}, 'wearos', 'Waiting')`;
+    // Three watches signing in at one address ask every five seconds: far more than thirty a minute.
+    for (let i = 0; i < WATCH_FAILED_KEYS_PER_MINUTE + 10; i++)
+      await expect(call("GET", "/v1/watch/me", waiting, "192.0.2.20")).rejects.toMatchObject({
+        status: 401,
+        code: "watch_code_pending",
+      });
+    // The address still has its whole budget for keys that don't work.
+    await expect(call("GET", "/v1/watch/me", newKey(), "192.0.2.20")).rejects.toMatchObject({
+      status: 401,
+      code: "invalid_watch_key",
+    });
+    // One watch asking without end is held to its own minute.
+    let last: unknown;
+    for (let i = 0; i < WATCH_KEY_PER_MINUTE; i++)
+      last = await call("GET", "/v1/watch/me", waiting, "192.0.2.20").catch((e) => e);
+    expect(last).toMatchObject({ status: 429 });
+    await h.tdb
+      .admin`delete from public.watch_key_requests where key_hash = ${hashWatchKey(waiting)}`;
+  });
+
+  it("counts an IPv6 network as one address and keeps its counters bounded", () => {
+    expect(addressKey("203.0.113.9")).toBe("203.0.113.9");
+    expect(addressKey("::ffff:203.0.113.9")).toBe("203.0.113.9");
+    expect(addressKey("2001:db8:1:2:aaaa:bbbb:cccc:dddd")).toBe("2001:db8:1:2::/64");
+    expect(addressKey("2001:DB8:1:2::1")).toBe("2001:db8:1:2::/64");
+    expect(addressKey("2001:db8::1")).toBe("2001:db8:0:0::/64");
+    expect(addressKey("[fe80::1%eth0]")).toBe("fe80:0:0:0::/64");
+    expect(addressKey("unknown")).toBe("unknown");
+    let t = 0;
+    const c = windowCounter(60_000, 5, () => t, { sweepAt: 100, cap: 500 });
+    // A flood of addresses within one window: the map stays bounded.
+    for (let i = 0; i < 5000; i++) c.hit(`a${i}`);
+    expect(c.size()).toBeLessThanOrEqual(751);
+    // The newest keep their count.
+    for (let i = 0; i < 4; i++) c.hit("a4999");
+    expect(c.hit("a4999")).not.toBeNull();
+    // Windows that ran out go once the map is looked over.
+    t += 60_000;
+    for (let i = 0; i < 800; i++) c.hit(`b${i}`);
+    expect(c.size()).toBeLessThanOrEqual(751);
+    expect(c.over("a4999")).toBeNull();
   });
 
   it("refuses a malformed key", async () => {
@@ -491,7 +615,50 @@ describe("requests on the wrist", () => {
 
   it("can be allowed from the watch only within its limits", async () => {
     const low = await approval({ risk: "low" });
-    expect((await decide(low.id, "approved")).status).toBe(200);
+    const allowed = await decide(low.id, "approved");
+    expect(allowed.status).toBe(200);
+    // The answer says it was decided, never the request's raw arguments.
+    expect(await j(allowed)).toMatchObject({
+      id: low.id,
+      status: "approved",
+      args_redacted: {},
+      tool_name: "mail.send",
+    });
+    // With details off, no words about it either; the phone still gets everything.
+    await h.request("/v1/watch-prefs", {
+      method: "PATCH",
+      token: me.token,
+      json: { show_details: false },
+    });
+    const quiet = await approval({ risk: "low" });
+    const denied = await j(await decide(quiet.id, "denied"));
+    expect(denied).toMatchObject({
+      status: "denied",
+      args_redacted: {},
+      tool_name: "",
+      summary: "",
+    });
+    expect(JSON.stringify(denied)).not.toContain("dana@");
+    await h.request("/v1/watch-prefs", {
+      method: "PATCH",
+      token: me.token,
+      json: { show_details: true },
+    });
+    const byPhone = await approval({ risk: "low" });
+    const full = await j(
+      await h.request(`/v1/approvals/${byPhone.id}/decision`, {
+        method: "POST",
+        token: me.token,
+        json: { decision: "denied" },
+      }),
+    );
+    expect(full.args_redacted).toMatchObject({ to: "dana@example.com" });
+    // A paid data call buys something: medium risk, and still the phone's.
+    const paid = await approval({ risk: "medium", tool: "data.call", args: { endpoint: "x" } });
+    expect(await j(await decide(paid.id, "approved"))).toMatchObject({
+      code: "watch_allow_refused",
+      detail: "payment",
+    });
     const high = await approval({ risk: "high" });
     const refused = await decide(high.id, "approved");
     expect(refused.status).toBe(403);
@@ -665,6 +832,72 @@ describe("runs and chats", () => {
       expect(events[0].phase).toBe("needs_ok");
       expect(events.at(-1).phase).toBe("stopped");
       expect(text).toContain("event: run");
+    } finally {
+      Object.assign(WATCH_STREAM, saved);
+    }
+  });
+
+  it("keeps an open stream to the person's settings as they change them", async () => {
+    const { id: aId, runId } = await approval({ risk: "medium" });
+    const saved = { ...WATCH_STREAM };
+    Object.assign(WATCH_STREAM, { ms: 5000, beatMs: 50, minGapMs: 0, recheckMs: 100 });
+    try {
+      const res = await watch(`/v1/watch/runs/${runId}?stream=1`);
+      setTimeout(() => {
+        void h.request("/v1/watch-prefs", {
+          method: "PATCH",
+          token: me.token,
+          json: { show_details: false },
+        });
+      }, 150);
+      setTimeout(async () => {
+        await h.tdb.admin`update public.approvals set status = 'denied' where id = ${aId}`;
+        await h.tdb
+          .admin`update public.runs set status = 'cancelled', ended_at = now() where id = ${runId}`;
+      }, 900);
+      const events = (await res.text())
+        .split("\n")
+        .filter((l) => l.startsWith("data: "))
+        .map((l) => JSON.parse(l.slice(6)));
+      expect(events[0].approval.title).toBe("Send an email");
+      // Details went off while it was open: the same request, without its words.
+      expect(
+        events.some(
+          (e: { phase: string; approval: { title: string } | null }) =>
+            e.phase === "needs_ok" && e.approval?.title === "",
+        ),
+      ).toBe(true);
+    } finally {
+      Object.assign(WATCH_STREAM, saved);
+      await h.request("/v1/watch-prefs", {
+        method: "PATCH",
+        token: me.token,
+        json: { show_details: true },
+      });
+    }
+  });
+
+  it("reads a run once per gap while a reply is being written, not once per event", async () => {
+    const runId = await run({ status: "running" });
+    const saved = { ...WATCH_STREAM };
+    Object.assign(WATCH_STREAM, {
+      ms: 1500,
+      beatMs: 5000,
+      minGapMs: 300,
+      recheckMs: 60_000,
+      reads: 0,
+    });
+    try {
+      const res = await watch(`/v1/watch/runs/${runId}?stream=1`);
+      const ended = res.text();
+      // Thirty events in about a second that change nothing a watch shows.
+      for (let i = 0; i < 30; i++) {
+        await h.tdb.admin`select pg_notify('casama_run_events', ${`${runId}:${i}`})`;
+        await new Promise((r) => setTimeout(r, 30));
+      }
+      await ended;
+      expect(WATCH_STREAM.reads).toBeGreaterThan(0);
+      expect(WATCH_STREAM.reads).toBeLessThanOrEqual(7);
     } finally {
       Object.assign(WATCH_STREAM, saved);
     }
@@ -868,6 +1101,76 @@ describe("open on phone and signing out", () => {
     expect(sent?.message).toMatchObject({
       title: "Spare is signed in to Casama",
       link: "/settings/watch",
+    });
+  });
+
+  it("says so once: registering a watch again or moving it isn't a new sign-in", async () => {
+    const fingerprint = hashWatchKey(newKey());
+    const register = async (org: string) =>
+      j(
+        await h.request("/v1/watch-keys", {
+          method: "POST",
+          token: me.token,
+          json: { org_id: org, fingerprint, platform: "wearos", name: "Mover" },
+        }),
+      );
+    const first = await register(orgId);
+    for (
+      let i = 0;
+      i < 50 && push.sent.at(-1)?.message.title !== "Mover is signed in to Casama";
+      i++
+    )
+      await new Promise((r) => setTimeout(r, 20));
+    expect(push.sent.at(-1)?.message.title).toBe("Mover is signed in to Casama");
+    const before = push.sent.length;
+    // The phone switches workspace and back: the same watch, moved.
+    const moved = await register(otherOrgId);
+    expect(moved).toMatchObject({ id: first.id, org_id: otherOrgId });
+    expect((await register(orgId)).org_id).toBe(orgId);
+    await new Promise((r) => setTimeout(r, 200));
+    expect(push.sent.length).toBe(before);
+  });
+
+  it("signs out everywhere: every watch the person signed in, in every workspace", async () => {
+    const own = (
+      await j(
+        await h.request("/v1/orgs", {
+          method: "POST",
+          token: member.token,
+          json: { name: "Mine" },
+        }),
+      )
+    ).id as string;
+    const k1 = newKey();
+    const k2 = newKey();
+    for (const [org, k] of [
+      [orgId, k1],
+      [own, k2],
+    ] as const)
+      await h.request("/v1/watch-keys", {
+        method: "POST",
+        token: member.token,
+        json: { org_id: org, fingerprint: hashWatchKey(k), platform: "wearos", name: "W" },
+      });
+    expect((await watch("/v1/watch/me", {}, k2)).status).toBe(200);
+    // Only the person's own session may: not a watch's key, and not signed out.
+    const byWatch = await watch("/v1/watch-keys", { method: "DELETE" }, k1);
+    expect(byWatch.status).toBe(403);
+    expect((await j(byWatch)).code).toBe("watch_key_not_allowed");
+    expect((await h.request("/v1/watch-keys", { method: "DELETE" })).status).toBe(401);
+    const res = await h.request("/v1/watch-keys", { method: "DELETE", token: member.token });
+    expect(res.status).toBe(200);
+    expect((await j(res)).deleted).toBeGreaterThanOrEqual(2);
+    for (const k of [k1, k2]) expect((await watch("/v1/watch/me", {}, k)).status).toBe(401);
+    const [left] = await h.tdb.admin<{ n: number }[]>`
+      select count(*)::int as n from public.watch_keys where user_id = ${member.id}`;
+    expect(left?.n).toBe(0);
+    // Someone else's watch is untouched.
+    expect((await watch("/v1/watch/me")).status).toBe(200);
+    expect(
+      await j(await h.request("/v1/watch-keys", { method: "DELETE", token: member.token })),
+    ).toEqual({
+      deleted: 0,
     });
   });
 

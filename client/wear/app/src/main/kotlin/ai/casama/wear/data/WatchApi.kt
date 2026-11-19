@@ -4,6 +4,7 @@ import ai.casama.wear.core.Decode
 import ai.casama.wear.core.DecodeException
 import ai.casama.wear.core.Encode
 import ai.casama.wear.core.Glance
+import ai.casama.wear.core.LinkMessage
 import ai.casama.wear.core.SseParser
 import ai.casama.wear.core.WatchApproval
 import ai.casama.wear.core.WatchAsked
@@ -40,11 +41,21 @@ sealed class ApiError(message: String) : Exception(message) {
     class RateLimited(val retryAfterSeconds: Int) : ApiError("rate limited")
     /** No connection, or the server didn't answer. */
     class Offline(cause: Throwable?) : ApiError("offline: ${cause?.message}")
-    class NotFound : ApiError("not found")
-    /** 409: already answered, already stopped. */
-    class Conflict : ApiError("conflict")
-    /** 403: the server refused (the watch's limits, out of credits). */
-    class Forbidden(val code: String?) : ApiError("forbidden $code")
+    /**
+     * 404. [code] tells them apart (WATCH-PROTOCOL §1): `not_found` is "not in this watch's
+     * workspace", `approval_not_found` and the like are "gone".
+     */
+    class NotFound(val code: String? = null) : ApiError("not found $code") {
+        /** The thing is in another workspace than this watch's key, or isn't the watch's to touch. */
+        val elsewhere: Boolean get() = code == "not_found"
+    }
+    /** 409: already answered, already stopped, no voice service. */
+    class Conflict(val code: String? = null) : ApiError("conflict $code")
+    /** 403: the server refused (the watch's limits). [detail] is its reason for a refused Allow. */
+    class Forbidden(val code: String?, val detail: String? = null) : ApiError("forbidden $code")
+    /** Another 4xx: the server won't take this, and asking again won't change that. */
+    class Refused(val status: Int, val code: String?) : ApiError("refused $status $code")
+    /** 5xx: the server had a problem; trying again later may work. */
     class Server(val status: Int) : ApiError("server $status")
     /** The answer couldn't be read. */
     class Bad(message: String) : ApiError(message)
@@ -72,8 +83,13 @@ class WatchApi(
 
     private val json = "application/json; charset=utf-8".toMediaType()
 
-    private fun base(server: String? = null): String =
-        (server ?: settings.server ?: throw ApiError.SignedOut()).trimEnd('/')
+    private fun base(server: String? = null): String {
+        val url = (server ?: settings.server ?: throw ApiError.SignedOut()).trimEnd('/')
+        // The key only travels over https, or plain http to a home-network address (the manifest
+        // allows cleartext for that alone; this is the gate).
+        if (!LinkMessage.isServerUrl(url)) throw ApiError.Offline(IOException("not a server address this watch calls"))
+        return url
+    }
 
     private fun request(path: String, server: String? = null, auth: Boolean = true): Request.Builder {
         val b = Request.Builder().url(base(server) + path).header("User-Agent", userAgent)
@@ -244,14 +260,16 @@ class WatchApi(
 
     private fun errorFor(r: Response): ApiError {
         val body = runCatching { r.peekBody(4096).string() }.getOrDefault("")
-        val code = runCatching { Decode.parse(body).strOrNull("code") }.getOrNull()
+        val problem = runCatching { Decode.parse(body) }.getOrNull()
+        val code = problem?.strOrNull("code")
         return when (r.code) {
             401 -> ApiError.SignedOut()
-            403 -> ApiError.Forbidden(code)
-            404 -> ApiError.NotFound()
-            409 -> ApiError.Conflict()
+            403 -> ApiError.Forbidden(code, problem?.strOrNull("detail"))
+            404 -> ApiError.NotFound(code)
+            409 -> ApiError.Conflict(code)
             429 -> ApiError.RateLimited(r.header("Retry-After")?.toIntOrNull() ?: 30)
-            else -> ApiError.Server(r.code)
+            in 500..599 -> ApiError.Server(r.code)
+            else -> ApiError.Refused(r.code, code)
         }
     }
 

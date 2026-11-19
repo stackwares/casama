@@ -1,7 +1,10 @@
 package ai.casama.wear.notify
 
 import ai.casama.wear.R
+import ai.casama.wear.core.CanAllow
 import ai.casama.wear.core.Encode
+import ai.casama.wear.core.Logic
+import ai.casama.wear.core.QueuedAsk
 import ai.casama.wear.core.WatchPush
 import ai.casama.wear.data.ApiError
 import ai.casama.wear.data.WatchApi
@@ -14,6 +17,7 @@ import androidx.core.app.RemoteInput
 import java.util.Locale
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * A notification's buttons, answered on the watch (§6.2): Allow, Deny, Do It, Not now, a spoken or
@@ -37,6 +41,9 @@ class ActionReceiver : BroadcastReceiver() {
             } finally {
                 pending.finish()
             }
+            // Tiles and complications catch up after the answer, outside the button's own time:
+            // a slow refresh must never turn "Allowed" into "Couldn't reach Casama".
+            runCatching { graph.session.refresh() }
         }
     }
 
@@ -78,13 +85,31 @@ class ActionReceiver : BroadcastReceiver() {
                         askedAtIso = null,
                         surface = "notification",
                     )
-                    session.call { ask(body, WatchApi.newKey()) }
+                    // The same notification and words give the same key, so a retry after a
+                    // timeout that did arrive can't send the reply twice.
+                    val key = (push.notificationId ?: push.messageId)?.let { Logic.replyKey(it, text) } ?: WatchApi.newKey()
+                    // Cut off before the receiver's own limit, so a link that hangs still ends
+                    // in "kept", not in a lost reply.
+                    val went = try {
+                        withTimeoutOrNull(7_000) { session.call { ask(body, key) } } != null
+                    } catch (e: ApiError) {
+                        if (e !is ApiError.Offline && e !is ApiError.Server && e !is ApiError.RateLimited) throw e
+                        false
+                    }
+                    if (!went) {
+                        // No connection: kept like any other ask (with the same key), and sent
+                        // when the watch is back.
+                        graph.outbox.keep(QueuedAsk(key, push.botId, push.conversationId, text, null, null, System.currentTimeMillis(), "notification"))
+                        Notifier.done(context, nid, context.getString(R.string.watch_kept_offline), text)
+                        return
+                    }
                     graph.haptics.done()
-                    Notifier.done(context, nid, context.getString(R.string.watch_sending), text)
+                    Notifier.done(context, nid, context.getString(R.string.watch_reply_sent), text)
                 }
                 OPEN_ON_PHONE -> {
-                    val opened = PhoneLink.openOnPhone(context, push.link) ||
-                        runCatching { session.call { handoff(push.link, push.title ?: bot) } }.isSuccess
+                    val title = PushWords.of(context, push).first
+                    val opened = PhoneLink.openOnPhone(context, push.link, title) ||
+                        runCatching { session.call { handoff(push.link, title) } }.isSuccess
                     Notifier.done(
                         context,
                         nid,
@@ -93,30 +118,50 @@ class ActionReceiver : BroadcastReceiver() {
                     )
                 }
             }
-            session.refresh()
         } catch (e: ApiError.Conflict) {
-            Notifier.done(context, nid, context.getString(R.string.watch_already_answered), bot)
+            if (Logic.conflict(e.code) == Logic.ConflictKind.OVER) {
+                Notifier.done(context, nid, context.getString(R.string.watch_already_answered), bot)
+            } else {
+                // Do It on a run the server couldn't start (the bot has no model, say): the
+                // suggestion is kept, so never "Already answered". The phone says why.
+                graph.haptics.problem()
+                redraw(context, push, context.getString(R.string.watch_not_on_watch), elsewhere = true)
+            }
+        } catch (e: ApiError.Refused) {
+            // 402: a limit was reached and nothing started. Anything else is a plain failure.
+            if (e.status != 402) throw e
+            graph.haptics.problem()
+            redraw(context, push, context.getString(R.string.watch_out_of_credits), elsewhere = true)
         } catch (e: ApiError.NotFound) {
-            Notifier.done(context, nid, context.getString(R.string.watch_already_answered), bot)
+            if (e.elsewhere) {
+                // Not in this watch's workspace: only the phone can answer it.
+                redraw(context, push, context.getString(R.string.watch_not_on_watch), elsewhere = true)
+            } else {
+                Notifier.done(context, nid, context.getString(R.string.watch_already_answered), bot)
+            }
         } catch (e: ApiError.Forbidden) {
             // The server's limits said no (a setting changed since the push): the phone decides.
             graph.haptics.problem()
-            redraw(context, push.copy(risk = null), context.getString(R.string.watch_review_on_phone))
+            redraw(context, push.copy(risk = null, canAllow = CanAllow.PHONE), context.getString(R.string.watch_review_on_phone))
         } catch (e: ApiError.SignedOut) {
             Notifier.cancel(context, nid)
         }
     }
 
-    private fun redraw(context: Context, push: WatchPush, note: String) {
-        val self = context.graph.session.self.value
+    private fun redraw(context: Context, push: WatchPush, note: String, elsewhere: Boolean = false) {
+        val graph = context.graph
+        val words = PushWords.of(context, push)
+        val otherWorkspace = Logic.elsewhere(push.orgId, graph.settings.orgId)
         Notifier.draw(
             context,
             push,
-            title = push.title ?: push.botName.orEmpty(),
-            body = push.body.orEmpty(),
-            allow = self?.prefs?.allow,
+            title = words.first,
+            body = words.second,
+            allow = graph.session.self.value?.prefs?.allow,
             quickReplies = PushSetup.quickReplies(context),
             note = note,
+            elsewhere = elsewhere || otherWorkspace,
+            otherWorkspace = otherWorkspace,
         )
     }
 

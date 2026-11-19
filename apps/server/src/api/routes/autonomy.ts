@@ -350,7 +350,20 @@ export function registerAutonomyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
           platform: watch.platform,
         },
       });
-    return c.json(approvalOut(row), 200);
+    const out = approvalOut(row);
+    // A watch never gets a request's raw arguments (its own view is GET /v1/watch/approvals/{id}),
+    // and with "Show details on the watch" off no words about it either. Deny works on any request
+    // in the workspace, so the answer must not be a way to read them.
+    if (watch)
+      return c.json(
+        {
+          ...out,
+          args_redacted: {},
+          ...(watch.showDetails ? {} : { tool_name: "", summary: "" }),
+        },
+        200,
+      );
+    return c.json(out, 200);
   });
 
   // --- secrets -------------------------------------------------------------------

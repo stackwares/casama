@@ -743,7 +743,8 @@ connection can't send twice.
   Row-level security lets a person see and delete only their own; the worker gets
   `public.allow_worker`. At most ten a person per workspace.
 - **`watch_key_requests`** for codes: the code's and the key's fingerprints, expiry, who claimed
-  it. No one reads it but the API. Five requests an hour per address, five wrong tries per code.
+  it. No one reads it but the API. Five requests an hour per address (an IPv6 /64 counts as one),
+  five wrong codes an hour per person. Looking a code up doesn't use it up.
 - **Auth:** a third branch beside `Bearer` in `app.ts`, shaped like the widgets branch's
   `widgetCaller`: check the route against the list, find the key, check the person is still in
   the workspace, count it. If the widgets branch has landed first, both become one resolver with
@@ -799,8 +800,9 @@ connection can't send twice.
   is. Nothing is kept on the watch.
 - **What the watch keeps:** the last glance and the last chat it showed, in its own storage,
   wiped at sign-out.
-- **Pushes** carry what they carry today. With private notifications on, they carry nothing and
-  the watch fetches the rest itself.
+- **Pushes** to a phone carry what they carry today. A watch's own copy follows **Show details on
+  the watch**: with it off, the bot's name and general words ("Needs your OK", "Replied"). With
+  private notifications on, they carry nothing and the watch fetches the rest itself.
 - **A code** is eight characters from an alphabet without look-alikes, good for ten minutes and
   one use, and the person sees which watch is asking before allowing it.
 - **Signing in tells the person**, on both screens, as Google requires and as is right.

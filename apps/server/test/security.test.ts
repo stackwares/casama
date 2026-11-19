@@ -271,6 +271,9 @@ describe("cross-tenant sweep (Phase 8 security review)", () => {
       // Watch settings (D-410) are the caller's own row, keyed by their user id; watch.test.ts
       // checks a watch key can't read or change them.
       "updateWatchPrefs",
+      // Sign Out Everywhere removes the caller's own watches and nobody else's; watch.test.ts
+      // checks another person's watch keeps working.
+      "deleteAllWatchKeys",
     ]);
     for (const [path, ops] of Object.entries(doc.paths)) {
       if (!path.startsWith("/v1/")) continue;

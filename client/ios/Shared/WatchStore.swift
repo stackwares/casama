@@ -35,6 +35,7 @@ enum WatchAccount {
     static let readAloud = "read_aloud"
     static let pushSent = "push_sent"
     static let welcomed = "welcomed"
+    static let signIns = "sign_in_requests"
   }
 
   private static var d: UserDefaults { WatchGroup.defaults }
@@ -108,6 +109,15 @@ enum WatchAccount {
     set { d.set(newValue, forKey: K.pushSent) }
   }
 
+  /// The sign-in requests this watch sent the phone, with the key they were for (WatchLogic).
+  static var signIns: IssuedSignIns {
+    get {
+      guard let data = d.data(forKey: K.signIns), let v = try? JSONDecoder().decode(IssuedSignIns.self, from: data) else { return .none }
+      return v
+    }
+    set { d.set(try? JSONEncoder().encode(newValue), forKey: K.signIns) }
+  }
+
   /// Signs this watch in: where its server is and who it belongs to.
   static func signIn(server: URL, orgId: String, orgName: String, person: String) {
     self.server = server
@@ -117,12 +127,14 @@ enum WatchAccount {
     accepted = true
     removed = false
     welcomed = false
+    // Answered: later answers to the same requests are not sign-ins.
+    d.removeObject(forKey: K.signIns)
   }
 
   /// Forgets everything about the account. The server's address stays, so signing in again
   /// through a code goes to the same place.
   static func wipe(removed wasRemoved: Bool) {
-    for key in [K.orgId, K.orgName, K.person, K.accepted, K.askBot, K.lastAskBot, K.pushSent, K.welcomed] {
+    for key in [K.orgId, K.orgName, K.person, K.accepted, K.askBot, K.lastAskBot, K.pushSent, K.welcomed, K.signIns] {
       d.removeObject(forKey: key)
     }
     removed = wasRemoved
@@ -185,9 +197,12 @@ enum GlanceCache {
     return try? WatchJSON.decoder().decode(WatchChat.self, from: data)
   }
 
-  static func wipe() {
+  /// Forgets the saved glance and chats. [keepMe] keeps who the watch is and the person's own
+  /// settings (hide reply text, show details), which don't change with the workspace.
+  static func wipe(keepMe: Bool = false) {
     for bot in d.stringArray(forKey: K.chats) ?? [] { d.removeObject(forKey: K.chatPrefix + bot) }
-    for key in [K.glance, K.glanceSaved, K.etag, K.me, K.chats] { d.removeObject(forKey: key) }
+    for key in [K.glance, K.glanceSaved, K.etag, K.chats] { d.removeObject(forKey: key) }
+    if !keepMe { d.removeObject(forKey: K.me) }
   }
 }
 
@@ -234,6 +249,17 @@ enum AskQueueStore {
     save(list)
   }
 
+  /// Counts a try the server failed for [id], and answers how many that makes.
+  @discardableResult
+  static func noteTry(_ id: String) -> Int {
+    var list = all()
+    guard let i = list.firstIndex(where: { $0.id == id }) else { return 1 }
+    let tries = (list[i].tries ?? 0) + 1
+    list[i].tries = tries
+    save(list)
+    return tries
+  }
+
   static func audioURL(_ ask: QueuedAsk) -> URL? {
     guard let name = ask.audioFile else { return nil }
     return audioDir?.appendingPathComponent(name)
@@ -246,5 +272,23 @@ enum AskQueueStore {
   static func wipe() {
     for ask in all() { deleteAudio(ask) }
     d.removeObject(forKey: key)
+    purgeTemp()
+  }
+
+  /// A recording being made or sent waits in the temp folder under this name.
+  static func tempRecordingURL() -> URL {
+    FileManager.default.temporaryDirectory.appendingPathComponent("\(tempPrefix)\(UUID().uuidString).m4a")
+  }
+
+  private static let tempPrefix = "ask-"
+
+  /// Removes recordings left in the temp folder (a send that failed, an app that was closed
+  /// mid-ask): nothing from a recording is kept unless the ask itself is kept.
+  static func purgeTemp() {
+    let dir = FileManager.default.temporaryDirectory
+    for name in (try? FileManager.default.contentsOfDirectory(atPath: dir.path)) ?? []
+    where name.hasPrefix(tempPrefix) && name.hasSuffix(".m4a") {
+      try? FileManager.default.removeItem(at: dir.appendingPathComponent(name))
+    }
   }
 }

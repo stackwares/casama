@@ -2157,7 +2157,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Approve or deny; denying cancels that step only */
+        /** Approve or deny; denying cancels that step only. A watch key is refused an allow it may not give (403 watch_allow_refused, watch_always_allow) and is held to its minute (429) */
         post: operations["decideApproval"];
         delete?: never;
         options?: never;
@@ -6598,6 +6598,25 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/watch-keys": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The person's signed-in watches in a workspace */
+        get: operations["listWatchKeys"];
+        put?: never;
+        /** Sign a watch in from the phone: register the fingerprint of the key the watch made. Registering the same fingerprint again updates it */
+        post: operations["registerWatchKey"];
+        /** Remove every watch the person signed in, in every workspace (Sign Out Everywhere): their keys stop working at once */
+        delete: operations["deleteAllWatchKeys"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/watch-keys/{id}": {
         parameters: {
             query?: never;
@@ -6656,7 +6675,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Which watch shows this code, before allowing it. Five wrong tries end a code */
+        /** Which watch shows this code, before allowing it. Looking a code up doesn't use it up; after five wrong codes in an hour the person waits */
         get: operations["getWatchCode"];
         put?: never;
         post?: never;
@@ -6712,24 +6731,6 @@ export interface paths {
         get: operations["getWatchSelf"];
         put?: never;
         post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/watch-keys": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** The person's signed-in watches in a workspace */
-        get: operations["listWatchKeys"];
-        put?: never;
-        /** Sign a watch in from the phone: register the fingerprint of the key the watch made. Registering the same fingerprint again updates it */
-        post: operations["registerWatchKey"];
         delete?: never;
         options?: never;
         head?: never;
@@ -13983,6 +13984,9 @@ export interface components {
         WatchCodeClaim: {
             /** Format: uuid */
             org_id: string;
+        };
+        DeletedWatchKeys: {
+            deleted: number;
         };
         DeletedWatchKey: {
             /** Format: uuid */
@@ -21804,6 +21808,15 @@ export interface operations {
                     "application/problem+json": components["schemas"]["Problem"];
                 };
             };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
             /** @description Not found */
             404: {
                 headers: {
@@ -21815,6 +21828,15 @@ export interface operations {
             };
             /** @description Conflict */
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Rate limited */
+            429: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -37383,6 +37405,135 @@ export interface operations {
             };
         };
     };
+    listWatchKeys: {
+        parameters: {
+            query: {
+                org_id: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Most recently used first */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WatchKeyList"];
+                };
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    registerWatchKey: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WatchKeyRegister"];
+            };
+        };
+        responses: {
+            /** @description Signed in */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WatchKey"];
+                };
+            };
+            /** @description Validation failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    deleteAllWatchKeys: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description How many were removed */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeletedWatchKeys"];
+                };
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     deleteWatchKey: {
         parameters: {
             query?: never;
@@ -37724,106 +37875,6 @@ export interface operations {
             };
             /** @description Rate limited */
             429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
-    };
-    listWatchKeys: {
-        parameters: {
-            query: {
-                org_id: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Most recently used first */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WatchKeyList"];
-                };
-            };
-            /** @description Not authenticated */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
-    };
-    registerWatchKey: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["WatchKeyRegister"];
-            };
-        };
-        responses: {
-            /** @description Signed in */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WatchKey"];
-                };
-            };
-            /** @description Validation failed */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Not authenticated */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Conflict */
-            409: {
                 headers: {
                     [name: string]: unknown;
                 };

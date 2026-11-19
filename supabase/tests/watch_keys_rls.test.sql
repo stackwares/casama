@@ -2,7 +2,7 @@
 -- fingerprint; codes and settings are written only by the API; the worker reads push tokens.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(17);
+select plan(22);
 
 insert into auth.users (id, email, aud, role) values
   ('10000000-0000-0000-0000-0000000005a1', 'watch-a1@example.com', 'authenticated', 'authenticated'),
@@ -73,6 +73,28 @@ select ok(exists (select 1 from pg_policies where tablename = 'watch_keys' and p
   'the worker reads every push token');
 select ok(exists (select 1 from pg_policies where tablename = 'watch_key_requests' and policyname = 'casama_worker_all'),
   'and sweeps old codes');
+
+-- Leaving a workspace (or being removed from it) takes that person's watch and widget keys there
+-- with it, so rejoining doesn't bring an old watch back signed in; other people's keys stay.
+insert into public.watch_keys (id, user_id, org_id, platform, key_hash, name) values
+  ('10000000-0000-0000-0000-0000000005c3', '10000000-0000-0000-0000-0000000005a1',
+   '10000000-0000-0000-0000-0000000005b1', 'watchos', repeat('1', 64), 'Ana''s other watch');
+insert into public.widget_keys (id, user_id, org_id, platform, key_hash) values
+  ('10000000-0000-0000-0000-0000000005d1', '10000000-0000-0000-0000-0000000005a1',
+   '10000000-0000-0000-0000-0000000005b1', 'ios', repeat('2', 64)),
+  ('10000000-0000-0000-0000-0000000005d2', '10000000-0000-0000-0000-0000000005a2',
+   '10000000-0000-0000-0000-0000000005b1', 'android', repeat('3', 64));
+delete from public.memberships where org_id = '10000000-0000-0000-0000-0000000005b1' and user_id = '10000000-0000-0000-0000-0000000005a2';
+select is((select count(*)::int from public.watch_keys where user_id = '10000000-0000-0000-0000-0000000005a2'), 0,
+  'a person who leaves a workspace loses their watch key there');
+select is((select count(*)::int from public.widget_keys where user_id = '10000000-0000-0000-0000-0000000005a2'), 0,
+  'and their widget key');
+select is((select count(*)::int from public.watch_keys where user_id = '10000000-0000-0000-0000-0000000005a1'), 1,
+  'someone still in the workspace keeps their watch');
+select is((select count(*)::int from public.widget_keys where user_id = '10000000-0000-0000-0000-0000000005a1'), 1,
+  'and their widgets');
+select ok(exists (select 1 from pg_indexes where schemaname = 'public' and indexname = 'watch_key_requests_key_hash_idx'),
+  'a waiting code is found by its watch''s fingerprint');
 
 select * from finish();
 rollback;

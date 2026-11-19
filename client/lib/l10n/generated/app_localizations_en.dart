@@ -15270,8 +15270,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get watchNewCode => 'New code';
 
   @override
-  String get watchSignedOut =>
-      'Signed out. Open Casama on your phone to sign in again';
+  String get watchSignedOut => 'This watch is signed out';
 
   @override
   String get watchOpenToSignIn => 'Open Casama to sign in';
@@ -15423,6 +15422,18 @@ class AppLocalizationsEn extends AppLocalizations {
       'That code didn\'t work. Check it on your watch';
 
   @override
+  String get watchPhoneCodeTaken =>
+      'This watch is still signed in to another account. Remove it there in Settings → Watch, then get a new code';
+
+  @override
+  String watchPhoneElsewhere(String workspace) {
+    return 'Signed in to $workspace';
+  }
+
+  @override
+  String get watchPhoneElsewhereUnknown => 'Signed in to another workspace';
+
+  @override
   String watchPhoneSignedIn(String name) {
     return '$name is signed in';
   }
@@ -15557,6 +15568,37 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get watchChannelOther => 'Other';
+
+  @override
+  String get watchOtherWorkspace =>
+      'This is in another workspace. Answer it on your phone';
+
+  @override
+  String get watchReplySent => 'Sent';
+
+  @override
+  String get watchReplyNotSent => 'Couldn\'t send your reply';
+
+  @override
+  String watchAskDropped(String time) {
+    return 'Couldn\'t send what you asked at $time';
+  }
+
+  @override
+  String get watchNeedsHttps =>
+      'This watch can only reach your server over https or on your home network';
+
+  @override
+  String get watchSignIn => 'Sign in';
+
+  @override
+  String get watchNotOnWatch =>
+      'This watch can\'t answer this one. Open it on your phone';
+
+  @override
+  String watchMoreOnPhone(String count) {
+    return '$count more on your phone';
+  }
 
   @override
   String get showList => 'Show the list';

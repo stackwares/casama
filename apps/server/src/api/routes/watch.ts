@@ -41,15 +41,22 @@ export const WATCH_KEYS_KEPT = 10;
 /** Codes one address may ask for in an hour, and wrong codes one person may type in an hour. */
 export const WATCH_CODES_PER_HOUR = 5;
 export const WATCH_WRONG_CODES_PER_HOUR = 5;
-/** Lookups one code takes before it stops working (showing it and allowing it take two). */
-export const WATCH_CODE_TRIES = 5;
+/** How long a key that worked skips the per-address count of keys that don't, and how many are kept. */
+export const WATCH_WORKED_MS = 10 * 60_000;
+const WATCH_WORKED_KEPT = 20_000;
 /** Eight characters without look-alikes (no 0, O, 1, I, L). */
 const CODE_ALPHABET = "23456789ABCDEFGHJKMNPQRSTUVWXYZ";
 const CODE_LENGTH = 8;
 /** How often a watch showing a code asks whether it was allowed. */
 const POLL_EVERY_S = 5;
-/** A run stream's limits (tests shorten them). */
-export const WATCH_STREAM = { ms: 110_000, beatMs: 15_000, minGapMs: 1000, recheckMs: 30_000 };
+/** A run stream's limits (tests shorten them), and how many snapshots streams have read. */
+export const WATCH_STREAM = {
+  ms: 110_000,
+  beatMs: 15_000,
+  minGapMs: 1000,
+  recheckMs: 30_000,
+  reads: 0,
+};
 
 const UUID = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
 
@@ -108,24 +115,71 @@ export function newWatchCode() {
   return out;
 }
 
+/**
+ * The address a limit counts by. An IPv6 address counts as its /64: one network hands out as many
+ * addresses as it likes, so counting each would be no limit at all.
+ */
+export function addressKey(ip: string): string {
+  const a = ip
+    .trim()
+    .toLowerCase()
+    .replace(/^\[|\]$/g, "")
+    .replace(/%.*$/, "");
+  if (!a.includes(":")) return a;
+  // An IPv4 address written the IPv6 way (::ffff:203.0.113.9) is that IPv4 address.
+  const mapped = /^(?:0{0,4}:){0,5}:?ffff:(\d{1,3}(?:\.\d{1,3}){3})$/.exec(a);
+  if (mapped) return mapped[1] as string;
+  const [head = "", tail] = a.split("::", 2);
+  const h = head ? head.split(":") : [];
+  const t = tail ? tail.split(":") : [];
+  const groups =
+    tail === undefined ? h : [...h, ...Array(Math.max(0, 8 - h.length - t.length)).fill("0"), ...t];
+  const net = groups.slice(0, 4).map((g) => g.replace(/^0+(?=.)/, "") || "0");
+  return `${net.join(":")}::/64`;
+}
+
+/** Past this many windows a counter looks for ones that ran out; it never keeps more than the cap. */
+const WINDOWS_SWEEP_AT = 10_000;
+const WINDOWS_CAP = 200_000;
+
 /** A fixed window per key; returns the seconds to wait when over. */
-function windowCounter(ms: number, max: number, now: () => number) {
+export function windowCounter(
+  ms: number,
+  max: number,
+  now: () => number,
+  o: { sweepAt?: number; cap?: number } = {},
+) {
+  const sweepAt = o.sweepAt ?? WINDOWS_SWEEP_AT;
+  const cap = o.cap ?? WINDOWS_CAP;
   const windows = new Map<string, { start: number; count: number }>();
+  let sweepPast = sweepAt;
   return {
     hit(key: string): number | null {
       const t = now();
       let w = windows.get(key);
       if (!w || t - w.start >= ms) {
         w = { start: t, count: 0 };
+        // A renewed window moves to the end, so the map stays oldest first.
+        windows.delete(key);
         windows.set(key, w);
-        // Only windows that ran out go: a flood of new keys can't reset anyone's limit.
-        if (windows.size > 50_000)
+        if (windows.size > sweepPast) {
+          // Windows that ran out go first: a flood of new keys shouldn't reset anyone's limit. The
+          // map is bounded all the same, so past the cap the oldest go, and the next look waits
+          // until the map has grown by half again (not one scan per new key).
           for (const [k, v] of windows) if (t - v.start >= ms) windows.delete(k);
+          for (const k of windows.keys()) {
+            if (windows.size <= cap) break;
+            windows.delete(k);
+          }
+          sweepPast = Math.max(sweepAt, Math.floor(windows.size * 1.5));
+        }
       }
       if (w.count >= max) return Math.max(1, Math.ceil((w.start + ms - t) / 1000));
       w.count += 1;
       return null;
     },
+    /** How many windows are kept (tests). */
+    size: () => windows.size,
     /** Gives back one counted hit (it turned out fine). */
     refund(key: string) {
       const w = windows.get(key);
@@ -150,9 +204,14 @@ const tooMany = (detail: string, retry: number) =>
  * it against the minute.
  */
 export function watchCaller(deps: Pick<AppDeps, "db">, o: { now?: () => number } = {}) {
-  const limit = windowCounter(60_000, WATCH_KEY_PER_MINUTE, o.now ?? Date.now);
+  const now = o.now ?? Date.now;
+  const limit = windowCounter(60_000, WATCH_KEY_PER_MINUTE, now);
   // Keys that don't work, per address: counted before the lookup, given back when the key works.
-  const failed = windowCounter(60_000, WATCH_FAILED_KEYS_PER_MINUTE, o.now ?? Date.now);
+  const failed = windowCounter(60_000, WATCH_FAILED_KEYS_PER_MINUTE, now);
+  // Keys that worked a moment ago, by fingerprint, and until when. They skip the per-address
+  // count: junk keys sent from the same address (shared Wi-Fi, a carrier's network) must not lock
+  // out the watches there that are signed in.
+  const worked = new Map<string, number>();
   return async (
     method: string,
     path: string,
@@ -162,11 +221,16 @@ export function watchCaller(deps: Pick<AppDeps, "db">, o: { now?: () => number }
     const m = method === "HEAD" ? "GET" : method;
     if (!WATCH_ROUTES.some(([wm, re]) => wm === m && re.test(path)))
       throw new ApiError(403, "watch_key_not_allowed", "A watch can't do this; use the phone");
-    const wait = failed.hit(ip);
-    if (wait !== null) throw tooMany("Too many watch keys that don't work from here", wait);
-    if (!/^cwt_[A-Za-z0-9_-]{43}$/.test(key))
-      throw new ApiError(401, "invalid_watch_key", "The watch key is invalid");
-    const hash = hashWatchKey(key);
+    const from = addressKey(ip);
+    const wellFormed = /^cwt_[A-Za-z0-9_-]{43}$/.test(key);
+    const hash = wellFormed ? hashWatchKey(key) : "";
+    const t = now();
+    const known = wellFormed && (worked.get(hash) ?? 0) > t;
+    if (!known) {
+      const wait = failed.hit(from);
+      if (wait !== null) throw tooMany("Too many watch keys that don't work from here", wait);
+    }
+    if (!wellFormed) throw new ApiError(401, "invalid_watch_key", "The watch key is invalid");
     const [row] = await deps.db.execute<{
       id: string;
       user_id: string;
@@ -189,15 +253,32 @@ export function watchCaller(deps: Pick<AppDeps, "db">, o: { now?: () => number }
       select k.id, k.user_id, k.org_id, k.platform, p.allow, p.show_details
       from k left join public.watch_prefs p on p.user_id = k.user_id`);
     if (!row) {
+      // A key that worked until now was removed: from here on it counts like any other.
+      if (known) {
+        worked.delete(hash);
+        failed.hit(from);
+      }
       // A watch showing a code asks until the code is allowed: tell it it's still waiting.
       const [pending] = await deps.db.execute<{ id: string }>(sql`
         select id from public.watch_key_requests
         where key_hash = ${hash} and claimed_at is null and expires_at > now() limit 1`);
-      if (pending)
+      if (pending) {
+        // Waiting on a code isn't a key that doesn't work: a few watches signing in at one address
+        // (each asks every five seconds) must not use up its budget. Each is held to its own minute.
+        failed.refund(from);
+        const slow = limit.hit(`code:${hash}`);
+        if (slow !== null) throw tooMany("This watch asked too often; wait a moment", slow);
         throw new ApiError(401, "watch_code_pending", "The code on the watch isn't allowed yet");
+      }
       throw new ApiError(401, "invalid_watch_key", "The watch key is invalid");
     }
-    failed.refund(ip);
+    if (!known) failed.refund(from);
+    worked.delete(hash);
+    worked.set(hash, t + WATCH_WORKED_MS);
+    for (const k of worked.keys()) {
+      if (worked.size <= WATCH_WORKED_KEPT) break;
+      worked.delete(k);
+    }
     const retry = limit.hit(row.id);
     if (retry !== null) throw tooMany("This watch made too many requests this minute", retry);
     return {
@@ -324,6 +405,8 @@ type KeyRow = {
   push_kind: string | null;
   last_used_at: string | Date | null;
   created_at: string | Date;
+  /** From saveKey: the row is new, not one registered again or moved to another workspace. */
+  inserted?: boolean;
 };
 const KEY_COLUMNS = sql`id, org_id, platform, name, model, app_version, os_version, paired_by,
   push_kind, last_used_at, created_at`;
@@ -404,7 +487,11 @@ export function registerWatchRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     deps.onBackgroundTask?.(task);
   };
 
-  /** Saves a watch key for a person; a fingerprint already someone else's is refused. */
+  /**
+   * Saves a watch key for a person; a fingerprint already someone else's is refused. Registering
+   * one again (the phone moved to another workspace, a reinstall) updates it and keeps how it was
+   * first signed in; `inserted` says which happened.
+   */
   const saveKey = async (
     userId: string,
     orgId: string,
@@ -427,9 +514,9 @@ export function registerWatchRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       on conflict (key_hash) do update set
         org_id = excluded.org_id, platform = excluded.platform, name = excluded.name,
         model = excluded.model, app_version = excluded.app_version,
-        os_version = excluded.os_version, paired_by = excluded.paired_by
+        os_version = excluded.os_version
       where public.watch_keys.user_id = excluded.user_id
-      returning ${KEY_COLUMNS}`);
+      returning ${KEY_COLUMNS}, (xmax = 0) as inserted`);
     if (!row) throw new ApiError(409, "watch_key_taken", "This watch is signed in as someone else");
     await trimKeys(userId, orgId, row.id);
     return row;
@@ -464,14 +551,25 @@ export function registerWatchRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     if (!(await isMember(claims, body.org_id)))
       throw new ApiError(404, "org_not_found", "Workspace not found");
     const row = await saveKey(claims.sub, body.org_id, body.fingerprint, body, "phone");
-    signedInNotice(claims.sub, row.name);
-    track(db, {
-      event: "watch_paired",
-      userId: claims.sub,
-      orgId: body.org_id,
-      properties: { method: "phone", platform: body.platform },
-    });
+    // A new watch only: the phone registers its watches again on every workspace switch.
+    if (row.inserted) {
+      signedInNotice(claims.sub, row.name);
+      track(db, {
+        event: "watch_paired",
+        userId: claims.sub,
+        orgId: body.org_id,
+        properties: { method: "phone", platform: body.platform },
+      });
+    }
     return c.json(keyOut(row), 201);
+  });
+
+  // "Sign Out Everywhere" on the phone: every watch the person signed in, in every workspace.
+  app.openapi(routes.deleteAllWatchKeys, async (c) => {
+    const claims = requireSession(c);
+    const rows = await db.execute<{ id: string }>(sql`
+      delete from public.watch_keys where user_id = ${claims.sub}::uuid returning id`);
+    return c.json({ deleted: rows.length }, 200);
   });
 
   app.openapi(routes.deleteWatchKey, async (c) => {
@@ -518,7 +616,11 @@ export function registerWatchRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     return c.json(await watchPrefsFor(db, claims.sub), 200);
   });
 
-  /** A code still waiting to be allowed, counting wrong ones against the person. */
+  /**
+   * A code still waiting to be allowed, counting wrong ones against the person. Looking a code up
+   * doesn't use it up: it stops working when it is allowed, replaced or ten minutes old, and until
+   * then its watch is told it is still waiting.
+   */
   const openCode = async (claims: JwtClaims, raw: string) => {
     // Counted before the lookup (given back when the code is right), so guesses sent all at once
     // can't slip past the limit.
@@ -536,10 +638,9 @@ export function registerWatchRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
           os_version: string | null;
           expires_at: string | Date;
         }>(sql`
-          update public.watch_key_requests set tries = tries + 1
-          where code_hash = ${hashWatchCode(code)} and claimed_at is null and expires_at > now()
-            and tries < ${WATCH_CODE_TRIES}
-          returning id, key_hash, platform, name, model, app_version, os_version, expires_at`)
+          select id, key_hash, platform, name, model, app_version, os_version, expires_at
+          from public.watch_key_requests
+          where code_hash = ${hashWatchCode(code)} and claimed_at is null and expires_at > now()`)
       : [];
     if (!row) throw new ApiError(404, "watch_code_not_found", "That code isn't on any watch now");
     wrongCodes.refund(claims.sub);
@@ -573,13 +674,15 @@ export function registerWatchRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     if (!claimed)
       throw new ApiError(404, "watch_code_not_found", "That code isn't on any watch now");
     const row = await saveKey(claims.sub, org_id, req.key_hash, req, "code");
-    signedInNotice(claims.sub, row.name);
-    track(db, {
-      event: "watch_paired",
-      userId: claims.sub,
-      orgId: org_id,
-      properties: { method: "code", platform: req.platform },
-    });
+    if (row.inserted) {
+      signedInNotice(claims.sub, row.name);
+      track(db, {
+        event: "watch_paired",
+        userId: claims.sub,
+        orgId: org_id,
+        properties: { method: "code", platform: req.platform },
+      });
+    }
     return c.json(keyOut(row), 201);
   });
 
@@ -587,7 +690,7 @@ export function registerWatchRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
 
   app.openapi(routes.requestWatchCode, async (c) => {
     const body = c.req.valid("json");
-    const ip = clientIp((n) => c.req.header(n), deps.env.TRUSTED_CLIENT_IP_HEADER);
+    const ip = addressKey(clientIp((n) => c.req.header(n), deps.env.TRUSTED_CLIENT_IP_HEADER));
     const retry = codesByAddress.hit(ip);
     if (retry !== null) throw tooMany("Too many codes from here; try again later", retry);
     // A watch asking again gets a new code; the old one stops working.
@@ -853,12 +956,25 @@ export function registerWatchRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
 
   /** Open run streams per watch key. */
   const streams = new Map<string, Array<{ close: () => void }>>();
-  const keyStillWorks = async (watch: WatchCaller) => {
-    const [k] = await db.execute<{ id: string }>(sql`
-      select k.id from public.watch_keys k
+  /** What a key's person lets it show and allow now, or null once the key no longer works. */
+  const keyNow = async (watch: WatchCaller) => {
+    const [k] = await db.execute<{
+      allow: string | null;
+      show_details: boolean | null;
+      hide: boolean | null;
+    }>(sql`
+      select p.allow, p.show_details, (pr.push_prefs ->> 'hide_reply_text')::boolean as hide
+      from public.watch_keys k
       join public.memberships m on m.user_id = k.user_id and m.org_id = k.org_id
+      left join public.watch_prefs p on p.user_id = k.user_id
+      left join public.profiles pr on pr.user_id = k.user_id
       where k.id = ${watch.id}::uuid`);
-    return !!k;
+    if (!k) return null;
+    return {
+      private: k.show_details === false,
+      level: (k.allow === "low" || k.allow === "none" ? k.allow : "medium") as WatchCaller["allow"],
+      hide: k.hide === true,
+    };
   };
 
   app.openapi(routes.getWatchRun, async (c) => {
@@ -866,13 +982,15 @@ export function registerWatchRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     const { id } = c.req.valid("param");
     const { stream } = c.req.valid("query");
     const [hide, voice] = await Promise.all([hideReplyText(watch.userId), voiceFor(watch.orgId)]);
+    // What the stream shows follows the person's settings while it is open (rechecked below).
+    let view = { private: !watch.showDetails, level: watch.allow, hide };
     const read = () =>
       buildWatchRun(db, id, {
         userId: watch.userId,
         orgId: watch.orgId,
-        private: !watch.showDetails,
-        level: watch.allow,
-        hideReplyText: hide,
+        private: view.private,
+        level: view.level,
+        hideReplyText: view.hide,
         speech: voice.speech,
       });
     const first = await read();
@@ -883,7 +1001,7 @@ export function registerWatchRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     return streamSSE(c, async (s) => {
       const startedAt = Date.now();
       let last = JSON.stringify(first);
-      let lastSent = Date.now();
+      let lastRead = Date.now();
       let lastCheck = Date.now();
       let done = watchRunEnded(first);
       let wake: (() => void) | undefined;
@@ -926,22 +1044,28 @@ export function registerWatchRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
           });
           wake = undefined;
           if (done) break;
-          // At most one snapshot a second: a watch's radio is the cost.
-          const gap = WATCH_STREAM.minGapMs - (Date.now() - lastSent);
+          // At most one snapshot a second, counted from the last one read: a watch's radio is the
+          // cost, and a reply being written (several events a second that change nothing a watch
+          // shows) mustn't read the run each time.
+          const gap = WATCH_STREAM.minGapMs - (Date.now() - lastRead);
           if (gap > 0 && !beat) await new Promise((r) => setTimeout(r, gap));
           if (done) break;
-          // A removed or signed-out watch's stream ends (its key is checked every 30 seconds).
+          // A removed or signed-out watch's stream ends, and one whose person changed what watches
+          // show or allow follows that (both checked every 30 seconds).
           if (Date.now() - lastCheck >= WATCH_STREAM.recheckMs) {
             lastCheck = Date.now();
-            if (!(await keyStillWorks(watch))) break;
+            const fresh = await keyNow(watch);
+            if (!fresh) break;
+            view = fresh;
           }
           const now = await read();
+          lastRead = Date.now();
+          WATCH_STREAM.reads += 1;
           if (!now) break;
           const json = JSON.stringify(now);
           if (json !== last) {
             await s.writeSSE({ event: "run", data: json });
             last = json;
-            lastSent = Date.now();
           } else if (beat) {
             await s.write(": ping\n\n");
           }

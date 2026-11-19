@@ -89,6 +89,23 @@ export const deleteWatchKey = createRoute({
   },
 });
 
+export const deleteAllWatchKeys = createRoute({
+  operationId: "deleteAllWatchKeys",
+  method: "delete",
+  path: "/v1/watch-keys",
+  tags: ["watch"],
+  security,
+  summary:
+    "Remove every watch the person signed in, in every workspace (Sign Out Everywhere): their keys stop working at once",
+  responses: {
+    200: jsonResponse(
+      "How many were removed",
+      z.object({ deleted: z.number().int().min(0) }).openapi("DeletedWatchKeys"),
+    ),
+    401: e401,
+  },
+});
+
 export const getWatchPrefs = createRoute({
   operationId: "getWatchPrefs",
   method: "get",
@@ -116,7 +133,8 @@ export const getWatchCode = createRoute({
   path: "/v1/watch-codes/{code}",
   tags: ["watch"],
   security,
-  summary: "Which watch shows this code, before allowing it. Five wrong tries end a code",
+  summary:
+    "Which watch shows this code, before allowing it. Looking a code up doesn't use it up; after five wrong codes in an hour the person waits",
   request: { params: codeParam },
   responses: {
     200: jsonResponse("The watch", WatchCodeInfo),

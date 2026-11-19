@@ -20,12 +20,24 @@ Decisions taken: all 18 defaults in the plan's §13.
   (keep polling every `poll_every_s`), and `invalid_watch_key` then means the code ran out.
 - A route a watch key may not use answers `403 watch_key_not_allowed` (not 401, so a watch never
   wipes its key over it). More than 60 requests a minute per key: `429 rate_limited` with
-  `Retry-After`.
+  `Retry-After`. Keys that don't work are counted per address (an IPv6 address by its /64), 30 a
+  minute; a key that worked in the last ten minutes and a watch waiting on its code aren't counted,
+  so junk sent from a shared address doesn't lock out the watches there.
+- Every error is a problem document with a `code`. Watches read the `code`, not only the status:
+  a 404 with `not_found` is "not in this watch's workspace" (say so and offer Open on phone), which
+  is not "already answered" (`approval_already_decided`, 409) or gone (`approval_not_found`).
 - Allowing from the watch: `POST /v1/approvals/{id}/decision` answers `403 watch_allow_refused`
   with `detail` set to the reason (`high_risk`, `payment`, `setting`, `not_yours`) when the request
-  is phone-only, and `403 watch_always_allow` for `always_allow: true`. Deny always works.
+  is phone-only, and `403 watch_always_allow` for `always_allow: true`. Deny always works. A tool
+  that spends money (a payment, a paid data call) is `payment`, whatever its risk. The answer to a
+  watch never carries the request's arguments (`args_redacted` is empty), and with Show details off
+  its `tool_name` and `summary` are empty too: a watch's view of a request is
+  `GET /v1/watch/approvals/{id}`.
 - Send `X-Casama-Surface: app|notification|complication|smart_stack|tile|control|siri` on actions,
   for counting (`watch_action`); `POST /v1/watch/ask` also takes it as `surface` in the body.
+- A sign-in code works until it is allowed, replaced by a new one or ten minutes old. Looking it
+  up (`GET /v1/watch-codes/{code}`) doesn't use it up; a person who types five wrong codes in an
+  hour waits (429).
 - Other codes: `watch_code_not_found` (404: wrong, used or expired code), `watch_key_taken` (409:
   that fingerprint belongs to someone else), `wrong_token_kind` / `bad_token` (400 on
   `PUT /v1/watch-keys/current`), `bot_not_found`, `chat_not_found`, `run_not_found`,
@@ -34,7 +46,18 @@ Decisions taken: all 18 defaults in the plan's §13.
   (403 on read aloud when details are off or reply text is hidden), `not_found` (404: the target
   is in another workspace than the key's).
 - At most 3 run streams per key: a fourth closes the oldest. A stream ends within 30 seconds of its
-  key being removed.
+  key being removed, and follows a change to Show details, Hide reply text or the allow level
+  within the same 30 seconds.
+- A bot's chat without a `conversation_id` (`GET /v1/watch/chats/{bot_id}`) is the person's own
+  latest chat with that bot, never a coworker's chat with a shared bot.
+- `can_speak` is false for a reply whose words are hidden (details off, or Hide reply text).
+- Keys go with the membership: leaving a workspace or being removed from it deletes the person's
+  watch keys (and widget keys) there. `DELETE /v1/watch-keys` (the person's session only, never a
+  watch key) deletes all of their watch keys in every workspace and answers `{ "deleted": n }`:
+  the phone's "Sign Out Everywhere".
+- Registering a fingerprint again (`POST /v1/watch-keys`: the phone moved to another workspace, a
+  reinstall) updates the key and keeps how it was first signed in (`paired_by`). The "is signed
+  in" notice and the `watch_paired` event are for a new key only.
 
 ## 2. The phone link
 
@@ -45,22 +68,38 @@ JSON. Capabilities: the phone app declares `casama_phone`, the watch app `casama
 | Direction | `type` | Other fields |
 |---|---|---|
 | watch → phone | `sign_in` | `request_id`, `fingerprint`, `platform` (`watchos`/`wearos`), `name`, `model`, `app_version`, `os_version` |
-| watch → phone | `open` | `link` (an app route to open on the phone) |
+| watch → phone | `open` | `link` (an app route to open on the phone), `title` (optional: what it is, for a notification) |
 | phone → watch | `signed_in` | `request_id`, `server`, `org_id`, `org_name`, `person_name` |
 | phone → watch | `sign_in_failed` | `request_id`, `reason` (`signed_out`, `declined`, `error`) |
 | phone → watch | `context` | `server`, `org_id`, `org_name`, `person_name` (the phone switched workspace; the key was re-registered for it) |
 | phone → watch | `sign_out` | none |
 
+- **`signed_in` is for one request.** A watch accepts it only when `request_id` is one it issued
+  for the key it holds now (it keeps the last few, and forgets them when the key is wiped). An
+  answer to an older key's request, or one that arrives after the watch signed out, changes nothing.
+- **A watch asks by itself only the first time.** After the person signed it out, or the phone or
+  the server removed it, it shows "Signed out" with a button and waits for a tap.
+- **Open on phone.** Apple: `open` is sent with a reply handler and the iPhone answers
+  `{ "front": true|false }` (true only while the app is on screen); it opens the link either way.
+  Without `front: true` (no answer in a few seconds, an older phone app) the watch also calls
+  `POST /v1/watch/handoff`, which leaves a notification on the person's phones. Android: when the
+  phone app isn't on screen it posts its own notification that opens the link (it can't come to
+  the front from the background); with no phone in reach the watch calls the handoff route.
+
 ## 3. The phone app's channel `casama/watch`
 
-Between Flutter and `WatchBridge.swift` / `WearBridge.kt`. Native code holds sign-in requests that
-arrive while Flutter isn't running (UserDefaults / SharedPreferences) until `takeRequests`.
+Between Flutter and `WatchBridge.swift` / `WearBridge.kt`. Native code holds sign-in requests
+(UserDefaults / SharedPreferences) until they are answered: one per fingerprint (a newer request
+from the same watch replaces the older), each stamped with when it arrived (`at`, milliseconds),
+and dropped after 15 minutes. `takeRequests` reads them without clearing; `answer` removes the one
+it answers. A request that arrives while nobody is signed in on the phone stays held and is
+answered once someone signs in.
 
 | Caller | Method | Arguments → result |
 |---|---|---|
-| native → Dart | `request` | `{request_id, platform, fingerprint, name, model?, app_version?, os_version?}` |
-| native → Dart | `open` | `{link}` |
-| Dart → native | `takeRequests` | → `List<Map>` of held requests (cleared) |
+| native → Dart | `request` | `{request_id, platform, fingerprint, name, model?, app_version?, os_version?, at?}` |
+| native → Dart | `open` | `{link, title?}` |
+| Dart → native | `takeRequests` | → `List<Map>` of held requests (not cleared) |
 | Dart → native | `answer` | `{request_id, ok, server?, org_id?, org_name?, person_name?, reason?}` |
 | Dart → native | `setContext` | `{server, org_id, org_name, person_name}` |
 | Dart → native | `signOut` | `{}` |
@@ -82,10 +121,13 @@ token carry these data keys, all strings, beside whatever the phone already read
 | `tag` | when the push has a collapse id (always when the person has an Apple Watch with its own token: `n-<notification_id>`) |
 | `link` | always: an app route |
 | `bot_id`, `bot_name`, `bot_avatar` | when a bot is involved |
+| `org_id` | whenever the push is about a workspace: which one. A watch answers only requests in its key's workspace; for another it offers Open on phone instead of buttons |
 | `approval_id`, `risk` | `approval` |
+| `can_allow` | `approval`, in the copies sent to a watch's own token only: `tap`, `hold` or `phone`, what this person's watch may do (the rule `GET /v1/watch/approvals/{id}` answers with). Absent in the phone's copy (and so in Apple's mirrored one): ask the server then |
 | `suggestion_id` | `suggestion` |
 | `conversation_id`, `message_id`, `run_id` | `reply`, `failed`, `brief`, `routine` |
 | `title`, `body` | Wear data messages (Apple uses `aps.alert`) |
+| `user_id` | Wear data messages: whose push it is |
 
 - Apple categories: `APPROVAL`, `SUGGESTION`, `REPLY`. The watch registers the same identifiers,
   with actions `ALLOW`, `DENY` (APPROVAL), `DO_IT`, `NOT_NOW` (SUGGESTION) and its own layout for
@@ -94,6 +136,19 @@ token carry these data keys, all strings, beside whatever the phone already read
   `apns-collapse-id` as the phone's copy.
 - Wear OS: pushes to the watch's own Firebase token are data-only; the watch app draws them. Once it
   has registered its own token it turns the phone's bridging off for Casama, so nothing shows twice.
+- Which watches hear a push: an Apple Watch's own token gets the pushes of the workspace its key
+  is in (the iPhone mirrors the rest). A Wear OS watch's token gets the person's pushes from every
+  workspace, because with bridging off nothing else would reach the wrist; `org_id` tells it which
+  it can answer.
+- **Show details off** (`watch_prefs.show_details`): the copies sent to a watch's own token carry
+  general words instead of the real ones. The title is the bot's name (else "Casama"); the body is
+  "Needs your OK" (`approval`), "Has a suggestion" (`suggestion`), "Replied" (`reply`), "Couldn't
+  finish" (`failed`), "Finished a routine" (`routine`), "Your brief is ready" (`brief`), "Needs you
+  to take over" (`takeover`) or "New activity". Ids, `watch_kind`, the category, the collapse id,
+  `org_id`, `can_allow` and `bot_name` stay. The phone's own copy is unchanged, so what an iPhone
+  mirrors to an Apple Watch follows the phone's settings.
+- Through Casama Cloud's relay with private notifications on, the relay gets no text for a watch
+  either: "Casama" / "New activity", in the Wear data too.
 
 ## 5. Strings
 

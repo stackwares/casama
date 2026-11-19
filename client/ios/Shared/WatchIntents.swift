@@ -179,7 +179,7 @@ struct AllowRequestIntent: AppIntent {
         return .result()
       }
       guard await WristCheck.check() == .ok else { return .result() }
-      try await api.decide(approvalId, allow: true)
+      try await api.decide(approvalId, allow: true, surface: WatchSurface.complication)
     } catch WatchAPIError.signedOut {
       WatchSync.signedOut()
       return .result()
@@ -206,7 +206,7 @@ struct RunRoutineNowIntent: AppIntent {
   func perform() async throws -> some IntentResult & ProvidesDialog {
     guard let api = WatchAPI.current() else { return .result(dialog: "\(WatchL10n.openToSignIn)") }
     do {
-      _ = try await api.runRoutine(routine.id)
+      _ = try await api.runRoutine(routine.id, surface: WatchSurface.siri)
       await WatchSync.refreshGlance(api: api)
       WatchSync.reloadWidgets()
       return .result(dialog: "\(WatchL10n.started)")
@@ -235,7 +235,7 @@ struct RunControlIntent: AppIntent {
   func perform() async throws -> some IntentResult & OpensIntent {
     guard let routine else { return .result(opensIntent: OpenWatchIntent(.upNext)) }
     guard let api = WatchAPI.current() else { return .result(opensIntent: OpenWatchIntent(.now)) }
-    _ = try? await api.runRoutine(routine.id)
+    _ = try? await api.runRoutine(routine.id, surface: WatchSurface.control)
     await WatchSync.refreshGlance(api: api)
     WatchSync.reloadWidgets()
     return .result()

@@ -72,10 +72,19 @@ class Settings(context: Context) {
         get() = prefs.getString(K_TILE_BOT, null)
         set(v) = prefs.edit { putString(K_TILE_BOT, v) }
 
-    /** The open phone sign-in request (WATCH-PROTOCOL §2), so a late answer can be matched. */
-    var signInRequestId: String?
-        get() = prefs.getString(K_REQUEST, null)
-        set(v) = prefs.edit { putString(K_REQUEST, v) }
+    /**
+     * The phone sign-in requests this watch has out, each with the fingerprint of the key it was
+     * made for (SignInRequests' lines), so only an answer to one of them is taken (WATCH-PROTOCOL
+     * §2). Forgotten with the account, as the key is.
+     */
+    var signInRequests: String?
+        get() = prefs.getString(K_REQUESTS, null)
+        set(v) = prefs.edit { putString(K_REQUESTS, v) }
+
+    /** The notification question was put once; it is never put again by the app (Wear OS 4+). */
+    var notificationsAsked: Boolean
+        get() = prefs.getBoolean(K_ASKED_NOTIFY, false)
+        set(v) = prefs.edit { putBoolean(K_ASKED_NOTIFY, v) }
 
     /** The Firebase token the server has for this watch; null when none was registered. */
     var registeredPushToken: String?
@@ -95,7 +104,7 @@ class Settings(context: Context) {
     /** Forgets the account; the person's own switches stay. */
     fun wipeAccount() {
         prefs.edit {
-            listOf(K_SERVER, K_SIGNED_IN, K_ORG_ID, K_ORG_NAME, K_PERSON, K_SELF, K_LAST_ASK, K_TILE_BOT, K_REQUEST, K_PUSH, K_GREET)
+            listOf(K_SERVER, K_SIGNED_IN, K_ORG_ID, K_ORG_NAME, K_PERSON, K_SELF, K_LAST_ASK, K_TILE_BOT, K_REQUEST, K_REQUESTS, K_PUSH, K_GREET)
                 .forEach { remove(it) }
         }
     }
@@ -109,7 +118,10 @@ class Settings(context: Context) {
         const val K_SELF = "self_json"
         const val K_LAST_ASK = "last_ask_bot"
         const val K_TILE_BOT = "tile_bot"
+        /** The single open request older builds kept; only removed now. */
         const val K_REQUEST = "sign_in_request"
+        const val K_REQUESTS = "sign_in_requests"
+        const val K_ASKED_NOTIFY = "asked_notifications"
         const val K_PUSH = "push_token"
         const val K_OUT_REASON = "signed_out_reason"
         const val K_GREET = "greet_pending"

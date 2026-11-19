@@ -40,6 +40,23 @@ fun firebaseValue(key: String, fallback: String = ""): String =
     firebase[key]?.takeIf { it.isNotBlank() } ?: firebase[fallback] ?: ""
 fun quoted(value: String) = "\"" + value.replace("\\", "\\\\").replace("\"", "\\\"") + "\""
 
+// Code sign-in's server is Casama Cloud. `-PdefaultServer=<url>` points a DEBUG build at a dev
+// stack (store captures, local testing). It never reaches a release: a release build with it set
+// (the flag, a gradle.properties line or ORG_GRADLE_PROJECT_defaultServer) fails instead of
+// shipping a store bundle whose code sign-in goes somewhere else.
+val defaultServerOverride: String? =
+    (findProperty("defaultServer") as String?)?.trim()?.trimEnd('/')?.takeIf { it.isNotEmpty() }
+if (defaultServerOverride != null) {
+    // preReleaseBuild is the first task of every release build (bundleRelease, assembleRelease).
+    tasks.configureEach {
+        if (name == "preReleaseBuild") {
+            doFirst {
+                throw GradleException("defaultServer is for debug builds only. Build the release without -PdefaultServer (check gradle.properties and ORG_GRADLE_PROJECT_defaultServer too).")
+            }
+        }
+    }
+}
+
 android {
     namespace = "ai.casama.wear"
     // AGP 9.1.1 compiles against API 37, as the phone does. Target stays 36 (§8.8): 36 gives the
@@ -61,11 +78,8 @@ android {
         buildConfigField("String", "FIREBASE_SENDER_ID", quoted(firebaseValue("FIREBASE_MESSAGING_SENDER_ID")))
         buildConfigField("String", "FIREBASE_API_KEY", quoted(firebaseValue("FIREBASE_ANDROID_API_KEY", "FIREBASE_API_KEY")))
         buildConfigField("String", "FIREBASE_APP_ID", quoted(firebaseValue("FIREBASE_ANDROID_APP_ID", "FIREBASE_APP_ID")))
-        // Code sign-in's server. -PdefaultServer=<https url> points a debug build at a dev stack
-        // (store captures, local testing); store builds keep Casama Cloud.
-        val defaultServer = (project.findProperty("defaultServer") as String?)?.trimEnd('/')
-            ?: "https://api.casama.ai"
-        buildConfigField("String", "DEFAULT_SERVER", quoted(defaultServer))
+        // Code sign-in's server; a debug build may point elsewhere (defaultServerOverride above).
+        buildConfigField("String", "DEFAULT_SERVER", quoted("https://api.casama.ai"))
     }
 
     buildFeatures {
@@ -87,6 +101,10 @@ android {
     }
 
     buildTypes {
+        debug {
+            // A build type's field replaces defaultConfig's of the same name.
+            defaultServerOverride?.let { buildConfigField("String", "DEFAULT_SERVER", quoted(it)) }
+        }
         release {
             isMinifyEnabled = true
             isShrinkResources = true
