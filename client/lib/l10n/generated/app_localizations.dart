@@ -19365,6 +19365,60 @@ abstract class AppLocalizations {
   /// **'Skip for now'**
   String get galleryPicksSkip;
 
+  /// No description provided for @galleryPicksAddNamed.
+  ///
+  /// In en, this message translates to:
+  /// **'Add {name}'**
+  String galleryPicksAddNamed(String name);
+
+  /// No description provided for @galleryPicksBestMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Best match'**
+  String get galleryPicksBestMatch;
+
+  /// No description provided for @galleryPicksInside.
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s inside'**
+  String get galleryPicksInside;
+
+  /// No description provided for @galleryPicksBots.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 bot} other{{count} bots}}'**
+  String galleryPicksBots(int count);
+
+  /// No description provided for @galleryPicksSkills.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 skill} other{{count} skills}}'**
+  String galleryPicksSkills(int count);
+
+  /// No description provided for @galleryPicksRoutines.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 routine} other{{count} routines}}'**
+  String galleryPicksRoutines(int count);
+
+  /// No description provided for @galleryPicksApps.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 app} other{{count} apps}}'**
+  String galleryPicksApps(int count);
+
+  /// No description provided for @galleryPicksPlugins.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 plugin} other{{count} plugins}}'**
+  String galleryPicksPlugins(int count);
+
+  /// No description provided for @galleryPicksLooks.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 look} other{{count} looks}}'**
+  String galleryPicksLooks(int count);
+
   /// No description provided for @galleryPicksAdded.
   ///
   /// In en, this message translates to:
