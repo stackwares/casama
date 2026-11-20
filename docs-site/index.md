@@ -68,7 +68,7 @@ features:
 ---
 
 <div class="home-shots">
-  <figure class="casama-video"><div class="casama-video-frame"><iframe src="https://www.youtube-nocookie.com/embed/E9x6E04ueoY?rel=0" title="Casama walkthrough" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div></figure>
+  <figure class="casama-video"><div class="casama-video-frame"><iframe src="https://www.youtube-nocookie.com/embed/cype-154_p0?rel=0" title="Casama walkthrough" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div></figure>
   <div class="casama-shot-pair">
     <figure class="casama-shot"><img class="shot-light" src="/screens/mac-group-light.webp" alt="A group chat: you ask everyone to plan Sam's birthday, Nova hands the invite to Ada and the RSVP page to Milo"><img class="shot-dark" src="/screens/mac-group-dark.webp" alt=""><figcaption>Group chats: ask @everyone and the lead splits the work.</figcaption></figure>
     <figure class="casama-shot"><img class="shot-light" src="/screens/mac-nova-light.webp" alt="Nova plans a weekend in Kyoto and shows each day's stops on a map in the chat"><img class="shot-dark" src="/screens/mac-nova-dark.webp" alt=""><figcaption>Maps, cards, pages and games right in the chat.</figcaption></figure>

@@ -52,27 +52,19 @@
     }
   }
 
-  // The film (D-390): "Watch the film" opens the 86-second film with sound in a dialog. A phone held
-  // upright gets the 9:16 film, which fills its screen; everything else gets 16:9. The choice is made
-  // each time the dialog opens. casama.ai/#film opens it straight away. Without JavaScript the links
-  // open the 16:9 file.
+  // The film (D-390): "Watch the film" opens the YouTube film in a dialog. casama.ai/#film
+  // opens it straight away. Without JavaScript the links open the YouTube URL.
   var filmVideo = film && film.querySelector(".film-video");
   if (film && filmVideo && typeof film.showModal === "function") {
-    var wide = {src: filmVideo.getAttribute("src"), poster: filmVideo.getAttribute("poster")};
-    var tall = {src: filmVideo.getAttribute("data-src-tall"), poster: filmVideo.getAttribute("data-poster-tall")};
-    var upright = window.matchMedia ? window.matchMedia("(orientation: portrait) and (max-width: 600px)") : null;
+    var filmSrc = filmVideo.getAttribute("data-src") || filmVideo.getAttribute("src");
+    var counted = false;
     var openFilm = function () {
       if (reel) reel.pause();
-      var useTall = !!(tall.src && upright && upright.matches);
-      var pick = useTall ? tall : wide;
-      film.classList.toggle("film--tall", useTall);
-      if (filmVideo.getAttribute("src") !== pick.src) {
-        filmVideo.setAttribute("poster", pick.poster);
-        filmVideo.setAttribute("src", pick.src);
-        filmVideo.load();
+      if (filmSrc && filmVideo.getAttribute("src") !== filmSrc) {
+        filmVideo.setAttribute("src", filmSrc);
       }
       film.showModal();
-      playQuietly(filmVideo);
+      if (!counted) { counted = true; countEvent("film_play"); }
     };
     Array.prototype.forEach.call(document.querySelectorAll("[data-film-open]"), function (a) {
       a.addEventListener("click", function (e) { e.preventDefault(); openFilm(); });
@@ -80,14 +72,10 @@
     film.querySelector("[data-film-close]").addEventListener("click", function () { film.close(); });
     film.addEventListener("click", function (e) { if (e.target === film) film.close(); });
     film.addEventListener("close", function () {
-      filmVideo.pause();
+      if (filmVideo.tagName === "IFRAME") filmVideo.removeAttribute("src");
+      else filmVideo.pause();
       if (location.hash === "#film") history.replaceState(null, "", location.pathname + location.search);
       if (reel && reelInView && !reel.controls) playQuietly(reel);
-    });
-    // Funnel (D-398): the first time the film plays with sound on this page.
-    filmVideo.addEventListener("play", function once() {
-      filmVideo.removeEventListener("play", once);
-      countEvent("film_play");
     });
     if (location.hash === "#film") openFilm();
     window.addEventListener("hashchange", function () { if (location.hash === "#film" && !film.open) openFilm(); });
