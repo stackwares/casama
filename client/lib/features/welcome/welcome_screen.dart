@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
@@ -12,10 +11,9 @@ import '../../ui/mascot.dart';
 import '../../ui/splash_scene.dart';
 import '../settings/name_step.dart';
 import '../../ui/bot_loader.dart';
-import '../../core/analytics.dart';
 
 /// First run (D-263): a new person gets a personal space and bot, and lands in its empty chat, the
-/// same one a new bot opens on. No form; the old wizard is behind "Set up manually".
+/// same one a new bot opens on.
 class WelcomeScreen extends ConsumerStatefulWidget {
   const WelcomeScreen({super.key});
 
@@ -106,15 +104,6 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                 Text(errorText(context, _error!), textAlign: TextAlign.center),
                 FilledButton(onPressed: _start, child: Text(l10n.tryAgain)),
               ],
-              TextButton.icon(
-                key: const Key('setUpManually'),
-                icon: const Icon(LucideIcons.slidersHorizontal, size: 18),
-                label: Text(l10n.setUpManually),
-                onPressed: () {
-                  Analytics.log('onboarding_begin', {'path': 'manual'});
-                  GoRouter.maybeOf(context)?.go('/onboarding');
-                },
-              ),
             ],
           ),
         ),

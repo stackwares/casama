@@ -72,20 +72,16 @@ void main() {
     expect(find.byKey(const Key('welcomeLoading')), findsNothing);
   });
 
-  testWidgets('"Set Up Manually" opens the wizard', (tester) async {
+  testWidgets('welcome screen does not show a manual setup button', (tester) async {
     await setSize(tester, const Size(900, 900));
     final backend = _SlowWelcome()..hasOrg = false;
     final router = GoRouter(initialLocation: '/welcome', routes: [
       GoRoute(path: '/welcome', builder: (_, _) => const WelcomeScreen()),
-      GoRoute(path: '/onboarding', builder: (_, _) => const Text('wizard')),
     ]);
     await tester.pumpWidget(routed(backend, router));
     await tester.pump();
-    await tester.tap(find.byKey(const Key('setUpManually')));
-    for (var i = 0; i < 5; i++) {
-      await tester.pump(const Duration(milliseconds: 100));
-    }
-    expect(find.text('wizard'), findsOneWidget);
+    expect(find.byKey(const Key('welcomeLoading')), findsOneWidget);
+    expect(find.byKey(const Key('setUpManually')), findsNothing);
   });
 
   testWidgets('card actions named app:* stay in the app', (tester) async {

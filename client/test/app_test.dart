@@ -12,6 +12,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:casama/app.dart';
 import 'package:casama/core/backend.dart';
 import 'package:casama/core/providers.dart';
+import 'package:casama/core/router.dart' show routerProvider;
 import 'package:casama/core/push.dart' show pushProvider;
 import 'package:casama/features/settings/name_step.dart' show nameStepNeededProvider;
 import 'package:casama/features/auth/floating_mascots.dart';
@@ -726,8 +727,9 @@ void main() {
     for (var i = 0; i < 5; i++) {
       await tester.pump(const Duration(milliseconds: 100));
     }
-    // New people land in the welcome chat (D-129); the wizard is behind "Set Up Manually".
-    await tester.tap(find.byKey(const Key('setUpManually')));
+    ProviderScope.containerOf(
+      tester.element(find.byType(CasamaApp)),
+    ).read(routerProvider).go('/onboarding');
     await tester.pumpAndSettle();
     expect(find.text('Set up your workspace'), findsOneWidget);
     await tester.enterText(find.byKey(const Key('workspaceName')), 'New Org');
