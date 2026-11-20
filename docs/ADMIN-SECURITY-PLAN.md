@@ -1,6 +1,6 @@
 # Admin console security implementation plan
 
-Status: **live** (server and docs 2026-11-20, d4570460), D-448; passkeys and Face ID built the same day (D-450); app builds pending. Built and review-fixed the same day. Authorized by Oliver: “build all now! you decide for everything!”
+Status: **live** (server 2026-11-20, d4570460; docs and web app build 60 with passkeys and Face ID, e042df58), D-448 and D-450; store and desktop builds pending. Built and review-fixed the same day. Authorized by Oliver: “build all now! you decide for everything!”
 
 ## Goal and decisions
 
