@@ -115,6 +115,16 @@ const secretOut = (s: SecretRow) => ({
 });
 
 export type IntegrationRow = typeof integrations.$inferSelect;
+/** How it signs in, in the Integration schema's words. Local MCP servers keep their own kind
+ * (none, token, header, oauth); a token or header is a key that stays on the computer. Anything
+ * outside the enum made the app's decoder throw on a 200. */
+const integrationAuth = (i: IntegrationRow): "oauth" | "api_key" | "none" => {
+  const raw = (i.config as Record<string, unknown>)?.auth;
+  if (raw === "oauth" || raw === "api_key" || raw === "none") return raw;
+  if (raw === "token" || raw === "header") return "api_key";
+  return i.vaultSecretId ? "api_key" : "none";
+};
+
 export const integrationOut = (i: IntegrationRow, botIds?: string[]) => ({
   id: i.id,
   org_id: i.orgId,
@@ -135,8 +145,7 @@ export const integrationOut = (i: IntegrationRow, botIds?: string[]) => ({
     typeof (i.config as Record<string, unknown>)?.app === "string"
       ? ((i.config as Record<string, string>).app ?? null)
       : null,
-  auth: (((i.config as Record<string, unknown>)?.auth as string | undefined) ??
-    (i.vaultSecretId ? "api_key" : "none")) as "oauth" | "api_key" | "none",
+  auth: integrationAuth(i),
   risk_overrides: (i.riskOverrides as Record<string, "low" | "medium" | "high">) ?? {},
   ...(botIds ? { bot_ids: botIds } : {}),
   device:

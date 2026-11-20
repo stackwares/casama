@@ -246,9 +246,22 @@ describe("local MCP servers", () => {
       await h.request(`/v1/local-devices/${own.id}/mcp-servers`, {
         method: "PUT",
         token: member.token,
-        json: { servers: [{ key: "notes", label: "Notes", kind: "stdio", summary: "notes-mcp" }] },
+        json: {
+          servers: [
+            { key: "notes", label: "Notes", kind: "stdio", summary: "notes-mcp" },
+            // A bearer token or header is a key kept on the computer; the Integration schema's
+            // auth is oauth | api_key | none, and anything else breaks the app's decoder.
+            { key: "paid", label: "Paid", kind: "loopback", summary: "paid", auth: "token" },
+            { key: "raw", label: "Raw", kind: "loopback", summary: "raw", auth: "header" },
+          ],
+        },
       }),
     );
+    expect(
+      Object.fromEntries(
+        (items as { device: { label: string }; auth: string }[]).map((i) => [i.device.label, i.auth]),
+      ),
+    ).toEqual({ Notes: "none", Paid: "api_key", Raw: "api_key" });
     const test = (token: string, id: string) =>
       h.request(`/v1/integrations/${id}/test`, { method: "POST", token });
     // Their computer isn't connected, so the test runs and reports why it failed.
