@@ -1,5 +1,5 @@
-/* Casama — casama.ai: the header's line on scroll, the example approval card, the film (in the
-   hero's dialog and in "See it at work"), the download button for this device and the install command's Copy button.
+/* Casama — casama.ai: the header's line on scroll, the film (in the
+   hero and its dialog), the download button for this device and the install command's Copy button.
    Everything else is plain HTML and CSS. */
 (function () {
   "use strict";
@@ -11,280 +11,7 @@
     onScroll();
   }
 
-  // The hero chat. It plays itself in a loop of about 25 seconds: you ask, Anna works through flights and
-  // hotels on her computer (with checkpoints and the cost ticking up), asks for your OK, a tap approves it,
-  // and it starts over. Visitors can tap Approve or Deny themselves while it asks. It begins on the finished
-  // card the HTML shows, so first paint is complete. With reduced motion or Save-Data it stays that still,
-  // and the buttons just show what would happen. It pauses while off screen or in a hidden tab.
-  var ask = document.getElementById("ask-card");
-  var chat = ask && ask.closest(".chat");
-  if (ask && chat) {
-    var askText = ask.querySelector("[data-ask-text]");
-    var askReply = chat.querySelector("[data-ask-reply]");
-    var original = askText.textContent;
-    var replyYes = "Booked. The confirmations are in your inbox and on your calendar. That task cost $0.019.";
-    var replyNo = "Okay, nothing was booked. I rolled my computer back to checkpoint 7.";
-    var answer = function (yes) {
-      ask.dataset.state = "done";
-      askText.textContent = yes ? "Approved. Booking flights and hotel." : "Denied. Checkpoint 7 restored.";
-      askReply.textContent = yes ? replyYes : replyNo;
-    };
-    var still = window.matchMedia("(prefers-reduced-motion: reduce)").matches || !!(navigator.connection && navigator.connection.saveData);
-    var buttons = ask.querySelectorAll("[data-ask]");
-
-    if (still || !("IntersectionObserver" in window)) {
-      var resetTimer = 0;
-      Array.prototype.forEach.call(buttons, function (b) {
-        b.addEventListener("click", function () {
-          answer(b.dataset.ask === "yes");
-          askReply.hidden = false;
-          clearTimeout(resetTimer);
-          resetTimer = setTimeout(function () { ask.dataset.state = "ask"; askText.textContent = original; askReply.hidden = true; }, 7000);
-        });
-      });
-    } else {
-      var body = chat.querySelector(".chat-body");
-      var you = body.querySelector(".bubble.you");
-      var result = body.querySelector(".bubble.bot:not([data-ask-reply])");
-      var run = body.querySelector(".run-card");
-      var statusEl = chat.querySelector("[data-chat-status]");
-      var dot = chat.querySelector(".live-dot");
-      var costEl = chat.querySelector("[data-chat-cost]");
-      var urlEl = run.querySelector("[data-run-url]");
-      var rowsEl = run.querySelector("[data-run-rows]");
-      var barEl = run.querySelector("[data-run-progress]");
-      var okEl = run.querySelector("[data-run-ok]");
-      var metaEl = run.querySelector("[data-run-meta]");
-      var steps = [you, result, run, ask, askReply];
-
-      // The airlines, hotels and prices are made up, like the film's.
-      var FLIGHTS = [["1 stop · Madrid", "$541"], ["Direct · 2h 35m", "$612"], ["1 stop · Paris", "$577"], ["Direct · late", "$655"], ["1 stop · London", "$598"],
-        ["2 stops", "$489"], ["Direct · early", "$634"], ["1 stop · Zurich", "$603"], ["1 stop · Frankfurt", "$622"], ["Direct · morning", "$612"]];
-      var HOTELS = [["Rua Nova Suites · Baixa", "$530"], ["Miradouro Inn · Alfama", "$468"], ["Tejo Loft · Chiado", "$575"], ["Casa Azul · Graça", "$455"],
-        ["Pátio Hotel · Alfama", "$519"], ["Sé Rooms · Alfama", "$441"], ["Largo House · Mouraria", "$498"], ["Casa Lumen · Alfama", "$492"]];
-      var PICK = [["TAP · direct · May 8–12", "$612", true], ["Casa Lumen · Alfama · 4 nights", "$492", true], ["Total", "$1,104"]];
-
-      var paused = false, inView = true, userPaused = false;
-      var setPaused = function () {
-        paused = document.hidden || !inView || userPaused;
-        chat.classList.toggle("is-paused", paused);
-      };
-      // Anything that moves for more than five seconds gets a pause button (WCAG 2.2.2); showcase.css styles it.
-      var toggle = document.createElement("button");
-      toggle.type = "button";
-      toggle.className = "scene-toggle";
-      toggle.setAttribute("aria-pressed", "false");
-      toggle.setAttribute("aria-label", "Pause animation");
-      toggle.innerHTML = '<span class="scene-toggle-icon" aria-hidden="true"></span>';
-      toggle.addEventListener("click", function () {
-        userPaused = !userPaused;
-        toggle.setAttribute("aria-pressed", String(userPaused));
-        toggle.setAttribute("aria-label", userPaused ? "Play animation" : "Pause animation");
-        setPaused();
-      });
-      chat.appendChild(toggle);
-      document.addEventListener("visibilitychange", setPaused);
-      new IntersectionObserver(function (e) { inView = e[e.length - 1].isIntersecting; setPaused(); }, { threshold: 0.2 }).observe(chat);
-      // A wait that stops counting while the chat can't be seen.
-      var wait = function (ms) {
-        return new Promise(function (done) {
-          var left = ms, last = Date.now();
-          (function tick() {
-            var now = Date.now();
-            if (!paused) left -= now - last;
-            last = now;
-            if (left <= 0) done(); else setTimeout(tick, Math.min(left, 100));
-          })();
-        });
-      };
-
-      var cost = 0;
-      var setCost = function (c) { cost = c; costEl.textContent = "$" + c.toFixed(3) + " today"; };
-      var setStatus = function (t, idle) { statusEl.textContent = t; dot.classList.toggle("idle", !!idle); };
-      var show = function (el) { el.classList.remove("off"); };
-      var hide = function (el) { el.classList.add("off"); };
-
-      var ROW = 30;
-      var rows = [];
-      var place = function () {
-        var n = rows.length;
-        rows.forEach(function (r, i) {
-          var slot = i - Math.max(0, n - 3);
-          r.style.transform = "translateY(" + (slot * ROW) + "px)";
-          r.style.opacity = slot < 0 ? "0" : "1";
-        });
-        while (rows.length > 4) rowsEl.removeChild(rows.shift());
-      };
-      var pushRow = function (d) {
-        var r = document.createElement("div");
-        r.className = "run-row" + (d[2] ? " best" : "");
-        r.innerHTML = "<span></span><b></b>";
-        r.firstChild.textContent = d[0];
-        r.lastChild.textContent = d[1];
-        r.style.transform = "translateY(" + (3 * ROW) + "px)";
-        r.style.opacity = "0";
-        rowsEl.appendChild(r);
-        rows.push(r);
-        void r.offsetWidth;
-        place();
-      };
-      var clearRows = function () { rows = []; rowsEl.textContent = ""; };
-
-      // Dots in the spot where the bot's next card will appear.
-      var typing = document.createElement("div");
-      typing.className = "bubble bot typing";
-      typing.innerHTML = "<i></i><i></i><i></i>";
-      typing.style.cssText = "position:absolute;left:0;";
-      var showTyping = function (at) { typing.style.top = at.offsetTop + "px"; body.appendChild(typing); };
-      var hideTyping = function () { if (typing.parentNode) body.removeChild(typing); };
-
-      var cursor = document.createElement("span");
-      cursor.className = "tap-cursor";
-      cursor.setAttribute("aria-hidden", "true");
-
-      var choose = null;
-      Array.prototype.forEach.call(buttons, function (b) {
-        b.addEventListener("click", function () { if (choose) choose({ yes: b.dataset.ask === "yes", byYou: true }); });
-      });
-
-      chat.classList.add("is-live");
-      steps.forEach(function (el) { el.setAttribute("data-step", ""); });
-      askReply.hidden = false;
-      askReply.textContent = replyYes;  // the longer reply holds its space, so the card never changes height
-      hide(askReply);
-      PICK.forEach(pushRow);
-      barEl.style.width = "100%";
-      setCost(0.017);
-      setStatus("Waiting for your OK");
-
-      var askPhase = async function () {
-        ask.dataset.state = "ask";
-        askText.textContent = original;
-        // Every card still takes its space while hidden, so this is the tallest the chat gets; holding it
-        // keeps the page from moving when the buttons go away.
-        body.style.minHeight = "";
-        body.style.minHeight = body.offsetHeight + "px";
-        ask.classList.add("asking");
-        setStatus("Waiting for your OK");
-        var picked = await new Promise(function (resolve) {
-          choose = resolve;
-          (async function () {
-            await wait(3200);
-            if (choose !== resolve) return;
-            var yesBtn = ask.querySelector('[data-ask="yes"]');
-            cursor.style.transition = "none";
-            cursor.style.left = (body.clientWidth - 24) + "px";
-            cursor.style.top = (body.clientHeight - 10) + "px";
-            cursor.style.opacity = "0";
-            body.appendChild(cursor);
-            void cursor.offsetWidth;
-            cursor.style.transition = "";
-            cursor.style.opacity = "1";
-            cursor.style.left = (yesBtn.offsetLeft + yesBtn.offsetWidth / 2) + "px";
-            cursor.style.top = (yesBtn.offsetTop + yesBtn.offsetHeight / 2) + "px";
-            await wait(1000);
-            if (choose !== resolve) { cursor.remove(); return; }
-            cursor.classList.add("press");
-            yesBtn.classList.add("tapped");
-            await wait(180);
-            cursor.classList.remove("press");
-            yesBtn.classList.remove("tapped");
-            resolve({ yes: true, byYou: false });
-          })();
-        });
-        choose = null;
-        ask.classList.remove("asking");
-        answer(picked.yes);
-        await wait(300);
-        cursor.style.opacity = "0";
-        if (picked.yes) {
-          setStatus("Booking flights and hotel");
-          await wait(1300);
-          setCost(0.019);
-          setStatus("Done · booked", true);
-        } else {
-          setStatus("Rolling back to checkpoint 7");
-          await wait(1000);
-          setStatus("Online", true);
-        }
-        show(askReply);
-        cursor.remove();
-        await wait(picked.byYou ? 8000 : 4500);
-      };
-
-      var buildPhase = async function () {
-        body.classList.add("fading");
-        await wait(550);
-        steps.forEach(hide);
-        hideTyping();
-        clearRows();
-        barEl.style.width = "0";
-        okEl.textContent = "Starting up";
-        metaEl.textContent = "Checkpoint 0";
-        urlEl.textContent = "Lisbon · May 8–12";
-        setCost(0);
-        setStatus("Online", true);
-        askReply.textContent = replyYes;
-        body.classList.remove("fading");
-        await wait(700);
-
-        show(you);
-        await wait(700);
-        setStatus("Reading your message");
-        showTyping(result);
-        await wait(1100);
-        hideTyping();
-        setStatus("Working on her computer");
-        show(run);
-        await wait(500);
-
-        var cp = 0;
-        urlEl.textContent = "Flights · LIS · May 8–12";
-        for (var i = 0; i < FLIGHTS.length; i++) {
-          pushRow(FLIGHTS[i]);
-          okEl.textContent = Math.round((i + 1) * 41 / FLIGHTS.length) + " flights checked";
-          barEl.style.width = ((i + 1) * 45 / FLIGHTS.length) + "%";
-          setCost(cost + 0.0008);
-          if (i % 3 === 2) metaEl.textContent = "Checkpoint " + (++cp) + " saved";
-          await wait(320);
-        }
-        urlEl.textContent = "Hotels · Alfama · 4 nights";
-        for (var j = 0; j < HOTELS.length; j++) {
-          pushRow(HOTELS[j]);
-          okEl.textContent = "41 flights and " + Math.round((j + 1) * 18 / HOTELS.length) + " hotels checked";
-          barEl.style.width = (45 + (j + 1) * 45 / HOTELS.length) + "%";
-          setCost(cost + 0.0008);
-          if (j % 3 === 2) metaEl.textContent = "Checkpoint " + (++cp) + " saved";
-          await wait(320);
-        }
-        urlEl.textContent = "Best fit · under $1,200";
-        await wait(300);
-        clearRows();
-        for (var k = 0; k < PICK.length; k++) { pushRow(PICK[k]); await wait(260); }
-        barEl.style.width = "100%";
-        metaEl.textContent = "Checkpoint 7 saved";
-        setCost(0.017);
-        await wait(700);
-        showTyping(result);
-        await wait(900);
-        hideTyping();
-        show(result);
-        await wait(900);
-        show(ask);
-        await wait(400);
-      };
-
-      (async function loop() {
-        await wait(1500);
-        for (;;) {
-          await askPhase();
-          await buildPhase();
-        }
-      })();
-    }
-  }
-
-  // The film in "See it at work" (D-390): it plays muted while it's on screen, unless the
+  // The film in the hero (D-390): it plays muted while it's on screen, unless the
   // visitor asked for less motion or less data (then it waits for the player's own button).
   // "Sound on" starts it over with the voice and music.
   var reel = document.querySelector(".reel-video");
@@ -292,17 +19,28 @@
   var playQuietly = function (v) { var p = v.play(); if (p && p.catch) p.catch(function () { /* the player's own button starts it */ }); };
   var film = document.getElementById("film");
   if (reel) {
+    // In the hero (D-390) a phone held upright gets the 9:16 film, which suits its screen better.
+    if (reel.hasAttribute("data-src-tall") && window.matchMedia("(max-width: 600px) and (orientation: portrait)").matches) {
+      reel.setAttribute("poster", reel.getAttribute("data-poster-tall"));
+      reel.setAttribute("src", reel.getAttribute("data-src-tall"));
+      reel.setAttribute("width", "1080"); reel.setAttribute("height", "1920");
+      reel.parentNode.classList.add("tall");
+    }
     var soundBtn = document.querySelector("[data-reel-sound]");
     var calm = window.matchMedia("(prefers-reduced-motion: reduce)").matches || !!(navigator.connection && navigator.connection.saveData);
     if (calm || !("IntersectionObserver" in window) || !soundBtn) {
       reel.controls = true;
       if (soundBtn) soundBtn.hidden = true;
     } else {
-      new IntersectionObserver(function (entries) {
-        reelInView = entries[0].isIntersecting;
-        if (reelInView && !(film && film.open)) playQuietly(reel);
-        else reel.pause();
-      }, { threshold: 0.35 }).observe(reel);
+      // It starts only after the page has loaded, so the film never slows the first paint.
+      var watchReel = function () {
+        new IntersectionObserver(function (entries) {
+          reelInView = entries[0].isIntersecting;
+          if (reelInView && !(film && film.open)) playQuietly(reel);
+          else reel.pause();
+        }, { threshold: 0.35 }).observe(reel);
+      };
+      if (document.readyState === "complete") watchReel(); else window.addEventListener("load", watchReel);
       var soundLabel = soundBtn.querySelector("[data-reel-sound-label]");
       soundBtn.addEventListener("click", function () {
         var on = reel.muted;
