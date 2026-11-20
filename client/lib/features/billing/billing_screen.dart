@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:casama_sdk/casama_sdk.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -28,6 +29,7 @@ import '../../ui/shell_header.dart';
 import '../../ui/mascot.dart';
 import 'credits_meter.dart';
 import 'paywall.dart';
+import 'redeem_code_screen.dart';
 import '../settings/support_screen.dart';
 import '../app_lock/confirm_identity.dart';
 import '../../core/remote_content.dart';
@@ -210,6 +212,10 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
                   child: _CurrentPlan(
                     summary: b,
                     highlight: widget.highlight,
+                    // A free plan's last week (docs/COMP-PLANS-PLAN.md): keep it by choosing it.
+                    onKeep: isAdmin && b.comp != null && !DateTime.now().isBefore(b.comp!.keepFrom)
+                        ? () => openPaywall(context, source: 'comp_ending')
+                        : null,
                     onManage: isAdmin && b.source_.value != 'default' && (b.source_.value != 'dodo' || channels.contains(PurchaseChannel.web))
                         ? () => _manage(b)
                         : null,
@@ -233,6 +239,17 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
                       final List<Widget> packs when packs.isNotEmpty => Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: packs),
                       _ => null,
                     },
+                  ),
+                // Gift codes for a free plan, only where they may be redeemed: the web app and the
+                // direct-download desktop builds, never the store apps (App Store 3.1.1).
+                if (org?.role == OrgRole.owner && b.comp == null && giftCodesAllowed(platform: ref.watch(platformProvider), isWeb: kIsWeb))
+                  Center(
+                    child: TextButton.icon(
+                      key: const Key('haveGiftCode'),
+                      onPressed: () => context.push(redeemCodePath()),
+                      icon: const Icon(LucideIcons.gift, size: 18),
+                      label: Text(l10n.haveGiftCode),
+                    ),
                   ),
                 if (isAdmin)
                   ShowHide(
@@ -532,10 +549,11 @@ class _BillingSkeleton extends StatelessWidget {
 }
 
 class _CurrentPlan extends StatelessWidget {
-  const _CurrentPlan({required this.summary, this.highlight, this.onManage});
+  const _CurrentPlan({required this.summary, this.highlight, this.onManage, this.onKeep});
   final BillingSummary summary;
   final String? highlight;
   final VoidCallback? onManage;
+  final VoidCallback? onKeep;
 
   @override
   Widget build(BuildContext context) {
@@ -543,7 +561,9 @@ class _CurrentPlan extends StatelessWidget {
     final scheme = context.colorScheme;
     final b = summary;
     final until = b.validUntil;
+    final comp = b.comp;
     final via = switch (b.source_.value) {
+      _ when comp != null => l10n.compViaCasama,
       'dodo' => l10n.viaWeb,
       'app_store' => l10n.viaAppStore,
       'google_play' => l10n.viaGooglePlay,
@@ -581,7 +601,9 @@ class _CurrentPlan extends StatelessWidget {
                     Text(l10n.yourPlan, style: context.textTheme.labelMedium?.copyWith(color: scheme.onSurfaceVariant)),
                     Text(b.planName, style: context.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800, letterSpacing: -0.4)),
                     if (via != null) Text(via, style: muted),
-                    if (until != null)
+                    if (comp != null)
+                      Text(l10n.compFreeUntil(comp.endsAt.toLocal().formattedWeekdayDate(context)), key: const Key('compFreeUntil'), style: muted)
+                    else if (until != null)
                       Text(
                         b.cancelAtPeriodEnd
                             ? l10n.planEndsOn(until.toLocal().formattedWeekdayDate(context))
@@ -623,6 +645,15 @@ class _CurrentPlan extends StatelessWidget {
           ),
           const SizedBox(height: AppSpace.md),
           const CreditsMeter(showBalance: false),
+          if (onKeep != null) ...[
+            const SizedBox(height: AppSpace.md),
+            FilledButton.icon(
+              key: const Key('keepCompPlan'),
+              onPressed: onKeep,
+              icon: const Icon(LucideIcons.heart, size: 18),
+              label: Text(l10n.compKeepPlan(b.planName)),
+            ),
+          ],
           if (onManage != null) ...[
             const SizedBox(height: AppSpace.md),
             HighlightTarget(

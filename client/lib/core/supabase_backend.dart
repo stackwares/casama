@@ -1559,6 +1559,14 @@ class SupabaseBackend implements Backend {
   @override
   Future<ReferralPreview> previewReferral(String code) async =>
       (await api.referrals.previewReferral(code: code)).data!;
+  @override
+  Future<CompCodePreview> previewCompCode(String code) async =>
+      (await api.comps.previewCompCode(code: code)).data!;
+  @override
+  Future<RedeemedComp> redeemCompCode(String code, String orgId) async =>
+      (await api.comps.redeemCompCode(
+        redeemCompRequest: RedeemCompRequest(code: code, orgId: orgId),
+      )).data!;
 
   @override
   Future<void> report(ReportTarget kind, String targetId, ReportReason reason, {String? note}) async {

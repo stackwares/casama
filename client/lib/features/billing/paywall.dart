@@ -8,6 +8,7 @@ import 'package:casama_sdk/casama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/analytics.dart';
+import '../../core/date_format.dart';
 import '../../core/billing.dart';
 import '../../core/haptics.dart';
 import '../../core/number_format.dart';
@@ -350,7 +351,11 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
     }
     final yearly = selectedPeriod == PaywallPeriod.year;
     final weekly = selectedPeriod == PaywallPeriod.week;
-    final isCurrent = selected != null && selected.code == billing?.planCode;
+    // A plan given free by Casama (docs/COMP-PLANS-PLAN.md) is the current plan until its last
+    // week, when it can be bought to keep it; any other plan can be bought at any time.
+    final comp = billing?.comp;
+    final keepComp = comp != null && selected?.code == comp.planCode && !DateTime.now().isBefore(comp.keepFrom);
+    final isCurrent = selected != null && selected.code == billing?.planCode && !keepComp;
     final free = catalog?.plans
         .where((p) => p.interval.value == 'none')
         .firstOrNull;
@@ -482,7 +487,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
     // One subscription per workspace (D-248): someone who already pays changes plans where they
     // subscribed. A web subscriber is moved in place by web checkout; a store subscriber only in
     // that store (another store, or the web, would start a second subscription).
-    final paidVia = billing != null && billing.planCode != 'free' ? billing.source_.value : null;
+    final paidVia = billing != null && billing.planCode != 'free' && comp == null ? billing.source_.value : null;
     final storeSub = paidVia == 'app_store' || paidVia == 'google_play';
     final elsewhere = storeSub && paidVia != source;
     final webSub = paidVia == 'dodo';
@@ -516,7 +521,9 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
     String? termsStore;
     int? storeTrial;
     if (isCurrent) {
-      buyLabel = l10n.currentPlan;
+      buyLabel = comp != null && comp.planCode == selected.code
+          ? l10n.compFreeUntil(comp.endsAt.toLocal().formattedWeekdayDate(context))
+          : l10n.currentPlan;
     } else if (selected != null && isAdmin) {
       final product = webSub ? null : productFor(selected);
       if (elsewhere) {
@@ -526,11 +533,13 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
         // The store decides who gets its intro offer: the button promises a trial only when the
         // store confirmed this person gets it, else only the price.
         storeTrial = paidVia == null ? storeTrials[product.id] : null;
-        buyLabel = switchLabel ?? (storeTrial != null ? l10n.paywallStartFreeTrial : l10n.subscribeFor(product.price));
+        buyLabel = keepComp
+            ? l10n.compKeepPlan(tier?.name ?? selected.name)
+            : switchLabel ?? (storeTrial != null ? l10n.paywallStartFreeTrial : l10n.subscribeFor(product.price));
         termsStore = source;
       } else if (channels.contains(PurchaseChannel.web) && selected.web) {
         buy = () => _web(selected);
-        buyLabel = switchLabel ?? startLabel;
+        buyLabel = keepComp ? l10n.compKeepPlan(tier?.name ?? selected.name) : switchLabel ?? startLabel;
       } else if (webSub) {
         // Where web checkout may not be offered, the note says only where billing happens, never
         // where to go to pay (App Store 3.1.1, Google Play payments policy).
@@ -611,7 +620,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
                                     facts: _facts(l10n, price.plan.limits, email: remoteFlag(ref, 'bot_email')),
                                     price: price,
                                     selected: t.code == tier?.code,
-                                    current: currentTier == t.code && paidVia != null,
+                                    current: currentTier == t.code && (paidVia != null || comp != null),
                                     popular: popular.contains(t.code),
                                     trial: trialDaysOf(t)?.let(l10n.trialDaysFree),
                                     vertical: wide,

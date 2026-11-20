@@ -184,6 +184,7 @@ String tabTitleFor(String? fullPath, AppLocalizations l10n, {String? botName}) {
     '/settings/fold' => l10n.foldScreenTitle,
     '/settings/admin' => l10n.adminConsole,
     '/settings/billing' => l10n.billing,
+    '/settings/billing/redeem' => l10n.redeemCodeTitle,
     '/settings/privacy' => l10n.privacy,
     '/settings/support' => l10n.helpAndSupport,
     '/settings/blocked' => l10n.blockedPeople,

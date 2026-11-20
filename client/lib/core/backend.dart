@@ -1700,6 +1700,9 @@ abstract class Backend {
   Future<Referral> referral();
   Future<Referral> redeemReferral(String code);
   Future<ReferralPreview> previewReferral(String code);
+  // Gift codes for free plans (docs/COMP-PLANS-PLAN.md); redeemed on the web and desktop only.
+  Future<CompCodePreview> previewCompCode(String code);
+  Future<RedeemedComp> redeemCompCode(String code, String orgId);
   // Reports and blocks (D-301)
   Future<void> report(ReportTarget kind, String targetId, ReportReason reason, {String? note});
   Future<List<BlockedPerson>> blockedPeople();

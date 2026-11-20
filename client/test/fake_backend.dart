@@ -1531,6 +1531,40 @@ class FakeBackend implements Backend {
       redeemUntil: null,
     );
   }
+  /// The one gift code the fake knows: G-ABCDE-12345, three months of Pro.
+  static bool _knownCompCode(String code) =>
+      code.toUpperCase().replaceAll(RegExp('[^0-9A-Z]'), '').replaceFirst(RegExp(r'^G(?=.{10}$)'), '') == 'ABCDE12345';
+  static Never _compProblem(int status, String code, String detail) {
+    final req = RequestOptions(path: '/v1/me/comp/redeem');
+    throw DioException(
+      requestOptions: req,
+      response: Response(
+        requestOptions: req,
+        statusCode: status,
+        data: {'type': 'about:blank', 'title': 'Error', 'status': status, 'code': code, 'detail': detail},
+      ),
+    );
+  }
+  @override
+  Future<CompCodePreview> previewCompCode(String code) async {
+    if (!_knownCompCode(code)) _compProblem(404, 'comp_code_invalid', "That code doesn't exist or can't be used");
+    return CompCodePreview(planCode: 'pro', planName: 'Pro', months: 3);
+  }
+  @override
+  Future<RedeemedComp> redeemCompCode(String code, String orgId) async {
+    redeemedCompCodes.add(code);
+    if (!_knownCompCode(code)) _compProblem(404, 'comp_code_invalid', "That code doesn't exist");
+    if (comp != null) _compProblem(409, 'comp_exists', 'This workspace already has a free plan. Extend that one instead.');
+    final ends = DateTime.now().toUtc().add(const Duration(days: 90));
+    planCode = 'pro';
+    comp = BillingSummaryComp(
+      planCode: 'pro',
+      endsAt: ends,
+      from: BillingSummaryCompFromEnum.code,
+      keepFrom: ends.subtract(const Duration(days: 7)),
+    );
+    return RedeemedComp(planCode: 'pro', planName: 'Pro', endsAt: ends, orgId: orgId);
+  }
   @override
   Future<ReferralPreview> previewReferral(String code) async {
     if (code.toUpperCase() != 'ANA234') {
@@ -6080,6 +6114,10 @@ class FakeBackend implements Backend {
 
   /// Whether the owner can still start a plan's free trial (D-249).
   var trialAvailable = false;
+
+  /// A free plan from Casama (docs/COMP-PLANS-PLAN.md); set by tests or a redeemed gift code.
+  BillingSummaryComp? comp;
+  final redeemedCompCodes = <String>[];
   final checkouts = <String>[];
   final verified = <String>[];
   final linkKeyNames = <String>[];
@@ -6121,9 +6159,10 @@ class FakeBackend implements Backend {
           }
         : const {'max_bots': 2},
     unlimited: !billingEnabled,
-    validUntil: planCode == 'pro' ? DateTime.utc(2026, 12, 10) : null,
-    source_: billingSource,
-    cancelAtPeriodEnd: false,
+    validUntil: comp?.endsAt ?? (planCode == 'pro' ? DateTime.utc(2026, 12, 10) : null),
+    source_: comp != null ? BillingSummarySource_Enum.default_ : billingSource,
+    cancelAtPeriodEnd: comp != null,
+    comp: comp,
     trialAvailable: trialAvailable,
     creditsUsd: billingEnabled ? 1.0 + packCredits : 0,
     subscriptions: const [],

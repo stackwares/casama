@@ -2961,6 +2961,81 @@ class AppLocalizationsEn extends AppLocalizations {
   String get manageSubscription => 'Manage Subscription';
 
   @override
+  String get compViaCasama => 'Free from Casama';
+
+  @override
+  String compFreeUntil(String date) {
+    return 'Free until $date';
+  }
+
+  @override
+  String compKeepPlan(String plan) {
+    return 'Keep $plan';
+  }
+
+  @override
+  String get haveGiftCode => 'Have a Gift Code?';
+
+  @override
+  String get redeemCodeTitle => 'Redeem a Gift Code';
+
+  @override
+  String get redeemCodeIntro =>
+      'Enter the code you were given. The plan goes to the workspace you choose, with nothing to pay.';
+
+  @override
+  String get redeemCodeLabel => 'Gift code';
+
+  @override
+  String get redeemCodeChecking => 'Checking…';
+
+  @override
+  String redeemCodeGives(String plan, int months) {
+    String _temp0 = intl.Intl.pluralLogic(
+      months,
+      locale: localeName,
+      other: '$months months of $plan, free',
+      one: '1 month of $plan, free',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get redeemCodeInvalid =>
+      'That code doesn\'t exist or can\'t be used anymore.';
+
+  @override
+  String get redeemCodeWorkspace => 'Workspace';
+
+  @override
+  String get redeemCodeSubmit => 'Redeem';
+
+  @override
+  String get redeemCodeFinePrint =>
+      'One gift code per person. When it ends, the workspace moves to Free unless you choose a plan.';
+
+  @override
+  String redeemCodeDoneTitle(String plan) {
+    return '$plan is yours';
+  }
+
+  @override
+  String redeemCodeDoneBody(String plan, String date) {
+    return 'Your workspace has $plan free until $date. Open Casama on any device to use it.';
+  }
+
+  @override
+  String get redeemCodeOpenBilling => 'Open Billing';
+
+  @override
+  String get redeemCodeNoWorkspace =>
+      'A gift code goes to a workspace you own. Create one first, then open the link again.';
+
+  @override
+  String get redeemCodeUnavailable =>
+      'This isn\'t available in this version of the app.';
+
+  @override
   String usageComputerHours(String hours) {
     return 'Cloud computers: $hours h';
   }

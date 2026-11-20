@@ -77,6 +77,7 @@ import '../features/skills/skills_screen.dart';
 import '../features/timeline/timeline_screen.dart';
 import '../features/admin/admin_screen.dart';
 import '../features/billing/billing_screen.dart';
+import '../features/billing/redeem_code_screen.dart';
 import '../features/privacy/privacy_screen.dart';
 import '../features/settings/support_screen.dart';
 import '../features/moderation/report_sheet.dart';
@@ -252,6 +253,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         }
         if (loc == '/sign-in' || joining) return null;
         final target = state.uri.toString();
+        // A gift code link (docs/COMP-PLANS-PLAN.md) opened signed out comes back after sign-in.
+        if (loc == '/redeem' || loc == '/settings/billing/redeem') {
+          Future.microtask(() => ref.read(pendingOpenLinkProvider.notifier).set(target));
+        }
         if (target == lastOpened && keepThroughSignIn(target)) {
           lastOpened = null;
           Future.microtask(() => ref.read(pendingOpenLinkProvider.notifier).set(target));
@@ -367,6 +372,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/invites/:token',
         redirect: (_, s) => joinPath(s.pathParameters['token']!),
+      ),
+      // casama.ai/g/<code> sends people here to redeem a gift code (docs/COMP-PLANS-PLAN.md).
+      GoRoute(
+        path: '/redeem',
+        redirect: (_, s) => redeemCodePath(s.uri.queryParameters['code']),
       ),
       GoRoute(
         path: '/i/:code',
@@ -1034,6 +1044,13 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: 'billing',
                 pageBuilder: _page((_, s) => BillingScreen(highlight: s.uri.queryParameters['highlight'])),
+                routes: [
+                  // Gift codes for a free plan (docs/COMP-PLANS-PLAN.md); web and desktop only.
+                  GoRoute(
+                    path: 'redeem',
+                    pageBuilder: _page((_, s) => RedeemCodeScreen(key: ValueKey(s.uri.toString()), code: s.uri.queryParameters['code'])),
+                  ),
+                ],
               ),
               GoRoute(
                 path: 'privacy',

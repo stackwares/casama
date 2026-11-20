@@ -43,6 +43,20 @@ List<PurchaseChannel> purchaseChannels({
   }
 }
 
+/// Gift codes for free plans (docs/COMP-PLANS-PLAN.md) unlock a paid plan, which App Store
+/// guideline 3.1.1 and Google Play's payments policy don't allow inside a store app (not even with
+/// the US storefront's web links). Only the web app and the direct-download desktop builds take
+/// them; the store apps never show a code field or mention codes. A plan granted by email works
+/// everywhere, since nothing is unlocked in the app.
+bool giftCodesAllowed({required TargetPlatform platform, required bool isWeb}) {
+  if (isWeb) return true;
+  return switch (platform) {
+    TargetPlatform.macOS => !isMacAppStoreBuild,
+    TargetPlatform.windows || TargetPlatform.linux => true,
+    _ => false,
+  };
+}
+
 /// RevenueCat's public SDK keys (D-297). They are meant to ship inside the apps; a build can point
 /// at another RevenueCat project with these defines.
 const kRevenueCatAppleKey = String.fromEnvironment('CASAMA_REVENUECAT_APPLE_KEY', defaultValue: 'appl_latZWsuTtiUgUXjNfDEIIXcRpwm');

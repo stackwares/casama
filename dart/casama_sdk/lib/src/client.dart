@@ -101,6 +101,9 @@ class CasamaClient {
   /// Account email preferences (D-301).
   AccountApi get account => api.getAccountApi();
   ReferralsApi get referrals => api.getReferralsApi();
+
+  /// Free plans for friends (docs/COMP-PLANS-PLAN.md): gift codes, and the owner's grants.
+  CompsApi get comps => api.getCompsApi();
   AdminApi get admin => api.getAdminApi();
 
   /// Scan to sign in (D-296): one-time codes that sign another device in to this account.

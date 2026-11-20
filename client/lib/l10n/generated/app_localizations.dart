@@ -4654,6 +4654,114 @@ abstract class AppLocalizations {
   /// **'Manage Subscription'**
   String get manageSubscription;
 
+  /// No description provided for @compViaCasama.
+  ///
+  /// In en, this message translates to:
+  /// **'Free from Casama'**
+  String get compViaCasama;
+
+  /// No description provided for @compFreeUntil.
+  ///
+  /// In en, this message translates to:
+  /// **'Free until {date}'**
+  String compFreeUntil(String date);
+
+  /// No description provided for @compKeepPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep {plan}'**
+  String compKeepPlan(String plan);
+
+  /// No description provided for @haveGiftCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Have a Gift Code?'**
+  String get haveGiftCode;
+
+  /// No description provided for @redeemCodeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Redeem a Gift Code'**
+  String get redeemCodeTitle;
+
+  /// No description provided for @redeemCodeIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the code you were given. The plan goes to the workspace you choose, with nothing to pay.'**
+  String get redeemCodeIntro;
+
+  /// No description provided for @redeemCodeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Gift code'**
+  String get redeemCodeLabel;
+
+  /// No description provided for @redeemCodeChecking.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking…'**
+  String get redeemCodeChecking;
+
+  /// No description provided for @redeemCodeGives.
+  ///
+  /// In en, this message translates to:
+  /// **'{months, plural, =1{1 month of {plan}, free} other{{months} months of {plan}, free}}'**
+  String redeemCodeGives(String plan, int months);
+
+  /// No description provided for @redeemCodeInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'That code doesn\'t exist or can\'t be used anymore.'**
+  String get redeemCodeInvalid;
+
+  /// No description provided for @redeemCodeWorkspace.
+  ///
+  /// In en, this message translates to:
+  /// **'Workspace'**
+  String get redeemCodeWorkspace;
+
+  /// No description provided for @redeemCodeSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Redeem'**
+  String get redeemCodeSubmit;
+
+  /// No description provided for @redeemCodeFinePrint.
+  ///
+  /// In en, this message translates to:
+  /// **'One gift code per person. When it ends, the workspace moves to Free unless you choose a plan.'**
+  String get redeemCodeFinePrint;
+
+  /// No description provided for @redeemCodeDoneTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{plan} is yours'**
+  String redeemCodeDoneTitle(String plan);
+
+  /// No description provided for @redeemCodeDoneBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your workspace has {plan} free until {date}. Open Casama on any device to use it.'**
+  String redeemCodeDoneBody(String plan, String date);
+
+  /// No description provided for @redeemCodeOpenBilling.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Billing'**
+  String get redeemCodeOpenBilling;
+
+  /// No description provided for @redeemCodeNoWorkspace.
+  ///
+  /// In en, this message translates to:
+  /// **'A gift code goes to a workspace you own. Create one first, then open the link again.'**
+  String get redeemCodeNoWorkspace;
+
+  /// No description provided for @redeemCodeUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This isn\'t available in this version of the app.'**
+  String get redeemCodeUnavailable;
+
   /// No description provided for @usageComputerHours.
   ///
   /// In en, this message translates to:
