@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The widget picker's preview of Canvas: a bot's gradient (top-leading to bottom-trailing). -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <gradient
+        android:angle="315"
+        android:endColor="#1F7A8C"
+        android:startColor="#0B3A53"
+        android:type="linear" />
+    <corners android:radius="@dimen/widget_radius" />
+</shape>

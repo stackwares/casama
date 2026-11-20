@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The widget picker's preview of Canvas (Android 12+): sample content, never drawn live. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@android:id/background"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_canvas_preview_bg"
+    android:clipToOutline="true"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:padding="@dimen/widget_padding">
+    <TextView style="@style/WidgetText" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:fontFamily="serif" android:gravity="center" android:maxLines="3" android:text="Be still, and know that I am God."
+        android:textColor="#FFFFFF" android:textSize="18sp" />
+    <TextView style="@style/WidgetText.Second" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="6dp" android:fontFamily="serif" android:gravity="center" android:text="Ps 46:10"
+        android:textColor="#D9FFFFFF" />
+</LinearLayout>

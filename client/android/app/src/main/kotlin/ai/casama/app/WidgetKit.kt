@@ -156,6 +156,7 @@ object WidgetKit {
     LibraryWidget::class.java,
     TasksWidget::class.java,
     CreditsWidget::class.java,
+    CanvasWidget::class.java,
   )
 
   fun provider(simpleName: String?): Class<out CasamaWidget>? = providers.firstOrNull { it.simpleName == simpleName }
@@ -448,8 +449,9 @@ object WidgetKit {
 }
 
 /**
- * What a person chose for each placed widget (WidgetConfigActivity): a bot for Ask and Bot, and
- * up to four routines for Routines (none: automatic). App-private, keyed by widget id.
+ * What a person chose for each placed widget (WidgetConfigActivity): a bot for Ask and Bot, up to
+ * four routines for Routines (none: automatic), and a canvas for Canvas (none: automatic).
+ * App-private, keyed by widget id.
  */
 object WidgetConfig {
   private const val PREFS = "casama_widgets"
@@ -469,8 +471,14 @@ object WidgetConfig {
   fun setRoutines(context: Context, id: Int, ids: List<String>) =
     prefs(context).edit().putString("routines_$id", ids.take(4).joinToString(",")).apply()
 
+  /** The Canvas widget's canvas (by id); null is Automatic, the one set most recently. */
+  fun canvas(context: Context, id: Int): String? = prefs(context).getString("canvas_$id", null)
+
+  fun setCanvas(context: Context, id: Int, canvasId: String?) =
+    prefs(context).edit().apply { if (canvasId == null) remove("canvas_$id") else putString("canvas_$id", canvasId) }.apply()
+
   fun forget(context: Context, ids: IntArray) {
-    prefs(context).edit().apply { ids.forEach { remove("bot_$it"); remove("routines_$it") } }.apply()
+    prefs(context).edit().apply { ids.forEach { remove("bot_$it"); remove("routines_$it"); remove("canvas_$it") } }.apply()
   }
 
   /** Run now was pressed and the app took it: the row says "Started" for a while. */

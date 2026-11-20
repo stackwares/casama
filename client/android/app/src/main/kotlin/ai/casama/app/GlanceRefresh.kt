@@ -1,8 +1,12 @@
 package ai.casama.app
 
+import ai.casama.app.canvas.CanvasList
+import ai.casama.app.canvas.CanvasLogic
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.util.Log
 import androidx.work.Constraints
 import androidx.work.ExistingPeriodicWorkPolicy
@@ -17,6 +21,7 @@ import java.io.File
 import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLEncoder
+import java.time.ZoneId
 import java.util.concurrent.TimeUnit
 
 /**
@@ -29,7 +34,8 @@ import java.util.concurrent.TimeUnit
  * - a `glance` data message ([GlancePushReceiver]) queues one fetch at once.
  *
  * A fetch that finds nothing new costs one cheap request (`If-None-Match`, 304). Both stop when the
- * last widget is removed or the key is dropped (sign-out).
+ * last widget is removed or the key is dropped (sign-out). With a Canvas widget placed, both also
+ * fetch the canvases ([CanvasRefresh], docs/BOT-WIDGET-PLAN.md §10.2).
  */
 object GlanceRefresh {
   private const val KEY_PREFS = "casama_widget_key"
@@ -49,7 +55,10 @@ object GlanceRefresh {
     keyPrefs(context).edit().apply {
       if (key.isNullOrEmpty()) clear() else putString("key", key).remove("etag")
     }.apply()
-    if (key.isNullOrEmpty()) File(context.filesDir, COVERS_DIR).deleteRecursively()
+    if (key.isNullOrEmpty()) {
+      File(context.filesDir, COVERS_DIR).deleteRecursively()
+      File(context.filesDir, CanvasStore.PICTURES_DIR).deleteRecursively()
+    }
     schedule(context)
   }
 
@@ -206,10 +215,199 @@ object GlanceRefresh {
 
 /** The background fetch, for both the periodic job and a push's one-off. */
 class GlanceWorker(context: Context, params: WorkerParameters) : Worker(context, params) {
-  override fun doWork(): Result = when (GlanceRefresh.fetch(applicationContext)) {
+  override fun doWork(): Result {
+    val glance = GlanceRefresh.fetch(applicationContext)
+    // The canvases after the glance: a key the glance found refused is gone by now, so this skips.
+    val canvases = CanvasRefresh.fetch(applicationContext)
+    val failed = glance == GlanceRefresh.Outcome.FAILED || canvases == GlanceRefresh.Outcome.FAILED
     // A one-off from a push retries a couple of times; the periodic job just waits for its next turn.
-    GlanceRefresh.Outcome.FAILED -> if (runAttemptCount < 2 && GlanceRefresh.TAG_PERIODIC !in tags) Result.retry() else Result.success()
-    else -> Result.success()
+    return if (failed && runAttemptCount < 2 && GlanceRefresh.TAG_PERIODIC !in tags) Result.retry() else Result.success()
+  }
+}
+
+/**
+ * The Canvas widget's data while the app is closed (docs/BOT-WIDGET-PLAN.md §10.2): with a Canvas
+ * widget placed, the 30-minute job and every refresh push also fetch
+ * `GET {glance_server}/v1/canvases?sizes=…` with the widget key (`If-None-Match`, 304 when nothing
+ * changed), then the pictures the placed widgets draw, shrunk to the largest of them and cached by
+ * hash. Planned entries switch by themselves: a one-off job at the next entry's time
+ * ([scheduleTick]), which Android may run a few minutes late.
+ */
+object CanvasRefresh {
+  private const val TICK = "casama_canvas_tick"
+  private const val TIMEOUT_MS = 10_000
+  /** A picture is a JPEG the server already shrank (under 400 KB); anything far bigger isn't one. */
+  private const val MAX_PICTURE_BYTES = 2 * 1024 * 1024
+  /** Pictures kept at most: a rotation usually shares one painting. */
+  private const val MAX_PICTURES = 8
+
+  private fun placed(context: Context) = CanvasStore.placedIds(context).isNotEmpty()
+
+  /** Fetches the canvases (off the main thread; [GlanceWorker] calls it). */
+  fun fetch(context: Context): GlanceRefresh.Outcome {
+    if (!placed(context)) return GlanceRefresh.Outcome.SKIPPED
+    val key = GlanceRefresh.key(context) ?: return GlanceRefresh.Outcome.SKIPPED
+    val store = GlanceStore.prefs(context)
+    val server = (store.all[GlanceStore.KEY_SERVER] as? String)?.trimEnd('/')?.ifEmpty { null } ?: return GlanceRefresh.Outcome.SKIPPED
+    if (!GlanceStore.signedIn(context)) return GlanceRefresh.Outcome.SKIPPED
+    // The workspace comes from the glance, as GlanceRefresh's own fetch does.
+    val org = (store.all[GlanceStore.KEY_GLANCE] as? String)?.let { GlanceStore.parse(it) }?.orgId?.ifEmpty { null }
+      ?: return GlanceRefresh.Outcome.SKIPPED
+    val current = CanvasStore.load(context)
+    val sizes = CanvasStore.sizes(context).joinToString(",")
+    val url = URL(
+      "$server/v1/canvases?org_id=" + URLEncoder.encode(org, "UTF-8") + "&sizes=" + URLEncoder.encode(sizes, "UTF-8"),
+    )
+    val conn = (url.openConnection() as HttpURLConnection).apply {
+      connectTimeout = TIMEOUT_MS
+      readTimeout = TIMEOUT_MS
+      setRequestProperty("Authorization", "Widget $key")
+      setRequestProperty("Accept", "application/json")
+      // The server's ETag is the list's version, quoted; whoever wrote the list last (the app or
+      // this), its version is the one to ask about.
+      current?.version?.ifEmpty { null }?.let { setRequestProperty("If-None-Match", "\"$it\"") }
+    }
+    return try {
+      when (val code = conn.responseCode) {
+        200 -> {
+          val body = conn.inputStream.bufferedReader().use { it.readText() }
+          val list = CanvasStore.parse(body) ?: return GlanceRefresh.Outcome.FAILED
+          if (!GlanceStore.signedIn(context)) return GlanceRefresh.Outcome.SKIPPED
+          store.edit().putString(CanvasStore.KEY, body).remove(CanvasStore.KEY_UNSUPPORTED).commit()
+          fetchPictures(context, server, key, list)
+          redraw(context)
+          GlanceRefresh.Outcome.CHANGED
+        }
+        304 -> {
+          fetchPictures(context, server, key, current)
+          redraw(context)
+          GlanceRefresh.Outcome.SAME
+        }
+        401, 403 -> {
+          Log.i(CasamaWidget.TAG, "widget key refused for canvases ($code); dropping it")
+          GlanceRefresh.setKey(context, null)
+          GlanceRefresh.Outcome.GONE
+        }
+        404 -> {
+          // A server from before bot widgets.
+          store.edit().putString(CanvasStore.KEY_UNSUPPORTED, "1").commit()
+          redraw(context)
+          GlanceRefresh.Outcome.SAME
+        }
+        else -> {
+          Log.w(CasamaWidget.TAG, "canvas fetch: HTTP $code")
+          GlanceRefresh.Outcome.FAILED
+        }
+      }
+    } catch (e: Exception) {
+      Log.w(CasamaWidget.TAG, "canvas fetch failed: ${e.message}")
+      GlanceRefresh.Outcome.FAILED
+    } finally {
+      conn.disconnect()
+    }
+  }
+
+  /** Redraws the Canvas widgets and plans their next switch. */
+  fun redraw(context: Context) {
+    WidgetKit.redraw(context, CanvasWidget::class.java)
+    scheduleTick(context)
+  }
+
+  /** The pictures the placed widgets draw now and later: (canvas id, hash). */
+  private fun wanted(context: Context, list: CanvasList?): List<Pair<String, String>> =
+    CanvasStore.shown(context, list)
+      .flatMap { c -> CanvasLogic.pictures(c).map { c.id to it } }
+      .distinctBy { it.second }
+      .take(MAX_PICTURES)
+
+  /** Whether a picture the widgets would draw isn't cached yet (`reload` then queues a fetch). */
+  fun picturesMissing(context: Context): Boolean {
+    if (GlanceRefresh.key(context) == null || !placed(context)) return false
+    return wanted(context, CanvasStore.load(context)).any { (_, h) -> CanvasStore.pictureFile(context, h)?.exists() == false }
+  }
+
+  /**
+   * Fetches the pictures the placed widgets draw and doesn't have yet, shrinks each to the largest
+   * placed widget, and forgets the rest. A picture that can't be fetched leaves its colour drawn.
+   */
+  private fun fetchPictures(context: Context, server: String, key: String, list: CanvasList?) {
+    val dir = File(context.filesDir, CanvasStore.PICTURES_DIR)
+    val wanted = wanted(context, list)
+    val keep = wanted.mapNotNull { CanvasStore.pictureFile(context, it.second)?.name }.toSet()
+    dir.listFiles()?.filter { it.name !in keep }?.forEach { it.delete() }
+    if (wanted.isEmpty()) return
+    val (maxW, maxH) = CanvasStore.largestPx(context)
+    for ((canvasId, hash) in wanted) {
+      val file = CanvasStore.pictureFile(context, hash) ?: continue
+      if (file.exists()) continue
+      dir.mkdirs()
+      val path = "/v1/canvases/${URLEncoder.encode(canvasId, "UTF-8")}/pictures/${URLEncoder.encode(hash, "UTF-8")}"
+      val conn = (URL(server + path).openConnection() as HttpURLConnection).apply {
+        connectTimeout = TIMEOUT_MS
+        readTimeout = TIMEOUT_MS
+        setRequestProperty("Authorization", "Widget $key")
+      }
+      try {
+        if (conn.responseCode != 200) continue
+        val bytes = conn.inputStream.use { it.readBytes() }.takeIf { it.size <= MAX_PICTURE_BYTES } ?: continue
+        val small = shrink(bytes, maxW, maxH) ?: continue
+        val tmp = File(dir, file.name + ".part")
+        tmp.outputStream().use { small.compress(Bitmap.CompressFormat.JPEG, 85, it) }
+        small.recycle()
+        tmp.renameTo(file)
+      } catch (e: Exception) {
+        Log.w(CasamaWidget.TAG, "canvas picture fetch failed: ${e.message}")
+      } finally {
+        conn.disconnect()
+      }
+    }
+  }
+
+  /** Decodes [bytes] no larger than needed to cover [w]×[h], then scales it to just cover it. */
+  private fun shrink(bytes: ByteArray, w: Int, h: Int): Bitmap? = runCatching {
+    val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+    BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
+    if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return null
+    var sample = 1
+    while (bounds.outWidth / (sample * 2) >= w && bounds.outHeight / (sample * 2) >= h) sample *= 2
+    val decoded = BitmapFactory.decodeByteArray(bytes, 0, bytes.size, BitmapFactory.Options().apply { inSampleSize = sample })
+      ?: return null
+    val scale = maxOf(w.toFloat() / decoded.width, h.toFloat() / decoded.height)
+    if (scale >= 1f) return decoded
+    val out = Bitmap.createScaledBitmap(decoded, (decoded.width * scale).toInt().coerceAtLeast(1), (decoded.height * scale).toInt().coerceAtLeast(1), true)
+    if (out !== decoded) decoded.recycle()
+    out
+  }.getOrNull()
+
+  /**
+   * A one-off job at the next moment a placed Canvas widget changes by itself: a planned entry, a
+   * countdown turning from days to a timer or a new day, an `until`. Replaced on every redraw; none
+   * when nothing is planned or no Canvas widget is placed.
+   */
+  fun scheduleTick(context: Context) {
+    val work = runCatching { WorkManager.getInstance(context.applicationContext) }.getOrNull() ?: return
+    val now = System.currentTimeMillis()
+    val next = if (placed(context)) CanvasLogic.nextTickMs(CanvasStore.shown(context, nowMs = now), now, ZoneId.systemDefault()) else null
+    if (next == null) {
+      work.cancelUniqueWork(TICK)
+      return
+    }
+    work.enqueueUniqueWork(
+      TICK,
+      ExistingWorkPolicy.REPLACE,
+      OneTimeWorkRequest.Builder(CanvasTickWorker::class.java)
+        // A moment after, so the entry's time has surely come when it draws.
+        .setInitialDelay(next - now + 2_000, TimeUnit.MILLISECONDS)
+        .build(),
+    )
+  }
+}
+
+/** The switch to a planned entry: redraws from what is stored, no network, and plans the next one. */
+class CanvasTickWorker(context: Context, params: WorkerParameters) : Worker(context, params) {
+  override fun doWork(): Result {
+    CanvasRefresh.redraw(applicationContext)
+    return Result.success()
   }
 }
 
