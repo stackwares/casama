@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -84,7 +85,7 @@ abstract class WakeWordEngine {
   Future<void> prepare({void Function(double)? onProgress});
 
   /// Starts listening; the stream fires each time the phrase is heard.
-  Stream<void> listen(String phrase);
+  Future<Stream<void>> listen(String phrase);
   Future<void> stop();
 }
 
@@ -102,27 +103,31 @@ class WakeWordModel {
     final dir = Directory('${(await getApplicationSupportDirectory()).path}/wake-word/$folder');
     if (files.every((f) => File('${dir.path}/$f').existsSync())) return dir.path;
     final c = client ?? http.Client();
-    final res = await c.send(http.Request('GET', Uri.parse(url)));
-    if (res.statusCode != 200) throw StateError('The wake word model could not be downloaded (${res.statusCode})');
-    final total = res.contentLength ?? 0;
-    final bytes = BytesBuilder(copy: false);
-    await for (final chunk in res.stream) {
-      bytes.add(chunk);
-      if (total > 0) onProgress?.call(bytes.length / total);
+    try {
+      final res = await c.send(http.Request('GET', Uri.parse(url)));
+      if (res.statusCode != 200) throw StateError('The wake word model could not be downloaded (${res.statusCode})');
+      final total = res.contentLength ?? 0;
+      final bytes = BytesBuilder(copy: false);
+      await for (final chunk in res.stream) {
+        bytes.add(chunk);
+        if (total > 0) onProgress?.call(bytes.length / total);
+      }
+      final data = bytes.takeBytes();
+      if (sha256.convert(data).toString() != sha256Hex) throw StateError("The wake word model didn't match its checksum");
+      final tar = TarDecoder().decodeBytes(BZip2Decoder().decodeBytes(data));
+      for (final f in tar.files) {
+        if (!f.isFile) continue;
+        final name = f.name.split('/').last;
+        if (!files.contains(name)) continue;
+        final out = File('${dir.path}/$name');
+        await out.parent.create(recursive: true);
+        await out.writeAsBytes(f.content as List<int>);
+      }
+      if (!files.every((f) => File('${dir.path}/$f').existsSync())) throw StateError('The wake word model is incomplete');
+      return dir.path;
+    } finally {
+      if (client == null) c.close();
     }
-    final data = bytes.takeBytes();
-    if (sha256.convert(data).toString() != sha256Hex) throw StateError("The wake word model didn't match its checksum");
-    final tar = TarDecoder().decodeBytes(BZip2Decoder().decodeBytes(data));
-    for (final f in tar.files) {
-      if (!f.isFile) continue;
-      final name = f.name.split('/').last;
-      if (!files.contains(name)) continue;
-      final out = File('${dir.path}/$name');
-      await out.parent.create(recursive: true);
-      await out.writeAsBytes(f.content as List<int>);
-    }
-    if (!files.every((f) => File('${dir.path}/$f').existsSync())) throw StateError('The wake word model is incomplete');
-    return dir.path;
   }
 }
 
@@ -170,59 +175,55 @@ class SherpaWakeWordEngine implements WakeWordEngine {
   }
 
   @override
-  Stream<void> listen(String phrase) {
+  Future<Stream<void>> listen(String phrase) async {
+    await stop();
+    await prepare();
+    sherpa.initBindings();
+    final d = _dir!;
+    final vocab = {
+      for (final l in await File('$d/tokens.txt').readAsLines())
+        if (l.trim().isNotEmpty) l.split(' ').first,
+    };
+    final lines = keywordLines(phrase, vocab);
+    if (lines.isEmpty) throw StateError("That wake phrase can't be spelled with the model's tokens; try simpler words");
+    final keywords = lines.join('\n');
+    if (!await _rec.hasPermission()) throw StateError('Microphone permission is needed for the wake word');
+    _spotter = sherpa.KeywordSpotter(
+      sherpa.KeywordSpotterConfig(
+        model: sherpa.OnlineModelConfig(
+          transducer: sherpa.OnlineTransducerModelConfig(encoder: '$d/${WakeWordModel.files[0]}', decoder: '$d/${WakeWordModel.files[1]}', joiner: '$d/${WakeWordModel.files[2]}'),
+          tokens: '$d/tokens.txt',
+          debug: false,
+        ),
+        keywordsBuf: keywords,
+        // sherpa-onnx expects the UTF-8 byte length; `▁` is 3 bytes in UTF-8.
+        keywordsBufSize: utf8.encode(keywords).length,
+      ),
+    );
+    _stream = _spotter!.createStream();
+    final audio = await _rec.startStream(const RecordConfig(encoder: AudioEncoder.pcm16bits, sampleRate: 16000, numChannels: 1));
     final out = _out = StreamController<void>();
-    unawaited(() async {
-      try {
-        await prepare();
-        sherpa.initBindings();
-        final d = _dir!;
-        final vocab = {
-          for (final l in await File('$d/tokens.txt').readAsLines())
-            if (l.trim().isNotEmpty) l.split(' ').first,
-        };
-        final lines = keywordLines(phrase, vocab);
-        if (lines.isEmpty) throw StateError("That wake phrase can't be spelled with the model's tokens; try simpler words");
-        final keywords = lines.join('\n');
-        _spotter = sherpa.KeywordSpotter(
-          sherpa.KeywordSpotterConfig(
-            model: sherpa.OnlineModelConfig(
-              transducer: sherpa.OnlineTransducerModelConfig(encoder: '$d/${WakeWordModel.files[0]}', decoder: '$d/${WakeWordModel.files[1]}', joiner: '$d/${WakeWordModel.files[2]}'),
-              tokens: '$d/tokens.txt',
-              debug: false,
-            ),
-            keywordsBuf: keywords,
-            keywordsBufSize: keywords.length,
-          ),
-        );
-        _stream = _spotter!.createStream();
-        if (!await _rec.hasPermission()) throw StateError('Microphone permission is needed for the wake word');
-        final audio = await _rec.startStream(const RecordConfig(encoder: AudioEncoder.pcm16bits, sampleRate: 16000, numChannels: 1));
-        final pcm = Pcm16Decoder();
-        _sub = audio.listen(
-          (chunk) {
-            final samples = pcm.decode(chunk);
-            final s = _stream;
-            final spotter = _spotter;
-            if (s == null || spotter == null || samples.isEmpty) return;
-            s.acceptWaveform(samples: samples, sampleRate: 16000);
-            while (spotter.isReady(s)) {
-              spotter.decode(s);
-            }
-            if (spotter.getResult(s).keyword.isNotEmpty) {
-              spotter.reset(s);
-              if (!out.isClosed) out.add(null);
-            }
-          },
-          // A microphone error ends listening through the stream, not as an unhandled crash.
-          onError: (Object e) {
-            if (!out.isClosed) out.addError(e);
-          },
-        );
-      } catch (e) {
+    final pcm = Pcm16Decoder();
+    _sub = audio.listen(
+      (chunk) {
+        final samples = pcm.decode(chunk);
+        final s = _stream;
+        final spotter = _spotter;
+        if (s == null || spotter == null || samples.isEmpty) return;
+        s.acceptWaveform(samples: samples, sampleRate: 16000);
+        while (spotter.isReady(s)) {
+          spotter.decode(s);
+        }
+        if (spotter.getResult(s).keyword.isNotEmpty) {
+          spotter.reset(s);
+          if (!out.isClosed) out.add(null);
+        }
+      },
+      // A microphone error ends listening through the stream, not as an unhandled crash.
+      onError: (Object e) {
         if (!out.isClosed) out.addError(e);
-      }
-    }());
+      },
+    );
     return out.stream;
   }
 
@@ -236,6 +237,7 @@ class SherpaWakeWordEngine implements WakeWordEngine {
     _stream = null;
     _spotter = null;
     await _out?.close();
+    _out = null;
   }
 }
 
@@ -283,28 +285,42 @@ class WakeWordController extends Notifier<WakeWordSettings> {
   }
 
   Future<void> save(WakeWordSettings s, {void Function(double)? onProgress}) async {
+    final prev = state;
     if (s.enabled) await _engine.prepare(onProgress: onProgress);
+    await _stopListening();
     state = s;
+    if (s.enabled) {
+      try {
+        await _startListening(rethrowError: true);
+      } catch (_) {
+        state = prev;
+        rethrow;
+      }
+    }
     try {
       final p = await SharedPreferences.getInstance();
       await p.setBool('wake.enabled', s.enabled);
       await p.setString('wake.phrase', s.phrase);
       if (s.botId != null) await p.setString('wake.bot', s.botId!);
     } catch (_) {}
-    await _stopListening();
-    if (s.enabled) await _startListening();
   }
 
-  Future<void> _startListening() async {
+  Future<void> _startListening({bool rethrowError = false}) async {
     if (!wakeWordSupported && !_testing) return;
     final botId = state.botId;
     if (botId == null || _sub != null) return;
     if (ref.read(activeCallProvider).live != null) return;
-    _sub = _engine.listen(state.phrase).listen((_) {
-      // Heard it: open a live call with the chosen bot.
-      Analytics.feature('wake_word');
-      unawaited(ref.read(routerProvider).pushOnce('/bots/$botId/call'));
-    }, onError: (Object e) => debugPrint('wake word: $e'));
+    try {
+      final stream = await _engine.listen(state.phrase);
+      _sub = stream.listen((_) {
+        // Heard it: open a live call with the chosen bot.
+        Analytics.feature('wake_word');
+        unawaited(ref.read(routerProvider).pushOnce('/bots/$botId/call'));
+      }, onError: (Object e) => debugPrint('wake word: $e'));
+    } catch (e) {
+      if (rethrowError) rethrow;
+      debugPrint('wake word: $e');
+    }
   }
 
   Future<void> _stopListening() async {

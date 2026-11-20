@@ -27,13 +27,18 @@ class FakeWakeEngine implements WakeWordEngine {
   }
 
   @override
-  Stream<void> listen(String p) {
+  Future<Stream<void>> listen(String p) async {
     phrase = p;
     return heard.stream;
   }
 
   @override
   Future<void> stop() async => stopped++;
+}
+
+class _FailingWakeEngine extends FakeWakeEngine {
+  @override
+  Future<Stream<void>> listen(String p) async => throw StateError('Microphone permission is needed for the wake word');
 }
 
 /// Wake word (D-144).
@@ -72,6 +77,24 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('call $botId'), findsOneWidget);
     WakeWordController.testing = false;
+  });
+
+  test('save rolls back and surfaces errors when listening fails to start', () async {
+    SharedPreferences.setMockInitialValues({});
+    WakeWordController.testing = true;
+    addTearDown(() => WakeWordController.testing = false);
+    final engine = _FailingWakeEngine();
+    final container = ProviderContainer(
+      overrides: [backendProvider.overrideWithValue(FakeBackend()), wakeWordEngineProvider.overrideWithValue(engine)],
+    );
+    addTearDown(container.dispose);
+    container.listen(wakeWordProvider, (_, _) {});
+    await expectLater(
+      container.read(wakeWordProvider.notifier).save(const WakeWordSettings(enabled: true, phrase: 'hey casama', botId: botId)),
+      throwsStateError,
+    );
+    expect(container.read(wakeWordProvider).enabled, isFalse);
+    expect((await SharedPreferences.getInstance()).getBool('wake.enabled'), isNull);
   });
 
   test('microphone audio decodes at odd offsets and across chunk edges', () {
