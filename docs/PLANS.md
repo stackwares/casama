@@ -43,7 +43,7 @@ same commit. Shipping details (deploys, app builds) move fast, so check them bef
 
 | Plan | Decisions | What's left |
 |---|---|---|
-| [RICH-CARDS-PLAN](RICH-CARDS-PLAN.md) | D-458 | Merged to main 2026-11-20, not deployed: a deploy (migration `20270304100001`), app builds; a licensed stock key for Casama Cloud; Stage B native widgets later |
+| [RICH-CARDS-PLAN](RICH-CARDS-PLAN.md) | D-458 | Merged to main 2026-11-20, not deployed: a deploy (migration `20270309100001`), app builds; a licensed stock key for Casama Cloud; Stage B native widgets later |
 | [BOT-PICTURES-PLAN](BOT-PICTURES-PLAN.md) | D-456 | App builds; Phase 0 real-device checks (HEIC, 48 MP photo, each platform's decoder), Xcode and Gradle builds of the native widget code; server deploy |
 | [ADMIN-SECURITY-PLAN](ADMIN-SECURITY-PLAN.md) | D-448, D-450, D-452, D-453 | Shipped 2026-11-20 as build 63: server, docs, web app, iPhone (TestFlight), Android and Wear OS (Play internal), Mac direct download (notarized, update feed) and Mac App Store (TestFlight) |
 | [LIMIT-RESETS-PLAN](LIMIT-RESETS-PLAN.md) | D-443 | Server + docs live 2026-11-20 (6d11b195); switched on, test grant on Oliver's space (expires 2026-12-04); app builds with Use Reset pending |
