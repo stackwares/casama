@@ -8,11 +8,12 @@
  * instance owner a moment ago. A prompt-injected bot can at most show the owner a card to decline.
  */
 
-import { ToolError, type ToolRegistry, type ToolContext } from "@casama/agent";
+import { type ToolContext, ToolError, type ToolRegistry } from "@casama/agent";
 import type { Database } from "@casama/db";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { suspendOrg, unsuspendOrg } from "./abuse.ts";
+import { registerAdminResetTools } from "./admin-bot-resets.ts";
 import {
   addWaitlistEntries,
   cleanEmail,
@@ -68,6 +69,8 @@ export interface AdminBotDeps {
   ownerEmails: string[];
   /** Stops a running computer when a workspace is suspended. */
   stopComputer?: (computerId: string) => Promise<void>;
+  /** Whether this server bills; saved-reset tools (D-445) need it. */
+  billingEnabled?: boolean;
 }
 
 /** Whether this user is an instance owner by the explicit list: confirmed email, not banned. */
@@ -210,12 +213,10 @@ export async function banUser(
     where o.suspended_at is null
       and not exists (select 1 from public.memberships m2 where m2.org_id = o.id and m2.role = 'owner' and m2.user_id <> ${userId}::uuid)`);
   for (const o of solo)
-    await suspendOrg(
-      { db: deps.db, stopComputer: deps.stopComputer },
-      o.id,
-      BAN_REASON,
-      { kind: "user", id: by },
-    );
+    await suspendOrg({ db: deps.db, stopComputer: deps.stopComputer }, o.id, BAN_REASON, {
+      kind: "user",
+      id: by,
+    });
   const orgs = await deps.db.execute<{ org_id: string }>(
     sql`select org_id from public.memberships where user_id = ${userId}::uuid`,
   );
@@ -311,7 +312,10 @@ export function registerAdminTools(registry: ToolRegistry, deps: AdminBotDeps) {
         created_at: iso(u.created_at),
         last_sign_in_at: iso(u.last_sign_in_at),
       }));
-      return { content: `${UNTRUSTED_NOTE}\n${JSON.stringify(out)}`, preview: `${out.length} accounts` };
+      return {
+        content: `${UNTRUSTED_NOTE}\n${JSON.stringify(out)}`,
+        preview: `${out.length} accounts`,
+      };
     },
   });
 
@@ -321,7 +325,7 @@ export function registerAdminTools(registry: ToolRegistry, deps: AdminBotDeps) {
     readOnly: true,
     untrustedOutput: true,
     description:
-      "Instance admin: waitlist entries (waiting, queued for a \"You're in\" email, admitted, joined), newest first or in batch order, optionally searched by email or note.",
+      'Instance admin: waitlist entries (waiting, queued for a "You\'re in" email, admitted, joined), newest first or in batch order, optionally searched by email or note.',
     schema: z.object({
       status: z.enum(["waiting", "queued", "admitted", "joined"]).optional(),
       q: z.string().max(200).optional(),
@@ -329,7 +333,11 @@ export function registerAdminTools(registry: ToolRegistry, deps: AdminBotDeps) {
     }),
     async execute(args, ctx) {
       await guard(deps, ctx, "admin.waitlist.list", false);
-      const rows = await listWaitlist(deps.db, { status: args.status, q: args.q }, args.limit ?? 20);
+      const rows = await listWaitlist(
+        deps.db,
+        { status: args.status, q: args.q },
+        args.limit ?? 20,
+      );
       const out = rows.map((r) => ({
         id: r.id,
         email: r.email,
@@ -339,7 +347,10 @@ export function registerAdminTools(registry: ToolRegistry, deps: AdminBotDeps) {
         note: r.note,
         created_at: iso(r.created_at),
       }));
-      return { content: `${UNTRUSTED_NOTE}\n${JSON.stringify(out)}`, preview: `${out.length} entries` };
+      return {
+        content: `${UNTRUSTED_NOTE}\n${JSON.stringify(out)}`,
+        preview: `${out.length} entries`,
+      };
     },
   });
 
@@ -352,7 +363,9 @@ export function registerAdminTools(registry: ToolRegistry, deps: AdminBotDeps) {
       const by = await guard(deps, ctx, "admin.waitlist.admit", true);
       const count = await queueWaitlist(deps.db, { ids: args.ids, by, via: "batch" });
       await audit(deps, ctx, "admin.waitlist.admit", by as string, { ids: args.ids, count });
-      return { content: `Let in ${count} of ${args.ids.length}; their emails go out in the next send.` };
+      return {
+        content: `Let in ${count} of ${args.ids.length}; their emails go out in the next send.`,
+      };
     },
   });
 
@@ -414,7 +427,9 @@ export function registerAdminTools(registry: ToolRegistry, deps: AdminBotDeps) {
       const r = await unbanUser(deps, args.user_id, by);
       if (!r.ok) throw new ToolError("admin_refused", r.reason);
       await audit(deps, ctx, "admin.users.unban", by, { user_id: args.user_id });
-      return { content: `Unbanned ${r.email ?? args.user_id}; ${r.unsuspended.length} workspace(s) back on.` };
+      return {
+        content: `Unbanned ${r.email ?? args.user_id}; ${r.unsuspended.length} workspace(s) back on.`,
+      };
     },
   });
 
@@ -430,7 +445,10 @@ export function registerAdminTools(registry: ToolRegistry, deps: AdminBotDeps) {
       if (args.org_id === ctx.orgId)
         throw new ToolError("admin_refused", "The admin bot's own workspace can't be suspended.");
       if (await ownersOnly(deps, args.org_id))
-        throw new ToolError("admin_refused", "An instance owner's workspace can't be suspended here.");
+        throw new ToolError(
+          "admin_refused",
+          "An instance owner's workspace can't be suspended here.",
+        );
       const ok = await suspendOrg(
         { db: deps.db, stopComputer: deps.stopComputer },
         args.org_id,
@@ -459,6 +477,9 @@ export function registerAdminTools(registry: ToolRegistry, deps: AdminBotDeps) {
       return { content: "Workspace back on." };
     },
   });
+
+  // Saved resets (D-445): the same gate and approvals, through the saved-reset service.
+  registerAdminResetTools(registry, deps, guard, audit);
 }
 
 /** Names of every admin tool, for the approval route and chat-app buttons. */

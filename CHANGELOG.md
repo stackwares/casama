@@ -9,6 +9,9 @@ The server, apps, CLI, SDK and MCP server share one version number.
 
 ## [Unreleased]
 
+- Admin bot: saved resets from a chat. It reads settings, campaigns, a workspace's resets, the log
+  and previews without asking; every change (switch, create with a required budget, edit, schedule,
+  pause, cancel, give, take back, undo) waits for the instance owner's approval (D-445).
 - Saved resets: instance owners can schedule and budget included-credit refills, pause or cancel
   campaigns, and take back unused resets or unspent refill credit. Workspace owners can use saved
   resets in Billing and Usage. The feature defaults to off and records an append-only audit trail.

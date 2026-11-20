@@ -382,6 +382,7 @@ export async function startWorker(opts: WorkerOptions) {
   const adminBot: AdminBotDeps = {
     db,
     ownerEmails: ownerEmails(opts.instanceAdminEmails),
+    billingEnabled: opts.billing?.enabled === true,
     stopComputer: computers
       ? async (id) => {
           await computers.sleep(id);

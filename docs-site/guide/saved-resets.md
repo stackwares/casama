@@ -46,4 +46,8 @@ Developers use `scripts/limit-resets.sh METHOD ROUTE [JSON_FILE]` with `CASAMA_A
 and audit trail as the app. Do not put the token in a command argument. The `/v1/admin/limit-resets/events.csv` endpoint streams the full filtered log. The JSON event endpoint accepts
 `campaign_id`, `org_id`, and `limit` filters for exporting more focused history.
 
+The instance owner's [admin bot](./workspaces.md#the-admin-bot) can do all of this from a chat
+too. It reads without asking; every change waits for the owner's approval, and a campaign it
+proposes always has a total budget.
+
 Saved resets are hidden on servers with billing disabled.

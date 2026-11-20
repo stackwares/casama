@@ -221,8 +221,8 @@ checks for updates.
 ### The admin bot
 
 The instance owner can let one of their own bots help run the server from a chat: look up
-accounts and the waitlist, let people in, ban and unban accounts, and suspend or unsuspend
-workspaces. The bot only ever proposes; **every change waits for the owner's approval in the app**,
+accounts and the waitlist, let people in, ban and unban accounts, suspend or unsuspend
+workspaces, and manage [saved resets](./saved-resets.md). The bot only ever proposes; **every change waits for the owner's approval in the app**,
 whatever the bot's autonomy, Full access or action rules say.
 
 It works only when all of these are true:
@@ -243,6 +243,14 @@ client, and can't be "always allowed". Each action checks its approval again whe
 A ban stops sign-in, ends the person's sessions and suspends the workspaces they alone own.
 Workspaces they share keep running for everyone else. Unbanning lifts the ban and those
 suspensions.
+
+For saved resets the bot can, without asking, show whether they're on and every campaign with its
+counts, one workspace's resets and history, the log, and a preview of who a hand-out would reach
+and what it could cost. Each change shows an approval card first: switching saved resets on or off
+and their limits, creating a campaign (always with a total budget), editing, scheduling, pausing,
+resuming, cancelling or deleting one, giving one workspace a reset, and taking a reset back or
+undoing one. They follow the same rules as Admin → Resets, and the saved-reset log names the
+owner who approved.
 
 ## Limit who can sign up
 
