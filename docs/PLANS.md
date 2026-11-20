@@ -26,6 +26,7 @@ same commit. Shipping details (deploys, app builds) move fast, so check them bef
 | [SES-MIGRATION-PLAN](SES-MIGRATION-PLAN.md) | 2026-11-20 | §14 decisions; then an AWS account (Oliver) and AWS's sending review in Phase 0 |
 | [SIRI-AI-PLAN](SIRI-AI-PLAN.md) | 2026-11-20 | §13 decisions; then a debug build on the iPhone for Phase 0 |
 | [USAGE-LIMITS-PLAN](USAGE-LIMITS-PLAN.md) | 2026-11-20 | Oliver's go-ahead to build; the decisions are made (§2) |
+| [WORKSPACE-PICTURES-PLAN](WORKSPACE-PICTURES-PLAN.md) | 2026-11-21 | §5 decisions and Oliver's go-ahead. Custom photos, cropper, Recent, and AI-drawn emblems for workspaces |
 
 ## In progress
 
