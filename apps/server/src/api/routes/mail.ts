@@ -184,6 +184,7 @@ export function registerMailRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
         available: !issue && !taken.has(name),
         issue: issue ?? (taken.has(name) ? "That name is taken." : null),
         suggestions: candidates.filter((n) => n !== name && !taken.has(n)).slice(0, 3),
+        domain: mail.domain,
       },
       200,
     );

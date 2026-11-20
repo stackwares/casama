@@ -12952,6 +12952,18 @@ abstract class AppLocalizations {
   /// **'The name can\'t be changed later.'**
   String get botEmailNameFixed;
 
+  /// No description provided for @botEmailNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get botEmailNameLabel;
+
+  /// No description provided for @botEmailWillBe.
+  ///
+  /// In en, this message translates to:
+  /// **'Your bot\'s address: {address}.'**
+  String botEmailWillBe(String address);
+
   /// No description provided for @botEmailClaim.
   ///
   /// In en, this message translates to:

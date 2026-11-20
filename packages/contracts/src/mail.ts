@@ -54,6 +54,8 @@ export const MailNameAvailability = z
     issue: z.string().nullable(),
     /** Free alternatives, best first. */
     suggestions: z.array(z.string()),
+    /** The domain addresses live on, so the app can show `name@domain` while it's typed. */
+    domain: z.string().optional(),
   })
   .openapi("MailNameAvailability");
 

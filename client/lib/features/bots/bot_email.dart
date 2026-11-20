@@ -68,6 +68,16 @@ class _ClaimFormState extends ConsumerState<_ClaimForm> {
   bool _busy = false;
   bool _prefilled = false;
 
+  /// The server's mail domain, from the first availability check (null until it answers).
+  String? _domain;
+
+  /// What the person typed, as a name: lowercased, and a pasted whole address cut at the `@`.
+  String get _typed {
+    final t = _name.text.trim().toLowerCase();
+    final at = t.indexOf('@');
+    return at < 0 ? t : t.substring(0, at);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -78,6 +88,7 @@ class _ClaimFormState extends ConsumerState<_ClaimForm> {
         _name.text = c.available ? c.name : (c.suggestions.firstOrNull ?? '');
         _check = c.available ? c : null;
         _prefilled = true;
+        _domain = c.domain ?? _domain;
       });
       if (!_checkAvailable) _schedule();
     }).catchError((_) => null);
@@ -90,12 +101,12 @@ class _ClaimFormState extends ConsumerState<_ClaimForm> {
     super.dispose();
   }
 
-  bool get _checkAvailable => _check?.available == true && _check?.name == _name.text.trim().toLowerCase();
+  bool get _checkAvailable => _check?.available == true && _check?.name == _typed;
 
   void _schedule() {
     _timer?.cancel();
     _check = null;
-    if (_name.text.trim().isEmpty) {
+    if (_typed.isEmpty) {
       setState(() {});
       return;
     }
@@ -104,12 +115,15 @@ class _ClaimFormState extends ConsumerState<_ClaimForm> {
       // Silent: a failed check just leaves the button off until the next keystroke.
       MailNameAvailability? c;
       try {
-        c = await ref.read(backendProvider).checkMailName(widget.botId, _name.text.trim());
+        c = await ref.read(backendProvider).checkMailName(widget.botId, _typed);
       } catch (_) {
         return;
       }
       if (!mounted || n != _request) return;
-      setState(() => _check = c);
+      setState(() {
+        _check = c;
+        _domain = c?.domain ?? _domain;
+      });
     });
   }
 
@@ -117,7 +131,7 @@ class _ClaimFormState extends ConsumerState<_ClaimForm> {
     setState(() => _busy = true);
     final claimed = await runGuarded(
       context,
-      () => ref.read(backendProvider).claimMailAddress(widget.botId, _name.text.trim(), surface: widget.surface),
+      () => ref.read(backendProvider).claimMailAddress(widget.botId, _typed, surface: widget.surface),
     );
     if (!mounted) return;
     setState(() => _busy = false);
@@ -133,8 +147,9 @@ class _ClaimFormState extends ConsumerState<_ClaimForm> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final issue = _check?.name == _name.text.trim().toLowerCase() ? _check?.issue : null;
-    final suggestions = _check?.name == _name.text.trim().toLowerCase() ? (_check?.suggestions ?? const []) : const <String>[];
+    final issue = _check?.name == _typed ? _check?.issue : null;
+    final suggestions = _check?.name == _typed ? (_check?.suggestions ?? const []) : const <String>[];
+    final hint = Theme.of(context).colorScheme.onSurfaceVariant;
     return FormSheet(
       icon: LucideIcons.mail,
       title: l10n.botEmailClaimTitle(widget.botName),
@@ -148,10 +163,24 @@ class _ClaimFormState extends ConsumerState<_ClaimForm> {
           controller: _name,
           autofocus: _prefilled,
           autocorrect: false,
-          decoration: InputDecoration(labelText: l10n.botEmail, hintText: l10n.botEmailNameHint),
+          enableSuggestions: false,
+          keyboardType: TextInputType.emailAddress,
+          decoration: InputDecoration(
+            labelText: l10n.botEmailNameLabel,
+            hintText: l10n.botEmailNameHint,
+            // The domain is fixed: shown greyed after the name, never typed.
+            suffixText: _domain == null ? null : '@$_domain',
+            suffixStyle: TextStyle(color: hint),
+          ),
           onChanged: (_) => _schedule(),
         ),
-        Text(l10n.botEmailNameFixed, style: Theme.of(context).textTheme.bodySmall),
+        Text(
+          _domain != null && _typed.isNotEmpty
+              ? '${l10n.botEmailWillBe('$_typed@$_domain')} ${l10n.botEmailNameFixed}'
+              : l10n.botEmailNameFixed,
+          key: const Key('mailWillBe'),
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
         if (issue != null) Text(issue, key: const Key('mailNameIssue'), style: TextStyle(color: Theme.of(context).colorScheme.error)),
         if (suggestions.isNotEmpty)
           Wrap(
