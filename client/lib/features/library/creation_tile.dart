@@ -117,25 +117,33 @@ class DrawnCover extends StatelessWidget {
           colors: [top, bottom],
         ),
       ),
-      child: Padding(
-        padding: EdgeInsets.all(big ? AppSpace.lg : AppSpace.sm),
+      // A grid tile already names the kind on its pill and the title under the cover, so its
+      // drawn cover is only the tint and one large glyph; repeating them stacked two icons.
+      child: !big
+          ? Center(
+              child: Icon(
+                creationIcon(creation.kind, label: creation.label),
+                size: 44,
+                color: ink.withValues(alpha: dark ? 0.5 : 0.45),
+              ),
+            )
+          : Padding(
+        padding: const EdgeInsets.all(AppSpace.lg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Icon(
               creationIcon(creation.kind, label: creation.label),
-              size: big ? 40 : 22,
+              size: 40,
               color: ink,
             ),
             const Spacer(),
             Text(
               creation.title,
-              maxLines: big ? 3 : 2,
+              maxLines: 3,
               overflow: TextOverflow.ellipsis,
               style:
-                  (big
-                          ? context.textTheme.headlineSmall
-                          : context.textTheme.labelLarge)
+                  context.textTheme.headlineSmall
                       ?.copyWith(
                         color: ink,
                         fontWeight: FontWeight.w700,
