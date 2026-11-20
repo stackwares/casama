@@ -216,6 +216,8 @@ export function registerMcpRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       authorization_endpoint: `${base(c)}/oauth/authorize`,
       token_endpoint: `${base(c)}/oauth/token`,
       registration_endpoint: `${base(c)}/oauth/register`,
+      revocation_endpoint: `${base(c)}/oauth/revoke`,
+      revocation_endpoint_auth_methods_supported: ["none"],
       response_types_supported: ["code"],
       grant_types_supported: ["authorization_code", "refresh_token"],
       code_challenge_methods_supported: ["S256"],
@@ -346,6 +348,29 @@ export function registerMcpRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     return oauthError(c, "unsupported_grant_type", "Use authorization_code or refresh_token");
   });
 
+  // Token revocation (RFC 7009): an app that disconnects ends the whole grant (its access and
+  // refresh tokens for that person and workspace). Always 200, so it says nothing about tokens.
+  // API keys aren't revoked here; admins revoke them in the app.
+  app.post("/oauth/revoke", async (c) => {
+    const form = (await c.req.parseBody().catch(() => ({}))) as Record<string, string>;
+    const t = typeof form.token === "string" ? form.token : "";
+    if (t.startsWith("kmcp_") || t.startsWith("kmcr_")) {
+      const [g] = await db.execute<{ user_id: string; org_id: string; client_id: string }>(sql`
+        select user_id, org_id, client_id from public.mcp_tokens
+        where token_hash = ${hash(t)} and kind in ('access', 'refresh') and client_id is not null`);
+      if (g) {
+        const done = await db.execute<{ id: string }>(sql`
+          update public.mcp_tokens set revoked_at = now()
+          where user_id = ${g.user_id}::uuid and org_id = ${g.org_id}::uuid and client_id = ${g.client_id}
+            and kind in ('access', 'refresh') and revoked_at is null returning id`);
+        if (done.length)
+          await db.execute(sql`insert into public.audit_log (org_id, actor_type, actor_id, action, target_type, metadata)
+            values (${g.org_id}::uuid, 'user', ${g.user_id}::uuid, 'mcp.disconnected', 'mcp_client', ${JSON.stringify({ client_id: g.client_id, by: "app" })}::jsonb)`);
+      }
+    }
+    return c.body(null, 200);
+  });
+
   // --- consent (the app) --------------------------------------------------------
 
   app.openapi(routes.getMcpAuthRequest, async (c) => {
@@ -471,5 +496,71 @@ export function registerMcpRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       update public.mcp_tokens set revoked_at = now() where id = ${key_id}::uuid and org_id = ${id}::uuid and kind = 'api_key' and revoked_at is null returning id`);
     if (!rows[0]) throw new ApiError(404, "key_not_found", "Key not found");
     return c.json({ revoked: key_id }, 200);
+  });
+
+  // --- connected apps (OAuth grants) -------------------------------------------------
+
+  const isAdmin = async (claims: JwtClaims, orgId: string) => {
+    const [r] = await withUserSession(db, claims, (tx) =>
+      tx.execute<{ admin: boolean; member: boolean }>(sql`
+        select public.has_role(${orgId}::uuid, 'admin') as admin, public.is_member(${orgId}::uuid) as member`),
+    );
+    if (!r?.member) throw new ApiError(403, "forbidden", "Not a member of this workspace");
+    return r.admin;
+  };
+
+  app.openapi(routes.listMcpConnections, async (c) => {
+    const claims = claimsOf(c);
+    const { id } = c.req.valid("param");
+    const all = await isAdmin(claims, id);
+    // A grant is live while it has an unrevoked, unexpired access or refresh token.
+    const rows = await db.execute<{
+      client_id: string;
+      client_name: string;
+      user_id: string;
+      user_name: string;
+      connected_at: string;
+      last_used_at: string | null;
+    }>(sql`
+      select t.client_id, k.name as client_name, t.user_id,
+        coalesce(nullif(p.display_name, ''), u.email::text, '') as user_name,
+        min(t.created_at) as connected_at, max(t.last_used_at) as last_used_at
+      from public.mcp_tokens t
+      join public.mcp_clients k on k.client_id = t.client_id
+      join auth.users u on u.id = t.user_id
+      left join public.profiles p on p.user_id = t.user_id
+      where t.org_id = ${id}::uuid and t.kind in ('access', 'refresh')
+        and t.revoked_at is null and t.expires_at > now()
+        and (${all} or t.user_id = ${claims.sub}::uuid)
+      group by t.client_id, k.name, t.user_id, p.display_name, u.email
+      order by max(coalesce(t.last_used_at, t.created_at)) desc`);
+    return c.json(
+      {
+        items: rows.map((r) => ({
+          ...r,
+          mine: r.user_id === claims.sub,
+          connected_at: iso(r.connected_at),
+          last_used_at: r.last_used_at ? iso(r.last_used_at) : null,
+        })),
+      },
+      200,
+    );
+  });
+
+  app.openapi(routes.revokeMcpConnection, async (c) => {
+    const claims = claimsOf(c);
+    const { id, client_id } = c.req.valid("param");
+    const userId = c.req.valid("query").user_id ?? claims.sub;
+    const admin = await isAdmin(claims, id);
+    if (userId !== claims.sub && !admin)
+      throw new ApiError(403, "forbidden", "Only owners and admins disconnect other people's apps");
+    const rows = await db.execute<{ id: string }>(sql`
+      update public.mcp_tokens set revoked_at = now()
+      where org_id = ${id}::uuid and user_id = ${userId}::uuid and client_id = ${client_id}
+        and kind in ('access', 'refresh') and revoked_at is null returning id`);
+    if (!rows[0]) throw new ApiError(404, "connection_not_found", "This app isn't connected");
+    await db.execute(sql`insert into public.audit_log (org_id, actor_type, actor_id, action, target_type, metadata)
+      values (${id}::uuid, 'user', ${claims.sub}::uuid, 'mcp.disconnected', 'mcp_client', ${JSON.stringify({ client_id, user_id: userId })}::jsonb)`);
+    return c.json({ revoked: client_id }, 200);
   });
 }

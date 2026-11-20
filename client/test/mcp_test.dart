@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:casama/features/mcp/mcp_screens.dart';
 import 'package:casama/features/workspaces/spaces.dart';
-import 'package:casama_sdk/casama_sdk.dart' show McpKey;
+import 'package:casama_sdk/casama_sdk.dart' show McpConnection, McpKey;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app_test.dart' show harness, setSize;
@@ -73,5 +73,58 @@ void main() {
     await tester.tap(find.byKey(const Key('confirmRevokeMcpKey')));
     await tester.pumpAndSettle();
     expect(backend.mcpActions, contains('revoke:k9'));
+  });
+  McpConnection conn(String client, String name, {bool mine = true, String user = 'u1'}) => McpConnection(
+        clientId: client,
+        clientName: name,
+        userId: user,
+        userName: mine ? 'Me' : 'Sam Lee',
+        mine: mine,
+        connectedAt: DateTime.now().subtract(const Duration(days: 2)),
+        lastUsedAt: DateTime.now().subtract(const Duration(hours: 3)),
+      );
+
+  testWidgets('admins see connected AI apps and disconnect one after confirming', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    await setSize(tester, const Size(900, 3000));
+    final backend = FakeBackend()
+      ..storedMcpConnections = [conn('kcl_a', 'Claude'), conn('kcl_b', 'Gemini CLI', mine: false, user: 'u2')];
+    await tester.pumpWidget(harness(backend, const WorkspaceSettingsScreen()));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(const Key('advanced-workspace.settings')));
+    await tester.tap(find.byKey(const Key('advanced-workspace.settings')));
+    await tester.pumpAndSettle();
+    expect(find.text('Connected AI Apps'), findsOneWidget);
+    expect(find.text('Claude'), findsOneWidget);
+    expect(find.text('Sam Lee · Used 3 hours ago'), findsOneWidget);
+    final disconnect = find.byKey(const Key('disconnectMcp-kcl_b-u2'));
+    await tester.ensureVisible(disconnect);
+    await tester.tap(disconnect);
+    await tester.pumpAndSettle();
+    expect(find.text('Disconnect Gemini CLI?'), findsOneWidget);
+    expect(backend.mcpActions, isEmpty);
+    await tester.tap(find.byKey(const Key('confirmDisconnectMcp')));
+    await tester.pumpAndSettle();
+    // Someone else's connection is named by its person, so the server cuts off the right one.
+    expect(backend.mcpActions, ['disconnect:kcl_b:u2']);
+    expect(find.text('Gemini CLI'), findsNothing);
+    expect(find.text('Claude'), findsOneWidget);
+  });
+
+  testWidgets("members see only their own connected apps, and nothing when they have none", (tester) async {
+    await setSize(tester, const Size(900, 1200));
+    final backend = FakeBackend();
+    await tester.pumpWidget(harness(backend, const SingleChildScrollView(child: McpConnectionsSection(orgId: 'o1'))));
+    await tester.pumpAndSettle();
+    expect(find.text('Connected AI Apps'), findsNothing);
+    backend.storedMcpConnections = [conn('kcl_a', 'ChatGPT')];
+    await tester.pumpWidget(harness(backend, const SingleChildScrollView(child: McpConnectionsSection(key: Key('again'), orgId: 'o2'))));
+    await tester.pumpAndSettle();
+    expect(find.text('ChatGPT'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('disconnectMcp-kcl_a-u1')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('confirmDisconnectMcp')));
+    await tester.pumpAndSettle();
+    expect(backend.mcpActions, ['disconnect:kcl_a']);
   });
 }

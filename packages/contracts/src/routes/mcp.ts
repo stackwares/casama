@@ -4,6 +4,7 @@ import {
   CreatedMcpKey,
   CreateMcpKeyRequest,
   McpAuthRequestInfo,
+  McpConnection,
   McpConsentRequest,
   McpConsentResult,
   McpKey,
@@ -47,6 +48,49 @@ export const revokeMcpKey = createRoute({
   request: { params: z.object({ id: Uuid, key_id: Uuid }) },
   responses: {
     200: jsonResponse("Revoked", z.object({ revoked: Uuid }).openapi("RevokedKey")),
+    401: e401,
+    403: e403,
+    404: e404,
+  },
+});
+
+export const listMcpConnections = createRoute({
+  operationId: "listMcpConnections",
+  method: "get",
+  path: "/v1/orgs/{id}/mcp-connections",
+  tags: ["mcp"],
+  security,
+  summary: "AI apps connected to this workspace with OAuth: your own, or everyone's for admins",
+  request: { params: z.object({ id: Uuid }) },
+  responses: {
+    200: jsonResponse(
+      "Connections",
+      z.object({ items: z.array(McpConnection) }).openapi("McpConnectionList"),
+    ),
+    401: e401,
+    403: e403,
+  },
+});
+
+export const revokeMcpConnection = createRoute({
+  operationId: "revokeMcpConnection",
+  method: "delete",
+  path: "/v1/orgs/{id}/mcp-connections/{client_id}",
+  tags: ["mcp"],
+  security,
+  summary:
+    "Disconnect an AI app at once: its access and refresh tokens stop working. Admins can disconnect anyone's.",
+  request: {
+    params: z.object({ id: Uuid, client_id: z.string().min(1).max(200) }),
+    query: z.object({
+      user_id: Uuid.optional().openapi({ description: "Whose connection (default: yours)" }),
+    }),
+  },
+  responses: {
+    200: jsonResponse(
+      "Disconnected",
+      z.object({ revoked: z.string() }).openapi("RevokedMcpConnection"),
+    ),
     401: e401,
     403: e403,
     404: e404,

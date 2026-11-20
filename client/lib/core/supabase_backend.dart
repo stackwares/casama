@@ -3582,6 +3582,15 @@ class SupabaseBackend implements Backend {
   }
 
   @override
+  Future<List<McpConnection>> mcpConnections(String orgId) async =>
+      (await api.mcp.listMcpConnections(id: orgId)).data!.items;
+
+  @override
+  Future<void> revokeMcpConnection(String orgId, String clientId, {String? userId}) async {
+    await api.mcp.revokeMcpConnection(id: orgId, clientId: clientId, userId: userId);
+  }
+
+  @override
   Future<bool> mcpDecideApprovals(String orgId) async =>
       (await api.privacy.getOrgSettings(id: orgId)).data!.mcpDecideApprovals;
 

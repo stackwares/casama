@@ -14,7 +14,8 @@ are in Vaultwarden, item **"Casama · store review account (review@casama.ai)"**
 | Name | Casama |
 | MCP address | `https://api.casama.ai/mcp` (Streamable HTTP, stateless) |
 | Docs-only address | `https://api.casama.ai/mcp/docs` (no sign-in) |
-| Sign-in | OAuth 2.1: protected-resource and authorization-server metadata under `/.well-known/`, dynamic client registration (`/oauth/register`), PKCE S256 required, public clients. Redirects must be `https` or `localhost`. Access token 1 hour, rotating refresh token 60 days. |
+| Sign-in | OAuth 2.1: protected-resource and authorization-server metadata under `/.well-known/`, dynamic client registration (`/oauth/register`), PKCE S256 required, public clients. Redirects must be `https` or `localhost`. Access token 1 hour, rotating refresh token 60 days. Token revocation (RFC 7009) at `/oauth/revoke`. |
+| Disconnecting | People see their connected apps in Workspace settings → Advanced → Connected AI Apps and disconnect one at once (admins: anyone's in the workspace). |
 | Scope of a connection | One person in one workspace, chosen on Casama's consent screen |
 | Tool annotations | Every tool has a title, `readOnlyHint` and `openWorldHint`; every tool that writes has `destructiveHint` (checked by `packages/mcp/test/annotations.test.ts`) |
 | Website | https://casama.ai |

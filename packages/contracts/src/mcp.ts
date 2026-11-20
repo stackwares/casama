@@ -13,6 +13,21 @@ export const McpKey = z
   })
   .openapi("McpKey");
 
+/** An AI app connected with OAuth (D-117): one person's grant to one app in one workspace. */
+export const McpConnection = z
+  .object({
+    client_id: z.string(),
+    client_name: z.string().openapi({ description: "The name the app registered with" }),
+    user_id: Uuid,
+    user_name: z
+      .string()
+      .openapi({ description: "Who connected it: their name, else their email" }),
+    mine: z.boolean(),
+    connected_at: ts,
+    last_used_at: ts.nullable(),
+  })
+  .openapi("McpConnection");
+
 export const CreatedMcpKey = McpKey.extend({
   key: z
     .string()

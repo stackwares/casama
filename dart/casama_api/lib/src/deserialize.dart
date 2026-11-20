@@ -427,6 +427,8 @@ import 'package:casama_api/src/model/local_mcp_sign_in_needed_event.dart';
 import 'package:casama_api/src/model/local_mcp_sign_in_needed_event_payload.dart';
 import 'package:casama_api/src/model/mark_teach_secret_request.dart';
 import 'package:casama_api/src/model/mcp_auth_request_info.dart';
+import 'package:casama_api/src/model/mcp_connection.dart';
+import 'package:casama_api/src/model/mcp_connection_list.dart';
 import 'package:casama_api/src/model/mcp_consent_request.dart';
 import 'package:casama_api/src/model/mcp_consent_result.dart';
 import 'package:casama_api/src/model/mcp_key.dart';
@@ -601,6 +603,7 @@ import 'package:casama_api/src/model/revert_page_request.dart';
 import 'package:casama_api/src/model/review_report_request.dart';
 import 'package:casama_api/src/model/revoked_key.dart';
 import 'package:casama_api/src/model/revoked_link_key.dart';
+import 'package:casama_api/src/model/revoked_mcp_connection.dart';
 import 'package:casama_api/src/model/routine.dart';
 import 'package:casama_api/src/model/routine_idea.dart';
 import 'package:casama_api/src/model/routine_idea_list.dart';
@@ -1816,6 +1819,10 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return MarkTeachSecretRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'McpAuthRequestInfo':
           return McpAuthRequestInfo.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'McpConnection':
+          return McpConnection.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'McpConnectionList':
+          return McpConnectionList.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'McpConsentRequest':
           return McpConsentRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'McpConsentResult':
@@ -2194,6 +2201,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return RevokedKey.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'RevokedLinkKey':
           return RevokedLinkKey.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'RevokedMcpConnection':
+          return RevokedMcpConnection.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Risk':
           
           

@@ -404,7 +404,9 @@ Class | Method | HTTP request | Description
 [*McpApi*](doc/McpApi.md) | [**createMcpKey**](doc/McpApi.md#createmcpkey) | **POST** /v1/orgs/{id}/mcp-keys | A workspace API key for the hosted MCP endpoint (admins); it acts as you in this workspace
 [*McpApi*](doc/McpApi.md) | [**decideMcpAuthRequest**](doc/McpApi.md#decidemcpauthrequest) | **POST** /v1/oauth/requests/{id}/consent | Allow or refuse an AI app&#39;s access to one workspace; returns where to send the browser
 [*McpApi*](doc/McpApi.md) | [**getMcpAuthRequest**](doc/McpApi.md#getmcpauthrequest) | **GET** /v1/oauth/requests/{id} | An AI app asking to connect, for the consent screen
+[*McpApi*](doc/McpApi.md) | [**listMcpConnections**](doc/McpApi.md#listmcpconnections) | **GET** /v1/orgs/{id}/mcp-connections | AI apps connected to this workspace with OAuth: your own, or everyone&#39;s for admins
 [*McpApi*](doc/McpApi.md) | [**listMcpKeys**](doc/McpApi.md#listmcpkeys) | **GET** /v1/orgs/{id}/mcp-keys | 
+[*McpApi*](doc/McpApi.md) | [**revokeMcpConnection**](doc/McpApi.md#revokemcpconnection) | **DELETE** /v1/orgs/{id}/mcp-connections/{client_id} | Disconnect an AI app at once: its access and refresh tokens stop working. Admins can disconnect anyone&#39;s.
 [*McpApi*](doc/McpApi.md) | [**revokeMcpKey**](doc/McpApi.md#revokemcpkey) | **DELETE** /v1/orgs/{id}/mcp-keys/{key_id} | 
 [*MemoryApi*](doc/MemoryApi.md) | [**deleteMemory**](doc/MemoryApi.md#deletememory) | **DELETE** /v1/bots/{id}/memories/{memoryId} | 
 [*MemoryApi*](doc/MemoryApi.md) | [**deleteMemoryBackend**](doc/MemoryApi.md#deletememorybackend) | **DELETE** /v1/orgs/{id}/memory-backend | Go back to the built-in memory (memories in the provider stay there)
@@ -1059,6 +1061,8 @@ Class | Method | HTTP request | Description
  - [LocalMcpSignInNeededEventPayload](doc/LocalMcpSignInNeededEventPayload.md)
  - [MarkTeachSecretRequest](doc/MarkTeachSecretRequest.md)
  - [McpAuthRequestInfo](doc/McpAuthRequestInfo.md)
+ - [McpConnection](doc/McpConnection.md)
+ - [McpConnectionList](doc/McpConnectionList.md)
  - [McpConsentRequest](doc/McpConsentRequest.md)
  - [McpConsentResult](doc/McpConsentResult.md)
  - [McpKey](doc/McpKey.md)
@@ -1243,6 +1247,7 @@ Class | Method | HTTP request | Description
  - [ReviewReportRequest](doc/ReviewReportRequest.md)
  - [RevokedKey](doc/RevokedKey.md)
  - [RevokedLinkKey](doc/RevokedLinkKey.md)
+ - [RevokedMcpConnection](doc/RevokedMcpConnection.md)
  - [Risk](doc/Risk.md)
  - [Routine](doc/Routine.md)
  - [RoutineIdea](doc/RoutineIdea.md)

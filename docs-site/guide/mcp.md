@@ -223,9 +223,18 @@ refused unless an owner or admin [allows it](#allow-approvals-from-ai-apps). Wha
 with what it reads is covered by that app's own privacy policy. See
 [Privacy and security](/guide/privacy) and [casama.ai/privacy](https://casama.ai/privacy).
 
-To disconnect an app, remove Casama in that app, which throws away its sign-in. An API key stops
-working as soon as it's revoked in **Connect AI Apps**, and leaving the workspace cuts off every
-connection you made to it. Questions:
+## See and disconnect connected apps
+
+Open **Settings → Workspace settings**, open **Advanced**, and find **Connected AI Apps**. It lists
+each app you connected by signing in, with when it was last used. Owners and admins see every
+person's connected apps in the workspace, with who connected each one.
+
+Tap **Disconnect** next to an app. It loses access to the workspace at once: its next request is
+refused and it can't renew its sign-in. To use it again, connect it again from the app. Removing
+Casama inside the app also ends its access.
+
+An API key stops working as soon as it's revoked in **Connect AI Apps**, and leaving the workspace
+cuts off every connection you made to it. Questions:
 [support@casama.ai](mailto:support@casama.ai).
 
 ## Limits

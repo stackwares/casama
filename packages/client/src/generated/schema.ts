@@ -6338,6 +6338,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/orgs/{id}/mcp-connections": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** AI apps connected to this workspace with OAuth: your own, or everyone's for admins */
+        get: operations["listMcpConnections"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/orgs/{id}/mcp-connections/{client_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Disconnect an AI app at once: its access and refresh tokens stop working. Admins can disconnect anyone's. */
+        delete: operations["revokeMcpConnection"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/orgs/{id}/mcp-keys/{key_id}": {
         parameters: {
             query?: never;
@@ -14255,8 +14289,28 @@ export interface components {
             /** Format: date-time */
             expires_at: string;
         };
+        McpConnectionList: {
+            items: components["schemas"]["McpConnection"][];
+        };
+        McpConnection: {
+            client_id: string;
+            /** @description The name the app registered with */
+            client_name: string;
+            /** Format: uuid */
+            user_id: string;
+            /** @description Who connected it: their name, else their email */
+            user_name: string;
+            mine: boolean;
+            /** Format: date-time */
+            connected_at: string;
+            /** Format: date-time */
+            last_used_at: string | null;
+        };
         McpKeyList: {
             items: components["schemas"]["McpKey"][];
+        };
+        RevokedMcpConnection: {
+            revoked: string;
         };
         RevokedKey: {
             /** Format: uuid */
@@ -37616,6 +37670,99 @@ export interface operations {
             };
             /** @description Not authenticated */
             401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    listMcpConnections: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Connections */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["McpConnectionList"];
+                };
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    revokeMcpConnection: {
+        parameters: {
+            query?: {
+                /** @description Whose connection (default: yours) */
+                user_id?: string;
+            };
+            header?: never;
+            path: {
+                id: string;
+                client_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Disconnected */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RevokedMcpConnection"];
+                };
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };

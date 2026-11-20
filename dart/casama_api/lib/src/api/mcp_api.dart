@@ -12,10 +12,12 @@ import 'package:dio/dio.dart';
 import 'package:casama_api/src/model/create_mcp_key_request.dart';
 import 'package:casama_api/src/model/created_mcp_key.dart';
 import 'package:casama_api/src/model/mcp_auth_request_info.dart';
+import 'package:casama_api/src/model/mcp_connection_list.dart';
 import 'package:casama_api/src/model/mcp_consent_request.dart';
 import 'package:casama_api/src/model/mcp_consent_result.dart';
 import 'package:casama_api/src/model/mcp_key_list.dart';
 import 'package:casama_api/src/model/revoked_key.dart';
+import 'package:casama_api/src/model/revoked_mcp_connection.dart';
 
 class McpApi {
 
@@ -297,6 +299,84 @@ _responseData = rawData == null ? null : deserialize<McpAuthRequestInfo, McpAuth
     );
   }
 
+  /// AI apps connected to this workspace with OAuth: your own, or everyone&#39;s for admins
+  /// 
+  ///
+  /// Parameters:
+  /// * [id] 
+  /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
+  /// * [headers] - Can be used to add additional headers to the request
+  /// * [extras] - Can be used to add flags to the request
+  /// * [validateStatus] - A [ValidateStatus] callback that can be used to determine request success based on the HTTP status of the response
+  /// * [onSendProgress] - A [ProgressCallback] that can be used to get the send progress
+  /// * [onReceiveProgress] - A [ProgressCallback] that can be used to get the receive progress
+  ///
+  /// Returns a [Future] containing a [Response] with a [McpConnectionList] as data
+  /// Throws [DioException] if API call or serialization fails
+  Future<Response<McpConnectionList>> listMcpConnections({ 
+    required String id,
+    CancelToken? cancelToken,
+    Map<String, dynamic>? headers,
+    Map<String, dynamic>? extra,
+    ValidateStatus? validateStatus,
+    ProgressCallback? onSendProgress,
+    ProgressCallback? onReceiveProgress,
+  }) async {
+    final _path = r'/v1/orgs/{id}/mcp-connections'.replaceAll('{' r'id' '}', id.toString());
+    final _options = Options(
+      method: r'GET',
+      headers: <String, dynamic>{
+        ...?headers,
+      },
+      extra: <String, dynamic>{
+        'secure': <Map<String, String>>[
+          {
+            'type': 'http',
+            'scheme': 'bearer',
+            'name': 'bearerAuth',
+          },
+        ],
+        ...?extra,
+      },
+      validateStatus: validateStatus,
+    );
+
+    final _response = await _dio.request<Object>(
+      _path,
+      options: _options,
+      cancelToken: cancelToken,
+      onSendProgress: onSendProgress,
+      onReceiveProgress: onReceiveProgress,
+    );
+
+    McpConnectionList? _responseData;
+
+    try {
+final rawData = _response.data;
+_responseData = rawData == null ? null : deserialize<McpConnectionList, McpConnectionList>(rawData, 'McpConnectionList', growable: true);
+
+    } catch (error, stackTrace) {
+      throw DioException(
+        requestOptions: _response.requestOptions,
+        response: _response,
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    return Response<McpConnectionList>(
+      data: _responseData,
+      headers: _response.headers,
+      isRedirect: _response.isRedirect,
+      requestOptions: _response.requestOptions,
+      redirects: _response.redirects,
+      statusCode: _response.statusCode,
+      statusMessage: _response.statusMessage,
+      extra: _response.extra,
+    );
+  }
+
   /// listMcpKeys
   /// 
   ///
@@ -364,6 +444,93 @@ _responseData = rawData == null ? null : deserialize<McpKeyList, McpKeyList>(raw
     }
 
     return Response<McpKeyList>(
+      data: _responseData,
+      headers: _response.headers,
+      isRedirect: _response.isRedirect,
+      requestOptions: _response.requestOptions,
+      redirects: _response.redirects,
+      statusCode: _response.statusCode,
+      statusMessage: _response.statusMessage,
+      extra: _response.extra,
+    );
+  }
+
+  /// Disconnect an AI app at once: its access and refresh tokens stop working. Admins can disconnect anyone&#39;s.
+  /// 
+  ///
+  /// Parameters:
+  /// * [id] 
+  /// * [clientId] 
+  /// * [userId] - Whose connection (default: yours)
+  /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
+  /// * [headers] - Can be used to add additional headers to the request
+  /// * [extras] - Can be used to add flags to the request
+  /// * [validateStatus] - A [ValidateStatus] callback that can be used to determine request success based on the HTTP status of the response
+  /// * [onSendProgress] - A [ProgressCallback] that can be used to get the send progress
+  /// * [onReceiveProgress] - A [ProgressCallback] that can be used to get the receive progress
+  ///
+  /// Returns a [Future] containing a [Response] with a [RevokedMcpConnection] as data
+  /// Throws [DioException] if API call or serialization fails
+  Future<Response<RevokedMcpConnection>> revokeMcpConnection({ 
+    required String id,
+    required String clientId,
+    String? userId,
+    CancelToken? cancelToken,
+    Map<String, dynamic>? headers,
+    Map<String, dynamic>? extra,
+    ValidateStatus? validateStatus,
+    ProgressCallback? onSendProgress,
+    ProgressCallback? onReceiveProgress,
+  }) async {
+    final _path = r'/v1/orgs/{id}/mcp-connections/{client_id}'.replaceAll('{' r'id' '}', id.toString()).replaceAll('{' r'client_id' '}', clientId.toString());
+    final _options = Options(
+      method: r'DELETE',
+      headers: <String, dynamic>{
+        ...?headers,
+      },
+      extra: <String, dynamic>{
+        'secure': <Map<String, String>>[
+          {
+            'type': 'http',
+            'scheme': 'bearer',
+            'name': 'bearerAuth',
+          },
+        ],
+        ...?extra,
+      },
+      validateStatus: validateStatus,
+    );
+
+    final _queryParameters = <String, dynamic>{
+      if (userId != null) r'user_id': userId,
+    };
+
+    final _response = await _dio.request<Object>(
+      _path,
+      options: _options,
+      queryParameters: _queryParameters,
+      cancelToken: cancelToken,
+      onSendProgress: onSendProgress,
+      onReceiveProgress: onReceiveProgress,
+    );
+
+    RevokedMcpConnection? _responseData;
+
+    try {
+final rawData = _response.data;
+_responseData = rawData == null ? null : deserialize<RevokedMcpConnection, RevokedMcpConnection>(rawData, 'RevokedMcpConnection', growable: true);
+
+    } catch (error, stackTrace) {
+      throw DioException(
+        requestOptions: _response.requestOptions,
+        response: _response,
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    return Response<RevokedMcpConnection>(
       data: _responseData,
       headers: _response.headers,
       isRedirect: _response.isRedirect,

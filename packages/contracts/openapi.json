@@ -24465,6 +24465,63 @@
           "expires_at"
         ]
       },
+      "McpConnectionList": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/McpConnection"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "McpConnection": {
+        "type": "object",
+        "properties": {
+          "client_id": {
+            "type": "string"
+          },
+          "client_name": {
+            "type": "string",
+            "description": "The name the app registered with"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "user_name": {
+            "type": "string",
+            "description": "Who connected it: their name, else their email"
+          },
+          "mine": {
+            "type": "boolean"
+          },
+          "connected_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "last_used_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "client_id",
+          "client_name",
+          "user_id",
+          "user_name",
+          "mine",
+          "connected_at",
+          "last_used_at"
+        ]
+      },
       "McpKeyList": {
         "type": "object",
         "properties": {
@@ -24477,6 +24534,17 @@
         },
         "required": [
           "items"
+        ]
+      },
+      "RevokedMcpConnection": {
+        "type": "object",
+        "properties": {
+          "revoked": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "revoked"
         ]
       },
       "RevokedKey": {
@@ -59943,6 +60011,151 @@
           },
           "401": {
             "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/orgs/{id}/mcp-connections": {
+      "get": {
+        "operationId": "listMcpConnections",
+        "tags": [
+          "mcp"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "AI apps connected to this workspace with OAuth: your own, or everyone's for admins",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Connections",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/McpConnectionList"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/orgs/{id}/mcp-connections/{client_id}": {
+      "delete": {
+        "operationId": "revokeMcpConnection",
+        "tags": [
+          "mcp"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Disconnect an AI app at once: its access and refresh tokens stop working. Admins can disconnect anyone's.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "required": true,
+            "name": "client_id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Whose connection (default: yours)"
+            },
+            "required": false,
+            "description": "Whose connection (default: yours)",
+            "name": "user_id",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Disconnected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RevokedMcpConnection"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
             "content": {
               "application/problem+json": {
                 "schema": {

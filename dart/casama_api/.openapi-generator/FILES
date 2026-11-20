@@ -514,6 +514,8 @@ lib/src/model/local_mcp_sign_in_needed_event.dart
 lib/src/model/local_mcp_sign_in_needed_event_payload.dart
 lib/src/model/mark_teach_secret_request.dart
 lib/src/model/mcp_auth_request_info.dart
+lib/src/model/mcp_connection.dart
+lib/src/model/mcp_connection_list.dart
 lib/src/model/mcp_consent_request.dart
 lib/src/model/mcp_consent_result.dart
 lib/src/model/mcp_key.dart
@@ -698,6 +700,7 @@ lib/src/model/revert_page_request.dart
 lib/src/model/review_report_request.dart
 lib/src/model/revoked_key.dart
 lib/src/model/revoked_link_key.dart
+lib/src/model/revoked_mcp_connection.dart
 lib/src/model/risk.dart
 lib/src/model/routine.dart
 lib/src/model/routine_idea.dart

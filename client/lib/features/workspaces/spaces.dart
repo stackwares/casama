@@ -459,6 +459,7 @@ class _WorkspaceSettingsScreenState extends ConsumerState<WorkspaceSettingsScree
             if (org.role.value == 'owner') ...[const SizedBox(height: AppSpace.lg), EncryptionSection(orgId: org.id)],
             if (org.role.value == 'owner') ...[const SizedBox(height: AppSpace.lg), PaymentsSection(orgId: org.id)],
             if (admin) ...[const SizedBox(height: AppSpace.lg), McpSettingsSection(orgId: org.id)],
+            if (!admin) ...[const SizedBox(height: AppSpace.lg), McpConnectionsSection(orgId: org.id)],
             if (admin) ...[const SizedBox(height: AppSpace.lg), WorkspaceFilesSection(orgId: org.id)],
           ],
         ),

@@ -6664,3 +6664,12 @@ password and code (D-448), and delegated the rest ("build them all now in 1 go!"
   three seconds after the sheet, the console locks.
 - **Tests:** `client/test/admin_quick_unlock_test.dart`; passkey tokens in
   `apps/server/test/admin.test.ts`.
+
+## D-451 Connected AI apps can be seen and disconnected from Casama (2026-11-20)
+
+- **Why:** an app connected with OAuth (D-117) could only be cut off from the app's own side, or by leaving the workspace. Connector directories (Claude, ChatGPT) expect people to see and end a connection from the service too.
+- **What a connection is:** one person's grant to one registered app (`client_id`) in one workspace, live while it has an unrevoked, unexpired access or refresh token. Refreshing keeps the same grant.
+- **API:** `GET /v1/orgs/{id}/mcp-connections` lists them with the app's registered name, who connected it, when, and when it was last used. Members see their own; owners and admins see everyone's. `DELETE /v1/orgs/{id}/mcp-connections/{client_id}` (`?user_id=` for someone else's, admins only) revokes every access and refresh token of that grant at once, so the app's next call gets 401 and its refresh fails. Audited as `mcp.disconnected`.
+- **Apps can disconnect themselves:** `POST /oauth/revoke` (RFC 7009, announced as `revocation_endpoint`) takes an access or refresh token and ends its whole grant. It always answers 200. API keys aren't revoked there; admins revoke them in the app.
+- **App:** Workspace settings → Advanced → Connect AI Apps → **Connected AI Apps** (admins, all of them, with the person's name), and the same list for members with only their own, shown only when they have one. **Disconnect** asks first.
+- **Tests:** `apps/server/test/hosted-mcp.test.ts` (list scoped by role, a member can't cut off another's app, access and refresh both stop, 404 the second time, admin disconnects a member's, RFC 7009), `client/test/mcp_test.dart`.

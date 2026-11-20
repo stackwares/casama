@@ -2098,6 +2098,10 @@ abstract class Backend {
   Future<List<McpKey>> mcpKeys(String orgId);
   Future<CreatedMcpKey> createMcpKey(String orgId, String name);
   Future<void> revokeMcpKey(String orgId, String keyId);
+  /// AI apps connected with OAuth: the caller's own, or everyone's for admins.
+  Future<List<McpConnection>> mcpConnections(String orgId);
+  /// Disconnects an app at once ([userId]: whose; default the caller's own).
+  Future<void> revokeMcpConnection(String orgId, String clientId, {String? userId});
   Future<bool> mcpDecideApprovals(String orgId);
   Future<void> setMcpDecideApprovals(String orgId, bool allowed);
   // Full access switch (D-394)

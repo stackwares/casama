@@ -617,6 +617,17 @@ class FakeBackend implements Backend {
   @override
   Future<void> revokeMcpKey(String orgId, String keyId) async =>
       mcpActions.add('revoke:$keyId');
+  List<McpConnection> storedMcpConnections = [];
+  @override
+  Future<List<McpConnection>> mcpConnections(String orgId) async => storedMcpConnections;
+  @override
+  Future<void> revokeMcpConnection(String orgId, String clientId, {String? userId}) async {
+    mcpActions.add('disconnect:$clientId${userId == null ? '' : ':$userId'}');
+    storedMcpConnections = [
+      for (final c in storedMcpConnections)
+        if (!(c.clientId == clientId && (userId == null ? c.mine : c.userId == userId))) c,
+    ];
+  }
   @override
   Future<bool> mcpDecideApprovals(String orgId) async => mcpApprovals;
   @override

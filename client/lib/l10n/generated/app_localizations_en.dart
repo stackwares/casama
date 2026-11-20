@@ -6929,6 +6929,39 @@ class AppLocalizationsEn extends AppLocalizations {
       'Apps that support MCP connect to this address and sign in, or use an API key. They act as the person who connected them.';
 
   @override
+  String get connectedAiApps => 'Connected AI Apps';
+
+  @override
+  String get connectedAiAppsHelp =>
+      'Apps you connected by signing in. Disconnect one and it loses access to this workspace right away.';
+
+  @override
+  String get connectedAiAppsAdminHelp =>
+      'Apps that people in this workspace connected by signing in. Disconnect one and it loses access right away.';
+
+  @override
+  String get noConnectedAiApps => 'No AI apps connected yet.';
+
+  @override
+  String mcpConnectionUsed(String when) {
+    return 'Used $when';
+  }
+
+  @override
+  String mcpConnectionConnected(String when) {
+    return 'Connected $when';
+  }
+
+  @override
+  String mcpConnectionBy(String person, String when) {
+    return '$person · $when';
+  }
+
+  @override
+  String get disconnectAiAppBody =>
+      'It stops working in this workspace right away. To use it again, connect it again from the app.';
+
+  @override
   String get mcpApprovals => 'Allow Approvals from AI Apps';
 
   @override

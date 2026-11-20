@@ -11068,6 +11068,54 @@ abstract class AppLocalizations {
   /// **'Apps that support MCP connect to this address and sign in, or use an API key. They act as the person who connected them.'**
   String get connectAiAppsHelp;
 
+  /// No description provided for @connectedAiApps.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected AI Apps'**
+  String get connectedAiApps;
+
+  /// No description provided for @connectedAiAppsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Apps you connected by signing in. Disconnect one and it loses access to this workspace right away.'**
+  String get connectedAiAppsHelp;
+
+  /// No description provided for @connectedAiAppsAdminHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Apps that people in this workspace connected by signing in. Disconnect one and it loses access right away.'**
+  String get connectedAiAppsAdminHelp;
+
+  /// No description provided for @noConnectedAiApps.
+  ///
+  /// In en, this message translates to:
+  /// **'No AI apps connected yet.'**
+  String get noConnectedAiApps;
+
+  /// No description provided for @mcpConnectionUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'Used {when}'**
+  String mcpConnectionUsed(String when);
+
+  /// No description provided for @mcpConnectionConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected {when}'**
+  String mcpConnectionConnected(String when);
+
+  /// No description provided for @mcpConnectionBy.
+  ///
+  /// In en, this message translates to:
+  /// **'{person} · {when}'**
+  String mcpConnectionBy(String person, String when);
+
+  /// No description provided for @disconnectAiAppBody.
+  ///
+  /// In en, this message translates to:
+  /// **'It stops working in this workspace right away. To use it again, connect it again from the app.'**
+  String get disconnectAiAppBody;
+
   /// No description provided for @mcpApprovals.
   ///
   /// In en, this message translates to:

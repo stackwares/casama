@@ -171,6 +171,10 @@ final _mcpKeysProvider = FutureProvider.autoDispose
     .family<List<McpKey>, String>(
       (ref, orgId) => ref.watch(backendProvider).mcpKeys(orgId),
     );
+final _mcpConnectionsProvider = FutureProvider.autoDispose
+    .family<List<McpConnection>, String>(
+      (ref, orgId) => ref.watch(backendProvider).mcpConnections(orgId),
+    );
 final _mcpApprovalsProvider = FutureProvider.autoDispose.family<bool, String>(
   (ref, orgId) => ref.watch(backendProvider).mcpDecideApprovals(orgId),
 );
@@ -310,7 +314,84 @@ class _McpSettingsSectionState extends ConsumerState<McpSettingsSection> {
             },
           ),
         ),
+        const SizedBox(height: AppSpace.lg),
+        McpConnectionsSection(orgId: widget.orgId, admin: true),
       ],
     );
+  }
+}
+
+/// AI apps connected with OAuth, each with Disconnect (its tokens stop working at once). Admins
+/// see everyone's in the workspace; members see their own, and only when they have one.
+class McpConnectionsSection extends ConsumerWidget {
+  const McpConnectionsSection({super.key, required this.orgId, this.admin = false});
+  final String orgId;
+  final bool admin;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final async = ref.watch(_mcpConnectionsProvider(orgId));
+    final items = async.value ?? const <McpConnection>[];
+    if (!admin && items.isEmpty) return const SizedBox.shrink();
+    return Column(
+      key: const Key('mcpConnections'),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SectionHeader(title: l10n.connectedAiApps),
+        FormNote(admin ? l10n.connectedAiAppsAdminHelp : l10n.connectedAiAppsHelp),
+        const SizedBox(height: AppSpace.sm),
+        if (items.isEmpty && async.hasValue)
+          FormNote(l10n.noConnectedAiApps)
+        else
+          GroupedCard(
+            children: [
+              for (final c in items)
+                GroupedTile(
+                  key: Key('mcpConnection-${c.clientId}-${c.userId}'),
+                  icon: LucideIcons.plug,
+                  title: c.clientName,
+                  subtitle: _subtitle(context, c),
+                  trailing: TextButton(
+                    key: Key('disconnectMcp-${c.clientId}-${c.userId}'),
+                    style: TextButton.styleFrom(foregroundColor: context.colorScheme.error),
+                    onPressed: () => _disconnect(context, ref, c),
+                    child: Text(l10n.disconnect),
+                  ),
+                ),
+            ],
+          ),
+      ],
+    );
+  }
+
+  String _subtitle(BuildContext context, McpConnection c) {
+    final l10n = context.l10n;
+    final used = c.lastUsedAt;
+    final when = used != null
+        ? l10n.mcpConnectionUsed(relativeTime(used, context))
+        : l10n.mcpConnectionConnected(relativeTime(c.connectedAt, context));
+    return c.mine ? when : l10n.mcpConnectionBy(c.userName, when);
+  }
+
+  Future<void> _disconnect(BuildContext context, WidgetRef ref, McpConnection c) async {
+    final l10n = context.l10n;
+    final ok = await showConfirm(
+      context: context,
+      title: l10n.disconnectTitle(c.clientName),
+      message: l10n.disconnectAiAppBody,
+      confirmLabel: l10n.disconnect,
+      destructive: true,
+      icon: LucideIcons.plug,
+      confirmKey: const Key('confirmDisconnectMcp'),
+    );
+    if (!ok || !context.mounted) return;
+    await runGuarded(
+      context,
+      () => ref
+          .read(backendProvider)
+          .revokeMcpConnection(orgId, c.clientId, userId: c.mine ? null : c.userId),
+    );
+    ref.invalidate(_mcpConnectionsProvider(orgId));
   }
 }

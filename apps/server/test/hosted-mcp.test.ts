@@ -30,6 +30,53 @@ const connect = async (bearer: string) => {
 const textOf = (r: unknown) =>
   (r as { content: Array<{ text: string }> }).content.map((c) => c.text).join("\n");
 
+/** The whole OAuth flow for one person: register an app, consent in a workspace, get tokens. */
+const oauthConnect = async (token: string, org: string, name: string) => {
+  const reg = (await (
+    await fetch(`${base}/oauth/register`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ client_name: name, redirect_uris: ["https://ai.example/cb"] }),
+    })
+  ).json()) as Record<string, string>;
+  const verifier = randomBytes(32).toString("base64url");
+  const challenge = createHash("sha256").update(verifier).digest("base64url");
+  const auth = await fetch(
+    `${base}/oauth/authorize?response_type=code&client_id=${reg.client_id}&redirect_uri=${encodeURIComponent("https://ai.example/cb")}&code_challenge=${challenge}&code_challenge_method=S256`,
+    { redirect: "manual" },
+  );
+  const requestId = (auth.headers.get("location") ?? "").split("/").pop() as string;
+  const consent = await j(
+    await h.request(`/v1/oauth/requests/${requestId}/consent`, {
+      method: "POST",
+      token,
+      json: { org_id: org, approve: true },
+    }),
+  );
+  const tokens = (await (
+    await fetch(`${base}/oauth/token`, {
+      method: "POST",
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        grant_type: "authorization_code",
+        code: new URL(consent.redirect_url).searchParams.get("code") as string,
+        code_verifier: verifier,
+      }),
+    })
+  ).json()) as Record<string, string>;
+  return { clientId: reg.client_id as string, ...tokens } as {
+    clientId: string;
+    access_token: string;
+    refresh_token: string;
+  };
+};
+const refreshWith = (refresh: string) =>
+  fetch(`${base}/oauth/token`, {
+    method: "POST",
+    headers: { "content-type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({ grant_type: "refresh_token", refresh_token: refresh }),
+  });
+
 beforeAll(async () => {
   h = await startHarness({ worker: { fixtures: FIXTURES } });
   server = serve({ fetch: h.app.fetch, port: 0 }) as unknown as Server;
@@ -260,5 +307,80 @@ describe("hosted MCP", () => {
       token: owner.token,
     });
     await expect(connect(key.key)).rejects.toThrow();
+  });
+  it("lists connected apps and disconnects one at once; members see and cut off only their own", async () => {
+    const member = await h.user("mcp-member@example.com");
+    await h.tdb
+      .admin`insert into public.memberships (org_id, user_id, role) values (${orgId}, ${member.id}, 'member')`;
+    const mine = await oauthConnect(owner.token, orgId, "Claude");
+    const theirs = await oauthConnect(member.token, orgId, "Gemini CLI");
+    const list = async (t: string) =>
+      (await j(await h.request(`/v1/orgs/${orgId}/mcp-connections`, { token: t }))).items as Array<{
+        client_id: string;
+        client_name: string;
+        user_id: string;
+        mine: boolean;
+      }>;
+    // Admins see everyone's; members only their own.
+    const all = await list(owner.token);
+    expect(all.map((x) => x.client_name)).toEqual(expect.arrayContaining(["Claude", "Gemini CLI"]));
+    expect(all.find((x) => x.client_id === mine.clientId)?.mine).toBe(true);
+    expect((await list(member.token)).map((x) => x.client_name)).toEqual(["Gemini CLI"]);
+    // A member can't disconnect someone else's app.
+    const denied = await h.request(
+      `/v1/orgs/${orgId}/mcp-connections/${mine.clientId}?user_id=${owner.id}`,
+      { method: "DELETE", token: member.token },
+    );
+    expect(denied.status).toBe(403);
+    // Disconnecting ends it at once: the access token and the refresh token both stop working.
+    const client = await connect(mine.access_token);
+    await client.close();
+    const res = await h.request(`/v1/orgs/${orgId}/mcp-connections/${mine.clientId}`, {
+      method: "DELETE",
+      token: owner.token,
+    });
+    expect(res.status).toBe(200);
+    await expect(connect(mine.access_token)).rejects.toThrow();
+    expect((await refreshWith(mine.refresh_token)).status).toBe(400);
+    expect((await list(owner.token)).some((x) => x.client_id === mine.clientId)).toBe(false);
+    // Again: nothing left to disconnect.
+    const again = await h.request(`/v1/orgs/${orgId}/mcp-connections/${mine.clientId}`, {
+      method: "DELETE",
+      token: owner.token,
+    });
+    expect(again.status).toBe(404);
+    // An admin can disconnect a member's app.
+    const byAdmin = await h.request(
+      `/v1/orgs/${orgId}/mcp-connections/${theirs.clientId}?user_id=${member.id}`,
+      { method: "DELETE", token: owner.token },
+    );
+    expect(byAdmin.status).toBe(200);
+    await expect(connect(theirs.access_token)).rejects.toThrow();
+    const [audit] = await h.tdb.admin<{ n: number }[]>`
+      select count(*)::int as n from public.audit_log where org_id = ${orgId} and action = 'mcp.disconnected'`;
+    expect(audit?.n).toBe(2);
+  });
+
+  it("an app can revoke its own grant (RFC 7009)", async () => {
+    const meta = (await (
+      await fetch(`${base}/.well-known/oauth-authorization-server`)
+    ).json()) as Record<string, string>;
+    expect(meta.revocation_endpoint).toBe(`${base}/oauth/revoke`);
+    const t = await oauthConnect(owner.token, orgId, "Phone AI 2");
+    const revoke = await fetch(`${base}/oauth/revoke`, {
+      method: "POST",
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ token: t.refresh_token, token_type_hint: "refresh_token" }),
+    });
+    expect(revoke.status).toBe(200);
+    // Revoking the refresh token ends the access token from the same grant too.
+    await expect(connect(t.access_token)).rejects.toThrow();
+    // Unknown tokens get the same answer.
+    const unknown = await fetch(`${base}/oauth/revoke`, {
+      method: "POST",
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ token: "kmcp_nope" }),
+    });
+    expect(unknown.status).toBe(200);
   });
 });
