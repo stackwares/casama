@@ -17,12 +17,12 @@ import {
   getConnectionSettings,
   setConnectionSettings,
 } from "../../services/connection-settings.ts";
-import { mailReservedNames, setMailReservedNames } from "../../services/mail-reserved-names.ts";
 import {
   getDecisionSettings,
   loadDecisionResults,
   setDecisionSettings,
 } from "../../services/decisions.ts";
+import { mailReservedNames, setMailReservedNames } from "../../services/mail-reserved-names.ts";
 import { CASAMA_VERSION } from "../../version.ts";
 import {
   ADMIN_PIN_MAX_FAILURES,
