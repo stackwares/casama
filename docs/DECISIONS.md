@@ -6660,13 +6660,16 @@ windows bound its remaining admin validity.
   access. External thread replies (someone off the allowed list answering mail the bot sent)
   never run with the owner's full access, every non-`selfOnly` tool asks, and the run is built
   without the person's private context (about-you facts, memories), so an injected question can't
-  be answered from it. Outbound mail carries Casama's own `Message-ID` (`<uuid@MAIL_DOMAIN>`),
-  stored with the sender's id, so reply threading and bounce counting don't depend on the vendor.
+  be answered from it. Outbound mail keeps a real `Message-ID` (Casama's own where the sender takes one, else the
+  sender's) next to the sender's id, so reply threading and bounce counting work on either sender.
 - **Privacy & encryption:** `mail_messages.content` is included in `SEALED_COLUMNS` for
   encryption-at-rest and data key rotation (D-238); account/workspace deletion purges stored
   `.eml` and attachment objects before cascading rows.
 - **Domain (2026-11-20):** `casama.app`, used bare (`ada@casama.app`); its web traffic only
   redirects to `casama.ai`. Not `mail.casama.app`: Cloudflare's catch-all routing rule works on
   a zone's apex only, and a subdomain's literal rules stop at 200.
-- **Plan:** `docs/BOT-EMAIL-PLAN.md`. Phases 1–4 built; Email Routing and the mail Worker are live
-  on `casama.app`; sending waits on Workers Paid, then the rest of Phase 0 and the deploy.
+- **Message-ID (Phase 0, 2026-11-20):** Cloudflare Email Sending refuses a send carrying a custom
+  `Message-ID`, and sets its own, which its delivery events carry. Senders declare
+  `customMessageId`; on Cloudflare the returned id is kept, on Resend Casama's own goes out.
+- **Plan:** `docs/BOT-EMAIL-PLAN.md`. Phases 1–4 built; Cloudflare is set up on `casama.app`
+  (routing, Worker, sending on Workers Paid, delivery events). Left: server settings and deploy.

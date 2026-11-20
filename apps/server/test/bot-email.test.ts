@@ -34,6 +34,7 @@ beforeAll(async () => {
     domain: "mail.test",
     sender: {
       name: "resend",
+      customMessageId: true,
       send: async (msg) => {
         sent.push(msg);
         return { messageId: `<sent-${sent.length}@mail.test>` };
@@ -1893,4 +1894,46 @@ describe("audit hardening", () => {
       select trigger from public.runs where bot_id = ${botId}::uuid order by created_at desc limit 1`);
     expect(r?.trigger).toBe("channel");
   });
+
+  it("keeps Cloudflare's own Message-ID, never sending one of ours", async () => {
+    const { u, botId } = await setup("cfid@example.com", "Cfid");
+    const claimed = await j(
+      await h.request(`/v1/bots/${botId}/email`, {
+        method: "POST",
+        token: u.token,
+        json: { name: "cfid" },
+      }),
+    );
+    const ch = (await loadChannel(h.handle.db, claimed.channel_id))!;
+    const seen: HostedMailMessage[] = [];
+    const cf = {
+      name: "cloudflare" as const,
+      customMessageId: false,
+      send: async (msg: HostedMailMessage) => {
+        seen.push(msg);
+        return { messageId: "<cf-generated@mail.test>" };
+      },
+    };
+    const err = await sendThrough(
+      h.handle.db,
+      ch,
+      { to: "cfid@acme.org", subject: "hi" },
+      "hello",
+      fetch,
+      "cfid@acme.org|hi",
+      undefined,
+      undefined,
+      cf,
+    );
+    expect(err).toBeNull();
+    expect(Object.keys(seen[0]?.headers ?? {})).not.toContain("Message-ID");
+    const [row] = await h.handle.db.execute<{ message_id: string; provider_message_id: string }>(sql`
+      select m.message_id, m.provider_message_id from public.mail_messages m
+      join public.mail_addresses a on a.id = m.address_id where a.local_part = 'cfid' and m.direction = 'out'`);
+    expect(row).toMatchObject({
+      message_id: "<cf-generated@mail.test>",
+      provider_message_id: "<cf-generated@mail.test>",
+    });
+  });
 });
+

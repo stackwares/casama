@@ -624,8 +624,11 @@ async function sendHostedMail(
     typeof reply.in_reply_to === "string" ? reply.in_reply_to.slice(0, 500) : undefined;
   const threadKey = o.threadKey ? o.threadKey.slice(0, 300) : null;
   const size = Buffer.byteLength(text) + files.reduce((n, x) => n + x.bytes.length, 0);
-  // Casama's own Message-ID, so replies thread on it whatever id the sending service keeps.
-  const ownMessageId = `<${randomUUID()}@${address.split("@")[1] || "casama.invalid"}>`;
+  // Casama's own Message-ID where the sender takes one (Resend), so replies thread on it whatever
+  // id the service keeps; Cloudflare sets its own, kept after the send.
+  const ownMessageId = o.sender.customMessageId
+    ? `<${randomUUID()}@${address.split("@")[1] || "casama.invalid"}>`
+    : null;
 
   // Atomically verify status, suppressions, daily caps and the reply-loop guard, then insert a
   // placeholder mail_messages row under an org-scoped advisory lock so parallel runs can't
@@ -725,7 +728,7 @@ async function sendHostedMail(
   const fromName =
     (b?.name ?? reserved.localPart).replace(/["<>]/g, "").trim() || reserved.localPart;
   const headers: Record<string, string> = {
-    "Message-ID": ownMessageId,
+    ...(ownMessageId ? { "Message-ID": ownMessageId } : {}),
     "Auto-Submitted": inReplyTo ? "auto-replied" : "auto-generated",
     ...(inReplyTo ? { "In-Reply-To": inReplyTo, References: inReplyTo } : {}),
   };
@@ -752,7 +755,9 @@ async function sendHostedMail(
   }
   if (providerId)
     await db.execute(sql`
-      update public.mail_messages set provider_message_id = ${providerId.slice(0, 500)}
+      update public.mail_messages
+      set provider_message_id = ${providerId.slice(0, 500)},
+          message_id = coalesce(message_id, ${providerId.slice(0, 500)})
       where id = ${reserved.rowId}::uuid`);
   track(db, { event: "mail_sent", userId: c.created_by, orgId: c.org_id });
   // Every sent mail is counted with its real cost, never billed (BOT-EMAIL-PLAN §10).
@@ -760,7 +765,7 @@ async function sendHostedMail(
     insert into public.usage_ledger (org_id, bot_id, kind, quantity, cost_usd, billable, meta)
     values (${c.org_id}::uuid, ${c.bot_id}::uuid, 'emails_sent', 1, 0.00035, false,
             ${JSON.stringify({ sender: o.sender.name })}::jsonb)`);
-  return ownMessageId;
+  return ownMessageId ?? providerId;
 }
 
 /** Sends text through a channel; failures are logged and returned. iMessage goes through the Mac's tunnel. */

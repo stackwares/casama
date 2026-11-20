@@ -56,6 +56,7 @@ export function workerMailSender(mail: HostedMail | undefined): HostedMailSender
   if (!mail.sendPaused) return mail.sender;
   return {
     name: mail.sender.name,
+    customMessageId: mail.sender.customMessageId,
     send: async () => {
       throw new Error("Hosted mail sending is paused on this server");
     },

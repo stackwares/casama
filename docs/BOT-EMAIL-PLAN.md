@@ -2,8 +2,9 @@
 
 Status: **built, not live** (written 2026-11-20; Phases 1–4 merged to `main` with audit fixes,
 D-449, not deployed). §13 is built on the recommendations until Oliver says otherwise. It stays
-off until a server has MAIL_DOMAIN and its keys. The mail domain is `casama.app` (bought, Email
-Routing and the Worker live); sending waits on Workers Paid, then Phase 0 and the deploy.
+off until a server has MAIL_DOMAIN and its keys. Cloudflare is set up on `casama.app` (routing,
+the Worker, sending, delivery events) and Phase 0 is mostly answered; what's left is the server's
+settings and the deploy.
 
 As built (Phase 1): the Worker's existence check is `GET /hooks/mail?to=…`, not HEAD (Hono
 doesn't match HEAD routes). Resend's received-email API reports sender checks in an
@@ -482,16 +483,29 @@ Oliver's yes.
 
 Against the local stack through `api-dev.casama.ai`, with a throwaway Worker.
 
-Findings so far (2026-11-20, on `casama.app`):
+Findings (2026-11-20, on `casama.app`, with real mail sent from `casama.app` to itself):
 
-- Done: Email Routing is on, with the catch-all rule sending every mail to the `casama-mail`
-  Worker, deployed with `MAIL_HOOK_SECRET` (vault: "Casama · Mail hook secret"). Until the server
-  is deployed with mail, the API answers the hook with a plain 404, which the Worker treats as
-  "try again later".
-- Blocked: Email Sending needs **Workers Paid** ($5 a month); the Stackwares account is on
-  Workers Free, so every Email Sending call is refused. Oliver subscribes in the dashboard
-  (Workers & Pages → Plans); then onboarding `casama.app` for sending, the delivery-events queue
-  and subscription, and the server's sending token follow.
+- **Set up:** Email Routing on, catch-all rule → `casama-mail` Worker (with `MAIL_HOOK_SECRET`,
+  vault "Casama · Mail hook secret"). Workers Paid bought. Email Sending onboarded on
+  `casama.app` (bounce MX, SPF, DKIM, `DMARC p=reject`). Queue `casama-mail-events` (dead
+  letters to `casama-mail-events-dlq`) fed by the event subscription `casama-app-sending`
+  (delivered, bounced, complained), consumed by the Worker. Server token with Email Sending only:
+  vault "Casama · Cloudflare Email Sending token (casama.app bot mail)".
+- **Quota:** starts at 1,000 sends a day; recipients arbitrary.
+- **Message-ID:** Cloudflare **refuses a send that sets its own `Message-ID`** (`email.invalid`).
+  It gives each mail `<random@casama.app>`, returns it as `message_id`, puts it in the header,
+  and delivery events carry the same value. So on Cloudflare the code keeps that id; Casama's own
+  Message-ID goes out only through senders that take one (Resend).
+- **Authentication-Results:** Cloudflare puts its trace block (Received, ARC-*, Received-SPF,
+  then `Authentication-Results: mx.cloudflare.net; … dmarc=pass header.from=… policy.dmarc=…`)
+  above every header of the original mail, so the first `Authentication-Results` header is
+  always Cloudflare's; anything a sender plants sits below it. Planting one through Email Sending
+  itself isn't possible: it refuses custom `Authentication-Results` headers.
+- **Size:** a 20.5 MiB mail reached the Worker whole.
+- **Envelope sender:** Cloudflare-sent mail arrives from `…@cf-bounce.casama.app` (not empty),
+  so it isn't taken for automatic mail.
+- Still to check after the deploy: what senders see for "no such address" and retries, and a mail
+  to Gmail and Outlook landing in the inbox.
 
 - A mail to any name on the domain reaches the Worker; so does a plus address.
 - The `Authentication-Results` header is there and reads as documented, including for a mail
@@ -505,7 +519,7 @@ Findings so far (2026-11-20, on `casama.app`):
 - Email Sending is available on the account; its starting daily quota; a mail to Gmail and to
   Outlook lands in the inbox.
 - Delivery events arrive through a queue.
-- Whether the account is already on Workers Paid. **No** (2026-11-20): it has to be bought.
+- Whether the account is already on Workers Paid. It wasn't; bought 2026-11-20.
 
 **Done when** each line has an answer written into this plan. Anything that fails changes the
 design before code starts (the fallback is Resend for sending).
@@ -628,7 +642,7 @@ Each has a recommendation; the plan above assumes it.
 ## 16. Left for Oliver
 
 - ~~Buy the mail domain and add it to the Stackwares Cloudflare account.~~ Done: `casama.app`.
-- Subscribe the Stackwares account to Workers Paid, for Email Sending.
+- ~~Subscribe the Stackwares account to Workers Paid, for Email Sending.~~ Done 2026-11-20.
 - Answers to §13.
 - A yes for the Cloudflare changes (Email Routing, the Worker, Email Sending) when Phase 0
   starts, and for each deploy and app build after that.

@@ -220,6 +220,12 @@ export interface HostedMailMessage {
 
 export interface HostedMailSender {
   readonly name: "cloudflare" | "resend";
+  /**
+   * Whether it takes Casama's own Message-ID header. Cloudflare refuses the send when one is set
+   * (checked 2026-11-20) and gives the mail its own `<…@domain>` Message-ID, which its delivery
+   * events also carry; that one is kept instead.
+   */
+  readonly customMessageId: boolean;
   send(msg: HostedMailMessage, f: typeof fetch): Promise<{ messageId: string | null }>;
 }
 
@@ -234,6 +240,7 @@ const asError = async (res: Response, who: string): Promise<Error> => {
 /** Cloudflare Email Sending over its REST API (BOT-EMAIL-PLAN §6.4). */
 export class CloudflareMailSender implements HostedMailSender {
   readonly name = "cloudflare" as const;
+  readonly customMessageId = false;
   private base: string;
   private accountId: string;
   private apiToken: string;
@@ -250,6 +257,9 @@ export class CloudflareMailSender implements HostedMailSender {
       (msg.attachments ?? []).reduce((n, a) => n + Math.ceil(a.bytes.length / 3) * 4, 0);
     if (size > HOSTED_MAIL_MAX_BYTES)
       throw new Error(`Mail is too large (${(size / 1048576).toFixed(1)} MiB; at most 25 MiB)`);
+    // Cloudflare sets the Message-ID itself and refuses a send that sets one.
+    const kept = Object.entries(msg.headers ?? {}).filter(([k]) => k.toLowerCase() !== "message-id");
+    const cfHeaders = kept.length ? Object.fromEntries(kept) : undefined;
     // Named senders go as an object (the REST API's field is `address`, not `email`).
     const named = msg.from.match(/^\s*(.*?)\s*<([^<>@\s]+@[^<>@\s]+)>\s*$/);
     const from =
@@ -264,7 +274,7 @@ export class CloudflareMailSender implements HostedMailSender {
         subject: msg.subject,
         text: msg.text,
         ...(msg.html ? { html: msg.html } : {}),
-        ...(msg.headers ? { headers: msg.headers } : {}),
+        ...(cfHeaders ? { headers: cfHeaders } : {}),
         ...(msg.attachments?.length
           ? {
               attachments: msg.attachments.map((a) => ({
@@ -300,6 +310,7 @@ export class CloudflareMailSender implements HostedMailSender {
 /** The fallback sender (BOT-EMAIL-PLAN §6.4): the same Resend call the email chat app makes. */
 export class ResendMailSender implements HostedMailSender {
   readonly name = "resend" as const;
+  readonly customMessageId = true;
   private base: string;
   private apiKey: string;
   constructor(o: { apiKey: string; apiBase?: string }) {

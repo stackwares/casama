@@ -133,6 +133,10 @@ describe("hosted senders", () => {
       to: "ana@example.com",
       headers: { "In-Reply-To": "<m1>" },
     });
+    expect(s.customMessageId).toBe(false);
+    // Cloudflare refuses a send that sets its own Message-ID: one never reaches it.
+    await s.send({ ...msg, headers: { ...msg.headers, "Message-ID": "<x@mail.test>" } }, f);
+    expect(Object.keys(JSON.parse(calls[1]!.body).headers)).not.toContain("Message-ID");
   });
 
   it("Cloudflare: refusals and HTTP errors throw", async () => {
