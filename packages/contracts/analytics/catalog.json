@@ -1749,13 +1749,38 @@
     {
       "name": "intro_video_opened",
       "by": ["client"],
-      "description": "The intro film was opened from the app (the YouTube link, from remote links intro_video / intro_video_vertical). surface is where: the row in a new person's empty chat, or Help.",
+      "description": "The intro film was opened (D-459). surface is where: the row in a new person's empty chat, or Help. player is app (the app's own full-screen player) or browser (Windows and Linux, or a film link that isn't a video file).",
       "properties": {
         "surface": {
           "type": "string",
           "values": ["empty_chat", "help"]
+        },
+        "player": {
+          "type": "string",
+          "values": ["app", "browser"]
         }
       },
+      "funnels": []
+    },
+    {
+      "name": "intro_video_closed",
+      "by": ["client"],
+      "description": "The app's intro film player was closed (D-459). percent is how far into the film they got (0 to 100); played is false when it never started (offline, say).",
+      "properties": {
+        "percent": {
+          "type": "number"
+        },
+        "played": {
+          "type": "boolean"
+        }
+      },
+      "funnels": []
+    },
+    {
+      "name": "intro_video_youtube",
+      "by": ["client"],
+      "description": "Watch on YouTube was tapped in the intro film player (D-459), at the end or after it couldn't play.",
+      "properties": {},
       "funnels": []
     },
     {

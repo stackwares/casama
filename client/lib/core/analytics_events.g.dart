@@ -49,6 +49,8 @@ const analyticsClientEvents = <String>{
   'app_error_shown',
   'starter_tapped',
   'intro_video_opened',
+  'intro_video_closed',
+  'intro_video_youtube',
   'intro_video_dismissed',
   'feature_used',
   'widgets_placed',

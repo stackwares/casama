@@ -477,7 +477,12 @@ app without a release. The settings are JSON:
   leave out keeps the app's own link. Names: `status`, `docs`, `terms`, `privacy`, `domain_terms`,
   `chatgpt_usage`, `openrouter_keys`, `gemini_keys`, `composio_keys`, `pipedream_keys`,
   `manage_subscription_app_store`, `manage_subscription_play`, `docker_linux`, `docker_mac_arm64`,
-  `docker_mac_amd64`.
+  `docker_mac_amd64`, and the intro film (D-459): `intro_video` (the 16:9 film), `intro_video_vertical`
+  (the 9:16 cut for phones held upright; without it phones play `intro_video`), and
+  `intro_video_youtube` / `intro_video_youtube_vertical` (**Watch on YouTube** in the player). A film
+  link ending in `.mp4`, `.m4v`, `.mov`, `.webm` or `.m3u8` plays in the app's own player; any other
+  link, such as a YouTube page, opens in the browser. The `intro_video` flag set to `false` hides the
+  film row in new chats.
 - `prompts` (D-372): the Chrome extension's ready-made prompts, by name: `selection.explain`,
   `selection.summarize`, `selection.translate`, `selection.rewrite` (the right-click menu) and
   `write.draft`, `write.rewrite`, `write.shorten`, `write.reply` (writing in a text box). Up to 40,

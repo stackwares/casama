@@ -12697,6 +12697,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get supportIntroVideo => 'Watch the intro film';
 
   @override
+  String get introVideoFailed =>
+      'Couldn\'t play the film. Check your connection and try again.';
+
+  @override
+  String get introVideoOnYoutube => 'Watch on YouTube';
+
+  @override
+  String get introVideoReplay => 'Replay';
+
+  @override
   String get supportIntroVideoHelp => 'See what Casama can do in 1½ minutes';
 
   @override

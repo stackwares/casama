@@ -1176,7 +1176,7 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
                 size: 18,
                 color: scheme.onSurfaceVariant,
               ),
-              onTap: () => openIntroVideo(context, 'help'),
+              onTap: () => showIntroFilm(context, 'help'),
             ),
             // Casama Cloud's public status page (D-304), same rule as the "Can't reach" bar.
             if (Uri.tryParse(backend.apiUrl)?.host == 'api.casama.ai')

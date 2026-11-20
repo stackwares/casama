@@ -6970,3 +6970,25 @@ quality and safety.
 - **Tests:** `packages/agent/test/live-data.test.ts` (recorded provider answers, cache, sun and moon, pins, pages), `packages/domain/test/live-cards.test.ts`, `apps/server/test/live-cards.test.ts`, `supabase/tests/live_cards_rls.test.sql`, `client/test/live_cards_test.dart` (every card from real provider fixtures at phone and desktop widths, refresh, views, quiz). Checked end to end in the web app against this branch's server on 2026-11-20: weather, forecast, watchlist, currency, world clock, earthquakes, recipe from a page, dictionary, dashboard, scores, comparison, calculator, sun and moon, summary, holidays, air quality; refresh, views, pin and Settings → Cards. Fixed from that pass: units, today's full-day high (MET's forecast starts now; Open-Meteo's daily figures cover the day), the moon's drawing, the quake map's fit, all sources in footers.
 - **Not done:** native Live card widgets and watch complications (Stage B), live tools on voice calls, health cards (decision 12: a separate plan), the long tail of §6 rows marked "—" (picked from `card_shown` and `card_reported` once there's data), a licensed stock provider on Casama Cloud (needs a key and a COSTS update), production deploy and app builds.
 
+## D-459 The intro film plays in the app, from links we can change remotely (2026-11-21)
+
+- **Decision (2026-11-21, Oliver: "do what you recommend now! but always make sure the remote links
+  work so we can update it whenever we want"):** new people can watch the 1½-minute film (D-390)
+  from a "See how Casama works" row in their empty chats and from Help → **Watch the intro film**.
+- **The app's own player, not YouTube:** a full-screen `video_player` page (native, not a WebView)
+  plays the MP4 from casama.ai, so there are no ads, no suggestions, no Shorts feed after it and no
+  cookie prompt, and it works where YouTube is blocked. Upright phones get the 9:16 cut, everything
+  else 16:9. Tap shows the controls (play/pause, scrubber, sound); Esc closes and Space pauses. At
+  the end: Replay and **Watch on YouTube**. If it can't load: Try again and Watch on YouTube.
+- **Remote links (D-372):** `intro_video`, `intro_video_vertical`, `intro_video_youtube`,
+  `intro_video_youtube_vertical` in Admin → App settings; the casama.ai MP4s and the YouTube film
+  and Short are the fallbacks. A vertical link left unset falls back to its 16:9 one. A film link
+  that isn't a video file (say a YouTube page) opens in the browser, so any https link works. Apps
+  pick up a change at launch or within 30 minutes. The `intro_video` flag hides the row.
+- **Platforms:** iOS, Android, macOS and web play in the app. Windows and Linux have no official
+  player, so they open the film link in the default browser.
+- **The row:** shown in a bot's empty chats while the person has had fewer than 3 chats with it;
+  gone once the film actually played or they closed it. A film that couldn't start leaves it.
+- **Analytics:** `intro_video_opened` {surface: empty_chat or help, player: app or browser},
+  `intro_video_closed` {percent, played}, `intro_video_youtube`, `intro_video_dismissed`.
+- **Tests:** `client/test/intro_video_test.dart`.

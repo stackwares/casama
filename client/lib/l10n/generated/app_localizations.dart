@@ -20151,6 +20151,24 @@ abstract class AppLocalizations {
   /// **'Watch the intro film'**
   String get supportIntroVideo;
 
+  /// No description provided for @introVideoFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t play the film. Check your connection and try again.'**
+  String get introVideoFailed;
+
+  /// No description provided for @introVideoOnYoutube.
+  ///
+  /// In en, this message translates to:
+  /// **'Watch on YouTube'**
+  String get introVideoOnYoutube;
+
+  /// No description provided for @introVideoReplay.
+  ///
+  /// In en, this message translates to:
+  /// **'Replay'**
+  String get introVideoReplay;
+
   /// No description provided for @supportIntroVideoHelp.
   ///
   /// In en, this message translates to:

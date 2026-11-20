@@ -193,8 +193,14 @@ export const ANALYTICS_CLIENT_EVENTS: Record<string, string[]> = {
     "position"
   ],
   "intro_video_opened": [
-    "surface"
+    "surface",
+    "player"
   ],
+  "intro_video_closed": [
+    "percent",
+    "played"
+  ],
+  "intro_video_youtube": [],
   "intro_video_dismissed": [],
   "feature_used": [
     "feature"
