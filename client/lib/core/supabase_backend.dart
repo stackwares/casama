@@ -536,6 +536,12 @@ class SupabaseBackend implements Backend {
     });
   }
 
+  /// Headers for calling the Auth server directly, without the signed-in session. The client's
+  /// own `headers` are only the extra ones and carry no `apikey`, so the gateway answered 401 and
+  /// the apps hid passkeys and SSO; the Auth client's headers always carry the key.
+  Map<String, String> get _directAuthHeaders =>
+      Map<String, String>.of(supabase.auth.headers)..removeWhere((k, _) => k.toLowerCase() == 'authorization');
+
   /// The Auth server's public settings say which sign-ins are on (SAML SSO, passkeys).
   @override
   Future<AuthMethods> authMethods() async {
@@ -545,7 +551,7 @@ class SupabaseBackend implements Backend {
     );
     final r = await Dio(BaseOptions(connectTimeout: const Duration(seconds: 10), receiveTimeout: const Duration(seconds: 15))).get<Map<String, dynamic>>(
       '$authUrl/settings',
-      options: Options(headers: supabase.headers),
+      options: Options(headers: _directAuthHeaders),
     );
     final s = r.data ?? const {};
     return AuthMethods(
@@ -641,7 +647,7 @@ class SupabaseBackend implements Backend {
     // The Auth server's passkey endpoints called directly: the client's own verify would replace
     // the session with the new one, even for another account's passkey.
     final authUrl = supabase.rest.url.replaceFirst(RegExp(r'/rest/v1/?$'), '/auth/v1');
-    final headers = Map<String, String>.of(supabase.headers)..removeWhere((k, _) => k.toLowerCase() == 'authorization');
+    final headers = _directAuthHeaders;
     final dio = Dio(BaseOptions(connectTimeout: const Duration(seconds: 10), receiveTimeout: const Duration(seconds: 20)));
     final start = (await dio.post<Map<String, dynamic>>(
       '$authUrl/passkeys/authentication/options',
