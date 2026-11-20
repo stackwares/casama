@@ -1,7 +1,7 @@
 ---
 title: How approvals work in Casama, and what never asks
 h1: How approvals work in Casama, and what never asks
-description: The rules that decide when a Casama bot must ask first: risk levels, three autonomy settings, payments that always ask, and what changes after a bot reads a web page.
+description: The rules for when a Casama bot must ask first: risk levels, three autonomy settings, payments that always ask, and what changes after a bot reads a web page.
 lead: An approval system fails in two ways. Ask too often and people stop reading. Ask too rarely and the first mistake is the last time anyone trusts the bot. These are the rules we settled on.
 updated: 2026-11-18
 author: oliver

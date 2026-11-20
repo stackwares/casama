@@ -1,7 +1,7 @@
 ---
 title: What is a computer use agent, and which let you take over?
 h1: What is a computer use agent, and which ones let you take over?
-description: A computer use agent works a computer the way you do: screen, mouse, keyboard, browser. Where it runs, why it matters, and which agents let you watch and take over.
+description: A computer use agent works a computer like you do: screen, mouse, keyboard, browser. Where it runs, why it matters, and which agents let you take over.
 lead: A computer use agent is an AI agent that operates a computer the way a person does. It looks at the screen, clicks, types, opens a browser and runs programs, instead of only calling apps through their APIs. That lets it use any website or app, including ones with no integration. The big questions are whose computer it uses, and whether you can watch it and take over.
 updated: 2026-11-18
 order: 20

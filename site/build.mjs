@@ -642,7 +642,38 @@ function homeWithFaqSchema(text) {
   return `${text.slice(0, a + FAQ_SCHEMA_OPEN.length)}\n  <script type="application/ld+json">\n  ${json}\n  </script>\n  ${text.slice(b)}`;
 }
 
-const org = { "@type": "Organization", name: product.name, url: `${SITE}/`, logo: `${SITE}/favicon.png`, sameAs: product.profiles };
+
+// ---------------------------------------------------------------- related pages (internal links)
+
+const STOP = new Set("a an and are as at be by can do does for from get how in is it its of on or our own the this to vs what which who why with you your casama ai agent agents".split(" "));
+const words = (page) => new Set(`${page.meta.title} ${page.meta.h1 ?? ""} ${page.meta.description}`.toLowerCase().replace(/[^a-z0-9 ]+/g, " ").split(/\s+/).filter((w) => w.length > 2 && !STOP.has(w)));
+const wordCache = new Map();
+const wordsOf = (page) => (wordCache.has(page) ? wordCache.get(page) : (wordCache.set(page, words(page)), wordCache.get(page)));
+
+/**
+ * "Keep reading": every written page links to its closest neighbours (same section first, then one
+ * from each other section), so each page has several ways in and no page is only reachable from a hub.
+ * The closest is the one sharing most words in the title and description; ties go by path, so a build
+ * is repeatable.
+ */
+function relatedFor(page) {
+  if (page.isIndex || page.slug === "changelog") return [];
+  const mine = wordsOf(page);
+  const score = (p) => [...wordsOf(p)].filter((w) => mine.has(w)).length;
+  const others = pages.filter((p) => !p.isIndex && p.slug !== page.slug && p.section !== undefined);
+  const ranked = (list) => list.map((p) => [score(p), p]).sort((a, b) => b[0] - a[0] || a[1].slug.localeCompare(b[1].slug)).map((x) => x[1]);
+  const same = ranked(others.filter((p) => p.section === page.section)).slice(0, 3);
+  const across = Object.keys(SECTIONS).filter((k) => k && k !== page.section).map((k) => ranked(others.filter((p) => p.section === k))[0]).filter(Boolean);
+  return [...same, ...across].slice(0, 6);
+}
+
+function relatedHtml(page) {
+  const list = relatedFor(page);
+  if (!list.length) return "";
+  return `<section class="related" aria-labelledby="related-h"><h2 id="related-h">Keep reading</h2><ul>${list.map((p) => `<li><a href="${p.path}">${esc(p.meta.h1 ?? p.meta.title)}</a></li>`).join("")}</ul></section>`;
+}
+
+const org = { "@type": "Organization", name: product.name, url: `${SITE}/`, logo: `${SITE}/logo.png`, sameAs: product.profiles };
 const authors = { casama: org, oliver: { "@type": "Person", name: "Oliver Martinez", url: `${SITE}/about#oliver`, sameAs: ["https://oliverbytes.dev", "https://github.com/oliverbytes"] } };
 
 function structuredData(page, crumbs) {
@@ -665,7 +696,7 @@ function structuredData(page, crumbs) {
 function render(page) {
   const { meta } = page;
   for (const key of ["title", "description", "updated"]) if (!meta[key]) fail(`${page.file}: front matter needs "${key}"`);
-  if ((meta.description ?? "").length > 170) fail(`${page.file}: description is ${meta.description.length} characters (keep it to 170)`);
+  if ((meta.description ?? "").length > 160) fail(`${page.file}: description is ${meta.description.length} characters (keep it to 160)`);
   if ((meta.title ?? "").length > 65) fail(`${page.file}: title is ${meta.title.length} characters (keep it to 65)`);
   const { html } = markdown(page.body, tokensFor(page));
   const words = plainWords(html);
@@ -697,7 +728,7 @@ function render(page) {
   <meta name="theme-color" content="#1c1c1e" media="(prefers-color-scheme: dark)">
   <link rel="canonical" href="${page.url}">
   <link rel="icon" type="image/svg+xml" href="/assets/bots/casama-winky-animated.svg">
-  <link rel="apple-touch-icon" href="/favicon.png">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <link rel="alternate" type="text/markdown" href="${mdPath}">
   <link rel="alternate" type="text/plain" href="/llms.txt" title="llms.txt">
 ${page.section === "blog" ? '  <link rel="alternate" type="application/rss+xml" href="/blog/rss.xml" title="Casama blog">\n' : ""}  <meta property="og:type" content="${page.isIndex || !page.section ? "website" : "article"}">
@@ -730,6 +761,7 @@ ${page.section === "blog" ? '  <link rel="alternate" type="application/rss+xml" 
       <p class="page-meta">${byline}${dates}</p>
       ${figure}
 ${html}
+${relatedHtml(page)}
 ${(page.section === "blog" && !page.isIndex) || page.slug === "changelog" ? waitlistBox("news-end") : ""}
     </article>
   </main>
@@ -820,6 +852,12 @@ function llms(all) {
   return `${head}${LLMS_MARK}\n\nEach link is the page's markdown copy. Facts about other products carry the date they were checked.\n\n${groups.join("\n\n")}\n`;
 }
 
+/** Every written page in one file, for assistants that want the whole site in a single fetch. */
+function llmsFull(all) {
+  const head = `# Casama: full text of casama.ai\n\n> ${product.description}\n\nEach section below is one page of https://casama.ai, in markdown. The index is https://casama.ai/llms.txt. Docs: https://docs.casama.ai/llms-full.txt. Facts about other products carry the date they were checked.\n`;
+  return `${head}\n${all.map((p) => twin(p).trim()).join("\n\n---\n\n")}\n`;
+}
+
 // ---------------------------------------------------------------- checks on hand-written pages
 
 /** The homepage is hand-written; its prices must match data/plans.json. */
@@ -859,7 +897,7 @@ const posts = pages.filter((p) => p.section === "blog" && !p.isIndex).sort((a, b
 outputs.push(["blog/rss.xml", rss("Casama blog", `${SITE}/blog/`, "What shipped in Casama and why, and numbers from running AI teammates.", posts.map((p) => ({ title: p.meta.h1 ?? p.meta.title, link: p.url, date: p.meta.published, description: p.meta.description })))]);
 const log = all.at(-1);
 outputs.push(["changelog/rss.xml", rss("Casama changelog", `${SITE}/changelog`, "Every Casama release.", log.releases.map((r) => ({ title: `Casama ${r.version}`, link: `${SITE}/changelog#version-${slugify(r.version)}-${r.date}`, date: r.date, description: `What changed in Casama ${r.version}.` })))]);
-outputs.push(["sitemap.xml", sitemap(all)], ["llms.txt", llms(all)]);
+outputs.push(["sitemap.xml", sitemap(all)], ["llms.txt", llms(all)], ["llms-full.txt", llmsFull(all)]);
 
 if (problems.length) {
   console.error(`site/build.mjs: ${problems.length} problem${problems.length === 1 ? "" : "s"}\n${problems.map((p) => `  - ${p}`).join("\n")}`);

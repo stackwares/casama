@@ -90,6 +90,9 @@ function hint(type) {
     routine: "Find it under Ideas when you add a routine to a bot, or open it from here.",
     plugin: "Add it in Casama from a bot's Plugins page, at the reviewed version.",
     set: "Adds everything in the set at once; apps still ask you to sign in.",
+    theme: "Pick it in Casama under Settings → Appearance → Themes, or open it from here.",
+    scheme: "Pick it in Casama under Settings → Appearance, or open it from here.",
+    wallpaper: "Pick it in Casama under Settings → Appearance, or open it from here.",
   }[type] ?? "";
 }
 function appLogoHtml(item, size) {
@@ -119,7 +122,18 @@ function rowHtml(item) {
   return `<li><a class="skill row-link" href="${C.pagePath(item)}">${pic}<span><span class="skill-name">${esc(item.name)}</span><span class="skill-desc">${esc(C.SINGULAR[item.type])}${item.description ? ` · ${esc(item.description)}` : ""}</span></span><span class="skill-go">${svgIcon("chevron-right", 18)}</span></a></li>`;
 }
 
+/** A meta description that fits a search result: 70 to 160 characters, cut at a sentence or a word. */
+function fitDescription(text) {
+  let d = String(text).replace(/\s+/g, " ").trim();
+  if (d.length < 70) d = `${d.replace(/\.?$/, ".")} From the Casama Gallery: free, open source and ready to add.`;
+  if (d.length <= 160) return d;
+  const cut = d.slice(0, 159);
+  const end = Math.max(cut.lastIndexOf(". "), cut.lastIndexOf("? "));
+  return end > 90 ? cut.slice(0, end + 1) : `${cut.slice(0, cut.lastIndexOf(" "))}…`;
+}
+
 function shell({ title, description, path, image, imageAlt, body, data, noindex, ld, type = "website" }) {
+  description = fitDescription(description);
   const url = SITE + path;
   return `<!doctype html>
 <html lang="en">
@@ -146,6 +160,8 @@ ${noindex ? '<meta name="robots" content="noindex">\n' : ""}<meta property="og:t
 <meta name="theme-color" content="#1c1c1e" media="(prefers-color-scheme: dark)">
 <meta name="casama-stats" content="https://api.casama.ai/v1/gallery/stats">
 <link rel="icon" type="image/svg+xml" href="/assets/casama-winky-animated.svg">
+<link rel="icon" href="/favicon.ico" sizes="48x48">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="stylesheet" href="/gallery.css">
 <link rel="stylesheet" href="/app.css">
 <link rel="stylesheet" href="/page.css">
@@ -158,7 +174,7 @@ ${ld ? `<script type="application/ld+json">${JSON.stringify(ld).replace(/</g, "\
     <a class="logo" href="https://casama.ai" aria-label="Casama home"><span data-casama-mark></span><span>Casama</span></a>
     <a class="brand-tag" href="/">Gallery</a>
     <nav class="bar-nav" aria-label="Gallery">
-      <a href="/make.html">Make a look</a>
+      <a href="/make">Make a look</a>
       <a href="/#contribute">Contribute</a>
       <a class="btn primary" href="https://casama.ai/download">Get Casama</a>
     </nav>
@@ -291,7 +307,28 @@ function related(item) {
 function describe(item) {
   if (item.description) return item.description;
   const by = C.community(item) ? ` by ${item.author.name}` : "";
+  // A look has no description of its own: say what it is by name, tags and what it holds, so no two
+  // pages share a line (docs/SEO-PLAN.md part D).
+  if (C.isLook(item)) {
+    const doc = C.doc(item);
+    const tags = (item.tags || []).join(", ");
+    const kind = C.SINGULAR[item.type].toLowerCase();
+    const holds = item.type === "theme" ? ` with ${[doc.headingFont, doc.bodyFont].filter((f, i, a) => f && a.indexOf(f) === i).join(" and ")} type` : item.type === "wallpaper" && doc.dark ? ", with a light and a dark version" : item.type === "scheme" ? ", for light and dark mode" : "";
+    const lic = `Free and open source${item.license ? ` (${item.license})` : ""}.`;
+    const text = `${item.name}: a${/^[aeiou]/i.test(tags) ? "n" : ""} ${tags ? `${tags} ` : ""}${kind} for the Casama app${by}${holds}. ${lic}`;
+    return text.length <= 160 ? text : `${item.name}: a ${kind} for the Casama app${by}. ${lic}`;
+  }
   return `${C.SINGULAR[item.type]} for Casama${by}. Free and open source${item.license ? ` (${item.license})` : ""}.`;
+}
+
+/** A few plain sentences on a look's page, so it is more than a picture and a table. */
+function lookText(item) {
+  if (!C.isLook(item)) return "";
+  const doc = C.doc(item);
+  const lic = item.license === "CC0-1.0" ? " It is released under CC0, so you can use, change and share it with no credit needed." : item.license ? ` It is licensed ${item.license}.` : "";
+  if (item.type === "theme") return `${item.name} is a Casama theme: one tap sets the colors, the fonts (${[doc.headingFont, doc.bodyFont].filter((f, i, a) => f && a.indexOf(f) === i).join(" and ")}) and the background together. You can change any of them afterwards and save the result as your own theme.${lic}`;
+  if (item.type === "scheme") return `${item.name} is a color scheme for Casama with a light and a dark version. It changes the app's colors and nothing else, so it works with any fonts and background you already use.${lic}`;
+  return `${item.name} is a background for Casama${doc.dark ? ", with a light and a dark version" : ""}. Choose it as your app background, or keep it with a theme.${lic}`;
 }
 
 function itemPage(item) {
@@ -310,6 +347,7 @@ ${heroHtml(item)}
   <p class="stats-line" id="stats" hidden></p>
   ${item.pick ? `<p class="pick-note">${svgIcon("sparkles", 16)}<span>${esc(item.pick)}</span></p>` : ""}
   <p class="about">${esc(about)}</p>
+  ${lookText(item) ? `<p class="small">${esc(lookText(item))}</p>` : ""}
   ${item.type === "app" ? `<p class="small">Connect ${esc(item.name)} once, choose which bots may use it, and ask in plain words. For each thing a bot can do in ${esc(item.name)}, you decide whether it may act alone or must ask you first.</p>` : ""}
   <div class="actions">
     <a class="btn primary" href="${esc(open)}">${svgIcon("external-link", 17)}${item.type === "skill" ? "Install in Casama" : item.type === "set" ? "Add all in Casama" : "Open in Casama"}</a>
@@ -347,7 +385,7 @@ ${more.length ? `<section class="section"><div class="section-head"><h2>More ${e
   const can = isApp ? (C.doc(item).capabilities || []).slice(0, 3).map((c) => c[0].toLowerCase() + c.slice(1)).join(", ") : "";
   return shell({
     ld,
-    title: isApp ? `${item.name} AI agent: use ${item.name} with a Casama bot` : `${item.name} · ${kind} for Casama`,
+    title: isApp ? `${item.name} AI agent: use ${item.name} with a Casama bot` : C.isLook(item) ? `${item.name} ${kind.toLowerCase()} for the Casama AI app` : `${item.name} · ${kind} for Casama`,
     description: isApp && can ? `${about} Connect ${item.name} to a Casama bot: ${can}. You choose what it must ask first.`.slice(0, 200) : about,
     path: C.pagePath(item),
     image: `${SITE}${C.pagePath(item)}og.png`,
@@ -665,7 +703,7 @@ const today = new Date().toISOString().slice(0, 10);
 const urls = [
   { loc: `${SITE}/`, lastmod: today },
   { loc: `${SITE}/add/` },
-  { loc: `${SITE}/make.html` },
+  { loc: `${SITE}/make` },
   ...groups.map((g) => ({ loc: SITE + groupPath(g.type, g.cat), lastmod: g.items.map((i) => i.updated || i.added || "").sort().at(-1) })),
   ...all.map((i) => ({ loc: C.pageUrl(i), lastmod: i.updated || i.added })),
   ...[...authors.values()].map((a) => ({ loc: SITE + C.authorPath(a.handle) })),
