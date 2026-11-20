@@ -5734,11 +5734,29 @@ abstract class AppLocalizations {
   /// **'Messages'**
   String get computerCapMessages;
 
-  /// No description provided for @personalComputerOfflineHelp.
+  /// No description provided for @personalComputerOfflineNamed.
   ///
   /// In en, this message translates to:
-  /// **'This computer is offline. Open Casama on it and turn on \"Use this computer for bots\".'**
-  String get personalComputerOfflineHelp;
+  /// **'{name} is offline. Open Casama on it and turn on \"Use this computer for bots\". Your own computer never uses your plan\'s computer hours.'**
+  String personalComputerOfflineNamed(String name);
+
+  /// Chat notice: the bot reached for the person's own computer, whose Casama app isn't running (D-447).
+  ///
+  /// In en, this message translates to:
+  /// **'Your computer is offline'**
+  String get yourComputerOffline;
+
+  /// No description provided for @howToFix.
+  ///
+  /// In en, this message translates to:
+  /// **'How to fix'**
+  String get howToFix;
+
+  /// No description provided for @computerHoursUsedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Computer hours used up'**
+  String get computerHoursUsedTitle;
 
   /// No description provided for @personalScreenNote.
   ///

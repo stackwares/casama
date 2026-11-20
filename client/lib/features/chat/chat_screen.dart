@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../computer/computer_screen.dart' show isPersonalComputer;
 import '../voice/active_call.dart';
 import '../voice/call_bubble.dart';
 import '../voice/call_recap.dart';
@@ -2103,6 +2104,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       },
                 onRestore: computer == null ? null : (cp) => confirmRestore(context, ref, computer.id, cp),
                 // A broken computer (D-240): restart it from the chat, or open its fixes.
+                personalComputer: computer != null && isPersonalComputer(computer),
                 onRestartComputer: computer == null || n.kind != NoticeKind.computer
                     ? null
                     : () async {
@@ -2114,7 +2116,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                           showSuccess(context, l10n.computerRestarted);
                         }
                       },
-                onFixComputer: computer == null || n.kind != NoticeKind.computer ? null : () => context.pushOnce('/computer?c=${computer.id}&tab=manage'),
+                onFixComputer: computer == null || n.kind != NoticeKind.computer ? null : () => context.pushOnce(isPersonalComputer(computer) ? '/computer?c=${computer.id}' : '/computer?c=${computer.id}&tab=manage'),
                 onUndo: (factId) async {
                   final l10n = context.l10n;
                   final ok = await runGuarded(context, () async {

@@ -69,7 +69,7 @@ class CompanionScreen extends ConsumerWidget {
                     message: l10n.companionIntro,
                     action: GlowButton.icon(
                       key: const Key('pairComputer'),
-                      onPressed: () => runGuarded(context, () => controller.pair(l10n.thisComputer)),
+                      onPressed: () => runGuarded(context, () => controller.pair(localComputerName() ?? l10n.thisComputer)),
                       icon: const Icon(LucideIcons.link, size: 18),
                       label: Text(l10n.useThisComputer),
                     ),

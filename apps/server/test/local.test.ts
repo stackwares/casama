@@ -283,6 +283,15 @@ describe("local computer companion (Phase 6)", () => {
     expect(Date.now() - t0).toBeLessThan(15_000);
     const failed = (await events(runId)).find((e) => e.type === "tool.failed");
     expect(JSON.stringify(failed?.payload)).toMatch(/offline|could not be reached|unavailable/i);
+    // The bot is told which kind of computer it is and what turns it on, never its id, and that
+    // this is no plan limit (D-447). The computer is offline, not broken.
+    const told = (failed?.payload as { message?: string } | undefined)?.message ?? "";
+    expect(told).toContain("Use this computer for bots");
+    expect(told).toContain("never uses the plan's computer hours");
+    expect(told).not.toContain(device.computer_id);
+    const [row] = await h.tdb
+      .admin`select state, error from public.computers where id = ${device.computer_id}`;
+    expect(row).toMatchObject({ state: "stopped", error: null });
     // Opening a file says the computer is offline and what to do, not "try again shortly".
     const open = await h.request(
       `/v1/computers/${device.computer_id}/files?path=${encodeURIComponent(join(home, "Shared", "report-draft.md"))}`,

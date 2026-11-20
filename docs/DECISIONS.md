@@ -6568,3 +6568,34 @@ number, counted oldest first. Oliver: "I agree with all of that so build all of 
   `plan_limit` row in `docs-site/guide/usage.md`.
 - **Tests:** `apps/server/test/billing.test.ts` (the newest of five bots on Free runs; a sixth is
   refused).
+
+## D-447 Your own computer offline is not a broken computer; used-up hours explain themselves (2026-11-20)
+
+Oliver's Free workspace had used its 5 computer hours, and a chat showed "Computer error · Restart ·
+More fixes", a computer named "This computer" with "The computer b3f4d1ec-… is offline" in red, and
+a bot saying its shell work "may be cut short until the hours reset". The bot's computer was his own
+Mac with the desktop app closed. Nothing was broken and no limit was involved.
+
+- **Offline, not error:** when a person's own computer can't be reached at a start
+  (`packages/agent/src/computers.ts`), it goes back to `stopped` with no saved error instead of
+  `error`. The bot is told (`personalOfflineMessage`) which computer it is by name, never by id,
+  what turns it on, and that this is no plan limit: a person's own computer never uses computer
+  hours. `LocalProvider`'s own offline text has no id either.
+- **Chat:** for a personal computer, a computer notice in `error`, `stopped` or `sleeping` reads
+  "Your computer is offline" with one button, **How to fix**, which opens the computer. Restart and
+  More fixes stay for cloud computers. This also covers servers before this change.
+- **Computer screen:** a personal computer shows no red error card; the offline text names the
+  computer and says it never uses the plan's computer hours.
+- **Names:** pairing used the name "This computer", true only on the computer itself. The desktop
+  app now pairs under the computer's own name (`cleanComputerName`, from the host name), and the
+  migration renames existing ones to "<first name>'s Mac / Windows PC / Linux computer". It also
+  puts personal computers saved as `error` for being offline back to `stopped`.
+- **Hours used up (cloud computers):** D-442 already refuses the start with the reason, the reset
+  day and the paywall. The computer screen now says so before Start is tapped
+  (`ComputerHoursCard`: why, that chat still works, the reset day, **See plans**).
+- **Casama Help:** the account tool adds that only cloud computers use computer hours.
+- **Tests:** `apps/server/test/local.test.ts` (offline: message, no id, state `stopped`),
+  `client/test/computer_manage_test.dart` (offline notice, computer names),
+  `client/test/live_test.dart` (hours card on a cloud computer, never on a personal one).
+- **Needs an app build** for the chat notice, the names and the hours card; the server part works
+  with today's apps (they show "Computer stopped" and "Offline" instead of an error).

@@ -443,6 +443,31 @@ void main() {
     await tester.pump(const Duration(seconds: 11));
   });
 
+  // D-447: used-up computer hours explain themselves on a cloud computer, and never on your own.
+  testWidgets("a cloud computer says when the month's computer hours are used; a personal one never does", (tester) async {
+    await setSize(tester, const Size(1300, 900));
+    final backend = _HoursUsed();
+    Future<void> show(Computer computer) async {
+      await tester.pumpWidget(liveHarness(
+        backend,
+        FakeLiveConnector(),
+        Scaffold(body: SizedBox(width: 420, child: ComputerPanel(key: ValueKey(computer.kind), computer: computer, embedded: true))),
+      ));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+
+    await show(_personal(ComputerState.stopped).copyWith(kind: ComputerKindEnum.team, provider: 'docker', state: ComputerState.sleeping));
+    expect(find.byKey(const Key('computerHoursCard')), findsOneWidget);
+    expect(find.textContaining('Chat still works'), findsOneWidget);
+    expect(find.byKey(const Key('computerHoursUpgrade')), findsOneWidget);
+
+    await show(_personal(ComputerState.stopped));
+    expect(find.byKey(const Key('computerHoursCard')), findsNothing);
+    expect(find.textContaining("never uses your plan's computer hours"), findsOneWidget);
+    await tester.pump(const Duration(seconds: 11));
+  });
+
   testWidgets('the computers list offers no live view or desktop switch on a personal computer', (tester) async {
     await setSize(tester, const Size(600, 1000));
     await tester.pumpWidget(harness(_PersonalComputer(), const ComputersScreen()));
@@ -518,6 +543,16 @@ class _PersonalComputer extends FakeBackend {
   ComputerState state = ComputerState.running;
   @override
   Future<List<Computer>> computers(String orgId) async => [_personal(state)];
+}
+
+class _HoursUsed extends FakeBackend {
+  _HoursUsed() {
+    billingEnabled = true;
+  }
+  @override
+  Future<BillingSummary> billing(String orgId) async => (await super.billing(orgId)).copyWith(
+    computerHours: BillingSummaryComputerHours(usedHours: 5, limitHours: 5, resetsAt: DateTime.utc(2026, 12, 1)),
+  );
 }
 
 class _AwakeDesktop extends FakeBackend {

@@ -34,10 +34,11 @@ export class LocalProvider implements SandboxProvider {
     this.opts = { ...opts, apiUrl: opts.apiUrl.replace(/\/$/, "") };
   }
 
-  private offline(ref: string): never {
+  // No id in the text: people and bots both read it, and an id tells neither which computer.
+  private offline(_ref: string): never {
     throw new SandboxError(
       "device_offline",
-      `The computer ${ref} is offline. Open the Casama app on it and turn on "Use this computer for bots".`,
+      'The person\'s own computer is offline. It works only while the Casama desktop app is open on it with "Use this computer for bots" switched on.',
       409,
     );
   }

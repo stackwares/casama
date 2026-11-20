@@ -16,6 +16,16 @@ import '../../core/desktop_sign_in_io.dart' show LoopbackSignIn;
 import '../../core/distribution.dart';
 
 Companion createCompanion() => IoCompanion();
+
+/// This computer's own name ("Olivers-iMac.local" reads as "Olivers iMac"), so a phone or a bot
+/// can tell it apart. Null when the system has none worth showing.
+String? localComputerName() {
+  try {
+    return cleanComputerName(Platform.localHostname);
+  } catch (_) {
+    return null;
+  }
+}
 DeviceTokenStore createTokenStore() => _TokenStore();
 LocalMcpStore createMcpStore() => _McpStore();
 

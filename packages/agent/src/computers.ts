@@ -8,6 +8,7 @@ import type {
   SandboxProvider,
   SnapshotRef,
 } from "@casama/sandbox";
+import { SandboxError } from "@casama/sandbox";
 import { sql } from "drizzle-orm";
 import { track } from "./analytics.ts";
 
@@ -344,6 +345,21 @@ export class ComputerService {
         });
         return h;
       } catch (err) {
+        // A person's own computer whose app is closed isn't broken (D-447): it goes back to
+        // offline with nothing to "restart", and the bot is told what it is and what turns it on.
+        if (c.kind === "local" && (err as { code?: string }).code === "device_offline") {
+          track(this.db, {
+            event: "computer_start_failed",
+            orgId: c.org_id,
+            properties: { ...facts, reason: "device_offline" },
+          });
+          await this.setState(computerId, "stopped", emit);
+          throw new SandboxError(
+            "device_offline",
+            personalOfflineMessage(typeof c.name === "string" ? c.name : null),
+            409,
+          );
+        }
         track(this.db, {
           event: "computer_start_failed",
           orgId: c.org_id,
@@ -828,4 +844,15 @@ export async function auditComputer(
     .execute(sql`insert into public.audit_log (org_id, actor_type, actor_id, action, target_type, target_id, metadata)
       values (${orgId}::uuid, ${actor?.type ?? "system"}, ${actor?.id ?? null}::uuid, ${action}, 'computer', ${computerId}::uuid, ${JSON.stringify(metadata)}::jsonb)`)
     .catch((err) => captureError(err, { step: "computer-audit", computer_id: computerId }));
+}
+
+/**
+ * What a bot is told when its person's own computer is offline. It names the computer (never its
+ * id), says what brings it back, and that the plan's computer hours have nothing to do with it:
+ * bots otherwise guess at a used-up limit.
+ */
+export function personalOfflineMessage(name?: string | null): string {
+  const own = name?.trim();
+  const named = own && own !== "This computer" ? ` "${own}"` : "";
+  return `The person's own computer${named} is offline, so nothing can run on it right now. It works only while the Casama desktop app is open on it with "Use this computer for bots" switched on: ask them to open it there. This is not a plan limit, and their own computer never uses the plan's computer hours.`;
 }

@@ -3723,8 +3723,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get computerCapMessages => 'Messages';
 
   @override
-  String get personalComputerOfflineHelp =>
-      'This computer is offline. Open Casama on it and turn on \"Use this computer for bots\".';
+  String personalComputerOfflineNamed(String name) {
+    return '$name is offline. Open Casama on it and turn on \"Use this computer for bots\". Your own computer never uses your plan\'s computer hours.';
+  }
+
+  @override
+  String get yourComputerOffline => 'Your computer is offline';
+
+  @override
+  String get howToFix => 'How to fix';
+
+  @override
+  String get computerHoursUsedTitle => 'Computer hours used up';
 
   @override
   String get personalScreenNote =>

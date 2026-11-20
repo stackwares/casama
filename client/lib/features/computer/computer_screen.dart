@@ -14,6 +14,7 @@ import 'package:xterm/xterm.dart';
 
 import 'computer_details.dart';
 import 'computer_manage.dart';
+import 'computer_hours_notice.dart';
 import 'computer_update.dart';
 import 'live_view_screen.dart';
 
@@ -540,6 +541,8 @@ class _ComputerPanelState extends ConsumerState<ComputerPanel> {
               ),
               // A newer system waiting (D-360): the person picks the moment.
               if (!personal && !resetting) ComputerUpdateCard(computer: computer),
+              // The month's computer hours are used (D-447): why it won't start, before Start is tapped.
+              if (!personal && !running) const ComputerHoursCard(),
               _ComputerTabs(tabIds: tabIds),
               const SizedBox(height: AppSpace.xs),
               Expanded(
@@ -563,7 +566,7 @@ class _ComputerPanelState extends ConsumerState<ComputerPanel> {
                                     : EmptyState(
                                         key: const Key('personalOffline'),
                                         icon: LucideIcons.wifiOff,
-                                        message: l10n.personalComputerOfflineHelp,
+                                        message: l10n.personalComputerOfflineNamed(computer.name),
                                       ),
                               ),
                             ],
@@ -639,16 +642,17 @@ class _ComputerHeader extends StatelessWidget {
     final scheme = context.colorScheme;
     final colors = context.appColors;
     final muted = scheme.onSurfaceVariant;
-    final tone = failed
+    final personal = isPersonalComputer(computer);
+    final tone = failed && !personal
         ? colors.negative
         : (running || busy ? colors.working : muted);
-    final personal = isPersonalComputer(computer);
     final desktop = computer.profile == ComputerProfileEnum.desktop;
     final system = computerSystemLine(context, computer, thisDevice: false);
     final activity = computerActivityLine(context, computer);
     // When it was last used matters more than its specs, so it leads (the specs may truncate).
     final details = [?activity, if (system.isNotEmpty) system].join(' · ');
-    final error = failed ? computer.error : null;
+    // A personal computer that can't be reached is offline, which the screen below explains.
+    final error = failed && !personal ? computer.error : null;
     // With large text on a narrow screen the button goes under the name, so the state line
     // never gets squeezed.
     final stacked =

@@ -5,6 +5,7 @@ import 'dart:typed_data';
 
 import 'package:casama/features/chat/chat_controller.dart';
 import 'package:casama/features/chat/widgets/chat_widgets.dart';
+import 'package:casama/features/companion/companion.dart';
 import 'package:casama/features/computer/computer_screen.dart';
 import 'package:casama_sdk/casama_sdk.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -372,5 +373,40 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('noticeRestartComputer')), findsNothing);
+  });
+
+  testWidgets('your own computer being offline is not a broken computer (D-447)', (tester) async {
+    var fixes = 0;
+    for (final state in const ['error', 'stopped']) {
+      await tester.pumpWidget(
+        harness(
+          FakeBackend(),
+          Scaffold(
+            body: NoticeLine(
+              key: ValueKey(state),
+              entry: NoticeEntry(kind: NoticeKind.computer, text: state),
+              personalComputer: true,
+              onRestartComputer: () {},
+              onFixComputer: () => fixes++,
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Your computer is offline'), findsOneWidget);
+      // Nothing to restart from a phone: one way in, to what turns it back on.
+      expect(find.byKey(const Key('noticeRestartComputer')), findsNothing);
+      expect(find.byKey(const Key('noticeMoreFixes')), findsNothing);
+      await tester.tap(find.byKey(const Key('noticeComputerOffline')));
+    }
+    expect(fixes, 2);
+  });
+
+  test('a computer is paired under its own name, cleaned up (D-447)', () {
+    expect(cleanComputerName('Olivers-iMac.local'), 'Olivers iMac');
+    expect(cleanComputerName('desk_pc.corp.example.com'), 'desk pc');
+    expect(cleanComputerName('localhost'), isNull);
+    expect(cleanComputerName('192.168.1.4'), isNull);
+    expect(cleanComputerName('  '), isNull);
   });
 }

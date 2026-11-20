@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'companion.dart';
 
 Companion createCompanion() => _Unsupported();
+String? localComputerName() => null;
 DeviceTokenStore createTokenStore() => _NoStore();
 LocalMcpStore createMcpStore() => _NoMcpStore();
 

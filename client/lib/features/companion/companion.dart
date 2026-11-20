@@ -6,6 +6,22 @@ import 'mcp_import.dart';
 
 export 'mcp_import.dart' show FoundMcpServer;
 
+/// The name this computer is paired under: its own, or null to fall back to "This computer".
+String? localComputerName() => impl.localComputerName();
+
+/// A host name as a person would write it: no domain, dashes and underscores as spaces. Null for
+/// names that say nothing ("localhost", an address).
+String? cleanComputerName(String host) {
+  var name = host.trim();
+  for (final tail in const ['.local', '.lan', '.home', '.localdomain']) {
+    if (name.toLowerCase().endsWith(tail)) name = name.substring(0, name.length - tail.length);
+  }
+  if (name.contains('.')) name = name.split('.').first;
+  name = name.replaceAll(RegExp(r'[-_]+'), ' ').trim();
+  if (name.isEmpty || name.toLowerCase() == 'localhost' || RegExp(r'^[\d ]+$').hasMatch(name)) return null;
+  return name.length > 60 ? name.substring(0, 60) : name;
+}
+
 /// What a bot is doing on this computer right now (shown in the overlay and tray).
 class CompanionActivity {
   const CompanionActivity({required this.runId, required this.bot, required this.tool, required this.summary, this.botId});

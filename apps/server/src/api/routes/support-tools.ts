@@ -178,6 +178,8 @@ export function supportLookups(
           : {}),
         monthly_spending_cap_usd: t?.quota == null ? null : usd(t.quota),
         computer_hours: of(hours, lim.computer_hours),
+        computer_hours_note:
+          "Only Casama's cloud computers use computer hours. A person's own computer (connected from the desktop app) never does, and is never stopped by them.",
         bots: of(t?.bots ?? 0, lim.max_bots),
         computers: of(t?.computers ?? 0, lim.max_computers),
         seats: of(t?.members ?? 0, lim.seats == null ? undefined : lim.seats + s.extra_seats),
@@ -326,7 +328,7 @@ export function supportLookups(
       if (!b) return "No bot by that name that this person can see in the open workspace.";
       if (found.length > 1 && b.name.toLowerCase() !== q.toLowerCase())
         return { several_match: found.map((f) => f.name), ask: "Ask which one they mean." };
-      const [routines, apps, channels, runs, lim] = await Promise.all([
+      const [routines, apps, channels, runs] = await Promise.all([
         tx.execute<{
           name: string;
           enabled: boolean;
@@ -355,7 +357,6 @@ export function supportLookups(
         }>(sql`
           select trigger, status, created_at, cost_usd, error from public.runs
           where bot_id = ${b.id}::uuid order by created_at desc limit 5`),
-        billing.summary(orgId),
       ]);
       const primary = (b.model_policy?.primary ?? null) as { model?: string } | null;
       return {

@@ -11,7 +11,8 @@ until you turn it on.
 ## Turn it on
 
 1. In the desktop app, open **Settings → Advanced → Use this computer for bots**.
-2. Tap **Use this computer for bots** to pair this machine with your account.
+2. Tap **Use this computer for bots** to pair this machine with your account. It's listed under
+   its own name (for example **Olivers iMac**), which you can change.
 3. Under **What Bots May Do**, turn on only the capabilities you want (see below).
 4. Under **Shared Folders**, tap **Add a Folder** and pick each folder bots may reach.
 5. Under **Bots Allowed**, check each bot that may use this computer.

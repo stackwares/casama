@@ -1378,6 +1378,7 @@ class NoticeLine extends StatelessWidget {
     this.plain = false,
     this.onRestartComputer,
     this.onFixComputer,
+    this.personalComputer = false,
     this.onOpenMemory,
   });
   final NoticeEntry entry;
@@ -1387,6 +1388,10 @@ class NoticeLine extends StatelessWidget {
 
   /// A computer that broke (state "error", D-240): restart it here, or open its fixes.
   final VoidCallback? onRestartComputer;
+
+  /// The chat's computer is the person's own (D-447): when it can't be reached it is offline, not
+  /// broken, and there is nothing to restart from here.
+  final bool personalComputer;
   final VoidCallback? onFixComputer;
 
   /// "Saved to your profile" (D-169): takes the fact back out.
@@ -1399,6 +1404,9 @@ class NoticeLine extends StatelessWidget {
 
   /// Failures open their details (error, failed steps, copy and export).
   final VoidCallback? onDetails;
+
+  bool get _personalOffline =>
+      personalComputer && entry.kind == NoticeKind.computer && const {'error', 'stopped', 'sleeping'}.contains(entry.text);
 
   @override
   Widget build(BuildContext context) {
@@ -1422,6 +1430,11 @@ class NoticeLine extends StatelessWidget {
         LucideIcons.rotateCcw,
         l10n.checkpointSaved(entry.text),
         muted,
+      ),
+      NoticeKind.computer when _personalOffline => (
+        LucideIcons.wifiOff,
+        l10n.yourComputerOffline,
+        colors.warning,
       ),
       NoticeKind.computer => (
         entry.text == 'error' ? LucideIcons.monitorX : LucideIcons.monitor,
@@ -1465,7 +1478,8 @@ class NoticeLine extends StatelessWidget {
         entry.refId != null;
     final details = failed && onDetails != null;
     final memory = entry.kind == NoticeKind.memory && onOpenMemory != null;
-    final broken = entry.kind == NoticeKind.computer && entry.text == 'error' && (onRestartComputer != null || onFixComputer != null);
+    final offline = _personalOffline && onFixComputer != null;
+    final broken = !_personalOffline && entry.kind == NoticeKind.computer && entry.text == 'error' && (onRestartComputer != null || onFixComputer != null);
     return Center(
       child: Material(
         type: MaterialType.transparency,
@@ -1478,9 +1492,9 @@ class NoticeLine extends StatelessWidget {
           child: Container(
             padding: EdgeInsets.fromLTRB(
               12,
-              restorable || broken ? 2 : 6,
-              restorable || details || broken ? 4 : memory ? 8 : 12,
-              restorable || broken ? 2 : 6,
+              restorable || broken || offline ? 2 : 6,
+              restorable || details || broken || offline ? 4 : memory ? 8 : 12,
+              restorable || broken || offline ? 2 : 6,
             ),
             decoration: BoxDecoration(
               color: failed
@@ -1531,6 +1545,12 @@ class NoticeLine extends StatelessWidget {
                     key: const Key('noticeMoreFixes'),
                     onPressed: onFixComputer,
                     child: Text(l10n.moreFixes),
+                  ),
+                if (offline)
+                  TextButton(
+                    key: const Key('noticeComputerOffline'),
+                    onPressed: onFixComputer,
+                    child: Text(l10n.howToFix),
                   ),
                 if (memory) ...[
                   const SizedBox(width: 2),
