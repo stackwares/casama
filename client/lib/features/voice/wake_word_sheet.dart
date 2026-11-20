@@ -95,6 +95,7 @@ class _WakeWordSheetState extends ConsumerState<WakeWordSheet> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final bots = ref.watch(botsProvider).value ?? const <Bot>[];
+    if (_bot != null && !bots.any((b) => b.id == _bot)) _bot = null;
     _bot ??= bots.firstOrNull?.id;
     final valid = !_enabled || (_bot != null && _phrase.text.trim().split(RegExp(r'\s+')).length >= 2);
     return FormSheet(

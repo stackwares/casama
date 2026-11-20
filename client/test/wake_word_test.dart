@@ -7,6 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:casama/core/providers.dart';
 import 'package:casama/core/router.dart';
+import 'package:casama/core/voice.dart';
 import 'package:casama/features/voice/wake_word.dart';
 import 'package:casama/features/voice/wake_word_sheet.dart';
 import 'package:casama/l10n/generated/app_localizations.dart';
@@ -103,6 +104,48 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Heard!'), findsOneWidget);
     expect(find.text('call $botId'), findsNothing);
+  });
+
+  testWidgets('sheet falls back to first bot when saved bot was deleted', (tester) async {
+    SharedPreferences.setMockInitialValues({'wake.enabled': false, 'wake.phrase': 'hey casama', 'wake.bot': 'deleted-bot'});
+    WakeWordController.testing = true;
+    addTearDown(() => WakeWordController.testing = false);
+    await setSize(tester, const Size(900, 1200));
+    final engine = FakeWakeEngine();
+    final router = GoRouter(initialLocation: '/wake', routes: [
+      GoRoute(path: '/', builder: (_, _) => const Scaffold(body: Text('home')), routes: [GoRoute(path: 'wake', builder: (_, _) => const Scaffold(body: WakeWordSheet()))]),
+    ]);
+    await tester.pumpWidget(ProviderScope(
+      overrides: [backendProvider.overrideWithValue(FakeBackend()), wakeWordEngineProvider.overrideWithValue(engine), routerProvider.overrideWithValue(router)],
+      child: MaterialApp.router(routerConfig: router, localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
+    ));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('wakeBot')), findsOneWidget);
+  });
+
+  test('wake word pauses during chat dictation and resumes after', () async {
+    SharedPreferences.setMockInitialValues({'wake.enabled': true, 'wake.phrase': 'hey casama', 'wake.bot': botId});
+    WakeWordController.testing = true;
+    addTearDown(() => WakeWordController.testing = false);
+    final engine = FakeWakeEngine();
+    final container = ProviderContainer(
+      overrides: [backendProvider.overrideWithValue(FakeBackend()), wakeWordEngineProvider.overrideWithValue(engine)],
+    );
+    addTearDown(container.dispose);
+    container.listen(wakeWordProvider, (_, _) {});
+    await Future<void>.delayed(Duration.zero);
+    await Future<void>.delayed(Duration.zero);
+    expect(engine.phrase, 'hey casama');
+    final stoppedBefore = engine.stopped;
+    engine.phrase = null;
+
+    container.read(dictationActiveProvider).value = true;
+    await Future<void>.delayed(Duration.zero);
+    expect(engine.stopped, greaterThan(stoppedBefore));
+
+    container.read(dictationActiveProvider).value = false;
+    await Future<void>.delayed(Duration.zero);
+    expect(engine.phrase, 'hey casama');
   });
 
   test('save rolls back and surfaces errors when listening fails to start', () async {

@@ -16,6 +16,7 @@ import 'package:sherpa_onnx/sherpa_onnx.dart' as sherpa;
 
 import '../../core/router.dart';
 import '../../core/analytics.dart';
+import '../../core/voice.dart';
 import 'active_call.dart';
 import '../../core/nav.dart';
 
@@ -254,14 +255,15 @@ class WakeWordController extends Notifier<WakeWordSettings> {
   @override
   WakeWordSettings build() {
     _engine = ref.read(wakeWordEngineProvider);
-    // The wake word doesn't listen during a call (D-327): the call has the mic. It starts again
-    // once the call ends.
+    // The wake word doesn't listen during a call (D-327) or chat dictation: they hold the mic.
+    // It starts again once they finish.
     final calls = ref.read(activeCallProvider);
-    var onCall = calls.live != null;
+    final dictation = ref.read(dictationActiveProvider);
+    var paused = calls.live != null || dictation.value;
     void follow() {
-      final now = calls.live != null;
-      if (now == onCall) return;
-      onCall = now;
+      final now = calls.live != null || dictation.value;
+      if (now == paused) return;
+      paused = now;
       if (now) {
         unawaited(_stopListening());
       } else if (stateOrNull?.enabled ?? false) {
@@ -270,6 +272,7 @@ class WakeWordController extends Notifier<WakeWordSettings> {
     }
 
     calls.addListener(follow);
+    dictation.addListener(follow);
     // Android has no foreground wake-word service (D-144), so pause on background and resume cleanly.
     final lifecycle = !kIsWeb && defaultTargetPlatform == TargetPlatform.android
         ? AppLifecycleListener(
@@ -282,6 +285,7 @@ class WakeWordController extends Notifier<WakeWordSettings> {
     ref.onDispose(() {
       lifecycle?.dispose();
       calls.removeListener(follow);
+      dictation.removeListener(follow);
       unawaited(_sub?.cancel());
       unawaited(_engine.stop());
     });
@@ -322,7 +326,7 @@ class WakeWordController extends Notifier<WakeWordSettings> {
     if (!wakeWordSupported && !_testing) return;
     final botId = state.botId;
     if (botId == null || _sub != null) return;
-    if (ref.read(activeCallProvider).live != null) return;
+    if (ref.read(activeCallProvider).live != null || ref.read(dictationActiveProvider).value) return;
     try {
       final stream = await _engine.listen(state.phrase);
       _sub = stream.listen((_) {

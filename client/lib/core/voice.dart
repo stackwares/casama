@@ -22,6 +22,9 @@ abstract class Dictation {
 }
 
 class RecordDictation implements Dictation {
+  RecordDictation([this._active]);
+
+  final ValueNotifier<bool>? _active;
   final _rec = AudioRecorder();
 
   // AAC in an m4a file: the format both phone recorders actually fill. A 16 kHz WAV often
@@ -38,6 +41,7 @@ class RecordDictation implements Dictation {
   @override
   Future<bool> start() async {
     if (!await _rec.hasPermission()) return false;
+    _active?.value = true;
     try {
       await beginDictationCapture(() async {
         final path = '${(await getTemporaryDirectory()).path}/casama-dictation.m4a';
@@ -48,21 +52,33 @@ class RecordDictation implements Dictation {
       debugPrint('dictation failed to start: $e\n$st');
       try {
         await cancel();
-      } catch (_) {}
+      } catch (_) {
+        _active?.value = false;
+      }
       rethrow;
     }
   }
 
   @override
   Future<(Uint8List, String)?> stop() async {
-    final clip = await endDictationCapture(_rec.stop);
-    if (clip == null) return null;
-    debugPrint('dictation clip ${clip.$1.length} bytes ${clip.$2}');
-    return clip;
+    try {
+      final clip = await endDictationCapture(_rec.stop);
+      if (clip == null) return null;
+      debugPrint('dictation clip ${clip.$1.length} bytes ${clip.$2}');
+      return clip;
+    } finally {
+      _active?.value = false;
+    }
   }
 
   @override
-  Future<void> cancel() => cancelDictationCapture(_rec.cancel);
+  Future<void> cancel() async {
+    try {
+      await cancelDictationCapture(_rec.cancel);
+    } finally {
+      _active?.value = false;
+    }
+  }
 }
 
 /// Plays read-aloud audio.
@@ -262,7 +278,14 @@ abstract class VoiceCallConnector {
   Future<VoiceCall> connect(VoiceSession session);
 }
 
-final dictationProvider = Provider<Dictation>((ref) => RecordDictation());
+/// True while chat dictation holds the microphone so the wake word can pause.
+final dictationActiveProvider = Provider<ValueNotifier<bool>>((ref) {
+  final active = ValueNotifier<bool>(false);
+  ref.onDispose(active.dispose);
+  return active;
+});
+
+final dictationProvider = Provider<Dictation>((ref) => RecordDictation(ref.read(dictationActiveProvider)));
 final speechPlayerProvider = Provider<SpeechPlayer>((ref) => JustAudioPlayer());
 /// Opens a live call: every call is Gemini Live (D-260).
 class RealtimeVoiceConnector implements VoiceCallConnector {
