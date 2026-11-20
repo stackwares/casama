@@ -39,7 +39,7 @@ same commit. Shipping details (deploys, app builds) move fast, so check them bef
 
 | Plan | Decisions | What's left |
 |---|---|---|
-| [LIMIT-RESETS-PLAN](LIMIT-RESETS-PLAN.md) | D-443 | Server/docs deploys, app release builds and first live grant; Mousepad fixture failure remains |
+| [LIMIT-RESETS-PLAN](LIMIT-RESETS-PLAN.md) | D-443 | Server live 2026-11-20 (6d11b195, audit fixes in), feature off; docs deploy, app release builds, then switch on and a first grant to Oliver's workspace |
 | [APP-ART-PLAN](APP-ART-PLAN.md) | D-440 | Web app (51), server and gallery live 2026-11-20; store builds and a low-end Android startup check |
 | [ADMIN-BOT-PLAN](ADMIN-BOT-PLAN.md) | D-435 | Push and deploy; then turn it on for admin@casama.ai's bot |
 | [CALL-RECAP-PLAN](CALL-RECAP-PLAN.md) | D-429 | Server live; app builds and a real call check |
