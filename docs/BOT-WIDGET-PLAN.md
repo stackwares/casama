@@ -1,8 +1,7 @@
 # Bot widgets: a bot puts what it likes on a person's widgets
 
-Status: **not started** (written 2026-11-20). Waiting on §13's answers and Oliver's go-ahead to
-build. No code. The decision gets its number when this is approved (the highest was D-450 on
-2026-11-20).
+Status: **in progress** (D-452). Approved 2026-11-20 with §13's defaults. Phases 1–3 written on
+`feat/bot-widgets`, not built; Phase 0 and Phases 4–6 not started.
 
 Platform rules below were checked on 2026-11-20 against Apple's and Google's own pages and against
 the SDKs installed on this Mac (Xcode 27.2; iOS 27.2, macOS 27.2 and watchOS 27.2 SDKs). Sources

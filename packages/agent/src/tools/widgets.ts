@@ -521,7 +521,8 @@ export function registerWidgetTools(registry: ToolRegistry, deps: WidgetToolDeps
         orgId: ctx.orgId,
         properties: {
           template: firstEntry?.template ?? "text",
-          has_picture: pictures.size > 0 || picturesOf(content).some((h) => h.startsWith("painting-")),
+          has_picture:
+            pictures.size > 0 || picturesOf(content).some((h) => h.startsWith("painting-")),
           entries: content.rotation?.items.length ?? content.entries?.length ?? 0,
           rotation: !!content.rotation,
           trigger: run.chat ? "chat" : run.routine ? "routine" : "other",
