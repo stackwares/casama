@@ -816,57 +816,36 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
   }
 }
 
-/// Soft colour behind the mascots: two glows from the brand's colours fading into the surface.
+/// Dreamy nebula backdrop behind the paywall, following light and dark mode.
 class _Backdrop extends StatelessWidget {
   const _Backdrop();
 
   @override
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
-    final a = context.isDark ? 0.30 : 0.20;
+    final asset = context.isDark
+        ? 'assets/scene/paywall-bg-dark.webp'
+        : 'assets/scene/paywall-bg-light.webp';
     return IgnorePointer(
-      child: Align(
-        alignment: Alignment.topCenter,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 640),
-          child: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Positioned(
-                top: -160,
-                left: -120,
-                child: _Glow(color: scheme.primary.withValues(alpha: a), size: 460),
-              ),
-              Positioned(
-                top: -100,
-                right: -140,
-                child: _Glow(
-                  color: scheme.tertiary.withValues(alpha: a),
-                  size: 420,
-                ),
-              ),
-            ],
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          Image.asset(
+            asset,
+            fit: BoxFit.cover,
+            alignment: Alignment.topCenter,
+            excludeFromSemantics: true,
+            filterQuality: FilterQuality.medium,
           ),
-        ),
+          DecoratedBox(
+            decoration: BoxDecoration(
+              color: scheme.surface.withValues(alpha: context.isDark ? 0.18 : 0.12),
+            ),
+          ),
+        ],
       ),
     );
   }
-}
-
-class _Glow extends StatelessWidget {
-  const _Glow({required this.color, required this.size});
-  final Color color;
-  final double size;
-
-  @override
-  Widget build(BuildContext context) => Container(
-    width: size,
-    height: size,
-    decoration: BoxDecoration(
-      shape: BoxShape.circle,
-      gradient: RadialGradient(colors: [color, color.withValues(alpha: 0)]),
-    ),
-  );
 }
 
 class _TopBar extends StatelessWidget {
