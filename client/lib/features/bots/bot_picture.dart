@@ -652,6 +652,12 @@ final _recentPicturesProvider = FutureProvider.autoDispose
       (ref, botId) => ref.watch(backendProvider).botPictures(botId),
     );
 
+final _candidatePicturesProvider = FutureProvider.autoDispose
+    .family<List<BotPicture>, String>(
+      (ref, botId) =>
+          ref.watch(backendProvider).botPictures(botId, candidates: true),
+    );
+
 // --- Make one with AI (§8) ---------------------------------------------------------------------
 
 typedef _Style = ({
@@ -707,66 +713,79 @@ Future<void> showBotPictureDraw(
 }) async {
   final chosen = await showAdaptiveSheet<BotPicture>(
     context: context,
-    heightFactor: 0.92,
     contentPadsBottom: true,
     builder: (_) => _DrawSheet(bot: bot),
   );
   if (chosen == null || !context.mounted) return;
-  // Drawn pictures come centred; the cropper is there for a nudge. Done without changes just uses it.
-  final original = await runGuarded(
-    context,
-    () => ref.read(backendProvider).botPictureOriginal(bot.id, chosen.id),
-  );
-  if (original == null || !context.mounted) return;
-  final cropped = await showAvatarCropper(
-    context,
-    bytes: original,
-    shape: AvatarShape.bot,
-    name: bot.name,
-    accent: botPalette(bot.name),
-  );
-  if (cropped == null || !context.mounted) return;
-  final c = cropped.crop;
-  final untouched =
-      !cropped.zoomed &&
-      !cropped.turned &&
-      (c.x - 0.5).abs() < 0.01 &&
-      (c.y - 0.5).abs() < 0.01;
-  if (!untouched) {
-    await _upload(
+  Uint8List? previewPng;
+  if (chosen.hasOriginal) {
+    // Drawn pictures come centred; the cropper is there for a nudge. Done without changes just uses it.
+    final original = await runGuarded(
       context,
-      ref,
-      bot,
-      cropped,
-      original: _originalFor(original),
-      source: 'generated',
-      onAvatar: onAvatar,
+      () => ref.read(backendProvider).botPictureOriginal(bot.id, chosen.id),
     );
-    return;
+    if (original == null || !context.mounted) return;
+    final cropped = await showAvatarCropper(
+      context,
+      bytes: original,
+      shape: AvatarShape.bot,
+      name: bot.name,
+      accent: botPalette(bot.name),
+    );
+    if (cropped == null || !context.mounted) return;
+    final c = cropped.crop;
+    final untouched =
+        !cropped.zoomed &&
+        !cropped.turned &&
+        (c.x - 0.5).abs() < 0.01 &&
+        (c.y - 0.5).abs() < 0.01;
+    if (!untouched) {
+      await _upload(
+        context,
+        ref,
+        bot,
+        cropped,
+        original: _originalFor(original),
+        source: 'generated',
+        onAvatar: onAvatar,
+      );
+      ref.invalidate(_recentPicturesProvider(bot.id));
+      ref.invalidate(_candidatePicturesProvider(bot.id));
+      return;
+    }
+    previewPng = cropped.png;
   }
   final before = bot.avatarUrl;
-  ref
-      .read(botPicturePreviewProvider.notifier)
-      .set(bot.id, BotPicturePreview(cropped.png));
+  if (previewPng != null) {
+    ref
+        .read(botPicturePreviewProvider.notifier)
+        .set(bot.id, BotPicturePreview(previewPng));
+  }
   final saved = await runGuarded(
     context,
     () => ref.read(backendProvider).useBotPicture(bot.id, chosen.id),
   );
   if (saved == null) {
-    ref.read(botPicturePreviewProvider.notifier).set(bot.id, null);
+    if (previewPng != null) {
+      ref.read(botPicturePreviewProvider.notifier).set(bot.id, null);
+    }
     return;
   }
-  ref
-      .read(botPicturePreviewProvider.notifier)
-      .set(
-        bot.id,
-        BotPicturePreview(
-          cropped.png,
-          uploading: false,
-          avatar: saved.avatarUrl,
-        ),
-      );
+  if (previewPng != null) {
+    ref
+        .read(botPicturePreviewProvider.notifier)
+        .set(
+          bot.id,
+          BotPicturePreview(
+            previewPng,
+            uploading: false,
+            avatar: saved.avatarUrl,
+          ),
+        );
+  }
   ref.read(botsProvider.notifier).put(saved);
+  ref.invalidate(_recentPicturesProvider(bot.id));
+  ref.invalidate(_candidatePicturesProvider(bot.id));
   onAvatar?.call(saved.avatarUrl);
   HapticsHelper.success();
   Analytics.log('bot_picture_set', {
@@ -833,7 +852,14 @@ class _DrawSheetState extends ConsumerState<_DrawSheet> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final scheme = context.colorScheme;
+    final saved = ref.watch(_candidatePicturesProvider(widget.bot.id)).asData?.value ?? const <BotPicture>[];
+    final seen = <String>{};
+    final pictures = <BotPicture>[
+      for (final p in [..._drawn, ...saved])
+        if (seen.add(p.id)) p,
+    ];
     return Column(
+      mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Padding(
@@ -864,8 +890,8 @@ class _DrawSheetState extends ConsumerState<_DrawSheet> {
             ],
           ),
         ),
-        Expanded(
-          child: ListView(
+        Flexible(
+          child: SingleChildScrollView(
             padding: EdgeInsets.fromLTRB(
               AppSpace.xl,
               AppSpace.xs,
@@ -873,7 +899,10 @@ class _DrawSheetState extends ConsumerState<_DrawSheet> {
               BottomPadding.of(context, minimum: AppSpace.lg),
             ),
             keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-            children: [
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
               Wrap(
                 spacing: AppSpace.xs,
                 runSpacing: AppSpace.xs,
@@ -930,7 +959,7 @@ class _DrawSheetState extends ConsumerState<_DrawSheet> {
                 label: Text(
                   _busy
                       ? l10n.botDrawWorking
-                      : (_drawn.isEmpty ? l10n.botDrawMake : l10n.botDrawMore),
+                      : (pictures.isEmpty ? l10n.botDrawMake : l10n.botDrawMore),
                 ),
               ),
               const SizedBox(height: 6),
@@ -941,9 +970,9 @@ class _DrawSheetState extends ConsumerState<_DrawSheet> {
                   color: scheme.onSurfaceVariant,
                 ),
               ),
-              const SizedBox(height: AppSpace.lg),
-              if (_busy || _drawn.isNotEmpty) ...[
-                if (_drawn.isNotEmpty)
+              if (_busy || pictures.isNotEmpty) ...[
+                const SizedBox(height: AppSpace.lg),
+                if (pictures.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(bottom: AppSpace.sm),
                     child: Text(
@@ -972,7 +1001,7 @@ class _DrawSheetState extends ConsumerState<_DrawSheet> {
                                 radius: side * 0.32,
                               ),
                             ),
-                        for (final p in _drawn)
+                        for (final p in pictures)
                           Semantics(
                             button: true,
                             label: l10n.botDrawPick,
@@ -996,6 +1025,7 @@ class _DrawSheetState extends ConsumerState<_DrawSheet> {
                 ),
               ],
             ],
+            ),
           ),
         ),
       ],

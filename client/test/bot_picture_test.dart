@@ -6,6 +6,7 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
+import 'package:casama_sdk/casama_sdk.dart' show BotPictureStyle;
 import 'package:casama/core/local_cache.dart';
 import 'package:casama/core/providers.dart';
 import 'package:casama/features/bots/bot_picture.dart';
@@ -313,5 +314,40 @@ void main() {
       expect(backend.botPictureUploads, hasLength(1));
       expect(backend.botAvatar, startsWith('image:'));
     });
+
+    testWidgets(
+      'draw dialog sizes to content on tall windows and shows saved candidates',
+      (tester) async {
+        await setSize(tester, const Size(1440, 1200));
+        readClipboardPicture = () async => null;
+        final backend = FakeBackend();
+        final drawn = await backend.drawBotPictures(
+          botId,
+          style: BotPictureStyle.cloud,
+        );
+        backend.botOriginal = (await tester.runAsync(() => _png(300)))!;
+        await tester.pumpWidget(_profile(backend));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const Key('botPictureEdit')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const Key('botPictureDraw')));
+        await tester.pumpAndSettle();
+
+        // Compact dialog on a 1200 px tall window (not stretched to 90% = 1080 px).
+        final dialogRect = tester.getRect(
+          find.descendant(of: find.byType(Dialog), matching: find.byType(Material)).first,
+        );
+        expect(dialogRect.height, lessThan(760));
+
+        // Saved candidates from an earlier draw are shown immediately and can be assigned.
+        final candFinder = find.byKey(Key('botDrawn-${drawn.first.id}'));
+        expect(candFinder, findsOneWidget);
+        await tester.tap(candFinder);
+        await _settle(tester);
+        await tester.tap(find.byKey(const Key('avatarCropDone')));
+        await _settle(tester);
+        expect(backend.botAvatar, drawn.first.avatarUrl);
+      },
+    );
   });
 }

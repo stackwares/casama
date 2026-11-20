@@ -2483,7 +2483,7 @@ class FakeBackend implements Backend {
 
   @override
   Future<List<BotPicture>> botPictures(String botId, {bool candidates = false}) async => candidates
-      ? const []
+      ? List.unmodifiable(_drawn)
       : [for (final p in _pictures) p.copyWith(inUse: p.avatarUrl == botAvatar)];
 
   @override

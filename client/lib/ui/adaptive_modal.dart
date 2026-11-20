@@ -81,8 +81,10 @@ Future<T?> showAdaptiveSheet<T>({
     builder: (context) {
       final size = MediaQuery.sizeOf(context);
       final width = math.min(dialogMaxWidth, size.width - 80);
-      // Tall windows get taller dialogs (up to 90% of the window), so long forms rarely scroll.
-      final maxHeight = math.min(math.max(dialogMaxHeight, size.height * 0.9 - 40), size.height * 0.9);
+      final cap = heightFactor == null
+          ? size.height * 0.9
+          : size.height * math.min(0.9, heightFactor);
+      final maxHeight = math.min(dialogMaxHeight, cap);
       // showDialog's own SafeArea keeps it off an iPhone Duo's side strip, centered in the page.
       return Dialog(
         clipBehavior: Clip.antiAlias,
