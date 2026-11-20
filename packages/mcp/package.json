@@ -1,6 +1,7 @@
 {
   "name": "@casama/mcp",
-  "version": "0.2.0",
+  "version": "0.2.1",
+  "mcpName": "io.github.stackwares/casama",
   "description": "Casama MCP server: search Casama's docs and API reference, check plugins, and control your Casama bots from AI coding tools (Claude Code, Cursor, Codex, and others).",
   "type": "module",
   "license": "Apache-2.0",

@@ -17,7 +17,7 @@ import { type GallerySource, registerGalleryTools } from "./gallery.ts";
 export * from "./docs.ts";
 export * from "./gallery.ts";
 
-export const VERSION = "0.2.0";
+export const VERSION = "0.2.1";
 
 type Session = { access_token: string; refresh_token?: string; expires_at?: number };
 
