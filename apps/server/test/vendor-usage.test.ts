@@ -176,7 +176,7 @@ describe("cloud usage readers", () => {
         "2027-03-14T08:00:00.000Z",
       );
       expect(new URL(String(url)).searchParams.get("filter")).toContain(
-        'metric.labels.method="confirmedMethod"',
+        'resource.labels.method="confirmedMethod"',
       );
       return Response.json({
         timeSeries: [{ points: [{ value: { int64Value: "5" } }] }],

@@ -73,3 +73,5 @@ insert into public.vendor_limits(vendor,label,kind,unit,limit_value,period,billi
 values ('openrouter_daily','OpenRouter daily server key','quota','USD',50,'day','https://openrouter.ai/settings/keys','Server model requests can fail when the daily key allowance runs out.'),
  ('google_maps_month','Google Maps monthly','quota','tiles',100000,'month','https://console.cloud.google.com/apis/api/tile.googleapis.com/quotas','Map cards try other configured sources when the included quota is depleted.')
 on conflict do nothing;
+-- Match the cloud account's existing low-credit warning: roughly one daily key cap of runway.
+update public.vendor_limits set balance_warn_below=50 where vendor='openrouter';

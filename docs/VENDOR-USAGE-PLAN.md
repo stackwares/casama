@@ -253,3 +253,9 @@ through the heavy-command lock. Server: 1,345 tests passed, 2 skipped; Flutter: 
 22 skipped. A final focused regression verifies that unconfigured history does not prematurely
 trigger a three-hour failure alert. Provider setup continues separately; this is not a claim that
 Phase 5 has shipped.
+
+Phase 5 follow-up: see [VENDOR-USAGE-SETUP.md](VENDOR-USAGE-SETUP.md). Google credential is now
+saved and hash-verified in Vaultwarden, and both tile-only application readers were verified
+live after correcting the resource-label filter. OpenRouter credits were verified with the
+existing management key. Cloudflare login, the Zoho filter, broad-scope-only vendor credentials,
+and production configuration/deployment remain unresolved. No production writes occurred.

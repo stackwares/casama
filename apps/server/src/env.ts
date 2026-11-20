@@ -226,7 +226,7 @@ export const EnvSchema = z.object({
   VENDOR_HERE_REALM: z.string().optional(),
   VENDOR_HERE_FEATURE_ID: z.string().optional(),
   GOOGLE_USAGE_SA_JSON: z.string().optional(),
-  GOOGLE_USAGE_TILE_METHOD: z.string().optional(),
+  GOOGLE_USAGE_TILE_METHOD: z.string().default("maps_api.tas.TileService.GetTileMedia"),
   VENDOR_COMPOSIO_ORG_KEY: z.string().optional(),
   VENDOR_ALERT_EMAILS: z.string().optional(),
   /**

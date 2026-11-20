@@ -60,7 +60,8 @@ Usage readers use separate monitoring credentials where available:
 
 Keep credentials in your secret store. MapTiler service tokens grant full account access; consider
 that scope before supplying one. Google Maps monitoring must filter the billed tile method;
-counting session or viewport requests would overstate tile usage.
+counting session or viewport requests would overstate tile usage. The reader defaults to the
+verified tile method `maps_api.tas.TileService.GetTileMedia`.
 
 Set `VENDOR_ALERT_EMAILS` to comma-separated alert recipients. Without it, alerts use
 `INSTANCE_ADMIN_EMAILS`, or the first instance account when that list is empty. Email delivery

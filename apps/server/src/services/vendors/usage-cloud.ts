@@ -192,7 +192,7 @@ export async function readCloudUsage(
     const interval = pacificPeriod(now, vendor === "google_maps_month");
     const start = interval.start;
     const query = new URLSearchParams({
-      filter: `metric.type="serviceruntime.googleapis.com/api/request_count" AND resource.labels.service="tile.googleapis.com" AND metric.labels.method=${JSON.stringify(env.GOOGLE_USAGE_TILE_METHOD)}`,
+      filter: `metric.type="serviceruntime.googleapis.com/api/request_count" AND resource.labels.service="tile.googleapis.com" AND resource.labels.method=${JSON.stringify(env.GOOGLE_USAGE_TILE_METHOD)}`,
       "interval.startTime": start,
       "interval.endTime": now.toISOString(),
       view: "FULL",
