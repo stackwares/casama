@@ -1,6 +1,7 @@
 # Local MCP servers that need a sign-in: the plan
 
-Status: **proposed** (2026-11-18). Nothing built. Waiting for Oliver's go-ahead.
+Status: **built as D-363** on local main; not pushed or deployed, and a real T3 Code sign-in needs a Mac
+build. Originally proposed 2026-11-18.
 
 ## The problem
 

@@ -1,7 +1,8 @@
 # Store screenshots (plan, 2026-11-18)
 
-**Status:** proposal. Nothing is made, captured or uploaded yet. Work starts after Oliver answers the
-decisions in §9. The listing text and the store forms are handled in another session; this plan covers
+**Status:** **done** (checked live 2026-11-20): App Store iPhone, iPad and Mac have 10 screenshots each, plus
+folding iPhone, Watch and App Previews; Google Play has phone, 7" and 10" tablet sets of 8, the feature
+graphic and Wear. Originally a proposal that waited on the decisions in §9. The listing text and the store forms are handled in another session; this plan covers
 pictures only.
 
 ## 1. Summary
