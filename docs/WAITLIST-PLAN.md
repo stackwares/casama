@@ -898,9 +898,11 @@ sign-up reaches the hook in `user_metadata` (so Phase 2's code-at-sign-up works 
   subscription when that address signs up, so no confirmation email goes out. After "You're in",
   a link opened inside Instagram, Facebook, Threads, TikTok, X, LinkedIn, Snapchat or Line says
   Google sign-in doesn't work there and leads with Get the apps and a button that copies
-  app.casama.ai (`embeddedBrowser` in `site/assets/waitlist.js`). Site only: no server or app
-  change. **Not built:** opening the web app with the claimed email already typed in; the sign-in
-  screen has no way to take one yet, so it needs an app change and a build.
+  app.casama.ai (`embeddedBrowser` in `site/assets/waitlist.js`). Site only: no server change.
+  Open Casama (and the copied link) is `app.casama.ai/#/sign-in?email=<the claimed address>`:
+  the sign-in screen opens the ways in with the address typed in and sends nothing until the
+  person presses (`SignInScreen.initialEmail`, `client/test/sign_in_email_link_test.dart`; from
+  app build 57). The address rides after the `#`, so no server sees it.
 
 ### Where the build differs from the plan above
 

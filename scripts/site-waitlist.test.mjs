@@ -316,6 +316,14 @@ test("a link opened inside another app's browser is recognised, and a real brows
   assert.equal(embeddedBrowser(undefined), "");
 });
 
+test("after a claim, Open Casama goes to the web app's sign-in with the address after the #", () => {
+  const { signInLink } = load();
+  assert.equal(signInLink(" rae+news@example.com "), "https://app.casama.ai/#/sign-in?email=rae%2Bnews%40example.com");
+  const link = new URL(signInLink("a&b=c@example.com"));
+  assert.equal(link.search, "", "nothing before the # reaches a server");
+  assert.equal(new URLSearchParams(link.hash.split("?")[1]).get("email"), "a&b=c@example.com");
+});
+
 test("sha256 matches Node's for the empty string, short, long and awkward inputs", () => {
   const inputs = [
     "",

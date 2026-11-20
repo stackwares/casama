@@ -39,14 +39,27 @@ void openGuidedSetup(BuildContext context) {
 
 /// The first screen: the bots floating around the name, and one button that opens the ways in.
 class SignInScreen extends ConsumerWidget {
-  const SignInScreen({super.key});
+  const SignInScreen({super.key, this.initialEmail});
 
-  static Future<void> openOptions(BuildContext context) =>
+  /// An address from a link (`/sign-in?email=`, sent by casama.ai's invite page after a claim):
+  /// the ways in open by themselves with it typed in. Nothing is sent until the person presses.
+  final String? initialEmail;
+
+  /// [value] if it could be an email address, trimmed; otherwise null (the link is ignored).
+  static String? emailFromLink(String? value) {
+    final email = (value ?? '').trim();
+    if (email.isEmpty || email.length > 254 || email.contains(RegExp(r'\s'))) return null;
+    final at = email.indexOf('@');
+    if (at <= 0 || at != email.lastIndexOf('@') || at == email.length - 1) return null;
+    return email;
+  }
+
+  static Future<void> openOptions(BuildContext context, {String? email}) =>
       showAdaptiveSheet<void>(
         context: context,
         dialogMaxWidth: 460,
         contentPadsBottom: true,
-        builder: (_) => const SignInOptions(),
+        builder: (_) => SignInOptions(initialEmail: email),
       );
 
   @override
@@ -63,6 +76,7 @@ class SignInScreen extends ConsumerWidget {
         fit: StackFit.expand,
         children: [
           SplashScene(brightness: Theme.of(context).brightness, background: Colors.transparent),
+          if (initialEmail != null) _OpenWithEmail(email: initialEmail!),
           FloatingMascots(
           child: ProgressiveFade(child: SafeArea(
             top: false,
@@ -187,9 +201,35 @@ class SignInScreen extends ConsumerWidget {
   }
 }
 
+/// Opens the ways in once, with the address from a link typed in. Draws nothing.
+class _OpenWithEmail extends StatefulWidget {
+  const _OpenWithEmail({required this.email});
+
+  final String email;
+
+  @override
+  State<_OpenWithEmail> createState() => _OpenWithEmailState();
+}
+
+class _OpenWithEmailState extends State<_OpenWithEmail> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) SignInScreen.openOptions(context, email: widget.email);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) => const SizedBox.shrink();
+}
+
 /// Apple and Google up front; email and password, a magic link, SSO and self-hosting folded behind reveals.
 class SignInOptions extends ConsumerStatefulWidget {
-  const SignInOptions({super.key});
+  const SignInOptions({super.key, this.initialEmail});
+
+  /// An address to start with (from a link): the email field is open and filled in.
+  final String? initialEmail;
 
   @override
   ConsumerState<SignInOptions> createState() => _SignInOptionsState();
@@ -197,14 +237,14 @@ class SignInOptions extends ConsumerStatefulWidget {
 
 class _SignInOptionsState extends ConsumerState<SignInOptions> {
   final _form = GlobalKey<FormState>();
-  final _email = TextEditingController();
+  late final _email = TextEditingController(text: widget.initialEmail ?? '');
   final _password = TextEditingController();
   var _signUp = false;
 
   /// The sign-up box for Casama's monthly email (D-408): unticked until the person ticks it.
   var _newsletter = false;
   var _busy = false;
-  var _showEmail = false;
+  late var _showEmail = (widget.initialEmail ?? '').isNotEmpty;
   var _showMore = false;
   var _usePassword = false;
 

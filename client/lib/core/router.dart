@@ -312,7 +312,10 @@ final routerProvider = Provider<GoRouter>((ref) {
     routes: [
       GoRoute(
         path: '/sign-in',
-        pageBuilder: _outside((_, _) => const SignInScreen()),
+        // casama.ai's invite page sends people here with the address they claimed (?email=).
+        pageBuilder: _outside(
+          (_, s) => SignInScreen(initialEmail: SignInScreen.emailFromLink(s.uri.queryParameters['email'])),
+        ),
       ),
       GoRoute(
         path: '/onboarding',

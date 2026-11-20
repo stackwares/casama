@@ -191,7 +191,7 @@
     });
   }
 
-  root.CasamaWaitlist = { sha256Hex: sha256Hex, leadingZeros: leadingZeros, findNonce: findNonce, solve: solve, embeddedBrowser: embeddedBrowser };
+  root.CasamaWaitlist = { sha256Hex: sha256Hex, leadingZeros: leadingZeros, findNonce: findNonce, solve: solve, embeddedBrowser: embeddedBrowser, signInLink: signInLink };
 
   if (typeof document === "undefined") return;
 
@@ -334,13 +334,18 @@
     return "";
   }
 
-  /** A button that copies `text`, and says so. Falls back to showing the text to copy by hand. */
-  function copyButton(text, label) {
+  /** The web app's sign-in screen with `email` typed in (client/lib/core/router.dart, /sign-in?email=). */
+  function signInLink(email) {
+    return "https://app.casama.ai/#/sign-in?email=" + encodeURIComponent(String(email || "").trim());
+  }
+
+  /** A button that copies `text`, and says so. When copying isn't allowed it shows `plain` to type by hand. */
+  function copyButton(text, label, plain) {
     var btn = node("button", "btn", label);
     btn.type = "button";
     btn.addEventListener("click", function () {
       function done() { btn.textContent = "Copied"; }
-      function byHand() { btn.textContent = text.replace(/^https:\/\//, ""); }
+      function byHand() { btn.textContent = plain; }
       try {
         if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, byHand);
         else byHand();
@@ -358,15 +363,18 @@
       p.appendChild(document.createTextNode(" Sign in with " + email + ": Google, Apple and the email link all work, as long as it's this address."));
       target.appendChild(p);
       var row = node("div", "wl-actions");
+      // The web app's sign-in opens with this address typed in. It rides after the #, so it is
+      // never sent to a server.
+      var signIn = signInLink(email);
       var inside = embeddedBrowser(navigator.userAgent);
       if (inside) {
         // Google's sign-in refuses to run inside another app's browser, and the web app is heavy
         // there. The apps come first, and the address to open in a real browser can be copied.
         target.appendChild(node("p", "wl-note", "You're in " + inside + "'s browser, where Google sign-in doesn't work. Get the app, or open app.casama.ai in Safari or Chrome."));
         row.appendChild(link("/download", "Get the apps", "btn primary"));
-        row.appendChild(copyButton(SIGN_IN, "Copy app.casama.ai"));
+        row.appendChild(copyButton(signIn, "Copy app.casama.ai", "app.casama.ai"));
       } else {
-        row.appendChild(link(SIGN_IN, "Open Casama", "btn primary"));
+        row.appendChild(link(signIn, "Open Casama", "btn primary"));
         row.appendChild(link("/download", "Get the apps", "btn"));
       }
       target.appendChild(row);
