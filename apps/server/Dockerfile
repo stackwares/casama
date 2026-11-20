@@ -52,6 +52,9 @@ COPY docs-site/self-hosting docs-site/self-hosting
 COPY docs-site/develop docs-site/develop
 # casama.ai explainers the support assistants also answer from (D-401).
 COPY site/content site/content
+# The bundled skill catalog (D-104), read at runtime by loadCatalog(). Its catalog.json also holds the
+# categories the gallery's skills are filtered by, so without it Settings → Skills → Catalog is empty.
+COPY skills skills
 # Built-in apps' marks, served to apps built before a mark was bundled (services/app-logos.ts).
 COPY client/assets/apps client/assets/apps
 # Migrations, applied by the one-shot `migrate` service in the self-host stack.
