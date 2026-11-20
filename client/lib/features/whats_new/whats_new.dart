@@ -119,6 +119,7 @@ Future<void> showWhatsNew(BuildContext context, {required String version, requir
       icon: LucideIcons.sparkles,
       art: 'whatsnew',
       title: l10n.whatsNewTitle(version),
+      subtitle: l10n.whatsNewSubtitle,
       submitLabel: l10n.whatsNewGotIt,
       submitKey: const Key('whatsNewDone'),
       showCancel: false,

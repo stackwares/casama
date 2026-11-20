@@ -39,11 +39,12 @@ class FormSheet extends StatelessWidget {
   final String? subtitle;
   final IconData? icon;
 
-  /// A painted picture ([paintedArt] name) shown large over the title in place of the icon tile;
-  /// [icon] is then drawn only if the picture is missing.
+  /// A painted picture ([paintedArt] name) beside the title in place of the icon tile; [icon] is
+  /// then drawn only if the picture is missing.
   final String? art;
 
-  /// Any other picture over the title, where [art] would go (a [MascotHero]); [art] wins if both.
+  /// Any other picture beside the title, where [art] would go (a [MascotHero]), scaled to fit;
+  /// [art] wins if both.
   final Widget? hero;
   final Color? iconColor;
   final List<Widget> children;
@@ -113,18 +114,21 @@ class FormSheet extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               mainAxisSize: MainAxisSize.min,
               children: [
-                if (art != null) ...[
-                  Center(
-                    child: PaintedHero(name: art!, size: compact ? 96 : 112, icon: icon ?? LucideIcons.sparkles, float: true),
-                  ),
-                  const SizedBox(height: AppSpace.md),
-                ] else if (hero != null) ...[
-                  Center(child: hero),
-                  const SizedBox(height: AppSpace.md),
-                ],
+                // One row: the picture beside the title, so the form starts high on the sheet.
                 Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: art != null || hero != null ? CrossAxisAlignment.center : CrossAxisAlignment.start,
                   children: [
+                    if (art != null) ...[
+                      PaintedHero(name: art!, size: compact ? 56 : 64, icon: icon ?? LucideIcons.sparkles, float: true),
+                      const SizedBox(width: AppSpace.md),
+                    ] else if (hero != null) ...[
+                      ConstrainedBox(
+                        key: const Key('formSheetHero'),
+                        constraints: BoxConstraints(maxWidth: compact ? 88 : 100, maxHeight: compact ? 56 : 64),
+                        child: FittedBox(child: hero),
+                      ),
+                      const SizedBox(width: AppSpace.md),
+                    ],
                     if (icon != null && art == null && hero == null) ...[
                       Container(
                         width: 44,

@@ -3069,6 +3069,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get whatsNewGotIt => 'Got It';
 
   @override
+  String get whatsNewSubtitle => 'Here\'s what changed since your last update.';
+
+  @override
   String get whatsNew010Calls =>
       'Call your bots and talk things through. They answer out loud, with captions.';
 
@@ -5681,6 +5684,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get newTicket => 'New ticket';
 
   @override
+  String get newTicketSubtitle =>
+      'A task for one of your bots, tracked on the board.';
+
+  @override
   String get allProjects => 'All projects';
 
   @override
@@ -5816,6 +5823,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get newWorkspace => 'New Workspace';
+
+  @override
+  String get newWorkspaceSubtitle =>
+      'A separate home for a team, with its own bots, chats and people.';
 
   @override
   String get joinWorkspaceHelp => 'Paste the invite link someone sent you.';
@@ -16241,8 +16252,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get inviteWaitlistedTitle => 'You\'re on the waitlist';
+
+  @override
   String get inviteWaitlisted =>
-      'These invites are gone. You\'re on the waitlist, ahead of the line.';
+      'These invites are gone, but you\'re ahead of the line.';
 
   @override
   String get inviteUseEmailHere =>

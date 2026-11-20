@@ -289,7 +289,8 @@ class _PaintedHeroState extends State<PaintedHero>
       builder: (context, child) {
         final t = float.value * 2 * math.pi;
         return Transform.translate(
-          offset: Offset(0, math.sin(t) * 4),
+          // About 4 px on a 112 px hero, less on a small one beside a sheet's title.
+          offset: Offset(0, math.sin(t) * (widget.size / 28).clamp(1.5, 4.0)),
           child: Transform.rotate(
             angle: math.sin(t + 1.1) * 0.014,
             child: child,
