@@ -10,11 +10,11 @@ No emails or messages were sent. No Flutter build was run.
 | Item | State |
 |---|---|
 | `alerts@casama.ai` alias | Done earlier (Zoho CLI, on the hello@ mailbox), verified |
-| "Alerts" label + filter | **Blocked**: no safe path found (below) |
+| "Alerts" label + filter | **Done** 2026-11-20 (below) |
 | Google usage reader: key | **Done**: key created, verified, saved to the vault |
-| OpenRouter credits | **Verified** with the existing management key |
+| OpenRouter credits | **Verified**; topped up, $62.40 left on 2026-11-20 |
 | Composio org usage | **Blocked**: needs an org-level key; scope unclear (below) |
-| Cloudflare Billing Read token | **Blocked**: dashboard sign-in needs a 2FA code (below) |
+| Cloudflare Billing Read token | **Done**: token made by API, verified, in the vault; VPS env pending |
 | MapTiler | **Not created, on purpose**: only full-access tokens exist |
 | HERE | **Deferred**: not switched on |
 | VPS env (`VENDOR_ALERT_EMAILS`, `GOOGLE_USAGE_SA_JSON`, ...) | **Not touched**: needs Oliver's yes |
@@ -64,7 +64,18 @@ No emails or messages were sent. No Flutter build was run.
   the clipboard pattern in AGENTS.md, and save it to the vault. Until then Admin shows Composio as
   "Not set up".
 
-## Cloudflare Billing Read token (blocked)
+## Cloudflare Billing Read token
+
+**Update 2026-11-20 (done):** no dashboard sign-in was needed. The vault's Stackwares user token
+**Cloudflare · stackwares · API token Admin automation · …fc54** has API Tokens Write, so it created a
+user token `Casama usage read (Billing Read)` (id `5e9496dc…0529`) with one policy: Billing Read on
+account Stackwares (`0e39b3b828e0c3f87f8f45fa626fa720`). `GET /accounts/{id}/billable-usage` with
+the new token for this month answered HTTP 200 (9 rows, all USD). Saved to the vault as **Casama ·
+Cloudflare API token: usage read (Billing Read)** (username `VENDOR_CLOUDFLARE_BILLING_TOKEN`);
+the vault copy's hash matched. Still to do, with Oliver's yes: set `VENDOR_CLOUDFLARE_BILLING_TOKEN`
+and `VENDOR_CLOUDFLARE_ACCOUNT_ID` on the VPS and restart the API and worker.
+
+Earlier notes:
 
 - `cf` CLI is signed in with OAuth on the Stackwares account, but `cf accounts tokens
   permission-groups list` returns 403 (9109), so it cannot create tokens.
@@ -87,7 +98,17 @@ No emails or messages were sent. No Flutter build was run.
   "Not set up" / own count.
 - HERE: not enabled, so no key was made.
 
-## Zoho: `alerts@casama.ai` label and filter (blocked)
+## Zoho: `alerts@casama.ai` label and filter
+
+**Update 2026-11-20 (done):** the `zmail` CLI created the label **Alerts** (id
+`1076376000000027001`) on hello@casama.ai. The filter was made in Zoho Mail's web UI in an incognito
+preview tab, with the password and TOTP from the vault item passed in through the clipboard
+(cleared afterwards; the browser was not trusted for 2FA). Filter **Casama alerts**: *Delivered To*
+contains `alerts@casama.ai` → tag **Alerts**, stays in Inbox, "do not process other filters" on.
+It sits at position 1, ahead of the Notification smart filter that would otherwise move automated
+alerts out of the Inbox.
+
+Earlier notes:
 
 - The alias exists (see plan §11). A filter that labels mail to `alerts@casama.ai` "Alerts" has to be
   made in Zoho Mail (Settings → Filters). The CLI's `filter` command filters command output; it does not create an incoming-mail filter.
@@ -112,9 +133,9 @@ No emails or messages were sent. No Flutter build was run.
 
 1. Production: set `VENDOR_ALERT_EMAILS=alerts@casama.ai` and `GOOGLE_USAGE_SA_JSON` on the VPS, then
    deploy (separate yes; `scripts/deploy-prod.sh --dry-run` first).
-2. Zoho Alerts filter (above).
-3. Composio org token decision; Cloudflare Billing Read token (2FA); MapTiler decision.
-4. OpenRouter top-up (about $12 left).
+2. ~~Zoho Alerts filter~~: done.
+3. Composio org token decision; MapTiler decision. Cloudflare token done; its VPS env needs a yes.
+4. ~~OpenRouter top-up~~: done, $62.40 left on 2026-11-20 (just above the $50 warning line).
 5. Check each reading against the vendor's own dashboard once the check runs (plan Phase 5).
 
 ## Parent review and live application-reader verification
