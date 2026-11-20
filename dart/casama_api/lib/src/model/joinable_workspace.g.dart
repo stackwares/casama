@@ -15,6 +15,8 @@ abstract class _$JoinableWorkspaceCWProxy {
 
   JoinableWorkspace color(String? color);
 
+  JoinableWorkspace avatarUrl(String? avatarUrl);
+
   JoinableWorkspace memberCount(int memberCount);
 
   JoinableWorkspace domain(String domain);
@@ -32,6 +34,7 @@ abstract class _$JoinableWorkspaceCWProxy {
     String name,
     String? icon,
     String? color,
+    String? avatarUrl,
     int memberCount,
     String domain,
   });
@@ -57,6 +60,9 @@ class _$JoinableWorkspaceCWProxyImpl implements _$JoinableWorkspaceCWProxy {
   JoinableWorkspace color(String? color) => call(color: color);
 
   @override
+  JoinableWorkspace avatarUrl(String? avatarUrl) => call(avatarUrl: avatarUrl);
+
+  @override
   JoinableWorkspace memberCount(int memberCount) =>
       call(memberCount: memberCount);
 
@@ -77,6 +83,7 @@ class _$JoinableWorkspaceCWProxyImpl implements _$JoinableWorkspaceCWProxy {
     Object? name = const $CopyWithPlaceholder(),
     Object? icon = const $CopyWithPlaceholder(),
     Object? color = const $CopyWithPlaceholder(),
+    Object? avatarUrl = const $CopyWithPlaceholder(),
     Object? memberCount = const $CopyWithPlaceholder(),
     Object? domain = const $CopyWithPlaceholder(),
   }) {
@@ -97,6 +104,10 @@ class _$JoinableWorkspaceCWProxyImpl implements _$JoinableWorkspaceCWProxy {
           ? _value.color
           // ignore: cast_nullable_to_non_nullable
           : color as String?,
+      avatarUrl: avatarUrl == const $CopyWithPlaceholder()
+          ? _value.avatarUrl
+          // ignore: cast_nullable_to_non_nullable
+          : avatarUrl as String?,
       memberCount:
           memberCount == const $CopyWithPlaceholder() || memberCount == null
           ? _value.memberCount
@@ -122,29 +133,36 @@ extension $JoinableWorkspaceCopyWith on JoinableWorkspace {
 // JsonSerializableGenerator
 // **************************************************************************
 
-JoinableWorkspace _$JoinableWorkspaceFromJson(Map<String, dynamic> json) =>
-    $checkedCreate('JoinableWorkspace', json, ($checkedConvert) {
-      $checkKeys(
-        json,
-        requiredKeys: const [
-          'id',
-          'name',
-          'icon',
-          'color',
-          'member_count',
-          'domain',
-        ],
-      );
-      final val = JoinableWorkspace(
-        id: $checkedConvert('id', (v) => v as String),
-        name: $checkedConvert('name', (v) => v as String),
-        icon: $checkedConvert('icon', (v) => v as String?),
-        color: $checkedConvert('color', (v) => v as String?),
-        memberCount: $checkedConvert('member_count', (v) => (v as num).toInt()),
-        domain: $checkedConvert('domain', (v) => v as String),
-      );
-      return val;
-    }, fieldKeyMap: const {'memberCount': 'member_count'});
+JoinableWorkspace _$JoinableWorkspaceFromJson(
+  Map<String, dynamic> json,
+) => $checkedCreate(
+  'JoinableWorkspace',
+  json,
+  ($checkedConvert) {
+    $checkKeys(
+      json,
+      requiredKeys: const [
+        'id',
+        'name',
+        'icon',
+        'color',
+        'member_count',
+        'domain',
+      ],
+    );
+    final val = JoinableWorkspace(
+      id: $checkedConvert('id', (v) => v as String),
+      name: $checkedConvert('name', (v) => v as String),
+      icon: $checkedConvert('icon', (v) => v as String?),
+      color: $checkedConvert('color', (v) => v as String?),
+      avatarUrl: $checkedConvert('avatar_url', (v) => v as String?),
+      memberCount: $checkedConvert('member_count', (v) => (v as num).toInt()),
+      domain: $checkedConvert('domain', (v) => v as String),
+    );
+    return val;
+  },
+  fieldKeyMap: const {'avatarUrl': 'avatar_url', 'memberCount': 'member_count'},
+);
 
 Map<String, dynamic> _$JoinableWorkspaceToJson(JoinableWorkspace instance) =>
     <String, dynamic>{
@@ -152,6 +170,7 @@ Map<String, dynamic> _$JoinableWorkspaceToJson(JoinableWorkspace instance) =>
       'name': instance.name,
       'icon': instance.icon,
       'color': instance.color,
+      'avatar_url': ?instance.avatarUrl,
       'member_count': instance.memberCount,
       'domain': instance.domain,
     };

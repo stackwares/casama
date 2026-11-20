@@ -61,6 +61,7 @@ import * as waitlist from "./waitlist.ts";
 import * as watch from "./watch.ts";
 import * as watchers from "./watchers.ts";
 import * as workspaceFiles from "./workspace-files.ts";
+import * as workspacePictures from "./workspace-pictures.ts";
 import * as workspaces from "./workspaces.ts";
 
 export const routes = {
@@ -68,6 +69,7 @@ export const routes = {
   ...support,
   ...moderation,
   ...workspaces,
+  ...workspacePictures,
   ...bots,
   ...botPictures,
   ...reactions,

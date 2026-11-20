@@ -605,6 +605,55 @@
       }
     },
     {
+      "name": "workspace_picture_set",
+      "by": ["client"],
+      "description": "A workspace got a picture of its own from the app (WORKSPACE-PICTURES-PLAN).",
+      "properties": {
+        "source": {
+          "type": "string",
+          "values": ["camera", "library", "file", "drop", "paste", "recent", "generated", "recrop"]
+        },
+        "transparent": { "type": "boolean" },
+        "rotated": { "type": "boolean" },
+        "zoomed": { "type": "boolean" }
+      }
+    },
+    {
+      "name": "workspace_picture_crop_cancelled",
+      "by": ["client"],
+      "description": "The workspace picture cropper was closed without using the picture.",
+      "properties": {
+        "source": {
+          "type": "string",
+          "values": ["camera", "library", "file", "drop", "paste", "recent", "generated", "recrop"]
+        }
+      }
+    },
+    {
+      "name": "workspace_picture_removed",
+      "by": ["client"],
+      "description": "A workspace stopped using its picture.",
+      "properties": {}
+    },
+    {
+      "name": "workspace_picture_undone",
+      "by": ["client"],
+      "description": "Undo right after changing a workspace's picture.",
+      "properties": {}
+    },
+    {
+      "name": "workspace_picture_drawn",
+      "by": ["server"],
+      "description": "Casama drew emblem picture candidates for a workspace (Make one with AI).",
+      "properties": {
+        "style": {
+          "type": "string",
+          "values": ["cloud", "soft3d", "watercolor", "flat", "pixel", "line", "photo"]
+        },
+        "count": { "type": "number" }
+      }
+    },
+    {
       "name": "profile_photo_set",
       "by": ["client"],
       "description": "A person set their profile photo through the cropper.",

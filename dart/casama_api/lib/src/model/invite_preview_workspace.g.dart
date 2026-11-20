@@ -13,6 +13,8 @@ abstract class _$InvitePreviewWorkspaceCWProxy {
 
   InvitePreviewWorkspace color(String? color);
 
+  InvitePreviewWorkspace avatarUrl(String? avatarUrl);
+
   InvitePreviewWorkspace memberCount(int memberCount);
 
   /// Creates a new instance with the provided field values.
@@ -27,6 +29,7 @@ abstract class _$InvitePreviewWorkspaceCWProxy {
     String name,
     String? icon,
     String? color,
+    String? avatarUrl,
     int memberCount,
   });
 }
@@ -49,6 +52,10 @@ class _$InvitePreviewWorkspaceCWProxyImpl
   InvitePreviewWorkspace color(String? color) => call(color: color);
 
   @override
+  InvitePreviewWorkspace avatarUrl(String? avatarUrl) =>
+      call(avatarUrl: avatarUrl);
+
+  @override
   InvitePreviewWorkspace memberCount(int memberCount) =>
       call(memberCount: memberCount);
 
@@ -65,6 +72,7 @@ class _$InvitePreviewWorkspaceCWProxyImpl
     Object? name = const $CopyWithPlaceholder(),
     Object? icon = const $CopyWithPlaceholder(),
     Object? color = const $CopyWithPlaceholder(),
+    Object? avatarUrl = const $CopyWithPlaceholder(),
     Object? memberCount = const $CopyWithPlaceholder(),
   }) {
     return InvitePreviewWorkspace(
@@ -80,6 +88,10 @@ class _$InvitePreviewWorkspaceCWProxyImpl
           ? _value.color
           // ignore: cast_nullable_to_non_nullable
           : color as String?,
+      avatarUrl: avatarUrl == const $CopyWithPlaceholder()
+          ? _value.avatarUrl
+          // ignore: cast_nullable_to_non_nullable
+          : avatarUrl as String?,
       memberCount:
           memberCount == const $CopyWithPlaceholder() || memberCount == null
           ? _value.memberCount
@@ -103,19 +115,25 @@ extension $InvitePreviewWorkspaceCopyWith on InvitePreviewWorkspace {
 
 InvitePreviewWorkspace _$InvitePreviewWorkspaceFromJson(
   Map<String, dynamic> json,
-) => $checkedCreate('InvitePreviewWorkspace', json, ($checkedConvert) {
-  $checkKeys(
-    json,
-    requiredKeys: const ['name', 'icon', 'color', 'member_count'],
-  );
-  final val = InvitePreviewWorkspace(
-    name: $checkedConvert('name', (v) => v as String),
-    icon: $checkedConvert('icon', (v) => v as String?),
-    color: $checkedConvert('color', (v) => v as String?),
-    memberCount: $checkedConvert('member_count', (v) => (v as num).toInt()),
-  );
-  return val;
-}, fieldKeyMap: const {'memberCount': 'member_count'});
+) => $checkedCreate(
+  'InvitePreviewWorkspace',
+  json,
+  ($checkedConvert) {
+    $checkKeys(
+      json,
+      requiredKeys: const ['name', 'icon', 'color', 'member_count'],
+    );
+    final val = InvitePreviewWorkspace(
+      name: $checkedConvert('name', (v) => v as String),
+      icon: $checkedConvert('icon', (v) => v as String?),
+      color: $checkedConvert('color', (v) => v as String?),
+      avatarUrl: $checkedConvert('avatar_url', (v) => v as String?),
+      memberCount: $checkedConvert('member_count', (v) => (v as num).toInt()),
+    );
+    return val;
+  },
+  fieldKeyMap: const {'avatarUrl': 'avatar_url', 'memberCount': 'member_count'},
+);
 
 Map<String, dynamic> _$InvitePreviewWorkspaceToJson(
   InvitePreviewWorkspace instance,
@@ -123,5 +141,6 @@ Map<String, dynamic> _$InvitePreviewWorkspaceToJson(
   'name': instance.name,
   'icon': instance.icon,
   'color': instance.color,
+  'avatar_url': ?instance.avatarUrl,
   'member_count': instance.memberCount,
 };

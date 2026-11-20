@@ -21,6 +21,8 @@ abstract class _$OrganizationWithRoleCWProxy {
 
   OrganizationWithRole color(String? color);
 
+  OrganizationWithRole avatarUrl(String? avatarUrl);
+
   OrganizationWithRole createdAt(DateTime createdAt);
 
   OrganizationWithRole role(OrgRole role);
@@ -47,6 +49,7 @@ abstract class _$OrganizationWithRoleCWProxy {
     String region,
     String? icon,
     String? color,
+    String? avatarUrl,
     DateTime createdAt,
     OrgRole role,
     bool? requireMfa,
@@ -85,6 +88,10 @@ class _$OrganizationWithRoleCWProxyImpl
   OrganizationWithRole color(String? color) => call(color: color);
 
   @override
+  OrganizationWithRole avatarUrl(String? avatarUrl) =>
+      call(avatarUrl: avatarUrl);
+
+  @override
   OrganizationWithRole createdAt(DateTime createdAt) =>
       call(createdAt: createdAt);
 
@@ -119,6 +126,7 @@ class _$OrganizationWithRoleCWProxyImpl
     Object? region = const $CopyWithPlaceholder(),
     Object? icon = const $CopyWithPlaceholder(),
     Object? color = const $CopyWithPlaceholder(),
+    Object? avatarUrl = const $CopyWithPlaceholder(),
     Object? createdAt = const $CopyWithPlaceholder(),
     Object? role = const $CopyWithPlaceholder(),
     Object? requireMfa = const $CopyWithPlaceholder(),
@@ -154,6 +162,10 @@ class _$OrganizationWithRoleCWProxyImpl
           ? _value.color
           // ignore: cast_nullable_to_non_nullable
           : color as String?,
+      avatarUrl: avatarUrl == const $CopyWithPlaceholder()
+          ? _value.avatarUrl
+          // ignore: cast_nullable_to_non_nullable
+          : avatarUrl as String?,
       createdAt: createdAt == const $CopyWithPlaceholder() || createdAt == null
           ? _value.createdAt
           // ignore: cast_nullable_to_non_nullable
@@ -216,6 +228,7 @@ OrganizationWithRole _$OrganizationWithRoleFromJson(
       region: $checkedConvert('region', (v) => v as String),
       icon: $checkedConvert('icon', (v) => v as String?),
       color: $checkedConvert('color', (v) => v as String?),
+      avatarUrl: $checkedConvert('avatar_url', (v) => v as String?),
       createdAt: $checkedConvert(
         'created_at',
         (v) => DateTime.parse(v as String),
@@ -228,6 +241,7 @@ OrganizationWithRole _$OrganizationWithRoleFromJson(
     return val;
   },
   fieldKeyMap: const {
+    'avatarUrl': 'avatar_url',
     'createdAt': 'created_at',
     'requireMfa': 'require_mfa',
     'requireAppLock': 'require_app_lock',
@@ -244,6 +258,7 @@ Map<String, dynamic> _$OrganizationWithRoleToJson(
   'region': instance.region,
   'icon': ?instance.icon,
   'color': ?instance.color,
+  'avatar_url': ?instance.avatarUrl,
   'created_at': instance.createdAt.toIso8601String(),
   'role': _$OrgRoleEnumMap[instance.role]!,
   'require_mfa': ?instance.requireMfa,

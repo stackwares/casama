@@ -21,6 +21,8 @@ abstract class _$OrganizationCWProxy {
 
   Organization color(String? color);
 
+  Organization avatarUrl(String? avatarUrl);
+
   Organization createdAt(DateTime createdAt);
 
   /// Creates a new instance with the provided field values.
@@ -39,6 +41,7 @@ abstract class _$OrganizationCWProxy {
     String region,
     String? icon,
     String? color,
+    String? avatarUrl,
     DateTime createdAt,
   });
 }
@@ -72,6 +75,9 @@ class _$OrganizationCWProxyImpl implements _$OrganizationCWProxy {
   Organization color(String? color) => call(color: color);
 
   @override
+  Organization avatarUrl(String? avatarUrl) => call(avatarUrl: avatarUrl);
+
+  @override
   Organization createdAt(DateTime createdAt) => call(createdAt: createdAt);
 
   /// Creates a new instance with the provided field values.
@@ -91,6 +97,7 @@ class _$OrganizationCWProxyImpl implements _$OrganizationCWProxy {
     Object? region = const $CopyWithPlaceholder(),
     Object? icon = const $CopyWithPlaceholder(),
     Object? color = const $CopyWithPlaceholder(),
+    Object? avatarUrl = const $CopyWithPlaceholder(),
     Object? createdAt = const $CopyWithPlaceholder(),
   }) {
     return Organization(
@@ -122,6 +129,10 @@ class _$OrganizationCWProxyImpl implements _$OrganizationCWProxy {
           ? _value.color
           // ignore: cast_nullable_to_non_nullable
           : color as String?,
+      avatarUrl: avatarUrl == const $CopyWithPlaceholder()
+          ? _value.avatarUrl
+          // ignore: cast_nullable_to_non_nullable
+          : avatarUrl as String?,
       createdAt: createdAt == const $CopyWithPlaceholder() || createdAt == null
           ? _value.createdAt
           // ignore: cast_nullable_to_non_nullable
@@ -141,34 +152,29 @@ extension $OrganizationCopyWith on Organization {
 // JsonSerializableGenerator
 // **************************************************************************
 
-Organization _$OrganizationFromJson(Map<String, dynamic> json) =>
-    $checkedCreate('Organization', json, ($checkedConvert) {
-      $checkKeys(
-        json,
-        requiredKeys: const [
-          'id',
-          'name',
-          'slug',
-          'plan',
-          'region',
-          'created_at',
-        ],
-      );
-      final val = Organization(
-        id: $checkedConvert('id', (v) => v as String),
-        name: $checkedConvert('name', (v) => v as String),
-        slug: $checkedConvert('slug', (v) => v as String),
-        plan: $checkedConvert('plan', (v) => v as String),
-        region: $checkedConvert('region', (v) => v as String),
-        icon: $checkedConvert('icon', (v) => v as String?),
-        color: $checkedConvert('color', (v) => v as String?),
-        createdAt: $checkedConvert(
-          'created_at',
-          (v) => DateTime.parse(v as String),
-        ),
-      );
-      return val;
-    }, fieldKeyMap: const {'createdAt': 'created_at'});
+Organization _$OrganizationFromJson(
+  Map<String, dynamic> json,
+) => $checkedCreate('Organization', json, ($checkedConvert) {
+  $checkKeys(
+    json,
+    requiredKeys: const ['id', 'name', 'slug', 'plan', 'region', 'created_at'],
+  );
+  final val = Organization(
+    id: $checkedConvert('id', (v) => v as String),
+    name: $checkedConvert('name', (v) => v as String),
+    slug: $checkedConvert('slug', (v) => v as String),
+    plan: $checkedConvert('plan', (v) => v as String),
+    region: $checkedConvert('region', (v) => v as String),
+    icon: $checkedConvert('icon', (v) => v as String?),
+    color: $checkedConvert('color', (v) => v as String?),
+    avatarUrl: $checkedConvert('avatar_url', (v) => v as String?),
+    createdAt: $checkedConvert(
+      'created_at',
+      (v) => DateTime.parse(v as String),
+    ),
+  );
+  return val;
+}, fieldKeyMap: const {'avatarUrl': 'avatar_url', 'createdAt': 'created_at'});
 
 Map<String, dynamic> _$OrganizationToJson(Organization instance) =>
     <String, dynamic>{
@@ -179,5 +185,6 @@ Map<String, dynamic> _$OrganizationToJson(Organization instance) =>
       'region': instance.region,
       'icon': ?instance.icon,
       'color': ?instance.color,
+      'avatar_url': ?instance.avatarUrl,
       'created_at': instance.createdAt.toIso8601String(),
     };

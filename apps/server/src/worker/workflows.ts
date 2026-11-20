@@ -45,6 +45,7 @@ import {
   syncComposioTriggers,
   ToolError,
   UPDATED_ERROR_CODE,
+  type WorkspacePictureDrawRequest,
   waiveFailedRun,
 } from "@casama/agent";
 import { contentKeys, type Database, liftTimeouts } from "@casama/db";
@@ -100,7 +101,10 @@ let runtime:
       fetch?: typeof fetch;
       voice?: VoiceRuntime;
       /** Draws bot pictures for the API's "Make one with AI" (docs/BOT-PICTURES-PLAN.md §8). */
-      botPictures?: { draw: (a: BotPictureDrawRequest) => Promise<{ ids: string[] }> };
+      botPictures?: {
+        draw: (a: BotPictureDrawRequest) => Promise<{ ids: string[] }>;
+        drawWorkspace: (a: WorkspacePictureDrawRequest) => Promise<{ ids: string[] }>;
+      };
       vendorUsage?: {
         env: import("../env.ts").Env;
         email: import("../services/email.ts").EmailSender;
@@ -1067,6 +1071,31 @@ export const generateBotPicturesWorkflow = DBOS.registerWorkflow(
       { name: "draw", retriesAllowed: false },
     ),
   { name: "generateBotPictures" },
+);
+
+export const generateWorkspacePicturesWorkflow = DBOS.registerWorkflow(
+  async (a: WorkspacePictureDrawRequest) =>
+    DBOS.runStep(
+      async (): Promise<
+        { ok: true; ids: string[] } | { ok: false; code: string; error: string }
+      > => {
+        const draw = rt().botPictures?.drawWorkspace;
+        if (!draw)
+          return {
+            ok: false,
+            code: "no_media_provider",
+            error: "Drawing isn't set up on this server",
+          };
+        try {
+          return { ok: true, ...(await draw(a)) };
+        } catch (e) {
+          const code = e instanceof ToolError ? e.code : "media_failed";
+          return { ok: false, code, error: e instanceof Error ? e.message : String(e) };
+        }
+      },
+      { name: "drawWorkspace", retriesAllowed: false },
+    ),
+  { name: "generateWorkspacePictures" },
 );
 
 /** Phase 0 test workflow: two checkpointed steps. */

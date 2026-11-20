@@ -1637,6 +1637,26 @@ abstract class Backend {
   /// Where a bot picture is served: 128 px for small avatars, 512 px for big ones.
   String botImageUrl(String imageId, {bool small = false});
 
+  // Workspace pictures (docs/WORKSPACE-PICTURES-PLAN.md)
+  Future<Organization> setWorkspacePicture(
+    String orgId,
+    Uint8List square, {
+    Uint8List? original,
+    BotPictureCrop? crop,
+    String source = 'upload',
+  });
+  Future<Organization> removeWorkspacePicture(String orgId);
+  Future<List<BotPicture>> workspacePictures(String orgId, {bool candidates = false});
+  Future<Organization> useWorkspacePicture(String orgId, String imageId);
+  Future<Uint8List> workspacePictureOriginal(String orgId, String imageId);
+  Future<List<BotPicture>> drawWorkspacePictures(
+    String orgId, {
+    required BotPictureStyle style,
+    String? description,
+    int count = 2,
+  });
+  String workspaceImageUrl(String imageId, {bool small = false});
+
   /// Workspace search (D-103), including files on awake computers. [kinds] scopes it (D-235):
   /// message, chat, memory, skill, routine, ticket or file; files only when `file` is listed.
   Future<SearchResponse> search(String orgId, String query, {List<String>? kinds});

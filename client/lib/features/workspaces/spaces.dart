@@ -5,9 +5,12 @@ import 'package:material_ui/material_ui.dart';
 import '../mcp/mcp_screens.dart';
 import 'join_flow.dart';
 import 'workspace_files.dart';
+import 'workspace_picture.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'dart:typed_data';
+
 import 'package:casama_sdk/casama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
@@ -21,6 +24,7 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
 import '../../ui/bottom_padding.dart';
 import '../../ui/adaptive_modal.dart';
+import '../../ui/bot_avatar.dart' show BotPictureRef;
 import '../../ui/advanced_section.dart';
 import '../../ui/app_card.dart';
 import '../../ui/form_sheet.dart';
@@ -53,22 +57,34 @@ Color? _hex(String? s) {
   return Color(int.parse('ff${s.substring(1)}', radix: 16));
 }
 
-/// A workspace's colored tile with its icon (or its initial).
-class SpaceAvatar extends StatelessWidget {
-  const SpaceAvatar({super.key, required this.name, this.icon, this.color, this.size = 32});
+/// A workspace's picture, or its colored tile with its icon (or initial).
+class SpaceAvatar extends ConsumerWidget {
+  const SpaceAvatar({
+    super.key,
+    required this.name,
+    this.icon,
+    this.color,
+    this.avatarUrl,
+    this.preview,
+    this.size = 32,
+  });
   final String name;
   final String? icon;
   final String? color;
+  final String? avatarUrl;
+  final Uint8List? preview;
   final double size;
 
   @override
-  Widget build(BuildContext context) {
-    final c = _hex(color) ?? context.colorScheme.primary;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final radius = BorderRadius.circular(size * 0.3);
+    final pic = BotPictureRef.parse(avatarUrl);
+    final c = _hex(color) ?? pic?.colors.first ?? context.colorScheme.primary;
     final glyph = spaceIcons[icon];
-    return Container(
+    final fallback = Container(
       width: size,
       height: size,
-      decoration: BoxDecoration(color: c.withValues(alpha: 0.18), borderRadius: BorderRadius.circular(size * 0.3)),
+      decoration: BoxDecoration(color: c.withValues(alpha: 0.18), borderRadius: radius),
       alignment: Alignment.center,
       child: glyph != null
           ? Icon(glyph, size: size * 0.55, color: c)
@@ -77,6 +93,34 @@ class SpaceAvatar extends StatelessWidget {
               style: TextStyle(color: c, fontWeight: FontWeight.w800, fontSize: size * 0.45),
             ),
     );
+    if (preview != null) {
+      return ClipRRect(
+        borderRadius: radius,
+        child: Image.memory(
+          preview!,
+          width: size,
+          height: size,
+          fit: BoxFit.cover,
+          gaplessPlayback: true,
+        ),
+      );
+    }
+    if (pic != null) {
+      final small = size <= 64;
+      final url = ref.watch(backendProvider).workspaceImageUrl(pic.id, small: small);
+      return ClipRRect(
+        borderRadius: radius,
+        child: Image.network(
+          url,
+          width: size,
+          height: size,
+          fit: BoxFit.cover,
+          gaplessPlayback: true,
+          errorBuilder: (_, _, _) => fallback,
+        ),
+      );
+    }
+    return fallback;
   }
 }
 
@@ -100,7 +144,14 @@ class WorkspaceSwitcher extends ConsumerWidget {
     final avatar = Badge(
       isLabelVisible: others > 0,
       smallSize: 8,
-      child: SpaceAvatar(name: org.name, icon: org.icon, color: org.color, size: compact ? 36 : 30),
+      child: SpaceAvatar(
+        name: org.name,
+        icon: org.icon,
+        color: org.color,
+        avatarUrl: org.avatarUrl,
+        preview: workspacePicturePreviewOf(ref, org),
+        size: compact ? 36 : 30,
+      ),
     );
     return Tooltip(
       message: context.l10n.spaces,
@@ -158,7 +209,13 @@ Future<void> showSpacesSheet(BuildContext context, WidgetRef ref) => showAdaptiv
                     key: Key('space-${o.id}'),
                     icon: LucideIcons.building2,
                     selected: o.id == current?.id,
-                    leading: SpaceAvatar(name: o.name, icon: o.icon, color: o.color),
+                    leading: SpaceAvatar(
+                      name: o.name,
+                      icon: o.icon,
+                      color: o.color,
+                      avatarUrl: o.avatarUrl,
+                      preview: workspacePicturePreviewOf(ref, o),
+                    ),
                     title: o.name,
                     subtitle: _roleLabel(context, o.role),
                     showChevron: false,
@@ -377,7 +434,17 @@ class _WorkspaceSettingsScreenState extends ConsumerState<WorkspaceSettingsScree
             children: [
               Row(
                 children: [
-                  SpaceAvatar(name: org.name, icon: org.icon, color: org.color, size: 44),
+                  if (admin)
+                    EditableWorkspaceAvatar(org: org, size: 48)
+                  else
+                    SpaceAvatar(
+                      name: org.name,
+                      icon: org.icon,
+                      color: org.color,
+                      avatarUrl: org.avatarUrl,
+                      preview: workspacePicturePreviewOf(ref, org),
+                      size: 48,
+                    ),
                   const SizedBox(width: AppSpace.md),
                   Expanded(
                     child: TextField(

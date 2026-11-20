@@ -120,6 +120,7 @@ class FakeBackend implements Backend {
             region: 'local',
             icon: orgIcon,
             color: orgColor,
+            avatarUrl: workspaceAvatar,
             createdAt: DateTime(2026),
             role: orgRole,
             suspended: orgSuspended,
@@ -141,7 +142,10 @@ class FakeBackend implements Backend {
     String? color,
   }) async {
     orgName = name ?? orgName;
-    orgIcon = icon ?? orgIcon;
+    if (icon != null) {
+      orgIcon = icon;
+      workspaceAvatar = null;
+    }
     orgColor = color ?? orgColor;
     return Organization(
       id: orgId,
@@ -151,6 +155,7 @@ class FakeBackend implements Backend {
       region: 'local',
       icon: orgIcon,
       color: orgColor,
+      avatarUrl: workspaceAvatar,
       createdAt: DateTime(2026),
     );
   }
@@ -2522,6 +2527,110 @@ class FakeBackend implements Backend {
   @override
   String botImageUrl(String imageId, {bool small = false}) =>
       'http://localhost:8787/v1/bot-images/$imageId${small ? '?size=128' : ''}';
+
+  String? workspaceAvatar;
+  final workspacePictureUploads = <({Uint8List square, Uint8List? original, BotPictureCrop? crop})>[];
+  final _workspacePictures = <BotPicture>[];
+  final _workspaceDrawn = <BotPicture>[];
+  Object? workspacePictureError;
+  Uint8List? workspaceOriginal;
+  var _nextWorkspacePicture = 1;
+
+  Organization _orgWithAvatar() => Organization(
+    id: orgId,
+    name: orgName,
+    slug: 'acme',
+    plan: 'free',
+    region: 'us',
+    icon: orgIcon,
+    color: orgColor,
+    avatarUrl: workspaceAvatar,
+    createdAt: DateTime.utc(2026),
+  );
+
+  @override
+  Future<Organization> setWorkspacePicture(
+    String orgId,
+    Uint8List square, {
+    Uint8List? original,
+    BotPictureCrop? crop,
+    String source = 'upload',
+  }) async {
+    final err = workspacePictureError;
+    if (err != null) throw err;
+    workspacePictureUploads.add((square: square, original: original, crop: crop));
+    final n = _nextWorkspacePicture++;
+    final id = '20000000-0000-4000-8000-${n.toString().padLeft(12, '0')}';
+    final p = BotPicture(
+      id: id,
+      avatarUrl: 'image:$id:6c5ce7a29bfe',
+      source_: BotPictureSource_Enum.upload,
+      inUse: true,
+      hasOriginal: original != null,
+      crop: crop,
+      createdAt: DateTime.utc(2026, 11, 21),
+    );
+    _workspacePictures.insert(0, p);
+    workspaceAvatar = p.avatarUrl;
+    return _orgWithAvatar();
+  }
+
+  @override
+  Future<Organization> removeWorkspacePicture(String orgId) async {
+    workspaceAvatar = null;
+    return _orgWithAvatar();
+  }
+
+  @override
+  Future<List<BotPicture>> workspacePictures(String orgId, {bool candidates = false}) async =>
+      candidates
+          ? List.unmodifiable(_workspaceDrawn)
+          : [for (final p in _workspacePictures) p.copyWith(inUse: p.avatarUrl == workspaceAvatar)];
+
+  @override
+  Future<Organization> useWorkspacePicture(String orgId, String imageId) async {
+    final p = [..._workspacePictures, ..._workspaceDrawn].firstWhere((x) => x.id == imageId);
+    _workspaceDrawn.remove(p);
+    _workspacePictures.removeWhere((x) => x.id == p.id);
+    _workspacePictures.insert(0, p);
+    workspaceAvatar = p.avatarUrl;
+    return _orgWithAvatar();
+  }
+
+  @override
+  Future<Uint8List> workspacePictureOriginal(String orgId, String imageId) async =>
+      workspaceOriginal ?? (throw StateError('no original'));
+
+  @override
+  Future<List<BotPicture>> drawWorkspacePictures(
+    String orgId, {
+    required BotPictureStyle style,
+    String? description,
+    int count = 2,
+  }) async {
+    final err = workspacePictureError;
+    if (err != null) throw err;
+    final made = <BotPicture>[];
+    for (var i = 0; i < count; i++) {
+      final n = _nextWorkspacePicture++;
+      final id = '20000000-0000-4000-8000-${n.toString().padLeft(12, '0')}';
+      final p = BotPicture(
+        id: id,
+        avatarUrl: 'image:$id:6c5ce7a29bfe',
+        source_: BotPictureSource_Enum.generated,
+        inUse: false,
+        hasOriginal: true,
+        createdAt: DateTime.utc(2026, 11, 21),
+      );
+      _workspaceDrawn.insert(0, p);
+      made.add(p);
+    }
+    return made;
+  }
+
+  @override
+  String workspaceImageUrl(String imageId, {bool small = false}) =>
+      'http://localhost:8787/v1/workspace-images/$imageId${small ? '?size=128' : ''}';
 
   /// The last bot update saved: the bot's id and the fields sent.
   ({String botId, String? name, String? persona, String? autonomy})? botUpdate;

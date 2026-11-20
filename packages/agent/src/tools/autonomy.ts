@@ -89,9 +89,10 @@ export interface AutonomyToolDeps {
   runChild?: (runId: string) => Promise<{ status: string }>;
   /** Starts a run without waiting (a bot assigning a ticket to another bot). Late-bound. */
   startRun?: (runId: string) => Promise<void>;
-  /** Hands out the bot picture drawer, for the API's "Make one with AI" (through the worker). */
+  /** Hands out the picture drawers, for the API's "Make one with AI" (through the worker). */
   exposeBotPictures?: (api: {
     draw: (a: BotPictureDrawRequest) => Promise<{ ids: string[] }>;
+    drawWorkspace: (a: WorkspacePictureDrawRequest) => Promise<{ ids: string[] }>;
   }) => void;
 }
 
@@ -112,6 +113,14 @@ export interface BotPictureDrawRequest {
   botId: string;
   userId: string | null;
   runId?: string | null;
+  style: BotPictureStyle;
+  description?: string;
+  count?: number;
+}
+
+export interface WorkspacePictureDrawRequest {
+  orgId: string;
+  userId: string | null;
   style: BotPictureStyle;
   description?: string;
   count?: number;
@@ -145,6 +154,23 @@ export function botPicturePrompt(
     `It shows ${what}.`,
     "One subject, centred, filling about two thirds of the frame with even space around it, facing the viewer, on a plain soft background that contrasts with it.",
     "Bold, simple and recognisable even when shown very small. No text, letters, numbers, logos or watermarks.",
+  ].join(" ");
+}
+
+/** The prompt for a workspace's emblem/picture: centred, bold, readable at 30 px in the switcher. */
+export function workspacePicturePrompt(
+  style: BotPictureStyle,
+  workspaceName: string,
+  description: string | undefined,
+): string {
+  const what = description?.trim()
+    ? description.trim()
+    : `a clean visual emblem representing a team workspace called "${workspaceName.slice(0, 80)}"`;
+  return [
+    `A square workspace emblem icon in the style of ${STYLE_WORDS[style]}.`,
+    `It shows ${what}.`,
+    "One clear central motif, centred, filling about two thirds of the frame with balanced padding on a clean contrasting background.",
+    "Bold, simple and recognisable even when shown at 30 pixels. No text, letters, numbers or watermarks.",
   ].join(" ");
 }
 
@@ -1613,7 +1639,91 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
       throw new ToolError("media_failed", "No picture came back. Try again in a moment.");
     return { ids };
   }
-  deps.exposeBotPictures?.({ draw: drawBotPictures });
+
+  async function storeWorkspacePicture(a: {
+    orgId: string;
+    userId: string | null;
+    bytes: Uint8Array;
+    workspaceName: string;
+    source: "generated";
+    candidate: boolean;
+  }) {
+    const pic = await makeBotPicture(a.bytes, { botName: a.workspaceName }).catch((e) => {
+      throw new ToolError("invalid_arguments", e instanceof Error ? e.message : String(e));
+    });
+    const original = await makeOriginal(a.bytes).catch(() => null);
+    const [row] = await db.execute<{ id: string }>(sql`
+      insert into public.workspace_images (org_id, created_by, source, large, small, original, original_type, colors, candidate)
+      values (${a.orgId}::uuid, ${a.userId}::uuid, ${a.source}, ${pic.large}, ${pic.small},
+              ${original?.bytes ?? null}, ${original?.type ?? null}, ${pic.colors}, ${a.candidate})
+      returning id`);
+    if (!row) throw new ToolError("media_failed", "The picture couldn't be saved.");
+    return { id: row.id, avatar: pictureAvatar(row.id, pic.colors) };
+  }
+
+  async function drawWorkspacePictures(a: WorkspacePictureDrawRequest): Promise<{ ids: string[] }> {
+    const provider = await deps.mediaFor?.(a.orgId);
+    if (!provider || provider.supports?.("image") === false)
+      throw new ToolError(
+        "no_media_provider",
+        "Drawing pictures needs an OpenRouter key. Add one in Model keys.",
+      );
+    const [org] = await db.execute<{ name: string }>(sql`
+      select name from public.organizations where id = ${a.orgId}::uuid`);
+    if (!org) throw new ToolError("org_not_found", "Workspace not found");
+    const prompt = workspacePicturePrompt(a.style, org.name, a.description);
+    const ctx = {
+      runId: null,
+      botId: null,
+      orgId: a.orgId,
+      actingUserId: a.userId,
+    } as unknown as ToolContext;
+    await mediaSafety(ctx, { kind: "image", prompt });
+    const count = Math.max(1, Math.min(2, a.count ?? 2));
+    const payer = provider.paidBy?.("image") ?? null;
+    if (payer) await needCredits(db, a.orgId, mediaCharge(payer, mediaPrices().image * count));
+    const drawn = await Promise.all(
+      Array.from({ length: count }, () =>
+        provider
+          .generateImage({ prompt, size: "square" })
+          .then(async ([img]) => {
+            if (!img) return null;
+            await recordMedia(
+              db,
+              ctx,
+              "media_images",
+              1,
+              img.costUsd ?? mediaPrices().image,
+              img.model ?? provider.id,
+              payer,
+              {
+                purpose: "workspace_picture",
+              },
+            );
+            return mediaBytes(img);
+          })
+          .catch(recordFailed(ctx, "media_images", payer))
+          .catch((e) => (count > 1 ? null : Promise.reject(e))),
+      ),
+    );
+    const ids: string[] = [];
+    for (const bytes of drawn) {
+      if (!bytes) continue;
+      const p = await storeWorkspacePicture({
+        orgId: a.orgId,
+        userId: a.userId,
+        bytes,
+        workspaceName: org.name,
+        source: "generated",
+        candidate: true,
+      }).catch(() => null);
+      if (p) ids.push(p.id);
+    }
+    if (ids.length === 0)
+      throw new ToolError("media_failed", "No picture came back. Try again in a moment.");
+    return { ids };
+  }
+  deps.exposeBotPictures?.({ draw: drawBotPictures, drawWorkspace: drawWorkspacePictures });
 
   registry.register({
     name: "profile.set_picture",

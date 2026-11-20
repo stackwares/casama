@@ -47,6 +47,10 @@ export interface Workflows {
   generateBotPictures(
     a: import("@casama/agent").BotPictureDrawRequest,
   ): Promise<{ ok: true; ids: string[] } | { ok: false; code: string; error: string }>;
+  /** Draws workspace picture candidates in the worker (docs/WORKSPACE-PICTURES-PLAN.md); waits for them. */
+  generateWorkspacePictures(
+    a: import("@casama/agent").WorkspacePictureDrawRequest,
+  ): Promise<{ ok: true; ids: string[] } | { ok: false; code: string; error: string }>;
   /** Voice (D-065): keyed operations run in the worker; each returns quickly. */
   voiceTranscribe(
     orgId: string,
@@ -192,6 +196,13 @@ export async function dbosWorkflows(databaseUrl: string): Promise<Workflows> {
         a,
       );
       // Two drawings in parallel take 6–20 s; the safety check and saving add a little.
+      return withTimeout(h.getResult({ pollingIntervalMs: 250 }), 90_000, "drawing");
+    },
+    async generateWorkspacePictures(a) {
+      const h = await client.enqueue<(...x: unknown[]) => Promise<never>>(
+        { queueName: "system", workflowName: "generateWorkspacePictures" },
+        a,
+      );
       return withTimeout(h.getResult({ pollingIntervalMs: 250 }), 90_000, "drawing");
     },
     async voiceTranscribe(orgId, botId, audioB64, mime, language) {

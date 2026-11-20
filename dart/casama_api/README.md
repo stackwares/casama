@@ -645,9 +645,12 @@ Class | Method | HTTP request | Description
 [*WorkspacesApi*](doc/WorkspacesApi.md) | [**createInvites**](doc/WorkspacesApi.md#createinvites) | **POST** /v1/orgs/{id}/invites/batch | Invite several people by email at once (admins)
 [*WorkspacesApi*](doc/WorkspacesApi.md) | [**createOrg**](doc/WorkspacesApi.md#createorg) | **POST** /v1/orgs | Create an organization; the caller becomes its owner
 [*WorkspacesApi*](doc/WorkspacesApi.md) | [**decideJoinRequest**](doc/WorkspacesApi.md#decidejoinrequest) | **POST** /v1/orgs/{id}/join-requests/{request_id} | Approve or decline a request to join (admins)
+[*WorkspacesApi*](doc/WorkspacesApi.md) | [**generateWorkspacePictures**](doc/WorkspacesApi.md#generateworkspacepictures) | **POST** /v1/orgs/{id}/images/generate | Draw emblem pictures for a workspace with AI
 [*WorkspacesApi*](doc/WorkspacesApi.md) | [**getDefaultInvite**](doc/WorkspacesApi.md#getdefaultinvite) | **GET** /v1/orgs/{id}/default-invite | The workspace&#39;s standing invite link (admins); made on first use
 [*WorkspacesApi*](doc/WorkspacesApi.md) | [**getJoinDomains**](doc/WorkspacesApi.md#getjoindomains) | **GET** /v1/orgs/{id}/join-domains | Email domains whose verified addresses can join without an invite (admins)
 [*WorkspacesApi*](doc/WorkspacesApi.md) | [**getMe**](doc/WorkspacesApi.md#getme) | **GET** /v1/me | The signed-in user and their organizations
+[*WorkspacesApi*](doc/WorkspacesApi.md) | [**getWorkspaceImage**](doc/WorkspacesApi.md#getworkspaceimage) | **GET** /v1/workspace-images/{id} | A workspace&#39;s picture (no token; cached for good)
+[*WorkspacesApi*](doc/WorkspacesApi.md) | [**getWorkspacePictureOriginal**](doc/WorkspacesApi.md#getworkspacepictureoriginal) | **GET** /v1/orgs/{id}/images/{image_id}/original | The picture before it was cropped, for Re-crop
 [*WorkspacesApi*](doc/WorkspacesApi.md) | [**joinByDomain**](doc/WorkspacesApi.md#joinbydomain) | **POST** /v1/orgs/{id}/join | Join a workspace open to your verified email domain
 [*WorkspacesApi*](doc/WorkspacesApi.md) | [**joinWithInvite**](doc/WorkspacesApi.md#joinwithinvite) | **POST** /v1/join | Join with an invite link, code or email invite (or ask to join)
 [*WorkspacesApi*](doc/WorkspacesApi.md) | [**listInviteLinks**](doc/WorkspacesApi.md#listinvitelinks) | **GET** /v1/orgs/{id}/invite-links | 
@@ -656,13 +659,17 @@ Class | Method | HTTP request | Description
 [*WorkspacesApi*](doc/WorkspacesApi.md) | [**listJoinableWorkspaces**](doc/WorkspacesApi.md#listjoinableworkspaces) | **GET** /v1/me/joinable-workspaces | Workspaces open to the signed-in person&#39;s verified email domain
 [*WorkspacesApi*](doc/WorkspacesApi.md) | [**listMembers**](doc/WorkspacesApi.md#listmembers) | **GET** /v1/orgs/{id}/members | The people in a workspace
 [*WorkspacesApi*](doc/WorkspacesApi.md) | [**listOrgs**](doc/WorkspacesApi.md#listorgs) | **GET** /v1/orgs | 
+[*WorkspacesApi*](doc/WorkspacesApi.md) | [**listWorkspacePictures**](doc/WorkspacesApi.md#listworkspacepictures) | **GET** /v1/orgs/{id}/images | A workspace&#39;s recent pictures, the one in use first, then by when they were last used
 [*WorkspacesApi*](doc/WorkspacesApi.md) | [**previewInvite**](doc/WorkspacesApi.md#previewinvite) | **GET** /v1/join/preview | What an invite link, code or email invite opens, before joining (no sign-in needed)
+[*WorkspacesApi*](doc/WorkspacesApi.md) | [**removeWorkspacePicture**](doc/WorkspacesApi.md#removeworkspacepicture) | **DELETE** /v1/orgs/{id}/image | Stop using a picture: back to the workspace&#39;s icon and colour
 [*WorkspacesApi*](doc/WorkspacesApi.md) | [**resendInvite**](doc/WorkspacesApi.md#resendinvite) | **POST** /v1/orgs/{id}/invites/{invite_id}/resend | Send an email invite again with a new link, valid 7 more days (admins)
 [*WorkspacesApi*](doc/WorkspacesApi.md) | [**revokeInvite**](doc/WorkspacesApi.md#revokeinvite) | **DELETE** /v1/orgs/{id}/invites/{invite_id} | 
 [*WorkspacesApi*](doc/WorkspacesApi.md) | [**revokeInviteLink**](doc/WorkspacesApi.md#revokeinvitelink) | **DELETE** /v1/orgs/{id}/invite-links/{link_id} | 
 [*WorkspacesApi*](doc/WorkspacesApi.md) | [**setJoinDomain**](doc/WorkspacesApi.md#setjoindomain) | **PUT** /v1/orgs/{id}/join-domains | Let people with a verified address at your own email domain join (admins)
+[*WorkspacesApi*](doc/WorkspacesApi.md) | [**setWorkspacePicture**](doc/WorkspacesApi.md#setworkspacepicture) | **PUT** /v1/orgs/{id}/image | Give a workspace a picture of its own
 [*WorkspacesApi*](doc/WorkspacesApi.md) | [**updateDefaultInvite**](doc/WorkspacesApi.md#updatedefaultinvite) | **PATCH** /v1/orgs/{id}/default-invite | Make the standing link ask an admin first, or reset it (admins)
 [*WorkspacesApi*](doc/WorkspacesApi.md) | [**updateOrg**](doc/WorkspacesApi.md#updateorg) | **PATCH** /v1/orgs/{id} | Rename a workspace or change its icon and color (admins)
+[*WorkspacesApi*](doc/WorkspacesApi.md) | [**useWorkspacePicture**](doc/WorkspacesApi.md#useworkspacepicture) | **POST** /v1/orgs/{id}/images/{image_id}/use | Switch to one of the workspace&#39;s recent or drawn pictures (also how Undo works)
 [*WorkspacesApi*](doc/WorkspacesApi.md) | [**workspaceBadges**](doc/WorkspacesApi.md#workspacebadges) | **GET** /v1/me/badges | Pending approvals and unread notifications per workspace
 
 

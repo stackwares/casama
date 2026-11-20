@@ -75,6 +75,17 @@ export const ANALYTICS_CLIENT_EVENTS: Record<string, string[]> = {
     "to"
   ],
   "bot_picture_undone": [],
+  "workspace_picture_set": [
+    "source",
+    "transparent",
+    "rotated",
+    "zoomed"
+  ],
+  "workspace_picture_crop_cancelled": [
+    "source"
+  ],
+  "workspace_picture_removed": [],
+  "workspace_picture_undone": [],
   "profile_photo_set": [
     "source",
     "rotated",

@@ -18,6 +18,8 @@ export const Organization = z
     icon: z.string().nullable().optional(),
     /** #rrggbb */
     color: z.string().nullable().optional(),
+    /** A picture of its own (`image:<uuid>:<rrggbb><rrggbb>`). */
+    avatar_url: z.string().nullable().optional(),
     created_at: z.iso.datetime({ offset: true }),
   })
   .openapi("Organization");
@@ -87,6 +89,7 @@ export const InvitePreview = z
       name: z.string(),
       icon: z.string().nullable(),
       color: z.string().nullable(),
+      avatar_url: z.string().nullable().optional(),
       member_count: z.number().int(),
     }),
     role: z.enum(["owner", "admin", "member"]),
@@ -163,6 +166,7 @@ export const JoinableWorkspace = z
     name: z.string(),
     icon: z.string().nullable(),
     color: z.string().nullable(),
+    avatar_url: z.string().nullable().optional(),
     member_count: z.number().int(),
     domain: z.string(),
   })

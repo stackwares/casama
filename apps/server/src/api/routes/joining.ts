@@ -183,13 +183,14 @@ export function registerJoiningRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
         region: string;
         icon: string | null;
         color: string | null;
+        avatar_url: string | null;
         created_at: Date;
         role: "owner" | "admin" | "member";
         require_mfa: boolean;
         require_app_lock: boolean;
         suspended_at: Date | null;
       }>(sql`
-        select o.id, o.name, o.slug, o.plan, o.region, o.icon, o.color, o.created_at, m.role, o.require_mfa, o.require_app_lock, o.suspended_at
+        select o.id, o.name, o.slug, o.plan, o.region, o.icon, o.color, o.avatar_url, o.created_at, m.role, o.require_mfa, o.require_app_lock, o.suspended_at
         from public.organizations o join public.memberships m on m.org_id = o.id and m.user_id = ${claims.sub}::uuid
         where o.id = ${orgId}::uuid`),
     );
@@ -431,6 +432,9 @@ export function registerJoiningRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
         select exists(select 1 from public.memberships where org_id = ${row.org_id}::uuid and user_id = ${claims.sub}::uuid) as ok`);
       alreadyMember = !!m?.ok;
     }
+    const [av] = await db.execute<{ avatar_url: string | null }>(
+      sql`select avatar_url from public.organizations where id = ${row.org_id}::uuid`,
+    );
     return c.json(
       {
         kind: row.kind,
@@ -438,6 +442,7 @@ export function registerJoiningRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
           name: row.org_name,
           icon: row.org_icon,
           color: row.org_color,
+          avatar_url: av?.avatar_url ?? null,
           member_count: row.member_count,
         },
         role: row.role,
@@ -753,6 +758,14 @@ export function registerJoiningRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
         domain: string;
       }>(sql`select * from public.joinable_workspaces()`),
     );
+    const orgIds = rows.map((r) => r.org_id);
+    const avRows =
+      orgIds.length === 0
+        ? []
+        : await db.execute<{ id: string; avatar_url: string | null }>(
+            sql`select id, avatar_url from public.organizations where id = any(${`{${orgIds.join(",")}}`}::uuid[])`,
+          );
+    const avById = new Map(avRows.map((a) => [a.id, a.avatar_url]));
     return c.json(
       {
         items: rows.map((r) => ({
@@ -760,6 +773,7 @@ export function registerJoiningRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
           name: r.org_name,
           icon: r.org_icon,
           color: r.org_color,
+          avatar_url: avById.get(r.org_id) ?? null,
           member_count: r.member_count,
           domain: r.domain,
         })),
@@ -837,17 +851,24 @@ export function registerJoiningRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     limiter.check(key);
     const row = parsed ? await lookup(parsed) : null;
     if (!row) limiter.miss(key);
+    const av = row
+      ? ((
+          await db.execute<{ avatar_url: string | null }>(
+            sql`select avatar_url from public.organizations where id = ${row.org_id}::uuid`,
+          )
+        )[0]?.avatar_url ?? null)
+      : null;
     const server = (deps.env.PUBLIC_API_URL ?? new URL(c.req.url).origin).replace(/\/$/, "");
     const openUrl = `casama://app/join/${encodeURIComponent(token)}?server=${encodeURIComponent(server)}`;
     c.header(
       "content-security-policy",
-      "default-src 'none'; style-src 'unsafe-inline'; img-src data:; frame-ancestors 'none'",
+      "default-src 'none'; style-src 'unsafe-inline'; img-src 'self' data:; frame-ancestors 'none'",
     );
     c.header("cache-control", "no-store");
     return c.html(
       joinPage({
         product: PRODUCT_NAME,
-        preview: row,
+        preview: row ? { ...row, org_avatar_url: av } : null,
         openUrl,
         server,
         appStoreUrl: deps.env.APP_STORE_URL,
@@ -953,6 +974,7 @@ function joinPage(p: {
   preview: {
     org_name: string;
     org_color: string | null;
+    org_avatar_url?: string | null;
     member_count: number;
     role: string;
     inviter_name: string | null;
@@ -970,12 +992,16 @@ function joinPage(p: {
       ? p.preview.org_color
       : "#6366f1";
   const initial = esc((p.preview?.org_name ?? "?").slice(0, 1).toUpperCase());
+  const imgId = /^image:([0-9a-f-]{36}):[0-9a-f]{12}$/.exec(p.preview?.org_avatar_url ?? "")?.[1];
+  const tile = imgId
+    ? `<img class="tile" src="${esc(p.server.replace(/\/+$/, ""))}/v1/workspace-images/${imgId}?size=128" alt="" style="object-fit:cover">`
+    : `<div class="tile" style="background:${color}22;color:${color}">${initial}</div>`;
   const stores = [
     p.appStoreUrl ? `<a class="store" href="${esc(p.appStoreUrl)}">App Store</a>` : "",
     p.playStoreUrl ? `<a class="store" href="${esc(p.playStoreUrl)}">Google Play</a>` : "",
   ].join("");
   const body = p.preview
-    ? `<div class="tile" style="background:${color}22;color:${color}">${initial}</div>
+    ? `${tile}
       <p class="eyebrow">${p.preview.inviter_name ? `${esc(p.preview.inviter_name)} invited you to join` : "You're invited to join"}</p>
       <h1>${esc(p.preview.org_name)}</h1>
       <p class="meta">${p.preview.member_count} ${p.preview.member_count === 1 ? "member" : "members"} · you'd join as ${p.preview.role === "admin" ? "an admin" : "a member"}</p>

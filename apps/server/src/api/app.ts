@@ -98,6 +98,7 @@ import {
 } from "./routes/watch.ts";
 import { registerWatcherRoutes } from "./routes/watchers.ts";
 import { registerWorkspaceFileRoutes } from "./routes/workspace-files.ts";
+import { registerWorkspacePictureRoutes } from "./routes/workspace-pictures.ts";
 import { registerWorkspaceRoutes } from "./routes/workspaces.ts";
 import type { AppDeps, AppEnv } from "./types.ts";
 import { clientIp } from "./util.ts";
@@ -473,6 +474,7 @@ export function createApp(deps: AppDeps) {
   registerModerationRoutes(app, deps);
   registerNewsletterRoutes(app, deps);
   registerWorkspaceRoutes(app, deps);
+  registerWorkspacePictureRoutes(app, deps);
   registerJoiningRoutes(app, deps);
   registerReferralRoutes(app, deps);
   registerWaitlistRoutes(app, deps);

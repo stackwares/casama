@@ -1323,6 +1323,7 @@ export const organizations = pgTable("organizations", {
 	suspendedReason: text("suspended_reason"),
 	icon: text(),
 	color: text(),
+	avatarUrl: text("avatar_url"),
 	llmTracing: boolean("llm_tracing").default(true).notNull(),
 	mcpDecideApprovals: boolean("mcp_decide_approvals").default(false).notNull(),
 	allowBotToBot: boolean("allow_bot_to_bot").default(true).notNull(),

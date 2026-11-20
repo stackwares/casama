@@ -56,6 +56,11 @@ const noWorkflows: Workflows = {
   summarizeCall: async () => {},
   voiceTranscribe: async () => ({ ok: false, error: "no worker" }),
   generateBotPictures: async () => ({ ok: false, code: "no_media_provider", error: "no worker" }),
+  generateWorkspacePictures: async () => ({
+    ok: false,
+    code: "no_media_provider",
+    error: "no worker",
+  }),
   voiceSpeak: async () => ({ ok: false, error: "no worker" }),
   voiceSession: async () => ({ ok: false, error: "no worker" }),
 };

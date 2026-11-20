@@ -31,6 +31,7 @@ const orgOut = (o: {
   region: string;
   icon?: string | null;
   color?: string | null;
+  avatarUrl?: string | null;
   createdAt: string | Date;
 }) => ({
   id: o.id,
@@ -40,6 +41,7 @@ const orgOut = (o: {
   region: o.region,
   icon: o.icon ?? null,
   color: o.color ?? null,
+  avatar_url: o.avatarUrl ?? null,
   created_at: iso(o.createdAt),
 });
 
@@ -195,7 +197,7 @@ export function registerWorkspaceRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps)
         .update(organizations)
         .set({
           ...(b.name !== undefined ? { name: b.name } : {}),
-          ...(b.icon !== undefined ? { icon: b.icon } : {}),
+          ...(b.icon !== undefined ? { icon: b.icon, avatarUrl: null } : {}),
           ...(b.color !== undefined ? { color: b.color } : {}),
         })
         .where(eq(organizations.id, id))

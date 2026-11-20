@@ -1,6 +1,6 @@
 # Workspace pictures: custom photos and AI-drawn emblems for workspaces
 
-Status: **Not started**, 2026-11-21 (re-audited against `bot-pictures.ts`, `workspaces.ts`, `joining.ts`, `20270308100001_bot_images.sql`, `avatar_cropper.dart`, and `spaces.dart`). Waiting on Oliver's §6 decisions and go-ahead; no code started yet.
+Status: **Built**, 2026-11-21 (all §6 defaults applied: 7 styles with workspace-emblem prompt, `avatar_url` on invite previews & HTML join page, 20 uploads/day and 20 drawings/day caps). Waiting on server deploy (migration `20270310100001_workspace_images.sql`) and app builds.
 
 Builds on [BOT-PICTURES-PLAN](BOT-PICTURES-PLAN.md) (D-456: `public.bot_images`, `AvatarCropper`, `makeBotPicture`, `makeOriginal`, recent/candidate history, Undo, AI drawing) and D-202 (profile photos in Postgres served by the API).
 

@@ -464,6 +464,9 @@ void _undoToast(
 }
 
 /// A picture on the clipboard, or null (no picture, or a platform without clipboard pictures).
+/// Reads a picture from the system clipboard (shared with workspace pictures).
+Future<Uint8List?> clipboardPictureBytes() => readClipboardPicture();
+
 /// Replaced in tests.
 @visibleForTesting
 Future<Uint8List?> Function() readClipboardPicture = () async {

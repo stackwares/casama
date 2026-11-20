@@ -26,6 +26,8 @@ class InvitePreviewWorkspace {
 
     required  this.color,
 
+     this.avatarUrl,
+
     required  this.memberCount,
   });
 
@@ -67,6 +69,18 @@ class InvitePreviewWorkspace {
 
   @JsonKey(
     
+    name: r'avatar_url',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final String? avatarUrl;
+
+
+
+  @JsonKey(
+    
     name: r'member_count',
     required: true,
     includeIfNull: false,
@@ -84,6 +98,7 @@ class InvitePreviewWorkspace {
       other.name == name &&
       other.icon == icon &&
       other.color == color &&
+      other.avatarUrl == avatarUrl &&
       other.memberCount == memberCount;
 
     @override
@@ -91,6 +106,7 @@ class InvitePreviewWorkspace {
         name.hashCode +
         (icon == null ? 0 : icon.hashCode) +
         (color == null ? 0 : color.hashCode) +
+        (avatarUrl == null ? 0 : avatarUrl.hashCode) +
         memberCount.hashCode;
 
   factory InvitePreviewWorkspace.fromJson(Map<String, dynamic> json) => _$InvitePreviewWorkspaceFromJson(json);

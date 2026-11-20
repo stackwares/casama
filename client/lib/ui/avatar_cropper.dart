@@ -26,6 +26,9 @@ enum AvatarShape {
   /// A bot's rounded square (radius 0.32 × side, as BotAvatar draws it).
   bot,
 
+  /// A workspace's rounded square (radius 0.30 × side, as SpaceAvatar draws it).
+  workspace,
+
   /// A person's circle.
   person,
 }
@@ -367,7 +370,7 @@ class _AvatarCropperState extends State<AvatarCropper>
                 ? CropBackground.none
                 : (s.margin
                       ? CropBackground.none
-                      : (widget.shape == AvatarShape.bot
+                      : (widget.shape != AvatarShape.person
                             ? CropBackground.accent
                             : CropBackground.white)));
         _start = _view;
@@ -1001,11 +1004,13 @@ class _AvatarCropperState extends State<AvatarCropper>
 // --- painting ----------------------------------------------------------------------------------
 
 /// The frame's shape at [rect].
-Path _shapePath(Rect rect, AvatarShape shape) => shape == AvatarShape.person
-    ? (Path()..addOval(rect))
-    : (Path()..addRRect(
-        RRect.fromRectAndRadius(rect, Radius.circular(rect.width * 0.32)),
-      ));
+Path _shapePath(Rect rect, AvatarShape shape) => switch (shape) {
+  AvatarShape.person => Path()..addOval(rect),
+  AvatarShape.workspace => Path()
+    ..addRRect(RRect.fromRectAndRadius(rect, Radius.circular(rect.width * 0.30))),
+  AvatarShape.bot => Path()
+    ..addRRect(RRect.fromRectAndRadius(rect, Radius.circular(rect.width * 0.32))),
+};
 
 void _paintBackground(
   Canvas canvas,
@@ -1561,7 +1566,7 @@ class _BackgroundRow extends StatelessWidget {
                   ),
                 ),
               ),
-              if (shape == AvatarShape.bot)
+              if (shape != AvatarShape.person)
                 chip(
                   CropBackground.accent,
                   accentLabel,

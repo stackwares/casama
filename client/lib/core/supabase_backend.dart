@@ -2008,6 +2008,58 @@ class SupabaseBackend implements Backend {
       '${api.baseUrl.replaceAll(RegExp(r'/+$'), '')}/v1/bot-images/$imageId${small ? '?size=128' : ''}';
 
   @override
+  Future<Organization> setWorkspacePicture(
+    String orgId,
+    Uint8List square, {
+    Uint8List? original,
+    BotPictureCrop? crop,
+    String source = 'upload',
+  }) async => (await api.workspaces.setWorkspacePicture(
+    id: orgId,
+    setBotPictureRequest: SetBotPictureRequest(
+      data: base64Encode(square),
+      original: original == null ? null : base64Encode(original),
+      crop: original == null ? null : crop,
+      source_: SetBotPictureRequestSource_Enum.upload,
+    ),
+  )).data!;
+
+  @override
+  Future<Organization> removeWorkspacePicture(String orgId) async =>
+      (await api.workspaces.removeWorkspacePicture(id: orgId)).data!;
+
+  @override
+  Future<List<BotPicture>> workspacePictures(String orgId, {bool candidates = false}) async =>
+      (await api.workspaces.listWorkspacePictures(id: orgId, candidates: candidates ? 'true' : null)).data!.items;
+
+  @override
+  Future<Organization> useWorkspacePicture(String orgId, String imageId) async =>
+      (await api.workspaces.useWorkspacePicture(id: orgId, imageId: imageId)).data!;
+
+  @override
+  Future<Uint8List> workspacePictureOriginal(String orgId, String imageId) async =>
+      (await api.workspaces.getWorkspacePictureOriginal(id: orgId, imageId: imageId)).data!;
+
+  @override
+  Future<List<BotPicture>> drawWorkspacePictures(
+    String orgId, {
+    required BotPictureStyle style,
+    String? description,
+    int count = 2,
+  }) async => (await api.workspaces.generateWorkspacePictures(
+    id: orgId,
+    generateBotPicturesRequest: GenerateBotPicturesRequest(
+      style: style,
+      description: (description?.trim().isEmpty ?? true) ? null : description!.trim(),
+      count: count,
+    ),
+  )).data!.items;
+
+  @override
+  String workspaceImageUrl(String imageId, {bool small = false}) =>
+      '${api.baseUrl.replaceAll(RegExp(r'/+$'), '')}/v1/workspace-images/$imageId${small ? '?size=128' : ''}';
+
+  @override
   Future<UsageReport> usage(String orgId, {String period = 'day', UsageFilter filter = UsageFilter.none}) async =>
       (await api.usage.getUsage(orgId: orgId, period: period, botId: filter.botId, model: filter.model, source_: filter.source, userId: filter.userId)).data!;
 

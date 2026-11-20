@@ -35,6 +35,8 @@ class OrganizationWithRole {
 
      this.color,
 
+     this.avatarUrl,
+
     required  this.createdAt,
 
     required  this.role,
@@ -132,6 +134,18 @@ class OrganizationWithRole {
 
   @JsonKey(
     
+    name: r'avatar_url',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final String? avatarUrl;
+
+
+
+  @JsonKey(
+    
     name: r'created_at',
     required: true,
     includeIfNull: false,
@@ -204,6 +218,7 @@ class OrganizationWithRole {
       other.region == region &&
       other.icon == icon &&
       other.color == color &&
+      other.avatarUrl == avatarUrl &&
       other.createdAt == createdAt &&
       other.role == role &&
       other.requireMfa == requireMfa &&
@@ -219,6 +234,7 @@ class OrganizationWithRole {
         region.hashCode +
         (icon == null ? 0 : icon.hashCode) +
         (color == null ? 0 : color.hashCode) +
+        (avatarUrl == null ? 0 : avatarUrl.hashCode) +
         createdAt.hashCode +
         role.hashCode +
         requireMfa.hashCode +
