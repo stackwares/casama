@@ -71,6 +71,7 @@ import 'widgets/screen_held_actions.dart';
 import 'widgets/reactions.dart';
 import 'widgets/shared_files.dart';
 import '../../core/analytics.dart';
+import 'widgets/intro_video.dart';
 import '../permissions/permissions_card.dart';
 import '../widgets/canvas_preview_card.dart';
 
@@ -2630,6 +2631,8 @@ class _EmptyThread extends ConsumerWidget {
                 // Apps to connect first, until two are connected (D-204).
                 ConnectAppTiles(botId: botId, botName: name, width: width - 2 * side),
                 const SizedBox(height: AppSpace.md),
+                // The intro film, for someone new (one row; it goes once watched or closed).
+                IntroVideoTile(botId: botId),
                 // One offer of an email address for a bot without one (BOT-EMAIL-PLAN §4.5).
                 if (remoteFlag(ref, 'bot_email', fallback: false)) EmailOfferTile(botId: botId, botName: name),
                 AnimatedOpacity(

@@ -12688,6 +12688,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get supportGuidesHelp => 'Step-by-step help for everything in Casama';
 
   @override
+  String get introVideoTitle => 'See how Casama works';
+
+  @override
+  String get introVideoSubtitle => 'A 1½-minute film';
+
+  @override
+  String get supportIntroVideo => 'Watch the intro film';
+
+  @override
+  String get supportIntroVideoHelp => 'See what Casama can do in 1½ minutes';
+
+  @override
   String get supportIds => 'Support IDs';
 
   @override

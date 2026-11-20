@@ -1705,6 +1705,25 @@
       "funnels": []
     },
     {
+      "name": "intro_video_opened",
+      "by": ["client"],
+      "description": "The intro film was opened from the app (the YouTube link, from remote links intro_video / intro_video_vertical). surface is where: the row in a new person's empty chat, or Help.",
+      "properties": {
+        "surface": {
+          "type": "string",
+          "values": ["empty_chat", "help"]
+        }
+      },
+      "funnels": []
+    },
+    {
+      "name": "intro_video_dismissed",
+      "by": ["client"],
+      "description": "The intro film row in an empty chat was closed without watching.",
+      "properties": {},
+      "funnels": []
+    },
+    {
       "name": "feature_used",
       "by": ["client"],
       "description": "A feature was used (once a day per device).",

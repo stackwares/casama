@@ -192,6 +192,10 @@ export const ANALYTICS_CLIENT_EVENTS: Record<string, string[]> = {
     "source",
     "position"
   ],
+  "intro_video_opened": [
+    "surface"
+  ],
+  "intro_video_dismissed": [],
   "feature_used": [
     "feature"
   ],

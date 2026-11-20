@@ -20133,6 +20133,30 @@ abstract class AppLocalizations {
   /// **'Step-by-step help for everything in Casama'**
   String get supportGuidesHelp;
 
+  /// No description provided for @introVideoTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'See how Casama works'**
+  String get introVideoTitle;
+
+  /// No description provided for @introVideoSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'A 1½-minute film'**
+  String get introVideoSubtitle;
+
+  /// No description provided for @supportIntroVideo.
+  ///
+  /// In en, this message translates to:
+  /// **'Watch the intro film'**
+  String get supportIntroVideo;
+
+  /// No description provided for @supportIntroVideoHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'See what Casama can do in 1½ minutes'**
+  String get supportIntroVideoHelp;
+
   /// No description provided for @supportIds.
   ///
   /// In en, this message translates to:

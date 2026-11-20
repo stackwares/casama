@@ -23,6 +23,7 @@ import '../../ui/mascot.dart';
 import '../../ui/page.dart';
 import '../../ui/shell_header.dart';
 import '../chat/widgets/chat_markdown.dart';
+import '../chat/widgets/intro_video.dart';
 import '../../core/remote_content.dart';
 
 /// Help & support (D-298): Casama Help, the support assistant (Casama Cloud), a message to the
@@ -1164,6 +1165,18 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
                 color: scheme.onSurfaceVariant,
               ),
               onTap: () => launch(Uri.parse(docs)),
+            ),
+            GroupedTile(
+              key: const Key('supportIntroVideo'),
+              icon: LucideIcons.circlePlay,
+              title: l10n.supportIntroVideo,
+              subtitle: l10n.supportIntroVideoHelp,
+              trailing: Icon(
+                LucideIcons.externalLink,
+                size: 18,
+                color: scheme.onSurfaceVariant,
+              ),
+              onTap: () => openIntroVideo(context, 'help'),
             ),
             // Casama Cloud's public status page (D-304), same rule as the "Can't reach" bar.
             if (Uri.tryParse(backend.apiUrl)?.host == 'api.casama.ai')

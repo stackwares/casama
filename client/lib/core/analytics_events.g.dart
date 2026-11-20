@@ -48,6 +48,8 @@ const analyticsClientEvents = <String>{
   'app_active_daily',
   'app_error_shown',
   'starter_tapped',
+  'intro_video_opened',
+  'intro_video_dismissed',
   'feature_used',
   'widgets_placed',
   'widget_action',
