@@ -1,10 +1,8 @@
 # An email address for every bot: plan
 
-Status: **built, not live** (written 2026-11-20; Phases 1–4 merged to `main` with audit fixes,
-D-449, not deployed). §13 is built on the recommendations until Oliver says otherwise. It stays
-off until a server has MAIL_DOMAIN and its keys. Cloudflare is set up on `casama.app` (routing,
-the Worker, sending, delivery events) and Phase 0 is mostly answered; what's left is the server's
-settings and the deploy.
+Status: **live** (written 2026-11-20; Phases 1–4 and Phase 0 done, D-449). Deployed to production
+2026-11-20 (`87f520fd`) with `MAIL_DOMAIN=casama.app`, sending through Cloudflare Email Sending.
+§13 is built on the recommendations until Oliver says otherwise.
 
 As built (Phase 1): the Worker's existence check is `GET /hooks/mail?to=…`, not HEAD (Hono
 doesn't match HEAD routes). Resend's received-email API reports sender checks in an
@@ -504,8 +502,10 @@ Findings (2026-11-20, on `casama.app`, with real mail sent from `casama.app` to 
 - **Size:** a 20.5 MiB mail reached the Worker whole.
 - **Envelope sender:** Cloudflare-sent mail arrives from `…@cf-bounce.casama.app` (not empty),
   so it isn't taken for automatic mail.
-- Still to check after the deploy: what senders see for "no such address" and retries, and a mail
-  to Gmail and Outlook landing in the inbox.
+- After the deploy: mail to an unclaimed address is refused as "No such address" (the Worker and
+  the API agree on the hook secret). A welcome-style mail scored **10/10 on mail-tester.com**
+  (SpamAssassin, SPF, DKIM, DMARC, no blocklists) and landed in the **Gmail inbox**. Outlook is not
+  checked yet (no Outlook inbox to test with).
 
 - A mail to any name on the domain reaches the Worker; so does a plus address.
 - The `Authentication-Results` header is there and reads as documented, including for a mail
