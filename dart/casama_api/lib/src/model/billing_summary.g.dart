@@ -29,6 +29,8 @@ abstract class _$BillingSummaryCWProxy {
 
   BillingSummary trialAvailable(bool? trialAvailable);
 
+  BillingSummary resets(List<SavedLimitReset>? resets);
+
   BillingSummary creditsUsd(num creditsUsd);
 
   BillingSummary daily(BillingSummaryDaily? daily);
@@ -59,6 +61,7 @@ abstract class _$BillingSummaryCWProxy {
     bool cancelAtPeriodEnd,
     int? extraSeats,
     bool? trialAvailable,
+    List<SavedLimitReset>? resets,
     num creditsUsd,
     BillingSummaryDaily? daily,
     BillingSummaryComputerHours? computerHours,
@@ -112,6 +115,9 @@ class _$BillingSummaryCWProxyImpl implements _$BillingSummaryCWProxy {
       call(trialAvailable: trialAvailable);
 
   @override
+  BillingSummary resets(List<SavedLimitReset>? resets) => call(resets: resets);
+
+  @override
   BillingSummary creditsUsd(num creditsUsd) => call(creditsUsd: creditsUsd);
 
   @override
@@ -150,6 +156,7 @@ class _$BillingSummaryCWProxyImpl implements _$BillingSummaryCWProxy {
     Object? cancelAtPeriodEnd = const $CopyWithPlaceholder(),
     Object? extraSeats = const $CopyWithPlaceholder(),
     Object? trialAvailable = const $CopyWithPlaceholder(),
+    Object? resets = const $CopyWithPlaceholder(),
     Object? creditsUsd = const $CopyWithPlaceholder(),
     Object? daily = const $CopyWithPlaceholder(),
     Object? computerHours = const $CopyWithPlaceholder(),
@@ -203,6 +210,10 @@ class _$BillingSummaryCWProxyImpl implements _$BillingSummaryCWProxy {
           ? _value.trialAvailable
           // ignore: cast_nullable_to_non_nullable
           : trialAvailable as bool?,
+      resets: resets == const $CopyWithPlaceholder()
+          ? _value.resets
+          // ignore: cast_nullable_to_non_nullable
+          : resets as List<SavedLimitReset>?,
       creditsUsd:
           creditsUsd == const $CopyWithPlaceholder() || creditsUsd == null
           ? _value.creditsUsd
@@ -284,6 +295,12 @@ BillingSummary _$BillingSummaryFromJson(
       ),
       extraSeats: $checkedConvert('extra_seats', (v) => (v as num?)?.toInt()),
       trialAvailable: $checkedConvert('trial_available', (v) => v as bool?),
+      resets: $checkedConvert(
+        'resets',
+        (v) => (v as List<dynamic>?)
+            ?.map((e) => SavedLimitReset.fromJson(e as Map<String, dynamic>))
+            .toList(),
+      ),
       creditsUsd: $checkedConvert('credits_usd', (v) => v as num),
       daily: $checkedConvert(
         'daily',
@@ -338,6 +355,7 @@ Map<String, dynamic> _$BillingSummaryToJson(BillingSummary instance) =>
       'cancel_at_period_end': instance.cancelAtPeriodEnd,
       'extra_seats': ?instance.extraSeats,
       'trial_available': ?instance.trialAvailable,
+      'resets': ?instance.resets?.map((e) => e.toJson()).toList(),
       'credits_usd': instance.creditsUsd,
       'daily': ?instance.daily?.toJson(),
       'computer_hours': ?instance.computerHours?.toJson(),

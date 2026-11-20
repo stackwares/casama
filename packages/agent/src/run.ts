@@ -2538,7 +2538,7 @@ async function spend(
       (select coalesce(sum(cost_usd), 0) from public.usage_ledger
         where org_id = ${info.orgId}::uuid and billable
           and kind <> all('{computer_seconds,stream_seconds}'::text[])
-          and created_at >= date_trunc('day', now() at time zone 'utc') at time zone 'utc') as cloud_today,
+          and created_at >= date_trunc('day', now() at time zone 'utc') at time zone 'utc') - public.limit_reset_offset(${info.orgId}::uuid,'daily') as cloud_today,
       (select count(*) from public.bots o join public.bots me on me.id = ${info.botId}::uuid
         where o.org_id = me.org_id and o.archived_at is null and o.id <> me.id
           and (o.created_at, o.id) < (me.created_at, me.id)) as bot_rank`);

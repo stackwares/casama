@@ -16549,4 +16549,132 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get adminGateNumberInvalid => 'Enter a whole number';
+
+  @override
+  String savedResetAvailable(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count resets saved',
+      one: '1 reset saved',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String savedResetExpiry(String date) {
+    return 'Use by $date';
+  }
+
+  @override
+  String get savedResetUse => 'Use Reset';
+
+  @override
+  String savedResetConfirm(String amount) {
+    return 'Refills \$$amount of this period’s included credits. This cannot be undone.';
+  }
+
+  @override
+  String get adminResets => 'Resets';
+
+  @override
+  String get resetsEnabled => 'Enable saved resets';
+
+  @override
+  String get resetsPerPeriod => 'Uses per workspace per period';
+
+  @override
+  String get resetsMaxHeld => 'Maximum saved resets';
+
+  @override
+  String get resetsNotifyOwners => 'Notify instance owners';
+
+  @override
+  String get resetsNewCampaign => 'Reset campaign';
+
+  @override
+  String get resetsName => 'Name';
+
+  @override
+  String get resetsMessage => 'Message to people';
+
+  @override
+  String get resetsPlans => 'Plan codes, separated by commas (empty means all)';
+
+  @override
+  String get resetsWorkspaces =>
+      'Workspace IDs, separated by commas (empty means all)';
+
+  @override
+  String get resetsBefore => 'Created before (date and time, optional)';
+
+  @override
+  String get resetsLimitedDays => 'Hit a limit in the last N days (optional)';
+
+  @override
+  String get resetsStart => 'Starts (date and time)';
+
+  @override
+  String get resetsExpiry => 'Expires (date and time)';
+
+  @override
+  String get resetsPercent => 'Included credits to refill (%)';
+
+  @override
+  String get resetsCap => 'Maximum dollars per use (optional)';
+
+  @override
+  String get resetsBudget => 'Total credit budget in dollars (optional)';
+
+  @override
+  String get resetsDaily => 'Clear today’s model limit';
+
+  @override
+  String get resetsComputer => 'Refill this month’s computer hours';
+
+  @override
+  String get resetsArrival => 'Notify on arrival';
+
+  @override
+  String get resetsReminder => 'Remind before expiry';
+
+  @override
+  String get resetsPreviewSave => 'Preview and save';
+
+  @override
+  String get resetsSchedule => 'Schedule';
+
+  @override
+  String get resetsPause => 'Pause';
+
+  @override
+  String get resetsResume => 'Resume';
+
+  @override
+  String resetsCampaignCounts(int given, int used, String credits) {
+    return '$given given · $used used · \$$credits refilled';
+  }
+
+  @override
+  String resetsPreview(int count, String credits, String cost) {
+    return '$count workspaces. Maximum refill: \$$credits. Estimated cost: \$$cost.';
+  }
+
+  @override
+  String get resetsWorkspace => 'Workspace ID (empty for all history)';
+
+  @override
+  String get resetsHistory => 'Load history';
+
+  @override
+  String get resetsGive => 'Give a reset';
+
+  @override
+  String get resetsCopyCsv => 'Copy CSV';
+
+  @override
+  String get resetsRevoke => 'Take back';
+
+  @override
+  String get resetsUndo => 'Undo unused refill';
 }

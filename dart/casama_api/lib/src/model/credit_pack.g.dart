@@ -11,6 +11,8 @@ abstract class _$CreditPackCWProxy {
 
   CreditPack name(String name);
 
+  CreditPack resets(List<SavedLimitReset>? resets);
+
   CreditPack creditsUsd(num creditsUsd);
 
   CreditPack web(bool web);
@@ -30,6 +32,7 @@ abstract class _$CreditPackCWProxy {
   CreditPack call({
     String code,
     String name,
+    List<SavedLimitReset>? resets,
     num creditsUsd,
     bool web,
     String? priceLabel,
@@ -49,6 +52,9 @@ class _$CreditPackCWProxyImpl implements _$CreditPackCWProxy {
 
   @override
   CreditPack name(String name) => call(name: name);
+
+  @override
+  CreditPack resets(List<SavedLimitReset>? resets) => call(resets: resets);
 
   @override
   CreditPack creditsUsd(num creditsUsd) => call(creditsUsd: creditsUsd);
@@ -75,6 +81,7 @@ class _$CreditPackCWProxyImpl implements _$CreditPackCWProxy {
   CreditPack call({
     Object? code = const $CopyWithPlaceholder(),
     Object? name = const $CopyWithPlaceholder(),
+    Object? resets = const $CopyWithPlaceholder(),
     Object? creditsUsd = const $CopyWithPlaceholder(),
     Object? web = const $CopyWithPlaceholder(),
     Object? priceLabel = const $CopyWithPlaceholder(),
@@ -89,6 +96,10 @@ class _$CreditPackCWProxyImpl implements _$CreditPackCWProxy {
           ? _value.name
           // ignore: cast_nullable_to_non_nullable
           : name as String,
+      resets: resets == const $CopyWithPlaceholder()
+          ? _value.resets
+          // ignore: cast_nullable_to_non_nullable
+          : resets as List<SavedLimitReset>?,
       creditsUsd:
           creditsUsd == const $CopyWithPlaceholder() || creditsUsd == null
           ? _value.creditsUsd
@@ -132,6 +143,12 @@ CreditPack _$CreditPackFromJson(Map<String, dynamic> json) => $checkedCreate(
     final val = CreditPack(
       code: $checkedConvert('code', (v) => v as String),
       name: $checkedConvert('name', (v) => v as String),
+      resets: $checkedConvert(
+        'resets',
+        (v) => (v as List<dynamic>?)
+            ?.map((e) => SavedLimitReset.fromJson(e as Map<String, dynamic>))
+            .toList(),
+      ),
       creditsUsd: $checkedConvert('credits_usd', (v) => v as num),
       web: $checkedConvert('web', (v) => v as bool),
       priceLabel: $checkedConvert('price_label', (v) => v as String?),
@@ -155,6 +172,7 @@ Map<String, dynamic> _$CreditPackToJson(CreditPack instance) =>
     <String, dynamic>{
       'code': instance.code,
       'name': instance.name,
+      'resets': ?instance.resets?.map((e) => e.toJson()).toList(),
       'credits_usd': instance.creditsUsd,
       'web': instance.web,
       'price_label': ?instance.priceLabel,

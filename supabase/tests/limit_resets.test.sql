@@ -1,0 +1,17 @@
+begin;
+create extension if not exists pgtap with schema extensions;
+select plan(8);
+select ok((select relrowsecurity from pg_class where oid='public.limit_reset_campaigns'::regclass),'campaign RLS');
+select ok((select relrowsecurity from pg_class where oid='public.limit_resets'::regclass),'reset RLS');
+select ok((select relrowsecurity from pg_class where oid='public.limit_reset_events'::regclass),'audit RLS');
+set local role authenticated;
+select throws_ok($$select * from public.limit_reset_campaigns$$,'42501',null,'members cannot read campaigns');
+select throws_ok($$insert into public.limit_reset_events(action) values ('forged')$$,'42501',null,'members cannot forge audit');
+select throws_ok($$select public.limit_reset_offset(gen_random_uuid(),'daily')$$,'42501',null,'members cannot query arbitrary offsets');
+reset role;
+set local role casama_worker;
+select lives_ok($$select * from public.limit_reset_campaigns$$,'worker reads campaigns');
+select throws_ok($$update public.limit_reset_events set action='forged'$$,'42501',null,'worker cannot rewrite history');
+reset role;
+select * from finish();
+rollback;

@@ -9,6 +9,11 @@ The server, apps, CLI, SDK and MCP server share one version number.
 
 ## [Unreleased]
 
+- Saved resets: instance owners can schedule and budget included-credit refills, pause or cancel
+  campaigns, and take back unused resets or unspent refill credit. Workspace owners can use saved
+  resets in Billing and Usage. The feature defaults to off and records an append-only audit trail.
+
+
 - `@mention` connected apps in chat (D-434): type `@` in any direct or group chat to mention a
   connected app (MCP server, OpenAPI source, A2A agent, local MCP, or individual Composio/Pipedream
   toolkit like `@Gmail` or `@Linear`). Picking or typing an `@App` preloads only that app's tools on

@@ -5116,6 +5116,8 @@ class SupabaseBackend implements Backend {
   // --- billing (Phase 7) ---------------------------------------------------
 
   @override
+  LimitResetsApi get limitResets => api.api.getLimitResetsApi();
+  @override
   Future<BillingSummary> billing(String orgId) async =>
       (await api.billing.getBilling(id: orgId)).data!;
   // Weekly plans (D-432) are only sent to apps that can show them.

@@ -283,6 +283,7 @@ export default defineConfig({
           { text: "Autonomy and approvals", link: "/guide/autonomy" },
           { text: "Notifications and attention", link: "/guide/attention" },
           { text: "Usage, budgets and plans", link: "/guide/usage" },
+          { text: "Saved resets", link: "/guide/saved-resets" },
           { text: "Limits", link: "/guide/limits" },
           { text: "Workspaces and teams", link: "/guide/workspaces" },
           { text: "Privacy and security", link: "/guide/privacy" },

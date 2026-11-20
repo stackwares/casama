@@ -323,3 +323,8 @@ owner sets still apply.
 - [Projects](/guide/projects)
 - [Workspaces and teams](/guide/workspaces)
 - [Self-hosting configuration](/self-hosting/configuration)
+
+## Saved resets
+
+An administrator may give your workspace a one-time refill. See [Saved resets](/guide/saved-resets)
+for using one, its expiry, and the instance-owner controls.

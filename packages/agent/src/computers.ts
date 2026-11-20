@@ -429,7 +429,7 @@ export class ComputerService {
              (select e.limits->>'max_computers' from public.entitlements e where e.org_id = o.id order by e.created_at desc limit 1) as max_computers,
              (select e.limits->>'computer_hours' from public.entitlements e where e.org_id = o.id order by e.created_at desc limit 1) as computer_hours,
              (select coalesce(sum(quantity), 0) from public.usage_ledger where org_id = o.id and kind = 'computer_seconds'
-                and created_at >= date_trunc('month', now() at time zone 'utc') at time zone 'utc') as computer_seconds,
+                and created_at >= date_trunc('month', now() at time zone 'utc') at time zone 'utc') - public.limit_reset_offset(o.id,'computer') as computer_seconds,
              ${
                opts.computerId
                  ? sql`(select count(*) from public.computers x join public.computers me on me.id = ${opts.computerId}::uuid
@@ -514,7 +514,7 @@ export class ComputerService {
       where c.kind <> 'local' and c.state in ('running', 'idle') and lim.hours is not null
         and (select coalesce(sum(quantity), 0) from public.usage_ledger
               where org_id = c.org_id and kind = 'computer_seconds'
-                and created_at >= date_trunc('month', now() at time zone 'utc') at time zone 'utc') / 3600.0 >= lim.hours`);
+                and created_at >= date_trunc('month', now() at time zone 'utc') at time zone 'utc') / 3600.0 - public.limit_reset_offset(c.org_id,'computer') / 3600.0 >= lim.hours`);
     const seen = new Set(broke.map((c) => c.id));
     for (const c of overHours) if (!seen.has(c.id)) broke.push(c);
     for (const c of broke) {

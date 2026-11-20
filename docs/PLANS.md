@@ -22,6 +22,7 @@ same commit. Shipping details (deploys, app builds) move fast, so check them bef
 | [APP-MENTIONS-PLAN](APP-MENTIONS-PLAN.md) | 2026-11-19 | Oliver's choices |
 | [RETENTION-MESSAGING-PLAN](RETENTION-MESSAGING-PLAN.md) | 2026-11-20 | §14 decisions; then 1.0 release and Apple's access |
 | [SIRI-AI-PLAN](SIRI-AI-PLAN.md) | 2026-11-20 | §13 decisions; then a debug build on the iPhone for Phase 0 |
+| [USAGE-LIMITS-PLAN](USAGE-LIMITS-PLAN.md) | 2026-11-20 | Oliver's go-ahead to build; the decisions are made (§2) |
 | [WEEKLY-PLAN-PLAN](WEEKLY-PLAN-PLAN.md) | 2026-11-20 | Oliver's answers (draft) |
 
 ## In progress
@@ -38,6 +39,7 @@ same commit. Shipping details (deploys, app builds) move fast, so check them bef
 
 | Plan | Decisions | What's left |
 |---|---|---|
+| [LIMIT-RESETS-PLAN](LIMIT-RESETS-PLAN.md) | D-443 | Server/docs deploys, app release builds and first live grant; Mousepad fixture failure remains |
 | [APP-ART-PLAN](APP-ART-PLAN.md) | D-440 | Web app (51), server and gallery live 2026-11-20; store builds and a low-end Android startup check |
 | [ADMIN-BOT-PLAN](ADMIN-BOT-PLAN.md) | D-435 | Push and deploy; then turn it on for admin@casama.ai's bot |
 | [CALL-RECAP-PLAN](CALL-RECAP-PLAN.md) | D-429 | Server live; app builds and a real call check |

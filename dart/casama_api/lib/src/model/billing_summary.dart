@@ -7,6 +7,7 @@ import 'package:casama_api/src/model/billing_summary_daily.dart';
 import 'package:casama_api/src/model/billing_summary_computer_hours.dart';
 import 'package:casama_api/src/model/subscription.dart';
 import 'package:casama_api/src/model/billing_source.dart';
+import 'package:casama_api/src/model/saved_limit_reset.dart';
 import 'package:copy_with_extension/copy_with_extension.dart';
 import 'package:json_annotation/json_annotation.dart';
 
@@ -45,6 +46,8 @@ class BillingSummary {
      this.extraSeats,
 
      this.trialAvailable,
+
+     this.resets,
 
     required  this.creditsUsd,
 
@@ -194,6 +197,18 @@ class BillingSummary {
 
   @JsonKey(
     
+    name: r'resets',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final List<SavedLimitReset>? resets;
+
+
+
+  @JsonKey(
+    
     name: r'credits_usd',
     required: true,
     includeIfNull: false,
@@ -267,6 +282,7 @@ class BillingSummary {
       other.cancelAtPeriodEnd == cancelAtPeriodEnd &&
       other.extraSeats == extraSeats &&
       other.trialAvailable == trialAvailable &&
+      other.resets == resets &&
       other.creditsUsd == creditsUsd &&
       other.daily == daily &&
       other.computerHours == computerHours &&
@@ -286,6 +302,7 @@ class BillingSummary {
         cancelAtPeriodEnd.hashCode +
         extraSeats.hashCode +
         trialAvailable.hashCode +
+        resets.hashCode +
         creditsUsd.hashCode +
         (daily == null ? 0 : daily.hashCode) +
         (computerHours == null ? 0 : computerHours.hashCode) +

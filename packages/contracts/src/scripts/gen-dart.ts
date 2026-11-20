@@ -91,6 +91,8 @@ for (const file of walk(join(apiDir, "lib")).filter(
 )) {
   const src = readFileSync(file, "utf8");
   let out = src.replaceAll("Map<String, Object>", "Map<String, Object?>");
+  // Dart optional parameter defaults must be compile-time constants.
+  out = out.replace(/(\bthis\.\w+\s*=\s*)\[\]/g, "$1const []");
   // The generator imports the error model into every API file; drop it where unused (pub.dev lints).
   const problemImport = "import 'package:casama_api/src/model/problem.dart';\n";
   if (out.includes(problemImport) && !/\bProblem\b/.test(out.replace(problemImport, "")))

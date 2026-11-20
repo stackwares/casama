@@ -11,6 +11,7 @@ import { deterministicUuid, getProductAnalytics } from "@casama/observability";
 import { sql } from "drizzle-orm";
 import { type AccountEmailKind, queueAccountEmail } from "../services/account-emails.ts";
 import { PAID_CHANGES, subscriptionChange } from "./analytics.ts";
+import { LimitResets } from "./limit-resets.ts";
 import {
   BillingError,
   type BillingProvider,
@@ -269,8 +270,7 @@ export class BillingService {
       const start = periodStart(end, plan.interval);
       const [g] = await this.db.execute<{ granted: string }>(sql`
         select coalesce(sum(delta), 0)::text as granted from public.credit_ledger
-        where org_id = ${orgId}::uuid and reason = 'grant' and delta > 0
-          and reference like 'monthly:%' and reference not like '%:free'
+        where org_id = ${orgId}::uuid and delta > 0 and ((reason = 'grant' and reference like 'monthly:%' and reference not like '%:free') or reason = 'reset')
           and created_at >= ${start.toISOString()}::timestamptz`);
       const granted = Number(g?.granted ?? 0);
       if (granted > 0)
@@ -789,7 +789,7 @@ export class BillingService {
   ) {
     if (!this.enabled || !this.opts.cloudDailyCap || limits?.unlimited === true) return null;
     const [r] = await this.db.execute<{ today: string }>(sql`
-      select coalesce(sum(cost_usd), 0)::text as today from public.usage_ledger
+      select greatest(0,coalesce(sum(cost_usd), 0)-public.limit_reset_offset(${orgId}::uuid,'daily'))::text as today from public.usage_ledger
       where org_id = ${orgId}::uuid and billable
         and kind <> all('{computer_seconds,stream_seconds}'::text[])
         and created_at >= date_trunc('day', now() at time zone 'utc') at time zone 'utc'`);
@@ -815,7 +815,7 @@ export class BillingService {
       typeof raw === "number" ? raw : typeof raw === "string" ? Number(raw) : Number.NaN;
     if (!this.enabled || limits?.unlimited === true || !Number.isFinite(limit)) return null;
     const [r] = await this.db.execute<{ seconds: string }>(sql`
-      select coalesce(sum(quantity), 0)::text as seconds from public.usage_ledger
+      select greatest(0,coalesce(sum(quantity), 0)-public.limit_reset_offset(${orgId}::uuid,'computer'))::text as seconds from public.usage_ledger
       where org_id = ${orgId}::uuid and kind = 'computer_seconds'
         and created_at >= date_trunc('month', now() at time zone 'utc') at time zone 'utc'`);
     const now = new Date();
@@ -1060,6 +1060,7 @@ export class BillingService {
   }
 
   async settle() {
+    await new LimitResets(this.db, this.enabled).tick();
     if (!this.enabled) return { orgs: 0, usd: 0 };
     await this.loadSettings();
     await this.flushCloudComputers();
@@ -1191,7 +1192,7 @@ export class BillingService {
                 where org_id = lc.org_id and billable and billed_at is null) <= 0 as broke,
         coalesce((select coalesce(sum(quantity), 0) from public.usage_ledger
             where org_id = lc.org_id and kind = 'computer_seconds'
-              and created_at >= date_trunc('month', now() at time zone 'utc') at time zone 'utc') / 3600.0
+              and created_at >= date_trunc('month', now() at time zone 'utc') at time zone 'utc') / 3600.0 - public.limit_reset_offset(lc.org_id,'computer') / 3600.0
           >= (e.limits->>'computer_hours')::numeric, false) as over_hours) s
       where lc.running_since is not null and (s.broke or s.over_hours)
       limit 200`);

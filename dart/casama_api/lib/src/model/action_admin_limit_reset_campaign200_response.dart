@@ -6,7 +6,7 @@
 import 'package:copy_with_extension/copy_with_extension.dart';
 import 'package:json_annotation/json_annotation.dart';
 
-part 'delete_integration200_response.g.dart';
+part 'action_admin_limit_reset_campaign200_response.g.dart';
 
 
 @CopyWith()
@@ -16,9 +16,9 @@ part 'delete_integration200_response.g.dart';
   disallowUnrecognizedKeys: false,
   explicitToJson: true,
 )
-class DeleteIntegration200Response {
-  /// Returns a new [DeleteIntegration200Response] instance.
-  DeleteIntegration200Response({
+class ActionAdminLimitResetCampaign200Response {
+  /// Returns a new [ActionAdminLimitResetCampaign200Response] instance.
+  ActionAdminLimitResetCampaign200Response({
 
     required  this.ok,
   });
@@ -38,16 +38,16 @@ class DeleteIntegration200Response {
 
 
     @override
-    bool operator ==(Object other) => identical(this, other) || other is DeleteIntegration200Response &&
+    bool operator ==(Object other) => identical(this, other) || other is ActionAdminLimitResetCampaign200Response &&
       other.ok == ok;
 
     @override
     int get hashCode =>
         ok.hashCode;
 
-  factory DeleteIntegration200Response.fromJson(Map<String, dynamic> json) => _$DeleteIntegration200ResponseFromJson(json);
+  factory ActionAdminLimitResetCampaign200Response.fromJson(Map<String, dynamic> json) => _$ActionAdminLimitResetCampaign200ResponseFromJson(json);
 
-  Map<String, dynamic> toJson() => _$DeleteIntegration200ResponseToJson(this);
+  Map<String, dynamic> toJson() => _$ActionAdminLimitResetCampaign200ResponseToJson(this);
 
   @override
   String toString() {

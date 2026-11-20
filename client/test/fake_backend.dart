@@ -34,6 +34,8 @@ RunEventItem ev(int seq, String type, Map<String, dynamic> payload) =>
 
 /// In-memory backend for widget tests.
 class FakeBackend implements Backend {
+  @override
+  LimitResetsApi get limitResets => throw UnimplementedError("Saved-reset requests must be mocked by the test");
   var signedIn = true;
   final _auth = StreamController<bool>.broadcast();
   final runEventsController = StreamController<RunEventItem>.broadcast();

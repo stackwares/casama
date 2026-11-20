@@ -369,6 +369,20 @@ Class | Method | HTTP request | Description
 [*KnowledgeApi*](doc/KnowledgeApi.md) | [**deleteKnowledgeSource**](doc/KnowledgeApi.md#deleteknowledgesource) | **DELETE** /v1/knowledge-sources/{id} | 
 [*KnowledgeApi*](doc/KnowledgeApi.md) | [**listKnowledgeSources**](doc/KnowledgeApi.md#listknowledgesources) | **GET** /v1/knowledge-sources | A bot&#39;s knowledge sources and the workspace&#39;s shared ones
 [*KnowledgeApi*](doc/KnowledgeApi.md) | [**resyncKnowledgeSource**](doc/KnowledgeApi.md#resyncknowledgesource) | **POST** /v1/knowledge-sources/{id}/sync | 
+[*LimitResetsApi*](doc/LimitResetsApi.md) | [**actionAdminLimitResetCampaign**](doc/LimitResetsApi.md#actionadminlimitresetcampaign) | **POST** /v1/admin/limit-resets/{id}/action | Schedule, pause, resume, cancel or delete a draft (instance owner)
+[*LimitResetsApi*](doc/LimitResetsApi.md) | [**actionAdminWorkspaceLimitReset**](doc/LimitResetsApi.md#actionadminworkspacelimitreset) | **POST** /v1/admin/limit-resets/resets/{id}/action | Revoke an unused reset or undo unspent refill credit (instance owner)
+[*LimitResetsApi*](doc/LimitResetsApi.md) | [**adminLimitResetCampaigns**](doc/LimitResetsApi.md#adminlimitresetcampaigns) | **GET** /v1/admin/limit-resets | List reset campaigns (instance owner)
+[*LimitResetsApi*](doc/LimitResetsApi.md) | [**adminLimitResetEvents**](doc/LimitResetsApi.md#adminlimitresetevents) | **GET** /v1/admin/limit-resets/events | Append-only reset log (instance owner)
+[*LimitResetsApi*](doc/LimitResetsApi.md) | [**adminLimitResetSettings**](doc/LimitResetsApi.md#adminlimitresetsettings) | **GET** /v1/admin/limit-resets/settings | Saved reset settings (instance owner)
+[*LimitResetsApi*](doc/LimitResetsApi.md) | [**adminWorkspaceLimitResets**](doc/LimitResetsApi.md#adminworkspacelimitresets) | **GET** /v1/admin/limit-resets/workspaces/{id} | Workspace reset history (instance owner)
+[*LimitResetsApi*](doc/LimitResetsApi.md) | [**createAdminLimitResetCampaign**](doc/LimitResetsApi.md#createadminlimitresetcampaign) | **POST** /v1/admin/limit-resets | Create a draft reset campaign (instance owner)
+[*LimitResetsApi*](doc/LimitResetsApi.md) | [**exportAdminLimitResetEvents**](doc/LimitResetsApi.md#exportadminlimitresetevents) | **GET** /v1/admin/limit-resets/events.csv | Export the full saved-reset audit log as CSV (instance owner)
+[*LimitResetsApi*](doc/LimitResetsApi.md) | [**giveAdminWorkspaceLimitReset**](doc/LimitResetsApi.md#giveadminworkspacelimitreset) | **POST** /v1/admin/limit-resets/workspaces/{id} | Give a one-off reset (instance owner)
+[*LimitResetsApi*](doc/LimitResetsApi.md) | [**listSavedLimitResets**](doc/LimitResetsApi.md#listsavedlimitresets) | **GET** /v1/orgs/{id}/billing/resets | Saved resets for a workspace
+[*LimitResetsApi*](doc/LimitResetsApi.md) | [**previewAdminLimitResetCampaign**](doc/LimitResetsApi.md#previewadminlimitresetcampaign) | **POST** /v1/admin/limit-resets/preview | Preview audience and maximum refill cost (instance owner)
+[*LimitResetsApi*](doc/LimitResetsApi.md) | [**redeemSavedLimitReset**](doc/LimitResetsApi.md#redeemsavedlimitreset) | **POST** /v1/orgs/{id}/billing/resets/redeem | Use the first expiring reset as the workspace owner
+[*LimitResetsApi*](doc/LimitResetsApi.md) | [**setAdminLimitResetSettings**](doc/LimitResetsApi.md#setadminlimitresetsettings) | **PUT** /v1/admin/limit-resets/settings | Change saved reset settings (instance owner)
+[*LimitResetsApi*](doc/LimitResetsApi.md) | [**updateAdminLimitResetCampaign**](doc/LimitResetsApi.md#updateadminlimitresetcampaign) | **PUT** /v1/admin/limit-resets/{id} | Edit a reset campaign (instance owner)
 [*LinksApi*](doc/LinksApi.md) | [**acceptBotLink**](doc/LinksApi.md#acceptbotlink) | **POST** /v1/links/accept | Accept a contact&#39;s invite with one of your bots (works across Casama servers)
 [*LinksApi*](doc/LinksApi.md) | [**createBotLink**](doc/LinksApi.md#createbotlink) | **POST** /v1/bots/{id}/links | Invite a trusted contact&#39;s bot to link with this one
 [*LinksApi*](doc/LinksApi.md) | [**listBotLinks**](doc/LinksApi.md#listbotlinks) | **GET** /v1/bots/{id}/links | 
@@ -607,6 +621,9 @@ Class | Method | HTTP request | Description
  - [Accepted](doc/Accepted.md)
  - [AcceptedSuggestion](doc/AcceptedSuggestion.md)
  - [AccountDeletion](doc/AccountDeletion.md)
+ - [ActionAdminLimitResetCampaign200Response](doc/ActionAdminLimitResetCampaign200Response.md)
+ - [ActionAdminLimitResetCampaignRequest](doc/ActionAdminLimitResetCampaignRequest.md)
+ - [ActionAdminWorkspaceLimitResetRequest](doc/ActionAdminWorkspaceLimitResetRequest.md)
  - [ActionRule](doc/ActionRule.md)
  - [ActionRuleList](doc/ActionRuleList.md)
  - [ActionRuleTarget](doc/ActionRuleTarget.md)
@@ -814,7 +831,6 @@ Class | Method | HTTP request | Description
  - [CreditPack](doc/CreditPack.md)
  - [DecideJoinRequest](doc/DecideJoinRequest.md)
  - [DeleteAccountRequest](doc/DeleteAccountRequest.md)
- - [DeleteIntegration200Response](doc/DeleteIntegration200Response.md)
  - [DeleteResult](doc/DeleteResult.md)
  - [DeletedCall](doc/DeletedCall.md)
  - [DeletedChannel](doc/DeletedChannel.md)
@@ -1010,6 +1026,12 @@ Class | Method | HTTP request | Description
  - [LeaseChangedEventPayload](doc/LeaseChangedEventPayload.md)
  - [LeaveWaitlistRequest](doc/LeaveWaitlistRequest.md)
  - [LibraryStarter](doc/LibraryStarter.md)
+ - [LimitResetAudience](doc/LimitResetAudience.md)
+ - [LimitResetCampaign](doc/LimitResetCampaign.md)
+ - [LimitResetCampaignInput](doc/LimitResetCampaignInput.md)
+ - [LimitResetEvent](doc/LimitResetEvent.md)
+ - [LimitResetPreview](doc/LimitResetPreview.md)
+ - [LimitResetSettings](doc/LimitResetSettings.md)
  - [LinkExchange](doc/LinkExchange.md)
  - [LinkExchangeList](doc/LinkExchangeList.md)
  - [LinkKey](doc/LinkKey.md)
@@ -1176,6 +1198,7 @@ Class | Method | HTTP request | Description
  - [ReasoningEffort](doc/ReasoningEffort.md)
  - [RedeemInviteRequest](doc/RedeemInviteRequest.md)
  - [RedeemReferralRequest](doc/RedeemReferralRequest.md)
+ - [RedeemSavedLimitReset200Response](doc/RedeemSavedLimitReset200Response.md)
  - [RedeemSignInCodeRequest](doc/RedeemSignInCodeRequest.md)
  - [RedeemedSignInCode](doc/RedeemedSignInCode.md)
  - [RedirectUrl](doc/RedirectUrl.md)
@@ -1252,6 +1275,7 @@ Class | Method | HTTP request | Description
  - [SaveTeachResponse](doc/SaveTeachResponse.md)
  - [SavedCount](doc/SavedCount.md)
  - [SavedImportedMemories](doc/SavedImportedMemories.md)
+ - [SavedLimitReset](doc/SavedLimitReset.md)
  - [SavedTurns](doc/SavedTurns.md)
  - [SearchKind](doc/SearchKind.md)
  - [SearchResponse](doc/SearchResponse.md)

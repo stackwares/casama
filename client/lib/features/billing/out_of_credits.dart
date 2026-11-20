@@ -1,3 +1,4 @@
+import 'saved_resets.dart';
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -39,7 +40,7 @@ Future<void> openOutOfCredits(BuildContext context, {String source = 'credits_de
     summary.close();
   }
   if (!context.mounted) return;
-  if (billing == null || !billing.enabled || billing.planCode == 'free') {
+  if (billing == null || !billing.enabled || (billing.planCode == 'free' && (billing.resets?.isEmpty ?? true))) {
     await openPaywall(context, reason: context.l10n.outOfCreditsTitle, source: source);
     return;
   }
@@ -146,6 +147,7 @@ class _OutOfCreditsSheetState extends ConsumerState<OutOfCreditsSheet> {
         key: const Key('outOfCreditsSheet'),
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          const SavedResets(),
           const Center(child: MascotImage(Mascot.sleepy, size: 88)),
           const SizedBox(height: AppSpace.sm),
           Text(

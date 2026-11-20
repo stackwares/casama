@@ -1753,6 +1753,54 @@
       "description": "Someone opened or started a group chat by picking another bot from a direct chat @ menu.",
       "properties": {},
       "funnels": []
+    },
+    {
+      "name": "reset_given",
+      "by": [
+        "server"
+      ],
+      "description": "A workspace was given a saved reset.",
+      "properties": {
+        "plan": {
+          "type": "string"
+        },
+        "campaign_id": {
+          "type": "string"
+        }
+      },
+      "funnels": []
+    },
+    {
+      "name": "reset_used",
+      "by": [
+        "server"
+      ],
+      "description": "A workspace owner used a saved reset.",
+      "properties": {
+        "plan": {
+          "type": "string"
+        },
+        "campaign_id": {
+          "type": "string"
+        }
+      },
+      "funnels": []
+    },
+    {
+      "name": "reset_expired",
+      "by": [
+        "server"
+      ],
+      "description": "An unused saved reset expired.",
+      "properties": {
+        "plan": {
+          "type": "string"
+        },
+        "campaign_id": {
+          "type": "string"
+        }
+      },
+      "funnels": []
     }
   ]
 }

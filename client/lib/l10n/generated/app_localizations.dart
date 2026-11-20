@@ -26593,6 +26593,228 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Enter a whole number'**
   String get adminGateNumberInvalid;
+
+  /// No description provided for @savedResetAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1 {1 reset saved} other {{count} resets saved}}'**
+  String savedResetAvailable(int count);
+
+  /// No description provided for @savedResetExpiry.
+  ///
+  /// In en, this message translates to:
+  /// **'Use by {date}'**
+  String savedResetExpiry(String date);
+
+  /// No description provided for @savedResetUse.
+  ///
+  /// In en, this message translates to:
+  /// **'Use Reset'**
+  String get savedResetUse;
+
+  /// No description provided for @savedResetConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Refills \${amount} of this period’s included credits. This cannot be undone.'**
+  String savedResetConfirm(String amount);
+
+  /// No description provided for @adminResets.
+  ///
+  /// In en, this message translates to:
+  /// **'Resets'**
+  String get adminResets;
+
+  /// No description provided for @resetsEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable saved resets'**
+  String get resetsEnabled;
+
+  /// No description provided for @resetsPerPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'Uses per workspace per period'**
+  String get resetsPerPeriod;
+
+  /// No description provided for @resetsMaxHeld.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximum saved resets'**
+  String get resetsMaxHeld;
+
+  /// No description provided for @resetsNotifyOwners.
+  ///
+  /// In en, this message translates to:
+  /// **'Notify instance owners'**
+  String get resetsNotifyOwners;
+
+  /// No description provided for @resetsNewCampaign.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset campaign'**
+  String get resetsNewCampaign;
+
+  /// No description provided for @resetsName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get resetsName;
+
+  /// No description provided for @resetsMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Message to people'**
+  String get resetsMessage;
+
+  /// No description provided for @resetsPlans.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan codes, separated by commas (empty means all)'**
+  String get resetsPlans;
+
+  /// No description provided for @resetsWorkspaces.
+  ///
+  /// In en, this message translates to:
+  /// **'Workspace IDs, separated by commas (empty means all)'**
+  String get resetsWorkspaces;
+
+  /// No description provided for @resetsBefore.
+  ///
+  /// In en, this message translates to:
+  /// **'Created before (date and time, optional)'**
+  String get resetsBefore;
+
+  /// No description provided for @resetsLimitedDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Hit a limit in the last N days (optional)'**
+  String get resetsLimitedDays;
+
+  /// No description provided for @resetsStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Starts (date and time)'**
+  String get resetsStart;
+
+  /// No description provided for @resetsExpiry.
+  ///
+  /// In en, this message translates to:
+  /// **'Expires (date and time)'**
+  String get resetsExpiry;
+
+  /// No description provided for @resetsPercent.
+  ///
+  /// In en, this message translates to:
+  /// **'Included credits to refill (%)'**
+  String get resetsPercent;
+
+  /// No description provided for @resetsCap.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximum dollars per use (optional)'**
+  String get resetsCap;
+
+  /// No description provided for @resetsBudget.
+  ///
+  /// In en, this message translates to:
+  /// **'Total credit budget in dollars (optional)'**
+  String get resetsBudget;
+
+  /// No description provided for @resetsDaily.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear today’s model limit'**
+  String get resetsDaily;
+
+  /// No description provided for @resetsComputer.
+  ///
+  /// In en, this message translates to:
+  /// **'Refill this month’s computer hours'**
+  String get resetsComputer;
+
+  /// No description provided for @resetsArrival.
+  ///
+  /// In en, this message translates to:
+  /// **'Notify on arrival'**
+  String get resetsArrival;
+
+  /// No description provided for @resetsReminder.
+  ///
+  /// In en, this message translates to:
+  /// **'Remind before expiry'**
+  String get resetsReminder;
+
+  /// No description provided for @resetsPreviewSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview and save'**
+  String get resetsPreviewSave;
+
+  /// No description provided for @resetsSchedule.
+  ///
+  /// In en, this message translates to:
+  /// **'Schedule'**
+  String get resetsSchedule;
+
+  /// No description provided for @resetsPause.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get resetsPause;
+
+  /// No description provided for @resetsResume.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume'**
+  String get resetsResume;
+
+  /// No description provided for @resetsCampaignCounts.
+  ///
+  /// In en, this message translates to:
+  /// **'{given} given · {used} used · \${credits} refilled'**
+  String resetsCampaignCounts(int given, int used, String credits);
+
+  /// No description provided for @resetsPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} workspaces. Maximum refill: \${credits}. Estimated cost: \${cost}.'**
+  String resetsPreview(int count, String credits, String cost);
+
+  /// No description provided for @resetsWorkspace.
+  ///
+  /// In en, this message translates to:
+  /// **'Workspace ID (empty for all history)'**
+  String get resetsWorkspace;
+
+  /// No description provided for @resetsHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Load history'**
+  String get resetsHistory;
+
+  /// No description provided for @resetsGive.
+  ///
+  /// In en, this message translates to:
+  /// **'Give a reset'**
+  String get resetsGive;
+
+  /// No description provided for @resetsCopyCsv.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy CSV'**
+  String get resetsCopyCsv;
+
+  /// No description provided for @resetsRevoke.
+  ///
+  /// In en, this message translates to:
+  /// **'Take back'**
+  String get resetsRevoke;
+
+  /// No description provided for @resetsUndo.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo unused refill'**
+  String get resetsUndo;
 }
 
 class _AppLocalizationsDelegate

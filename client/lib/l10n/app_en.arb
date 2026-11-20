@@ -5408,5 +5408,89 @@
   "adminGateBatchHour": "Batch time (UTC)",
   "adminGateBatchHourValue": "{hour}:00 UTC",
   "@adminGateBatchHourValue": {"placeholders": {"hour": {"type": "String"}}},
-  "adminGateNumberInvalid": "Enter a whole number"
+  "adminGateNumberInvalid": "Enter a whole number",
+  "savedResetAvailable": "{count, plural, =1 {1 reset saved} other {{count} resets saved}}",
+  "@savedResetAvailable": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "savedResetExpiry": "Use by {date}",
+  "@savedResetExpiry": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "savedResetUse": "Use Reset",
+  "savedResetConfirm": "Refills ${amount} of this period’s included credits. This cannot be undone.",
+  "@savedResetConfirm": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "adminResets": "Resets",
+  "resetsEnabled": "Enable saved resets",
+  "resetsPerPeriod": "Uses per workspace per period",
+  "resetsMaxHeld": "Maximum saved resets",
+  "resetsNotifyOwners": "Notify instance owners",
+  "resetsNewCampaign": "Reset campaign",
+  "resetsName": "Name",
+  "resetsMessage": "Message to people",
+  "resetsPlans": "Plan codes, separated by commas (empty means all)",
+  "resetsWorkspaces": "Workspace IDs, separated by commas (empty means all)",
+  "resetsBefore": "Created before (date and time, optional)",
+  "resetsLimitedDays": "Hit a limit in the last N days (optional)",
+  "resetsStart": "Starts (date and time)",
+  "resetsExpiry": "Expires (date and time)",
+  "resetsPercent": "Included credits to refill (%)",
+  "resetsCap": "Maximum dollars per use (optional)",
+  "resetsBudget": "Total credit budget in dollars (optional)",
+  "resetsDaily": "Clear today’s model limit",
+  "resetsComputer": "Refill this month’s computer hours",
+  "resetsArrival": "Notify on arrival",
+  "resetsReminder": "Remind before expiry",
+  "resetsPreviewSave": "Preview and save",
+  "resetsSchedule": "Schedule",
+  "resetsPause": "Pause",
+  "resetsResume": "Resume",
+  "resetsCampaignCounts": "{given} given · {used} used · ${credits} refilled",
+  "@resetsCampaignCounts": {
+    "placeholders": {
+      "given": {
+        "type": "int"
+      },
+      "used": {
+        "type": "int"
+      },
+      "credits": {
+        "type": "String"
+      }
+    }
+  },
+  "resetsPreview": "{count} workspaces. Maximum refill: ${credits}. Estimated cost: ${cost}.",
+  "@resetsPreview": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "credits": {
+        "type": "String"
+      },
+      "cost": {
+        "type": "String"
+      }
+    }
+  },
+  "resetsWorkspace": "Workspace ID (empty for all history)",
+  "resetsHistory": "Load history",
+  "resetsGive": "Give a reset",
+  "resetsCopyCsv": "Copy CSV",
+  "resetsRevoke": "Take back",
+  "resetsUndo": "Undo unused refill"
 }

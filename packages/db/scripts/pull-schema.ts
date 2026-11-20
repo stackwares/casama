@@ -3,19 +3,20 @@
  * starts a throwaway database, applies migrations, runs drizzle-kit pull.
  */
 import { execFileSync } from "node:child_process";
-import { existsSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { startTestDatabase } from "../src/testing.ts";
 
 const pkg = fileURLToPath(new URL("..", import.meta.url));
-const out = `${pkg}src/generated`;
+const out = `${pkg}.schema-generation-${process.pid}`;
 const db = await startTestDatabase();
 try {
   rmSync(out, { recursive: true, force: true });
   execFileSync(
-    "npx",
+    process.execPath,
     [
-      "drizzle-kit",
+      "--preserve-symlinks-main",
+      `${pkg}node_modules/drizzle-kit/bin.cjs`,
       "pull",
       "--dialect=postgresql",
       `--url=${db.url}`,
@@ -110,6 +111,9 @@ try {
   }
   rmSync(`${out}/meta`, { recursive: true, force: true });
   for (const f of readdirSync(out)) if (f.endsWith(".sql")) rmSync(`${out}/${f}`, { force: true });
+  rmSync(`${pkg}src/generated`, { recursive: true, force: true });
+  renameSync(out, `${pkg}src/generated`);
 } finally {
+  rmSync(out, { recursive: true, force: true });
   await db.stop();
 }

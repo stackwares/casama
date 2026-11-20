@@ -50,6 +50,7 @@ import { registerGalleryContentRoutes } from "./routes/gallery-content.ts";
 import { registerGlanceRoutes, widgetCaller, widgetClaims } from "./routes/glance.ts";
 import { registerJoiningRoutes } from "./routes/joining.ts";
 import { registerKnowledgeRoutes } from "./routes/knowledge.ts";
+import { registerLimitResetRoutes } from "./routes/limit-resets.ts";
 import { registerConnectAppRoutes } from "./routes/link.ts";
 import { registerLinkRoutes } from "./routes/links.ts";
 import { registerLiveRoutes } from "./routes/live.ts";
@@ -480,6 +481,7 @@ export function createApp(deps: AppDeps) {
   registerAbuseRoutes(app, deps);
   registerAutonomyRoutes(app, deps);
   registerBillingRoutes(app, deps);
+  registerLimitResetRoutes(app, deps);
   registerPrivacyRoutes(app, deps);
   registerAppearanceRoutes(app, deps, deps.wallpapers);
   registerGalleryRoutes(app, deps);

@@ -1,5 +1,6 @@
 import { z } from "@hono/zod-openapi";
 import { Uuid } from "./common.ts";
+import { SavedLimitReset } from "./limit-resets.ts";
 
 const ts = z.iso.datetime({ offset: true });
 const Source = z.enum(["dodo", "app_store", "google_play"]).openapi("BillingSource");
@@ -27,6 +28,7 @@ export const CreditPack = z
   .object({
     code: z.string(),
     name: z.string(),
+    resets: z.array(SavedLimitReset).optional(),
     credits_usd: z.number(),
     web: z.boolean(),
     /** The web price (D-244); store prices come from the store and are higher. */
@@ -74,6 +76,7 @@ export const BillingSummary = z
       .boolean()
       .optional()
       .openapi({ description: "The owner can still start a plan's free trial (D-249)" }),
+    resets: z.array(SavedLimitReset).optional(),
     credits_usd: z.number(),
     daily: z
       .object({

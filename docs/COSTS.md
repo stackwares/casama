@@ -283,3 +283,14 @@ Langfuse langfuse.com/pricing · Dodo Payments dodopayments.com/pricing · Apple
 developer.apple.com/app-store/small-business-program · Google Play
 support.google.com/googleplay/android-developer/answer/112622 · reCAPTCHA
 docs.cloud.google.com/recaptcha/docs/compare-tiers · casama.ai renewal cfdomainpricing.com (unofficial).
+
+## Saved resets
+
+Saved resets refill included credits without a purchase. Campaign previews show the maximum
+charged-credit exposure; budgets cap actual refills, and settings cap uses per billing period
+and the number held. The preview uses the current billing markup: at 1.4 it estimates
+$0.714 in provider cost per $1 refilled. OpenRouter’s fee is already included on both sides of
+the usage price and is not counted a second time. This is an estimate, not an additional vendor charge:
+actual model, computer and service costs remain recorded in `usage_ledger` when used. Refills
+appear in `credit_ledger` with reason `reset`, with a period-ending credit lot. Undo removes only
+that lot's unspent portion. There is no new paid dependency.

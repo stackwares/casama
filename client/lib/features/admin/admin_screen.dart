@@ -1,3 +1,5 @@
+import '../../core/billing.dart';
+import 'resets_tab.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:casama_sdk/casama_sdk.dart';
@@ -47,14 +49,16 @@ class AdminScreen extends ConsumerWidget {
   /// The tab to open on (`?tab=domains` from a notification), or the overview.
   final String? tab;
 
-  static const _tabs = ['overview', 'users', 'workspaces', 'services', 'pricing', 'reports', 'domains', 'support', 'abuse', 'waitlist'];
+  static const _tabs = ['overview', 'users', 'workspaces', 'services', 'pricing', 'reports', 'domains', 'support', 'abuse', 'waitlist', 'resets'];
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
+    final billingEnabled = ref.watch(billingProvider).value?.enabled ?? false;
+    final tabs = _tabs.where((tab) => tab != 'resets' || billingEnabled).toList();
     return DefaultTabController(
-      length: _tabs.length,
-      initialIndex: _tabs.indexOf(tab ?? '').clamp(0, _tabs.length - 1),
+      length: tabs.length,
+      initialIndex: tabs.indexOf(tab ?? '').clamp(0, tabs.length - 1),
       child: SubPage(
         title: l10n.adminConsole,
         bottom: PreferredSize(
@@ -79,13 +83,14 @@ class AdminScreen extends ConsumerWidget {
                   Tab(height: 40, text: l10n.adminSupport),
                   Tab(height: 40, text: l10n.adminAbuse),
                   Tab(height: 40, text: l10n.adminWaitlist),
+                  if (billingEnabled) Tab(height: 40, text: l10n.adminResets),
                 ],
               )),
             ),
           ),
         ),
-        body: const TabBarView(
-          children: [_Overview(), _Users(), _Orgs(), _Services(), PricingTab(), ReportsTab(), AdminDomainsTab(), SupportTicketsTab(), _Abuse(), AdminWaitlistTab()],
+        body: TabBarView(
+          children: [_Overview(), _Users(), _Orgs(), _Services(), PricingTab(), ReportsTab(), AdminDomainsTab(), SupportTicketsTab(), _Abuse(), AdminWaitlistTab(), if (billingEnabled) const ResetsTab()],
         ),
       ),
     );

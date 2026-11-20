@@ -30,6 +30,7 @@ lib/src/api/gallery_api.dart
 lib/src/api/import_api.dart
 lib/src/api/integrations_api.dart
 lib/src/api/knowledge_api.dart
+lib/src/api/limit_resets_api.dart
 lib/src/api/links_api.dart
 lib/src/api/local_computer_api.dart
 lib/src/api/mcp_api.dart
@@ -78,6 +79,9 @@ lib/src/model/accept_skill_proposal_request.dart
 lib/src/model/accepted.dart
 lib/src/model/accepted_suggestion.dart
 lib/src/model/account_deletion.dart
+lib/src/model/action_admin_limit_reset_campaign200_response.dart
+lib/src/model/action_admin_limit_reset_campaign_request.dart
+lib/src/model/action_admin_workspace_limit_reset_request.dart
 lib/src/model/action_rule.dart
 lib/src/model/action_rule_list.dart
 lib/src/model/action_rule_target.dart
@@ -285,7 +289,6 @@ lib/src/model/credit_entry.dart
 lib/src/model/credit_pack.dart
 lib/src/model/decide_join_request.dart
 lib/src/model/delete_account_request.dart
-lib/src/model/delete_integration200_response.dart
 lib/src/model/delete_result.dart
 lib/src/model/deleted_call.dart
 lib/src/model/deleted_channel.dart
@@ -481,6 +484,12 @@ lib/src/model/lease_changed_event.dart
 lib/src/model/lease_changed_event_payload.dart
 lib/src/model/leave_waitlist_request.dart
 lib/src/model/library_starter.dart
+lib/src/model/limit_reset_audience.dart
+lib/src/model/limit_reset_campaign.dart
+lib/src/model/limit_reset_campaign_input.dart
+lib/src/model/limit_reset_event.dart
+lib/src/model/limit_reset_preview.dart
+lib/src/model/limit_reset_settings.dart
 lib/src/model/link_exchange.dart
 lib/src/model/link_exchange_list.dart
 lib/src/model/link_key.dart
@@ -647,6 +656,7 @@ lib/src/model/reaction_summary.dart
 lib/src/model/reasoning_effort.dart
 lib/src/model/redeem_invite_request.dart
 lib/src/model/redeem_referral_request.dart
+lib/src/model/redeem_saved_limit_reset200_response.dart
 lib/src/model/redeem_sign_in_code_request.dart
 lib/src/model/redeemed_sign_in_code.dart
 lib/src/model/redirect_url.dart
@@ -723,6 +733,7 @@ lib/src/model/save_teach_request.dart
 lib/src/model/save_teach_response.dart
 lib/src/model/saved_count.dart
 lib/src/model/saved_imported_memories.dart
+lib/src/model/saved_limit_reset.dart
 lib/src/model/saved_turns.dart
 lib/src/model/search_kind.dart
 lib/src/model/search_response.dart

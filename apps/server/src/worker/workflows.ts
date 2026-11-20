@@ -49,6 +49,7 @@ import { captureError } from "@casama/observability";
 import { DBOS } from "@dbos-inc/dbos-sdk";
 import { sql } from "drizzle-orm";
 import superjson from "superjson";
+import { LimitResets } from "../billing/limit-resets.ts";
 import { endSilentCalls } from "../billing/live-calls.ts";
 import { ee } from "../ee.ts";
 import { linkUpkeep } from "../link/upkeep.ts";
@@ -1242,6 +1243,15 @@ export const billingSettleWorkflow = DBOS.registerWorkflow(
     const billing = rt().billing;
     if (!billing?.enabled) return;
     await DBOS.runStep(() => billing.settle(), { name: "settle" });
+    await DBOS.runStep(
+      async () => {
+        const resets = new LimitResets(rt().db, billing.enabled);
+        const notes = rt().agent.notifications;
+        if (notes) await resets.notices(notes, process.env.INSTANCE_ADMIN_EMAILS);
+        await resets.analytics();
+      },
+      { name: "saved-reset-notices" },
+    );
     // Running low: the owners hear before bots stop (D-275).
     await DBOS.runStep(
       async () => {

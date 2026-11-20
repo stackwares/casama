@@ -105,6 +105,13 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 
 ## Billing and Casama Link (Phase 7)
 
+- **Saved resets (D-443):** `billing/limit-resets.ts`, `api/routes/limit-resets.ts`, and the minute
+  billing workflow handle campaigns, issuance, redemption, audit, notices and analytics. The
+  `limit_reset_*` tables and meter-offset helpers are added by `20270224100001_limit_resets.sql`.
+  Native app controls live in `features/admin/resets_tab.dart` and `features/billing/saved_resets.dart`.
+  `scripts/limit-resets.sh` uses the same instance-owner routes from the terminal.
+
+
 - **Billing** (D-070): `apps/server/src/billing` (`BillingProvider`, Dodo, App Store and Google Play adapters, `BillingService`), `/v1/billing/plans`, `/v1/orgs/{id}/billing` (summary, checkout, portal, purchases, usage), `/hooks/billing/{dodo,app_store,google_play}`, and the worker's `billingSettle` job (every minute). Tables: `subscriptions`, `credit_ledger`, `credit_packs`, `billing_events`, plus `entitlements.overrides` and `usage_ledger.billable`. App: Billing screen (plans, store purchases through `in_app_purchase`, Restore Purchases, web checkout and portal, usage, Casama Link keys) and a paywall on 402.
 - **Casama Link** (D-071): `/v1/orgs/{id}/link/keys`, `/link/v1/{whoami,sandbox/*,models/chat/completions}` on the cloud; the `casama-cloud` provider on self-hosted servers. Tables: `link_keys`, `link_computers`.
 - Off by default (`BILLING_ENABLED=false`).

@@ -6,6 +6,9 @@ import 'package:casama_api/src/model/accept_skill_proposal_request.dart';
 import 'package:casama_api/src/model/accepted.dart';
 import 'package:casama_api/src/model/accepted_suggestion.dart';
 import 'package:casama_api/src/model/account_deletion.dart';
+import 'package:casama_api/src/model/action_admin_limit_reset_campaign200_response.dart';
+import 'package:casama_api/src/model/action_admin_limit_reset_campaign_request.dart';
+import 'package:casama_api/src/model/action_admin_workspace_limit_reset_request.dart';
 import 'package:casama_api/src/model/action_rule.dart';
 import 'package:casama_api/src/model/action_rule_list.dart';
 import 'package:casama_api/src/model/action_rule_target.dart';
@@ -207,7 +210,6 @@ import 'package:casama_api/src/model/credit_entry.dart';
 import 'package:casama_api/src/model/credit_pack.dart';
 import 'package:casama_api/src/model/decide_join_request.dart';
 import 'package:casama_api/src/model/delete_account_request.dart';
-import 'package:casama_api/src/model/delete_integration200_response.dart';
 import 'package:casama_api/src/model/delete_result.dart';
 import 'package:casama_api/src/model/deleted_call.dart';
 import 'package:casama_api/src/model/deleted_channel.dart';
@@ -395,6 +397,12 @@ import 'package:casama_api/src/model/lease_changed_event.dart';
 import 'package:casama_api/src/model/lease_changed_event_payload.dart';
 import 'package:casama_api/src/model/leave_waitlist_request.dart';
 import 'package:casama_api/src/model/library_starter.dart';
+import 'package:casama_api/src/model/limit_reset_audience.dart';
+import 'package:casama_api/src/model/limit_reset_campaign.dart';
+import 'package:casama_api/src/model/limit_reset_campaign_input.dart';
+import 'package:casama_api/src/model/limit_reset_event.dart';
+import 'package:casama_api/src/model/limit_reset_preview.dart';
+import 'package:casama_api/src/model/limit_reset_settings.dart';
 import 'package:casama_api/src/model/link_exchange.dart';
 import 'package:casama_api/src/model/link_exchange_list.dart';
 import 'package:casama_api/src/model/link_key.dart';
@@ -554,6 +562,7 @@ import 'package:casama_api/src/model/purchase_request.dart';
 import 'package:casama_api/src/model/reaction_summary.dart';
 import 'package:casama_api/src/model/redeem_invite_request.dart';
 import 'package:casama_api/src/model/redeem_referral_request.dart';
+import 'package:casama_api/src/model/redeem_saved_limit_reset200_response.dart';
 import 'package:casama_api/src/model/redeem_sign_in_code_request.dart';
 import 'package:casama_api/src/model/redeemed_sign_in_code.dart';
 import 'package:casama_api/src/model/redirect_url.dart';
@@ -624,6 +633,7 @@ import 'package:casama_api/src/model/save_teach_request.dart';
 import 'package:casama_api/src/model/save_teach_response.dart';
 import 'package:casama_api/src/model/saved_count.dart';
 import 'package:casama_api/src/model/saved_imported_memories.dart';
+import 'package:casama_api/src/model/saved_limit_reset.dart';
 import 'package:casama_api/src/model/saved_turns.dart';
 import 'package:casama_api/src/model/search_response.dart';
 import 'package:casama_api/src/model/search_result.dart';
@@ -918,6 +928,12 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return AcceptedSuggestion.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AccountDeletion':
           return AccountDeletion.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ActionAdminLimitResetCampaign200Response':
+          return ActionAdminLimitResetCampaign200Response.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ActionAdminLimitResetCampaignRequest':
+          return ActionAdminLimitResetCampaignRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ActionAdminWorkspaceLimitResetRequest':
+          return ActionAdminWorkspaceLimitResetRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ActionRule':
           return ActionRule.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ActionRuleList':
@@ -1338,8 +1354,6 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return DecideJoinRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeleteAccountRequest':
           return DeleteAccountRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
-        case 'DeleteIntegration200Response':
-          return DeleteIntegration200Response.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeleteResult':
           return DeleteResult.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeletedCall':
@@ -1738,6 +1752,18 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return LeaveWaitlistRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'LibraryStarter':
           return LibraryStarter.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'LimitResetAudience':
+          return LimitResetAudience.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'LimitResetCampaign':
+          return LimitResetCampaign.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'LimitResetCampaignInput':
+          return LimitResetCampaignInput.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'LimitResetEvent':
+          return LimitResetEvent.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'LimitResetPreview':
+          return LimitResetPreview.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'LimitResetSettings':
+          return LimitResetSettings.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'LinkExchange':
           return LinkExchange.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'LinkExchangeList':
@@ -2077,6 +2103,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return RedeemInviteRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'RedeemReferralRequest':
           return RedeemReferralRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'RedeemSavedLimitReset200Response':
+          return RedeemSavedLimitReset200Response.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'RedeemSignInCodeRequest':
           return RedeemSignInCodeRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'RedeemedSignInCode':
@@ -2235,6 +2263,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return SavedCount.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SavedImportedMemories':
           return SavedImportedMemories.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'SavedLimitReset':
+          return SavedLimitReset.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SavedTurns':
           return SavedTurns.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SearchKind':

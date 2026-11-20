@@ -2674,6 +2674,8 @@ abstract class Backend {
 
   // Billing (Phase 7). `BillingSummary.enabled` is false on self-hosted servers (no paywall).
   Future<BillingSummary> billing(String orgId);
+  /// Saved resets use the same authenticated contract as other billing actions.
+  LimitResetsApi get limitResets;
   Future<PlanCatalog> plans();
   /// A checkout page to open, or null when an existing web subscription was moved to [planCode]
   /// in place (D-248).

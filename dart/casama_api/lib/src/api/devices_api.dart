@@ -9,12 +9,12 @@ import 'dart:convert';
 import 'package:casama_api/src/deserialize.dart';
 import 'package:dio/dio.dart';
 
+import 'package:casama_api/src/model/action_admin_limit_reset_campaign200_response.dart';
 import 'package:casama_api/src/model/ask_device_permission_request.dart';
 import 'package:casama_api/src/model/ask_device_permission_result.dart';
 import 'package:casama_api/src/model/bot_model_privacy.dart';
 import 'package:casama_api/src/model/browser_trigger_list.dart';
 import 'package:casama_api/src/model/create_device_request_request.dart';
-import 'package:casama_api/src/model/delete_integration200_response.dart';
 import 'package:casama_api/src/model/device_kind.dart';
 import 'package:casama_api/src/model/device_permission_type.dart';
 import 'package:casama_api/src/model/device_permissions.dart';
@@ -58,9 +58,9 @@ class DevicesApi {
   /// * [onSendProgress] - A [ProgressCallback] that can be used to get the send progress
   /// * [onReceiveProgress] - A [ProgressCallback] that can be used to get the receive progress
   ///
-  /// Returns a [Future] containing a [Response] with a [DeleteIntegration200Response] as data
+  /// Returns a [Future] containing a [Response] with a [ActionAdminLimitResetCampaign200Response] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<DeleteIntegration200Response>> answerDeviceRequest({ 
+  Future<Response<ActionAdminLimitResetCampaign200Response>> answerDeviceRequest({ 
     required String id,
     required DeviceRequestResult deviceRequestResult,
     CancelToken? cancelToken,
@@ -115,11 +115,11 @@ _bodyData=jsonEncode(deviceRequestResult);
       onReceiveProgress: onReceiveProgress,
     );
 
-    DeleteIntegration200Response? _responseData;
+    ActionAdminLimitResetCampaign200Response? _responseData;
 
     try {
 final rawData = _response.data;
-_responseData = rawData == null ? null : deserialize<DeleteIntegration200Response, DeleteIntegration200Response>(rawData, 'DeleteIntegration200Response', growable: true);
+_responseData = rawData == null ? null : deserialize<ActionAdminLimitResetCampaign200Response, ActionAdminLimitResetCampaign200Response>(rawData, 'ActionAdminLimitResetCampaign200Response', growable: true);
 
     } catch (error, stackTrace) {
       throw DioException(
@@ -131,7 +131,7 @@ _responseData = rawData == null ? null : deserialize<DeleteIntegration200Respons
       );
     }
 
-    return Response<DeleteIntegration200Response>(
+    return Response<ActionAdminLimitResetCampaign200Response>(
       data: _responseData,
       headers: _response.headers,
       isRedirect: _response.isRedirect,
@@ -351,9 +351,9 @@ _responseData = rawData == null ? null : deserialize<DeviceRequestAnswer, Device
   /// * [onSendProgress] - A [ProgressCallback] that can be used to get the send progress
   /// * [onReceiveProgress] - A [ProgressCallback] that can be used to get the receive progress
   ///
-  /// Returns a [Future] containing a [Response] with a [DeleteIntegration200Response] as data
+  /// Returns a [Future] containing a [Response] with a [ActionAdminLimitResetCampaign200Response] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<DeleteIntegration200Response>> deleteDevicePlace({ 
+  Future<Response<ActionAdminLimitResetCampaign200Response>> deleteDevicePlace({ 
     required String id,
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
@@ -389,11 +389,11 @@ _responseData = rawData == null ? null : deserialize<DeviceRequestAnswer, Device
       onReceiveProgress: onReceiveProgress,
     );
 
-    DeleteIntegration200Response? _responseData;
+    ActionAdminLimitResetCampaign200Response? _responseData;
 
     try {
 final rawData = _response.data;
-_responseData = rawData == null ? null : deserialize<DeleteIntegration200Response, DeleteIntegration200Response>(rawData, 'DeleteIntegration200Response', growable: true);
+_responseData = rawData == null ? null : deserialize<ActionAdminLimitResetCampaign200Response, ActionAdminLimitResetCampaign200Response>(rawData, 'ActionAdminLimitResetCampaign200Response', growable: true);
 
     } catch (error, stackTrace) {
       throw DioException(
@@ -405,7 +405,7 @@ _responseData = rawData == null ? null : deserialize<DeleteIntegration200Respons
       );
     }
 
-    return Response<DeleteIntegration200Response>(
+    return Response<ActionAdminLimitResetCampaign200Response>(
       data: _responseData,
       headers: _response.headers,
       isRedirect: _response.isRedirect,
@@ -429,9 +429,9 @@ _responseData = rawData == null ? null : deserialize<DeleteIntegration200Respons
   /// * [onSendProgress] - A [ProgressCallback] that can be used to get the send progress
   /// * [onReceiveProgress] - A [ProgressCallback] that can be used to get the receive progress
   ///
-  /// Returns a [Future] containing a [Response] with a [DeleteIntegration200Response] as data
+  /// Returns a [Future] containing a [Response] with a [ActionAdminLimitResetCampaign200Response] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<DeleteIntegration200Response>> deleteDeviceSource({ 
+  Future<Response<ActionAdminLimitResetCampaign200Response>> deleteDeviceSource({ 
     required String key,
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
@@ -467,11 +467,11 @@ _responseData = rawData == null ? null : deserialize<DeleteIntegration200Respons
       onReceiveProgress: onReceiveProgress,
     );
 
-    DeleteIntegration200Response? _responseData;
+    ActionAdminLimitResetCampaign200Response? _responseData;
 
     try {
 final rawData = _response.data;
-_responseData = rawData == null ? null : deserialize<DeleteIntegration200Response, DeleteIntegration200Response>(rawData, 'DeleteIntegration200Response', growable: true);
+_responseData = rawData == null ? null : deserialize<ActionAdminLimitResetCampaign200Response, ActionAdminLimitResetCampaign200Response>(rawData, 'ActionAdminLimitResetCampaign200Response', growable: true);
 
     } catch (error, stackTrace) {
       throw DioException(
@@ -483,7 +483,7 @@ _responseData = rawData == null ? null : deserialize<DeleteIntegration200Respons
       );
     }
 
-    return Response<DeleteIntegration200Response>(
+    return Response<ActionAdminLimitResetCampaign200Response>(
       data: _responseData,
       headers: _response.headers,
       isRedirect: _response.isRedirect,

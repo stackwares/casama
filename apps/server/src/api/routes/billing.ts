@@ -1,3 +1,4 @@
+import { LimitResets } from "../../billing/limit-resets.ts";
 /** Billing (Phase 7, D-070): plans, entitlements, checkout, store purchases, webhooks, Casama Link keys. */
 
 import { track } from "@casama/agent";
@@ -105,7 +106,14 @@ export function registerBillingRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     const claims = requireClaims(c.get("claims"));
     const { id } = c.req.valid("param");
     await role(claims, id, "member");
-    return c.json(await billing.summary(id), 200);
+    const summary = await billing.summary(id);
+    const [owner] = await withUserSession(db, claims, (tx) =>
+      tx.execute<{ ok: boolean }>(sql`select public.has_role(${id}::uuid,'owner') as ok`),
+    );
+    return c.json(
+      { ...summary, resets: await new LimitResets(db, billing.enabled).saved(id, !!owner?.ok) },
+      200,
+    );
   });
 
   app.openapi(routes.createCheckout, async (c) => {

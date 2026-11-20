@@ -6459,3 +6459,15 @@ the Usage screen didn't show computer hours at all, so the credits bar looked wr
 - **Usage screen:** `BillingSummary.computer_hours` (`used_hours`, `limit_hours`, `resets_at`, null
   when no limit applies) and a "Computer hours: 17 of 5 h" row under the credits and today's limit,
   saying chat still works when they're used up. Older apps ignore the new field.
+
+## D-443 Saved resets are instance-owner grants, with period-bound credit lots (2026-11-20)
+
+Oliver approved `docs/LIMIT-RESETS-PLAN.md`. Only instance owners manage campaigns and settings;
+only workspace owners redeem. The feature defaults off. A refill tops up included credit, leaves
+purchased lots untouched, and expires with the current grant period. Redemption shares the
+organization lock used by credit_apply and locks the campaign for its total budget. Undo zeroes
+only the refill lot and reconciles the ledger rather than using the generic oldest-lot debit.
+Daily and computer meter resets use offsets against immutable usage records. Audience filters
+intersect and the recipients are frozen at launch; workspaces over the held limit are skipped.
+Notifications use the existing deferred push queue and quiet hours. Every administrative change
+and redemption is recorded in a log whose updates, deletes and truncations are rejected.

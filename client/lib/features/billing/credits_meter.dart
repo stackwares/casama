@@ -1,3 +1,4 @@
+import 'saved_resets.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:casama_sdk/casama_sdk.dart';
@@ -64,6 +65,7 @@ class CreditsMeter extends ConsumerWidget {
       key: const Key('creditsMeter'),
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        const SavedResets(),
         Row(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [

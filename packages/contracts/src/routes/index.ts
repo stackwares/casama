@@ -25,6 +25,7 @@ import * as gallery from "./gallery.ts";
 import * as galleryContent from "./gallery-content.ts";
 import * as glance from "./glance.ts";
 import * as knowledge from "./knowledge.ts";
+import * as limitResets from "./limit-resets.ts";
 import * as connect from "./link.ts";
 import * as links from "./links.ts";
 import * as local from "./local.ts";
@@ -75,6 +76,7 @@ export const routes = {
   ...local,
   ...admin,
   ...billing,
+  ...limitResets,
   ...connect,
   ...privacy,
   ...appearance,
