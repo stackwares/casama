@@ -892,6 +892,15 @@ sign-up reaches the hook in `user_metadata` (so Phase 2's code-at-sign-up works 
   never tried for real.** Browser-based Apple/Google sign-in (web, Windows, Linux) shows the
   old message on refusal and offers Continue with Email in I Have an Invite.
 - **Not done:** the PostHog dashboard (needs Oliver's yes), the Show HN draft line.
+- **Invite pages, 2026-11-20 (Oliver: "build it"):** the claim form on `/invite/<code>`, `/i/<code>`
+  and `/waitlist` has the monthly email box, unticked. A tick rides with the claim
+  (`newsletter: true` on `/v1/waitlist/redeem`, which the server already kept) and becomes a
+  subscription when that address signs up, so no confirmation email goes out. After "You're in",
+  a link opened inside Instagram, Facebook, Threads, TikTok, X, LinkedIn, Snapchat or Line says
+  Google sign-in doesn't work there and leads with Get the apps and a button that copies
+  app.casama.ai (`embeddedBrowser` in `site/assets/waitlist.js`). Site only: no server or app
+  change. **Not built:** opening the web app with the claimed email already typed in; the sign-in
+  screen has no way to take one yet, so it needs an app change and a build.
 
 ### Where the build differs from the plan above
 

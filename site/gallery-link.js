@@ -422,6 +422,10 @@ const FORM_CSS = `
   button.btn[disabled] { opacity: .6; cursor: default; }
   .wl-status { margin: 0; min-height: 1.5em; font-size: 15px; color: var(--muted); }
   .wl-status.is-bad { color: var(--ink); font-weight: 700; }
+  .wl-check { display: flex; align-items: flex-start; gap: 10px; color: var(--muted); font-size: 15px; cursor: pointer; }
+  .wl-check input { flex: none; width: 18px; height: 18px; margin-top: 2px; accent-color: var(--accent); }
+  .wl-actions { display: grid; gap: 10px; }
+  .wl-actions .btn { margin-top: 0; }
   .wl-label { color: var(--ink); font-weight: 700; }
   .wl-result { margin-top: 18px; }
   .wl-result p { color: var(--ink); }

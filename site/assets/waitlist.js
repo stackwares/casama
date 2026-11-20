@@ -191,7 +191,7 @@
     });
   }
 
-  root.CasamaWaitlist = { sha256Hex: sha256Hex, leadingZeros: leadingZeros, findNonce: findNonce, solve: solve };
+  root.CasamaWaitlist = { sha256Hex: sha256Hex, leadingZeros: leadingZeros, findNonce: findNonce, solve: solve, embeddedBrowser: embeddedBrowser };
 
   if (typeof document === "undefined") return;
 
@@ -317,6 +317,38 @@
     return a;
   }
 
+  /**
+   * The app whose built-in browser this is (a link tapped inside Instagram, Facebook, Threads, TikTok,
+   * X, LinkedIn, Snapchat or Line), or "" in a real browser. Pure, for tests.
+   */
+  function embeddedBrowser(ua) {
+    ua = String(ua || "");
+    if (/Barcelona/i.test(ua)) return "Threads";
+    if (/Instagram/i.test(ua)) return "Instagram";
+    if (/FBAN|FBAV|FB_IAB|FBIOS/i.test(ua)) return "Facebook";
+    if (/musical_ly|BytedanceWebview|TikTok/i.test(ua)) return "TikTok";
+    if (/Twitter/i.test(ua)) return "X";
+    if (/LinkedInApp/i.test(ua)) return "LinkedIn";
+    if (/Snapchat/i.test(ua)) return "Snapchat";
+    if (/\bLine\//i.test(ua)) return "Line";
+    return "";
+  }
+
+  /** A button that copies `text`, and says so. Falls back to showing the text to copy by hand. */
+  function copyButton(text, label) {
+    var btn = node("button", "btn", label);
+    btn.type = "button";
+    btn.addEventListener("click", function () {
+      function done() { btn.textContent = "Copied"; }
+      function byHand() { btn.textContent = text.replace(/^https:\/\//, ""); }
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, byHand);
+        else byHand();
+      } catch (e) { byHand(); }
+    });
+    return btn;
+  }
+
   /** What a redeemed code says (docs/WAITLIST-PLAN.md §12). Everything typed by a person goes in as text. */
   function showRedeemed(target, outcome, email) {
     target.textContent = "";
@@ -326,8 +358,17 @@
       p.appendChild(document.createTextNode(" Sign in with " + email + ": Google, Apple and the email link all work, as long as it's this address."));
       target.appendChild(p);
       var row = node("div", "wl-actions");
-      row.appendChild(link(SIGN_IN, "Open Casama", "btn primary"));
-      row.appendChild(link("/download", "Get the apps", "btn"));
+      var inside = embeddedBrowser(navigator.userAgent);
+      if (inside) {
+        // Google's sign-in refuses to run inside another app's browser, and the web app is heavy
+        // there. The apps come first, and the address to open in a real browser can be copied.
+        target.appendChild(node("p", "wl-note", "You're in " + inside + "'s browser, where Google sign-in doesn't work. Get the app, or open app.casama.ai in Safari or Chrome."));
+        row.appendChild(link("/download", "Get the apps", "btn primary"));
+        row.appendChild(copyButton(SIGN_IN, "Copy app.casama.ai"));
+      } else {
+        row.appendChild(link(SIGN_IN, "Open Casama", "btn primary"));
+        row.appendChild(link("/download", "Get the apps", "btn"));
+      }
       target.appendChild(row);
     } else {
       target.appendChild(node("p", "wl-lead", "That invite has been used up. You're on the waitlist, near the front."));
@@ -429,7 +470,9 @@
       if (!email || !code) return;
       busy(form, true);
       say(status, "One moment…", false);
-      postWithProof("/v1/waitlist/redeem", { email: email, code: code, source: sourceFor(form) }).then(
+      var payload = { email: email, code: code, source: sourceFor(form) };
+      if (f.newsletter && f.newsletter.checked) payload.newsletter = true;
+      postWithProof("/v1/waitlist/redeem", payload).then(
         function (res) {
           form.hidden = true;
           if (result) showRedeemed(result, res && res.outcome, email);

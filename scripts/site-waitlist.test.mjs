@@ -295,6 +295,27 @@ function zeroBits(digest) {
   return bits;
 }
 
+test("the claim form has an unticked monthly email box, and sends it only when ticked", () => {
+  const form = redeemForm({ code: "CASAMA-X", label: "Claim my invite", source: "invite" });
+  assert.match(form, /<input type="checkbox" name="newsletter">/, "the box is there and not ticked");
+  assert.match(form, /Also send me Casama's monthly email \(once a month at most\)/);
+  const js = site("assets/waitlist.js");
+  assert.match(js, /if \(f\.newsletter && f\.newsletter\.checked\) payload\.newsletter = true;/);
+});
+
+test("a link opened inside another app's browser is recognised, and a real browser is not", () => {
+  const { embeddedBrowser } = load();
+  const iphone = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148";
+  assert.equal(embeddedBrowser(`${iphone} Instagram 350.0.0.20.90 (iPhone15,3; iOS 18_0; en_US)`), "Instagram");
+  assert.equal(embeddedBrowser(`${iphone} Barcelona 350.0.0.20.90 Instagram`), "Threads");
+  assert.equal(embeddedBrowser(`${iphone} [FBAN/FBIOS;FBAV/480.0.0.30.107;FBBV/1]`), "Facebook");
+  assert.equal(embeddedBrowser(`${iphone} musical_ly_36.0.0 JsSdk/2.0 BytedanceWebview/d8a21c6`), "TikTok");
+  assert.equal(embeddedBrowser(`${iphone} Twitter for iPhone/10.60`), "X");
+  assert.equal(embeddedBrowser(`${iphone} Version/18.0 Mobile/15E148 Safari/604.1`), "");
+  assert.equal(embeddedBrowser("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"), "");
+  assert.equal(embeddedBrowser(undefined), "");
+});
+
 test("sha256 matches Node's for the empty string, short, long and awkward inputs", () => {
   const inputs = [
     "",

@@ -28,7 +28,8 @@ function joinForm(source) {
 
 /**
  * Posts to /v1/waitlist/redeem. With `code` the code is fixed (invite pages); without, there is a code field.
- * `label` is the button.
+ * `label` is the button. The monthly email box starts unticked; a tick is kept with the claim and only
+ * becomes a subscription once that address signs up, so no confirmation email is needed.
  */
 export function redeemForm({ code = "", label, source = "waitlist" }) {
   const codeField = code
@@ -36,6 +37,7 @@ export function redeemForm({ code = "", label, source = "waitlist" }) {
     : `\n    <label class="wl-field"><span>Invite code</span><input type="text" name="code" required autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="200"></label>`;
   return `<form class="wl-form" data-wl-redeem data-source="${esc(source)}"${code ? ` data-code="${esc(code)}"` : ""} aria-label="${esc(label)}" hidden>${codeField}
     <label class="wl-field"><span>Email</span><input type="email" name="email" required autocomplete="email" inputmode="email" maxlength="254" placeholder="you@example.com"></label>
+    <label class="wl-check"><input type="checkbox" name="newsletter"><span>Also send me Casama's monthly email (once a month at most)</span></label>
     <button class="btn primary" type="submit">${esc(label)}</button>
     <p class="wl-status" role="status" aria-live="polite" data-wl-status></p>
   </form>
