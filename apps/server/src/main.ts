@@ -65,6 +65,7 @@ import {
   smtpEmail,
   withBackupEmail,
 } from "./services/email.ts";
+import { liveDataConfigFromEnv } from "./services/live-data.ts";
 import { OutsideRelay } from "./services/outside-relay.ts";
 import { chromiumPdf, remotePdf } from "./services/pdf.ts";
 import { serverPushSender } from "./services/push-sender.ts";
@@ -438,6 +439,7 @@ if (env.MODE === "api") {
             : undefined,
         }
       : undefined,
+    liveData: liveDataConfigFromEnv(env),
     dataResale:
       env.TREG_RESALE === "on" && env.TREG_API_KEY
         ? { tregKey: env.TREG_API_KEY, tregUrl: env.TREG_API_URL }

@@ -119,6 +119,8 @@ import 'package:casama_api/src/model/canvas_preview_event.dart';
 import 'package:casama_api/src/model/canvas_preview_event_payload.dart';
 import 'package:casama_api/src/model/canvas_rotation.dart';
 import 'package:casama_api/src/model/canvas_update.dart';
+import 'package:casama_api/src/model/card_prefs.dart';
+import 'package:casama_api/src/model/card_units.dart';
 import 'package:casama_api/src/model/catalog_app.dart';
 import 'package:casama_api/src/model/catalog_app_api_key.dart';
 import 'package:casama_api/src/model/catalog_skill.dart';
@@ -432,6 +434,8 @@ import 'package:casama_api/src/model/list_device_places200_response.dart';
 import 'package:casama_api/src/model/list_device_readings200_response.dart';
 import 'package:casama_api/src/model/list_device_requests200_response.dart';
 import 'package:casama_api/src/model/list_device_sources200_response.dart';
+import 'package:casama_api/src/model/live_card.dart';
+import 'package:casama_api/src/model/live_card_list.dart';
 import 'package:casama_api/src/model/local_capabilities.dart';
 import 'package:casama_api/src/model/local_device.dart';
 import 'package:casama_api/src/model/local_device_list.dart';
@@ -540,6 +544,10 @@ import 'package:casama_api/src/model/pending_invite.dart';
 import 'package:casama_api/src/model/pending_invite_list.dart';
 import 'package:casama_api/src/model/phone_call.dart';
 import 'package:casama_api/src/model/phone_call_list.dart';
+import 'package:casama_api/src/model/pin_live_card.dart';
+import 'package:casama_api/src/model/pinned_live_card.dart';
+import 'package:casama_api/src/model/place.dart';
+import 'package:casama_api/src/model/place_list.dart';
 import 'package:casama_api/src/model/plan.dart';
 import 'package:casama_api/src/model/plan_catalog.dart';
 import 'package:casama_api/src/model/plugin.dart';
@@ -588,6 +596,7 @@ import 'package:casama_api/src/model/referral.dart';
 import 'package:casama_api/src/model/referral_invited_by.dart';
 import 'package:casama_api/src/model/referral_invites.dart';
 import 'package:casama_api/src/model/referral_preview.dart';
+import 'package:casama_api/src/model/refresh_live_card.dart';
 import 'package:casama_api/src/model/relay_analytics_request.dart';
 import 'package:casama_api/src/model/relayed_analytics_event.dart';
 import 'package:casama_api/src/model/release_lease_request.dart';
@@ -803,6 +812,7 @@ import 'package:casama_api/src/model/ui_action_part.dart';
 import 'package:casama_api/src/model/ui_shown_event.dart';
 import 'package:casama_api/src/model/ui_shown_event_payload.dart';
 import 'package:casama_api/src/model/update_about_you_request.dart';
+import 'package:casama_api/src/model/update_card_prefs.dart';
 import 'package:casama_api/src/model/update_channel_request.dart';
 import 'package:casama_api/src/model/update_computer_request.dart';
 import 'package:casama_api/src/model/update_conversation_request.dart';
@@ -1182,6 +1192,10 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return CanvasRotation.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CanvasUpdate':
           return CanvasUpdate.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'CardPrefs':
+          return CardPrefs.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'CardUnits':
+          return CardUnits.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CatalogApp':
           return CatalogApp.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CatalogAppApiKey':
@@ -1844,6 +1858,10 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return ListDeviceRequests200Response.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ListDeviceSources200Response':
           return ListDeviceSources200Response.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'LiveCard':
+          return LiveCard.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'LiveCardList':
+          return LiveCardList.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'LocalCapabilities':
           return LocalCapabilities.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'LocalDevice':
@@ -2072,6 +2090,14 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return PhoneCall.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'PhoneCallList':
           return PhoneCallList.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'PinLiveCard':
+          return PinLiveCard.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'PinnedLiveCard':
+          return PinnedLiveCard.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'Place':
+          return Place.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'PlaceList':
+          return PlaceList.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Plan':
           return Plan.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'PlanCatalog':
@@ -2177,6 +2203,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return ReferralInvites.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ReferralPreview':
           return ReferralPreview.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'RefreshLiveCard':
+          return RefreshLiveCard.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'RelayAnalyticsRequest':
           return RelayAnalyticsRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'RelayedAnalyticsEvent':
@@ -2646,6 +2674,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return UiShownEventPayload.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'UpdateAboutYouRequest':
           return UpdateAboutYouRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'UpdateCardPrefs':
+          return UpdateCardPrefs.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'UpdateChannelRequest':
           return UpdateChannelRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'UpdateComputerRequest':

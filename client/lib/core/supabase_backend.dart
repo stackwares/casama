@@ -4626,6 +4626,79 @@ class SupabaseBackend implements Backend {
   Future<CanvasGrantSaved> setCanvasGrant(String botId, bool allowed) async =>
       (await api.widgets.setCanvasGrant(setCanvasGrant: SetCanvasGrant(botId: botId, allowed: allowed))).data!;
 
+  // Live data cards (docs/RICH-CARDS-PLAN.md).
+  Options get _json => Options(headers: authHeaders, contentType: 'application/json');
+
+  @override
+  Future<Map<String, Object?>> refreshLiveCard(String id, {String? view, bool force = false}) async {
+    final res = await api.api.dio.post<Map<String, dynamic>>(
+      '/v1/live-cards/$id/refresh',
+      data: {'view': ?view, if (force) 'force': true},
+      options: _json,
+    );
+    return Map<String, Object?>.from(res.data!);
+  }
+
+  @override
+  Future<List<Map<String, Object?>>> liveCards(List<String> ids) async {
+    if (ids.isEmpty) return const [];
+    final res = await api.api.dio.get<Map<String, dynamic>>(
+      '/v1/live-cards',
+      queryParameters: {'ids': ids.take(20).join(',')},
+      options: Options(headers: authHeaders),
+    );
+    return [for (final i in (res.data?['items'] as List? ?? const [])) Map<String, Object?>.from(i as Map)];
+  }
+
+  @override
+  Future<Map<String, Object?>> pinLiveCard(String id, {Map<String, String>? units}) async {
+    final res = await api.api.dio.post<Map<String, dynamic>>(
+      '/v1/live-cards/$id/pin',
+      data: {'units': ?units},
+      options: _json,
+    );
+    return Map<String, Object?>.from(res.data!);
+  }
+
+  @override
+  Future<void> unpinLiveCard(String id) async {
+    await api.api.dio.delete<Object?>('/v1/live-cards/$id/pin', options: Options(headers: authHeaders));
+  }
+
+  @override
+  Future<void> reportLiveCard(String id) async {
+    await api.api.dio.post<Object?>('/v1/live-cards/$id/report', options: Options(headers: authHeaders));
+  }
+
+  @override
+  Future<Map<String, Object?>> cardPrefs() async {
+    final res = await api.api.dio.get<Map<String, dynamic>>('/v1/me/card-prefs', options: Options(headers: authHeaders));
+    return Map<String, Object?>.from(res.data ?? const {});
+  }
+
+  @override
+  Future<Map<String, Object?>> updateCardPrefs({Map<String, Object?>? homePlace, bool clearHome = false, Map<String, String>? units}) async {
+    final res = await api.api.dio.put<Map<String, dynamic>>(
+      '/v1/me/card-prefs',
+      data: {
+        if (clearHome) 'home_place': null else 'home_place': ?homePlace,
+        'units': ?units,
+      },
+      options: _json,
+    );
+    return Map<String, Object?>.from(res.data ?? const {});
+  }
+
+  @override
+  Future<List<Map<String, Object?>>> searchPlaces(String query) async {
+    final res = await api.api.dio.get<Map<String, dynamic>>(
+      '/v1/places',
+      queryParameters: {'q': query},
+      options: Options(headers: authHeaders),
+    );
+    return [for (final i in (res.data?['items'] as List? ?? const [])) Map<String, Object?>.from(i as Map)];
+  }
+
   // Watches (D-410). Raw JSON, like the widget keys: these routes may be newer than the generated
   // client.
   @override
@@ -6491,3 +6564,4 @@ class SupabaseBackend implements Backend {
 }
 
 String _solvePuzzle((String, int) p) => solveSignupChallenge(p.$1, p.$2);
+

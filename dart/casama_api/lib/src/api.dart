@@ -18,6 +18,7 @@ import 'package:casama_api/src/api/auth_api.dart';
 import 'package:casama_api/src/api/billing_api.dart';
 import 'package:casama_api/src/api/bots_api.dart';
 import 'package:casama_api/src/api/browser_api.dart';
+import 'package:casama_api/src/api/cards_api.dart';
 import 'package:casama_api/src/api/casama_link_api.dart';
 import 'package:casama_api/src/api/channels_api.dart';
 import 'package:casama_api/src/api/chat_api.dart';
@@ -184,6 +185,12 @@ class CasamaApi {
   /// by doing that all interceptors will not be executed
   BrowserApi getBrowserApi() {
     return BrowserApi(dio);
+  }
+
+  /// Get CardsApi instance, base route and serializer can be overridden by a given but be careful,
+  /// by doing that all interceptors will not be executed
+  CardsApi getCardsApi() {
+    return CardsApi(dio);
   }
 
   /// Get CasamaLinkApi instance, base route and serializer can be overridden by a given but be careful,

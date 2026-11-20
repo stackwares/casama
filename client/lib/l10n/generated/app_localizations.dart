@@ -27481,6 +27481,1422 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Enter a positive limit, a warning between 0 and 1, and valid dates.'**
   String get vendorInvalidSettings;
+
+  /// No description provided for @card24hRange.
+  ///
+  /// In en, this message translates to:
+  /// **'24-hour range'**
+  String get card24hRange;
+
+  /// No description provided for @card52wRange.
+  ///
+  /// In en, this message translates to:
+  /// **'52-week range'**
+  String get card52wRange;
+
+  /// No description provided for @cardAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Again'**
+  String get cardAgain;
+
+  /// No description provided for @cardAgoSuffix.
+  ///
+  /// In en, this message translates to:
+  /// **'ago'**
+  String get cardAgoSuffix;
+
+  /// No description provided for @cardAirQuality.
+  ///
+  /// In en, this message translates to:
+  /// **'Air quality'**
+  String get cardAirQuality;
+
+  /// No description provided for @cardAqiAdviceBad.
+  ///
+  /// In en, this message translates to:
+  /// **'Everyone should cut down on long or hard effort outdoors; keep windows closed.'**
+  String get cardAqiAdviceBad;
+
+  /// No description provided for @cardAqiAdviceGood.
+  ///
+  /// In en, this message translates to:
+  /// **'Great day to be outside.'**
+  String get cardAqiAdviceGood;
+
+  /// No description provided for @cardAqiAdviceModerate.
+  ///
+  /// In en, this message translates to:
+  /// **'Fine for most people; very sensitive people may want to take it easy.'**
+  String get cardAqiAdviceModerate;
+
+  /// No description provided for @cardAqiAdviceSensitive.
+  ///
+  /// In en, this message translates to:
+  /// **'Children, older people and anyone with asthma should limit long effort outdoors.'**
+  String get cardAqiAdviceSensitive;
+
+  /// No description provided for @cardAqiGood.
+  ///
+  /// In en, this message translates to:
+  /// **'Good'**
+  String get cardAqiGood;
+
+  /// No description provided for @cardAqiHazardous.
+  ///
+  /// In en, this message translates to:
+  /// **'Hazardous'**
+  String get cardAqiHazardous;
+
+  /// No description provided for @cardAqiModerate.
+  ///
+  /// In en, this message translates to:
+  /// **'Moderate'**
+  String get cardAqiModerate;
+
+  /// No description provided for @cardAqiSensitive.
+  ///
+  /// In en, this message translates to:
+  /// **'Unhealthy for sensitive groups'**
+  String get cardAqiSensitive;
+
+  /// No description provided for @cardAqiUnhealthy.
+  ///
+  /// In en, this message translates to:
+  /// **'Unhealthy'**
+  String get cardAqiUnhealthy;
+
+  /// No description provided for @cardAqiVeryUnhealthy.
+  ///
+  /// In en, this message translates to:
+  /// **'Very unhealthy'**
+  String get cardAqiVeryUnhealthy;
+
+  /// No description provided for @cardBaggage.
+  ///
+  /// In en, this message translates to:
+  /// **'Baggage'**
+  String get cardBaggage;
+
+  /// No description provided for @cardCalcAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount'**
+  String get cardCalcAmount;
+
+  /// No description provided for @cardCalcBill.
+  ///
+  /// In en, this message translates to:
+  /// **'Bill'**
+  String get cardCalcBill;
+
+  /// No description provided for @cardCalcDiscount.
+  ///
+  /// In en, this message translates to:
+  /// **'Discount'**
+  String get cardCalcDiscount;
+
+  /// No description provided for @cardCalcDiscountTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Discount'**
+  String get cardCalcDiscountTitle;
+
+  /// No description provided for @cardCalcGross.
+  ///
+  /// In en, this message translates to:
+  /// **'With tax'**
+  String get cardCalcGross;
+
+  /// No description provided for @cardCalcGrowth.
+  ///
+  /// In en, this message translates to:
+  /// **'Growth'**
+  String get cardCalcGrowth;
+
+  /// No description provided for @cardCalcInterest.
+  ///
+  /// In en, this message translates to:
+  /// **'Interest'**
+  String get cardCalcInterest;
+
+  /// No description provided for @cardCalcLoan.
+  ///
+  /// In en, this message translates to:
+  /// **'Loan'**
+  String get cardCalcLoan;
+
+  /// No description provided for @cardCalcMonthly.
+  ///
+  /// In en, this message translates to:
+  /// **'Each month'**
+  String get cardCalcMonthly;
+
+  /// No description provided for @cardCalcMonthlyPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly payment'**
+  String get cardCalcMonthlyPayment;
+
+  /// No description provided for @cardCalcNet.
+  ///
+  /// In en, this message translates to:
+  /// **'Before tax'**
+  String get cardCalcNet;
+
+  /// No description provided for @cardCalcPeople.
+  ///
+  /// In en, this message translates to:
+  /// **'People'**
+  String get cardCalcPeople;
+
+  /// No description provided for @cardCalcPerPerson.
+  ///
+  /// In en, this message translates to:
+  /// **'Each person pays'**
+  String get cardCalcPerPerson;
+
+  /// No description provided for @cardCalcPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Price'**
+  String get cardCalcPrice;
+
+  /// No description provided for @cardCalcPrincipal.
+  ///
+  /// In en, this message translates to:
+  /// **'Principal'**
+  String get cardCalcPrincipal;
+
+  /// No description provided for @cardCalcRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Yearly rate'**
+  String get cardCalcRate;
+
+  /// No description provided for @cardCalcSavings.
+  ///
+  /// In en, this message translates to:
+  /// **'Savings'**
+  String get cardCalcSavings;
+
+  /// No description provided for @cardCalcStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start with'**
+  String get cardCalcStart;
+
+  /// No description provided for @cardCalcTax.
+  ///
+  /// In en, this message translates to:
+  /// **'Tax'**
+  String get cardCalcTax;
+
+  /// No description provided for @cardCalcTaxIncluded.
+  ///
+  /// In en, this message translates to:
+  /// **'Tax included'**
+  String get cardCalcTaxIncluded;
+
+  /// No description provided for @cardCalcTaxRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Tax rate'**
+  String get cardCalcTaxRate;
+
+  /// No description provided for @cardCalcTip.
+  ///
+  /// In en, this message translates to:
+  /// **'Tip'**
+  String get cardCalcTip;
+
+  /// No description provided for @cardCalcTipAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Tip'**
+  String get cardCalcTipAmount;
+
+  /// No description provided for @cardCalcTipSplit.
+  ///
+  /// In en, this message translates to:
+  /// **'Tip and split'**
+  String get cardCalcTipSplit;
+
+  /// No description provided for @cardCalcTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get cardCalcTotal;
+
+  /// No description provided for @cardCalcTotalInterest.
+  ///
+  /// In en, this message translates to:
+  /// **'Total interest'**
+  String get cardCalcTotalInterest;
+
+  /// No description provided for @cardCalcTotalPaid.
+  ///
+  /// In en, this message translates to:
+  /// **'Total paid'**
+  String get cardCalcTotalPaid;
+
+  /// No description provided for @cardCalcUnits.
+  ///
+  /// In en, this message translates to:
+  /// **'Convert units'**
+  String get cardCalcUnits;
+
+  /// No description provided for @cardCalcValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Value'**
+  String get cardCalcValue;
+
+  /// No description provided for @cardCalcVat.
+  ///
+  /// In en, this message translates to:
+  /// **'Tax'**
+  String get cardCalcVat;
+
+  /// No description provided for @cardCalcYears.
+  ///
+  /// In en, this message translates to:
+  /// **'Years'**
+  String get cardCalcYears;
+
+  /// No description provided for @cardCalcYouPay.
+  ///
+  /// In en, this message translates to:
+  /// **'You pay'**
+  String get cardCalcYouPay;
+
+  /// No description provided for @cardCalcYouPutIn.
+  ///
+  /// In en, this message translates to:
+  /// **'You put in'**
+  String get cardCalcYouPutIn;
+
+  /// No description provided for @cardCalcYouSave.
+  ///
+  /// In en, this message translates to:
+  /// **'You save'**
+  String get cardCalcYouSave;
+
+  /// No description provided for @cardCall.
+  ///
+  /// In en, this message translates to:
+  /// **'Call'**
+  String get cardCall;
+
+  /// No description provided for @cardCaloriesWord.
+  ///
+  /// In en, this message translates to:
+  /// **'Calories'**
+  String get cardCaloriesWord;
+
+  /// No description provided for @cardComparison.
+  ///
+  /// In en, this message translates to:
+  /// **'Comparison'**
+  String get cardComparison;
+
+  /// No description provided for @cardCondClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get cardCondClear;
+
+  /// No description provided for @cardCondCloudy.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloudy'**
+  String get cardCondCloudy;
+
+  /// No description provided for @cardCondDrizzle.
+  ///
+  /// In en, this message translates to:
+  /// **'Drizzle'**
+  String get cardCondDrizzle;
+
+  /// No description provided for @cardCondFog.
+  ///
+  /// In en, this message translates to:
+  /// **'Fog'**
+  String get cardCondFog;
+
+  /// No description provided for @cardCondHail.
+  ///
+  /// In en, this message translates to:
+  /// **'Hail'**
+  String get cardCondHail;
+
+  /// No description provided for @cardCondHeavyRain.
+  ///
+  /// In en, this message translates to:
+  /// **'Heavy rain'**
+  String get cardCondHeavyRain;
+
+  /// No description provided for @cardCondHeavySnow.
+  ///
+  /// In en, this message translates to:
+  /// **'Heavy snow'**
+  String get cardCondHeavySnow;
+
+  /// No description provided for @cardCondLightRain.
+  ///
+  /// In en, this message translates to:
+  /// **'Light rain'**
+  String get cardCondLightRain;
+
+  /// No description provided for @cardCondLightSnow.
+  ///
+  /// In en, this message translates to:
+  /// **'Light snow'**
+  String get cardCondLightSnow;
+
+  /// No description provided for @cardCondMostlyClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Mostly clear'**
+  String get cardCondMostlyClear;
+
+  /// No description provided for @cardCondPartlyCloudy.
+  ///
+  /// In en, this message translates to:
+  /// **'Partly cloudy'**
+  String get cardCondPartlyCloudy;
+
+  /// No description provided for @cardCondRain.
+  ///
+  /// In en, this message translates to:
+  /// **'Rain'**
+  String get cardCondRain;
+
+  /// No description provided for @cardCondShowers.
+  ///
+  /// In en, this message translates to:
+  /// **'Showers'**
+  String get cardCondShowers;
+
+  /// No description provided for @cardCondSleet.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleet'**
+  String get cardCondSleet;
+
+  /// No description provided for @cardCondSnow.
+  ///
+  /// In en, this message translates to:
+  /// **'Snow'**
+  String get cardCondSnow;
+
+  /// No description provided for @cardCondThunder.
+  ///
+  /// In en, this message translates to:
+  /// **'Thunderstorms'**
+  String get cardCondThunder;
+
+  /// No description provided for @cardCons.
+  ///
+  /// In en, this message translates to:
+  /// **'Cons'**
+  String get cardCons;
+
+  /// No description provided for @cardCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied'**
+  String get cardCopied;
+
+  /// No description provided for @cardCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy as text'**
+  String get cardCopy;
+
+  /// No description provided for @cardCouldntUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t update'**
+  String get cardCouldntUpdate;
+
+  /// No description provided for @cardCurrency.
+  ///
+  /// In en, this message translates to:
+  /// **'Currency'**
+  String get cardCurrency;
+
+  /// No description provided for @cardDayLength.
+  ///
+  /// In en, this message translates to:
+  /// **'Day length'**
+  String get cardDayLength;
+
+  /// No description provided for @cardDayRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Day\'s range'**
+  String get cardDayRange;
+
+  /// No description provided for @cardDays.
+  ///
+  /// In en, this message translates to:
+  /// **'days'**
+  String get cardDays;
+
+  /// No description provided for @cardDelay.
+  ///
+  /// In en, this message translates to:
+  /// **'Delay'**
+  String get cardDelay;
+
+  /// No description provided for @cardDictionary.
+  ///
+  /// In en, this message translates to:
+  /// **'Dictionary'**
+  String get cardDictionary;
+
+  /// No description provided for @cardEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get cardEmail;
+
+  /// No description provided for @cardFlightCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled'**
+  String get cardFlightCancelled;
+
+  /// No description provided for @cardFlightDiverted.
+  ///
+  /// In en, this message translates to:
+  /// **'Diverted'**
+  String get cardFlightDiverted;
+
+  /// No description provided for @cardFlightInAir.
+  ///
+  /// In en, this message translates to:
+  /// **'In the air'**
+  String get cardFlightInAir;
+
+  /// No description provided for @cardFlightIncident.
+  ///
+  /// In en, this message translates to:
+  /// **'Incident'**
+  String get cardFlightIncident;
+
+  /// No description provided for @cardFlightLanded.
+  ///
+  /// In en, this message translates to:
+  /// **'Landed'**
+  String get cardFlightLanded;
+
+  /// No description provided for @cardFlightScheduled.
+  ///
+  /// In en, this message translates to:
+  /// **'On schedule'**
+  String get cardFlightScheduled;
+
+  /// No description provided for @cardFromBot.
+  ///
+  /// In en, this message translates to:
+  /// **'Written by the bot; it may be wrong'**
+  String get cardFromBot;
+
+  /// No description provided for @cardFullRecipe.
+  ///
+  /// In en, this message translates to:
+  /// **'Full recipe'**
+  String get cardFullRecipe;
+
+  /// No description provided for @cardGate.
+  ///
+  /// In en, this message translates to:
+  /// **'Gate'**
+  String get cardGate;
+
+  /// No description provided for @cardGo.
+  ///
+  /// In en, this message translates to:
+  /// **'Go'**
+  String get cardGo;
+
+  /// No description provided for @cardHeads.
+  ///
+  /// In en, this message translates to:
+  /// **'Heads'**
+  String get cardHeads;
+
+  /// No description provided for @cardHolidays.
+  ///
+  /// In en, this message translates to:
+  /// **'Public holidays'**
+  String get cardHolidays;
+
+  /// No description provided for @cardHoursShort.
+  ///
+  /// In en, this message translates to:
+  /// **'hours'**
+  String get cardHoursShort;
+
+  /// No description provided for @cardHumidity.
+  ///
+  /// In en, this message translates to:
+  /// **'Humidity'**
+  String get cardHumidity;
+
+  /// No description provided for @cardItsTime.
+  ///
+  /// In en, this message translates to:
+  /// **'It\'s time!'**
+  String get cardItsTime;
+
+  /// No description provided for @cardJustNow.
+  ///
+  /// In en, this message translates to:
+  /// **'just now'**
+  String get cardJustNow;
+
+  /// No description provided for @cardLast24h.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 24 hours'**
+  String get cardLast24h;
+
+  /// No description provided for @cardLast30Days.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 30 days'**
+  String get cardLast30Days;
+
+  /// No description provided for @cardListen.
+  ///
+  /// In en, this message translates to:
+  /// **'Listen'**
+  String get cardListen;
+
+  /// No description provided for @cardLiveNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Right now'**
+  String get cardLiveNow;
+
+  /// No description provided for @cardLongWeekend.
+  ///
+  /// In en, this message translates to:
+  /// **'Long weekend'**
+  String get cardLongWeekend;
+
+  /// No description provided for @cardLostShort.
+  ///
+  /// In en, this message translates to:
+  /// **'L'**
+  String get cardLostShort;
+
+  /// No description provided for @cardMarket24h.
+  ///
+  /// In en, this message translates to:
+  /// **'24/7'**
+  String get cardMarket24h;
+
+  /// No description provided for @cardMarketCap.
+  ///
+  /// In en, this message translates to:
+  /// **'Market cap'**
+  String get cardMarketCap;
+
+  /// No description provided for @cardMarketClosed.
+  ///
+  /// In en, this message translates to:
+  /// **'Closed'**
+  String get cardMarketClosed;
+
+  /// No description provided for @cardMarketOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get cardMarketOpen;
+
+  /// No description provided for @cardMarketPost.
+  ///
+  /// In en, this message translates to:
+  /// **'After hours'**
+  String get cardMarketPost;
+
+  /// No description provided for @cardMarketPre.
+  ///
+  /// In en, this message translates to:
+  /// **'Pre-market'**
+  String get cardMarketPre;
+
+  /// No description provided for @cardMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Message'**
+  String get cardMessage;
+
+  /// No description provided for @cardMinutesShort.
+  ///
+  /// In en, this message translates to:
+  /// **'min'**
+  String get cardMinutesShort;
+
+  /// No description provided for @cardMoonFirstQuarter.
+  ///
+  /// In en, this message translates to:
+  /// **'First quarter'**
+  String get cardMoonFirstQuarter;
+
+  /// No description provided for @cardMoonFull.
+  ///
+  /// In en, this message translates to:
+  /// **'Full moon'**
+  String get cardMoonFull;
+
+  /// No description provided for @cardMoonLastQuarter.
+  ///
+  /// In en, this message translates to:
+  /// **'Last quarter'**
+  String get cardMoonLastQuarter;
+
+  /// No description provided for @cardMoonNew.
+  ///
+  /// In en, this message translates to:
+  /// **'New moon'**
+  String get cardMoonNew;
+
+  /// No description provided for @cardMoonWaningCrescent.
+  ///
+  /// In en, this message translates to:
+  /// **'Waning crescent'**
+  String get cardMoonWaningCrescent;
+
+  /// No description provided for @cardMoonWaningGibbous.
+  ///
+  /// In en, this message translates to:
+  /// **'Waning gibbous'**
+  String get cardMoonWaningGibbous;
+
+  /// No description provided for @cardMoonWaxingCrescent.
+  ///
+  /// In en, this message translates to:
+  /// **'Waxing crescent'**
+  String get cardMoonWaxingCrescent;
+
+  /// No description provided for @cardMoonWaxingGibbous.
+  ///
+  /// In en, this message translates to:
+  /// **'Waxing gibbous'**
+  String get cardMoonWaxingGibbous;
+
+  /// No description provided for @cardMore.
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get cardMore;
+
+  /// No description provided for @cardNext24h.
+  ///
+  /// In en, this message translates to:
+  /// **'Next 24 hours'**
+  String get cardNext24h;
+
+  /// No description provided for @cardNoAlerts.
+  ///
+  /// In en, this message translates to:
+  /// **'No alerts'**
+  String get cardNoAlerts;
+
+  /// No description provided for @cardNoAlertsLong.
+  ///
+  /// In en, this message translates to:
+  /// **'No weather warnings are in force here right now.'**
+  String get cardNoAlertsLong;
+
+  /// No description provided for @cardNoChart.
+  ///
+  /// In en, this message translates to:
+  /// **'No chart for this range'**
+  String get cardNoChart;
+
+  /// No description provided for @cardNoGames.
+  ///
+  /// In en, this message translates to:
+  /// **'No games'**
+  String get cardNoGames;
+
+  /// No description provided for @cardNoHolidays.
+  ///
+  /// In en, this message translates to:
+  /// **'No more public holidays this year.'**
+  String get cardNoHolidays;
+
+  /// No description provided for @cardNoQuakes.
+  ///
+  /// In en, this message translates to:
+  /// **'No earthquakes of that size recently.'**
+  String get cardNoQuakes;
+
+  /// No description provided for @cardNoStorms.
+  ///
+  /// In en, this message translates to:
+  /// **'None active'**
+  String get cardNoStorms;
+
+  /// No description provided for @cardNoStormsLong.
+  ///
+  /// In en, this message translates to:
+  /// **'No tropical storms are active right now.'**
+  String get cardNoStormsLong;
+
+  /// No description provided for @cardNotAdvice.
+  ///
+  /// In en, this message translates to:
+  /// **'Not financial advice'**
+  String get cardNotAdvice;
+
+  /// No description provided for @cardNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Now'**
+  String get cardNow;
+
+  /// No description provided for @cardNutritionFacts.
+  ///
+  /// In en, this message translates to:
+  /// **'Nutrition Facts'**
+  String get cardNutritionFacts;
+
+  /// No description provided for @cardOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get cardOpen;
+
+  /// No description provided for @cardOpenSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the source'**
+  String get cardOpenSource;
+
+  /// No description provided for @cardParcel.
+  ///
+  /// In en, this message translates to:
+  /// **'Parcel'**
+  String get cardParcel;
+
+  /// No description provided for @cardParcelDelivered.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivered'**
+  String get cardParcelDelivered;
+
+  /// No description provided for @cardParcelInTransit.
+  ///
+  /// In en, this message translates to:
+  /// **'On the way'**
+  String get cardParcelInTransit;
+
+  /// No description provided for @cardParcelOrdered.
+  ///
+  /// In en, this message translates to:
+  /// **'Label made'**
+  String get cardParcelOrdered;
+
+  /// No description provided for @cardParcelOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Out for delivery'**
+  String get cardParcelOut;
+
+  /// No description provided for @cardParcelProblem.
+  ///
+  /// In en, this message translates to:
+  /// **'Problem'**
+  String get cardParcelProblem;
+
+  /// No description provided for @cardPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Pin to widgets'**
+  String get cardPin;
+
+  /// No description provided for @cardPinFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t pin this card'**
+  String get cardPinFailed;
+
+  /// No description provided for @cardPinned.
+  ///
+  /// In en, this message translates to:
+  /// **'Pinned to your widgets'**
+  String get cardPinned;
+
+  /// No description provided for @cardPinnedWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Pinned. Allow this bot on your widgets to see it there'**
+  String get cardPinnedWaiting;
+
+  /// No description provided for @cardPlayedShort.
+  ///
+  /// In en, this message translates to:
+  /// **'P'**
+  String get cardPlayedShort;
+
+  /// No description provided for @cardPointsShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Pts'**
+  String get cardPointsShort;
+
+  /// No description provided for @cardPrevClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Prev. close'**
+  String get cardPrevClose;
+
+  /// No description provided for @cardPros.
+  ///
+  /// In en, this message translates to:
+  /// **'Pros'**
+  String get cardPros;
+
+  /// No description provided for @cardProsCons.
+  ///
+  /// In en, this message translates to:
+  /// **'Pros and cons'**
+  String get cardProsCons;
+
+  /// No description provided for @cardQuiz.
+  ///
+  /// In en, this message translates to:
+  /// **'Quiz'**
+  String get cardQuiz;
+
+  /// No description provided for @cardRain.
+  ///
+  /// In en, this message translates to:
+  /// **'Rain'**
+  String get cardRain;
+
+  /// No description provided for @cardRainChance.
+  ///
+  /// In en, this message translates to:
+  /// **'Rain chance'**
+  String get cardRainChance;
+
+  /// No description provided for @cardRandom.
+  ///
+  /// In en, this message translates to:
+  /// **'Random'**
+  String get cardRandom;
+
+  /// No description provided for @cardReadMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Read more'**
+  String get cardReadMore;
+
+  /// No description provided for @cardReferenceRates.
+  ///
+  /// In en, this message translates to:
+  /// **'Central bank reference rates, published daily'**
+  String get cardReferenceRates;
+
+  /// No description provided for @cardRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get cardRefresh;
+
+  /// No description provided for @cardReport.
+  ///
+  /// In en, this message translates to:
+  /// **'Report wrong data'**
+  String get cardReport;
+
+  /// No description provided for @cardReported.
+  ///
+  /// In en, this message translates to:
+  /// **'Thanks, we\'ll look at it'**
+  String get cardReported;
+
+  /// No description provided for @cardSameTime.
+  ///
+  /// In en, this message translates to:
+  /// **'same time'**
+  String get cardSameTime;
+
+  /// No description provided for @cardScores.
+  ///
+  /// In en, this message translates to:
+  /// **'Scores'**
+  String get cardScores;
+
+  /// No description provided for @cardSecondsShort.
+  ///
+  /// In en, this message translates to:
+  /// **'sec'**
+  String get cardSecondsShort;
+
+  /// No description provided for @cardServings.
+  ///
+  /// In en, this message translates to:
+  /// **'Servings'**
+  String get cardServings;
+
+  /// No description provided for @cardShareImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Share as picture'**
+  String get cardShareImage;
+
+  /// No description provided for @cardStandings.
+  ///
+  /// In en, this message translates to:
+  /// **'Standings'**
+  String get cardStandings;
+
+  /// No description provided for @cardStorms.
+  ///
+  /// In en, this message translates to:
+  /// **'Tropical storms'**
+  String get cardStorms;
+
+  /// No description provided for @cardSunMoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Sun and moon'**
+  String get cardSunMoon;
+
+  /// No description provided for @cardSunrise.
+  ///
+  /// In en, this message translates to:
+  /// **'Sunrise'**
+  String get cardSunrise;
+
+  /// No description provided for @cardSunset.
+  ///
+  /// In en, this message translates to:
+  /// **'Sunset'**
+  String get cardSunset;
+
+  /// No description provided for @cardSwap.
+  ///
+  /// In en, this message translates to:
+  /// **'Swap'**
+  String get cardSwap;
+
+  /// No description provided for @cardSynonyms.
+  ///
+  /// In en, this message translates to:
+  /// **'Similar:'**
+  String get cardSynonyms;
+
+  /// No description provided for @cardTails.
+  ///
+  /// In en, this message translates to:
+  /// **'Tails'**
+  String get cardTails;
+
+  /// No description provided for @cardTeam.
+  ///
+  /// In en, this message translates to:
+  /// **'Team'**
+  String get cardTeam;
+
+  /// No description provided for @cardTerminal.
+  ///
+  /// In en, this message translates to:
+  /// **'Terminal'**
+  String get cardTerminal;
+
+  /// No description provided for @cardTimeIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Time in each place'**
+  String get cardTimeIn;
+
+  /// No description provided for @cardTimeline.
+  ///
+  /// In en, this message translates to:
+  /// **'Timeline'**
+  String get cardTimeline;
+
+  /// No description provided for @cardToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get cardToday;
+
+  /// No description provided for @cardTomorrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Tomorrow'**
+  String get cardTomorrow;
+
+  /// No description provided for @cardTranslation.
+  ///
+  /// In en, this message translates to:
+  /// **'Translation'**
+  String get cardTranslation;
+
+  /// No description provided for @cardTsunami.
+  ///
+  /// In en, this message translates to:
+  /// **'Tsunami'**
+  String get cardTsunami;
+
+  /// No description provided for @cardUnpin.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from widgets'**
+  String get cardUnpin;
+
+  /// No description provided for @cardUnpinned.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed from your widgets'**
+  String get cardUnpinned;
+
+  /// No description provided for @cardUv.
+  ///
+  /// In en, this message translates to:
+  /// **'UV'**
+  String get cardUv;
+
+  /// No description provided for @cardUvExtreme.
+  ///
+  /// In en, this message translates to:
+  /// **'extreme'**
+  String get cardUvExtreme;
+
+  /// No description provided for @cardUvHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'high'**
+  String get cardUvHigh;
+
+  /// No description provided for @cardUvLow.
+  ///
+  /// In en, this message translates to:
+  /// **'low'**
+  String get cardUvLow;
+
+  /// No description provided for @cardUvModerate.
+  ///
+  /// In en, this message translates to:
+  /// **'moderate'**
+  String get cardUvModerate;
+
+  /// No description provided for @cardUvVeryHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'very high'**
+  String get cardUvVeryHigh;
+
+  /// No description provided for @cardVolume.
+  ///
+  /// In en, this message translates to:
+  /// **'Volume'**
+  String get cardVolume;
+
+  /// No description provided for @cardWatchlist.
+  ///
+  /// In en, this message translates to:
+  /// **'Watchlist'**
+  String get cardWatchlist;
+
+  /// No description provided for @cardWeather.
+  ///
+  /// In en, this message translates to:
+  /// **'Weather'**
+  String get cardWeather;
+
+  /// No description provided for @cardWeatherAlerts.
+  ///
+  /// In en, this message translates to:
+  /// **'Weather alerts'**
+  String get cardWeatherAlerts;
+
+  /// No description provided for @cardWebsite.
+  ///
+  /// In en, this message translates to:
+  /// **'Website'**
+  String get cardWebsite;
+
+  /// No description provided for @cardWind.
+  ///
+  /// In en, this message translates to:
+  /// **'Wind'**
+  String get cardWind;
+
+  /// No description provided for @cardWonShort.
+  ///
+  /// In en, this message translates to:
+  /// **'W'**
+  String get cardWonShort;
+
+  /// No description provided for @cardWorldClock.
+  ///
+  /// In en, this message translates to:
+  /// **'World clock'**
+  String get cardWorldClock;
+
+  /// No description provided for @cardYesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday'**
+  String get cardYesterday;
+
+  /// No description provided for @cardQuakesWorld.
+  ///
+  /// In en, this message translates to:
+  /// **'Strongest earthquakes today'**
+  String get cardQuakesWorld;
+
+  /// No description provided for @cardMinutesAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{n} min ago'**
+  String cardMinutesAgo(int n);
+
+  /// No description provided for @cardHoursAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{n} h ago'**
+  String cardHoursAgo(int n);
+
+  /// No description provided for @cardStale.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t update · from {ago}'**
+  String cardStale(String ago);
+
+  /// No description provided for @cardUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated {ago}'**
+  String cardUpdated(String ago);
+
+  /// No description provided for @cardDelayed.
+  ///
+  /// In en, this message translates to:
+  /// **'Delayed {minutes} min'**
+  String cardDelayed(int minutes);
+
+  /// No description provided for @cardHighLow.
+  ///
+  /// In en, this message translates to:
+  /// **'H {high}  L {low}'**
+  String cardHighLow(String high, String low);
+
+  /// No description provided for @cardFeelsLike.
+  ///
+  /// In en, this message translates to:
+  /// **'Feels {temp}'**
+  String cardFeelsLike(String temp);
+
+  /// No description provided for @cardNextDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{n} days'**
+  String cardNextDays(int n);
+
+  /// No description provided for @cardUntil.
+  ///
+  /// In en, this message translates to:
+  /// **'Until {when}'**
+  String cardUntil(String when);
+
+  /// No description provided for @cardAlertCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{n, plural, =1{1 alert in force} other{{n} alerts in force}}'**
+  String cardAlertCount(int n);
+
+  /// No description provided for @cardAqiMainPollutant.
+  ///
+  /// In en, this message translates to:
+  /// **'Mostly {pollutant}'**
+  String cardAqiMainPollutant(String pollutant);
+
+  /// No description provided for @cardPollen.
+  ///
+  /// In en, this message translates to:
+  /// **'{kind} pollen'**
+  String cardPollen(String kind);
+
+  /// No description provided for @cardDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'{h}h {m}m'**
+  String cardDuration(int h, int m);
+
+  /// No description provided for @cardGoldenHour.
+  ///
+  /// In en, this message translates to:
+  /// **'Golden hour from {time}'**
+  String cardGoldenHour(String time);
+
+  /// No description provided for @cardMoonLit.
+  ///
+  /// In en, this message translates to:
+  /// **'{pct}% lit'**
+  String cardMoonLit(int pct);
+
+  /// No description provided for @cardMoonrise.
+  ///
+  /// In en, this message translates to:
+  /// **'Rises {time}'**
+  String cardMoonrise(String time);
+
+  /// No description provided for @cardMoonset.
+  ///
+  /// In en, this message translates to:
+  /// **'Sets {time}'**
+  String cardMoonset(String time);
+
+  /// No description provided for @cardRangeChange.
+  ///
+  /// In en, this message translates to:
+  /// **'Change over {range}'**
+  String cardRangeChange(String range);
+
+  /// No description provided for @cardUpDown.
+  ///
+  /// In en, this message translates to:
+  /// **'{up} up · {down} down'**
+  String cardUpDown(int up, int down);
+
+  /// No description provided for @cardRatesOf.
+  ///
+  /// In en, this message translates to:
+  /// **'Rates of {date}'**
+  String cardRatesOf(String date);
+
+  /// No description provided for @cardAtTime.
+  ///
+  /// In en, this message translates to:
+  /// **'At {when}'**
+  String cardAtTime(String when);
+
+  /// No description provided for @cardInDays.
+  ///
+  /// In en, this message translates to:
+  /// **'in {n} days'**
+  String cardInDays(int n);
+
+  /// No description provided for @cardPercentThere.
+  ///
+  /// In en, this message translates to:
+  /// **'{pct}% of the way'**
+  String cardPercentThere(int pct);
+
+  /// No description provided for @cardQuakesNear.
+  ///
+  /// In en, this message translates to:
+  /// **'Earthquakes near {place}'**
+  String cardQuakesNear(String place);
+
+  /// No description provided for @cardQuakeCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{n, plural, =0{None} =1{1 earthquake} other{{n} earthquakes}}'**
+  String cardQuakeCount(int n);
+
+  /// No description provided for @cardDepth.
+  ///
+  /// In en, this message translates to:
+  /// **'{depth} deep'**
+  String cardDepth(String depth);
+
+  /// No description provided for @cardAway.
+  ///
+  /// In en, this message translates to:
+  /// **'{distance} away'**
+  String cardAway(String distance);
+
+  /// No description provided for @cardStormCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{n, plural, =1{1 active} other{{n} active}}'**
+  String cardStormCount(int n);
+
+  /// No description provided for @cardAlertLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'{level} alert'**
+  String cardAlertLevel(String level);
+
+  /// No description provided for @cardGameCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{n, plural, =1{1 game} other{{n} games}}'**
+  String cardGameCount(int n);
+
+  /// No description provided for @cardLiveCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{n} live'**
+  String cardLiveCount(int n);
+
+  /// No description provided for @cardMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{n} min'**
+  String cardMinutes(int n);
+
+  /// No description provided for @cardExpected.
+  ///
+  /// In en, this message translates to:
+  /// **'Expected {date}'**
+  String cardExpected(String date);
+
+  /// No description provided for @cardCalories.
+  ///
+  /// In en, this message translates to:
+  /// **'{n} kcal'**
+  String cardCalories(int n);
+
+  /// No description provided for @cardStepsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{n, plural, =1{1 step} other{{n} steps}}'**
+  String cardStepsCount(int n);
+
+  /// No description provided for @cardWins.
+  ///
+  /// In en, this message translates to:
+  /// **'Wins {n}'**
+  String cardWins(int n);
+
+  /// No description provided for @cardServingSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Serving: {size}'**
+  String cardServingSize(String size);
+
+  /// No description provided for @cardChecksPassed.
+  ///
+  /// In en, this message translates to:
+  /// **'{passed} of {total} checks passed'**
+  String cardChecksPassed(int passed, int total);
+
+  /// No description provided for @cardTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Total {n}'**
+  String cardTotal(int n);
+
+  /// No description provided for @cardCalcAfterYears.
+  ///
+  /// In en, this message translates to:
+  /// **'After {n} years'**
+  String cardCalcAfterYears(int n);
 }
 
 class _AppLocalizationsDelegate

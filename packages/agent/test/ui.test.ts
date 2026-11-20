@@ -646,7 +646,7 @@ describe("ui.catalog (USAGE-PLAN step 4)", () => {
     expect(() =>
       registry.parse("ui.show", { components: [{ id: "root", component: "Table" }] }),
     ).toThrow(
-      /components\.0\.component: "Table" isn't in the catalog\. Its components are Text, Row, .*Details; call ui\.catalog for their properties\./,
+      /components\.0\.component: "Table" isn't in the catalog\. Its components are Text, Row, .*Details, Weather, .*Carousel; call ui\.catalog for their properties\./,
     );
     expect(() => registry.parse("ui.show", { components: [{ id: "root" }] })).toThrow(
       /Each component needs a component name/,
@@ -658,9 +658,10 @@ describe("ui.catalog (USAGE-PLAN step 4)", () => {
     const schema = JSON.stringify(show?.inputSchema);
     expect(schema).not.toContain("$schema");
     expect(schema).not.toContain("maxLength");
-    // What shapes a call stays: the list's size, the component names, and free-form properties.
+    // What shapes a call stays: the list's size and free-form properties. Component names are
+    // plain text on the wire (60-odd names would go out with every call); the parse checks them.
     expect(schema).toContain('"maxItems":60');
-    expect(schema).toContain('"enum":["Text","Row"');
+    expect(schema).not.toContain('"enum":["Text","Row"');
     expect(schema).toContain('"required":["id","component"],"additionalProperties":{}');
     // The server still checks what the model isn't told.
     expect(() =>

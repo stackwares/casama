@@ -17076,4 +17076,829 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get vendorInvalidSettings =>
       'Enter a positive limit, a warning between 0 and 1, and valid dates.';
+
+  @override
+  String get card24hRange => '24-hour range';
+
+  @override
+  String get card52wRange => '52-week range';
+
+  @override
+  String get cardAgain => 'Again';
+
+  @override
+  String get cardAgoSuffix => 'ago';
+
+  @override
+  String get cardAirQuality => 'Air quality';
+
+  @override
+  String get cardAqiAdviceBad =>
+      'Everyone should cut down on long or hard effort outdoors; keep windows closed.';
+
+  @override
+  String get cardAqiAdviceGood => 'Great day to be outside.';
+
+  @override
+  String get cardAqiAdviceModerate =>
+      'Fine for most people; very sensitive people may want to take it easy.';
+
+  @override
+  String get cardAqiAdviceSensitive =>
+      'Children, older people and anyone with asthma should limit long effort outdoors.';
+
+  @override
+  String get cardAqiGood => 'Good';
+
+  @override
+  String get cardAqiHazardous => 'Hazardous';
+
+  @override
+  String get cardAqiModerate => 'Moderate';
+
+  @override
+  String get cardAqiSensitive => 'Unhealthy for sensitive groups';
+
+  @override
+  String get cardAqiUnhealthy => 'Unhealthy';
+
+  @override
+  String get cardAqiVeryUnhealthy => 'Very unhealthy';
+
+  @override
+  String get cardBaggage => 'Baggage';
+
+  @override
+  String get cardCalcAmount => 'Amount';
+
+  @override
+  String get cardCalcBill => 'Bill';
+
+  @override
+  String get cardCalcDiscount => 'Discount';
+
+  @override
+  String get cardCalcDiscountTitle => 'Discount';
+
+  @override
+  String get cardCalcGross => 'With tax';
+
+  @override
+  String get cardCalcGrowth => 'Growth';
+
+  @override
+  String get cardCalcInterest => 'Interest';
+
+  @override
+  String get cardCalcLoan => 'Loan';
+
+  @override
+  String get cardCalcMonthly => 'Each month';
+
+  @override
+  String get cardCalcMonthlyPayment => 'Monthly payment';
+
+  @override
+  String get cardCalcNet => 'Before tax';
+
+  @override
+  String get cardCalcPeople => 'People';
+
+  @override
+  String get cardCalcPerPerson => 'Each person pays';
+
+  @override
+  String get cardCalcPrice => 'Price';
+
+  @override
+  String get cardCalcPrincipal => 'Principal';
+
+  @override
+  String get cardCalcRate => 'Yearly rate';
+
+  @override
+  String get cardCalcSavings => 'Savings';
+
+  @override
+  String get cardCalcStart => 'Start with';
+
+  @override
+  String get cardCalcTax => 'Tax';
+
+  @override
+  String get cardCalcTaxIncluded => 'Tax included';
+
+  @override
+  String get cardCalcTaxRate => 'Tax rate';
+
+  @override
+  String get cardCalcTip => 'Tip';
+
+  @override
+  String get cardCalcTipAmount => 'Tip';
+
+  @override
+  String get cardCalcTipSplit => 'Tip and split';
+
+  @override
+  String get cardCalcTotal => 'Total';
+
+  @override
+  String get cardCalcTotalInterest => 'Total interest';
+
+  @override
+  String get cardCalcTotalPaid => 'Total paid';
+
+  @override
+  String get cardCalcUnits => 'Convert units';
+
+  @override
+  String get cardCalcValue => 'Value';
+
+  @override
+  String get cardCalcVat => 'Tax';
+
+  @override
+  String get cardCalcYears => 'Years';
+
+  @override
+  String get cardCalcYouPay => 'You pay';
+
+  @override
+  String get cardCalcYouPutIn => 'You put in';
+
+  @override
+  String get cardCalcYouSave => 'You save';
+
+  @override
+  String get cardCall => 'Call';
+
+  @override
+  String get cardCaloriesWord => 'Calories';
+
+  @override
+  String get cardComparison => 'Comparison';
+
+  @override
+  String get cardCondClear => 'Clear';
+
+  @override
+  String get cardCondCloudy => 'Cloudy';
+
+  @override
+  String get cardCondDrizzle => 'Drizzle';
+
+  @override
+  String get cardCondFog => 'Fog';
+
+  @override
+  String get cardCondHail => 'Hail';
+
+  @override
+  String get cardCondHeavyRain => 'Heavy rain';
+
+  @override
+  String get cardCondHeavySnow => 'Heavy snow';
+
+  @override
+  String get cardCondLightRain => 'Light rain';
+
+  @override
+  String get cardCondLightSnow => 'Light snow';
+
+  @override
+  String get cardCondMostlyClear => 'Mostly clear';
+
+  @override
+  String get cardCondPartlyCloudy => 'Partly cloudy';
+
+  @override
+  String get cardCondRain => 'Rain';
+
+  @override
+  String get cardCondShowers => 'Showers';
+
+  @override
+  String get cardCondSleet => 'Sleet';
+
+  @override
+  String get cardCondSnow => 'Snow';
+
+  @override
+  String get cardCondThunder => 'Thunderstorms';
+
+  @override
+  String get cardCons => 'Cons';
+
+  @override
+  String get cardCopied => 'Copied';
+
+  @override
+  String get cardCopy => 'Copy as text';
+
+  @override
+  String get cardCouldntUpdate => 'Couldn\'t update';
+
+  @override
+  String get cardCurrency => 'Currency';
+
+  @override
+  String get cardDayLength => 'Day length';
+
+  @override
+  String get cardDayRange => 'Day\'s range';
+
+  @override
+  String get cardDays => 'days';
+
+  @override
+  String get cardDelay => 'Delay';
+
+  @override
+  String get cardDictionary => 'Dictionary';
+
+  @override
+  String get cardEmail => 'Email';
+
+  @override
+  String get cardFlightCancelled => 'Cancelled';
+
+  @override
+  String get cardFlightDiverted => 'Diverted';
+
+  @override
+  String get cardFlightInAir => 'In the air';
+
+  @override
+  String get cardFlightIncident => 'Incident';
+
+  @override
+  String get cardFlightLanded => 'Landed';
+
+  @override
+  String get cardFlightScheduled => 'On schedule';
+
+  @override
+  String get cardFromBot => 'Written by the bot; it may be wrong';
+
+  @override
+  String get cardFullRecipe => 'Full recipe';
+
+  @override
+  String get cardGate => 'Gate';
+
+  @override
+  String get cardGo => 'Go';
+
+  @override
+  String get cardHeads => 'Heads';
+
+  @override
+  String get cardHolidays => 'Public holidays';
+
+  @override
+  String get cardHoursShort => 'hours';
+
+  @override
+  String get cardHumidity => 'Humidity';
+
+  @override
+  String get cardItsTime => 'It\'s time!';
+
+  @override
+  String get cardJustNow => 'just now';
+
+  @override
+  String get cardLast24h => 'Last 24 hours';
+
+  @override
+  String get cardLast30Days => 'Last 30 days';
+
+  @override
+  String get cardListen => 'Listen';
+
+  @override
+  String get cardLiveNow => 'Right now';
+
+  @override
+  String get cardLongWeekend => 'Long weekend';
+
+  @override
+  String get cardLostShort => 'L';
+
+  @override
+  String get cardMarket24h => '24/7';
+
+  @override
+  String get cardMarketCap => 'Market cap';
+
+  @override
+  String get cardMarketClosed => 'Closed';
+
+  @override
+  String get cardMarketOpen => 'Open';
+
+  @override
+  String get cardMarketPost => 'After hours';
+
+  @override
+  String get cardMarketPre => 'Pre-market';
+
+  @override
+  String get cardMessage => 'Message';
+
+  @override
+  String get cardMinutesShort => 'min';
+
+  @override
+  String get cardMoonFirstQuarter => 'First quarter';
+
+  @override
+  String get cardMoonFull => 'Full moon';
+
+  @override
+  String get cardMoonLastQuarter => 'Last quarter';
+
+  @override
+  String get cardMoonNew => 'New moon';
+
+  @override
+  String get cardMoonWaningCrescent => 'Waning crescent';
+
+  @override
+  String get cardMoonWaningGibbous => 'Waning gibbous';
+
+  @override
+  String get cardMoonWaxingCrescent => 'Waxing crescent';
+
+  @override
+  String get cardMoonWaxingGibbous => 'Waxing gibbous';
+
+  @override
+  String get cardMore => 'More';
+
+  @override
+  String get cardNext24h => 'Next 24 hours';
+
+  @override
+  String get cardNoAlerts => 'No alerts';
+
+  @override
+  String get cardNoAlertsLong =>
+      'No weather warnings are in force here right now.';
+
+  @override
+  String get cardNoChart => 'No chart for this range';
+
+  @override
+  String get cardNoGames => 'No games';
+
+  @override
+  String get cardNoHolidays => 'No more public holidays this year.';
+
+  @override
+  String get cardNoQuakes => 'No earthquakes of that size recently.';
+
+  @override
+  String get cardNoStorms => 'None active';
+
+  @override
+  String get cardNoStormsLong => 'No tropical storms are active right now.';
+
+  @override
+  String get cardNotAdvice => 'Not financial advice';
+
+  @override
+  String get cardNow => 'Now';
+
+  @override
+  String get cardNutritionFacts => 'Nutrition Facts';
+
+  @override
+  String get cardOpen => 'Open';
+
+  @override
+  String get cardOpenSource => 'Open the source';
+
+  @override
+  String get cardParcel => 'Parcel';
+
+  @override
+  String get cardParcelDelivered => 'Delivered';
+
+  @override
+  String get cardParcelInTransit => 'On the way';
+
+  @override
+  String get cardParcelOrdered => 'Label made';
+
+  @override
+  String get cardParcelOut => 'Out for delivery';
+
+  @override
+  String get cardParcelProblem => 'Problem';
+
+  @override
+  String get cardPin => 'Pin to widgets';
+
+  @override
+  String get cardPinFailed => 'Couldn\'t pin this card';
+
+  @override
+  String get cardPinned => 'Pinned to your widgets';
+
+  @override
+  String get cardPinnedWaiting =>
+      'Pinned. Allow this bot on your widgets to see it there';
+
+  @override
+  String get cardPlayedShort => 'P';
+
+  @override
+  String get cardPointsShort => 'Pts';
+
+  @override
+  String get cardPrevClose => 'Prev. close';
+
+  @override
+  String get cardPros => 'Pros';
+
+  @override
+  String get cardProsCons => 'Pros and cons';
+
+  @override
+  String get cardQuiz => 'Quiz';
+
+  @override
+  String get cardRain => 'Rain';
+
+  @override
+  String get cardRainChance => 'Rain chance';
+
+  @override
+  String get cardRandom => 'Random';
+
+  @override
+  String get cardReadMore => 'Read more';
+
+  @override
+  String get cardReferenceRates =>
+      'Central bank reference rates, published daily';
+
+  @override
+  String get cardRefresh => 'Refresh';
+
+  @override
+  String get cardReport => 'Report wrong data';
+
+  @override
+  String get cardReported => 'Thanks, we\'ll look at it';
+
+  @override
+  String get cardSameTime => 'same time';
+
+  @override
+  String get cardScores => 'Scores';
+
+  @override
+  String get cardSecondsShort => 'sec';
+
+  @override
+  String get cardServings => 'Servings';
+
+  @override
+  String get cardShareImage => 'Share as picture';
+
+  @override
+  String get cardStandings => 'Standings';
+
+  @override
+  String get cardStorms => 'Tropical storms';
+
+  @override
+  String get cardSunMoon => 'Sun and moon';
+
+  @override
+  String get cardSunrise => 'Sunrise';
+
+  @override
+  String get cardSunset => 'Sunset';
+
+  @override
+  String get cardSwap => 'Swap';
+
+  @override
+  String get cardSynonyms => 'Similar:';
+
+  @override
+  String get cardTails => 'Tails';
+
+  @override
+  String get cardTeam => 'Team';
+
+  @override
+  String get cardTerminal => 'Terminal';
+
+  @override
+  String get cardTimeIn => 'Time in each place';
+
+  @override
+  String get cardTimeline => 'Timeline';
+
+  @override
+  String get cardToday => 'Today';
+
+  @override
+  String get cardTomorrow => 'Tomorrow';
+
+  @override
+  String get cardTranslation => 'Translation';
+
+  @override
+  String get cardTsunami => 'Tsunami';
+
+  @override
+  String get cardUnpin => 'Remove from widgets';
+
+  @override
+  String get cardUnpinned => 'Removed from your widgets';
+
+  @override
+  String get cardUv => 'UV';
+
+  @override
+  String get cardUvExtreme => 'extreme';
+
+  @override
+  String get cardUvHigh => 'high';
+
+  @override
+  String get cardUvLow => 'low';
+
+  @override
+  String get cardUvModerate => 'moderate';
+
+  @override
+  String get cardUvVeryHigh => 'very high';
+
+  @override
+  String get cardVolume => 'Volume';
+
+  @override
+  String get cardWatchlist => 'Watchlist';
+
+  @override
+  String get cardWeather => 'Weather';
+
+  @override
+  String get cardWeatherAlerts => 'Weather alerts';
+
+  @override
+  String get cardWebsite => 'Website';
+
+  @override
+  String get cardWind => 'Wind';
+
+  @override
+  String get cardWonShort => 'W';
+
+  @override
+  String get cardWorldClock => 'World clock';
+
+  @override
+  String get cardYesterday => 'Yesterday';
+
+  @override
+  String get cardQuakesWorld => 'Strongest earthquakes today';
+
+  @override
+  String cardMinutesAgo(int n) {
+    return '$n min ago';
+  }
+
+  @override
+  String cardHoursAgo(int n) {
+    return '$n h ago';
+  }
+
+  @override
+  String cardStale(String ago) {
+    return 'Couldn\'t update · from $ago';
+  }
+
+  @override
+  String cardUpdated(String ago) {
+    return 'Updated $ago';
+  }
+
+  @override
+  String cardDelayed(int minutes) {
+    return 'Delayed $minutes min';
+  }
+
+  @override
+  String cardHighLow(String high, String low) {
+    return 'H $high  L $low';
+  }
+
+  @override
+  String cardFeelsLike(String temp) {
+    return 'Feels $temp';
+  }
+
+  @override
+  String cardNextDays(int n) {
+    return '$n days';
+  }
+
+  @override
+  String cardUntil(String when) {
+    return 'Until $when';
+  }
+
+  @override
+  String cardAlertCount(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n alerts in force',
+      one: '1 alert in force',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String cardAqiMainPollutant(String pollutant) {
+    return 'Mostly $pollutant';
+  }
+
+  @override
+  String cardPollen(String kind) {
+    return '$kind pollen';
+  }
+
+  @override
+  String cardDuration(int h, int m) {
+    return '${h}h ${m}m';
+  }
+
+  @override
+  String cardGoldenHour(String time) {
+    return 'Golden hour from $time';
+  }
+
+  @override
+  String cardMoonLit(int pct) {
+    return '$pct% lit';
+  }
+
+  @override
+  String cardMoonrise(String time) {
+    return 'Rises $time';
+  }
+
+  @override
+  String cardMoonset(String time) {
+    return 'Sets $time';
+  }
+
+  @override
+  String cardRangeChange(String range) {
+    return 'Change over $range';
+  }
+
+  @override
+  String cardUpDown(int up, int down) {
+    return '$up up · $down down';
+  }
+
+  @override
+  String cardRatesOf(String date) {
+    return 'Rates of $date';
+  }
+
+  @override
+  String cardAtTime(String when) {
+    return 'At $when';
+  }
+
+  @override
+  String cardInDays(int n) {
+    return 'in $n days';
+  }
+
+  @override
+  String cardPercentThere(int pct) {
+    return '$pct% of the way';
+  }
+
+  @override
+  String cardQuakesNear(String place) {
+    return 'Earthquakes near $place';
+  }
+
+  @override
+  String cardQuakeCount(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n earthquakes',
+      one: '1 earthquake',
+      zero: 'None',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String cardDepth(String depth) {
+    return '$depth deep';
+  }
+
+  @override
+  String cardAway(String distance) {
+    return '$distance away';
+  }
+
+  @override
+  String cardStormCount(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n active',
+      one: '1 active',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String cardAlertLevel(String level) {
+    return '$level alert';
+  }
+
+  @override
+  String cardGameCount(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n games',
+      one: '1 game',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String cardLiveCount(int n) {
+    return '$n live';
+  }
+
+  @override
+  String cardMinutes(int n) {
+    return '$n min';
+  }
+
+  @override
+  String cardExpected(String date) {
+    return 'Expected $date';
+  }
+
+  @override
+  String cardCalories(int n) {
+    return '$n kcal';
+  }
+
+  @override
+  String cardStepsCount(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n steps',
+      one: '1 step',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String cardWins(int n) {
+    return 'Wins $n';
+  }
+
+  @override
+  String cardServingSize(String size) {
+    return 'Serving: $size';
+  }
+
+  @override
+  String cardChecksPassed(int passed, int total) {
+    return '$passed of $total checks passed';
+  }
+
+  @override
+  String cardTotal(int n) {
+    return 'Total $n';
+  }
+
+  @override
+  String cardCalcAfterYears(int n) {
+    return 'After $n years';
+  }
 }

@@ -326,6 +326,22 @@ export const EnvSchema = z.object({
     .regex(/^\d{6,20}$/)
     .optional(),
   /** Paid data resale (D-138, Casama Cloud only, after a written agreement with Treg): Casama's Treg key and the switch. */
+  /**
+   * Live data cards (docs/RICH-CARDS-PLAN.md): weather, prices, rates and more from named
+   * providers. LIVE_DATA=off leaves the live.* tools out. Open-Meteo's free API is non-commercial:
+   * "auto" uses it only on servers that don't bill (BILLING_ENABLED off) or with LIVE_OPEN_METEO_KEY.
+   * LIVE_UNOFFICIAL ("auto" likewise) allows public endpoints without published API terms
+   * (Yahoo Finance quotes and movers, ESPN scores); Casama Cloud uses a licensed key instead.
+   */
+  LIVE_DATA: z.enum(["on", "off"]).default("on"),
+  LIVE_OPEN_METEO: z.enum(["auto", "on", "off"]).default("auto"),
+  LIVE_OPEN_METEO_KEY: z.string().optional(),
+  LIVE_UNOFFICIAL: z.enum(["auto", "on", "off"]).default("auto"),
+  LIVE_COINGECKO_KEY: z.string().optional(),
+  LIVE_FINNHUB_KEY: z.string().optional(),
+  LIVE_AVIATIONSTACK_KEY: z.string().optional(),
+  LIVE_17TRACK_KEY: z.string().optional(),
+  LIVE_TMDB_KEY: z.string().optional(),
   TREG_API_KEY: z.string().optional(),
   TREG_RESALE: z.enum(["on", "off"]).default("off"),
   TREG_API_URL: z.url().optional(),

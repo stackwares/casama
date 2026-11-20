@@ -15,6 +15,7 @@ lib/src/api/auth_api.dart
 lib/src/api/billing_api.dart
 lib/src/api/bots_api.dart
 lib/src/api/browser_api.dart
+lib/src/api/cards_api.dart
 lib/src/api/casama_link_api.dart
 lib/src/api/channels_api.dart
 lib/src/api/chat_api.dart
@@ -194,6 +195,8 @@ lib/src/model/canvas_preview_event.dart
 lib/src/model/canvas_preview_event_payload.dart
 lib/src/model/canvas_rotation.dart
 lib/src/model/canvas_update.dart
+lib/src/model/card_prefs.dart
+lib/src/model/card_units.dart
 lib/src/model/catalog_app.dart
 lib/src/model/catalog_app_api_key.dart
 lib/src/model/catalog_skill.dart
@@ -519,6 +522,8 @@ lib/src/model/list_device_places200_response.dart
 lib/src/model/list_device_readings200_response.dart
 lib/src/model/list_device_requests200_response.dart
 lib/src/model/list_device_sources200_response.dart
+lib/src/model/live_card.dart
+lib/src/model/live_card_list.dart
 lib/src/model/local_capabilities.dart
 lib/src/model/local_device.dart
 lib/src/model/local_device_list.dart
@@ -631,6 +636,10 @@ lib/src/model/pending_invite.dart
 lib/src/model/pending_invite_list.dart
 lib/src/model/phone_call.dart
 lib/src/model/phone_call_list.dart
+lib/src/model/pin_live_card.dart
+lib/src/model/pinned_live_card.dart
+lib/src/model/place.dart
+lib/src/model/place_list.dart
 lib/src/model/plan.dart
 lib/src/model/plan_catalog.dart
 lib/src/model/plugin.dart
@@ -682,6 +691,7 @@ lib/src/model/referral.dart
 lib/src/model/referral_invited_by.dart
 lib/src/model/referral_invites.dart
 lib/src/model/referral_preview.dart
+lib/src/model/refresh_live_card.dart
 lib/src/model/relay_analytics_request.dart
 lib/src/model/relayed_analytics_event.dart
 lib/src/model/release_lease_request.dart
@@ -910,6 +920,7 @@ lib/src/model/ui_action_part.dart
 lib/src/model/ui_shown_event.dart
 lib/src/model/ui_shown_event_payload.dart
 lib/src/model/update_about_you_request.dart
+lib/src/model/update_card_prefs.dart
 lib/src/model/update_channel_request.dart
 lib/src/model/update_computer_request.dart
 lib/src/model/update_conversation_request.dart

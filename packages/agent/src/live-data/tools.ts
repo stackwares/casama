@@ -1,0 +1,314 @@
+/**
+ * The live data tools bots call (RICH-CARDS-PLAN §4.1, §11), one lazy group (`tools.load live`):
+ * as core tools they'd add ~700 tokens to every model call (USAGE-PLAN step 4), and a conversation
+ * that used them keeps them loaded (remembered groups). Each call
+ * shows its card itself (a `ui.shown` event, kept with the reply like any card), keeps the call in
+ * `live_cards` so the app can refresh it without the model, and gives the model a short text.
+ */
+import { randomUUID } from "node:crypto";
+import type { Database } from "@casama/db";
+import { surfaceMessages } from "@casama/domain";
+import { sql } from "drizzle-orm";
+import { z } from "zod";
+import { actingUserOf } from "../acting.ts";
+import { leanSchema, type ToolContext, ToolError, type ToolRegistry } from "../tools/registry.ts";
+import { LiveDataError } from "./core.ts";
+import type { LiveEngine, LivePerson, LiveResult, LiveTool } from "./engine.ts";
+import type { Place } from "./places.ts";
+
+/** What the model reads after a live card was shown. */
+export const LIVE_CARD_SHOWN =
+  "The person now sees this as a card with every number above, its source and time, so don't repeat them: answer in one short sentence with what matters (advice, the answer to their question). Never write a table or list of these numbers.";
+
+const PLACE = z
+  .string()
+  .max(120)
+  .optional()
+  .describe(
+    'A city or place ("Manila", "Springfield, US", "14.6,121.0"). Leave out for the person\'s home city.',
+  );
+const CARD = z
+  .boolean()
+  .optional()
+  .describe("false: text only, no card (the person asked for text)");
+
+const SPECS: Record<LiveTool, { name: string; description: string; schema: z.ZodObject }> = {
+  weather: {
+    name: "live.weather",
+    description:
+      "Weather now, for a day (today, tomorrow, a weekday, a date) or the week, from a forecast service; shows a weather card. Use it for any weather, rain, temperature or what-to-wear question instead of web search.",
+    schema: z.object({
+      place: PLACE,
+      when: z
+        .string()
+        .max(20)
+        .optional()
+        .describe('"now" (default), "today", "tomorrow", "saturday", "2026-11-21" or "week"'),
+      card: CARD,
+    }),
+  },
+  quote: {
+    name: "live.quote",
+    description:
+      "Live prices of stocks, ETFs, indexes and crypto (tickers like AAPL, BTC, ^GSPC, PSEi, or names like Apple or Bitcoin), with a chart; one symbol shows a quote card, several a watchlist. Use it instead of web search for any price.",
+    schema: z.object({
+      symbols: z.array(z.string().min(1).max(40)).min(1).max(12),
+      range: z.enum(["1D", "1W", "1M", "3M", "1Y", "5Y"]).optional(),
+      currency: z
+        .string()
+        .length(3)
+        .optional()
+        .describe("Crypto prices in this currency (default USD)"),
+      title: z.string().max(60).optional(),
+      card: CARD,
+    }),
+  },
+  fx: {
+    name: "live.fx",
+    description:
+      "Currency conversion at central bank reference rates (updated daily), with a 30-day trend; shows a converter card. Use it for exchange rates instead of web search.",
+    schema: z.object({
+      from: z.string().length(3).describe("ISO code, like USD"),
+      to: z.array(z.string().length(3)).min(1).max(8),
+      amount: z.number().positive().optional(),
+      date: z.string().max(10).optional().describe("A past date YYYY-MM-DD for that day's rate"),
+      card: CARD,
+    }),
+  },
+  time: {
+    name: "live.time",
+    description:
+      "The time now (or at a given moment) in several places, with their offsets; shows a world clock card. For 'what time is it in…', 'convert 3pm PST to Manila', meeting times across zones.",
+    schema: z.object({
+      places: z.array(z.string().min(1).max(80)).min(1).max(8).describe("Cities or IANA zones"),
+      at: z
+        .string()
+        .max(40)
+        .optional()
+        .describe("An ISO time with offset to convert, like 2026-11-21T15:00-08:00"),
+      card: CARD,
+    }),
+  },
+  air: {
+    name: "live.air",
+    description:
+      "Air quality (US AQI, pollutants, pollen where there's data) and UV for a place; shows an air quality card.",
+    schema: z.object({ place: PLACE, card: CARD }),
+  },
+  sun: {
+    name: "live.sun",
+    description:
+      "Sunrise, sunset, golden hour, day length and the moon's phase for a place and day; shows a sun and moon card.",
+    schema: z.object({ place: PLACE, date: z.string().max(10).optional(), card: CARD }),
+  },
+  alerts: {
+    name: "live.alerts",
+    description:
+      "Official severe weather alerts in force for a place (US for now); shows an alert card.",
+    schema: z.object({ place: PLACE, card: CARD }),
+  },
+  markets: {
+    name: "live.markets",
+    description:
+      "Market overview (major indexes, gold, oil, bitcoin) or today's top gainers, losers or most active stocks; shows a watchlist card.",
+    schema: z.object({
+      view: z.enum(["overview", "gainers", "losers", "active"]).optional(),
+      card: CARD,
+    }),
+  },
+  holidays: {
+    name: "live.holidays",
+    description:
+      "Public holidays for a country (upcoming by default, or a whole year); shows a holiday list card.",
+    schema: z.object({
+      country: z
+        .string()
+        .length(2)
+        .optional()
+        .describe("Two-letter code like PH; default the person's"),
+      year: z.number().int().min(1990).max(2100).optional(),
+      upcoming: z.boolean().optional(),
+      card: CARD,
+    }),
+  },
+  quakes: {
+    name: "live.quakes",
+    description:
+      "Recent earthquakes worldwide (strongest of the last day) or near a place (last week), from USGS; shows a card with a map.",
+    schema: z.object({
+      place: z.string().max(120).optional(),
+      min_magnitude: z.number().min(1).max(9).optional(),
+      radius_km: z.number().min(10).max(5000).optional(),
+      days: z.number().int().min(1).max(7).optional(),
+      card: CARD,
+    }),
+  },
+  storms: {
+    name: "live.storms",
+    description:
+      "Active tropical storms and typhoons (GDACS), nearest to a place first; shows a storm card with a map.",
+    schema: z.object({ place: z.string().max(120).optional(), card: CARD }),
+  },
+  lookup: {
+    name: "live.lookup",
+    description:
+      "An encyclopedia summary (Wikipedia) of a person, place, thing or event, with a picture; shows a summary card.",
+    schema: z.object({
+      topic: z.string().min(1).max(200),
+      lang: z.string().max(3).optional(),
+      card: CARD,
+    }),
+  },
+  define: {
+    name: "live.define",
+    description:
+      "An English word's definitions, pronunciation (with audio) and synonyms; shows a dictionary card.",
+    schema: z.object({ word: z.string().min(1).max(40), card: CARD }),
+  },
+  book: {
+    name: "live.book",
+    description:
+      "A book's details (author, year, pages, rating, cover) from Open Library; shows a book card.",
+    schema: z.object({ query: z.string().min(1).max(200), card: CARD }),
+  },
+  film: {
+    name: "live.film",
+    description:
+      "A film's or TV show's details (year, rating, poster, overview) from TMDB; shows a card.",
+    schema: z.object({
+      query: z.string().min(1).max(200),
+      kind: z.enum(["movie", "show"]).optional(),
+      card: CARD,
+    }),
+  },
+  sports: {
+    name: "live.sports",
+    description:
+      "Scores and fixtures (today or a date) or standings: nba, wnba, ncaab, epl, laliga, seriea, bundesliga, ligue1, ucl, mls, nfl, mlb, nhl, f1; shows a scoreboard or table card.",
+    schema: z.object({
+      league: z.string().min(2).max(30),
+      team: z.string().max(60).optional(),
+      date: z.string().max(10).optional(),
+      view: z.enum(["scores", "standings"]).optional(),
+      card: CARD,
+    }),
+  },
+  flight: {
+    name: "live.flight",
+    description:
+      "A flight's status (gate, delay, times) by its number like PR102; shows a boarding-pass card.",
+    schema: z.object({
+      flight: z.string().min(3).max(10),
+      date: z.string().max(10).optional(),
+      card: CARD,
+    }),
+  },
+  parcel: {
+    name: "live.parcel",
+    description: "Where a parcel is, from its tracking number; shows a tracking card.",
+    schema: z.object({ tracking: z.string().min(6).max(40), card: CARD }),
+  },
+};
+
+/** The person a run acts for: home city, time zone and units. */
+export async function livePerson(db: Database, userId: string | null): Promise<LivePerson> {
+  if (!userId) return {};
+  const [p] = await db
+    .execute<{
+      timezone: string | null;
+      home_place: Place | null;
+      card_units: LivePerson["units"];
+    }>(sql`
+      select timezone, home_place, card_units from public.profiles where user_id = ${userId}::uuid`)
+    .catch(() => [] as never[]);
+  return {
+    timezone: p?.timezone ?? null,
+    homePlace: p?.home_place ?? null,
+    units: p?.card_units ?? null,
+  };
+}
+
+/** Saves a shown card so the app can refresh it; returns its id. */
+export async function saveLiveCard(
+  db: Database,
+  row: {
+    orgId: string;
+    botId: string | null;
+    runId: string | null;
+    userId: string | null;
+    tool: LiveTool;
+    result: LiveResult;
+  },
+) {
+  const id = randomUUID();
+  await db.execute(sql`
+    insert into public.live_cards (id, org_id, bot_id, run_id, user_id, personal, card, tool, args, data)
+    values (${id}::uuid, ${row.orgId}::uuid, ${row.botId}::uuid, ${row.runId}::uuid, ${row.userId}::uuid,
+            ${row.result.personal === true}, ${row.result.built.card.component}, ${row.tool},
+            ${JSON.stringify(row.result.resolved)}::jsonb, ${JSON.stringify(row.result.built.card)}::jsonb)`);
+  return id;
+}
+
+/** The A2UI messages for a live card: one root component. */
+export function liveSurface(surfaceId: string, card: Record<string, unknown>) {
+  return surfaceMessages(surfaceId, [{ id: "root", ...card }]);
+}
+
+export interface LiveToolDeps {
+  db: Database;
+  engine: LiveEngine;
+}
+
+export function registerLiveTools(registry: ToolRegistry, deps: LiveToolDeps) {
+  const { db, engine } = deps;
+  for (const tool of engine.available()) {
+    const spec = SPECS[tool];
+    registry.register({
+      name: spec.name,
+      description: spec.description,
+      risk: "low",
+      // Reading public data changes nothing, and the card is for the person: never asks.
+      readOnly: true,
+      schema: spec.schema,
+      jsonSchema: leanSchema(spec.schema),
+      async execute(args: Record<string, unknown>, ctx: ToolContext) {
+        const userId = ctx.actingUserId ?? (await actingUserOf(db, ctx.runId).catch(() => null));
+        const person = await livePerson(db, userId);
+        let result: LiveResult;
+        try {
+          result = await engine.run(tool, args, person);
+        } catch (err) {
+          if (err instanceof LiveDataError)
+            throw new ToolError(
+              err.code,
+              `${err.message}${err.code === "upstream" || err.code === "rate_limited" || err.code === "no_provider" ? " You may use web.search instead; say the numbers came from the web." : ""}`,
+            );
+          throw err;
+        }
+        const { built } = result;
+        if (args.card === false) return { content: built.text, preview: built.preview };
+        const ref = await saveLiveCard(db, {
+          orgId: ctx.orgId,
+          botId: ctx.botId,
+          runId: ctx.runId,
+          userId,
+          tool,
+          result,
+        }).catch(() => null);
+        const card = ref ? withRef(built.card, ref) : built.card;
+        const surfaceId = `ui_${randomUUID().replaceAll("-", "").slice(0, 16)}`;
+        await ctx.emit("ui.shown", {
+          surface_id: surfaceId,
+          messages: liveSurface(surfaceId, card),
+          live_card: tool,
+        });
+        return { content: `${built.text}\n\n${LIVE_CARD_SHOWN}`, preview: built.preview };
+      },
+    });
+  }
+}
+
+export function withRef(card: Record<string, unknown>, ref: string) {
+  const live = card.live as Record<string, unknown> | undefined;
+  return live ? { ...card, live: { ...live, ref } } : card;
+}

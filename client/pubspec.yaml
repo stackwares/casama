@@ -116,6 +116,8 @@ dependencies:
   in_app_review: ^2.0.12
   flutter_map: ^8.3.2
   latlong2: ^0.10.1
+  # Live data cards' world clocks (docs/RICH-CARDS-PLAN.md); pinned by the override below.
+  timezone: ^0.11.2
   json_schema_builder: ^0.1.7
   emoji_picker_flutter: ^4.5.4
 dev_dependencies:

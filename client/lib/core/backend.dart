@@ -2507,6 +2507,32 @@ abstract class Backend {
   /// waiting shows), or stops it (what it showed is cleared).
   Future<CanvasGrantSaved> setCanvasGrant(String botId, bool allowed);
 
+  // Live data cards (docs/RICH-CARDS-PLAN.md). Raw JSON: a card is an A2UI component.
+  /// Fetches a live card again (through the server's shared cache), or another of its [view]s (a
+  /// day, a chart range). [force] is the person's ↻. Answers `{id, card, fetched_at, error, pinned}`.
+  Future<Map<String, Object?>> refreshLiveCard(String id, {String? view, bool force = false});
+
+  /// The latest saved data of the live cards on screen, by id.
+  Future<List<Map<String, Object?>>> liveCards(List<String> ids);
+
+  /// Pins a live card to the person's widgets; answers the canvas id and its status (`waiting`
+  /// until the bot may show things on widgets).
+  Future<Map<String, Object?>> pinLiveCard(String id, {Map<String, String>? units});
+
+  Future<void> unpinLiveCard(String id);
+
+  /// Reports wrong data on a card (no words are sent).
+  Future<void> reportLiveCard(String id);
+
+  /// The person's home city and units for cards: `{home_place, units}`.
+  Future<Map<String, Object?>> cardPrefs();
+
+  /// Saves the home city (a place from [searchPlaces]; [clearHome] removes it) and/or units.
+  Future<Map<String, Object?>> updateCardPrefs({Map<String, Object?>? homePlace, bool clearHome = false, Map<String, String>? units});
+
+  /// Cities matching [query], for picking a home city.
+  Future<List<Map<String, Object?>>> searchPlaces(String query);
+
   // Watches (D-410)
   /// The person's signed-in watches in [orgId], most recently used first. Empty when the server
   /// has no watch keys yet.
@@ -3147,3 +3173,4 @@ class UsageFilter {
   @override
   String toString() => 'UsageFilter(bot: $botId, model: $model, source: $source, user: $userId)';
 }
+

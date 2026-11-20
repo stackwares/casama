@@ -1,0 +1,2937 @@
+{
+ "weather_now": {
+  "component": "Weather",
+  "place": {
+   "name": "San Francisco",
+   "region": "California",
+   "country": "US",
+   "lat": 37.77,
+   "lng": -122.42,
+   "tz": "America/Los_Angeles"
+  },
+  "when": "now",
+  "now": {
+   "temp": 10.5,
+   "feels": 9.4,
+   "code": "showers",
+   "isDay": false,
+   "humidity": 82.2,
+   "windKph": 9,
+   "windDir": 145.7,
+   "pressureHpa": 1017.4,
+   "uv": 0,
+   "cloud": 71.9,
+   "dewPoint": 7.5
+  },
+  "day": {
+   "date": "2026-11-20",
+   "high": 13,
+   "low": 7,
+   "code": "mostly_clear",
+   "precipMm": 1.9,
+   "windKph": 18.4,
+   "uv": 3.6,
+   "sunrise": "2026-11-20T06:56-08:00",
+   "sunset": "2026-11-20T16:56-08:00",
+   "chance": 45
+  },
+  "hours": [
+   {
+    "t": "2026-11-20T04:00-08:00",
+    "temp": 10.5,
+    "code": "showers",
+    "isDay": false,
+    "mm": 0.7,
+    "windKph": 9,
+    "chance": 45
+   },
+   {
+    "t": "2026-11-20T05:00-08:00",
+    "temp": 9.6,
+    "code": "showers",
+    "isDay": false,
+    "mm": 0.2,
+    "windKph": 8.6,
+    "chance": 38
+   },
+   {
+    "t": "2026-11-20T06:00-08:00",
+    "temp": 10.1,
+    "code": "showers",
+    "isDay": false,
+    "mm": 0.2,
+    "windKph": 11.5,
+    "chance": 35
+   },
+   {
+    "t": "2026-11-20T07:00-08:00",
+    "temp": 10.3,
+    "code": "mostly_clear",
+    "isDay": true,
+    "mm": 0,
+    "windKph": 7.9,
+    "chance": 45
+   },
+   {
+    "t": "2026-11-20T08:00-08:00",
+    "temp": 11.2,
+    "code": "showers",
+    "isDay": true,
+    "mm": 0.8,
+    "windKph": 10.1,
+    "chance": 41
+   },
+   {
+    "t": "2026-11-20T09:00-08:00",
+    "temp": 11.5,
+    "code": "partly_cloudy",
+    "isDay": true,
+    "mm": 0,
+    "windKph": 9.4,
+    "chance": 17
+   },
+   {
+    "t": "2026-11-20T10:00-08:00",
+    "temp": 11.9,
+    "code": "mostly_clear",
+    "isDay": true,
+    "mm": 0,
+    "windKph": 11.5,
+    "chance": 22
+   },
+   {
+    "t": "2026-11-20T11:00-08:00",
+    "temp": 11.9,
+    "code": "cloudy",
+    "isDay": true,
+    "mm": 0,
+    "windKph": 18.4,
+    "chance": 7
+   },
+   {
+    "t": "2026-11-20T12:00-08:00",
+    "temp": 11.7,
+    "code": "mostly_clear",
+    "isDay": true,
+    "mm": 0,
+    "windKph": 17.6,
+    "chance": 2
+   },
+   {
+    "t": "2026-11-20T13:00-08:00",
+    "temp": 12.4,
+    "code": "mostly_clear",
+    "isDay": true,
+    "mm": 0,
+    "windKph": 14.4,
+    "chance": 1
+   },
+   {
+    "t": "2026-11-20T14:00-08:00",
+    "temp": 12.7,
+    "code": "mostly_clear",
+    "isDay": true,
+    "mm": 0,
+    "windKph": 14.8,
+    "chance": 0
+   },
+   {
+    "t": "2026-11-20T15:00-08:00",
+    "temp": 12.5,
+    "code": "clear",
+    "isDay": true,
+    "mm": 0,
+    "windKph": 15.5,
+    "chance": 0
+   },
+   {
+    "t": "2026-11-20T16:00-08:00",
+    "temp": 12,
+    "code": "clear",
+    "isDay": true,
+    "mm": 0,
+    "windKph": 14.8,
+    "chance": 0
+   },
+   {
+    "t": "2026-11-20T17:00-08:00",
+    "temp": 11,
+    "code": "clear",
+    "isDay": false,
+    "mm": 0,
+    "windKph": 14.4,
+    "chance": 0
+   },
+   {
+    "t": "2026-11-20T18:00-08:00",
+    "temp": 10.3,
+    "code": "clear",
+    "isDay": false,
+    "mm": 0,
+    "windKph": 13.3,
+    "chance": 0
+   },
+   {
+    "t": "2026-11-20T19:00-08:00",
+    "temp": 9.8,
+    "code": "clear",
+    "isDay": false,
+    "mm": 0,
+    "windKph": 9,
+    "chance": 0
+   },
+   {
+    "t": "2026-11-20T20:00-08:00",
+    "temp": 9.7,
+    "code": "clear",
+    "isDay": false,
+    "mm": 0,
+    "windKph": 8.6,
+    "chance": 0
+   },
+   {
+    "t": "2026-11-20T21:00-08:00",
+    "temp": 9.5,
+    "code": "clear",
+    "isDay": false,
+    "mm": 0,
+    "windKph": 9,
+    "chance": 0
+   },
+   {
+    "t": "2026-11-20T22:00-08:00",
+    "temp": 9.3,
+    "code": "clear",
+    "isDay": false,
+    "mm": 0,
+    "windKph": 9,
+    "chance": 0
+   },
+   {
+    "t": "2026-11-20T23:00-08:00",
+    "temp": 9.4,
+    "code": "mostly_clear",
+    "isDay": false,
+    "mm": 0,
+    "windKph": 10.1,
+    "chance": 0
+   },
+   {
+    "t": "2026-11-21T00:00-08:00",
+    "temp": 9,
+    "code": "fog",
+    "isDay": false,
+    "mm": 0,
+    "windKph": 11.5,
+    "chance": 0
+   },
+   {
+    "t": "2026-11-21T01:00-08:00",
+    "temp": 8.3,
+    "code": "fog",
+    "isDay": false,
+    "mm": 0,
+    "windKph": 11.9,
+    "chance": 0
+   },
+   {
+    "t": "2026-11-21T02:00-08:00",
+    "temp": 7.9,
+    "code": "fog",
+    "isDay": false,
+    "mm": 0,
+    "windKph": 11.2,
+    "chance": 0
+   },
+   {
+    "t": "2026-11-21T03:00-08:00",
+    "temp": 7.4,
+    "code": "fog",
+    "isDay": false,
+    "mm": 0,
+    "windKph": 9.7,
+    "chance": 0
+   }
+  ],
+  "days": [
+   {
+    "date": "2026-11-20",
+    "high": 13,
+    "low": 7,
+    "code": "mostly_clear",
+    "precipMm": 1.9,
+    "windKph": 18.4,
+    "uv": 3.6,
+    "sunrise": "2026-11-20T06:56-08:00",
+    "sunset": "2026-11-20T16:56-08:00",
+    "chance": 45
+   },
+   {
+    "date": "2026-11-21",
+    "high": 13,
+    "low": 7,
+    "code": "fog",
+    "precipMm": 3.3,
+    "windKph": 15.8,
+    "uv": 2.6,
+    "sunrise": "2026-11-21T06:57-08:00",
+    "sunset": "2026-11-21T16:56-08:00",
+    "chance": 88
+   },
+   {
+    "date": "2026-11-22",
+    "high": 12,
+    "low": 8,
+    "code": "cloudy",
+    "precipMm": 0,
+    "windKph": 14,
+    "uv": 1.7,
+    "sunrise": "2026-11-22T06:58-08:00",
+    "sunset": "2026-11-22T16:55-08:00",
+    "chance": 45
+   },
+   {
+    "date": "2026-11-23",
+    "high": 14,
+    "low": 7,
+    "code": "cloudy",
+    "precipMm": 0,
+    "windKph": 10.4,
+    "uv": 3.3,
+    "sunrise": "2026-11-23T06:59-08:00",
+    "sunset": "2026-11-23T16:55-08:00",
+    "chance": 13
+   },
+   {
+    "date": "2026-11-24",
+    "high": 16,
+    "low": 13,
+    "code": "rain",
+    "precipMm": 0,
+    "windKph": 21.6,
+    "uv": 3,
+    "sunrise": "2026-11-24T07:00-08:00",
+    "sunset": "2026-11-24T16:54-08:00",
+    "chance": 70
+   },
+   {
+    "date": "2026-11-25",
+    "high": 19,
+    "low": 14,
+    "code": "showers",
+    "precipMm": 0,
+    "windKph": 27,
+    "uv": 0.5,
+    "sunrise": "2026-11-25T07:01-08:00",
+    "sunset": "2026-11-25T16:54-08:00",
+    "chance": 67
+   },
+   {
+    "date": "2026-11-26",
+    "high": 18,
+    "low": 14,
+    "code": "cloudy",
+    "precipMm": 0,
+    "windKph": 15.5,
+    "uv": 3.3,
+    "sunrise": "2026-11-26T07:02-08:00",
+    "sunset": "2026-11-26T16:54-08:00",
+    "chance": 20
+   }
+  ],
+  "sunrise": "2026-11-20T06:56-08:00",
+  "sunset": "2026-11-20T16:56-08:00",
+  "alerts": [
+   {
+    "severity": "minor",
+    "event": "Coastal Flood Advisory",
+    "until": "2026-11-21T11:00:00-08:00"
+   }
+  ],
+  "live": {
+   "source": {
+    "id": "met_norway",
+    "name": "MET Norway",
+    "url": "https://api.met.no/",
+    "license": "CC BY 4.0"
+   },
+   "sources": [
+    {
+     "id": "open_meteo",
+     "name": "Open-Meteo",
+     "url": "https://open-meteo.com/",
+     "license": "CC BY 4.0"
+    }
+   ],
+   "fetchedAt": "2026-11-20T12:52:32.363Z",
+   "staleAfter": "2026-11-20T13:22:32.363Z",
+   "stale": false,
+   "views": [
+    "now",
+    "today",
+    "tomorrow",
+    "week"
+   ]
+  },
+  "summary": "San Francisco, US now: 51\u00b0F (feels 49\u00b0F), showers, humidity 82%, wind 6 mph. Today 45\u00b0F\u201355\u00b0F; rain likely around 04:00, 08:00. Alerts: Coastal Flood Advisory."
+ },
+ "weather_tomorrow": {
+  "component": "Weather",
+  "place": {
+   "name": "Manila",
+   "region": "National Capital Region",
+   "country": "PH",
+   "lat": 14.6,
+   "lng": 120.98,
+   "tz": "Asia/Manila"
+  },
+  "when": "2026-11-21",
+  "day": {
+   "date": "2026-11-21",
+   "high": 31,
+   "low": 25,
+   "code": "light_rain",
+   "precipMm": 1.7,
+   "windKph": 18.7,
+   "uv": 6.7,
+   "sunrise": "2026-11-21T06:01+08:00",
+   "sunset": "2026-11-21T17:25+08:00",
+   "chance": 88
+  },
+  "hours": [
+   {
+    "t": "2026-11-21T00:00+08:00",
+    "temp": 25.5,
+    "code": "cloudy",
+    "isDay": false,
+    "mm": 0,
+    "windKph": 10.8,
+    "chance": 0
+   },
+   {
+    "t": "2026-11-21T01:00+08:00",
+    "temp": 25.2,
+    "code": "partly_cloudy",
+    "isDay": false,
+    "mm": 0,
+    "windKph": 10.1,
+    "chance": 0
+   },
+   {
+    "t": "2026-11-21T02:00+08:00",
+    "temp": 25.1,
+    "code": "partly_cloudy",
+    "isDay": false,
+    "mm": 0,
+    "windKph": 12.2,
+    "chance": 0
+   },
+   {
+    "t": "2026-11-21T03:00+08:00",
+    "temp": 25.1,
+    "code": "partly_cloudy",
+    "isDay": false,
+    "mm": 0,
+    "windKph": 12.2,
+    "chance": 1
+   },
+   {
+    "t": "2026-11-21T04:00+08:00",
+    "temp": 25.1,
+    "code": "partly_cloudy",
+    "isDay": false,
+    "mm": 0,
+    "windKph": 12.6,
+    "chance": 1
+   },
+   {
+    "t": "2026-11-21T05:00+08:00",
+    "temp": 25,
+    "code": "cloudy",
+    "isDay": false,
+    "mm": 0,
+    "windKph": 12.6,
+    "chance": 2
+   },
+   {
+    "t": "2026-11-21T06:00+08:00",
+    "temp": 25,
+    "code": "cloudy",
+    "isDay": false,
+    "mm": 0,
+    "windKph": 12.2,
+    "chance": 2
+   },
+   {
+    "t": "2026-11-21T07:00+08:00",
+    "temp": 25.5,
+    "code": "partly_cloudy",
+    "isDay": true,
+    "mm": 0,
+    "windKph": 12.6,
+    "chance": 1
+   },
+   {
+    "t": "2026-11-21T08:00+08:00",
+    "temp": 26.4,
+    "code": "partly_cloudy",
+    "isDay": true,
+    "mm": 0,
+    "windKph": 11.5,
+    "chance": 2
+   },
+   {
+    "t": "2026-11-21T09:00+08:00",
+    "temp": 27.6,
+    "code": "showers",
+    "isDay": true,
+    "mm": 0.3,
+    "windKph": 9,
+    "chance": 3
+   },
+   {
+    "t": "2026-11-21T10:00+08:00",
+    "temp": 28.5,
+    "code": "rain",
+    "isDay": true,
+    "mm": 0.4,
+    "windKph": 11.5,
+    "chance": 7
+   },
+   {
+    "t": "2026-11-21T11:00+08:00",
+    "temp": 29.8,
+    "code": "light_rain",
+    "isDay": true,
+    "mm": 0.2,
+    "windKph": 12.2,
+    "chance": 16
+   },
+   {
+    "t": "2026-11-21T12:00+08:00",
+    "temp": 30.6,
+    "code": "cloudy",
+    "isDay": true,
+    "mm": 0,
+    "windKph": 13.7,
+    "chance": 40
+   },
+   {
+    "t": "2026-11-21T13:00+08:00",
+    "temp": 31.1,
+    "code": "light_rain",
+    "isDay": true,
+    "mm": 0.4,
+    "windKph": 16.9,
+    "chance": 70
+   },
+   {
+    "t": "2026-11-21T14:00+08:00",
+    "temp": 29.8,
+    "code": "light_rain",
+    "isDay": true,
+    "mm": 0.3,
+    "windKph": 18.7,
+    "chance": 88
+   },
+   {
+    "t": "2026-11-21T15:00+08:00",
+    "temp": 30.1,
+    "code": "light_rain",
+    "isDay": true,
+    "mm": 0.1,
+    "windKph": 16.2,
+    "chance": 85
+   },
+   {
+    "t": "2026-11-21T16:00+08:00",
+    "temp": 29.7,
+    "code": "cloudy",
+    "isDay": true,
+    "mm": 0,
+    "windKph": 15.1,
+    "chance": 71
+   },
+   {
+    "t": "2026-11-21T17:00+08:00",
+    "temp": 28.7,
+    "code": "partly_cloudy",
+    "isDay": true,
+    "mm": 0,
+    "windKph": 15.5,
+    "chance": 55
+   },
+   {
+    "t": "2026-11-21T18:00+08:00",
+    "temp": 27.8,
+    "code": "mostly_clear",
+    "isDay": false,
+    "mm": 0,
+    "windKph": 15.5,
+    "chance": 37
+   },
+   {
+    "t": "2026-11-21T19:00+08:00",
+    "temp": 27.2,
+    "code": "partly_cloudy",
+    "isDay": false,
+    "mm": 0,
+    "windKph": 15.8,
+    "chance": 18
+   },
+   {
+    "t": "2026-11-21T20:00+08:00",
+    "temp": 26.7,
+    "code": "partly_cloudy",
+    "isDay": false,
+    "mm": 0,
+    "windKph": 14.4,
+    "chance": 4
+   },
+   {
+    "t": "2026-11-21T21:00+08:00",
+    "temp": 26.3,
+    "code": "partly_cloudy",
+    "isDay": false,
+    "mm": 0,
+    "windKph": 13.3,
+    "chance": 0
+   },
+   {
+    "t": "2026-11-21T22:00+08:00",
+    "temp": 26.1,
+    "code": "mostly_clear",
+    "isDay": false,
+    "mm": 0,
+    "windKph": 12.6,
+    "chance": 2
+   },
+   {
+    "t": "2026-11-21T23:00+08:00",
+    "temp": 25.8,
+    "code": "mostly_clear",
+    "isDay": false,
+    "mm": 0,
+    "windKph": 11.9,
+    "chance": 4
+   }
+  ],
+  "days": [
+   {
+    "date": "2026-11-20",
+    "high": 26,
+    "low": 25,
+    "code": "cloudy",
+    "precipMm": 0,
+    "windKph": 11.9,
+    "uv": 6.4,
+    "sunrise": "2026-11-20T06:00+08:00",
+    "sunset": "2026-11-20T17:25+08:00",
+    "chance": 100
+   },
+   {
+    "date": "2026-11-21",
+    "high": 31,
+    "low": 25,
+    "code": "light_rain",
+    "precipMm": 1.7,
+    "windKph": 18.7,
+    "uv": 6.7,
+    "sunrise": "2026-11-21T06:01+08:00",
+    "sunset": "2026-11-21T17:25+08:00",
+    "chance": 88
+   },
+   {
+    "date": "2026-11-22",
+    "high": 31,
+    "low": 25,
+    "code": "showers",
+    "precipMm": 1,
+    "windKph": 18,
+    "uv": 6.8,
+    "sunrise": "2026-11-22T06:01+08:00",
+    "sunset": "2026-11-22T17:25+08:00",
+    "chance": 78
+   },
+   {
+    "date": "2026-11-23",
+    "high": 32,
+    "low": 25,
+    "code": "mostly_clear",
+    "precipMm": 0,
+    "windKph": 13,
+    "uv": 7.1,
+    "sunrise": "2026-11-23T06:02+08:00",
+    "sunset": "2026-11-23T17:25+08:00",
+    "chance": 33
+   },
+   {
+    "date": "2026-11-24",
+    "high": 32,
+    "low": 25,
+    "code": "showers",
+    "precipMm": 0,
+    "windKph": 6.1,
+    "uv": 7.2,
+    "sunrise": "2026-11-24T06:02+08:00",
+    "sunset": "2026-11-24T17:25+08:00",
+    "chance": 55
+   },
+   {
+    "date": "2026-11-25",
+    "high": 32,
+    "low": 25,
+    "code": "showers",
+    "precipMm": 0,
+    "windKph": 10.8,
+    "uv": 5.9,
+    "sunrise": "2026-11-25T06:03+08:00",
+    "sunset": "2026-11-25T17:25+08:00",
+    "chance": 59
+   },
+   {
+    "date": "2026-11-26",
+    "high": 33,
+    "low": 25,
+    "code": "partly_cloudy",
+    "precipMm": 0,
+    "windKph": 3.6,
+    "uv": 3.2,
+    "sunrise": "2026-11-26T06:03+08:00",
+    "sunset": "2026-11-26T17:25+08:00",
+    "chance": 24
+   }
+  ],
+  "sunrise": "2026-11-21T06:01+08:00",
+  "sunset": "2026-11-21T17:25+08:00",
+  "live": {
+   "source": {
+    "id": "met_norway",
+    "name": "MET Norway",
+    "url": "https://api.met.no/",
+    "license": "CC BY 4.0"
+   },
+   "sources": [
+    {
+     "id": "open_meteo",
+     "name": "Open-Meteo",
+     "url": "https://open-meteo.com/",
+     "license": "CC BY 4.0"
+    }
+   ],
+   "fetchedAt": "2026-11-20T12:52:33.931Z",
+   "staleAfter": "2026-11-20T13:22:33.931Z",
+   "stale": false,
+   "views": [
+    "now",
+    "today",
+    "tomorrow",
+    "week"
+   ]
+  },
+  "summary": "Manila, PH on 2026-11-21: light rain, 25\u00b0C to 31\u00b0C, 88% chance of rain, wind up to 19 km/h, UV 7; rain likely around 13:00, 14:00, 15:00\u2026."
+ },
+ "forecast": {
+  "component": "Forecast",
+  "place": {
+   "name": "Tokyo",
+   "country": "JP",
+   "lat": 35.69,
+   "lng": 139.69,
+   "tz": "Asia/Tokyo"
+  },
+  "days": [
+   {
+    "date": "2026-11-20",
+    "high": 7,
+    "low": 3,
+    "code": "clear",
+    "precipMm": 0,
+    "windKph": 16.2,
+    "uv": 3.8,
+    "sunrise": "2026-11-20T06:22+09:00",
+    "sunset": "2026-11-20T16:33+09:00",
+    "chance": 4
+   },
+   {
+    "date": "2026-11-21",
+    "high": 12,
+    "low": 2,
+    "code": "clear",
+    "precipMm": 0,
+    "windKph": 8.6,
+    "uv": 3.7,
+    "sunrise": "2026-11-21T06:23+09:00",
+    "sunset": "2026-11-21T16:33+09:00",
+    "chance": 0
+   },
+   {
+    "date": "2026-11-22",
+    "high": 13,
+    "low": 3,
+    "code": "clear",
+    "precipMm": 0,
+    "windKph": 14.8,
+    "uv": 3.6,
+    "sunrise": "2026-11-22T06:24+09:00",
+    "sunset": "2026-11-22T16:32+09:00",
+    "chance": 2
+   },
+   {
+    "date": "2026-11-23",
+    "high": 12,
+    "low": 2,
+    "code": "clear",
+    "precipMm": 0,
+    "windKph": 13.3,
+    "uv": 3.6,
+    "sunrise": "2026-11-23T06:25+09:00",
+    "sunset": "2026-11-23T16:32+09:00",
+    "chance": 0
+   },
+   {
+    "date": "2026-11-24",
+    "high": 18,
+    "low": 5,
+    "code": "rain",
+    "precipMm": 0,
+    "windKph": 22.3,
+    "uv": 3.7,
+    "sunrise": "2026-11-24T06:26+09:00",
+    "sunset": "2026-11-24T16:31+09:00",
+    "chance": 83
+   },
+   {
+    "date": "2026-11-25",
+    "high": 12,
+    "low": 5,
+    "code": "cloudy",
+    "precipMm": 0,
+    "windKph": 11.2,
+    "uv": 3.6,
+    "sunrise": "2026-11-25T06:27+09:00",
+    "sunset": "2026-11-25T16:31+09:00",
+    "chance": 24
+   },
+   {
+    "date": "2026-11-26",
+    "high": 13,
+    "low": 4,
+    "code": "partly_cloudy",
+    "precipMm": 0,
+    "windKph": 7.6,
+    "uv": 3.2,
+    "sunrise": "2026-11-26T06:28+09:00",
+    "sunset": "2026-11-26T16:30+09:00",
+    "chance": 0
+   },
+   {
+    "date": "2026-11-27",
+    "high": 16,
+    "low": 5,
+    "code": "cloudy",
+    "precipMm": 0,
+    "windKph": 4.3,
+    "uv": 2.9,
+    "sunrise": "2026-11-27T06:29+09:00",
+    "sunset": "2026-11-27T16:30+09:00",
+    "chance": 1
+   },
+   {
+    "date": "2026-11-28",
+    "high": 15,
+    "low": 5,
+    "code": "cloudy",
+    "precipMm": 0,
+    "windKph": 7.6,
+    "uv": 0.7,
+    "sunrise": "2026-11-28T06:30+09:00",
+    "sunset": "2026-11-28T16:30+09:00",
+    "chance": 20
+   },
+   {
+    "date": "2026-11-29",
+    "high": 15,
+    "low": 5,
+    "code": "cloudy",
+    "precipMm": 0,
+    "windKph": 16.2,
+    "uv": 3.3,
+    "sunrise": "2026-11-29T06:31+09:00",
+    "sunset": "2026-11-29T16:30+09:00",
+    "chance": 26
+   }
+  ],
+  "today": "2026-11-20",
+  "live": {
+   "source": {
+    "id": "met_norway",
+    "name": "MET Norway",
+    "url": "https://api.met.no/",
+    "license": "CC BY 4.0"
+   },
+   "sources": [
+    {
+     "id": "open_meteo",
+     "name": "Open-Meteo",
+     "url": "https://open-meteo.com/",
+     "license": "CC BY 4.0"
+    }
+   ],
+   "fetchedAt": "2026-11-20T12:52:34.450Z",
+   "staleAfter": "2026-11-20T13:22:34.450Z",
+   "stale": false,
+   "views": [
+    "now",
+    "today",
+    "tomorrow",
+    "week"
+   ]
+  },
+  "summary": "Forecast for Tokyo, JP:\n2026-11-20: clear, 3\u00b0C\u20137\u00b0C, rain 4%\n2026-11-21: clear, 2\u00b0C\u201312\u00b0C, rain 0%\n2026-11-22: clear, 3\u00b0C\u201313\u00b0C, rain 2%\n2026-11-23: clear, 2\u00b0C\u201312\u00b0C, rain 0%\n2026-11-24: rain, 5\u00b0C\u201318\u00b0C, rain 83%\n2026-11-25: cloudy, 5\u00b0C\u201312\u00b0C, rain 24%\n2026-11-26: partly cloudy, 4\u00b0C\u201313\u00b0C, rain 0%"
+ },
+ "alerts": {
+  "component": "WeatherAlert",
+  "place": {
+   "name": "Miami",
+   "region": "Florida",
+   "country": "US",
+   "lat": 25.77,
+   "lng": -80.19,
+   "tz": "America/New_York"
+  },
+  "alerts": [
+   {
+    "severity": "moderate",
+    "event": "Rip Current Statement",
+    "headline": "Rip Current Statement issued November 20 at 12:37AM EST until November 20 at 7:00PM EST by NWS Miami FL",
+    "area": "Coastal Broward County; Coastal Miami Dade County",
+    "start": "2026-11-20T00:37:00-05:00",
+    "end": "2026-11-20T19:00:00-05:00",
+    "instruction": "Swim near a lifeguard. If caught in a rip current, relax and\nfloat. Don't swim against the current. If able, swim in a\ndirection following the shoreline. If unable to escape, face the\nshore and call or wave for help.",
+    "issuer": "NWS Miami FL",
+    "url": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.3ede6dce89d6f4197a74fd5c6cd0722f2918dbce.002.1"
+   }
+  ],
+  "live": {
+   "source": {
+    "id": "nws",
+    "name": "US National Weather Service",
+    "url": "https://www.weather.gov/"
+   },
+   "fetchedAt": "2026-11-20T12:52:35.089Z",
+   "staleAfter": "2026-11-20T13:02:35.089Z"
+  },
+  "summary": "Active alerts for Miami: Rip Current Statement (moderate, until 2026-11-20T19:00:00-05:00)."
+ },
+ "air": {
+  "component": "AirQuality",
+  "place": {
+   "name": "Manila",
+   "region": "National Capital Region",
+   "country": "PH",
+   "lat": 14.6,
+   "lng": 120.98,
+   "tz": "Asia/Manila"
+  },
+  "aqi": 39,
+  "scale": "us",
+  "dominant": "o3",
+  "pollutants": [
+   {
+    "id": "pm2_5",
+    "value": 6.5,
+    "unit": "\u00b5g/m\u00b3"
+   },
+   {
+    "id": "pm10",
+    "value": 7.3,
+    "unit": "\u00b5g/m\u00b3"
+   },
+   {
+    "id": "o3",
+    "value": 29,
+    "unit": "\u00b5g/m\u00b3"
+   },
+   {
+    "id": "no2",
+    "value": 13.8,
+    "unit": "\u00b5g/m\u00b3"
+   },
+   {
+    "id": "so2",
+    "value": 8.5,
+    "unit": "\u00b5g/m\u00b3"
+   },
+   {
+    "id": "co",
+    "value": 378,
+    "unit": "\u00b5g/m\u00b3"
+   }
+  ],
+  "hours": [
+   {
+    "t": "2026-11-20T20:00+08:00",
+    "aqi": 39
+   },
+   {
+    "t": "2026-11-20T21:00+08:00",
+    "aqi": 39
+   },
+   {
+    "t": "2026-11-20T22:00+08:00",
+    "aqi": 39
+   },
+   {
+    "t": "2026-11-20T23:00+08:00",
+    "aqi": 38
+   },
+   {
+    "t": "2026-11-21T00:00+08:00",
+    "aqi": 38
+   },
+   {
+    "t": "2026-11-21T01:00+08:00",
+    "aqi": 38
+   },
+   {
+    "t": "2026-11-21T02:00+08:00",
+    "aqi": 38
+   },
+   {
+    "t": "2026-11-21T03:00+08:00",
+    "aqi": 39
+   },
+   {
+    "t": "2026-11-21T04:00+08:00",
+    "aqi": 39
+   },
+   {
+    "t": "2026-11-21T05:00+08:00",
+    "aqi": 39
+   },
+   {
+    "t": "2026-11-21T06:00+08:00",
+    "aqi": 40
+   },
+   {
+    "t": "2026-11-21T07:00+08:00",
+    "aqi": 40
+   },
+   {
+    "t": "2026-11-21T08:00+08:00",
+    "aqi": 41
+   },
+   {
+    "t": "2026-11-21T09:00+08:00",
+    "aqi": 42
+   },
+   {
+    "t": "2026-11-21T10:00+08:00",
+    "aqi": 42
+   },
+   {
+    "t": "2026-11-21T11:00+08:00",
+    "aqi": 42
+   },
+   {
+    "t": "2026-11-21T12:00+08:00",
+    "aqi": 42
+   },
+   {
+    "t": "2026-11-21T13:00+08:00",
+    "aqi": 42
+   },
+   {
+    "t": "2026-11-21T14:00+08:00",
+    "aqi": 42
+   },
+   {
+    "t": "2026-11-21T15:00+08:00",
+    "aqi": 42
+   },
+   {
+    "t": "2026-11-21T16:00+08:00",
+    "aqi": 42
+   },
+   {
+    "t": "2026-11-21T17:00+08:00",
+    "aqi": 42
+   },
+   {
+    "t": "2026-11-21T18:00+08:00",
+    "aqi": 42
+   },
+   {
+    "t": "2026-11-21T19:00+08:00",
+    "aqi": 42
+   }
+  ],
+  "uv": 0,
+  "live": {
+   "source": {
+    "id": "open_meteo_air",
+    "name": "CAMS via Open-Meteo",
+    "url": "https://open-meteo.com/en/docs/air-quality-api",
+    "license": "CC BY 4.0"
+   },
+   "fetchedAt": "2026-11-20T12:52:36.132Z",
+   "staleAfter": "2026-11-20T13:52:36.132Z"
+  },
+  "summary": "Air quality in Manila: US AQI 39 (good), mostly o3; UV 0."
+ },
+ "sun": {
+  "component": "SunMoon",
+  "place": {
+   "name": "Reykjavik",
+   "region": "Capital Region",
+   "country": "IS",
+   "lat": 64.14,
+   "lng": -21.9,
+   "tz": "Atlantic/Reykjavik"
+  },
+  "date": "2026-11-20",
+  "sun": {
+   "sunrise": "2026-11-20T10:12+00:00",
+   "sunset": "2026-11-20T16:16+00:00",
+   "noon": "2026-11-20T13:14+00:00",
+   "dawn": "2026-11-20T09:10+00:00",
+   "dusk": "2026-11-20T17:19+00:00",
+   "goldenMorningEnd": "2026-11-20T12:44+00:00",
+   "goldenEveningStart": "2026-11-20T13:44+00:00",
+   "dayMinutes": 363,
+   "changeMinutes": -5.9
+  },
+  "moon": {
+   "phase": 0.352,
+   "name": "waxing_gibbous",
+   "illumination": 80,
+   "rise": "2026-11-20T14:59+00:00",
+   "set": "2026-11-20T03:50+00:00"
+  },
+  "live": {
+   "source": {
+    "id": "astro",
+    "name": "Calculated by Casama"
+   },
+   "fetchedAt": "2026-11-20T12:52:36.360Z",
+   "staleAfter": "2026-11-20T18:52:36.360Z"
+  },
+  "summary": "Reykjavik on 2026-11-20: sunrise 10:12, sunset 16:16 (local time), golden hour from 13:44; moon waxing gibbous, 80% lit."
+ },
+ "quote_crypto": {
+  "component": "Quote",
+  "symbol": "BTC",
+  "name": "Bitcoin",
+  "kind": "crypto",
+  "currency": "USD",
+  "price": 61550,
+  "change": -2320.2729850536125,
+  "changePct": -3.67284,
+  "prevClose": 63870.27298505361,
+  "dayLow": 61273,
+  "dayHigh": 64001,
+  "volume": 40015934723,
+  "marketCap": 1238036763751,
+  "logoUrl": "https://coin-images.coingecko.com/coins/images/1/large/bitcoin.png?1696501400",
+  "marketState": "24h",
+  "asOf": "2026-11-20T12:50:59.000Z",
+  "chart": {
+   "range": "1D",
+   "points": [
+    [
+     1795095763191.6167,
+     63895.7372
+    ],
+    [
+     1795099384748.503,
+     63826.6886
+    ],
+    [
+     1795103006305.3892,
+     63978.1412
+    ],
+    [
+     1795106627862.2754,
+     63500.2968
+    ],
+    [
+     1795110249419.1616,
+     63031.3809
+    ],
+    [
+     1795113870976.0479,
+     62751.6808
+    ],
+    [
+     1795117492532.934,
+     62693.5227
+    ],
+    [
+     1795121114089.8203,
+     62825.8867
+    ],
+    [
+     1795124735646.7065,
+     62258.6873
+    ],
+    [
+     1795128357203.5928,
+     62064.757
+    ],
+    [
+     1795131978760.479,
+     61491.2446
+    ],
+    [
+     1795135600317.3652,
+     62126.3322
+    ],
+    [
+     1795139221874.2515,
+     61921.3618
+    ],
+    [
+     1795142843431.1377,
+     62051.583
+    ],
+    [
+     1795146464988.024,
+     61494.4692
+    ],
+    [
+     1795150086544.9102,
+     62136.7839
+    ],
+    [
+     1795153708101.7964,
+     62088.4654
+    ],
+    [
+     1795157329658.6826,
+     61463.6427
+    ],
+    [
+     1795160951215.5688,
+     61865.7979
+    ],
+    [
+     1795164572772.455,
+     62000.4438
+    ],
+    [
+     1795168194329.3413,
+     61804.2477
+    ],
+    [
+     1795171815886.2275,
+     61774.3851
+    ],
+    [
+     1795175437443.1138,
+     61599.253
+    ],
+    [
+     1795179059000,
+     61997.969
+    ]
+   ]
+  },
+  "live": {
+   "source": {
+    "id": "coingecko",
+    "name": "CoinGecko",
+    "url": "https://www.coingecko.com/"
+   },
+   "fetchedAt": "2026-11-20T12:52:36.761Z",
+   "staleAfter": "2026-11-20T12:53:36.761Z",
+   "stale": false,
+   "delayed": null,
+   "views": [
+    "1D",
+    "1W",
+    "1M",
+    "3M",
+    "1Y",
+    "5Y"
+   ]
+  },
+  "summary": "Bitcoin (BTC): $61,550.00, -3.67% in 24 h."
+ },
+ "quote_stock": {
+  "component": "Quote",
+  "symbol": "AAPL",
+  "name": "Apple Inc.",
+  "kind": "stock",
+  "exchange": "NasdaqGS",
+  "currency": "USD",
+  "price": 349.21,
+  "change": 6.269999999999982,
+  "changePct": 1.828308158861603,
+  "prevClose": 342.94,
+  "dayLow": 346.47,
+  "dayHigh": 355.28,
+  "low52": 243.42,
+  "high52": 360.83,
+  "volume": 40469518,
+  "marketState": "pre",
+  "asOf": "2026-11-19T21:00:01.000Z",
+  "delayedMinutes": 15,
+  "chart": {
+   "range": "1M",
+   "points": [
+    [
+     1792503000000,
+     339.5
+    ],
+    [
+     1792589400000,
+     343.99
+    ],
+    [
+     1792675800000,
+     348.22
+    ],
+    [
+     1792762200000,
+     347.73
+    ],
+    [
+     1793021400000,
+     343.91
+    ],
+    [
+     1793107800000,
+     347.1
+    ],
+    [
+     1793194200000,
+     343.83
+    ],
+    [
+     1793280600000,
+     348.91
+    ],
+    [
+     1793367000000,
+     344.63
+    ],
+    [
+     1793629800000,
+     338.32
+    ],
+    [
+     1793716200000,
+     331.9
+    ],
+    [
+     1793802600000,
+     349.51
+    ],
+    [
+     1793889000000,
+     344.17
+    ],
+    [
+     1793975400000,
+     342.37
+    ],
+    [
+     1794234600000,
+     350.69
+    ],
+    [
+     1794321000000,
+     348.51
+    ],
+    [
+     1794407400000,
+     355.63
+    ],
+    [
+     1794493800000,
+     354.88
+    ],
+    [
+     1794580200000,
+     356.27
+    ],
+    [
+     1794839400000,
+     352.78
+    ],
+    [
+     1794925800000,
+     351.91
+    ],
+    [
+     1795012200000,
+     352.45
+    ],
+    [
+     1795098600000,
+     349.21
+    ]
+   ]
+  },
+  "live": {
+   "source": {
+    "id": "yahoo_finance",
+    "name": "Yahoo Finance",
+    "url": "https://finance.yahoo.com/"
+   },
+   "fetchedAt": "2026-11-20T12:52:37.248Z",
+   "staleAfter": "2026-11-20T12:53:37.248Z",
+   "stale": false,
+   "delayed": 15,
+   "views": [
+    "1D",
+    "1W",
+    "1M",
+    "3M",
+    "1Y",
+    "5Y"
+   ]
+  },
+  "summary": "Apple Inc. (AAPL): $349.21, +1.83% over 1M, market pre, delayed 15 min."
+ },
+ "watchlist": {
+  "component": "Watchlist",
+  "quotes": [
+   {
+    "symbol": "AAPL",
+    "name": "Apple Inc.",
+    "kind": "stock",
+    "exchange": "NasdaqGS",
+    "currency": "USD",
+    "price": 349.21,
+    "change": -3.240000000000009,
+    "changePct": -0.919279330401478,
+    "prevClose": 352.45,
+    "dayLow": 346.47,
+    "dayHigh": 355.28,
+    "low52": 243.42,
+    "high52": 360.83,
+    "volume": 40469518,
+    "marketState": "pre",
+    "asOf": "2026-11-19T21:00:01.000Z",
+    "delayedMinutes": 15,
+    "chart": {
+     "range": "1D",
+     "points": [
+      [
+       1795098600000,
+       352.31
+      ],
+      [
+       1795099200000,
+       349.39
+      ],
+      [
+       1795099800000,
+       348.6
+      ],
+      [
+       1795100400000,
+       349.69
+      ],
+      [
+       1795101000000,
+       349.25
+      ],
+      [
+       1795101600000,
+       348.83
+      ],
+      [
+       1795102200000,
+       348.37
+      ],
+      [
+       1795102800000,
+       349.38
+      ],
+      [
+       1795103400000,
+       349.07
+      ],
+      [
+       1795104000000,
+       349.83
+      ],
+      [
+       1795104600000,
+       349.42
+      ],
+      [
+       1795105200000,
+       349.41
+      ],
+      [
+       1795105800000,
+       349.5283
+      ],
+      [
+       1795106400000,
+       349.7317
+      ],
+      [
+       1795107000000,
+       349.41
+      ],
+      [
+       1795107600000,
+       347.2
+      ],
+      [
+       1795108200000,
+       347.3499
+      ],
+      [
+       1795108800000,
+       350.12
+      ],
+      [
+       1795109400000,
+       350.3912
+      ],
+      [
+       1795110000000,
+       349.6351
+      ],
+      [
+       1795110600000,
+       349.66
+      ],
+      [
+       1795111200000,
+       348.75
+      ],
+      [
+       1795111800000,
+       347.95
+      ],
+      [
+       1795112400000,
+       348.985
+      ],
+      [
+       1795113000000,
+       350.09
+      ],
+      [
+       1795113600000,
+       349.64
+      ],
+      [
+       1795114200000,
+       349.37
+      ],
+      [
+       1795114800000,
+       349.085
+      ],
+      [
+       1795115400000,
+       348.915
+      ],
+      [
+       1795116000000,
+       349.3064
+      ],
+      [
+       1795116600000,
+       350.115
+      ],
+      [
+       1795117200000,
+       349.8002
+      ],
+      [
+       1795117800000,
+       349.25
+      ],
+      [
+       1795118400000,
+       348.75
+      ],
+      [
+       1795119000000,
+       348.8
+      ],
+      [
+       1795119600000,
+       349.57
+      ],
+      [
+       1795120200000,
+       348.825
+      ],
+      [
+       1795120800000,
+       348.9
+      ],
+      [
+       1795121400000,
+       349.23
+      ],
+      [
+       1795122000000,
+       349.21
+      ]
+     ]
+    }
+   },
+   {
+    "symbol": "TSLA",
+    "name": "Tesla, Inc.",
+    "kind": "stock",
+    "exchange": "NasdaqGS",
+    "currency": "USD",
+    "price": 374.41,
+    "change": -9.310000000000002,
+    "changePct": -2.4262483060565,
+    "prevClose": 383.72,
+    "dayLow": 370.81,
+    "dayHigh": 393.598,
+    "low52": 297.38,
+    "high52": 498.83,
+    "volume": 25476067,
+    "marketState": "pre",
+    "asOf": "2026-11-19T21:00:01.000Z",
+    "delayedMinutes": 15,
+    "chart": {
+     "range": "1D",
+     "points": [
+      [
+       1795098600000,
+       393.06
+      ],
+      [
+       1795099200000,
+       389.838
+      ],
+      [
+       1795099800000,
+       386.06
+      ],
+      [
+       1795100400000,
+       386.71
+      ],
+      [
+       1795101000000,
+       385.0125
+      ],
+      [
+       1795101600000,
+       383.055
+      ],
+      [
+       1795102200000,
+       379.49
+      ],
+      [
+       1795102800000,
+       381.155
+      ],
+      [
+       1795103400000,
+       379.01
+      ],
+      [
+       1795104000000,
+       382.075
+      ],
+      [
+       1795104600000,
+       381.2218
+      ],
+      [
+       1795105200000,
+       381.5
+      ],
+      [
+       1795105800000,
+       381.655
+      ],
+      [
+       1795106400000,
+       382.325
+      ],
+      [
+       1795107000000,
+       378.6199
+      ],
+      [
+       1795107600000,
+       373.25
+      ],
+      [
+       1795108200000,
+       374.68
+      ],
+      [
+       1795108800000,
+       379.35
+      ],
+      [
+       1795109400000,
+       381.3693
+      ],
+      [
+       1795110000000,
+       378.07
+      ],
+      [
+       1795110600000,
+       379.73
+      ],
+      [
+       1795111200000,
+       377.755
+      ],
+      [
+       1795111800000,
+       376.64
+      ],
+      [
+       1795112400000,
+       377.7
+      ],
+      [
+       1795113000000,
+       379.415
+      ],
+      [
+       1795113600000,
+       378.01
+      ],
+      [
+       1795114200000,
+       377.31
+      ],
+      [
+       1795114800000,
+       376.56
+      ],
+      [
+       1795115400000,
+       377.0399
+      ],
+      [
+       1795116000000,
+       376.5125
+      ],
+      [
+       1795116600000,
+       378.06
+      ],
+      [
+       1795117200000,
+       377.975
+      ],
+      [
+       1795117800000,
+       376.62
+      ],
+      [
+       1795118400000,
+       374.77
+      ],
+      [
+       1795119000000,
+       374.8
+      ],
+      [
+       1795119600000,
+       375.865
+      ],
+      [
+       1795120200000,
+       374.53
+      ],
+      [
+       1795120800000,
+       375.9
+      ],
+      [
+       1795121400000,
+       376.01
+      ],
+      [
+       1795122000000,
+       374.41
+      ]
+     ]
+    }
+   },
+   {
+    "symbol": "ETH",
+    "name": "Ethereum",
+    "kind": "crypto",
+    "currency": "USD",
+    "price": 1738.23,
+    "change": -66.11112862450432,
+    "changePct": -3.66401,
+    "prevClose": 1804.3411286245043,
+    "dayLow": 1717.73,
+    "dayHigh": 1813.98,
+    "volume": 12422604195,
+    "marketCap": 212400405214,
+    "logoUrl": "https://coin-images.coingecko.com/coins/images/279/large/ethereum.png?1696501628",
+    "marketState": "24h",
+    "asOf": "2026-11-20T12:51:56.000Z",
+    "chart": {
+     "range": "1D",
+     "points": [
+      [
+       1795095820191.6167,
+       1805.8929
+      ],
+      [
+       1795099441748.503,
+       1804.5268
+      ],
+      [
+       1795103063305.3892,
+       1811.4897
+      ],
+      [
+       1795106684862.2754,
+       1796.91
+      ],
+      [
+       1795110306419.1616,
+       1779.5632
+      ],
+      [
+       1795113927976.0479,
+       1768.6576
+      ],
+      [
+       1795117549532.934,
+       1769.8122
+      ],
+      [
+       1795121171089.8203,
+       1776.0219
+      ],
+      [
+       1795124792646.7065,
+       1767.435
+      ],
+      [
+       1795128414203.5928,
+       1759.4164
+      ],
+      [
+       1795132035760.479,
+       1740.1455
+      ],
+      [
+       1795135657317.3652,
+       1759.1926
+      ],
+      [
+       1795139278874.2515,
+       1755.5898
+      ],
+      [
+       1795142900431.1377,
+       1754.4832
+      ],
+      [
+       1795146521988.024,
+       1733.2989
+      ],
+      [
+       1795150143544.9102,
+       1746.3954
+      ],
+      [
+       1795153765101.7964,
+       1744.6082
+      ],
+      [
+       1795157386658.6826,
+       1725.45
+      ],
+      [
+       1795161008215.5688,
+       1740.0032
+      ],
+      [
+       1795164629772.455,
+       1748.2874
+      ],
+      [
+       1795168251329.3413,
+       1751.2657
+      ],
+      [
+       1795171872886.2275,
+       1749.6607
+      ],
+      [
+       1795175494443.1138,
+       1744.7465
+      ],
+      [
+       1795179116000,
+       1755.3907
+      ]
+     ]
+    }
+   },
+   {
+    "symbol": "PSEI.PS",
+    "name": "PSEi INDEX",
+    "kind": "index",
+    "exchange": "Philippine",
+    "currency": "PHP",
+    "price": 5306.98,
+    "change": -170.9300000000003,
+    "changePct": -3.1203506446801845,
+    "prevClose": 5477.91,
+    "dayLow": 5249.76,
+    "dayHigh": 5428.79,
+    "low52": 5249.76,
+    "high52": 7552.2,
+    "volume": 0,
+    "marketState": "closed",
+    "asOf": "2026-11-20T06:50:00.000Z",
+    "delayedMinutes": 15,
+    "chart": {
+     "range": "1D",
+     "points": [
+      [
+       1795138200000,
+       5407.54
+      ],
+      [
+       1795138800000,
+       5378.2002
+      ],
+      [
+       1795139400000,
+       5370.8799
+      ],
+      [
+       1795140000000,
+       5363.8398
+      ],
+      [
+       1795140600000,
+       5363.0898
+      ],
+      [
+       1795141200000,
+       5364.48
+      ],
+      [
+       1795141800000,
+       5325.9102
+      ],
+      [
+       1795142400000,
+       5312.4702
+      ],
+      [
+       1795143000000,
+       5300.52
+      ],
+      [
+       1795143600000,
+       5297.1401
+      ],
+      [
+       1795144200000,
+       5279.3398
+      ],
+      [
+       1795144800000,
+       5266.29
+      ],
+      [
+       1795145400000,
+       5258.1001
+      ],
+      [
+       1795146000000,
+       5253.0298
+      ],
+      [
+       1795146600000,
+       5254.1099
+      ],
+      [
+       1795147200000,
+       5257.1001
+      ],
+      [
+       1795147800000,
+       5257.1001
+      ],
+      [
+       1795148400000,
+       5257.1001
+      ],
+      [
+       1795149000000,
+       5257.1001
+      ],
+      [
+       1795149600000,
+       5257.1001
+      ],
+      [
+       1795150200000,
+       5257.1001
+      ],
+      [
+       1795150800000,
+       5259.29
+      ],
+      [
+       1795151400000,
+       5261.1299
+      ],
+      [
+       1795152000000,
+       5267.9199
+      ],
+      [
+       1795152600000,
+       5264.3398
+      ],
+      [
+       1795153200000,
+       5266.3799
+      ],
+      [
+       1795153800000,
+       5276.6099
+      ],
+      [
+       1795154400000,
+       5279.0801
+      ],
+      [
+       1795155000000,
+       5284.04
+      ],
+      [
+       1795155600000,
+       5294.5898
+      ],
+      [
+       1795156200000,
+       5310.1499
+      ],
+      [
+       1795156800000,
+       5287.4302
+      ],
+      [
+       1795157400000,
+       5306.98
+      ]
+     ]
+    }
+   }
+  ],
+  "live": {
+   "source": {
+    "id": "yahoo_finance",
+    "name": "Yahoo Finance",
+    "url": "https://finance.yahoo.com/"
+   },
+   "sources": [
+    {
+     "id": "coingecko",
+     "name": "CoinGecko",
+     "url": "https://www.coingecko.com/"
+    }
+   ],
+   "fetchedAt": "2026-11-20T12:52:37.404Z",
+   "staleAfter": "2026-11-20T12:53:37.404Z",
+   "stale": false,
+   "delayed": 15
+  },
+  "summary": "AAPL $349.21 -0.92%; TSLA $374.41 -2.43%; ETH $1,738.23 -3.66%; PSEI.PS \u20b15,306.98 -3.12%"
+ },
+ "fx": {
+  "component": "Currency",
+  "base": "USD",
+  "amount": 100,
+  "date": "2026-11-19",
+  "rates": [
+   {
+    "to": "PHP",
+    "rate": 63.695
+   }
+  ],
+  "trend": {
+   "to": "PHP",
+   "points": [
+    [
+     "2026-10-20",
+     63.133
+    ],
+    [
+     "2026-10-21",
+     63.309
+    ],
+    [
+     "2026-10-22",
+     63.509
+    ],
+    [
+     "2026-10-23",
+     63.642
+    ],
+    [
+     "2026-10-26",
+     63.944
+    ],
+    [
+     "2026-10-27",
+     63.994
+    ],
+    [
+     "2026-10-28",
+     63.99
+    ],
+    [
+     "2026-10-29",
+     63.838
+    ],
+    [
+     "2026-10-30",
+     63.68
+    ],
+    [
+     "2026-11-02",
+     63.547
+    ],
+    [
+     "2026-11-03",
+     63.461
+    ],
+    [
+     "2026-11-04",
+     63.529
+    ],
+    [
+     "2026-11-05",
+     62.995
+    ],
+    [
+     "2026-11-06",
+     63.017
+    ],
+    [
+     "2026-11-09",
+     63.175
+    ],
+    [
+     "2026-11-10",
+     62.904
+    ],
+    [
+     "2026-11-11",
+     63.251
+    ],
+    [
+     "2026-11-12",
+     63.727
+    ],
+    [
+     "2026-11-13",
+     63.813
+    ],
+    [
+     "2026-11-16",
+     63.954
+    ],
+    [
+     "2026-11-17",
+     63.676
+    ],
+    [
+     "2026-11-18",
+     63.669
+    ],
+    [
+     "2026-11-19",
+     63.695
+    ]
+   ]
+  },
+  "live": {
+   "source": {
+    "id": "frankfurter",
+    "name": "Frankfurter (central bank rates)",
+    "url": "https://frankfurter.dev/"
+   },
+   "fetchedAt": "2026-11-20T12:52:38.077Z",
+   "staleAfter": "2026-11-20T15:52:38.077Z",
+   "stale": false
+  },
+  "summary": "100 USD = 6369.50 PHP (reference rates of 2026-11-19)."
+ },
+ "fx_many": {
+  "component": "Currency",
+  "base": "EUR",
+  "amount": 1,
+  "date": "2026-11-19",
+  "rates": [
+   {
+    "to": "GBP",
+    "rate": 0.83581
+   },
+   {
+    "to": "JPY",
+    "rate": 175.84
+   },
+   {
+    "to": "USD",
+    "rate": 1.0992
+   }
+  ],
+  "live": {
+   "source": {
+    "id": "frankfurter",
+    "name": "Frankfurter (central bank rates)",
+    "url": "https://frankfurter.dev/"
+   },
+   "fetchedAt": "2026-11-20T12:52:39.171Z",
+   "staleAfter": "2026-11-20T15:52:39.171Z",
+   "stale": false
+  },
+  "summary": "1 EUR = 0.8358 GBP; 1 EUR = 175.84 JPY; 1 EUR = 1.0992 USD (reference rates of 2026-11-19)."
+ },
+ "clock": {
+  "component": "WorldClock",
+  "places": [
+   {
+    "name": "Manila",
+    "tz": "Asia/Manila",
+    "country": "PH"
+   },
+   {
+    "name": "San Francisco",
+    "tz": "America/Los_Angeles",
+    "country": "US"
+   },
+   {
+    "name": "London",
+    "tz": "Europe/London",
+    "country": "GB"
+   }
+  ],
+  "summary": "Manila: 20:52 on 2026-11-20 (UTC+8); San Francisco: 04:52 on 2026-11-20 (UTC-8); London: 12:52 on 2026-11-20 (UTC+0)"
+ },
+ "holidays": {
+  "component": "Holidays",
+  "country": "PH",
+  "holidays": [
+   {
+    "date": "2026-11-30",
+    "name": "Bonifacio Day",
+    "localName": "Araw ni Gat Andres Bonifacio",
+    "types": [
+     "Public"
+    ]
+   },
+   {
+    "date": "2026-12-08",
+    "name": "Feast of the Immaculate Conception of Mary",
+    "localName": "Kapistahan ng Immaculada Concepcion",
+    "types": [
+     "Public"
+    ]
+   },
+   {
+    "date": "2026-12-24",
+    "name": "Christmas Eve",
+    "types": [
+     "Public"
+    ]
+   },
+   {
+    "date": "2026-12-25",
+    "name": "Christmas Day",
+    "localName": "Araw ng Pasko",
+    "types": [
+     "Public"
+    ]
+   },
+   {
+    "date": "2026-12-30",
+    "name": "Rizal Day",
+    "localName": "Araw ng Kamatayan ni Dr. Jose Rizal",
+    "types": [
+     "Public"
+    ]
+   },
+   {
+    "date": "2026-12-31",
+    "name": "Last Day of The Year",
+    "localName": "Huling Araw ng Taon",
+    "types": [
+     "Public"
+    ]
+   }
+  ],
+  "today": "2026-11-20",
+  "live": {
+   "source": {
+    "id": "nager_date",
+    "name": "Nager.Date",
+    "url": "https://date.nager.at/"
+   },
+   "fetchedAt": "2026-11-20T12:52:40.086Z",
+   "staleAfter": "2026-11-21T12:52:40.086Z"
+  },
+  "summary": "2026-11-30 Bonifacio Day; 2026-12-08 Feast of the Immaculate Conception of Mary; 2026-12-24 Christmas Eve; 2026-12-25 Christmas Day; 2026-12-30 Rizal Day; 2026-12-31 Last Day of The Year"
+ },
+ "quakes": {
+  "component": "Quake",
+  "near": {
+   "name": "Manila",
+   "lat": 14.6042,
+   "lng": 120.9822
+  },
+  "quakes": [
+   {
+    "id": "us6000ubvt",
+    "magnitude": 4.4,
+    "place": "12 km SSE of Jimalalud, Philippines",
+    "time": "2026-11-18T20:30:54.635Z",
+    "lng": 123.257,
+    "lat": 9.8835,
+    "depthKm": 10,
+    "tsunami": false,
+    "felt": 2,
+    "url": "https://earthquake.usgs.gov/earthquakes/eventpage/us6000ubvt",
+    "distanceKm": 580
+   },
+   {
+    "id": "us7000tyum",
+    "magnitude": 4.4,
+    "place": "35 km WSW of Palauig, Philippines",
+    "time": "2026-11-17T20:12:28.569Z",
+    "lng": 119.6092,
+    "lat": 15.2971,
+    "depthKm": 10,
+    "tsunami": false,
+    "url": "https://earthquake.usgs.gov/earthquakes/eventpage/us7000tyum",
+    "distanceKm": 166
+   },
+   {
+    "id": "us7000tyes",
+    "magnitude": 4.6,
+    "place": "27 km ESE of Union, Philippines",
+    "time": "2026-11-15T14:17:52.535Z",
+    "lng": 126.3512,
+    "lat": 9.6916,
+    "depthKm": 10,
+    "tsunami": false,
+    "url": "https://earthquake.usgs.gov/earthquakes/eventpage/us7000tyes",
+    "distanceKm": 799
+   },
+   {
+    "id": "us7000tyek",
+    "magnitude": 5.5,
+    "place": "9 km E of Union, Philippines",
+    "time": "2026-11-15T13:41:35.701Z",
+    "lng": 126.2,
+    "lat": 9.7595,
+    "depthKm": 10,
+    "tsunami": false,
+    "felt": 15,
+    "alert": "green",
+    "url": "https://earthquake.usgs.gov/earthquakes/eventpage/us7000tyek",
+    "distanceKm": 782
+   },
+   {
+    "id": "us7000ty9l",
+    "magnitude": 4.9,
+    "place": "7 km SE of Tagbina, Philippines",
+    "time": "2026-11-14T16:04:22.205Z",
+    "lng": 126.2112,
+    "lat": 8.3996,
+    "depthKm": 154,
+    "tsunami": false,
+    "url": "https://earthquake.usgs.gov/earthquakes/eventpage/us7000ty9l",
+    "distanceKm": 895
+   },
+   {
+    "id": "us7000ty5b",
+    "magnitude": 4.5,
+    "place": "22 km NE of Kinablangan, Philippines",
+    "time": "2026-11-13T23:58:23.875Z",
+    "lng": 126.6692,
+    "lat": 7.8529,
+    "depthKm": 10,
+    "tsunami": false,
+    "url": "https://earthquake.usgs.gov/earthquakes/eventpage/us7000ty5b",
+    "distanceKm": 974
+   }
+  ],
+  "live": {
+   "source": {
+    "id": "usgs",
+    "name": "USGS",
+    "url": "https://earthquake.usgs.gov/"
+   },
+   "fetchedAt": "2026-11-20T12:52:40.850Z",
+   "staleAfter": "2026-11-20T13:02:40.850Z"
+  },
+  "summary": "M4.4 12 km SSE of Jimalalud, Philippines at 2026-11-18T20:30:54.635Z (580 km away); M4.4 35 km WSW of Palauig, Philippines at 2026-11-17T20:12:28.569Z (166 km away); M4.6 27 km ESE of Union, Philippines at 2026-11-15T14:17:52.535Z (799 km away); M5.5 9 km E of Union, Philippines at 2026-11-15T13:41:35.701Z (782 km away); M4.9 7 km SE of Tagbina, Philippines at 2026-11-14T16:04:22.205Z (895 km away); M4.5 22 km NE of Kinablangan, Philippines at 2026-11-13T23:58:23.875Z (974 km away)"
+ },
+ "storms": {
+  "component": "Storm",
+  "near": {
+   "name": "Manila",
+   "lat": 14.6042,
+   "lng": 120.9822
+  },
+  "storms": [
+   {
+    "id": "1001351",
+    "name": "AKVAN",
+    "alert": "green",
+    "category": "Tropical Depression (maximum wind speed of 83 km/h)",
+    "windKph": 83,
+    "lng": 84.7,
+    "lat": 17.2,
+    "from": "2026-11-16T18:00:00",
+    "to": "2026-11-19T18:00:00",
+    "countries": "India",
+    "url": "https://www.gdacs.org/report.aspx?eventid=1001351&episodeid=13&eventtype=TC",
+    "distanceKm": 3885
+   },
+   {
+    "id": "1001350",
+    "name": "XAVIER",
+    "alert": "green",
+    "category": "Hurricane/Typhoon > 74 mph (maximum wind speed of 241 km/h)",
+    "windKph": 241,
+    "lng": -162.8,
+    "lat": -11,
+    "from": "2026-11-15T06:00:00",
+    "to": "2026-11-20T06:00:00",
+    "countries": "American Samoa, Samoa",
+    "url": "https://www.gdacs.org/report.aspx?eventid=1001350&episodeid=12&eventtype=TC",
+    "distanceKm": 8866
+   }
+  ],
+  "live": {
+   "source": {
+    "id": "gdacs",
+    "name": "GDACS (EU JRC)",
+    "url": "https://www.gdacs.org/"
+   },
+   "fetchedAt": "2026-11-20T12:52:42.404Z",
+   "staleAfter": "2026-11-20T13:02:42.404Z"
+  },
+  "summary": "AKVAN: green alert, winds 83 km/h, 3885 km away, India; XAVIER: green alert, winds 241 km/h, 8866 km away, American Samoa, Samoa"
+ },
+ "summary": {
+  "component": "Summary",
+  "title": "Jollibee",
+  "subtitle": "Filipino fast-food restaurant chain",
+  "imageUrl": "https://thumb.wikimedia.org/wikipedia/en/thumb/8/84/Jollibee_2011_logo.svg/330px-Jollibee_2011_logo.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+  "text": "Jollibee is a Filipino fast-food restaurant chain and the flagship brand of Jollibee Foods Corporation (JFC). Established in 1978 by Tony Tan Caktiong, it is the Philippines' top fast-food restaurant and is among the world's fastest-growing restaurant chains, having expanded its international presence almost sixfold from 2014 to 2024.",
+  "url": "https://en.wikipedia.org/wiki/Jollibee",
+  "source": {
+   "name": "Wikipedia",
+   "url": "https://en.wikipedia.org/wiki/Jollibee"
+  },
+  "live": {
+   "source": {
+    "id": "wikipedia",
+    "name": "Wikipedia",
+    "url": "https://en.wikipedia.org/wiki/Jollibee",
+    "license": "CC BY-SA 4.0"
+   },
+   "fetchedAt": "2026-11-20T12:52:43.034Z",
+   "staleAfter": "2026-11-27T12:52:43.034Z"
+  },
+  "summary": "Jollibee (Filipino fast-food restaurant chain): Jollibee is a Filipino fast-food restaurant chain and the flagship brand of Jollibee Foods Corporation (JFC). Established in 1978 by Tony Tan Caktiong, it is the Philippines' top fast-food restaurant and is among the world's fastest-growing restaurant chains, having expanded its international presence almost sixfold from 2014 to 2024."
+ },
+ "define": {
+  "component": "Definition",
+  "word": "serendipity",
+  "phonetic": "/\u02ccs\u025b.\u0279\u0259n.\u02c8d\u026a.p\u026a.ti/",
+  "audioUrl": "https://api.dictionaryapi.dev/media/pronunciations/en/serendipity-au.mp3",
+  "senses": [
+   {
+    "pos": "noun",
+    "meaning": "A combination of events which have come together by chance to make a surprisingly good or wonderful outcome."
+   },
+   {
+    "pos": "noun",
+    "meaning": "An unsought, unintended, and/or unexpected, but fortunate, discovery and/or learning experience that happens by accident."
+   }
+  ],
+  "synonyms": [
+   "chance",
+   "luck"
+  ],
+  "source": {
+   "name": "Wiktionary",
+   "url": "https://en.wiktionary.org/wiki/serendipity"
+  },
+  "live": {
+   "source": {
+    "id": "free_dictionary",
+    "name": "Wiktionary",
+    "url": "https://en.wiktionary.org/wiki/serendipity",
+    "license": "CC BY-SA 3.0"
+   },
+   "fetchedAt": "2026-11-20T12:52:43.558Z",
+   "staleAfter": "2026-12-20T12:52:43.558Z"
+  },
+  "summary": "serendipity /\u02ccs\u025b.\u0279\u0259n.\u02c8d\u026a.p\u026a.ti/: (noun) A combination of events which have come together by chance to make a surprisingly good or wonderful outcome. (noun) An unsought, unintended, and/or unexpected, but fortunate, discovery and/or learning experience that happens by accident."
+ },
+ "book": {
+  "component": "Media",
+  "kind": "book",
+  "title": "Dune",
+  "subtitle": "Frank Herbert",
+  "imageUrl": "https://covers.openlibrary.org/b/id/11481354-L.jpg",
+  "year": "1965",
+  "rating": 4.3,
+  "ratingMax": 5,
+  "facts": [
+   {
+    "label": "Author",
+    "value": "Frank Herbert"
+   },
+   {
+    "label": "First published",
+    "value": "1965"
+   },
+   {
+    "label": "Pages",
+    "value": "606"
+   },
+   {
+    "label": "Subjects",
+    "value": "Dune (Imaginary place), Fiction, Fiction, science fiction, general, Dune (imaginary place), fiction"
+   }
+  ],
+  "url": "https://openlibrary.org/works/OL893414W",
+  "source": {
+   "name": "Open Library",
+   "url": "https://openlibrary.org/works/OL893414W"
+  },
+  "live": {
+   "source": {
+    "id": "open_library",
+    "name": "Open Library",
+    "url": "https://openlibrary.org/works/OL893414W"
+   },
+   "fetchedAt": "2026-11-20T12:52:44.651Z",
+   "staleAfter": "2026-11-27T12:52:44.651Z"
+  },
+  "summary": "Dune by Frank Herbert (1965), rated 4.3/5 on Open Library."
+ },
+ "scores": {
+  "component": "Score",
+  "league": "NBA",
+  "games": [
+   {
+    "id": "401910019",
+    "league": "NBA",
+    "name": "Golden State Warriors at Memphis Grizzlies",
+    "start": "2026-11-20T01:00Z",
+    "state": "post",
+    "detail": "Final",
+    "clock": "0.0",
+    "period": 4,
+    "venue": "FedExForum",
+    "teams": [
+     {
+      "name": "Golden State Warriors",
+      "abbr": "GS",
+      "score": "98",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/scoreboard/gs.png",
+      "color": "fdb927",
+      "record": "8-8",
+      "home": false,
+      "winner": false
+     },
+     {
+      "name": "Memphis Grizzlies",
+      "abbr": "MEM",
+      "score": "126",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/scoreboard/mem.png",
+      "color": "5d76a9",
+      "record": "12-4",
+      "home": true,
+      "winner": true
+     }
+    ],
+    "url": "https://www.espn.com/nba/game/_/gameId/401910019/warriors-grizzlies"
+   },
+   {
+    "id": "401910020",
+    "league": "NBA",
+    "name": "Portland Trail Blazers at Milwaukee Bucks",
+    "start": "2026-11-20T01:00Z",
+    "state": "post",
+    "detail": "Final",
+    "clock": "0.0",
+    "period": 4,
+    "venue": "Fiserv Forum",
+    "teams": [
+     {
+      "name": "Portland Trail Blazers",
+      "abbr": "POR",
+      "score": "124",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/scoreboard/por.png",
+      "color": "e03a3e",
+      "record": "10-5",
+      "home": false,
+      "winner": true
+     },
+     {
+      "name": "Milwaukee Bucks",
+      "abbr": "MIL",
+      "score": "114",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/scoreboard/mil.png",
+      "color": "00471b",
+      "record": "1-15",
+      "home": true,
+      "winner": false
+     }
+    ],
+    "url": "https://www.espn.com/nba/game/_/gameId/401910020/trail-blazers-bucks"
+   },
+   {
+    "id": "401910021",
+    "league": "NBA",
+    "name": "New York Knicks at Minnesota Timberwolves",
+    "start": "2026-11-20T01:00Z",
+    "state": "post",
+    "detail": "Final",
+    "clock": "0.0",
+    "period": 4,
+    "venue": "Target Center",
+    "teams": [
+     {
+      "name": "New York Knicks",
+      "abbr": "NY",
+      "score": "102",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/scoreboard/ny.png",
+      "color": "1d428a",
+      "record": "9-6",
+      "home": false,
+      "winner": true
+     },
+     {
+      "name": "Minnesota Timberwolves",
+      "abbr": "MIN",
+      "score": "99",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/scoreboard/min.png",
+      "color": "266092",
+      "record": "11-5",
+      "home": true,
+      "winner": false
+     }
+    ],
+    "url": "https://www.espn.com/nba/game/_/gameId/401910021/knicks-timberwolves"
+   },
+   {
+    "id": "401910022",
+    "league": "NBA",
+    "name": "LA Clippers at San Antonio Spurs",
+    "start": "2026-11-20T01:00Z",
+    "state": "post",
+    "detail": "Final",
+    "clock": "0.0",
+    "period": 4,
+    "venue": "Frost Bank Center",
+    "teams": [
+     {
+      "name": "LA Clippers",
+      "abbr": "LAC",
+      "score": "112",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/scoreboard/lac.png",
+      "color": "12173f",
+      "record": "4-10",
+      "home": false,
+      "winner": false
+     },
+     {
+      "name": "San Antonio Spurs",
+      "abbr": "SA",
+      "score": "124",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/scoreboard/sa.png",
+      "color": "000000",
+      "record": "13-3",
+      "home": true,
+      "winner": true
+     }
+    ],
+    "url": "https://www.espn.com/nba/game/_/gameId/401910022/clippers-spurs"
+   }
+  ],
+  "live": {
+   "source": {
+    "id": "espn",
+    "name": "ESPN",
+    "url": "https://www.espn.com/"
+   },
+   "fetchedAt": "2026-11-20T12:52:45.252Z",
+   "staleAfter": "2026-11-20T13:02:45.252Z"
+  },
+  "summary": "GS 98 \u2013 MEM 126 (Final); POR 124 \u2013 MIL 114 (Final); NY 102 \u2013 MIN 99 (Final); LAC 112 \u2013 SA 124 (Final)"
+ },
+ "standings": {
+  "component": "Standings",
+  "league": "Premier League",
+  "groups": [
+   {
+    "name": "2026-27 English Premier League",
+    "rows": [
+     {
+      "rank": 1,
+      "team": "Arsenal",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/359.png",
+      "played": 10,
+      "won": 9,
+      "drawn": 0,
+      "lost": 1,
+      "points": 27,
+      "diff": "+10"
+     },
+     {
+      "rank": 2,
+      "team": "Brighton & Hove Albion",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/331.png",
+      "played": 10,
+      "won": 7,
+      "drawn": 1,
+      "lost": 2,
+      "points": 22,
+      "diff": "+19"
+     },
+     {
+      "rank": 3,
+      "team": "Manchester City",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/382.png",
+      "played": 10,
+      "won": 7,
+      "drawn": 0,
+      "lost": 3,
+      "points": 21,
+      "diff": "+8"
+     },
+     {
+      "rank": 4,
+      "team": "Liverpool",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/364.png",
+      "played": 10,
+      "won": 5,
+      "drawn": 3,
+      "lost": 2,
+      "points": 18,
+      "diff": "+4"
+     },
+     {
+      "rank": 5,
+      "team": "Chelsea",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/363.png",
+      "played": 10,
+      "won": 5,
+      "drawn": 1,
+      "lost": 4,
+      "points": 16,
+      "diff": "+3"
+     },
+     {
+      "rank": 6,
+      "team": "Everton",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/368.png",
+      "played": 10,
+      "won": 4,
+      "drawn": 4,
+      "lost": 2,
+      "points": 16,
+      "diff": "+2"
+     },
+     {
+      "rank": 7,
+      "team": "AFC Bournemouth",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/349.png",
+      "played": 10,
+      "won": 4,
+      "drawn": 3,
+      "lost": 3,
+      "points": 15,
+      "diff": "+2"
+     },
+     {
+      "rank": 8,
+      "team": "Brentford",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/337.png",
+      "played": 10,
+      "won": 3,
+      "drawn": 5,
+      "lost": 2,
+      "points": 14,
+      "diff": "+5"
+     },
+     {
+      "rank": 9,
+      "team": "Leeds United",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/357.png",
+      "played": 10,
+      "won": 3,
+      "drawn": 5,
+      "lost": 2,
+      "points": 14,
+      "diff": "+2"
+     },
+     {
+      "rank": 10,
+      "team": "Aston Villa",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/362.png",
+      "played": 10,
+      "won": 3,
+      "drawn": 4,
+      "lost": 3,
+      "points": 13,
+      "diff": "-3"
+     },
+     {
+      "rank": 11,
+      "team": "Tottenham Hotspur",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/367.png",
+      "played": 10,
+      "won": 3,
+      "drawn": 3,
+      "lost": 4,
+      "points": 12,
+      "diff": "-1"
+     },
+     {
+      "rank": 12,
+      "team": "Newcastle United",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/361.png",
+      "played": 10,
+      "won": 3,
+      "drawn": 3,
+      "lost": 4,
+      "points": 12,
+      "diff": "-3"
+     },
+     {
+      "rank": 13,
+      "team": "Hull City",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/306.png",
+      "played": 10,
+      "won": 2,
+      "drawn": 5,
+      "lost": 3,
+      "points": 11,
+      "diff": "0"
+     },
+     {
+      "rank": 14,
+      "team": "Ipswich Town",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/373.png",
+      "played": 10,
+      "won": 3,
+      "drawn": 2,
+      "lost": 5,
+      "points": 11,
+      "diff": "-5"
+     },
+     {
+      "rank": 15,
+      "team": "Fulham",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/370.png",
+      "played": 10,
+      "won": 2,
+      "drawn": 4,
+      "lost": 4,
+      "points": 10,
+      "diff": "-2"
+     },
+     {
+      "rank": 16,
+      "team": "Nottingham Forest",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/393.png",
+      "played": 10,
+      "won": 2,
+      "drawn": 3,
+      "lost": 5,
+      "points": 9,
+      "diff": "-4"
+     },
+     {
+      "rank": 17,
+      "team": "Coventry City",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/388.png",
+      "played": 10,
+      "won": 3,
+      "drawn": 0,
+      "lost": 7,
+      "points": 9,
+      "diff": "-9"
+     },
+     {
+      "rank": 18,
+      "team": "Manchester United",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/360.png",
+      "played": 10,
+      "won": 1,
+      "drawn": 5,
+      "lost": 4,
+      "points": 8,
+      "diff": "-5"
+     },
+     {
+      "rank": 19,
+      "team": "Sunderland",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/366.png",
+      "played": 10,
+      "won": 2,
+      "drawn": 2,
+      "lost": 6,
+      "points": 8,
+      "diff": "-9"
+     },
+     {
+      "rank": 20,
+      "team": "Crystal Palace",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/384.png",
+      "played": 10,
+      "won": 2,
+      "drawn": 1,
+      "lost": 7,
+      "points": 7,
+      "diff": "-14"
+     }
+    ]
+   }
+  ],
+  "live": {
+   "source": {
+    "id": "espn",
+    "name": "ESPN",
+    "url": "https://www.espn.com/"
+   },
+   "fetchedAt": "2026-11-20T12:52:45.465Z",
+   "staleAfter": "2026-11-20T13:22:45.465Z"
+  },
+  "summary": "2026-27 English Premier League: 1. Arsenal 27 pts, 2. Brighton & Hove Albion 22 pts, 3. Manchester City 21 pts, 4. Liverpool 18 pts, 5. Chelsea 16 pts, 6. Everton 16 pts"
+ }
+}

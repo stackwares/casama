@@ -277,7 +277,7 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
   registry.register({
     name: "web.search",
     description:
-      "Search the web. Returns titles, links and snippets; read a page's text with web.fetch (cheaper than http.request), or open it in the browser when it needs clicking or a sign-in.",
+      "Search the web. Returns titles, links and snippets; read a page's text with web.fetch (cheaper than http.request), or open it in the browser when it needs clicking or a sign-in. Weather, prices, exchange rates, time zones, scores, earthquakes and definitions come from the live tools instead (tools.load live): real data shown as cards.",
     risk: "low",
     readOnly: true,
     untrustedOutput: true,

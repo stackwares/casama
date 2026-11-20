@@ -42,8 +42,8 @@ class BotUiAction {
 }
 
 /// Casama's cards that answer with their own buttons (D-335, D-337), and their events' prefixes.
-const ownButtonCards = {'MessageDraft', 'Event', 'MessageList', 'Checklist', 'Results', 'PersonPicker', 'Schedule'};
-const ownCardEvents = ['draft.', 'event.', 'message.', 'checklist.', 'result.', 'person.', 'schedule.'];
+const ownButtonCards = {'MessageDraft', 'Event', 'MessageList', 'Checklist', 'Results', 'PersonPicker', 'Schedule', 'Quiz'};
+const ownCardEvents = ['draft.', 'event.', 'message.', 'checklist.', 'result.', 'person.', 'schedule.', 'quiz.'];
 
 /// The text of the message an action sends: the chosen values as they read on screen, or the
 /// button's label (also when the values are only flags), or (with neither) the action's name.

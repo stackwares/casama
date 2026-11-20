@@ -41,6 +41,7 @@ const GROUP_PURPOSE: Record<string, string> = {
     "the person's own phone or computer: calendar, contacts, health (sleep, steps, heart rate), places, reminders; read them or ask for access",
   widget:
     "put a verse, quote, countdown, streak, list or picture on the person's home screen and Lock Screen widgets, changing daily by itself",
+  live: "weather, stock and crypto prices, currency rates, time in other places, sun and moon, air quality, holidays, earthquakes, storms, definitions, encyclopedia, books, scores, flights, parcels: real data shown as cards. Load this instead of searching the web for any of these",
   projects:
     "keep work that takes several files or sessions (a game, an app, a site) together: start one and what you make is filed under it",
 };

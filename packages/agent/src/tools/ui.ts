@@ -28,7 +28,7 @@ export {
  */
 export function checkComponents(components: Array<Record<string, unknown>>) {
   try {
-    checkCatalog(components);
+    checkCatalog(components, { fromBot: true });
   } catch (err) {
     if (err instanceof UiCheckError)
       throw new ToolError("invalid_arguments", `${err.message}${catalogHint(err.message)}`);
@@ -50,6 +50,17 @@ const Component = z
 
 export const UiShowArgs = z.object({
   components: z.array(Component).min(1).max(60),
+  data: z
+    .record(z.string(), z.unknown())
+    .optional()
+    .describe('Starting values for inputs: {"form": {"plan": ["pro"]}}'),
+});
+
+const UiShowWire = z.object({
+  components: z
+    .array(z.object({ id: z.string(), component: z.string() }).catchall(z.unknown()))
+    .min(1)
+    .max(60),
   data: z
     .record(z.string(), z.unknown())
     .optional()
@@ -84,7 +95,7 @@ Every input's value is a data path like the ChoicePicker's. A Button's action se
 
 After calling this, end your turn: the answer arrives as the person's next message. A typed letter or number is that option of your last list (A or 1 is first).
 
-Every other component (Map, MessageDraft, Event, Checklist, Stats, Results, Details, Tabs, Video…) is described by ui.catalog, with Button checks: call it for a component's properties before you first use one. Most are cards for what you read, found or set up: show one instead of a long list in your reply, and still say a line in text. To show a place, where things are or a route, use a Map: never open a browser or build a page for it. Show an email, message or post you write for the person as a MessageDraft before sending, unless they said to send it straight away.`;
+Every other component (Map, MessageDraft, Event, Checklist, Stats, Results, Details, Tabs, Video…) is described by ui.catalog, with Button checks: call it for a component's properties before you first use one. Most are cards for what you read, found or set up: show one instead of a long list in your reply, and still say a line in text. To show a place, where things are or a route, use a Map: never open a browser or build a page for it. Show an email, message or post you write for the person as a MessageDraft before sending, unless they said to send it straight away. Recipe, Comparison, ProsCons, Steps, Timeline, Calculator, Translation, Contact, Quiz, Countdown and Dashboard are cards too. Weather, prices, rates and scores come from the live tools, which show their own cards.`;
 
 /**
  * The lettered options of each list question on a shown UI ("Which plan? A) Basic, B) Pro"), so
@@ -130,7 +141,9 @@ export function registerUiTools(registry: ToolRegistry) {
     // never waits for approval, even for bots set to ask before everything.
     readOnly: true,
     schema: UiShowArgs,
-    jsonSchema: leanSchema(UiShowArgs),
+    // The model sees component as a name, not all 60-odd: the parse still checks it, and a wrong
+    // one comes back with the list (that also keeps every call's prompt small).
+    jsonSchema: leanSchema(UiShowWire),
     async execute(args, ctx) {
       const components = normalizeBindings(args.components) as Array<Record<string, unknown>>;
       checkComponents(components);

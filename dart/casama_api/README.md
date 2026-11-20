@@ -187,6 +187,14 @@ Class | Method | HTTP request | Description
 [*BrowserApi*](doc/BrowserApi.md) | [**listHighlights**](doc/BrowserApi.md#listhighlights) | **GET** /v1/me/highlights | Your highlights in a workspace, newest first; one page&#39;s when url is given
 [*BrowserApi*](doc/BrowserApi.md) | [**listPageCommands**](doc/BrowserApi.md#listpagecommands) | **GET** /v1/me/page-commands | Your saved prompts for the / menu in Casama for Chrome
 [*BrowserApi*](doc/BrowserApi.md) | [**updatePageCommand**](doc/BrowserApi.md#updatepagecommand) | **PATCH** /v1/me/page-commands/{id} | 
+[*CardsApi*](doc/CardsApi.md) | [**getCardPrefs**](doc/CardsApi.md#getcardprefs) | **GET** /v1/me/card-prefs | The person&#39;s home city and units for cards
+[*CardsApi*](doc/CardsApi.md) | [**getLiveCards**](doc/CardsApi.md#getlivecards) | **GET** /v1/live-cards | The latest data of the live cards on screen (up to 20 ids, comma separated)
+[*CardsApi*](doc/CardsApi.md) | [**pinLiveCard**](doc/CardsApi.md#pinlivecard) | **POST** /v1/live-cards/{id}/pin | Pin a card to the person&#39;s widgets: a Canvas the server keeps fresh without the bot (the bot&#39;s widget permission applies)
+[*CardsApi*](doc/CardsApi.md) | [**refreshLiveCard**](doc/CardsApi.md#refreshlivecard) | **POST** /v1/live-cards/{id}/refresh | Fetch a card&#39;s data again (through the shared cache), or another of its views. No model call; a failed fetch returns the last card marked stale with the reason
+[*CardsApi*](doc/CardsApi.md) | [**reportLiveCard**](doc/CardsApi.md#reportlivecard) | **POST** /v1/live-cards/{id}/report | Report wrong data on a card (its provider and data are kept, no words)
+[*CardsApi*](doc/CardsApi.md) | [**searchPlaces**](doc/CardsApi.md#searchplaces) | **GET** /v1/places | Cities matching a name, for picking a home city
+[*CardsApi*](doc/CardsApi.md) | [**unpinLiveCard**](doc/CardsApi.md#unpinlivecard) | **DELETE** /v1/live-cards/{id}/pin | Take a pinned card off the widgets
+[*CardsApi*](doc/CardsApi.md) | [**updateCardPrefs**](doc/CardsApi.md#updatecardprefs) | **PUT** /v1/me/card-prefs | Set the person&#39;s home city (a city, never a street) and units for cards
 [*CasamaLinkApi*](doc/CasamaLinkApi.md) | [**approveLinkSignIn**](doc/CasamaLinkApi.md#approvelinksignin) | **POST** /v1/orgs/{id}/link/sign-ins/approve | Link the server that shows this code to the workspace (admins)
 [*CasamaLinkApi*](doc/CasamaLinkApi.md) | [**getLinkSignIn**](doc/CasamaLinkApi.md#getlinksignin) | **GET** /v1/link/sign-ins/{user_code} | The server a link code belongs to, shown before approving
 [*CasamaLinkApi*](doc/CasamaLinkApi.md) | [**listLinkServers**](doc/CasamaLinkApi.md#listlinkservers) | **GET** /v1/orgs/{id}/link/servers | Servers linked to the workspace and their addresses (admins)
@@ -746,6 +754,8 @@ Class | Method | HTTP request | Description
  - [CanvasPreviewEventPayload](doc/CanvasPreviewEventPayload.md)
  - [CanvasRotation](doc/CanvasRotation.md)
  - [CanvasUpdate](doc/CanvasUpdate.md)
+ - [CardPrefs](doc/CardPrefs.md)
+ - [CardUnits](doc/CardUnits.md)
  - [CatalogApp](doc/CatalogApp.md)
  - [CatalogAppApiKey](doc/CatalogAppApiKey.md)
  - [CatalogSkill](doc/CatalogSkill.md)
@@ -1071,6 +1081,8 @@ Class | Method | HTTP request | Description
  - [ListDeviceReadings200Response](doc/ListDeviceReadings200Response.md)
  - [ListDeviceRequests200Response](doc/ListDeviceRequests200Response.md)
  - [ListDeviceSources200Response](doc/ListDeviceSources200Response.md)
+ - [LiveCard](doc/LiveCard.md)
+ - [LiveCardList](doc/LiveCardList.md)
  - [LocalCapabilities](doc/LocalCapabilities.md)
  - [LocalDevice](doc/LocalDevice.md)
  - [LocalDeviceList](doc/LocalDeviceList.md)
@@ -1183,6 +1195,10 @@ Class | Method | HTTP request | Description
  - [PendingInviteList](doc/PendingInviteList.md)
  - [PhoneCall](doc/PhoneCall.md)
  - [PhoneCallList](doc/PhoneCallList.md)
+ - [PinLiveCard](doc/PinLiveCard.md)
+ - [PinnedLiveCard](doc/PinnedLiveCard.md)
+ - [Place](doc/Place.md)
+ - [PlaceList](doc/PlaceList.md)
  - [Plan](doc/Plan.md)
  - [PlanCatalog](doc/PlanCatalog.md)
  - [Plugin](doc/Plugin.md)
@@ -1234,6 +1250,7 @@ Class | Method | HTTP request | Description
  - [ReferralInvitedBy](doc/ReferralInvitedBy.md)
  - [ReferralInvites](doc/ReferralInvites.md)
  - [ReferralPreview](doc/ReferralPreview.md)
+ - [RefreshLiveCard](doc/RefreshLiveCard.md)
  - [RelayAnalyticsRequest](doc/RelayAnalyticsRequest.md)
  - [RelayedAnalyticsEvent](doc/RelayedAnalyticsEvent.md)
  - [ReleaseLeaseRequest](doc/ReleaseLeaseRequest.md)
@@ -1462,6 +1479,7 @@ Class | Method | HTTP request | Description
  - [UiShownEvent](doc/UiShownEvent.md)
  - [UiShownEventPayload](doc/UiShownEventPayload.md)
  - [UpdateAboutYouRequest](doc/UpdateAboutYouRequest.md)
+ - [UpdateCardPrefs](doc/UpdateCardPrefs.md)
  - [UpdateChannelRequest](doc/UpdateChannelRequest.md)
  - [UpdateComputerRequest](doc/UpdateComputerRequest.md)
  - [UpdateConversationRequest](doc/UpdateConversationRequest.md)

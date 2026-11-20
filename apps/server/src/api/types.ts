@@ -82,6 +82,8 @@ export interface AppDeps {
   readiness: Record<string, () => Promise<void>>;
   /** Widget refresh pushes for changes made through the API (D-405); unset: none. */
   glance?: import("@casama/agent").GlancePusher;
+  /** Live data cards (docs/RICH-CARDS-PLAN.md): tests give their own; otherwise built from env. */
+  liveEngine?: import("@casama/agent").LiveEngine | null;
   /** Pushes the API sends itself, such as a watch's "Open on phone" (D-410); unset: none. */
   notifications?: import("@casama/agent").NotificationService;
 }

@@ -20,7 +20,10 @@ import {
   GlancePusher,
   hashEmbedder,
   LangfuseSink,
+  LiveEngine,
   LiveRunPusher,
+  liveCache,
+  liveHttp,
   MediaRouter,
   type ModelGateway,
   memoryStoreFor,
@@ -31,9 +34,11 @@ import {
   openAiEmbedder,
   PLATFORM_OPENROUTER_CREDENTIAL_ID,
   type PushSender,
+  pruneLiveCache,
   RecordingPushSender,
   ReplayGateway,
   recordingGateway,
+  refreshPins,
   registerAutonomyTools,
   registerBotTools,
   registerCallTools,
@@ -49,6 +54,7 @@ import {
   registerKnowledgeTools,
   registerLibraryTools,
   registerLinkTools,
+  registerLiveTools,
   registerLoginTools,
   registerPageTools,
   registerPaymentTools,
@@ -216,6 +222,8 @@ export interface WorkerOptions {
   cloudLockedModel?: string;
   /** Paid data resale on Casama Cloud (D-138): Casama's Treg key, used only when resale is on. */
   dataResale?: { tregKey: string; tregUrl?: string };
+  /** Live data cards (docs/RICH-CARDS-PLAN.md); null or unset leaves the live.* tools out. */
+  liveData?: import("@casama/agent").LiveConfig | null;
   /** Casama Link upkeep (D-296), on a cloud that gives out addresses: parking and warnings. */
   casamaLink?: Omit<import("../link/upkeep.ts").LinkUpkeepOptions, "db" | "log">;
   /** Connected domains (D-329): proof checks, certificates, cleanup and the plan pause rule. */
@@ -712,6 +720,11 @@ export async function startWorker(opts: WorkerOptions) {
   });
   // Desktop context (D-152): file search on the person's own computer.
   registerDesktopContextTools(tools, { db });
+  // Live data cards (docs/RICH-CARDS-PLAN.md): providers through the egress guard, a shared cache.
+  const liveEngine = opts.liveData
+    ? new LiveEngine(liveHttp(fetchOut), liveCache(db), opts.liveData)
+    : null;
+  if (liveEngine) registerLiveTools(tools, { db, engine: liveEngine });
   // Paid data (D-138): the workspace's own Treg key, else Casama's resale key when it's on.
   registerDataTools(tools, {
     db,
@@ -951,6 +964,21 @@ export async function startWorker(opts: WorkerOptions) {
         onError: (e) => opts.logger.warn("model prices not refreshed", { error: e.message }),
       })
     : undefined;
+  // Pinned live cards (docs/RICH-CARDS-PLAN.md §4.5): written again on their rhythm with no model
+  // run; the shared answer cache is pruned once an hour.
+  let pinTicks = 0;
+  const pinTimer = liveEngine
+    ? setInterval(() => {
+        void (async () => {
+          const changed = await refreshPins(db, liveEngine);
+          for (const userId of changed) glancePusher?.changed(userId, { urgent: false });
+          if (++pinTicks % 12 === 0) await pruneLiveCache(db);
+        })().catch((e: unknown) =>
+          opts.logger.warn("pinned cards not refreshed", { error: String(e) }),
+        );
+      }, 5 * 60_000)
+    : undefined;
+  pinTimer?.unref?.();
   opts.logger.info("worker started", {
     fixtures: !!opts.modelFixtures,
     push:
@@ -968,6 +996,7 @@ export async function startWorker(opts: WorkerOptions) {
       // (D-402). Only a step longer than the drain is cut, and D-268 covers running it again.
       const cut = await drainSteps(opts.drainMs ?? 45_000);
       opts.logger.info("worker drained", { steps_cut: cut });
+      if (pinTimer) clearInterval(pinTimer);
       stopLive();
       stopGlance();
       glancePusher?.stop();

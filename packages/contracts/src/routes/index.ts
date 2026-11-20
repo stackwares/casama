@@ -29,6 +29,7 @@ import * as knowledge from "./knowledge.ts";
 import * as limitResets from "./limit-resets.ts";
 import * as connect from "./link.ts";
 import * as links from "./links.ts";
+import * as liveCards from "./live-cards.ts";
 import * as local from "./local.ts";
 import * as mcp from "./mcp.ts";
 import * as moderation from "./moderation.ts";
@@ -120,6 +121,7 @@ export const routes = {
   ...domains,
   ...starters,
   ...canvas,
+  ...liveCards,
   ...glance,
   ...watch,
 };
@@ -149,6 +151,7 @@ export {
   glance,
   knowledge,
   links,
+  liveCards,
   local,
   mcp,
   packs,

@@ -4,7 +4,7 @@
  * holds only the components bots use most; everything else a bot needs to build a UI is here.
  * What the catalog accepts is decided by the checks in @casama/domain (a2ui.ts), not by this text.
  */
-import { UI_COMPONENTS } from "@casama/domain";
+import { LIVE_COMPONENTS, UI_COMPONENTS } from "@casama/domain";
 
 export type UiComponent = (typeof UI_COMPONENTS)[number];
 
@@ -12,6 +12,9 @@ const LAYOUT =
   '{children: [ids], align?: "start"|"center"|"end"|"stretch", justify?: "start"|"center"|"end"|"spaceBetween"}';
 const MEDIA =
   "It plays in the chat with a play button. The url must be an https link to the media file itself (.mp4, .mp3, .m4a…), not a page like YouTube or Spotify: for those, send the link in your reply.";
+
+const LIVE_ONLY = (tool: string) =>
+  `Live data: shown only by ${tool}, which fills it from a named source and keeps it fresh. Never build it with ui.show.`;
 
 /** Each component's properties, in the words a bot builds it from. Every catalog component has one. */
 export const UI_REFERENCE: Record<UiComponent, string> = {
@@ -56,6 +59,57 @@ export const UI_REFERENCE: Record<UiComponent, string> = {
     '{kind?: "reminder"|"routine"|"watcher", title, when: "Mondays at 9:00", next?, detail?, ref?: its id}. After you set up a reminder, routine or watcher: Change ("schedule.change") and Cancel it ("schedule.cancel" {ref}).',
   Details:
     "{title?, rows: [{label, value}], footer?}. Label and value rows, up to 30: a booking, an order, a receipt, a summary. Display only.",
+  // docs/RICH-CARDS-PLAN.md. Data cards: shown only by the live.* tools, never by ui.show.
+  Weather: LIVE_ONLY("live.weather"),
+  Forecast: LIVE_ONLY('live.weather with when "week"'),
+  WeatherAlert: LIVE_ONLY("live.alerts"),
+  AirQuality: LIVE_ONLY("live.air"),
+  SunMoon: LIVE_ONLY("live.sun"),
+  Quote: LIVE_ONLY("live.quote"),
+  Watchlist: LIVE_ONLY("live.quote with several symbols, or live.markets"),
+  Currency: LIVE_ONLY("live.fx"),
+  Holidays: LIVE_ONLY("live.holidays"),
+  Quake: LIVE_ONLY("live.quakes"),
+  Storm: LIVE_ONLY("live.storms"),
+  Flight: LIVE_ONLY("live.flight"),
+  Parcel: LIVE_ONLY("live.parcel"),
+  Score: LIVE_ONLY("live.sports"),
+  Standings: LIVE_ONLY('live.sports with view "standings"'),
+  // Composed cards a bot fills itself.
+  WorldClock:
+    '{title?, places: [{name, tz: an IANA zone like "Asia/Manila", country?: "PH"}], at?: ISO time with offset}. Live clocks for up to 8 places with day and night; with at, that moment in each place (a meeting time). live.time fills it for you.',
+  Countdown:
+    '{title, target: ISO time, start?: ISO time (shows progress), tz?, art?: "new_year"|"birthday"|"launch"|"holiday"|"trip"|"wedding"|"exam"|"game"|"event"}. Ticks live to a date.',
+  Summary:
+    "{title, subtitle?, imageUrl?: https, text, facts?: [{label, value}] (up to 12), url?, source?: {name, url?}}. A person, place, company, country or idea at a glance. live.lookup fills it from Wikipedia; fill it yourself only from what you read, with its source.",
+  Definition:
+    "{word, phonetic?, audioUrl?, senses: [{pos?, meaning, example?}] (up to 10), synonyms?: [..], lang?, source?}. live.define fills it for English words; use it yourself for other languages.",
+  Media:
+    '{kind: "book"|"movie"|"show"|"song"|"album"|"game"|"podcast"|"app", title, subtitle?, imageUrl?, year?, rating?, ratingMax? (default 10), text?, facts?: [{label, value}], links?: [{label, url}], url?, source?: {name, url?}}. One title with its cover or poster.',
+  Recipe:
+    '{title, imageUrl?, time?: "35 min", servings?: number, calories?, ingredients: [{text, qty?: number, unit?}] (up to 60), steps: [text] (up to 40), url?, source?: {name, url?}}. The person scales servings and ticks ingredients on the card. Give qty as a number so it scales.',
+  Comparison:
+    "{title?, items: [2-4 names], rows: [{label, values: [one per item], best?: the winning item's position from 0}] (up to 20)}. Things side by side: phones, plans, cities.",
+  ProsCons: "{title?, pros: [text], cons: [text] (1-10 each), verdict?}.",
+  Steps: "{title?, steps: [{title, detail?, imageUrl?}] (up to 20)}. A numbered how-to.",
+  Timeline:
+    "{title?, events: [{when: a date, time or label, title, detail?, icon?}] (up to 30)}. A trip itinerary, a history, a project plan.",
+  Calculator:
+    '{kind: "loan"|"savings"|"tip"|"percent"|"vat"|"unit", title?, currency?: "PHP", inputs?: loan {amount, rate (yearly %), years} · savings {start, monthly, rate, years} · tip {bill, tip (%), people} · percent {price, discount (%)} · vat {amount, rate (%), included: bool} · unit {value, from, to} (units like km, mi, kg, lb, c, f, l, gal, cup, ml)}. The person edits the numbers and the card does the math itself.',
+  Random:
+    '{kind: "dice"|"coin"|"number"|"pick", title?, sides?, count?, min?, max?, options?: [text] (for pick)}. The person rolls, flips or spins on the card.',
+  Translation:
+    "{from: language, to: language, source: text, translated: text, romanized?, note?}. With play buttons for both.",
+  Contact:
+    "{name, title?, company?, phones?: [..], emails?: [..], address?, avatarUrl?, url?}. Call, message, email and copy on the card.",
+  Quiz: '{question, options: [2-6], answer?: the right option\'s position from 0, explanation?, title?}. The person picks; the card shows if they were right and sends their pick to you as "quiz.answer".',
+  Nutrition:
+    '{title, serving?, calories: number, rows: [{label, value: "12 g", daily?: percent of daily value}] (up to 20)}. A nutrition facts label.',
+  Status:
+    '{title, kind?: "pr"|"issue"|"ci"|"deploy"|"task"|"service"|"order"|"other", state: "open"|"merged"|"closed"|"draft"|"passed"|"failed"|"running"|"queued"|"cancelled"|"done"|"blocked"|"up"|"down"|"degraded" (or your own word), ref?: "#123", subtitle?, app?: "github"…, url?, jobs?: [{name, state, detail?}] (checks or steps, up to 30), stats?: [{label, value}] (up to 8)}. A pull request, issue, build, deploy or service at a glance.',
+  Dashboard:
+    "{title?, children: [ids of 1-12 cards]}. A grid of cards in one: a morning brief, a trip at a glance. Its children are other cards in the list.",
+  Carousel: "{title?, children: [ids of 1-12 cards]}. Cards side by side that the person swipes.",
 };
 
 /** Casama's own additions to the basic catalog: apps from before a card skip it. */
@@ -71,6 +125,7 @@ const CARDS = new Set<UiComponent>([
   "PersonPicker",
   "Schedule",
   "Details",
+  ...LIVE_COMPONENTS,
 ]);
 const INPUTS = new Set<UiComponent>([
   "TextField",

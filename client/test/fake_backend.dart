@@ -844,6 +844,51 @@ class FakeBackend implements Backend {
     canvasList = canvasList.copyWith(version: '${canvasList.version}+', items: [for (final x in canvasList.items) if (x.id != id) x]);
   }
 
+  // Live data cards (docs/RICH-CARDS-PLAN.md).
+  final liveCardActions = <String>[];
+  Map<String, Object?> Function(String id, String? view)? onRefreshLiveCard;
+  Map<String, Object?> cardPrefsValue = {'home_place': null, 'units': null};
+
+  @override
+  Future<Map<String, Object?>> refreshLiveCard(String id, {String? view, bool force = false}) async {
+    liveCardActions.add('refresh:$id:${view ?? ''}:$force');
+    final f = onRefreshLiveCard;
+    if (f == null) throw StateError('no live card $id');
+    return f(id, view);
+  }
+
+  @override
+  Future<List<Map<String, Object?>>> liveCards(List<String> ids) async => const [];
+
+  @override
+  Future<Map<String, Object?>> pinLiveCard(String id, {Map<String, String>? units}) async {
+    liveCardActions.add('pin:$id');
+    return {'canvas_id': '00000000-0000-0000-0000-000000000001', 'status': 'shown'};
+  }
+
+  @override
+  Future<void> unpinLiveCard(String id) async => liveCardActions.add('unpin:$id');
+
+  @override
+  Future<void> reportLiveCard(String id) async => liveCardActions.add('report:$id');
+
+  @override
+  Future<Map<String, Object?>> cardPrefs() async => cardPrefsValue;
+
+  @override
+  Future<Map<String, Object?>> updateCardPrefs({Map<String, Object?>? homePlace, bool clearHome = false, Map<String, String>? units}) async {
+    cardPrefsValue = {
+      'home_place': clearHome ? null : (homePlace ?? cardPrefsValue['home_place']),
+      'units': units ?? cardPrefsValue['units'],
+    };
+    return cardPrefsValue;
+  }
+
+  @override
+  Future<List<Map<String, Object?>>> searchPlaces(String query) async => [
+    {'name': 'Manila', 'region': 'Metro Manila', 'country': 'PH', 'country_name': 'Philippines', 'lat': 14.6, 'lng': 120.98, 'tz': 'Asia/Manila'},
+  ];
+
   @override
   Future<CanvasGrantSaved> setCanvasGrant(String botId, bool allowed) async {
     final error = canvasError;

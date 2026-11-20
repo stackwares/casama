@@ -13,6 +13,7 @@ import 'bot_ui_cards.dart';
 import 'bot_ui_draft.dart';
 import 'bot_ui_lists.dart';
 import 'bot_ui_map.dart';
+import 'cards/live_catalog.dart';
 import 'chat_markdown.dart';
 
 /// The basic A2UI catalog (D-086) with Casama's own look for the parts bots use most: buttons,
@@ -49,6 +50,8 @@ CatalogImplementation casamaUiCatalog({OpenUrlCallback? openUrl}) {
       personPickerComponent,
       scheduleComponent,
       detailsComponent,
+      // docs/RICH-CARDS-PLAN.md: live data, composed cards and containers.
+      ...liveComponents,
     ]);
 }
 

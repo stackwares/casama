@@ -60,6 +60,7 @@ import { registerLimitResetRoutes } from "./routes/limit-resets.ts";
 import { registerConnectAppRoutes } from "./routes/link.ts";
 import { registerLinkRoutes } from "./routes/links.ts";
 import { registerLiveRoutes } from "./routes/live.ts";
+import { registerLiveCardRoutes } from "./routes/live-cards.ts";
 import { registerInternalRoutes, registerLocalRoutes } from "./routes/local.ts";
 import { type InProcessEnv, registerMcpRoutes } from "./routes/mcp.ts";
 import { registerModerationRoutes } from "./routes/moderation.ts";
@@ -537,6 +538,7 @@ export function createApp(deps: AppDeps) {
   registerCreationRoutes(app, deps);
   registerGlanceRoutes(app, deps);
   registerCanvasRoutes(app, deps);
+  registerLiveCardRoutes(app, deps);
   registerWatchRoutes(app, deps);
   registerChatExportRoutes(app, deps);
   registerConnectAppRoutes(app, deps, instanceOwnerCheck(deps));

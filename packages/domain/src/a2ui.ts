@@ -6,13 +6,10 @@
  * what a bot shows, and plugin cards (D-345) for a plugin's card files and their filled cards.
  */
 
-/** Why a UI or card was refused, in words a bot or a plugin's author can act on. */
-export class UiCheckError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "UiCheckError";
-  }
-}
+import { checkLiveCard, LIVE_COMPONENTS } from "./live-cards.ts";
+import { UiCheckError } from "./ui-check-error.ts";
+
+export { UiCheckError };
 
 /** The A2UI v1.0 basic catalog the apps render (D-086). */
 export const A2UI_BASIC_CATALOG = "https://a2ui.org/specification/v1_0/catalogs/basic/catalog.json";
@@ -48,6 +45,8 @@ export const UI_COMPONENTS = [
   "PersonPicker",
   "Schedule",
   "Details",
+  // docs/RICH-CARDS-PLAN.md: live data cards, composed cards and the containers that hold them.
+  ...LIVE_COMPONENTS,
 ] as const;
 
 /**
@@ -144,6 +143,8 @@ function checkMedia(c: Record<string, unknown>, t = false) {
  */
 export interface CheckOptions {
   template?: boolean;
+  /** The list came from a bot's `ui.show`: data cards are the server's to fill (RICH-CARDS-PLAN). */
+  fromBot?: boolean;
 }
 
 /** A `{{…}}` binding in a card file's string (D-345). */
@@ -199,6 +200,7 @@ export function checkComponents(
     if (c.component === "Map") checkMap(c, t);
     if (c.component === "MessageDraft") checkDraft(c);
     checkCard(c, t);
+    checkLiveCard(c, { template: t, fromBot: opts.fromBot });
     checkReservedEvent(c);
     if (c.component === "Video" || c.component === "AudioPlayer") checkMedia(c, t);
     checkChecks(c);
@@ -239,6 +241,8 @@ const CARD_EVENTS: Record<string, string> = {
   "result.": "Results",
   "person.": "PersonPicker",
   "schedule.": "Schedule",
+  "quiz.": "Quiz",
+  "live.": "a live data card",
 };
 
 /**
