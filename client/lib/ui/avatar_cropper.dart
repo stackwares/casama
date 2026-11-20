@@ -209,24 +209,28 @@ decodeAvatarSource(Uint8List bytes) async {
   if (bytes.length > 40 * 1024 * 1024) {
     throw AvatarSourceError.tooBig(bytes.length);
   }
-  final ui.ImageDescriptor descriptor;
+  // instantiateImageCodecWithSize, not ImageDescriptor: on the web a descriptor can't tell its
+  // width or height (UnsupportedError), which made every picture "unreadable" there.
+  final ui.Codec codec;
   try {
-    descriptor = await ui.ImageDescriptor.encoded(
+    codec = await ui.instantiateImageCodecWithSize(
       await ui.ImmutableBuffer.fromUint8List(bytes),
+      getTargetSize: (w, h) {
+        final long = math.max(w, h);
+        if (long <= 2048) return ui.TargetImageSize(width: w, height: h);
+        final f = 2048 / long;
+        return ui.TargetImageSize(
+          width: math.max(1, (w * f).round()),
+          height: math.max(1, (h * f).round()),
+        );
+      },
     );
   } catch (_) {
     throw const AvatarSourceError.unreadable();
   }
   try {
-    final long = math.max(descriptor.width, descriptor.height);
-    final f = long > 2048 ? 2048 / long : 1.0;
-    final codec = await descriptor.instantiateCodec(
-      targetWidth: math.max(1, (descriptor.width * f).round()),
-      targetHeight: math.max(1, (descriptor.height * f).round()),
-    );
     final animated = codec.frameCount > 1;
     final image = (await codec.getNextFrame()).image;
-    codec.dispose();
     // See-through parts, from a small copy: any pixel under 250 alpha.
     final small = await _thumb(image, 64);
     final data = await small.toByteData(format: ui.ImageByteFormat.rawRgba);
@@ -257,7 +261,7 @@ decodeAvatarSource(Uint8List bytes) async {
   } catch (_) {
     throw const AvatarSourceError.unreadable();
   } finally {
-    descriptor.dispose();
+    codec.dispose();
   }
 }
 
