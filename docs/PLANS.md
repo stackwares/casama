@@ -19,11 +19,9 @@ same commit. Shipping details (deploys, app builds) move fast, so check them bef
 | Plan | Written | Waiting on |
 |---|---|---|
 | [ADS-ATTRIBUTION-PLAN](ADS-ATTRIBUTION-PLAN.md) | 2026-11-20 | §15 decisions; then a Meta business portfolio, ad account and app (Oliver) |
-| [APP-MENTIONS-PLAN](APP-MENTIONS-PLAN.md) | 2026-11-19 | Oliver's choices |
 | [RETENTION-MESSAGING-PLAN](RETENTION-MESSAGING-PLAN.md) | 2026-11-20 | §14 decisions; then 1.0 release and Apple's access |
 | [SIRI-AI-PLAN](SIRI-AI-PLAN.md) | 2026-11-20 | §13 decisions; then a debug build on the iPhone for Phase 0 |
 | [USAGE-LIMITS-PLAN](USAGE-LIMITS-PLAN.md) | 2026-11-20 | Oliver's go-ahead to build; the decisions are made (§2) |
-| [WEEKLY-PLAN-PLAN](WEEKLY-PLAN-PLAN.md) | 2026-11-20 | Oliver's answers (draft) |
 
 ## In progress
 
@@ -32,7 +30,7 @@ same commit. Shipping details (deploys, app builds) move fast, so check them bef
 | [GAPS-PLAN-2026-11](GAPS-PLAN-2026-11.md) | D-301..D-305 | Items 1–5 live. Item 6 (accessibility pass) and item 7 (more languages) not started; v1 is English only |
 | [LAUNCH-VIDEO-PLAN](LAUNCH-VIDEO-PLAN.md) |  | Main cut v2, 30 s cut and 15 s cut made. Launch date and the narration voice are open; every video needs narration |
 | [LIBRARY-PLAN](LIBRARY-PLAN.md) | D-274, D-276, D-281, D-291, D-294, D-295 | Pins, select several, "Recently opened", "what was made for a ticket" |
-| [MASTER-PLAN-2026-11](MASTER-PLAN-2026-11.md) | D-267..D-293 | Most stages built (its status line is out of date). Left: Add 8 (languages, same as Gaps 7), Add 13 (start by text), Add 15 (SOC 2, data processing agreement), Library Phase 4 items above. Not checked item by item |
+| [MASTER-PLAN-2026-11](MASTER-PLAN-2026-11.md) | D-267..D-293 | Most stages built. Left: Add 8 (languages, same as Gaps 7), Add 13 (start by text), Add 15 (SOC 2, data processing agreement), Library Phase 4 items above. Not checked item by item |
 | [VENDOR-USAGE-PLAN](VENDOR-USAGE-PLAN.md) | §10 approved | Phases 1–4 implemented and verified locally; Phase 5 account setup/live checks remain. Production env/deploy need a separate yes |
 | [WAITLIST-PLAN](WAITLIST-PLAN.md) | D-427 | Phases 1–3 live; Phase 4 on launch day; store builds |
 
@@ -41,6 +39,9 @@ same commit. Shipping details (deploys, app builds) move fast, so check them bef
 | Plan | Decisions | What's left |
 |---|---|---|
 | [LIMIT-RESETS-PLAN](LIMIT-RESETS-PLAN.md) | D-443 | Server + docs live 2026-11-20 (6d11b195); switched on, test grant on Oliver's space (expires 2026-12-04); app builds with Use Reset pending |
+| [APP-MENTIONS-PLAN](APP-MENTIONS-PLAN.md) | D-434 | Phases 0–3 built 2026-11-20; deploy and app builds |
+| [DOCS-REFRESH-PLAN](DOCS-REFRESH-PLAN.md) | | Docs edits done; goes out with the next docs deploy (`scripts/deploy-web.sh`, needs a yes) |
+| [WEEKLY-PLAN-PLAN](WEEKLY-PLAN-PLAN.md) | D-432 | Check the server deploy and that the stores list the weekly products |
 | [APP-ART-PLAN](APP-ART-PLAN.md) | D-440 | Web app (51), server and gallery live 2026-11-20; store builds and a low-end Android startup check |
 | [ADMIN-BOT-PLAN](ADMIN-BOT-PLAN.md) | D-435 | Push and deploy; then turn it on for admin@casama.ai's bot |
 | [CALL-RECAP-PLAN](CALL-RECAP-PLAN.md) | D-429 | Server live; app builds and a real call check |
@@ -73,8 +74,8 @@ same commit. Shipping details (deploys, app builds) move fast, so check them bef
 | [ADMIN-BOT-RESETS-PLAN](ADMIN-BOT-RESETS-PLAN.md) | D-445 | Server and docs live 2026-11-20 (14281b6d); the admin bot was already on |
 | [ANALYTICS-PLAN](ANALYTICS-PLAN.md) | D-206..D-210 | |
 | [DOCUMENT-FILES-PLAN](DOCUMENT-FILES-PLAN.md) | D-351 | Live and in app build 32 |
-| [LINK-PLAN](LINK-PLAN.md) | D-296 | Live in prod (its status line is out of date) |
-| [PLUGINS-AND-PACKS-PLAN](PLUGINS-AND-PACKS-PLAN.md) | D-343 | Live in prod (its status line is out of date) |
+| [LINK-PLAN](LINK-PLAN.md) | D-296 | Live in prod |
+| [PLUGINS-AND-PACKS-PLAN](PLUGINS-AND-PACKS-PLAN.md) | D-343 | Live in prod |
 | [REACTIONS-PLAN](REACTIONS-PLAN.md) | D-331 | Live everywhere 2026-11-17 |
 | [SHOWCASE-PLAN](SHOWCASE-PLAN.md) |  | Live on casama.ai 2026-11-19 |
 | [STORE-SCREENSHOTS-PLAN](STORE-SCREENSHOTS-PLAN.md) |  | Checked live 2026-11-20: App Store iPhone, iPad, Mac 10 each (+ folding iPhone 9, Watch 5, previews); Play phone, 7" and 10" tablets 8 each, feature graphic, Wear 5 |

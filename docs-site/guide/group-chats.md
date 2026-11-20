@@ -20,6 +20,10 @@ You need at least two bots in the workspace.
 
 Group chats are listed under **Group chats** in the sidebar, each with its number of bots.
 
+You can also start one from a chat with a single bot: type `@` and pick another bot under **Start a
+group chat**. Casama opens the group chat of those two bots, or the one you already have, and keeps
+what you typed.
+
 ## Choose who answers
 
 Who answers depends on how you address the message. As you type `@`, the app suggests the group's

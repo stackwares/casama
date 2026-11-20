@@ -270,6 +270,12 @@ When you answer, the live call opens in the same conversation and the bot speaks
 - Bots can ring you at most 3 times a day in all, and the same bot waits 30 minutes before ringing
   you again. Past either limit nothing rings: you get one notification with the reason, and the bot
   is told why it couldn't call.
+- A ring that reached none of your devices (no phone set up for calls, and no computer or browser
+  open for the banner) doesn't count toward either limit. The bot is told you have nothing set up
+  to ring, so it can say so, and you still get the missed-call notification.
+- Rings and notifications go to the account signed in on the phone. Sign out and that phone stops
+  getting the old account's calls; sign in as someone else and it starts reaching the new account
+  right away, without restarting the app.
 - To stop a bot from calling you at all, open the bot's settings and turn off **Can call me**. It
   then sends a notification instead.
 

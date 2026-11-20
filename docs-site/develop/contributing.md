@@ -123,6 +123,25 @@ computer instead: an https tunnel, `adb reverse tcp:8787 tcp:8787` for an Androi
 your computer's LAN address (iOS blocks plain http unless you allow it). The `SUPABASE_URL` in your
 `.env` must be reachable from the phone too, because the app signs in there.
 
+### Map cards
+
+Maps that bots draw in a chat load their tiles from one of four sources, tried in this order:
+Google Map Tiles, MapTiler, HERE, then OpenStreetMap. A source without a key is skipped. When one
+fails (refused, rate-limited, offline), every later map in that app session moves to the next.
+
+Pass the keys when you build the app, with `--dart-define` or a file given to
+`--dart-define-from-file`:
+
+| Setting | Source |
+| --- | --- |
+| `CASAMA_GOOGLE_MAPS_KEY` | Google Map Tiles API |
+| `CASAMA_MAPTILER_KEY` | MapTiler |
+| `CASAMA_HERE_MAPS_KEY` | HERE |
+
+With no keys, maps use OpenStreetMap's public tiles. Put a daily quota on a Google key so that
+extra traffic gets a refusal, which falls through to the next source, and not a charge. HERE has
+alerts but no hard spending cap, so leave its key empty unless you watch usage.
+
 ## Run the CLI
 
 ```sh

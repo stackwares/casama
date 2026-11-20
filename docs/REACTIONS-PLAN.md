@@ -1,6 +1,8 @@
 # Message reactions: the plan
 
-Status: **built, not deployed** (2026-11-17), as D-331, with every default answer in §9. On branch
+Status: **done** (live everywhere 2026-11-17, D-331).
+
+Original status: **built, not deployed** (2026-11-17), as D-331, with every default answer in §9. On branch
 `t3/reactions`. What changed from this plan while building is in §10; what's left for Oliver is in
 §11.
 

@@ -1,6 +1,8 @@
 # Live showcase on casama.ai: plan
 
-Status: **built, not committed or deployed** (2026-11-19). Oliver: "go and build them now", so the
+Status: **done** (live on casama.ai 2026-11-19).
+
+Original status: **built, not committed or deployed** (2026-11-19). Oliver: "go and build them now", so the
 recommended answer to each question in §7 was taken: desktop + phone + tablet, watch-and-take-over as
 scene C, screenshots out of this section, pause buttons everywhere including the hero. Code:
 `site/showcase.css`, `site/showcase.js`, the `.showcase` block in `site/index.html`, and the hero's pause

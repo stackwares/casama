@@ -43,13 +43,20 @@ Type `@` in any chat to point a bot straight at a connected app — for example,
 invoices from `@Stripe`."* Casama loads that app's tools on the first turn so the bot doesn't spend
 a step looking for them.
 
-- **Direct chats:** `@` lists apps attached to this bot (including individual apps connected through
-  Composio or Pipedream). Workspace owners and admins also see **Add to this bot** for apps already
-  connected elsewhere in the workspace, and after two typed letters **Connect** offers catalog apps
-  you haven't connected yet.
+- **Direct chats:** a bare `@` always opens a list. It shows the apps attached to this bot
+  (including individual apps connected through Composio or Pipedream), then popular apps you can
+  connect, so a bot with no apps still gets something to pick. Workspace owners and admins also see
+  **Add to this bot** for apps already connected elsewhere in the workspace, and after two typed
+  letters **Connect** offers catalog apps you haven't connected yet.
+- **Start a group chat from a direct chat:** the same list shows your other bots under **Start a
+  group chat**. Pick one and Casama opens the group chat of the two bots (the existing one if you
+  already have it), with your draft carried over and the bot's name in it. See
+  [Group chats](/guide/group-chats).
 - **Group chats:** The same `@` menu lists **Bots** first, then **Apps** across the group's bots.
   If a bot and an app share a name, both rows are badged **Bot** or **App** so you can pick the one
   you mean.
+- **In the composer:** a mention that will count (a bot in the group, or an app the bot has) shows
+  bold and highlighted as you type it. An `@word` that matches nothing stays plain text.
 - **Chat apps:** Typing `@Gmail` or `@Linear` from Telegram, Slack, Teams, or iMessage works too when
   the name matches one of the bot's connected apps.
 - Up to three apps can be mentioned per message. Tap any `@App` pill in a sent message to open its

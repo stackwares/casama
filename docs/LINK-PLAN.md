@@ -2,7 +2,9 @@
 
 Renamed from Casama Connect on 2026-11-15; addresses live on **casama.link** (bought that day).
 
-Status: **built 2026-11-14, all three phases, on the branch `worktree-casama-connect`**
+Status: **done** (live in production; checked against `docs/PLANS.md` on 2026-11-20, D-296).
+
+Original status: **built 2026-11-14, all three phases, on the branch `worktree-casama-connect`**
 (worktree `.claude/worktrees/casama-connect`); nothing is on `main` or in production until Oliver
 says. Oliver's answers are in §13 and the decisions are **D-296** in `docs/DECISIONS.md`. The
 migrations are `20270201100200` (renames the old Cloud Connect tables) to `20270201100203`. Everything is tested against a fake

@@ -1,6 +1,8 @@
 # Making credits last: plan
 
-Status: **built on 2026-11-17 as D-354 (step 1) and D-355 (steps 2 to 8), not deployed. Step 9
+Status: **done** (steps 1 to 8 live; step 9 dropped, see section 9; checked against `docs/PLANS.md` on 2026-11-20).
+
+Original status: **built on 2026-11-17 as D-354 (step 1) and D-355 (steps 2 to 8), not deployed. Step 9
 is not built: it turned out to be false on Casama Cloud (section 9).** Oliver took every default
 in section 7 and asked for all of it in one go. What was built differs from this plan in a few
 places, listed in section 9; the rest of the page is the plan as written.

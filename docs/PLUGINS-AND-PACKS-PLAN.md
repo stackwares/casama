@@ -1,6 +1,8 @@
 # Plugins and packs: the plan
 
-Status: **built on branch `t3/plugins-and-packs`, not merged, pushed or deployed** (2026-11-17), as
+Status: **done** (live in production; checked against `docs/PLANS.md` on 2026-11-20, D-343).
+
+Original status: **built on branch `t3/plugins-and-packs`, not merged, pushed or deployed** (2026-11-17), as
 D-343 with every §13 decision at its default. See "Progress" at the end for what is done and what
 is left. Written after Oliver asked how the "everything is a plugin" idea stands, which things are
 plugins, which could be, and whether there should be content packs.

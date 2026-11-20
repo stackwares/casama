@@ -82,7 +82,9 @@ Any client that supports Streamable HTTP with custom headers works the same way.
 
 ## Local over stdio
 
-The local server runs on your machine and uses the same sign-in as the Casama CLI.
+The local server runs on your machine and uses the same sign-in as the Casama CLI. `@casama/mcp` is
+also listed in the official MCP Registry as `io.github.stackwares/casama`, so tools that browse the
+registry can add it from there.
 
 1. Sign in with the CLI:
 

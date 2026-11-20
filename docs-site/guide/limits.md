@@ -54,8 +54,8 @@ limits** (or `GET`/`PUT /v1/admin/call-limits`).
 | Simultaneous billable live calls per workspace | 3 open calls | New call is refused with `429 too_many_calls` | No (fixed) | [Voice](/guide/voice) |
 | Live call start reserve (Casama Cloud) | At least 2 minutes of credits | Call is refused (`out_of_credits`) before connecting | Add credits or upgrade plan | [Voice](/guide/voice) |
 | Bot ring timeout | 45 seconds | Stops ringing and sends a missed-call notification | No (fixed) | [Voice](/guide/voice#when-a-bot-calls-you) |
-| Bot daily ring cap | 3 rings a day across all bots | Stops ringing, sends a notification, and tells the bot why | Admin console: `ring_daily_cap` (0–20; `0` disables rings) | [Voice](/guide/voice#when-a-bot-calls-you) |
-| Per-bot ring cooldown | 30 minutes between rings | Same bot waits before ringing again; sends a notification instead | Admin console: `ring_cooldown_minutes` (0–1440 min) | [Voice](/guide/voice#when-a-bot-calls-you) |
+| Bot daily ring cap | 3 rings a day across all bots | Stops ringing, sends a notification, and tells the bot why. Rings that reached no device don't count | Admin console: `ring_daily_cap` (0–20; `0` disables rings) | [Voice](/guide/voice#when-a-bot-calls-you) |
+| Per-bot ring cooldown | 30 minutes between rings | Same bot waits before ringing again; sends a notification instead. Rings that reached no device don't count | Admin console: `ring_cooldown_minutes` (0–1440 min) | [Voice](/guide/voice#when-a-bot-calls-you) |
 | Voice tool handoff | ~12 seconds | Longer tools move to chat and the bot tells you when ready | No (fixed) | [Voice](/guide/voice#the-call-screen) |
 | Call context and persona | First 1,500 chars of instructions; up to 20 prior turns (~600 tokens); ~5 min live rolling window | Oldest live turns trim (8,000 → 3,000 tokens); everything stays saved in chat | Self-hosted: `VOICE_CONTEXT_TRIGGER_TOKENS`, `VOICE_CONTEXT_TARGET_TOKENS` | [Voice](/guide/voice#the-call-screen), [Configuration](/self-hosting/configuration#advanced-settings) |
 | Read-aloud clip | 4,000 characters | Longer replies are read up to the cap | No (fixed) | [Voice](/guide/voice) |

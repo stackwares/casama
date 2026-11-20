@@ -1,6 +1,8 @@
 # Master plan, November 2026
 
-Status: **proposed** (2026-11-13). Nothing here is built. This is the one plan to execute from; it
+Status: **in progress** (checked 2026-11-20). Most stages are built; what is left is listed in `docs/PLANS.md` (Add 8 languages, Add 13 start by text, Add 15 SOC 2 and a data processing agreement, Library Phase 4 items). Not checked item by item.
+
+Original status: **proposed** (2026-11-13). Nothing here was built yet. This is the one plan to execute from; it
 orders the work of two documents and does not repeat their detail:
 
 - `docs/PRODUCT-REVIEW-2026-11-13.md` (the review): what to fix, improve and add, with evidence.

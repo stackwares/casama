@@ -1,6 +1,8 @@
 # Weekly plans as a price anchor: plan
 
-Status: **approved 2026-11-20 (D-432)**. Oliver picked the higher prices, $7.99 / $19.99 / $39.99 a
+Status: **built** (2026-11-20, D-432); deploy and store listings still to check in `docs/PLANS.md`.
+
+Original status: **approved 2026-11-20 (D-432)**. Oliver picked the higher prices, $7.99 / $19.99 / $39.99 a
 week; the other questions took the proposed answers. The tables below show the first draft's prices.
 
 ## 0. Summary

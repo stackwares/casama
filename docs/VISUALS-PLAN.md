@@ -1,5 +1,7 @@
 # Visuals for the websites (plan, 2026-11-18)
 
+Status: **done** (D-379): share cards, heroes, the 404 scene and wallpapers are live. Not checked item by item (`docs/PLANS.md`, 2026-11-20).
+
 Generated artwork for casama.ai, the docs, the gallery, casama.link and casama.page, made with
 `codex/gpt-6-luna`. Nothing is deployed until Oliver picks and says yes.
 

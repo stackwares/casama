@@ -41,6 +41,17 @@ card with a button that brings up the system prompt or the right settings page. 
 another device, your phone gets a notification: tap it there to finish. Settings → Permissions
 lists every permission Casama uses on the device you're on.
 
+Three permissions don't work like the rest:
+
+- **Health on iPhone:** iOS shows its Health sheet only once and never tells an app which reads
+  were refused. After that, **Open Health** opens the Health app: tap your picture, then **Apps**,
+  then **Casama**, and turn on what your bots may read. The row shows as on once Casama can read
+  your steps.
+- **Health on Android:** the row checks what Health Connect has really granted, and offers to
+  install Health Connect when it's missing.
+- **Always location on iPhone:** the row asks for **Always** on top of **While using**. iOS offers
+  that upgrade once; after that the row opens Settings.
+
 ## What each platform shares
 
 | Kind              | iOS | Android | macOS | Windows | Linux | What's shared                                        |

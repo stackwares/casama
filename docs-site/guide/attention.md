@@ -36,6 +36,10 @@ includes web push. The Windows and Linux apps show system notifications while Ca
 in its window or in the tray. They have no push service, so nothing arrives while the app is
 closed.
 
+Notifications go to the account signed in on the phone. When you sign out, that phone stops
+getting the old account's notifications; when someone signs in, it starts getting theirs right
+away, without restarting the app.
+
 While the app is open in front of you, nothing buzzes. A banner at the top of the app shows what
 arrived instead, with **Review** for something that needs you and **Open** for a reply.
 

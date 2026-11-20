@@ -548,6 +548,9 @@ one with its own domain. With **Private Notifications** on, they carry no text. 
 | `GALLERY_URL`                 | `https://gallery.casama.ai` | The open gallery of themes, color schemes, wallpapers, skills, apps, starter bots, routine ideas and reviewed plugins. Set to `off` to turn it off; a fork can point here instead. When it can't be reached, the built-in looks, skills, apps and bots stay. |
 | `GITHUB_API_TOKEN`            | (empty)                     | A GitHub token for fetching plugins, packs and skills from GitHub. Without one, GitHub allows the server 60 API calls an hour (Casama reads public files from raw.githubusercontent.com, so a fetch is a few calls); with one, 5,000. A fine-grained token with public repositories (read-only) is enough. A workspace's own `GITHUB_TOKEN` secret still opens its private repositories. |
 
+Map cards in chat use build-time keys in the app, not server settings; see
+[Map cards](/develop/contributing#map-cards).
+
 Register `https://casama.example.com/oauth/callback` as the redirect URI in each OAuth app. See
 [Connections](/guide/connections).
 
@@ -738,6 +741,8 @@ an ask URL.
 | `GA4_PROPERTY_ID`              | (empty)                                   | Optional. The numeric GA4 property id: with the setting below, a purged account is deleted from GA4 too.            |
 | `GA4_SERVICE_ACCOUNT_JSON`     | (empty)                                   | A Google service account's JSON key with Editor on that property, for those deletions.                              |
 | `ANALYTICS_ENVIRONMENT`        | (`NODE_ENV`)                              | The `environment` tag on analytics and error events: `production`, `staging` or `development`.                       |
+| `INTERNAL_EMAILS`              | (empty)                                   | Comma-separated email addresses of your own and test accounts. Their events are marked internal (`is_internal` in PostHog, `traffic_type=internal` in Google Analytics) so you can filter them out. The addresses are never sent to either service. |
+| `INTERNAL_EMAIL_DOMAINS`       | (empty)                                   | The same, for whole domains (`example.com`). Matching is case-insensitive.                                           |
 | `POSTHOG_PERSONAL_API_KEY`     | (empty)                                   | Optional. A PostHog personal API key with person write scope: when an account is purged, its PostHog person and events are deleted too. |
 | `POSTHOG_PROJECT_ID`           | (empty)                                   | The PostHog project the key above belongs to.                                                                        |
 | `POSTHOG_APP_HOST`             | `https://us.posthog.com`                  | PostHog's app address for person deletion (your region or self-hosted address).                                      |
