@@ -27,7 +27,7 @@ beforeAll(async () => {
     env: {
       MAIL_DOMAIN: "mail.test",
       MAIL_HOOK_SECRET: "hook-secret",
-      INSTANCE_ADMIN_EMAILS: "admin@example.com",
+      INSTANCE_ADMIN_EMAILS: "admin@example.com,owner2@example.com",
     },
   });
   h.deps.hostedMail = {
@@ -1927,7 +1927,10 @@ describe("audit hardening", () => {
     );
     expect(err).toBeNull();
     expect(Object.keys(seen[0]?.headers ?? {})).not.toContain("Message-ID");
-    const [row] = await h.handle.db.execute<{ message_id: string; provider_message_id: string }>(sql`
+    const [row] = await h.handle.db.execute<{
+      message_id: string;
+      provider_message_id: string;
+    }>(sql`
       select m.message_id, m.provider_message_id from public.mail_messages m
       join public.mail_addresses a on a.id = m.address_id where a.local_part = 'cfid' and m.direction = 'out'`);
     expect(row).toMatchObject({
@@ -1935,5 +1938,38 @@ describe("audit hardening", () => {
       provider_message_id: "<cf-generated@mail.test>",
     });
   });
-});
 
+  it("the instance owner claims reserved and held names; others can't", async () => {
+    const owner = await setup("owner2@example.com", "Ownerbot");
+    const other = await setup("notowner@example.com", "Otherbot");
+    await h.request("/v1/admin/mail-reserved-names", {
+      method: "PUT",
+      token: owner.u.token,
+      json: { names: ["zenaida"] },
+    });
+    const check = async (who: typeof owner, name: string) =>
+      j(
+        await h.request(`/v1/bots/${who.botId}/email/availability?name=${name}`, {
+          token: who.u.token,
+        }),
+      );
+    expect((await check(other, "zenaida")).available).toBe(false);
+    expect((await check(other, "zenaida.helper")).available).toBe(true);
+    expect((await check(owner, "zenaida")).available).toBe(true);
+    expect(
+      (
+        await h.request(`/v1/bots/${other.botId}/email`, {
+          method: "POST",
+          token: other.u.token,
+          json: { name: "oliver" },
+        })
+      ).status,
+    ).toBe(400);
+    const res = await h.request(`/v1/bots/${owner.botId}/email`, {
+      method: "POST",
+      token: owner.u.token,
+      json: { name: "oliver" },
+    });
+    expect(res.status).toBe(201);
+  });
+});

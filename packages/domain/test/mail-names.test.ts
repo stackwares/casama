@@ -23,6 +23,23 @@ describe("hosted mail names", () => {
     expect(mailNameIssue("custom", ["custom"])).toBe("That name is reserved. Pick another.");
   });
 
+  it("blocks distinctive brands inside a name, everyday-word brands only whole", () => {
+    for (const n of ["gcash.support", "bdo-alerts", "microsoft_help", "netflix"])
+      expect(mailNameIssue(n)).toBe("That name is reserved. Pick another.");
+    for (const n of ["maya", "smart", "grab"])
+      expect(mailNameIssue(n)).toBe("That name is reserved. Pick another.");
+    for (const n of ["maya.santos", "smart.helper", "grab.bag"])
+      expect(mailNameIssue(n)).toBeNull();
+  });
+
+  it("holds names exactly, and lets the instance owner claim reserved ones", () => {
+    expect(mailNameIssue("max", ["max"])).toBe("That name is reserved. Pick another.");
+    expect(mailNameIssue("max.helper", ["max"])).toBeNull();
+    for (const n of ["oliver", "admin", "casama", "max"])
+      expect(mailNameIssue(n, ["max"], { instanceOwner: true })).toBeNull();
+    expect(mailNameIssue("ad..min", [], { instanceOwner: true })).toContain("lowercase letters");
+  });
+
   it("builds a base from the bot's name", () => {
     expect(mailBaseName("Ada")).toBe("ada");
     expect(mailBaseName("Front Desk!")).toBe("front.desk");

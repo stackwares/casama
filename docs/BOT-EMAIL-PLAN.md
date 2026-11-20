@@ -140,7 +140,12 @@ Where Casama would differ, on purpose:
   `security`, `abuse`, `postmaster`, `hostmaster`, `webmaster`, `noreply`, `help`, `info`,
   `team`, `hello`, `mailer-daemon`), Casama's own names (`casama`, `stackwares`, `oliver`), and
   a list of brands that are impersonation targets (banks, payment and mail providers, stores).
-  The instance owner can add names in Admin.
+  The instance owner can add names in Admin; those block only that exact name (holding `max`
+  doesn't block `max.helper`). Distinctive brands (`gcash`, `microsoft`) are blocked inside a
+  name too (`gcash.support`); brands that are everyday words or first names (`maya`, `smart`,
+  `grab`) only as the whole name.
+- **The instance owner may claim reserved names** (Casama's own, and the ones held in Admin), so
+  names can be held for them until they claim them. Everyone else gets "That name is reserved".
 - Plus addresses: `ada+shop@` reaches Ada, with the tag `shop` kept on the mail. Anyone can use
   any tag; it's a label, not a lock.
 

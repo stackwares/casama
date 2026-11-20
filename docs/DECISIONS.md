@@ -6671,5 +6671,8 @@ windows bound its remaining admin validity.
 - **Message-ID (Phase 0, 2026-11-20):** Cloudflare Email Sending refuses a send carrying a custom
   `Message-ID`, and sets its own, which its delivery events carry. Senders declare
   `customMessageId`; on Cloudflare the returned id is kept, on Resend Casama's own goes out.
+- **Reserved names (2026-11-20):** the instance owner may claim reserved names, so Admin's list
+  holds names for them; names held in Admin block only the exact name. Brands are split: distinctive
+  ones also block as a part of a name, everyday-word ones only whole.
 - **Plan:** `docs/BOT-EMAIL-PLAN.md`. Live 2026-11-20: deployed with `MAIL_DOMAIN=casama.app`,
   Cloudflare set up (routing, Worker, sending on Workers Paid, delivery events).

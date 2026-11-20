@@ -103,11 +103,13 @@ export async function claimBotMailAddress(
     claimerUserId: string | null;
     manage: boolean;
     surface: string;
+    /** The claimer runs this instance: reserved names are theirs to claim. */
+    instanceOwner?: boolean;
   },
 ): Promise<ClaimedMailAddress> {
   const { db } = deps;
   const name = o.name.trim().toLowerCase();
-  const issue = mailNameIssue(name, deps.extraReserved ?? []);
+  const issue = mailNameIssue(name, deps.extraReserved ?? [], { instanceOwner: o.instanceOwner });
   if (issue) throw new ClaimMailError("invalid_name", issue);
   if (!o.manage)
     throw new ClaimMailError("forbidden", "Only people who manage this bot can claim its address");

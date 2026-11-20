@@ -36,6 +36,7 @@ import { mailReservedNames } from "../../services/mail-reserved-names.ts";
 import { ApiError } from "../errors.ts";
 import type { AppDeps, AppEnv } from "../types.ts";
 import { iso } from "../util.ts";
+import { isInstanceOwner } from "./admin.ts";
 
 const claimsOf = (c: { get(k: "claims"): JwtClaims | undefined }) => {
   const claims = c.get("claims");
@@ -64,6 +65,7 @@ const notifyNewOf = (config: unknown): boolean =>
 
 export function registerMailRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
   const { db } = deps;
+  const isOwner = isInstanceOwner(deps);
   const fetchOut = () => deps.apps?.fetch ?? fetch;
 
   const bot = async (claims: JwtClaims, id: string) => {
@@ -129,6 +131,7 @@ export function registerMailRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
           claimerUserId: claims.sub,
           manage: b.manage,
           surface: body.surface ?? "profile",
+          instanceOwner: await isOwner(claims).catch(() => false),
         },
       );
       return c.json(out(mail.domain, row, await channelConfig(row.channel_id)), 201);
@@ -165,7 +168,8 @@ export function registerMailRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     void b;
     const name = raw.trim().toLowerCase();
     const extraReserved = await mailReservedNames(db);
-    const issue = mailNameIssue(name, extraReserved);
+    const owner = await isOwner(claims).catch(() => false);
+    const issue = mailNameIssue(name, extraReserved, { instanceOwner: owner });
     // Alternatives from the requested name (the sheet calls this with the bot's name first).
     const candidates = [
       ...new Set([name, ...suggestMailNames(name, null, () => false, extraReserved, 10)]),
