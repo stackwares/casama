@@ -1,6 +1,6 @@
 # Free plans for friends (comps): plan
 
-Status: **not started** (written 2026-11-21). Waiting on Oliver's answers in §12 and the go-ahead to build.
+Status: **approved** (2026-11-21). Build all three phases using the defaults in §12, including the optional admin bot tools.
 
 Asked by Oliver (2026-11-21): "what's the best way to give out discounts to my friends right now? or
 actually free plans but only for specific plans?"
