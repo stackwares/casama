@@ -1,6 +1,6 @@
 # Casama showcase and funding opportunities
 
-Research snapshot: 2026-11-21. This is a lead list, not a claim of eligibility or acceptance. Recheck dates, terms, geography, account history, and program availability before applying. Status for all entries: **not applied / not verified internally**. Credits are service discounts, not cash grants. Do not create accounts or submit without checking existing accounts and ownership.
+Research snapshot: 2026-11-21. This is a lead list, not a claim of eligibility or acceptance. Recheck dates, terms, geography, account history, and program availability before applying. Unless noted otherwise, status is **not applied / not verified internally**. Credits are service discounts, not cash grants. Do not create accounts or submit without checking existing accounts and ownership.
 
 ## Showcase and discovery
 
@@ -10,7 +10,7 @@ Research snapshot: 2026-11-21. This is a lead list, not a claim of eligibility o
 | [Google Dev Library](https://devlibrary.withgoogle.com/about) | Submit a technical article or open-source project for review. | Flutter, Firebase and AI; explain Casama's architecture and A2UI. Confirm the submission form is operating. |
 | [Flutter showcase](https://flutter.dev/showcase) and [Flutter Web case studies](https://flutter.dev/development/web) | Prepare a case-study pitch; no public nomination form found. | Cross-platform product, Flutter web and measurable outcomes. No dedicated Wasm submission program verified. Verify actual deployed Wasm before claiming it. |
 | [OpenAI developer community](https://developers.openai.com/community) | Use its project submission route for a demo or workflow. | Show an actual OpenAI/Codex use case; review requirements before submitting. |
-| [It's All Widgets](https://itsallwidgets.com/submit) | Submit app or website/store link; Google sign-in required. | Independent Flutter showcase, free, human reviewed. |
+| [It's All Widgets](https://itsallwidgets.com/casama) | **Submitted for review 2026-11-21.** Four phone screenshots, desktop screenshot, icon, app links and source included. | Independent Flutter showcase; site says it will email when live. |
 | [Built with Flutter](https://builtwithflutter.dev/submit-app) | Submit app description, links and media. | Independent; current review activity unverified. |
 | [Product Hunt](https://help.producthunt.com/en/articles/17734646-8-launch-faq-and-myths) | Plan a product launch with a personal account and gallery. | Broad distribution; choose launch timing deliberately. |
 | [MCP Registry](https://github.com/modelcontextprotocol/registry) | Publish a qualifying MCP server with verified namespace. | Server discovery rather than an app showcase; confirm Casama has an appropriate public server. |
