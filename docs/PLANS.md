@@ -30,7 +30,7 @@ same commit. Shipping details (deploys, app builds) move fast, so check them bef
 |---|---|---|
 | [BOT-EMAIL-NEXT-PLAN](BOT-EMAIL-NEXT-PLAN.md) | D-451 | Live 2026-11-20: server (`9cfc36a2`) and web app build 61; Cloudflare asked for 10,000 a day. Left: store builds; raise `MAIL_SEND_DAILY_MAX` when Cloudflare answers |
 | [BOT-EMAIL-PLAN](BOT-EMAIL-PLAN.md) | D-449 | Live 2026-11-20 (`87f520fd`): bots get `name@casama.app`, sending through Cloudflare Email Sending; 10/10 on mail-tester, Gmail inbox. Left: Outlook placement check |
-| [BOT-WIDGET-PLAN](BOT-WIDGET-PLAN.md) | D-455 | Phases 1–3 written and merged; build 59 (Android internal + Wear, TestFlight, Mac DMG) made 2026-11-20 but nothing run on a device. Left: Phase 0 device checks (the Apple push key in production, server deploy + migration `20270306100001`), then Live, the free layout and watches |
+| [BOT-WIDGET-PLAN](BOT-WIDGET-PLAN.md) | D-455 | Phases 1–3 written and merged; build 59 (Android internal + Wear, TestFlight, Mac DMG) made 2026-11-20 but nothing run on a device. Left: Phase 0 device checks (the Apple push key in production, server deploy + migration `20270307100001`), then Live, the free layout and watches |
 | [GAPS-PLAN-2026-11](GAPS-PLAN-2026-11.md) | D-301..D-305 | Items 1–5 live. Item 6 (accessibility pass) and item 7 (more languages) not started; v1 is English only |
 | [LAUNCH-VIDEO-PLAN](LAUNCH-VIDEO-PLAN.md) |  | Main cut v2, 30 s cut and 15 s cut made. Launch date and the narration voice are open; every video needs narration |
 | [LIBRARY-PLAN](LIBRARY-PLAN.md) | D-274, D-276, D-281, D-291, D-294, D-295 | Pins, select several, "Recently opened", "what was made for a ticket" |
