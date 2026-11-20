@@ -444,9 +444,9 @@ class _ComputerPanelState extends ConsumerState<ComputerPanel> {
     if (started != null && mounted) setState(() => _watchLive = true);
   }
 
-  /// Switches a headless computer to the desktop right here, so the person can watch it live
-  /// without a trip to Settings > Computers. A running one restarts (files kept): ask first.
-  Future<void> _switchToDesktop() async {
+  /// Switches the computer between the desktop and browser-only right on its Screen tab, both
+  /// ways, without a trip to Settings > Computers. A running one restarts (files kept): ask first.
+  Future<void> _switchProfile({required bool toDesktop}) async {
     final l10n = context.l10n;
     final computer = widget.computer;
     final running =
@@ -455,7 +455,7 @@ class _ComputerPanelState extends ConsumerState<ComputerPanel> {
     if (running) {
       final ok = await showConfirm(
         context: context,
-        title: l10n.switchToDesktop,
+        title: toDesktop ? l10n.switchToDesktop : l10n.switchToBrowserOnly,
         message: l10n.switchProfileConfirm,
         confirmLabel: l10n.switchProfileButton,
       );
@@ -465,14 +465,20 @@ class _ComputerPanelState extends ConsumerState<ComputerPanel> {
       'profile',
       () => ref
           .read(backendProvider)
-          .updateComputer(computer.id, profile: 'desktop'),
+          .updateComputer(computer.id, profile: toDesktop ? 'desktop' : 'headless'),
     );
     if (done == null || !mounted) return;
     HapticsHelper.success();
     // Once the desktop is up, the side panel opens its live view.
-    setState(() => _watchLive = running);
-    showToast(context, l10n.switchedToDesktopHere, kind: ToastKind.success);
+    setState(() => _watchLive = toDesktop && running);
+    showToast(
+      context,
+      toDesktop ? l10n.switchedToDesktopHere : l10n.switchedToBrowserOnly,
+      kind: ToastKind.success,
+    );
   }
+
+  Future<void> _switchToDesktop() => _switchProfile(toDesktop: true);
 
   @override
   Widget build(BuildContext context) {
@@ -599,14 +605,34 @@ class _ComputerPanelState extends ConsumerState<ComputerPanel> {
                           ),
                           _ =>
                             computer.profile == ComputerProfileEnum.desktop
-                                ? (widget.embedded
-                                      ? _InlineLive(
-                                          computer: computer,
-                                          watching: _watchLive,
-                                          onWatch: () =>
-                                              setState(() => _watchLive = true),
-                                        )
-                                      : _LiveEntry(computer: computer))
+                                ? Column(
+                                    children: [
+                                      // The way back to browser-only, as light as the way here.
+                                      _ProfileBar(
+                                        key: const Key('desktopBar'),
+                                        icon: LucideIcons.monitor,
+                                        label: l10n.desktopBarLabel,
+                                        actionKey: const Key('switchToBrowserOnly'),
+                                        actionLabel: l10n.switchToBrowserOnly,
+                                        busyLabel: l10n.switchingToBrowserOnly,
+                                        onSwitch: _action != null
+                                            ? null
+                                            : () => _switchProfile(toDesktop: false),
+                                        switching: _action == 'profile',
+                                      ),
+                                      Expanded(
+                                        child: widget.embedded
+                                            ? _InlineLive(
+                                                computer: computer,
+                                                watching: _watchLive,
+                                                onWatch: () => setState(
+                                                  () => _watchLive = true,
+                                                ),
+                                              )
+                                            : _LiveEntry(computer: computer),
+                                      ),
+                                    ],
+                                  )
                                 // Headless: its browser page, and the one way to watch apps
                                 // live (switch to the desktop) right where it's wanted.
                                 : running
@@ -1493,9 +1519,7 @@ class _InlineLiveState extends ConsumerState<_InlineLive> {
   }
 }
 
-/// A note above the screen. Headless computers only have a browser, and switching to a desktop
-/// lives in Settings > Computers (one place for it, D-182), so theirs links there. A personal
-/// computer's says it shows screenshots, not a live view (D-218).
+/// A note above a personal computer's screen: it shows screenshots, not a live view (D-218).
 class _ScreenNote extends StatelessWidget {
   const _ScreenNote({required this.text});
   final String text;
@@ -1594,36 +1618,50 @@ class _SwitchToDesktopButton extends StatelessWidget {
   }
 }
 
-/// A thin line over a headless computer's browser picture: it's only the browser, and the
-/// desktop is one tap away.
-class _BrowserOnlyBar extends StatelessWidget {
-  const _BrowserOnlyBar({required this.onSwitch, required this.switching});
+/// A thin line above the screen saying what kind of computer this is, with the switch to the
+/// other kind: over a headless computer's browser picture ("Browser only · Switch to Desktop")
+/// and over a desktop ("Desktop · Switch to browser-only").
+class _ProfileBar extends StatelessWidget {
+  const _ProfileBar({
+    super.key,
+    required this.icon,
+    required this.label,
+    required this.actionKey,
+    required this.actionLabel,
+    required this.busyLabel,
+    required this.onSwitch,
+    required this.switching,
+  });
+  final IconData icon;
+  final String label;
+  final Key actionKey;
+  final String actionLabel;
+  final String busyLabel;
   final VoidCallback? onSwitch;
   final bool switching;
 
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
     final scheme = context.colorScheme;
     final muted = scheme.onSurfaceVariant;
     return Padding(
       padding: const EdgeInsets.fromLTRB(AppSpace.md, AppSpace.xxs, AppSpace.sm, 0),
       child: Row(
         children: [
-          Icon(LucideIcons.globe, size: 16, color: muted),
+          Icon(icon, size: 16, color: muted),
           const SizedBox(width: AppSpace.xs),
           Expanded(
             child: Text(
-              l10n.headlessBrowserOnly,
+              label,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: context.textTheme.bodySmall?.copyWith(color: muted),
             ),
           ),
           TextButton(
-            key: const Key('switchToDesktop'),
+            key: actionKey,
             onPressed: switching ? null : onSwitch,
-            child: Text(switching ? l10n.switchingToDesktop : l10n.switchToDesktop),
+            child: Text(switching ? busyLabel : actionLabel),
           ),
         ],
       ),
@@ -1729,7 +1767,12 @@ class _ScreenTabState extends ConsumerState<_ScreenTab> {
     if (!headless) return picture;
     return Column(
       children: [
-        _BrowserOnlyBar(
+        _ProfileBar(
+          icon: LucideIcons.globe,
+          label: l10n.headlessBrowserOnly,
+          actionKey: const Key('switchToDesktop'),
+          actionLabel: l10n.switchToDesktop,
+          busyLabel: l10n.switchingToDesktop,
           onSwitch: widget.onSwitchToDesktop,
           switching: widget.switching,
         ),

@@ -321,6 +321,30 @@ void main() {
     await tester.pump(const Duration(milliseconds: 400));
     expect(find.byKey(const Key('liveExpand')), findsOneWidget);
   });
+  testWidgets('a desktop computer switches back to browser-only from the same panel, asking first', (tester) async {
+    await setSize(tester, const Size(1300, 900));
+    final backend = _AwakeDesktop();
+    await tester.pumpWidget(ProviderScope(
+      overrides: [backendProvider.overrideWithValue(backend), unlockersProvider.overrideWithValue(FakeUnlockers()), liveConnectorProvider.overrideWithValue(FakeLiveConnector())],
+      child: MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: const Scaffold(body: SizedBox(width: 420, child: ComputerScreen(embedded: true))),
+      ),
+    ));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(find.text('Desktop · uses more memory'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('switchToBrowserOnly')));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('The computer restarts to switch'), findsOneWidget);
+    await tester.tap(find.text('Switch'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(backend.computerUpdates, ['headless']);
+    await tester.pumpWidget(const SizedBox());
+  });
   testWidgets('control taken in the side panel carries over to full screen', (tester) async {
     await setSize(tester, const Size(1300, 900));
     final backend = _AwakeDesktop();

@@ -1053,6 +1053,19 @@ class AppLocalizationsEn extends AppLocalizations {
       'Switched to Desktop. Its screen shows here once it\'s up.';
 
   @override
+  String get desktopBarLabel => 'Desktop · uses more memory';
+
+  @override
+  String get switchToBrowserOnly => 'Switch to browser-only';
+
+  @override
+  String get switchingToBrowserOnly => 'Switching to browser-only…';
+
+  @override
+  String get switchedToBrowserOnly =>
+      'Switched to browser-only. It uses less memory now.';
+
+  @override
   String get runNow => 'Run Now';
 
   @override

@@ -1822,6 +1822,30 @@ abstract class AppLocalizations {
   /// **'Switched to Desktop. Its screen shows here once it\'s up.'**
   String get switchedToDesktopHere;
 
+  /// No description provided for @desktopBarLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Desktop · uses more memory'**
+  String get desktopBarLabel;
+
+  /// No description provided for @switchToBrowserOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch to browser-only'**
+  String get switchToBrowserOnly;
+
+  /// No description provided for @switchingToBrowserOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Switching to browser-only…'**
+  String get switchingToBrowserOnly;
+
+  /// No description provided for @switchedToBrowserOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Switched to browser-only. It uses less memory now.'**
+  String get switchedToBrowserOnly;
+
   /// No description provided for @runNow.
   ///
   /// In en, this message translates to:
