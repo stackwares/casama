@@ -4,10 +4,13 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/admin_security.dart';
 import '../../core/backend.dart';
+import '../../core/passkeys.dart';
 import '../../core/providers.dart';
+import '../app_lock/app_lock.dart';
 import '../../core/widgets.dart';
 import '../../ui/page.dart';
 
@@ -131,7 +134,8 @@ class _AdminSecurityGateState extends ConsumerState<AdminSecurityGate>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (_leftApp(state)) _lock();
+    // A passkey or Face ID sheet can pause the app while it's up; that isn't leaving.
+    if (_leftApp(state) && AdminSecurity.systemSheets == 0) _lock();
   }
 
   void _unlock() {
@@ -219,6 +223,7 @@ class _AdminSecurityGateState extends ConsumerState<AdminSecurityGate>
                         key: ValueKey((backend, backend.userId)),
                         generation: generation,
                         showTwoStepTip: true,
+                        allowDevice: true,
                         onVerified: () {
                           if (mounted &&
                               generation == _generation &&
@@ -238,8 +243,10 @@ class _AdminSecurityGateState extends ConsumerState<AdminSecurityGate>
   }
 }
 
-/// Password or emailed code, then the authenticator code when the account has two-step sign-in
-/// (the server refuses admin work from a session that hasn't passed it).
+/// A passkey, password or emailed code, then the authenticator code when the account has two-step
+/// sign-in (the server refuses admin work from a session that hasn't passed it). On the lock screen
+/// ([allowDevice]), Face ID, a fingerprint or the device passcode lifts the app's own lock while
+/// the server still accepts the session's last sign-in (D-450).
 class AdminAuthentication extends ConsumerStatefulWidget {
   const AdminAuthentication({
     super.key,
@@ -247,11 +254,16 @@ class AdminAuthentication extends ConsumerStatefulWidget {
     this.sensitive = false,
     this.generation = 0,
     this.showTwoStepTip = false,
+    this.allowDevice = false,
   });
   final int generation;
   final VoidCallback onVerified;
   final bool sensitive;
   final bool showTwoStepTip;
+  final bool allowDevice;
+
+  /// How long the server must still accept the session's sign-in for the device check to unlock.
+  static const deviceMargin = Duration(seconds: 30);
 
   @override
   ConsumerState<AdminAuthentication> createState() =>
@@ -279,21 +291,140 @@ class _AdminAuthenticationState extends ConsumerState<AdminAuthentication>
         )
       : Future.value(true);
 
+  /// The account has a passkey this app can use here.
+  late final Future<bool> _hasPasskey = () async {
+    try {
+      if (!(await ref.read(authMethodsProvider.future)).passkeys) return false;
+      return (await _backend.passkeys()).isNotEmpty;
+    } catch (_) {
+      return false;
+    }
+  }();
+
+  /// Passkeys work here but the account has none yet (the lock screen suggests one).
+  late final Future<bool> _suggestPasskey = widget.showTwoStepTip
+      ? () async {
+          try {
+            return (await ref.read(authMethodsProvider.future)).passkeys &&
+                !await _hasPasskey;
+          } catch (_) {
+            return false;
+          }
+        }()
+      : Future.value(false);
+
+  late final Future<bool> _deviceReady = _deviceAllowed();
+  bool _devicePrompted = false;
+  bool _deviceGone = false;
+
+  /// Face ID and the like only lift the app's own lock, so only while the server would still take
+  /// this session for admin reads (and two-step is done); the server never counts them.
+  bool get _serverStillAccepts {
+    final left = AdminSecurity.serverWindowLeft();
+    return left != null &&
+        left >= AdminAuthentication.deviceMargin &&
+        !_backend.twoStepCodeNeeded &&
+        _backend.userId == _identity;
+  }
+
+  Future<bool> _deviceAllowed() async {
+    if (!widget.allowDevice || !_serverStillAccepts) return false;
+    try {
+      return await ref.read(unlockersProvider).deviceAvailable();
+    } catch (_) {
+      return false;
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     AdminSecurity.authFormOpened();
+    // Back in the app with the console locked: the device check opens by itself, once.
+    _deviceReady.then((ready) {
+      if (ready &&
+          mounted &&
+          WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed) {
+        _unlockWithDevice(auto: true);
+      }
+    });
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (_leftApp(state)) {
+    if (_leftApp(state) && AdminSecurity.systemSheets == 0) {
       _password.clear();
       _code.clear();
       _twoStepCode.clear();
     }
+    if (state == AppLifecycleState.resumed) {
+      _deviceReady.then((ready) {
+        if (ready && mounted) _unlockWithDevice(auto: true);
+      });
+    }
   }
+
+  /// Runs a system sheet without the console (or the app lock, D-375) counting it as time away.
+  Future<T> _sheet<T>(Future<T> Function() run) async {
+    late T out;
+    Object? error;
+    StackTrace? stack;
+    await AdminSecurity.duringSystemSheet(
+      () => ref.read(appLockProvider.notifier).prompt(() async {
+        try {
+          out = await run();
+        } catch (e, s) {
+          error = e;
+          stack = s;
+        }
+        return UnlockResult.ok;
+      }),
+    );
+    if (error != null) Error.throwWithStackTrace(error!, stack!);
+    return out;
+  }
+
+  Future<void> _unlockWithDevice({bool auto = false}) async {
+    if (auto && _devicePrompted) return;
+    _devicePrompted = true;
+    final generation = widget.generation;
+    if (_busy) return;
+    if (!_serverStillAccepts) {
+      setState(() => _deviceGone = true);
+      return;
+    }
+    setState(() {
+      _busy = true;
+      _failed = false;
+    });
+    final reason = context.l10n.adminDeviceReason;
+    try {
+      final result = await _sheet(
+        () => ref.read(unlockersProvider).device(reason),
+      );
+      if (!mounted || generation != widget.generation) return;
+      // The window may have closed while the sheet was up.
+      if (result == UnlockResult.ok && _serverStillAccepts) {
+        // Not a fresh sign-in: changes still ask (no AdminSecurity.verified).
+        widget.onVerified();
+      } else if (result == UnlockResult.ok) {
+        setState(() => _deviceGone = true);
+      } else if (result == UnlockResult.failed) {
+        setState(() => _failed = true);
+      }
+    } catch (_) {
+      if (mounted) setState(() => _failed = true);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _verifyWithPasskey() => _run((_) async {
+    final ok = await _sheet(_backend.signInAgainWithPasskey);
+    if (ok == null) throw const _Closed();
+    if (!ok) throw StateError('Passkey refused');
+  }, verify: true);
 
   @override
   void dispose() {
@@ -335,6 +466,13 @@ class _AdminAuthenticationState extends ConsumerState<AdminAuthentication>
         } else {
           _done();
         }
+      }
+    } on _Closed {
+      // The person closed the system sheet: nothing failed.
+    } on PasskeyProblem catch (e) {
+      if (mounted) {
+        setState(() => _failed = true);
+        showMessage(context, e.message);
       }
     } catch (_) {
       if (mounted) setState(() => _failed = true);
@@ -411,6 +549,45 @@ class _AdminAuthenticationState extends ConsumerState<AdminAuthentication>
           widget.sensitive ? l10n.adminConfirmActionHelp : l10n.adminLockedHelp,
         ),
         const SizedBox(height: 16),
+        FutureBuilder<List<bool>>(
+          future: Future.wait([_deviceReady, _hasPasskey]),
+          builder: (context, snap) {
+            final device = snap.data?[0] == true && !_deviceGone;
+            final passkey = snap.data?[1] == true;
+            if (!device && !passkey) return const SizedBox.shrink();
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (device)
+                  FilledButton.icon(
+                    key: const Key('adminUnlockDevice'),
+                    onPressed: _busy ? null : _unlockWithDevice,
+                    icon: const Icon(LucideIcons.fingerprint),
+                    label: Text(l10n.adminUnlockDevice),
+                  ),
+                if (device && passkey) const SizedBox(height: 8),
+                if (passkey)
+                  (device ? FilledButton.tonalIcon : FilledButton.icon)(
+                    key: const Key('adminPasskey'),
+                    onPressed: _busy || _email == null
+                        ? null
+                        : _verifyWithPasskey,
+                    icon: const Icon(LucideIcons.keyRound),
+                    label: Text(l10n.adminVerifyPasskey),
+                  ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  child: Text(
+                    l10n.adminOrPassword,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
         TextField(
           key: const Key('adminPassword'),
           controller: _password,
@@ -495,7 +672,25 @@ class _AdminAuthenticationState extends ConsumerState<AdminAuthentication>
                 )
               : const SizedBox.shrink(),
         ),
+        FutureBuilder<bool>(
+          future: _suggestPasskey,
+          builder: (context, suggest) => suggest.data == true
+              ? Padding(
+                  padding: const EdgeInsets.only(top: 12),
+                  child: Text(
+                    l10n.adminPasskeyTip,
+                    key: const Key('adminPasskeyTip'),
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                )
+              : const SizedBox.shrink(),
+        ),
       ],
     );
   }
+}
+
+/// The person closed a system sheet.
+class _Closed implements Exception {
+  const _Closed();
 }

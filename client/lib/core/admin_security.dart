@@ -1,7 +1,8 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 
 /// Mounted only while the native admin screen is available. Never persists an unlock.
 class AdminSecurity {
@@ -56,6 +57,88 @@ class AdminSecurity {
       userId == codeSentTo &&
       codeSentAt != null &&
       DateTime.now().difference(codeSentAt!) < const Duration(minutes: 10);
+
+  /// The signed-in session's access token. Set once by the app's backend.
+  static String? Function()? accessToken;
+
+  /// Sign-ins the server counts (apps/server/src/api/admin-security.ts); a refresh never does.
+  static const _interactiveMethods = {
+    'password',
+    'otp',
+    'totp',
+    'oauth',
+    'sso/saml',
+    'magiclink',
+    'passkey',
+  };
+
+  /// The server's read window for the admin console (`ADMIN_READ_WINDOW_SECONDS`).
+  static const serverReadWindow = Duration(minutes: 5);
+
+  /// How long the server will still accept this session's latest real sign-in for admin reads,
+  /// read from the token's signed `amr` (D-450). Null without a token or a real sign-in in it.
+  static Duration? serverWindowLeft({DateTime? now}) {
+    final token = accessToken?.call();
+    if (token == null) return null;
+    try {
+      final parts = token.split('.');
+      if (parts.length != 3) return null;
+      final claims = jsonDecode(
+        utf8.decode(base64Url.decode(base64Url.normalize(parts[1]))),
+      );
+      final amr = claims is Map ? claims['amr'] : null;
+      if (amr is! List) return null;
+      int? newest;
+      for (final e in amr) {
+        if (e is! Map || !_interactiveMethods.contains(e['method'])) continue;
+        final t = e['timestamp'];
+        if (t is num && (newest == null || t > newest)) newest = t.toInt();
+      }
+      if (newest == null) return null;
+      final at = DateTime.fromMillisecondsSinceEpoch(newest * 1000);
+      final left = serverReadWindow - (now ?? DateTime.now()).difference(at);
+      return left.isNegative ? Duration.zero : left;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// System sheets open (a passkey, Face ID). Some pause the app while they're up (Android's
+  /// Credential Manager); that isn't leaving it, so nothing locks meanwhile.
+  static int systemSheets = 0;
+
+  /// Runs a system sheet without it counting as leaving the app. Waits briefly for the app to come
+  /// back to the foreground afterwards; still away then, the console locks.
+  static Future<T> duringSystemSheet<T>(Future<T> Function() run) async {
+    systemSheets++;
+    try {
+      return await run();
+    } finally {
+      final back = await _foreground();
+      systemSheets--;
+      if (!back) lock?.call();
+    }
+  }
+
+  static Future<bool> _foreground() async {
+    final binding = WidgetsBinding.instance;
+    final state = binding.lifecycleState;
+    if (state == null || state == AppLifecycleState.resumed) return true;
+    final done = Completer<bool>();
+    final listener = AppLifecycleListener(
+      onResume: () => done.isCompleted ? null : done.complete(true),
+    );
+    final timer = Timer(
+      const Duration(seconds: 3),
+      () => done.isCompleted ? null : done.complete(false),
+    );
+    try {
+      return await done.future;
+    } finally {
+      timer.cancel();
+      listener.dispose();
+    }
+  }
 
   static bool protectedPath(String path, {String method = 'GET'}) =>
       path.startsWith('/v1/admin/') &&

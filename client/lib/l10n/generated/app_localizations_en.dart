@@ -2505,6 +2505,22 @@ class AppLocalizationsEn extends AppLocalizations {
       'Tip: turn on two-step sign-in in Settings. Without it, anyone who can read your email on this device can unlock the console with an emailed code.';
 
   @override
+  String get adminUnlockDevice => 'Unlock with Face ID or fingerprint';
+
+  @override
+  String get adminDeviceReason => 'Unlock the admin console';
+
+  @override
+  String get adminVerifyPasskey => 'Verify with a passkey';
+
+  @override
+  String get adminOrPassword => 'or use your password';
+
+  @override
+  String get adminPasskeyTip =>
+      'Tip: add a passkey in Settings → Passkeys to verify with Face ID or a fingerprint instead of your password.';
+
+  @override
   String get adminOverview => 'Overview';
 
   @override

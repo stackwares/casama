@@ -1416,6 +1416,13 @@ abstract class Backend {
   /// the sheet. Throws `PasskeyProblem` when this device has no passkey to offer.
   Future<bool?> confirmWithPasskey();
 
+  /// Signs in again with one of the person's passkeys, for a fresh sign-in the server can check
+  /// (the admin console, D-450). The new session replaces this one only when the passkey belongs
+  /// to the signed-in account. True when it did; false for another account's or a refused one;
+  /// null when the person closed the sheet. Throws `PasskeyProblem` when this device has no
+  /// passkey to offer.
+  Future<bool?> signInAgainWithPasskey();
+
   // Passkeys on this account
   Future<List<PasskeyInfo>> passkeys();
 

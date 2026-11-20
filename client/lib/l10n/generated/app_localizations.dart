@@ -3970,6 +3970,36 @@ abstract class AppLocalizations {
   /// **'Tip: turn on two-step sign-in in Settings. Without it, anyone who can read your email on this device can unlock the console with an emailed code.'**
   String get adminTwoStepTip;
 
+  /// No description provided for @adminUnlockDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock with Face ID or fingerprint'**
+  String get adminUnlockDevice;
+
+  /// No description provided for @adminDeviceReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock the admin console'**
+  String get adminDeviceReason;
+
+  /// No description provided for @adminVerifyPasskey.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify with a passkey'**
+  String get adminVerifyPasskey;
+
+  /// No description provided for @adminOrPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'or use your password'**
+  String get adminOrPassword;
+
+  /// No description provided for @adminPasskeyTip.
+  ///
+  /// In en, this message translates to:
+  /// **'Tip: add a passkey in Settings → Passkeys to verify with Face ID or a fingerprint instead of your password.'**
+  String get adminPasskeyTip;
+
   /// No description provided for @adminOverview.
   ///
   /// In en, this message translates to:

@@ -1,6 +1,6 @@
 # Admin console security implementation plan
 
-Status: **live** (server and docs 2026-11-20, d4570460), D-448; app builds pending. Built and review-fixed the same day. Authorized by Oliver: “build all now! you decide for everything!”
+Status: **live** (server and docs 2026-11-20, d4570460), D-448; passkeys and Face ID built the same day (D-450); app builds pending. Built and review-fixed the same day. Authorized by Oliver: “build all now! you decide for everything!”
 
 ## Goal and decisions
 
@@ -30,6 +30,32 @@ A review found ways around the lock and two broken flows; all fixed:
 - [x] Parallel changes share one confirmation instead of the second being dropped; no second prompt within 45 seconds of a fresh sign-in.
 - [x] Lock screen suggests two-step sign-in when the account has none (an open inbox can unlock with an emailed code).
 - [x] Gallery request status change takes the fresh sign-in too.
+
+## Passkeys and Face ID (D-450, 2026-11-20)
+
+Oliver: "build them all now in 1 go! you decide for everything else." Typing a password and a code
+every few minutes is the console's main friction. Two quicker ways in, with the password and emailed
+code kept as the fallback:
+
+- [x] **Passkey** (iPhone, Android, web; where the server's passkeys work in this app): "Verify with a
+  passkey" comes first on the lock screen and in every confirmation. It's a real sign-in, so the
+  server's checks accept it (`amr` method `passkey`). The ceremony goes to the Auth server's endpoints
+  directly and the new session is installed only when the passkey belongs to the signed-in account;
+  another account's passkey changes nothing and counts as a failure.
+- [x] **Two-step accounts still give the authenticator code after a passkey.** Checked in Supabase
+  Auth v2.198.0: a passkey sign-in is `aal1`, and its WebAuthn setting is user verification
+  *preferred*, so a security key without a PIN passes with possession alone. Letting it skip the
+  authenticator would weaken the account, so the server rules and `decide_approval` stay as they are.
+- [x] **Face ID, fingerprint or the device passcode** (`local_auth`, where the app lock's device check
+  works) unlocks the console's screen when the server would still accept the session's sign-in for
+  at least 30 more seconds (and two-step is done). It only lifts the app's own lock: the server can't
+  check it, so it never counts as a fresh sign-in for changes. In practice that is a quick return to
+  the app after leaving it; after the 5-minute idle lock the server's window is over anyway. The
+  check opens by itself once when the lock screen is shown in the foreground.
+- [x] A system sheet (passkey, Face ID) doesn't lock the console while it is open, even where it
+  pauses the app (Android's Credential Manager).
+- [x] Without a passkey, the lock screen suggests adding one in Settings → Passkeys.
+- [x] Tests, docs (self-hosting), decision D-450.
 
 ## Validation commands
 

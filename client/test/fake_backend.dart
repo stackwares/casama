@@ -5388,6 +5388,17 @@ class FakeBackend implements Backend {
     return answer as bool?;
   }
 
+  /// What signing in again with a passkey answers (the admin console, D-450).
+  Object? passkeyReSignIn = true;
+  var passkeyReSignIns = 0;
+  @override
+  Future<bool?> signInAgainWithPasskey() async {
+    passkeyReSignIns++;
+    final answer = passkeyReSignIn;
+    if (answer is Exception) throw answer;
+    return answer as bool?;
+  }
+
   final passkeyList = <PasskeyInfo>[];
   @override
   Future<List<PasskeyInfo>> passkeys() async => List.of(passkeyList);

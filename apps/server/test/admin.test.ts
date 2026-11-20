@@ -83,6 +83,21 @@ describe("owner admin console (Phase 6)", () => {
         json: {},
       });
       expect(await j(write)).toMatchObject({ code: "admin_confirmation_required" });
+      // A fresh passkey is a first step only (Supabase: aal1, user verification preferred, D-450).
+      const now = Math.floor(Date.now() / 1000);
+      const passkey = await h.tokenFor(who, {
+        aal: "aal1",
+        amr: [{ method: "passkey", timestamp: now }],
+      });
+      expect((await h.request("/v1/admin/users", { token: passkey })).status).toBe(403);
+      const passkeyAndCode = await h.tokenFor(who, {
+        aal: "aal2",
+        amr: [
+          { method: "totp", timestamp: now },
+          { method: "passkey", timestamp: now },
+        ],
+      });
+      expect((await h.request("/v1/admin/users", { token: passkeyAndCode })).status).toBe(200);
       // Discovery still works, and a session that passed the code gets in.
       expect((await h.request("/v1/admin/overview", { token: aal1 })).status).toBe(200);
       const aal2 = await h.tokenFor(who, { aal: "aal2" });

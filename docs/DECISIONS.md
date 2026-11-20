@@ -6632,3 +6632,35 @@ then retries once; the server refuses before any side effect. The admin bot appr
 and two changes asked for at once share one dialog. This is a console/session safeguard, not a
 replacement for OS locking. It does not revoke an already issued JWT on a local lock: the server
 windows bound its remaining admin validity.
+
+## D-450 Admin console: passkeys and Face ID instead of typing (2026-11-20)
+
+Oliver asked for passkeys, then Face ID or a fingerprint on mobile, instead of re-entering the
+password and code (D-448), and delegated the rest ("build them all now in 1 go!").
+
+- **Passkey first.** The lock screen and every admin confirmation show "Verify with a passkey" when
+  the server's passkeys work in this app (`AuthMethods.passkeys`: iOS, Android, web) and the account
+  has one. Without one, the lock screen suggests adding it. Password and emailed code stay below.
+- **A real sign-in, for this account only.** `signInAgainWithPasskey` runs the ceremony against the
+  Auth server's passkey endpoints directly (shared with `confirmWithPasskey`, D-375) and installs the
+  new session with `setSession` only when its user is the signed-in one. Another account's passkey
+  leaves the session alone, logs its extra session out and counts as a failure. The server accepts
+  the new token's `amr` method `passkey` (D-448); no server rule changed.
+- **Two-step accounts still give the code.** Supabase Auth v2.198.0 issues a passkey sign-in at
+  `aal1`, and its WebAuthn user verification is *preferred*: a security key without a PIN passes on
+  possession alone, and the token can't say whether the person was verified. Counting it as the
+  second step would weaken accounts with an authenticator, so the API's `requireSecondStep` and
+  `decide_approval` stay as they are. Without an authenticator, it is one prompt.
+- **Face ID only lifts the app's lock.** `local_auth` (the app lock's device check: Face ID, Touch ID,
+  a fingerprint, the passcode, Windows Hello) unlocks the console's screen, never the server: it
+  isn't verifiable there. It is offered only while the session's newest real sign-in (read from the
+  token's signed `amr`) leaves at least 30 seconds of the server's five-minute read window, and
+  two-step is done; it doesn't count as a fresh sign-in for changes (no 45-second grace). It opens by
+  itself once when the locked console is in the foreground, which in practice is a quick return
+  after leaving the app; after the five-minute idle lock the window is over and the passkey asks.
+- **System sheets aren't leaving.** While a passkey or Face ID sheet is open
+  (`AdminSecurity.duringSystemSheet`, and the app lock's `prompt`), pausing the app doesn't lock the
+  console; Android's Credential Manager pauses it. If the app isn't back in the foreground within
+  three seconds after the sheet, the console locks.
+- **Tests:** `client/test/admin_quick_unlock_test.dart`; passkey tokens in
+  `apps/server/test/admin.test.ts`.

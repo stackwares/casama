@@ -217,6 +217,15 @@ password or an emailed one-time code (emailed codes require SMTP); an account wi
 sign-in also enters its authenticator code. The rest of the app stays signed in. Admin changes
 ask you to confirm with a fresh sign-in, at most once every 45 seconds.
 
+Where the app can use your passkeys (the web, and the iPhone and Android apps on servers whose
+passkeys are for `casama.ai`), **Verify with a passkey** comes first: one Face ID, fingerprint or
+device passcode prompt instead of typing your password. It is a real sign-in, so the server
+accepts it; an account with two-step sign-in still enters its authenticator code after it,
+because a passkey sign-in counts as one step. On a phone or computer with Face ID, a fingerprint
+reader or Windows Hello, coming back to a locked console also offers **Unlock with Face ID or
+fingerprint** while your last sign-in is less than about four and a half minutes old. That only
+lifts the app's own lock: the server can't check it, so changes still ask for a fresh sign-in.
+
 The API independently requires a sign-in from the last five minutes for admin reads and the
 last minute for changes, and the two-step code when the account has an authenticator. Token
 refresh does not extend these windows, so even an active console occasionally asks you to verify

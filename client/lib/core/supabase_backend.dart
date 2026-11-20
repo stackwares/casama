@@ -99,6 +99,7 @@ class SupabaseBackend implements Backend {
     );
     // Every call says whether the server answers, for the bar over the app (D-296).
     watchReachability(client.api.dio, apiUrl);
+    AdminSecurity.accessToken = () => supabase.auth.currentSession?.accessToken;
     client.api.dio.interceptors.add(AdminSecurityInterceptor(
       client.api.dio,
       token: () => supabase.auth.currentSession?.accessToken,
@@ -642,10 +643,11 @@ class SupabaseBackend implements Backend {
     return true;
   }
 
-  @override
-  Future<bool?> confirmWithPasskey() async {
-    // The Auth server's passkey endpoints called directly: the client's own verify would replace
-    // the session with the new one, even for another account's passkey.
+  /// A passkey ceremony against the Auth server's endpoints directly, so the client's session is
+  /// untouched (its own verify would replace it, even with another account's passkey). The Auth
+  /// server's session answer; null when the person closed the sheet; an empty map when the server
+  /// refused the passkey.
+  Future<Map<String, dynamic>?> _passkeyCeremony() async {
     final authUrl = supabase.rest.url.replaceFirst(RegExp(r'/rest/v1/?$'), '/auth/v1');
     final headers = _directAuthHeaders;
     final dio = Dio(BaseOptions(connectTimeout: const Duration(seconds: 10), receiveTimeout: const Duration(seconds: 20)));
@@ -659,30 +661,61 @@ class SupabaseBackend implements Backend {
     if (challengeId is! String || options is! Map) throw const PasskeyProblem("Passkeys aren't set up on this server.");
     final credential = await _passkeySheet.get(Map<String, dynamic>.from(options));
     if (credential == null) return null;
-    final Map<String, dynamic> verified;
     try {
-      verified = (await dio.post<Map<String, dynamic>>(
+      return (await dio.post<Map<String, dynamic>>(
         '$authUrl/passkeys/authentication/verify',
         data: {'challenge_id': challengeId, 'credential': credential},
         options: Options(headers: headers, contentType: 'application/json'),
       )).data ?? const {};
     } on DioException catch (e) {
       final status = e.response?.statusCode ?? 0;
-      if (status >= 400 && status < 500) return false;
+      if (status >= 400 && status < 500) return const {};
       rethrow;
     }
-    // The check made a session of its own: end it at once, leaving this one alone.
+  }
+
+  /// Ends a session the Auth server made for a passkey check, leaving the app's own alone.
+  void _endExtraSession(Map<String, dynamic> verified) {
     final token = verified['access_token'];
-    if (token is String) {
-      unawaited(
-        dio
-            .post<void>('$authUrl/logout', queryParameters: const {'scope': 'local'}, options: Options(headers: {...headers, 'Authorization': 'Bearer $token'}))
-            .then((_) {}, onError: (Object _) {}),
-      );
-    }
+    if (token is! String) return;
+    final authUrl = supabase.rest.url.replaceFirst(RegExp(r'/rest/v1/?$'), '/auth/v1');
+    unawaited(
+      Dio()
+          .post<void>('$authUrl/logout', queryParameters: const {'scope': 'local'}, options: Options(headers: {..._directAuthHeaders, 'Authorization': 'Bearer $token'}))
+          .then((_) {}, onError: (Object _) {}),
+    );
+  }
+
+  static String? _verifiedUserId(Map<String, dynamic> verified) {
     final user = verified['user'];
     final id = user is Map ? user['id'] : null;
+    return id is String ? id : null;
+  }
+
+  @override
+  Future<bool?> confirmWithPasskey() async {
+    final verified = await _passkeyCeremony();
+    if (verified == null) return null;
+    _endExtraSession(verified);
+    final id = _verifiedUserId(verified);
     return id != null && id == supabase.auth.currentUser?.id;
+  }
+
+  @override
+  Future<bool?> signInAgainWithPasskey() async {
+    final me = supabase.auth.currentUser?.id;
+    if (me == null) return false;
+    final verified = await _passkeyCeremony();
+    if (verified == null) return null;
+    final access = verified['access_token'];
+    final refresh = verified['refresh_token'];
+    // Another account's passkey: its session goes, this one stays.
+    if (_verifiedUserId(verified) != me || access is! String || refresh is! String || supabase.auth.currentUser?.id != me) {
+      _endExtraSession(verified);
+      return false;
+    }
+    await supabase.auth.setSession(refresh, accessToken: access);
+    return supabase.auth.currentUser?.id == me;
   }
 
   @override
