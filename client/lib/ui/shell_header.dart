@@ -70,7 +70,7 @@ class ShellHeader extends StatelessWidget implements PreferredSizeWidget {
     // No rail or sidebar to leave by: the page needs its own way back. Inside a pane the width
     // says nothing, so the shell is asked.
     final phone = shell?.navInPage ?? AppBreakpoints.of(MediaQuery.sizeOf(context).width) == WindowSize.compact;
-    final beside = shell != null && shell.splitDetail && isDetailRoot(context);
+    final beside = shell != null && (shell.splitDetail || shell.pane == PaneRole.detail) && isDetailRoot(context);
     final canPop = !beside && (showBack ?? (routeCanPop || (phoneFallback != null && phone)));
     final titleBlock = Column(
       crossAxisAlignment: CrossAxisAlignment.start,

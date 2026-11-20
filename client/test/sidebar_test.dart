@@ -31,6 +31,28 @@ void main() {
     expect(find.byType(ChatScreen), findsOneWidget);
   });
 
+  testWidgets('on large screens with the sidebar open, a chat has no Back button, while a subpage pushed from it does', (tester) async {
+    await setSize(tester, const Size(1600, 1000));
+    final backend = FakeBackend();
+    await tester.pumpWidget(ProviderScope(overrides: [backendProvider.overrideWithValue(backend)], child: const CasamaApp()));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('sidebar-bot-$botId')));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ChatScreen), findsOneWidget);
+    expect(find.byTooltip('Back'), findsNothing);
+
+    await tester.tap(find.text('Ada').last);
+    await tester.pumpAndSettle();
+    expect(find.byTooltip('Back'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Back'));
+    await tester.pumpAndSettle();
+    expect(find.byType(ChatScreen), findsOneWidget);
+    expect(find.byTooltip('Back'), findsNothing);
+  });
+
   test('answered requests and read notifications drop out of the badges', () async {
     final backend = FakeBackend()
       ..storedNotifications = [
