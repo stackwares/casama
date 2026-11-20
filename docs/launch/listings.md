@@ -76,3 +76,35 @@ Tried on 2026-11-18. What blocks most of them today is that the repository has n
 
 Drafts are in `roundup-notes.md`. They are not sent: they should come from a person's own mailbox,
 and they land better once there is a launch to point to.
+
+## MCP directory submissions — 2026-11-20
+
+| Directory | State |
+|---|---|
+| Official MCP Registry | Live: `io.github.stackwares/casama` version 0.2.0. |
+| Glama | Server live at https://glama.ai/mcp/servers/stackwares/casama; hosted docs connector imported from the registry. |
+| punkpeye/awesome-mcp-servers | https://github.com/punkpeye/awesome-mcp-servers/pull/20098 open; submission check passes. Duplicate #19871 closed. |
+| punkpeye/awesome-remote-mcp-servers | https://github.com/punkpeye/awesome-remote-mcp-servers/pull/5303 open. |
+| TensorBlock MCP Index | https://github.com/TensorBlock/awesome-mcp-servers/issues/6438 submitted; automation opened draft https://github.com/TensorBlock/awesome-mcp-servers/pull/6439. Draft metadata incorrectly uses the documentation page as endpoint and omits stdio; fix before merge. |
+| MCPPlayground | https://github.com/MCPPlayground/awesome-mcp-servers/pull/9 open. |
+| PulseMCP | Submissions paused; its page says it will import official registry entries after reopening. |
+| MCPServers.org | Submitted free on 2026-11-20; confirmation says review within two weeks. |
+| MCP.directory | Submitted on 2026-11-20; confirmation says review within 24 hours. Check imported monorepo details when live. |
+| MCP.so | Current submission page shows only a $39 paid submission; no free option visible. Not submitted. |
+| MCP Market | Submitted to free GitHub queue on 2026-11-20; confirmation estimates 4–6 weeks. Paid expedited GitHub listing $29; remote submission reported $69. |
+
+TensorBlock metadata correction submitted as https://github.com/TensorBlock/awesome-mcp-servers/pull/6441 against its generated draft branch. Awaiting maintainer action.
+
+### MCP directories: rest of the sweep, 2026-11-20 (later)
+
+| Directory | State |
+|---|---|
+| Glama quality score | Scored 2026-11-18: TDQS grade A, 3.9/5 across 5 tools, so the `glama-badge-check` comment on awesome-mcp-servers #20098 is satisfied. The connector page https://glama.ai/mcp/connectors/io.github.stackwares/casama exists (imported from the registry). |
+| @casama/mcp 0.2.1 on npm | **Not published yet** (npm still shows 0.2.0). Tarball is built at `dist/mcp-0.2.1/casama-mcp-0.2.1.tgz` and has `mcpName`. Needs Oliver's passkey 2FA: `npm publish dist/mcp-0.2.1/casama-mcp-0.2.1.tgz`. After that, add the npm `packages` entry to `packages/mcp/server.json` and run `mcp-publisher publish` again. |
+| LobeHub MCP marketplace | **Parked.** Publishing is `lhm` CLI only. It needs a LobeHub login (done: an account was created by signing in with Oliver's GitHub, read-only email and profile) and `lhm github connect`, which asks GitHub for **read/write on all of oliverbytes' repositories (public and private), workflow files, gists and org membership**. Not approved: far more than a listing needs. If Oliver wants it, he can approve that himself; the manifest is ready at `lhm.plugin.json` (identifier `stackwares-casama`, cloudEndpoint https://api.casama.ai/mcp/docs, version 0.2.1) and the command is `npx -y @lobehub/market-cli plugin publish https://github.com/stackwares/casama --dir <manifest dir>`. LobeHub may also crawl the repo on its own. |
+| Cursor Directory | **Skipped.** It is now a plugin marketplace ("Submit a plugin" behind a sign-in), not a plain MCP list. Would need Casama packaged as a Cursor plugin. |
+| LaunchMCP | **Gone.** The domain redirects to a for-sale page. |
+| PickAPlugin | **Skipped.** Catalogs ChatGPT and Codex plugins; not a fit unless Casama ships as one. (Free by email: hello@pickaplugin.com.) |
+| Docker MCP Catalog | **Not done.** PR route to docker/mcp-registry; local servers need a Dockerfile, which packages/mcp doesn't have. Possible later. |
+| Smithery | **Not available.** Accounts, CLI and proxy shut down 2026-10-31; it stays only as a public registry. |
+| modelcontextprotocol/servers | **No route.** It takes issues, not PRs, and retired its third-party list in favour of the registry. |
