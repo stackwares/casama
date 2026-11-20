@@ -6,7 +6,7 @@ Research snapshot: 2026-11-21. This is a lead list, not a claim of eligibility o
 
 | Opportunity | Route and next step | Fit / caveat |
 | --- | --- | --- |
-| [A2UI community](https://a2ui.org/community/) | Propose a project via the documented GitHub PR; also share in [Discussions](https://a2ui.org/ecosystem/community/) with code and a demo of at most four minutes. | Show native Flutter A2UI surfaces; community samples emphasize open source. Feature not guaranteed. |
+| [A2UI community](https://github.com/a2ui-project/a2ui/discussions/4337) | **Posted to Show and tell 2026-11-21.** Shared source, card documentation and the general product video. | Feature not guaranteed; a focused A2UI walkthrough would strengthen the post. The renderer directory has separate criteria. |
 | [Google Dev Library](https://devlibrary.withgoogle.com/about) | Submit a technical article or open-source project for review. | Flutter, Firebase and AI; explain Casama's architecture and A2UI. Confirm the submission form is operating. |
 | [Flutter showcase](https://flutter.dev/showcase) and [Flutter Web case studies](https://flutter.dev/development/web) | Prepare a case-study pitch; no public nomination form found. | Cross-platform product, Flutter web and measurable outcomes. No dedicated Wasm submission program verified. Verify actual deployed Wasm before claiming it. |
 | [OpenAI developer community](https://developers.openai.com/community) | Use its project submission route for a demo or workflow. | Show an actual OpenAI/Codex use case; review requirements before submitting. |
@@ -55,7 +55,7 @@ All leads below are **not applied**. Confirm eligibility and existing listings b
 | Opportunity | Route and qualification |
 | --- | --- |
 | [Show HN](https://news.ycombinator.com/showhn.html) | Maker posts a working, nontrivial project people can try and stays available to discuss it. Avoid signup barriers and solicitation of votes. |
-| [OpenAlternative](https://openalternative.co/submit) | Open-source alternative directory with AI-agent and self-hosted categories; submission requires sign-in. Verify its current criteria, project stars, license and actual product comparison. |
+| [OpenAlternative](https://openalternative.co/submit) | **Not submitted: ineligible as of 2026-11-21.** Its form requires 250+ stars for repositories less than six months old; Casama had 0 stars and was created November 18, 2026. Recheck before applying. |
 | [AlternativeTo](https://alternativeto.net/faq/#add-a-new-application) | Submit a released app as a relevant alternative. Verified email required; free review backlog can be very long; paid priority does not guarantee approval. |
 | [Peerlist Launchpad](https://peerlist.io/launchpad) | Weekly developer/product launch; check [rules](https://help.peerlist.io/individual/launchpad/guidelines-faqs) and timing before scheduling. |
 | [Awesome LLM Agent Frameworks](https://github.com/kaushikb11/awesome-llm-agents) | Suggest a project through the repository's contribution instructions; verify that Casama fits its scope. |
