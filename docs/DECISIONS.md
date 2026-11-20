@@ -6382,6 +6382,10 @@ Oliver: "let's make google analytics live everywhere, the app and all our websit
 - **Store forms:** App Store App Privacy adds Device ID → Analytics (Product Interaction and User ID
   were already declared) and was published again. Play Data safety adds Analytics to App
   interactions and Device or other IDs, and was sent for review.
+- **Also set the same day:** a daily BigQuery export (event and user data, no streaming, no ad ids)
+  into project `kasama-ai` (US), and reporting identity "Observed" (user id and device id, no modelled
+  users). Filtering test accounts out isn't done: nothing marks them yet (`is_internal` from
+  ANALYTICS-PLAN was never built), so it needs a server and app change.
 
 ## D-440 Painted pictures across the app, and a painted splash (2026-11-20)
 
