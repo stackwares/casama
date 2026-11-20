@@ -1036,11 +1036,21 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get headlessScreenNoteSettings =>
-      'This computer has no desktop, so this shows its browser (blank until the bot opens a page). To watch and control apps live, switch it to a desktop in computer settings.';
+  String get headlessScreenTitle => 'Watch your bot work live';
 
   @override
-  String get openComputerSettings => 'Open Computer Settings';
+  String get headlessScreenEmpty =>
+      'This computer runs browser-only to stay light. You\'ll see its web pages here when it opens one. Switch to a desktop to watch and control apps too.';
+
+  @override
+  String get headlessScreenChecking => 'Checking for pages every few seconds';
+
+  @override
+  String get headlessBrowserOnly => 'Browser only';
+
+  @override
+  String get switchedToDesktopHere =>
+      'Switched to Desktop. Its screen shows here once it\'s up.';
 
   @override
   String get runNow => 'Run Now';

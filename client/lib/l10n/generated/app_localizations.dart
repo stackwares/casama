@@ -1792,17 +1792,35 @@ abstract class AppLocalizations {
   /// **'{day, select, sun{Sunday} mon{Monday} tue{Tuesday} wed{Wednesday} thu{Thursday} fri{Friday} sat{Saturday} other{{day}}}'**
   String cronDay(String day);
 
-  /// No description provided for @headlessScreenNoteSettings.
+  /// No description provided for @headlessScreenTitle.
   ///
   /// In en, this message translates to:
-  /// **'This computer has no desktop, so this shows its browser (blank until the bot opens a page). To watch and control apps live, switch it to a desktop in computer settings.'**
-  String get headlessScreenNoteSettings;
+  /// **'Watch your bot work live'**
+  String get headlessScreenTitle;
 
-  /// No description provided for @openComputerSettings.
+  /// No description provided for @headlessScreenEmpty.
   ///
   /// In en, this message translates to:
-  /// **'Open Computer Settings'**
-  String get openComputerSettings;
+  /// **'This computer runs browser-only to stay light. You\'ll see its web pages here when it opens one. Switch to a desktop to watch and control apps too.'**
+  String get headlessScreenEmpty;
+
+  /// No description provided for @headlessScreenChecking.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking for pages every few seconds'**
+  String get headlessScreenChecking;
+
+  /// No description provided for @headlessBrowserOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Browser only'**
+  String get headlessBrowserOnly;
+
+  /// No description provided for @switchedToDesktopHere.
+  ///
+  /// In en, this message translates to:
+  /// **'Switched to Desktop. Its screen shows here once it\'s up.'**
+  String get switchedToDesktopHere;
 
   /// No description provided for @runNow.
   ///

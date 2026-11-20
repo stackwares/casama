@@ -436,6 +436,44 @@ class _ComputerPanelState extends ConsumerState<ComputerPanel> {
     return result;
   }
 
+  Future<void> _wake() async {
+    final started = await _run(
+      'start',
+      () => ref.read(backendProvider).startComputer(widget.computer.id),
+    );
+    if (started != null && mounted) setState(() => _watchLive = true);
+  }
+
+  /// Switches a headless computer to the desktop right here, so the person can watch it live
+  /// without a trip to Settings > Computers. A running one restarts (files kept): ask first.
+  Future<void> _switchToDesktop() async {
+    final l10n = context.l10n;
+    final computer = widget.computer;
+    final running =
+        computer.state == ComputerState.running ||
+        computer.state == ComputerState.idle;
+    if (running) {
+      final ok = await showConfirm(
+        context: context,
+        title: l10n.switchToDesktop,
+        message: l10n.switchProfileConfirm,
+        confirmLabel: l10n.switchProfileButton,
+      );
+      if (!ok || !mounted) return;
+    }
+    final done = await _run(
+      'profile',
+      () => ref
+          .read(backendProvider)
+          .updateComputer(computer.id, profile: 'desktop'),
+    );
+    if (done == null || !mounted) return;
+    HapticsHelper.success();
+    // Once the desktop is up, the side panel opens its live view.
+    setState(() => _watchLive = running);
+    showToast(context, l10n.switchedToDesktopHere, kind: ToastKind.success);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -524,19 +562,7 @@ class _ComputerPanelState extends ConsumerState<ComputerPanel> {
                             ? l10n.stateStarting
                             : (failed ? l10n.retry : l10n.computerWake),
                         // Already waking: the button shows progress instead of starting it twice.
-                        onPressed: waking || _action != null
-                            ? null
-                            : () async {
-                                final started = await _run(
-                                  'start',
-                                  () => ref
-                                      .read(backendProvider)
-                                      .startComputer(computer.id),
-                                );
-                                if (started != null && mounted) {
-                                  setState(() => _watchLive = true);
-                                }
-                              },
+                        onPressed: waking || _action != null ? null : _wake,
                       ),
               ),
               // A newer system waiting (D-360): the person picks the moment.
@@ -581,23 +607,32 @@ class _ComputerPanelState extends ConsumerState<ComputerPanel> {
                                               setState(() => _watchLive = true),
                                         )
                                       : _LiveEntry(computer: computer))
-                                : Column(
-                                    children: [
-                                      _ScreenNote(
-                                        text: l10n.headlessScreenNoteSettings,
-                                        settingsLink: true,
-                                      ),
-                                      Expanded(
-                                        child: running
-                                            ? _ScreenTab(
-                                                computerId: computer.id,
-                                              )
-                                            : EmptyState(
-                                                icon: LucideIcons.moon,
-                                                message: l10n.computerAsleep,
-                                              ),
-                                      ),
-                                    ],
+                                // Headless: its browser page, and the one way to watch apps
+                                // live (switch to the desktop) right where it's wanted.
+                                : running
+                                ? _ScreenTab(
+                                    computerId: computer.id,
+                                    onSwitchToDesktop: _action != null
+                                        ? null
+                                        : _switchToDesktop,
+                                    switching: _action == 'profile',
+                                  )
+                                : EmptyState(
+                                    key: const Key('headlessAsleep'),
+                                    icon: LucideIcons.moon,
+                                    message: l10n.computerAsleep,
+                                    action: _HeadlessActions(
+                                      wakeLabel: waking
+                                          ? l10n.stateStarting
+                                          : l10n.computerWake,
+                                      onWake: waking || _action != null
+                                          ? null
+                                          : _wake,
+                                      onSwitch: waking || _action != null
+                                          ? null
+                                          : _switchToDesktop,
+                                      switching: _action == 'profile',
+                                    ),
                                   ),
                         },
                     ],
@@ -1462,13 +1497,11 @@ class _InlineLiveState extends ConsumerState<_InlineLive> {
 /// lives in Settings > Computers (one place for it, D-182), so theirs links there. A personal
 /// computer's says it shows screenshots, not a live view (D-218).
 class _ScreenNote extends StatelessWidget {
-  const _ScreenNote({required this.text, this.settingsLink = false});
+  const _ScreenNote({required this.text});
   final String text;
-  final bool settingsLink;
 
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
     final scheme = context.colorScheme;
     return Padding(
       padding: const EdgeInsets.fromLTRB(
@@ -1478,35 +1511,19 @@ class _ScreenNote extends StatelessWidget {
         AppSpace.xxs,
       ),
       child: AppCard(
-        padding: const EdgeInsets.fromLTRB(14, 14, 14, 6),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+        padding: const EdgeInsets.all(14),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(LucideIcons.info, size: 18, color: scheme.primary),
-                const SizedBox(width: AppSpace.xs),
-                Expanded(
-                  child: Text(
-                    text,
-                    style: context.textTheme.bodySmall?.copyWith(
-                      color: scheme.onSurfaceVariant,
-                      height: 1.4,
-                    ),
-                  ),
+            Icon(LucideIcons.info, size: 18, color: scheme.primary),
+            const SizedBox(width: AppSpace.xs),
+            Expanded(
+              child: Text(
+                text,
+                style: context.textTheme.bodySmall?.copyWith(
+                  color: scheme.onSurfaceVariant,
+                  height: 1.4,
                 ),
-              ],
-            ),
-            if (settingsLink)
-            Align(
-              alignment: AlignmentDirectional.centerEnd,
-              child: TextButton.icon(
-                key: const Key('openComputerSettings'),
-                icon: const Icon(LucideIcons.settings, size: 16),
-                label: Text(l10n.openComputerSettings),
-                onPressed: () =>
-                    GoRouter.maybeOf(context)?.pushOnce('/settings/computers'),
               ),
             ),
           ],
@@ -1516,9 +1533,118 @@ class _ScreenNote extends StatelessWidget {
   }
 }
 
+/// The asleep headless computer's actions: wake it (the usual thing), or switch it to the
+/// desktop to watch apps live.
+class _HeadlessActions extends StatelessWidget {
+  const _HeadlessActions({
+    required this.wakeLabel,
+    required this.onWake,
+    required this.onSwitch,
+    required this.switching,
+  });
+  final String wakeLabel;
+  final VoidCallback? onWake;
+  final VoidCallback? onSwitch;
+  final bool switching;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        FilledButton.icon(
+          key: const Key('headlessWake'),
+          onPressed: onWake,
+          icon: const Icon(LucideIcons.power, size: 18),
+          label: Text(wakeLabel),
+        ),
+        const SizedBox(height: AppSpace.xs),
+        _SwitchToDesktopButton(onPressed: onSwitch, switching: switching, filled: false),
+      ],
+    );
+  }
+}
+
+/// "Switch to Desktop", with a spinner while the computer switches.
+class _SwitchToDesktopButton extends StatelessWidget {
+  const _SwitchToDesktopButton({
+    required this.onPressed,
+    required this.switching,
+    this.filled = true,
+  });
+  final VoidCallback? onPressed;
+  final bool switching;
+  final bool filled;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final icon = switching
+        ? const SizedBox.square(
+            dimension: 16,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          )
+        : const Icon(LucideIcons.monitor, size: 18);
+    final label = Text(switching ? l10n.switchingToDesktop : l10n.switchToDesktop);
+    const key = Key('switchToDesktop');
+    final pressed = switching ? null : onPressed;
+    return filled
+        ? FilledButton.icon(key: key, onPressed: pressed, icon: icon, label: label)
+        : TextButton.icon(key: key, onPressed: pressed, icon: icon, label: label);
+  }
+}
+
+/// A thin line over a headless computer's browser picture: it's only the browser, and the
+/// desktop is one tap away.
+class _BrowserOnlyBar extends StatelessWidget {
+  const _BrowserOnlyBar({required this.onSwitch, required this.switching});
+  final VoidCallback? onSwitch;
+  final bool switching;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final scheme = context.colorScheme;
+    final muted = scheme.onSurfaceVariant;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(AppSpace.md, AppSpace.xxs, AppSpace.sm, 0),
+      child: Row(
+        children: [
+          Icon(LucideIcons.globe, size: 16, color: muted),
+          const SizedBox(width: AppSpace.xs),
+          Expanded(
+            child: Text(
+              l10n.headlessBrowserOnly,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: context.textTheme.bodySmall?.copyWith(color: muted),
+            ),
+          ),
+          TextButton(
+            key: const Key('switchToDesktop'),
+            onPressed: switching ? null : onSwitch,
+            child: Text(switching ? l10n.switchingToDesktop : l10n.switchToDesktop),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _ScreenTab extends ConsumerStatefulWidget {
-  const _ScreenTab({required this.computerId});
+  const _ScreenTab({
+    required this.computerId,
+    this.onSwitchToDesktop,
+    this.switching = false,
+  });
   final String computerId;
+
+  /// Set on a headless computer: the screen offers the desktop (D-178 keeps headless the
+  /// default, since a desktop costs more). Null on a personal computer.
+  final VoidCallback? onSwitchToDesktop;
+  final bool switching;
+
+  bool get headless => onSwitchToDesktop != null || switching;
 
   @override
   ConsumerState<_ScreenTab> createState() => _ScreenTabState();
@@ -1558,19 +1684,57 @@ class _ScreenTabState extends ConsumerState<_ScreenTab> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final headless = widget.headless;
     if (_png == null) {
+      if (headless) {
+        // The page refreshes on its own every few seconds, so no Refresh button: the one
+        // action is the desktop, for watching apps and not just web pages.
+        return EmptyState(
+          key: const Key('headlessEmpty'),
+          icon: LucideIcons.monitor,
+          title: l10n.headlessScreenTitle,
+          message: l10n.headlessScreenEmpty,
+          action: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _SwitchToDesktopButton(
+                onPressed: widget.onSwitchToDesktop,
+                switching: widget.switching,
+              ),
+              const SizedBox(height: AppSpace.sm),
+              Text(
+                l10n.headlessScreenChecking,
+                style: context.textTheme.bodySmall?.copyWith(
+                  color: context.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        );
+      }
       return EmptyState(
         icon: LucideIcons.monitor,
-        message: context.l10n.noScreen,
+        message: l10n.noScreen,
         action: OutlinedButton.icon(
           onPressed: _load,
           icon: const Icon(LucideIcons.rotateCw, size: 18),
-          label: Text(context.l10n.refresh),
+          label: Text(l10n.refresh),
         ),
       );
     }
-    return InteractiveViewer(
+    final picture = InteractiveViewer(
       child: Center(child: Image.memory(_png!, gaplessPlayback: true)),
+    );
+    if (!headless) return picture;
+    return Column(
+      children: [
+        _BrowserOnlyBar(
+          onSwitch: widget.onSwitchToDesktop,
+          switching: widget.switching,
+        ),
+        Expanded(child: picture),
+      ],
     );
   }
 }

@@ -428,7 +428,7 @@ void main() {
     expect(find.text('Connected'), findsOneWidget);
     expect(find.textContaining('a new screenshot every few seconds'), findsOneWidget);
     expect(find.text('Files'), findsOneWidget);
-    for (final gone in ['openLiveView', 'liveSurface', 'computerSleep', 'computerStart', 'openComputerSettings']) {
+    for (final gone in ['openLiveView', 'liveSurface', 'computerSleep', 'computerStart', 'switchToDesktop']) {
       expect(find.byKey(Key(gone)), findsNothing, reason: gone);
     }
     expect(find.text('Terminal'), findsNothing);

@@ -1,6 +1,5 @@
 // The computer shows Screen, Terminal, Files and Manage, always; restore points live in Manage
-// (D-240). The desktop/headless switch lives only in Settings >
-// Computers.
+// (D-240). A headless computer's Screen offers the switch to the desktop right there.
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -36,14 +35,41 @@ void main() {
     await tester.pumpWidget(const SizedBox());
   });
 
-  testWidgets('a headless computer points to Settings > Computers instead of switching here', (tester) async {
+  testWidgets('an asleep headless computer offers Wake and switches to the desktop without a restart warning', (tester) async {
     await setSize(tester, const Size(800, 1000));
-    await tester.pumpWidget(harness(FakeBackend(), const Scaffold(body: ComputerScreen(embedded: true))));
+    final backend = FakeBackend();
+    await tester.pumpWidget(harness(backend, const Scaffold(body: ComputerScreen(embedded: true))));
     await tester.pumpAndSettle();
-    expect(find.byKey(const Key('switchToDesktop')), findsNothing);
-    expect(find.text('Switch to Desktop'), findsNothing);
-    expect(find.byKey(const Key('openComputerSettings')), findsOneWidget);
-    expect(find.textContaining('switch it to a desktop in computer settings'), findsOneWidget);
+    expect(find.byKey(const Key('openComputerSettings')), findsNothing);
+    expect(find.byKey(const Key('headlessAsleep')), findsOneWidget);
+    expect(find.byKey(const Key('headlessWake')), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('switchToDesktop')));
+    await tester.pumpAndSettle();
+    // Asleep, nothing is running to stop, so no confirm.
+    expect(find.text('Switch'), findsNothing);
+    expect(backend.computerUpdates, ['desktop']);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('a running headless computer with a blank screen offers the desktop, asks first, and has no Refresh', (tester) async {
+    await setSize(tester, const Size(800, 1000));
+    final backend = FakeBackend()
+      ..teamComputerState = ComputerState.running
+      ..screen = Uint8List(0);
+    await tester.pumpWidget(harness(backend, const Scaffold(body: ComputerScreen(embedded: true))));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('headlessEmpty')), findsOneWidget);
+    expect(find.text('Watch your bot work live'), findsOneWidget);
+    expect(find.text('Refresh'), findsNothing);
+
+    await tester.tap(find.byKey(const Key('switchToDesktop')));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('The computer restarts to switch'), findsOneWidget);
+    expect(backend.computerUpdates, isEmpty);
+    await tester.tap(find.text('Switch'));
+    await tester.pumpAndSettle();
+    expect(backend.computerUpdates, ['desktop']);
     await tester.pumpWidget(const SizedBox());
   });
 
@@ -57,6 +83,9 @@ void main() {
     await tester.pumpWidget(harness(backend, const Scaffold(body: ComputerScreen(embedded: true))));
     await tester.pumpAndSettle();
     expect(find.byType(InteractiveViewer), findsOneWidget);
+    // Over the picture, one thin line: it's only the browser, and the desktop is a tap away.
+    expect(find.text('Browser only'), findsOneWidget);
+    expect(find.byKey(const Key('switchToDesktop')), findsOneWidget);
 
     // A failed request keeps the last picture.
     backend.screen = null;
@@ -69,7 +98,7 @@ void main() {
     await tester.pump(const Duration(seconds: 5));
     await tester.pumpAndSettle();
     expect(find.byType(InteractiveViewer), findsNothing);
-    expect(find.textContaining('Nothing on screen yet'), findsOneWidget);
+    expect(find.byKey(const Key('headlessEmpty')), findsOneWidget);
     await tester.pumpWidget(const SizedBox());
   });
   testWidgets('a computer that is not in the list offers Refresh and a way to pick one, not a dead end', (tester) async {
