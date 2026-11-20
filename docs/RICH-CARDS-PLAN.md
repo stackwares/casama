@@ -1,8 +1,8 @@
 # Live data cards (weather, markets, money, time, travel and more): plan
 
-Status: **not started** (written 2026-11-20). Waiting for Oliver's answers to §16 and his go-ahead.
-No code yet. When the first phase lands, record the decision in `docs/DECISIONS.md` (check the
-highest number first; it was D-452 on 2026-11-20).
+Status: **built** (2026-11-20, D-453) on branch `feat/live-cards`, not merged or deployed. Oliver
+said "You decide everything for me. Start building everything": every §16 decision is at its default.
+What was built, and where it differs from the text below, is in "As built" at the end.
 
 Asked for by Oliver on 2026-11-20, with two screenshots: "weather in Manila tomorrow, one line" got
 a paragraph about cached Yandex mirror pages with conflicting data, and "weather in San Francisco
@@ -1210,3 +1210,44 @@ Defaults are what the plan assumes if he says "defaults".
   `packages/agent/src/tools/ui-catalog.ts`, `run.ts` (built-in tool cards), `tools/autonomy.ts`
   (`web.search` text, `web.fetch` JSON-LD), `voice.ts`, `glance.ts`/canvas worker (pins),
   `bot_ui.dart` (registering cards), settings screens (units, home place).
+
+## As built (2026-11-20, D-453)
+
+Phases 0–5 and Stage A of §4.5 are built; Phase 6 (native live widgets) and Phase 7 (the long tail)
+wait as decisions 9 and §14 say. Differences from the plan above:
+
+- **Tools are one lazy group, not four core tools** (§4.1). As core tools `live.weather`, `live.quote`,
+  `live.fx` and `live.time` added ~700 tokens to every model call, past the USAGE-PLAN budget. The
+  group's index line says to load it instead of searching, `web.search` adds the same hint when a
+  query looks like weather, prices or rates, and a conversation that used them keeps them loaded.
+  The first answer in a chat costs one `tools.load`.
+- **Names:** tools are `live.weather`, `live.air`, `live.sun`, `live.alerts`, `live.quote`,
+  `live.markets`, `live.fx`, `live.time`, `live.holidays`, `live.quakes`, `live.storms`,
+  `live.lookup`, `live.define`, `live.book`, `live.film`, `live.sports`, `live.flight`,
+  `live.parcel`, `live.dashboard` and `live.page` (the plan's `cards.fromPage`). No `time.until`:
+  countdowns are a composed card the app ticks itself.
+- **Fewer, broader components:** 34 instead of one per §6 row. RainNow is part of Weather; Movers and
+  MarketOverview are Watchlists; Place, Product and Headlines use D-337's Results; Trip and
+  Itinerary use Timeline; Country, Person and Organization use Summary; Book, Movie, Show, Album and
+  Game are Media; PR, issue, CI, deploy and order are Status (its rows are `jobs`, because every
+  component's `checks` are A2UI input checks).
+- **Not on voice calls** (§4.2): the call tool budget (D-355) has ~40 characters to spare.
+- **Units** (§4.6): the person's choice, else their time zone (not their device locale), on both
+  sides, so the card and the bot's sentence agree. `/v1/me/card-prefs` returns the effective units.
+- **Weather "today"** shows the weather now with the whole day's high and low (MET Norway's forecast
+  starts at the current hour; Open-Meteo's daily figures fill the day where allowed).
+- **Art** (§5.6, decision 6): Lucide icons on painted skies instead of Meteocons; no bundled assets,
+  flags as emoji. Crypto and team logos come from the providers' own https images.
+- **Stocks on Casama Cloud** (decision 2): Finnhub is wired (`LIVE_FINNHUB_KEY`) but no plan is
+  bought; until then Cloud has crypto, rates and everything else, and says stock prices aren't set
+  up. Self-hosted servers (billing off) use Yahoo Finance's public chart API.
+- **Flights, parcels, films** (decisions 7, 13): aviationstack, 17TRACK and TMDB adapters exist;
+  their tools appear only with keys (`LIVE_AVIATIONSTACK_KEY`, `LIVE_17TRACK_KEY`, `LIVE_TMDB_KEY`).
+- **Sports** (decision 10): ESPN's public scoreboards for NBA, WNBA, NCAA men's basketball, EPL,
+  LaLiga, Serie A, Bundesliga, Ligue 1, Champions League, MLS, NFL, MLB, NHL and F1. PBA has no
+  clean source yet.
+- **Not built:** Stage B native widgets and watch complications, health cards (decision 12), the
+  §6 rows marked "—" without a component above, pollen outside Europe, alerts outside the US,
+  PAGASA signals (decision 11: links only), evals in `packages/evals` (the plan's 40 prompts; the
+  web E2E pass in D-453 stood in for them).
+

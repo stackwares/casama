@@ -9,6 +9,20 @@ The server, apps, CLI, SDK and MCP server share one version number.
 
 ## [Unreleased]
 
+- Live data cards (D-453): bots answer weather, forecasts, air quality, sunrise and moon, weather
+  alerts, stock and crypto prices, currency rates, time in other places, public holidays,
+  earthquakes, storms, encyclopedia summaries, definitions, books, scores and standings with cards
+  of real data from named sources, and one sentence instead of a paragraph from search snippets.
+  Cards say where their numbers came from and when, refresh themselves while on screen (and with
+  the refresh button) without the bot, switch views (today, tomorrow, 7 days; 1D to 5Y), pin to
+  your widgets, copy as text and share as a picture. `live.page` turns a recipe, product, film,
+  book, event or article link into a card from the page's own data; `live.dashboard` puts several
+  cards in one grid, and the morning brief opens with one. Bots can also show recipes,
+  comparisons, pros and cons, steps, timelines, calculators, dice and pickers, translations,
+  contacts, quizzes, nutrition labels, status cards, countdowns and world clocks. Settings → Cards
+  sets your home city and units. Self-hosted servers need no keys; flights, parcels, films and
+  stocks on billing servers take a provider key (`LIVE_*` in `.env.example`).
+
 - Map cards (D-444): tiles now come from Google first, then MapTiler, HERE (when configured) and
   OpenStreetMap, moving on when a source fails or reaches its free limit. Google's logo and data
   credit show on its maps. Google usage is capped below its free tier, so it can't bill.

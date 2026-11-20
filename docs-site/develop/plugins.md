@@ -274,7 +274,10 @@ natively, in the app's own look.
 - **`format`** is required and is `1`. A newer format is skipped, so an older Casama shows text.
 - **`card`** is one component of the catalog, and the rest of the file is its fields:
   `Details`, `Checklist`, `Event`, `Agenda`, `Schedule`, `Results`, `MessageList`, `Stats`,
-  `Map`, `PersonPicker`, `MessageDraft`, or the basic ones (`Text`, `Image`, `Video`, …). The
+  `Map`, `PersonPicker`, `MessageDraft`, the live cards (`Weather`, `Quote`, `Watchlist`,
+  `Currency`, `Score`, `Flight`, `Parcel` and the rest; a card your plugin fills names your plugin
+  as its source and isn't refreshed by Casama), the composed cards (`Recipe`, `Summary`, `Media`,
+  `Comparison`, `Status`, `Timeline` and the rest), or the basic ones (`Text`, `Image`, `Video`, …). The
   fields are the ones a bot's `ui.show` tool takes (listed in
   [`packages/agent/src/tools/ui-catalog.ts`](https://github.com/stackwares/casama/blob/main/packages/agent/src/tools/ui-catalog.ts),
   the reference a bot reads with its `ui.catalog` tool). For a layout of several basic

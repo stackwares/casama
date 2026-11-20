@@ -256,6 +256,7 @@ export default defineConfig({
           { text: "Bots in the notch and menu bar", link: "/guide/notch" },
           { text: "Bots on the Lock Screen", link: "/guide/lock-screen" },
           { text: "Widgets and controls", link: "/guide/widgets" },
+          { text: "Live cards: weather, prices and more", link: "/guide/live-cards" },
           { text: "Casama on Apple Watch", link: "/guide/apple-watch" },
           { text: "Casama on Wear OS", link: "/guide/wear-os" },
           { text: "Casama on a folding phone", link: "/guide/folding-phones" },

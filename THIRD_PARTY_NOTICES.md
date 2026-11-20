@@ -113,6 +113,15 @@ Update this file in the same pull request that adds or removes a dependency.
 | OpenAPI Generator (dart-dio templates) | code generation                | Apache-2.0                                     |
 | Lucide icon data (lucide-static 1.63.0) | gallery doodle `glyphs` (`gallery/assets/lucide`) | ISC                                     |
 
+- **SunCalc** by Vladimir Agafonkin (BSD-2-Clause, https://github.com/mourner/suncalc): the sun and
+  moon formulas in `packages/agent/src/live-data/astro.ts` are a port. Copyright (c) 2014,
+  Vladimir Agafonkin. Redistribution and use in source and binary forms, with or without
+  modification, are permitted provided that the copyright notice, this list of conditions and the
+  disclaimer are retained.
+- **Live card data** (D-453) is credited on each card and in Settings → Cards: MET Norway and
+  Open-Meteo (CC BY 4.0), GeoNames (CC BY 4.0), Wikipedia (CC BY-SA 4.0), Wiktionary (CC BY-SA),
+  Frankfurter, CoinGecko, USGS, GDACS, the US National Weather Service, Open Library, Nager.Date.
+
 ## Fonts
 
 | Font   | Used in                                   | License                                      |
