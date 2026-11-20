@@ -24,6 +24,7 @@ import {
   UpdateNotice,
 } from "../admin.ts";
 import { jsonBody, jsonResponse, problemResponses, Uuid } from "../common.ts";
+import { AdminVendor, VendorSettings } from "../vendors.ts";
 
 const security = [{ bearerAuth: [] }];
 const { 401: e401, 403: e403, 404: e404 } = problemResponses;
@@ -264,4 +265,32 @@ export const takeDownCreation = createRoute({
     body: jsonBody(z.object({ down: z.boolean() }).openapi("TakeDownRequest")),
   },
   responses: { 200: jsonResponse("Done", ReportedCreation), 401: e401, 403: e403, 404: e404 },
+});
+
+export const adminVendors = get(
+  "adminVendors",
+  "/v1/admin/vendors",
+  "Vendor usage (owner only)",
+  z.object({ items: z.array(AdminVendor) }).openapi("AdminVendorList"),
+);
+export const setAdminVendor = createRoute({
+  operationId: "setAdminVendor",
+  method: "put",
+  path: "/v1/admin/vendors/{vendor}",
+  tags: ["admin"],
+  security,
+  request: {
+    params: z.object({ vendor: z.string().min(1).max(80) }),
+    body: jsonBody(VendorSettings),
+  },
+  responses: { 200: jsonResponse("Updated vendor", AdminVendor), ...problemResponses },
+});
+export const checkAdminVendor = createRoute({
+  operationId: "checkAdminVendor",
+  method: "post",
+  path: "/v1/admin/vendors/{vendor}/check",
+  tags: ["admin"],
+  security,
+  request: { params: z.object({ vendor: z.string().min(1).max(80) }) },
+  responses: { 200: jsonResponse("Latest vendor reading", AdminVendor), ...problemResponses },
 });

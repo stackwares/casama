@@ -64,6 +64,68 @@ describe("owner admin console (Phase 6)", () => {
     expect(set.limits).toEqual({ max_bots: 3, monthly_usd: 25 });
   });
 
+  it("restricts vendor monitoring to the instance owner and validates settings", async () => {
+    for (const [path, method] of [
+      ["/v1/admin/vendors", "GET"],
+      ["/v1/admin/vendors/resend", "PUT"],
+      ["/v1/admin/vendors/resend/check", "POST"],
+    ] as const) {
+      const response = await h.request(path, {
+        token: member.token,
+        method,
+        ...(method === "PUT"
+          ? {
+              json: {
+                limit_value: 100,
+                period: "day",
+                period_start: null,
+                expires_at: null,
+                warn_at: 0.8,
+                enabled: true,
+              },
+            }
+          : {}),
+      });
+      expect(response.status).toBe(403);
+    }
+    const response = await h.request("/v1/admin/vendors", { token: owner.token });
+    expect(response.status).toBe(200);
+    const vendors = await j(response);
+    expect(vendors.items.some((v: { vendor: string }) => v.vendor === "resend")).toBe(true);
+    expect(
+      (
+        await h.request("/v1/admin/vendors/resend", {
+          method: "PUT",
+          token: owner.token,
+          json: {
+            limit_value: 100,
+            period: "day",
+            period_start: null,
+            expires_at: null,
+            warn_at: 0,
+            enabled: true,
+          },
+        })
+      ).status,
+    ).toBe(400);
+    expect(
+      (
+        await h.request("/v1/admin/vendors/resend", {
+          method: "PUT",
+          token: owner.token,
+          json: {
+            limit_value: 100,
+            period: "day",
+            period_start: null,
+            expires_at: null,
+            warn_at: 0.9,
+            enabled: true,
+          },
+        })
+      ).status,
+    ).toBe(200);
+  });
+
   it("shows services and health", async () => {
     const s = await j(await h.request("/v1/admin/services", { token: owner.token }));
     const byName = Object.fromEntries(s.items.map((i: { name: string }) => [i.name, i]));

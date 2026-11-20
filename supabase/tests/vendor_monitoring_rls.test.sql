@@ -1,0 +1,14 @@
+begin;
+create extension if not exists pgtap with schema extensions;
+select plan(7);
+select ok((select relrowsecurity from pg_class where oid='public.vendor_alerts'::regclass),'alerts have RLS');
+select ok((select relrowsecurity from pg_class where oid='public.vendor_observations'::regclass),'observations have RLS');
+select ok(exists(select 1 from pg_policies where tablename='vendor_alerts' and policyname='casama_worker_all'),'worker has alert policy');
+select ok(exists(select 1 from pg_policies where tablename='vendor_observations' and policyname='casama_worker_all'),'worker has observations policy');
+set local role authenticated;
+select throws_ok($$select * from public.vendor_alerts$$,'42501',null,'users cannot read instance alert recipients or text');
+select throws_ok($$select * from public.vendor_observations$$,'42501',null,'users cannot read account observations');
+reset role;
+select is((select count(*)::int from public.vendor_limits),21,'catalog contains vendor catalog includes daily and monthly meters');
+select * from finish();
+rollback;

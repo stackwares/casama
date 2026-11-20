@@ -4886,6 +4886,14 @@ class SupabaseBackend implements Backend {
   Future<List<AbuseEvent>> adminAbuseEvents() async =>
       (await api.admin.adminAbuseEvents()).data!.items;
   @override
+  Future<List<AdminVendor>> adminVendors() async => (await api.admin.adminVendors()).data!.items;
+  @override
+  Future<AdminVendor> setAdminVendor(String vendor, VendorSettings settings) async =>
+      (await api.admin.setAdminVendor(vendor: vendor, vendorSettings: settings)).data!;
+  @override
+  Future<AdminVendor> checkAdminVendor(String vendor) async =>
+      (await api.admin.checkAdminVendor(vendor: vendor)).data!;
+  @override
   Future<List<AdminService>> adminServices() async =>
       (await api.admin.adminServices()).data!.items;
   @override

@@ -20,6 +20,12 @@ adds a paid service or a vendor changes its price.
 - **Rule of thumb:** charge at least **cost × 1.3** for metered usage, and price plans so that
   `price × (1 − store fee) ≥ included costs × 1.3 + fixed costs per user`.
 
+## Vendor monitoring
+
+The **Admin → Vendors** implementation is built locally; production rollout is pending. Its hourly usage checks use read-only
+vendor APIs and local counters; they add no paid dependency. Usage tracking does not change
+vendor caps or buy credits. See `docs/VENDOR-USAGE-PLAN.md` for rollout status.
+
 ## Fixed costs (paid whether or not anyone uses it)
 
 | Item | Cost | Notes |

@@ -114,6 +114,8 @@ lib/src/model/admin_service.dart
 lib/src/model/admin_service_list.dart
 lib/src/model/admin_user.dart
 lib/src/model/admin_user_list.dart
+lib/src/model/admin_vendor.dart
+lib/src/model/admin_vendor_list.dart
 lib/src/model/admit_waitlist_request.dart
 lib/src/model/agent_import_plan.dart
 lib/src/model/agent_import_plan_leftovers_inner.dart
@@ -933,6 +935,8 @@ lib/src/model/usage_report_by_source_inner.dart
 lib/src/model/usage_source.dart
 lib/src/model/user_fact.dart
 lib/src/model/user_fact_list.dart
+lib/src/model/vendor_reading.dart
+lib/src/model/vendor_settings.dart
 lib/src/model/visibility.dart
 lib/src/model/voice_heartbeat.dart
 lib/src/model/voice_heartbeat_request.dart

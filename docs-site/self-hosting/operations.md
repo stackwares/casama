@@ -34,6 +34,39 @@ sat idle for 5 minutes.
 passes `-v`.
 :::
 
+## Vendor usage
+
+Instance owners can open **Admin → Vendors** to see provider quotas, prepaid balances and
+renewal dates. Set purchased credits and renewal dates to match your own accounts. Counted usage
+starts when monitoring is installed; it cannot recover calls made before then.
+
+An **Unknown** reading means the check failed. It does not mean the provider still has credit.
+A provider without its monitoring credential needs setup before it can report a balance. Buying
+credits and changing provider plans remain actions on the provider's billing page.
+
+Usage readers use separate monitoring credentials where available:
+
+| Provider | Settings |
+| --- | --- |
+| OpenRouter | `VENDOR_OPENROUTER_MANAGEMENT_KEY` |
+| DeepSeek | Existing `DEEPSEEK_SEARCH_API_KEY` |
+| Twilio | `VENDOR_TWILIO_ACCOUNT_SID`, `VENDOR_TWILIO_AUTH_TOKEN` |
+| Name.com | Existing registrar credentials |
+| Google Maps | `GOOGLE_USAGE_SA_JSON`, `GOOGLE_USAGE_TILE_METHOD` |
+| MapTiler | `VENDOR_MAPTILER_SERVICE_TOKEN` |
+| Composio | `VENDOR_COMPOSIO_ORG_KEY` |
+| Cloudflare | `VENDOR_CLOUDFLARE_ACCOUNT_ID`, `VENDOR_CLOUDFLARE_BILLING_TOKEN` |
+| HERE | `VENDOR_HERE_KEY_ID`, `VENDOR_HERE_KEY_SECRET`, `VENDOR_HERE_REALM`, `VENDOR_HERE_FEATURE_ID` |
+
+Keep credentials in your secret store. MapTiler service tokens grant full account access; consider
+that scope before supplying one. Google Maps monitoring must filter the billed tile method;
+counting session or viewport requests would overstate tile usage.
+
+Set `VENDOR_ALERT_EMAILS` to comma-separated alert recipients. Without it, alerts use
+`INSTANCE_ADMIN_EMAILS`, or the first instance account when that list is empty. Email delivery
+uses the configured transactional sender and backup. Counts cover calls made through this server;
+ZeptoMail sends made directly by Supabase Auth are excluded.
+
 ## Upgrade
 
 1. Back up first:

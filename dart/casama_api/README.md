@@ -123,7 +123,9 @@ Class | Method | HTTP request | Description
 [*AdminApi*](doc/AdminApi.md) | [**adminUpdateInviteCampaign**](doc/AdminApi.md#adminupdateinvitecampaign) | **PATCH** /v1/admin/invite-campaigns/{code} | Change a campaign code&#39;s total, dates or name, or turn it off (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**adminUpdates**](doc/AdminApi.md#adminupdates) | **GET** /v1/admin/updates | Whether a newer Casama release exists
 [*AdminApi*](doc/AdminApi.md) | [**adminUsers**](doc/AdminApi.md#adminusers) | **GET** /v1/admin/users | Everyone on this instance
+[*AdminApi*](doc/AdminApi.md) | [**adminVendors**](doc/AdminApi.md#adminvendors) | **GET** /v1/admin/vendors | Vendor usage (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**adminWaitlist**](doc/AdminApi.md#adminwaitlist) | **GET** /v1/admin/waitlist | The waitlist: numbers, the gate and a page of entries (owner only)
+[*AdminApi*](doc/AdminApi.md) | [**checkAdminVendor**](doc/AdminApi.md#checkadminvendor) | **POST** /v1/admin/vendors/{vendor}/check | 
 [*AdminApi*](doc/AdminApi.md) | [**checkRemoteAccess**](doc/AdminApi.md#checkremoteaccess) | **POST** /v1/admin/remote-access/check | Check the address now: Casama Cloud, the connector, and the address from outside
 [*AdminApi*](doc/AdminApi.md) | [**getSupportWebStats**](doc/AdminApi.md#getsupportwebstats) | **GET** /v1/admin/support-web | Today&#39;s use of the website assistant and the questions it couldn&#39;t answer (instance owners)
 [*AdminApi*](doc/AdminApi.md) | [**listContentReports**](doc/AdminApi.md#listcontentreports) | **GET** /v1/admin/content-reports | Reports from inside the app, open first (instance owners)
@@ -139,6 +141,7 @@ Class | Method | HTTP request | Description
 [*AdminApi*](doc/AdminApi.md) | [**setAdminBot**](doc/AdminApi.md#setadminbot) | **PUT** /v1/admin/admin-bot | Turn the admin bot on or off, or choose its bot (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**setAdminCloudModels**](doc/AdminApi.md#setadmincloudmodels) | **PUT** /v1/admin/models | Change the models Casama Cloud runs (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**setAdminConnectionSettings**](doc/AdminApi.md#setadminconnectionsettings) | **PUT** /v1/admin/connections | Choose how apps without their own sign-in connect (owner only)
+[*AdminApi*](doc/AdminApi.md) | [**setAdminVendor**](doc/AdminApi.md#setadminvendor) | **PUT** /v1/admin/vendors/{vendor} | 
 [*AdminApi*](doc/AdminApi.md) | [**setBillingSettings**](doc/AdminApi.md#setbillingsettings) | **PATCH** /v1/admin/billing-settings | Change the markup on usage paid with Casama&#39;s keys
 [*AdminApi*](doc/AdminApi.md) | [**setOrgLimits**](doc/AdminApi.md#setorglimits) | **PATCH** /v1/admin/orgs/{id}/limits | Set a workspace&#39;s quotas
 [*AdminApi*](doc/AdminApi.md) | [**setRemoteAccessSettings**](doc/AdminApi.md#setremoteaccesssettings) | **PUT** /v1/admin/remote-access/settings | Casama Link settings on this server: private notifications (owner only)
@@ -656,6 +659,8 @@ Class | Method | HTTP request | Description
  - [AdminServiceList](doc/AdminServiceList.md)
  - [AdminUser](doc/AdminUser.md)
  - [AdminUserList](doc/AdminUserList.md)
+ - [AdminVendor](doc/AdminVendor.md)
+ - [AdminVendorList](doc/AdminVendorList.md)
  - [AdmitWaitlistRequest](doc/AdmitWaitlistRequest.md)
  - [AgentImportPlan](doc/AgentImportPlan.md)
  - [AgentImportPlanLeftoversInner](doc/AgentImportPlanLeftoversInner.md)
@@ -1475,6 +1480,8 @@ Class | Method | HTTP request | Description
  - [UsageSource](doc/UsageSource.md)
  - [UserFact](doc/UserFact.md)
  - [UserFactList](doc/UserFactList.md)
+ - [VendorReading](doc/VendorReading.md)
+ - [VendorSettings](doc/VendorSettings.md)
  - [Visibility](doc/Visibility.md)
  - [VoiceHeartbeat](doc/VoiceHeartbeat.md)
  - [VoiceHeartbeatRequest](doc/VoiceHeartbeatRequest.md)

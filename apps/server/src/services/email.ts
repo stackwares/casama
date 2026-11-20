@@ -41,6 +41,8 @@ export function resendEmail(
   apiKey: string,
   from: string,
   fetchImpl: typeof fetch = fetch,
+  /** Sees every answer from Resend, for its quota headers (docs/VENDOR-USAGE-PLAN.md). Must not throw. */
+  onResponse?: (res: Response) => void,
 ): EmailSender {
   return {
     enabled: true,
@@ -59,6 +61,11 @@ export function resendEmail(
           ...(msg.headers ? { headers: msg.headers } : {}),
         }),
       });
+      try {
+        onResponse?.(res);
+      } catch {
+        // Reading headers must never fail a send.
+      }
       if (!res.ok) throw new Error(`email send failed with status ${res.status}`);
     },
   };

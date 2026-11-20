@@ -2915,6 +2915,39 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/admin/vendors": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Vendor usage (owner only) */
+        get: operations["adminVendors"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/vendors/{vendor}/check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["checkAdminVendor"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/admin/reports": {
         parameters: {
             query?: never;
@@ -2959,6 +2992,22 @@ export interface paths {
         get?: never;
         /** Create or change a plan; workspaces on it get the new limits right away */
         put: operations["savePlan"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/vendors/{vendor}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["setAdminVendor"];
         post?: never;
         delete?: never;
         options?: never;
@@ -10829,6 +10878,45 @@ export interface components {
             /** Format: date-time */
             last_sign_in_at: string | null;
             orgs: number;
+        };
+        AdminVendorList: {
+            items: components["schemas"]["AdminVendor"][];
+        };
+        AdminVendor: components["schemas"]["VendorSettings"] & {
+            billing_url: string | null;
+            impact: string | null;
+            vendor: string;
+            label: string;
+            /** @enum {string} */
+            kind: "quota" | "balance" | "renewal";
+            unit: string;
+            latest: components["schemas"]["VendorReading"];
+            history: components["schemas"]["VendorReading"][];
+        };
+        VendorReading: {
+            checked_at: string;
+            used: number | null;
+            remaining: number | null;
+            limit_value: number | null;
+            resets_at: string | null;
+            /** @enum {string} */
+            status: "ok" | "low" | "out" | "unknown";
+            /** @enum {string} */
+            source: "api" | "own_count" | "manual";
+            error: string | null;
+        } | null;
+        VendorSettings: {
+            limit_value: number | null;
+            /** @enum {string|null} */
+            period: "day" | "month" | "billing_period" | "prepaid" | null;
+            /** Format: date-time */
+            period_start: string | null;
+            /** Format: date-time */
+            expires_at: string | null;
+            warn_at: number;
+            enabled: boolean;
+            /** @default 5 */
+            balance_warn_below: number;
         };
         ReportedCreationList: {
             items: components["schemas"]["ReportedCreation"][];
@@ -25090,6 +25178,120 @@ export interface operations {
             };
         };
     };
+    adminVendors: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Vendor usage (owner only) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminVendorList"];
+                };
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    checkAdminVendor: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                vendor: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Latest vendor reading */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminVendor"];
+                };
+            };
+            /** @description Validation failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Rate limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     listReportedCreations: {
         parameters: {
             query?: never;
@@ -25225,6 +25427,86 @@ export interface operations {
             };
             /** @description Not found */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    setAdminVendor: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                vendor: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VendorSettings"];
+            };
+        };
+        responses: {
+            /** @description Updated vendor */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminVendor"];
+                };
+            };
+            /** @description Validation failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Rate limited */
+            429: {
                 headers: {
                     [name: string]: unknown;
                 };

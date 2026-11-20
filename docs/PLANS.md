@@ -23,7 +23,6 @@ same commit. Shipping details (deploys, app builds) move fast, so check them bef
 | [RETENTION-MESSAGING-PLAN](RETENTION-MESSAGING-PLAN.md) | 2026-11-20 | §14 decisions; then 1.0 release and Apple's access |
 | [SIRI-AI-PLAN](SIRI-AI-PLAN.md) | 2026-11-20 | §13 decisions; then a debug build on the iPhone for Phase 0 |
 | [USAGE-LIMITS-PLAN](USAGE-LIMITS-PLAN.md) | 2026-11-20 | Oliver's go-ahead to build; the decisions are made (§2) |
-| [VENDOR-USAGE-PLAN](VENDOR-USAGE-PLAN.md) | 2026-11-20 | Go-ahead to build (decisions made, §10); a yes for the VPS env change in Phase 5 |
 | [WEEKLY-PLAN-PLAN](WEEKLY-PLAN-PLAN.md) | 2026-11-20 | Oliver's answers (draft) |
 
 ## In progress
@@ -34,6 +33,7 @@ same commit. Shipping details (deploys, app builds) move fast, so check them bef
 | [LAUNCH-VIDEO-PLAN](LAUNCH-VIDEO-PLAN.md) |  | Main cut v2, 30 s cut and 15 s cut made. Launch date and the narration voice are open; every video needs narration |
 | [LIBRARY-PLAN](LIBRARY-PLAN.md) | D-274, D-276, D-281, D-291, D-294, D-295 | Pins, select several, "Recently opened", "what was made for a ticket" |
 | [MASTER-PLAN-2026-11](MASTER-PLAN-2026-11.md) | D-267..D-293 | Most stages built (its status line is out of date). Left: Add 8 (languages, same as Gaps 7), Add 13 (start by text), Add 15 (SOC 2, data processing agreement), Library Phase 4 items above. Not checked item by item |
+| [VENDOR-USAGE-PLAN](VENDOR-USAGE-PLAN.md) | §10 approved | Phases 1–4 implemented locally; full verification and Phase 5 account setup/live checks. Production env/deploy need a separate yes |
 | [WAITLIST-PLAN](WAITLIST-PLAN.md) | D-427 | Phases 1–3 live; Phase 4 on launch day; store builds |
 
 ## Built (waiting to ship)

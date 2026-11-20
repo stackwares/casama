@@ -41,6 +41,8 @@ import 'package:casama_api/src/model/admin_service.dart';
 import 'package:casama_api/src/model/admin_service_list.dart';
 import 'package:casama_api/src/model/admin_user.dart';
 import 'package:casama_api/src/model/admin_user_list.dart';
+import 'package:casama_api/src/model/admin_vendor.dart';
+import 'package:casama_api/src/model/admin_vendor_list.dart';
 import 'package:casama_api/src/model/admit_waitlist_request.dart';
 import 'package:casama_api/src/model/agent_import_plan.dart';
 import 'package:casama_api/src/model/agent_import_plan_leftovers_inner.dart';
@@ -825,6 +827,8 @@ import 'package:casama_api/src/model/usage_report_by_person_inner.dart';
 import 'package:casama_api/src/model/usage_report_by_source_inner.dart';
 import 'package:casama_api/src/model/user_fact.dart';
 import 'package:casama_api/src/model/user_fact_list.dart';
+import 'package:casama_api/src/model/vendor_reading.dart';
+import 'package:casama_api/src/model/vendor_settings.dart';
 import 'package:casama_api/src/model/voice_heartbeat.dart';
 import 'package:casama_api/src/model/voice_heartbeat_request.dart';
 import 'package:casama_api/src/model/voice_heartbeat_request_usage.dart';
@@ -998,6 +1002,10 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return AdminUser.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AdminUserList':
           return AdminUserList.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'AdminVendor':
+          return AdminVendor.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'AdminVendorList':
+          return AdminVendorList.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AdmitWaitlistRequest':
           return AdmitWaitlistRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AgentImportPlan':
@@ -2671,6 +2679,10 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return UserFact.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'UserFactList':
           return UserFactList.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'VendorReading':
+          return VendorReading.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'VendorSettings':
+          return VendorSettings.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Visibility':
           
           

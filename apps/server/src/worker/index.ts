@@ -93,6 +93,7 @@ import {
 } from "../services/admin-bot.ts";
 import { getCloudModels } from "../services/cloud-models.ts";
 import { serverPushSender } from "../services/push-sender.ts";
+import { countingSearch, createVendorCounter } from "../services/vendors/count.ts";
 import { searchDomains } from "../sites/buying.ts";
 import { sitesSettings } from "../sites/config.ts";
 import { drainSteps } from "./drain.ts";
@@ -148,6 +149,11 @@ export interface WorkerOptions {
   /** How long a stopping worker lets steps in flight finish (D-402); default 45 s. */
   drainMs?: number;
   db?: Database;
+  vendorUsage?: {
+    env: import("../env.ts").Env;
+    email: import("../services/email.ts").EmailSender;
+    adminDb?: Database;
+  };
   /** Desktop companion tunnel (the API's internal URL and token). */
   local?: { apiUrl: string; internalToken: string };
   /** Sandbox supervisor; without it bots have no computers. */
@@ -462,13 +468,18 @@ export async function startWorker(opts: WorkerOptions) {
   const stopGlance = glancePusher ? EventBus.observe(glancePusher.observe) : () => {};
   if (glancePusher) notifications.onNotify = glancePusher.notified;
   // The server's own search chain (D-384), built once; vendor APIs through the egress guard.
+  // Parallel and Serper queries on the server's keys are counted for Admin → Vendors
+  // (docs/VENDOR-USAGE-PLAN.md); a workspace's own search key is its own bill and isn't.
+  const vendorCounter = createVendorCounter(db, {
+    log: (msg, extra) => opts.logger.warn(msg, extra),
+  });
   const serverSearch = serverSearchChain({
     order: opts.serverSearch?.order,
     keys: opts.serverSearch?.keys ?? {},
     searxngUrl: opts.searxngUrl,
     fetch: fetchOut,
     bases: opts.providerBases,
-  });
+  }).map((p) => countingSearch(p, vendorCounter));
   const searchCache = new SearchCache();
   const searchError = (provider: string, err: unknown) =>
     opts.logger.warn("web search provider failed", { provider, error: (err as Error).message });
@@ -767,6 +778,7 @@ export async function startWorker(opts: WorkerOptions) {
   });
   configureWorkflows({
     db,
+    vendorUsage: opts.vendorUsage,
     slots: new RunSlots(
       opts.runConcurrency ?? 20,
       Math.min(opts.runWorkspaceConcurrency ?? 5, opts.runConcurrency ?? 20),

@@ -5076,6 +5076,12 @@ class FakeBackend implements Backend {
   }
 
   @override
+  Future<List<AdminVendor>> adminVendors() async => [];
+  @override
+  Future<AdminVendor> setAdminVendor(String vendor, VendorSettings settings) => throw UnimplementedError();
+  @override
+  Future<AdminVendor> checkAdminVendor(String vendor) => throw UnimplementedError();
+  @override
   Future<List<AdminService>> adminServices() async => [
     AdminService(
       name: 'Database',

@@ -234,7 +234,7 @@ export async function noticeInstanceOwners(
   const rows = admins.length
     ? await db.execute(sql`
         insert into public.notifications (user_id, kind, payload)
-        select u.id, ${kind}, ${body}::jsonb from auth.users u where lower(u.email) = any(${admins}) returning id`)
+        select u.id, ${kind}, ${body}::jsonb from auth.users u where lower(u.email) in (select jsonb_array_elements_text(${JSON.stringify(admins)}::jsonb)) returning id`)
     : await db.execute(sql`
         insert into public.notifications (user_id, kind, payload)
         select u.id, ${kind}, ${body}::jsonb from auth.users u order by u.created_at limit 1 returning id`);

@@ -210,6 +210,25 @@ export const EnvSchema = z.object({
   CASAMA_LINK_CLOUD: bool.default(true),
   CLOUD_MODEL_UPSTREAM_URL: z.url().default("https://openrouter.ai/api/v1"),
   CLOUD_MODEL_UPSTREAM_KEY: z.string().optional(),
+  /** Existing management key used only for vendor balance reads. */
+  VENDOR_OPENROUTER_MANAGEMENT_KEY: z.string().optional(),
+  /** MapTiler only offers full-access service tokens; use an existing approved token only. */
+  VENDOR_MAPTILER_SERVICE_TOKEN: z.string().optional(),
+  VENDOR_TWILIO_ACCOUNT_SID: z
+    .string()
+    .regex(/^AC[a-fA-F0-9]{32}$/)
+    .optional(),
+  VENDOR_TWILIO_AUTH_TOKEN: z.string().optional(),
+  VENDOR_CLOUDFLARE_ACCOUNT_ID: z.string().optional(),
+  VENDOR_CLOUDFLARE_BILLING_TOKEN: z.string().optional(),
+  VENDOR_HERE_KEY_ID: z.string().optional(),
+  VENDOR_HERE_KEY_SECRET: z.string().optional(),
+  VENDOR_HERE_REALM: z.string().optional(),
+  VENDOR_HERE_FEATURE_ID: z.string().optional(),
+  GOOGLE_USAGE_SA_JSON: z.string().optional(),
+  GOOGLE_USAGE_TILE_METHOD: z.string().optional(),
+  VENDOR_COMPOSIO_ORG_KEY: z.string().optional(),
+  VENDOR_ALERT_EMAILS: z.string().optional(),
   /**
    * Which OpenRouter providers serve calls on that key (D-354). One model is sold by dozens of
    * providers at very different prices, each with its own prompt cache. `price` tries the cheapest

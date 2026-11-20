@@ -1,7 +1,16 @@
 # Vendor usage and balances in Admin, with alerts: plan
 
-Status: **not started** (written 2026-11-20). Decisions made (§10, Oliver: "Choose the best email
-for alerts. Decide all for me"); waiting on the go-ahead to build. No code yet.
+Status: **in progress** (approved 2026-11-20). Phases 1–4 implemented locally. Full server
+checks and database policy tests pass; Flutter full verification is in progress. Phase 5 account
+setup and live verification remain incomplete. No production environment change or deployment
+has been performed.
+
+- Phase 1: implemented; atomic counters and RLS tested. Auth's direct SMTP sends are excluded.
+- Phase 2: implemented; all nine API readers tested with fixtures, plus header observations.
+- Phase 3: implemented; hourly workflow, durable alerts, recovery, summary and renewal tests pass.
+- Phase 4: implemented; contracts/client generation, owner routes and Flutter tests pass.
+- Phase 5: in progress; alert alias and Google reader account created. Credentials, mailbox
+  filter, production configuration and live provider reconciliation remain pending (§11).
 
 Oliver (2026-11-20): "Does our admin console show our usages for all our services we use like
 maptiler, resend, zeptomail, google maps, etc? So we can also monitor which one is almost gone or
@@ -202,3 +211,38 @@ Full suites through `scripts/heavy.sh` once at the end.
    to the admins' phones, repeated once a day while they last. Back to `ok` → one email.
 
 Phase 5 adds the `alerts@casama.ai` alias and filter with the `zmail` CLI.
+
+## 11. Implementation and rollout log
+
+2026-11-20: implementation approved and started. The database foundation has focused pgTAP
+coverage for constraints, worker writes and denied direct authenticated reads (14 passing checks).
+
+Credential audit (names only): existing vault items include OpenRouter · Casama · management key
+and Composio API key: Casama org, casama_prod project. Dedicated monitoring credentials were not
+found by the initial name searches for Google, MapTiler, HERE or Cloudflare. Existing tile and
+infrastructure keys must not be assumed to grant usage access.
+
+The active local Google CLI account lacks `iam.serviceAccounts.list` on `kasama-ai`; creating the
+Monitoring Viewer service account needs authorized project access. Browser permission for vendor
+setup has been requested. Production environment edits and deployment remain pending the
+separate approval required in Phase 5. No production settings have been changed by this task.
+
+2026-11-20 provider verification correction: MapTiler's Admin API documentation describes service
+tokens as full account read/write credentials, not analytics-only credentials. Do not create a
+new MapTiler service token under this plan's read-only approval. Monitoring can use an existing
+explicitly authorized token or own counts where available; otherwise show Not set up. Source:
+https://docs.maptiler.com/cloud/admin-api/ . The shared Zoho browser session did not show the
+Casama organization/mailbox; it was closed without changes. Alias creation remains pending.
+
+2026-11-20: `alerts@casama.ai` created using the authenticated Zoho CLI and independently verified
+on the `hello@casama.ai` account. No test email sent. The CLI's `alias` and `filter` commands are
+shell helpers, not mailbox aliases or incoming-mail filters; the mailbox alias used
+`userManagement addEmailAlias`. The Alerts label/filter remains pending a mailbox UI/API path.
+Temporary credential and account-response files were removed after verification.
+
+Google setup update: browser project access succeeded. Created service account
+`casama-usage-reader@kasama-ai.iam.gserviceaccount.com` with Monitoring Viewer. A JSON key download
+was not exposed by the shared browser's download inventory or local Downloads folder. That key
+was immediately deleted, and the account's Keys page confirmed no keys remain. No uncollected
+active credential is left behind. Google credential capture into Vaultwarden and metric-method
+verification remain pending; the service account itself is ready.

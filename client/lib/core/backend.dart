@@ -2599,6 +2599,9 @@ abstract class Backend {
   Future<List<AbuseEvent>> adminAbuseEvents();
   Future<AdminOrg> setOrgLimits(String orgId, Map<String, num> limits);
   Future<List<AdminService>> adminServices();
+  Future<List<AdminVendor>> adminVendors();
+  Future<AdminVendor> setAdminVendor(String vendor, VendorSettings settings);
+  Future<AdminVendor> checkAdminVendor(String vendor);
   Future<UpdateNotice> adminUpdates();
 
   /// How apps without their own sign-in connect (D-173): the server's Composio account or people's own.

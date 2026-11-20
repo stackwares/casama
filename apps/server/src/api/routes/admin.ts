@@ -1,3 +1,4 @@
+import { checkVendor, listVendors, updateVendor } from "../../services/vendors/index.ts";
 /** Owner admin console (Phase 6): instance totals, users, quotas, services, update notices. */
 
 import { replaceAllDataKeys } from "@casama/agent";
@@ -8,12 +9,7 @@ import type { OpenAPIHono } from "@hono/zod-openapi";
 import { sql } from "drizzle-orm";
 import { ee } from "../../ee.ts";
 import { suspendOrg, unsuspendOrg } from "../../services/abuse.ts";
-import {
-  getAdminBot,
-  isListedOwner,
-  ownerEmails,
-  setAdminBot,
-} from "../../services/admin-bot.ts";
+import { getAdminBot, isListedOwner, ownerEmails, setAdminBot } from "../../services/admin-bot.ts";
 import { capacityReport } from "../../services/capacity.ts";
 import { getCloudModels, setCloudModels } from "../../services/cloud-models.ts";
 import {
@@ -66,6 +62,26 @@ export function registerAdminRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
   const { db, env } = deps;
   const requireOwner = instanceOwnerCheck(deps);
 
+  app.openapi(routes.adminVendors, async (c) => {
+    await requireOwner(requireClaims(c.get("claims")));
+    return c.json({ items: await listVendors(db) }, 200);
+  });
+  app.openapi(routes.setAdminVendor, async (c) => {
+    await requireOwner(requireClaims(c.get("claims")));
+    const vendor = c.req.valid("param").vendor;
+    if (!(await updateVendor(db, vendor, c.req.valid("json"))))
+      throw new ApiError(404, "not_found", "Vendor not found");
+    const result = (await listVendors(db)).find((v) => v.vendor === vendor);
+    if (!result) throw new ApiError(404, "not_found", "Vendor not found");
+    return c.json(result, 200);
+  });
+  app.openapi(routes.checkAdminVendor, async (c) => {
+    await requireOwner(requireClaims(c.get("claims")));
+    const result = await checkVendor(db, env, c.req.valid("param").vendor);
+    if (!result) throw new ApiError(404, "not_found", "Vendor not found");
+    return c.json(result, 200);
+  });
+
   const connectionsOut = (settings: ConnectionSettings) => ({
     ...settings,
     composio_key: !!env.COMPOSIO_API_KEY,
@@ -111,7 +127,9 @@ export function registerAdminRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     }
     await setAdminBot(db, { enabled: body.enabled, bot_id: botId ?? null });
     const [org] = botId
-      ? await db.execute<{ org_id: string }>(sql`select org_id from public.bots where id = ${botId}::uuid`)
+      ? await db.execute<{ org_id: string }>(
+          sql`select org_id from public.bots where id = ${botId}::uuid`,
+        )
       : [];
     if (org)
       await db.execute(sql`insert into public.audit_log (org_id, actor_type, actor_id, action, target_type, target_id, metadata)

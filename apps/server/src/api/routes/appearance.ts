@@ -1,7 +1,9 @@
+import { observeUnsplash } from "../../services/vendors/observations.ts";
 /** Wallpaper photo search through the server (D-087), so the source's key never ships in the app. */
 
 import { routes } from "@casama/contracts";
 import type { OpenAPIHono } from "@hono/zod-openapi";
+import { countingWallpapers, createVendorCounter } from "../../services/vendors/count.ts";
 import { unsplashSource, type WallpaperSource } from "../../services/wallpapers.ts";
 import { ApiError } from "../errors.ts";
 import type { AppDeps, AppEnv } from "../types.ts";
@@ -9,8 +11,24 @@ import type { AppDeps, AppEnv } from "../types.ts";
 export function registerAppearanceRoutes(
   app: OpenAPIHono<AppEnv>,
   deps: AppDeps,
+  // Photo searches on the server's own key are counted for Admin → Vendors (docs/VENDOR-USAGE-PLAN.md).
   source: WallpaperSource | null = deps.env.UNSPLASH_ACCESS_KEY
-    ? unsplashSource({ accessKey: deps.env.UNSPLASH_ACCESS_KEY, apiUrl: deps.env.UNSPLASH_API_URL })
+    ? countingWallpapers(
+        unsplashSource({
+          accessKey: deps.env.UNSPLASH_ACCESS_KEY,
+          apiUrl: deps.env.UNSPLASH_API_URL,
+          fetch: async (input, init) => {
+            const response = await fetch(input, init);
+            const url = new URL(
+              typeof input === "string" ? input : input instanceof URL ? input.href : input.url,
+            );
+            if (url.origin === new URL(deps.env.UNSPLASH_API_URL).origin)
+              void observeUnsplash(deps.db, response.headers);
+            return response;
+          },
+        }),
+        createVendorCounter(deps.db, { log: (msg, extra) => deps.logger.warn(msg, extra) }),
+      )
     : null,
 ) {
   const requireSource = (c: { get(k: "claims"): unknown }) => {

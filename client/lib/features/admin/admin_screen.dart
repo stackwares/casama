@@ -1,5 +1,6 @@
 import '../../core/billing.dart';
 import 'resets_tab.dart';
+import 'vendors_tab.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:casama_sdk/casama_sdk.dart';
@@ -49,7 +50,7 @@ class AdminScreen extends ConsumerWidget {
   /// The tab to open on (`?tab=domains` from a notification), or the overview.
   final String? tab;
 
-  static const _tabs = ['overview', 'users', 'workspaces', 'services', 'pricing', 'reports', 'domains', 'support', 'abuse', 'waitlist', 'resets'];
+  static const _tabs = ['overview', 'users', 'workspaces', 'services', 'pricing', 'reports', 'domains', 'support', 'abuse', 'waitlist', 'vendors', 'resets'];
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -83,6 +84,7 @@ class AdminScreen extends ConsumerWidget {
                   Tab(height: 40, text: l10n.adminSupport),
                   Tab(height: 40, text: l10n.adminAbuse),
                   Tab(height: 40, text: l10n.adminWaitlist),
+                  Tab(height: 40, text: l10n.adminVendors),
                   if (billingEnabled) Tab(height: 40, text: l10n.adminResets),
                 ],
               )),
@@ -90,7 +92,7 @@ class AdminScreen extends ConsumerWidget {
           ),
         ),
         body: TabBarView(
-          children: [_Overview(), _Users(), _Orgs(), _Services(), PricingTab(), ReportsTab(), AdminDomainsTab(), SupportTicketsTab(), _Abuse(), AdminWaitlistTab(), if (billingEnabled) const ResetsTab()],
+          children: [_Overview(), _Users(), _Orgs(), _Services(), PricingTab(), ReportsTab(), AdminDomainsTab(), SupportTicketsTab(), _Abuse(), AdminWaitlistTab(), const VendorsTab(), if (billingEnabled) const ResetsTab()],
         ),
       ),
     );
@@ -221,6 +223,7 @@ class _Overview extends ConsumerWidget {
                 const SizedBox(height: AppSpace.md),
                 const CapacityCard(),
                 const MarginCard(),
+                VendorAttentionBanner(tabIndex: AdminScreen._tabs.indexOf('vendors')),
                 FormNote(l10n.casamaVersion(o.version), icon: LucideIcons.badgeCheck),
               ],
             );

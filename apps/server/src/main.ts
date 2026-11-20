@@ -13,7 +13,7 @@ import {
   widgetPushSender,
 } from "@casama/agent";
 import { GA4_TWINS } from "@casama/contracts";
-import { contentKeys, createDb } from "@casama/db";
+import { contentKeys, createDb, type Database } from "@casama/db";
 import {
   captureError,
   createLogger,
@@ -71,6 +71,8 @@ import { serverPushSender } from "./services/push-sender.ts";
 import { referralConfig } from "./services/referrals.ts";
 import { remoteAccessFromEnv } from "./services/remote-access.ts";
 import { startGalleryPrompts, startRemoteSettings } from "./services/remote-settings.ts";
+import { countingEmail, createVendorCounter, smtpVendor } from "./services/vendors/count.ts";
+import { observeResend } from "./services/vendors/observations.ts";
 import { domainsBuyingFromEnv } from "./sites/buying.ts";
 import { domainsUpkeepFromEnv, siteInstanceId } from "./sites/domains.ts";
 
@@ -177,19 +179,41 @@ const allowCidrs = env.OUTBOUND_ALLOW_CIDRS?.split(",")
  * The email sender: Resend or SMTP (D-174), with the Resend backup behind it when
  * EMAIL_BACKUP_RESEND_API_KEY is set (D-433). Undefined when email isn't configured.
  */
-async function emailFromEnv(): Promise<EmailSender | undefined> {
-  const main = env.RESEND_API_KEY
-    ? resendEmail(env.RESEND_API_KEY, env.EMAIL_FROM)
-    : env.SMTP_HOST
+async function emailFromEnv(db: Database): Promise<EmailSender | undefined> {
+  // Sends are counted for Admin → Vendors (docs/VENDOR-USAGE-PLAN.md), each at the provider that took it.
+  const counter = createVendorCounter(db, { log: (msg, extra) => logger.warn(msg, extra) });
+  const smtp =
+    !env.RESEND_API_KEY && env.SMTP_HOST
       ? await smtpEmail(
           { host: env.SMTP_HOST, port: env.SMTP_PORT, user: env.SMTP_USER, pass: env.SMTP_PASS },
           env.EMAIL_FROM,
         )
       : undefined;
+  // Only ZeptoMail is counted; another SMTP server is a self-hoster's own.
+  const smtpOwner = smtpVendor(env.SMTP_HOST);
+  const main = env.RESEND_API_KEY
+    ? countingEmail(
+        resendEmail(env.RESEND_API_KEY, env.EMAIL_FROM, fetch, (r) => {
+          void observeResend(db, r.headers);
+        }),
+        "resend",
+        counter,
+      )
+    : smtp && smtpOwner
+      ? countingEmail(smtp, smtpOwner, counter)
+      : smtp;
   if (!env.EMAIL_BACKUP_RESEND_API_KEY) return main;
-  const backup = resendEmail(
-    env.EMAIL_BACKUP_RESEND_API_KEY,
-    env.EMAIL_BACKUP_FROM ?? env.EMAIL_FROM,
+  const backup = countingEmail(
+    resendEmail(
+      env.EMAIL_BACKUP_RESEND_API_KEY,
+      env.EMAIL_BACKUP_FROM ?? env.EMAIL_FROM,
+      fetch,
+      (r) => {
+        void observeResend(db, r.headers);
+      },
+    ),
+    "resend",
+    counter,
   );
   if (!main) return backup;
   return withBackupEmail(main, backup, (err) =>
@@ -240,7 +264,7 @@ if (env.MODE === "api") {
       supabaseUrl: env.SUPABASE_URL,
       jwtSecret: env.SUPABASE_JWT_SECRET,
     }),
-    email: (await emailFromEnv()) ?? disabledEmail,
+    email: (await emailFromEnv(handle.db)) ?? disabledEmail,
     pdf: env.PDF_RENDERER_URL
       ? remotePdf(env.PDF_RENDERER_URL)
       : env.PDF_CHROMIUM_PATH
@@ -341,6 +365,11 @@ if (env.MODE === "api") {
   const stopPrompts = startGalleryPrompts(env, logger);
   stoppers.push(async () => stopPrompts());
   const worker = await startWorker({
+    vendorUsage: {
+      env,
+      adminDb: galleryDb.db,
+      email: (await emailFromEnv(galleryDb.db)) ?? disabledEmail,
+    },
     instanceAdminEmails: env.INSTANCE_ADMIN_EMAILS,
     // Android rings carry a decline token (D-424), checked by the API with the same secret.
     callDeclineSecret: env.SUPABASE_JWT_SECRET
@@ -459,7 +488,10 @@ if (env.MODE === "api") {
   });
   stoppers.push(worker.stop);
   // One email sender for the worker's own emails (capacity alerts, account emails).
-  const workerEmail = await emailFromEnv();
+  // Its sends are counted through the worker's own database role (docs/VENDOR-USAGE-PLAN.md).
+  const vendorCounts = createDb(env.WORKER_DATABASE_URL ?? env.DATABASE_URL, { max: 1 });
+  stoppers.push(vendorCounts.close);
+  const workerEmail = await emailFromEnv(vendorCounts.db);
   // Account emails (D-302): billing changes and the welcome series, from the outbox.
   if (workerEmail && env.ACCOUNT_EMAILS) {
     const outbox = createDb(env.DATABASE_URL, { max: 1 });

@@ -56,6 +56,7 @@ import { linkUpkeep } from "../link/upkeep.ts";
 import { sweepSignups } from "../services/analytics-signups.ts";
 import { pendingSummaries, summarizeCall } from "../services/call-summary.ts";
 import { sweepReferralRewards } from "../services/referrals.ts";
+import { vendorUsageSweep } from "../services/vendors/sweep.ts";
 import { type BuyingContext, ordersUpkeep, registerOrder } from "../sites/buying.ts";
 import { type DomainsContext, domainsHourly, domainsMinute } from "../sites/domains.ts";
 import { domainsLifecycle } from "../sites/lifecycle.ts";
@@ -94,6 +95,11 @@ let runtime:
       computers?: ComputerService;
       fetch?: typeof fetch;
       voice?: VoiceRuntime;
+      vendorUsage?: {
+        env: import("../env.ts").Env;
+        email: import("../services/email.ts").EmailSender;
+        adminDb?: Database;
+      };
       billing?: import("../billing/service.ts").BillingService;
       telemetry?: { url: string; version: string };
       /** How many runs work at once (D-413); without it every started run works. */
@@ -1116,6 +1122,17 @@ export const maintenanceWorkflow = DBOS.registerWorkflow(
       },
       { name: "domains-hourly" },
     ).catch(captureStep("domains-hourly", 0));
+    await DBOS.runStep(
+      async () => {
+        const setup = rt().vendorUsage;
+        if (setup)
+          await vendorUsageSweep(rt().db, setup.env, setup.email, {
+            fetch: rt().fetch,
+            adminDb: setup.adminDb,
+          });
+      },
+      { name: "vendor-usage" },
+    ).catch(captureStep("vendor-usage", undefined));
     // Bought domains (D-329): open orders, stuck refunds and the registrar balance.
     await DBOS.runStep(
       async () => {

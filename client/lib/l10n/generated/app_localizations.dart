@@ -26815,6 +26815,138 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Undo unused refill'**
   String get resetsUndo;
+
+  /// No description provided for @adminVendors.
+  ///
+  /// In en, this message translates to:
+  /// **'Vendors'**
+  String get adminVendors;
+
+  /// No description provided for @vendorNeedsAttention.
+  ///
+  /// In en, this message translates to:
+  /// **'Vendor services need attention'**
+  String get vendorNeedsAttention;
+
+  /// No description provided for @vendorNotSetUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Not set up'**
+  String get vendorNotSetUp;
+
+  /// No description provided for @vendorCheckNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Check now'**
+  String get vendorCheckNow;
+
+  /// No description provided for @vendorLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'Limit or prepaid amount'**
+  String get vendorLimit;
+
+  /// No description provided for @vendorWarnAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Warning threshold (0–1)'**
+  String get vendorWarnAt;
+
+  /// No description provided for @vendorExpiry.
+  ///
+  /// In en, this message translates to:
+  /// **'Expiry (ISO date and time)'**
+  String get vendorExpiry;
+
+  /// No description provided for @vendorHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent readings'**
+  String get vendorHistory;
+
+  /// No description provided for @vendorSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get vendorSave;
+
+  /// No description provided for @vendorEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Monitoring enabled'**
+  String get vendorEnabled;
+
+  /// No description provided for @vendorUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get vendorUnknown;
+
+  /// No description provided for @vendorLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Low'**
+  String get vendorLow;
+
+  /// No description provided for @vendorOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Out'**
+  String get vendorOut;
+
+  /// No description provided for @vendorOk.
+  ///
+  /// In en, this message translates to:
+  /// **'OK'**
+  String get vendorOk;
+
+  /// No description provided for @vendorNoReading.
+  ///
+  /// In en, this message translates to:
+  /// **'No reading yet'**
+  String get vendorNoReading;
+
+  /// No description provided for @vendorCheckFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Check failed'**
+  String get vendorCheckFailed;
+
+  /// No description provided for @vendorResets.
+  ///
+  /// In en, this message translates to:
+  /// **'Resets'**
+  String get vendorResets;
+
+  /// No description provided for @vendorSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Source'**
+  String get vendorSource;
+
+  /// No description provided for @vendorBilling.
+  ///
+  /// In en, this message translates to:
+  /// **'Billing and refill'**
+  String get vendorBilling;
+
+  /// No description provided for @vendorBalanceWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Warn below balance'**
+  String get vendorBalanceWarning;
+
+  /// No description provided for @vendorPeriodStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Period start (ISO date and time)'**
+  String get vendorPeriodStart;
+
+  /// No description provided for @vendorInvalidSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a positive limit, a warning between 0 and 1, and valid dates.'**
+  String get vendorInvalidSettings;
 }
 
 class _AppLocalizationsDelegate

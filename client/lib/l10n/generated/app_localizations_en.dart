@@ -16677,4 +16677,71 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get resetsUndo => 'Undo unused refill';
+
+  @override
+  String get adminVendors => 'Vendors';
+
+  @override
+  String get vendorNeedsAttention => 'Vendor services need attention';
+
+  @override
+  String get vendorNotSetUp => 'Not set up';
+
+  @override
+  String get vendorCheckNow => 'Check now';
+
+  @override
+  String get vendorLimit => 'Limit or prepaid amount';
+
+  @override
+  String get vendorWarnAt => 'Warning threshold (0–1)';
+
+  @override
+  String get vendorExpiry => 'Expiry (ISO date and time)';
+
+  @override
+  String get vendorHistory => 'Recent readings';
+
+  @override
+  String get vendorSave => 'Save';
+
+  @override
+  String get vendorEnabled => 'Monitoring enabled';
+
+  @override
+  String get vendorUnknown => 'Unknown';
+
+  @override
+  String get vendorLow => 'Low';
+
+  @override
+  String get vendorOut => 'Out';
+
+  @override
+  String get vendorOk => 'OK';
+
+  @override
+  String get vendorNoReading => 'No reading yet';
+
+  @override
+  String get vendorCheckFailed => 'Check failed';
+
+  @override
+  String get vendorResets => 'Resets';
+
+  @override
+  String get vendorSource => 'Source';
+
+  @override
+  String get vendorBilling => 'Billing and refill';
+
+  @override
+  String get vendorBalanceWarning => 'Warn below balance';
+
+  @override
+  String get vendorPeriodStart => 'Period start (ISO date and time)';
+
+  @override
+  String get vendorInvalidSettings =>
+      'Enter a positive limit, a warning between 0 and 1, and valid dates.';
 }
