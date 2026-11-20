@@ -39,8 +39,6 @@ same commit. Shipping details (deploys, app builds) move fast, so check them bef
 | Plan | Decisions | What's left |
 |---|---|---|
 | [LIMIT-RESETS-PLAN](LIMIT-RESETS-PLAN.md) | D-443 | Server + docs live 2026-11-20 (6d11b195); switched on, test grant on Oliver's space (expires 2026-12-04); app builds with Use Reset pending |
-| [APP-MENTIONS-PLAN](APP-MENTIONS-PLAN.md) | D-434 | Phases 0–3 built 2026-11-20; deploy and app builds |
-| [WEEKLY-PLAN-PLAN](WEEKLY-PLAN-PLAN.md) | D-432 | Check the server deploy and that the stores list the weekly products |
 | [APP-ART-PLAN](APP-ART-PLAN.md) | D-440 | Web app (51), server and gallery live 2026-11-20; store builds and a low-end Android startup check |
 | [ADMIN-BOT-PLAN](ADMIN-BOT-PLAN.md) | D-435 | Push and deploy; then turn it on for admin@casama.ai's bot |
 | [CALL-RECAP-PLAN](CALL-RECAP-PLAN.md) | D-429 | Server live; app builds and a real call check |
@@ -72,6 +70,7 @@ same commit. Shipping details (deploys, app builds) move fast, so check them bef
 |---|---|---|
 | [ADMIN-BOT-RESETS-PLAN](ADMIN-BOT-RESETS-PLAN.md) | D-445 | Server and docs live 2026-11-20 (14281b6d); the admin bot was already on |
 | [ANALYTICS-PLAN](ANALYTICS-PLAN.md) | D-206..D-210 | |
+| [APP-MENTIONS-PLAN](APP-MENTIONS-PLAN.md) | D-434 | Live (confirmed by Oliver 2026-11-20) |
 | [DOCS-REFRESH-PLAN](DOCS-REFRESH-PLAN.md) | | Live on docs.casama.ai 2026-11-20 |
 | [DOCUMENT-FILES-PLAN](DOCUMENT-FILES-PLAN.md) | D-351 | Live and in app build 32 |
 | [LINK-PLAN](LINK-PLAN.md) | D-296 | Live in prod |
@@ -79,5 +78,6 @@ same commit. Shipping details (deploys, app builds) move fast, so check them bef
 | [REACTIONS-PLAN](REACTIONS-PLAN.md) | D-331 | Live everywhere 2026-11-17 |
 | [SHOWCASE-PLAN](SHOWCASE-PLAN.md) |  | Live on casama.ai 2026-11-19 |
 | [STORE-SCREENSHOTS-PLAN](STORE-SCREENSHOTS-PLAN.md) |  | Checked live 2026-11-20: App Store iPhone, iPad, Mac 10 each (+ folding iPhone 9, Watch 5, previews); Play phone, 7" and 10" tablets 8 each, feature graphic, Wear 5 |
+| [WEEKLY-PLAN-PLAN](WEEKLY-PLAN-PLAN.md) | D-432 | Live (confirmed by Oliver 2026-11-20) |
 | [USAGE-PLAN](USAGE-PLAN.md) | D-354, D-355 | Steps 1–8 live; step 9 dropped (false on Casama Cloud) |
 | [VISUALS-PLAN](VISUALS-PLAN.md) | D-379 | Share cards, heroes, 404 scene, wallpapers live. Not checked item by item |

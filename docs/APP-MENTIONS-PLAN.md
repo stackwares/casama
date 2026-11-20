@@ -1,6 +1,6 @@
 # @mention an app in chat: plan
 
-Status: **done** (D-434; written 2026-11-19; implemented Phases 0–3 on 2026-11-20).
+Status: **done** (D-434; written 2026-11-19; implemented Phases 0–3 on 2026-11-20; live, confirmed by Oliver 2026-11-20).
 
 Recorded as decision **D-434** in `docs/DECISIONS.md`.
 
