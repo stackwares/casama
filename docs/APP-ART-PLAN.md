@@ -1,7 +1,7 @@
 # Painted pictures across the app: plan
 
-Status: **built** (2026-11-20, D-440). Web app live on app.casama.ai; server deploy, gallery deploy
-and store builds pending.
+Status: **built** (2026-11-20, D-440). Live on the web app (build 51), the server (project cover
+column, gallery covers) and gallery.casama.ai. Store builds and the Android startup check pending.
 
 Asked by Oliver after the starter set picker's painted covers ("what other parts of our app can be
 as beautiful as that?"), then "go and do all of this", plus a painted splash and welcome background.
