@@ -81,7 +81,7 @@ and they land better once there is a launch to point to.
 
 | Directory | State |
 |---|---|
-| Official MCP Registry | Live: `io.github.stackwares/casama` version 0.2.0. |
+| Official MCP Registry | Live: `io.github.stackwares/casama` version 0.2.1 (npm package + hosted docs endpoint). |
 | Glama | Server live at https://glama.ai/mcp/servers/stackwares/casama; hosted docs connector imported from the registry. |
 | punkpeye/awesome-mcp-servers | https://github.com/punkpeye/awesome-mcp-servers/pull/20098 open; submission check passes. Duplicate #19871 closed. |
 | punkpeye/awesome-remote-mcp-servers | https://github.com/punkpeye/awesome-remote-mcp-servers/pull/5303 open. |
@@ -100,7 +100,7 @@ TensorBlock metadata correction submitted as https://github.com/TensorBlock/awes
 | Directory | State |
 |---|---|
 | Glama quality score | Scored 2026-11-18: TDQS grade A, 3.9/5 across 5 tools, so the `glama-badge-check` comment on awesome-mcp-servers #20098 is satisfied. The connector page https://glama.ai/mcp/connectors/io.github.stackwares/casama exists (imported from the registry). |
-| @casama/mcp 0.2.1 on npm | **Not published yet** (npm still shows 0.2.0). Tarball is built at `dist/mcp-0.2.1/casama-mcp-0.2.1.tgz` and has `mcpName`. Needs Oliver's passkey 2FA: `npm publish dist/mcp-0.2.1/casama-mcp-0.2.1.tgz`. After that, add the npm `packages` entry to `packages/mcp/server.json` and run `mcp-publisher publish` again. |
+| @casama/mcp 0.2.1 on npm | **Published 2026-11-20** (took a few minutes to appear), and the MCP Registry now lists `io.github.stackwares/casama` 0.2.1 as latest with the npm package plus the hosted endpoint. Old note: (npm showed 0.2.0). Tarball is built at `dist/mcp-0.2.1/casama-mcp-0.2.1.tgz` and has `mcpName`. Needs Oliver's passkey 2FA: `npm publish dist/mcp-0.2.1/casama-mcp-0.2.1.tgz`. After that, add the npm `packages` entry to `packages/mcp/server.json` and run `mcp-publisher publish` again. |
 | LobeHub MCP marketplace | **Parked.** Publishing is `lhm` CLI only. It needs a LobeHub login (done: an account was created by signing in with Oliver's GitHub, read-only email and profile) and `lhm github connect`, which asks GitHub for **read/write on all of oliverbytes' repositories (public and private), workflow files, gists and org membership**. Not approved: far more than a listing needs. If Oliver wants it, he can approve that himself; the manifest is ready at `dist/mcp-0.2.1/lhm.plugin.json` (untracked) (identifier `stackwares-casama`, cloudEndpoint https://api.casama.ai/mcp/docs, version 0.2.1) and the command is `npx -y @lobehub/market-cli plugin publish https://github.com/stackwares/casama --dir dist/mcp-0.2.1`. LobeHub may also crawl the repo on its own. |
 | Cursor Directory | **Skipped.** It is now a plugin marketplace ("Submit a plugin" behind a sign-in), not a plain MCP list. Would need Casama packaged as a Cursor plugin. |
 | LaunchMCP | **Gone.** The domain redirects to a for-sale page. |
