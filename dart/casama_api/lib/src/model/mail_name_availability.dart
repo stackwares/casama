@@ -27,6 +27,8 @@ class MailNameAvailability {
     required  this.issue,
 
     required  this.suggestions,
+
+     this.domain,
   });
 
   @JsonKey(
@@ -77,6 +79,18 @@ class MailNameAvailability {
 
 
 
+  @JsonKey(
+    
+    name: r'domain',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final String? domain;
+
+
+
 
 
     @override
@@ -84,14 +98,16 @@ class MailNameAvailability {
       other.name == name &&
       other.available == available &&
       other.issue == issue &&
-      other.suggestions == suggestions;
+      other.suggestions == suggestions &&
+      other.domain == domain;
 
     @override
     int get hashCode =>
         name.hashCode +
         available.hashCode +
         (issue == null ? 0 : issue.hashCode) +
-        suggestions.hashCode;
+        suggestions.hashCode +
+        domain.hashCode;
 
   factory MailNameAvailability.fromJson(Map<String, dynamic> json) => _$MailNameAvailabilityFromJson(json);
 

@@ -3046,6 +3046,7 @@ class FakeBackend implements Backend {
       available: !mailByBot.values.any((a) => a.localPart == n),
       issue: null,
       suggestions: const ['ada2', 'ada3'],
+      domain: 'mail.test',
     );
   }
   @override

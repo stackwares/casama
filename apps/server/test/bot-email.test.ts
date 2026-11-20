@@ -1955,6 +1955,7 @@ describe("audit hardening", () => {
         }),
       );
     expect((await check(other, "zenaida")).available).toBe(false);
+    expect((await check(other, "zenaida")).domain).toBe("mail.test");
     expect((await check(other, "zenaida.helper")).available).toBe(true);
     expect((await check(owner, "zenaida")).available).toBe(true);
     expect(

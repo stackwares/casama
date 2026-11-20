@@ -8358,6 +8358,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get botEmailNameFixed => 'The name can\'t be changed later.';
 
   @override
+  String get botEmailNameLabel => 'Name';
+
+  @override
+  String botEmailWillBe(String address) {
+    return 'Your bot\'s address: $address.';
+  }
+
+  @override
   String get botEmailClaim => 'Create address';
 
   @override

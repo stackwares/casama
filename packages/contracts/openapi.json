@@ -24768,6 +24768,9 @@
             "items": {
               "type": "string"
             }
+          },
+          "domain": {
+            "type": "string"
           }
         },
         "required": [

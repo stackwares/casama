@@ -23,6 +23,9 @@ void main() {
       tester.widget<TextField>(find.byKey(const Key('mailName'))).controller?.text,
       'ada',
     );
+    // The domain shows greyed after the name, and the whole address below it.
+    expect(find.text('@mail.test'), findsOneWidget);
+    expect(find.textContaining("Your bot's address: ada@mail.test."), findsOneWidget);
     final claim = find.byKey(const Key('claimMail'));
     expect(tester.widget<FilledButton>(claim).onPressed, isNotNull);
     await tester.tap(claim);
@@ -241,6 +244,21 @@ void main() {
     expect(mailboxSize(300 * 1024 * 1024, 'en'), '300 MB');
     expect(mailboxSize(2 * 1024 * 1024 * 1024, 'en'), '2 GB');
     expect(mailboxSize(1536 * 1024 * 1024, 'en'), '1.5 GB');
+  });
+
+  testWidgets('a pasted whole address keeps only the name', (tester) async {
+    await setSize(tester, const Size(900, 1200));
+    final backend = FakeBackend();
+    await tester.pumpWidget(harness(backend, Scaffold(body: Builder(builder: (c) => TextButton(onPressed: () => showBotEmailSheet(c, botId), child: const Text('open'))))));
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('mailName')), 'Front.Desk@mail.test');
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.pumpAndSettle();
+    expect(find.textContaining("Your bot's address: front.desk@mail.test."), findsOneWidget);
+    await tester.tap(find.byKey(const Key('claimMail')));
+    await tester.pumpAndSettle();
+    expect(backend.mailActions, contains('claim:$botId:front.desk:profile'));
   });
 }
 

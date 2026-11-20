@@ -14583,6 +14583,7 @@ export interface components {
             available: boolean;
             issue: string | null;
             suggestions: string[];
+            domain?: string;
         };
         ClaimMailAddressRequest: {
             name: string;

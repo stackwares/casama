@@ -15,6 +15,8 @@ abstract class _$MailNameAvailabilityCWProxy {
 
   MailNameAvailability suggestions(List<String> suggestions);
 
+  MailNameAvailability domain(String? domain);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `MailNameAvailability(...).copyWith.fieldName(value)`.
@@ -28,6 +30,7 @@ abstract class _$MailNameAvailabilityCWProxy {
     bool available,
     String? issue,
     List<String> suggestions,
+    String? domain,
   });
 }
 
@@ -52,6 +55,9 @@ class _$MailNameAvailabilityCWProxyImpl
   MailNameAvailability suggestions(List<String> suggestions) =>
       call(suggestions: suggestions);
 
+  @override
+  MailNameAvailability domain(String? domain) => call(domain: domain);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `MailNameAvailability(...).copyWith.fieldName(value)`.
@@ -66,6 +72,7 @@ class _$MailNameAvailabilityCWProxyImpl
     Object? available = const $CopyWithPlaceholder(),
     Object? issue = const $CopyWithPlaceholder(),
     Object? suggestions = const $CopyWithPlaceholder(),
+    Object? domain = const $CopyWithPlaceholder(),
   }) {
     return MailNameAvailability(
       name: name == const $CopyWithPlaceholder() || name == null
@@ -85,6 +92,10 @@ class _$MailNameAvailabilityCWProxyImpl
           ? _value.suggestions
           // ignore: cast_nullable_to_non_nullable
           : suggestions as List<String>,
+      domain: domain == const $CopyWithPlaceholder()
+          ? _value.domain
+          // ignore: cast_nullable_to_non_nullable
+          : domain as String?,
     );
   }
 }
@@ -116,6 +127,7 @@ MailNameAvailability _$MailNameAvailabilityFromJson(
       'suggestions',
       (v) => (v as List<dynamic>).map((e) => e as String).toList(),
     ),
+    domain: $checkedConvert('domain', (v) => v as String?),
   );
   return val;
 });
@@ -127,4 +139,5 @@ Map<String, dynamic> _$MailNameAvailabilityToJson(
   'available': instance.available,
   'issue': instance.issue,
   'suggestions': instance.suggestions,
+  'domain': ?instance.domain,
 };
