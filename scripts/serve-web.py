@@ -36,7 +36,7 @@ LINK_SITE = (8734, os.path.join(ROOT, 'link-site'))  # casama.link's own page
 SITES_SITE = (8735, os.path.join(ROOT, 'sites-site'))  # casama.page's own page (D-329); link.css and assets come from link-site, like deploy-sites-web.sh
 PROD = re.compile(rb'https://(www\.|docs\.|gallery\.)?casama\.ai(?![\w-]|\.\w)')
 TEXT_TYPES = ('text/', 'application/javascript', 'application/json', 'application/xml', 'image/svg+xml')
-WORKER_ROUTES = re.compile(r'^/(gallery(/.*)?|i/.*|open(/.*)?|get(/.*)?)$')  # site/wrangler.jsonc run_worker_first
+WORKER_ROUTES = re.compile(r'^/(gallery(/.*)?|i/.*|g(/.*)?|open(/.*)?|get(/.*)?)$')  # site/wrangler.jsonc run_worker_first
 
 mimetypes.add_type('font/woff2', '.woff2')
 mimetypes.add_type('application/javascript', '.js')

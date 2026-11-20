@@ -28,6 +28,10 @@
  * /waitlist/leave?t=<token> asks before it removes an address from the waitlist. The forms are
  * site/waitlist-ui.js, wired by site/assets/waitlist.js.
  *
+ * https://casama.ai/g/<code> is a gift code for a free plan (docs/COMP-PLANS-PLAN.md): what it gives and
+ * a button to redeem it in the web app. Redeeming happens only on the web (App Store 3.1.1), so there
+ * is no app link for /g/ and no "Open in Casama"; the plan then shows up in every app by itself.
+ *
  * /newsletter/* is the monthly email's sign-up and double opt-in (D-404, site/newsletter.js).
  *
  * /assets/film/* (D-390) comes here too, only to answer byte-range requests: static assets always
@@ -91,6 +95,10 @@ export default {
       if (!code) return inviteNotFound();
       trackFunnel(request, env, ctx, "invite_open");
       return inviteClaimPage(code[1].toUpperCase());
+    }
+    if (url.pathname === "/g" || url.pathname.startsWith("/g/")) {
+      const gift = /^\/g\/([0-9A-Za-z-]{10,16})\/?$/.exec(url.pathname);
+      return gift ? giftPage(gift[1].toUpperCase()) : giftNotFound();
     }
     const invite = /^\/i\/([0-9A-Za-z]{6})\/?$/.exec(url.pathname);
     if (invite) {
@@ -396,6 +404,47 @@ function inviteNotFound() {
     body: `  <h1>We couldn't find that invite.</h1>
   <p>Check the code and try again, or join the waitlist and we'll email you when it's your turn.</p>
   <a class="btn primary" href="${SITE}/waitlist">Join the waitlist</a>`,
+  });
+}
+
+/**
+ * /g/<code>: a gift code for a free plan. Never cached by a shared cache (a code's uses run out), and
+ * no analytics: the code is in the address.
+ */
+async function giftPage(code) {
+  let preview = null;
+  try {
+    const res = await fetch(`${API}/v1/comp/preview?code=${encodeURIComponent(code)}`);
+    if (res.status === 404) return giftNotFound();
+    if (res.ok) preview = await res.json();
+  } catch {
+    // The page still offers the redeem button when the API is briefly unreachable.
+  }
+  const months = Number(preview?.months ?? 0);
+  const plan = preview?.plan_name ?? "";
+  const gives = plan && months ? `${months === 1 ? "1 month" : `${months} months`} of Casama ${plan}, free` : "A free Casama plan";
+  const redeem = `${WEB_APP}/redeem?code=${encodeURIComponent(code)}`;
+  return formPage({
+    title: "A gift for you",
+    description: `${gives}. Redeem it on the web, then use it in every Casama app.`,
+    cache: "private, no-store",
+    body: `  <h1>${esc(gives)}</h1>
+  <p>Someone at Casama gave you this. Redeem it on the web with your Casama account (or make one), and the plan is there in every Casama app: iPhone, Android, Mac and the web. Nothing to pay, and no card.</p>
+  <div class="code" aria-label="Gift code">${esc(code)}</div>
+  <a class="btn primary" href="${esc(redeem)}">Redeem on the web</a>
+  <a class="btn" href="${DOWNLOAD_PAGE}">Get Casama</a>
+  <p class="small">One gift code per person. When the free time ends, your workspace moves to Free unless you choose a plan, and everything you made stays.</p>`,
+  });
+}
+
+function giftNotFound() {
+  return formPage({
+    title: "Gift code not found",
+    status: 404,
+    cache: "private, no-store",
+    body: `  <h1>This gift code can't be used.</h1>
+  <p>It may be mistyped, used up, or past its date. Check it with the person who gave it to you.</p>
+  <a class="btn primary" href="${SITE}">About Casama</a>`,
   });
 }
 

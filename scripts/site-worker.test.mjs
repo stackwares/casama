@@ -288,3 +288,38 @@ test("the /b beacon sends the external referrer's source to GA4", async () => {
   assert.equal(sent[0].body.events[1].params.source, "google");
   assert.equal(sent[0].body.ip_override, undefined, "no IP address leaves the Worker");
 });
+
+test("a gift code page says what it gives, links to the web app, and sends no analytics", async () => {
+  const asked = [];
+  globalThis.fetch = async (url, init) => {
+    const u = String(url);
+    if (u.startsWith("https://www.google-analytics.com/"))
+      sent.push({ url: u, body: JSON.parse(init.body) });
+    if (u.startsWith("https://api.casama.ai/v1/comp/preview")) {
+      asked.push(u);
+      return u.includes("G-ABCDE-12345")
+        ? Response.json({ plan_code: "pro", plan_name: "Pro", months: 3 })
+        : new Response("{}", { status: 404 });
+    }
+    return new Response(null, { status: 204 });
+  };
+  const ok = await worker.fetch(new Request("https://casama.ai/g/g-abcde-12345"), env, {
+    waitUntil() {},
+  });
+  assert.equal(ok.status, 200);
+  assert.equal(ok.headers.get("cache-control"), "private, no-store");
+  const html = await ok.text();
+  assert.match(html, /3 months of Casama Pro, free/);
+  assert.match(html, /https:\/\/app\.casama\.ai\/redeem\?code=G-ABCDE-12345/);
+  assert.ok(!html.includes("casama://"));
+  assert.equal(asked.length, 1);
+  const missing = await worker.fetch(new Request("https://casama.ai/g/G-ZZZZZ-ZZZZZ"), env, {
+    waitUntil() {},
+  });
+  assert.equal(missing.status, 404);
+  const malformed = await worker.fetch(new Request("https://casama.ai/g/x"), env, {
+    waitUntil() {},
+  });
+  assert.equal(malformed.status, 404);
+  assert.equal(sent.length, 0);
+});
