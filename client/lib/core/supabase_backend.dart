@@ -125,7 +125,8 @@ class SupabaseBackend implements Backend {
   /// casama:// scheme, which Supabase picks up), or on the web the site they came from (the
   /// server's site address would be the marketing page, not the web app).
   static const authRedirect = 'casama://app/login-callback';
-  static String? get _authRedirect => kIsWeb ? Uri.base.origin : authRedirect;
+  // Trailing slash so the URL matches GoTrue's `/**` glob patterns (e.g. `http://localhost:*/**`).
+  static String? get _authRedirect => kIsWeb ? '${Uri.base.origin}/' : authRedirect;
 
   @override
   Future<void> signIn(String email, String password) =>
