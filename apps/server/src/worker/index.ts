@@ -503,6 +503,7 @@ export async function startWorker(opts: WorkerOptions) {
   };
   let client: DBOSClient | undefined;
   registerAutonomyTools(tools, {
+    liveTools: Boolean(opts.liveData),
     db,
     // Noto Sans CJK for Chinese, Japanese and Korean PDFs (D-351); the image has it at the default.
     cjkFontDir: process.env.CJK_FONT_DIR || undefined,

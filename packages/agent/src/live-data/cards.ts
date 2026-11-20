@@ -34,9 +34,21 @@ export interface Units {
 export const METRIC: Units = { temp: "C", wind: "kph", precip: "mm", distance: "km" };
 export const US_UNITS: Units = { temp: "F", wind: "mph", precip: "in", distance: "mi" };
 
-/** The units a country uses, for people who haven't chosen. */
+/** The units a country uses. */
 export function unitsFor(country?: string): Units {
   return country === "US" || country === "LR" || country === "MM" ? US_UNITS : METRIC;
+}
+
+/** Time zones of the countries that use °F and miles (the US, Liberia, Myanmar). */
+const IMPERIAL_ZONES =
+  /^(America\/(New_York|Detroit|Kentucky\/.+|Indiana\/.+|Chicago|Menominee|North_Dakota\/.+|Denver|Boise|Phoenix|Los_Angeles|Anchorage|Juneau|Sitka|Metlakatla|Yakutat|Nome|Adak|Puerto_Rico)|Pacific\/(Honolulu|Guam|Pago_Pago)|Africa\/Monrovia|Asia\/(Yangon|Rangoon)|US\/.+)$/;
+
+/**
+ * The units for a person who hasn't chosen any, from their time zone: the same rule the app
+ * uses, so a card and the bot's words agree (a Filipino asking about San Francisco gets °C).
+ */
+export function unitsForZone(tz?: string | null): Units {
+  return tz && IMPERIAL_ZONES.test(tz) ? US_UNITS : METRIC;
 }
 
 const temp = (c: number, u: Units) =>
@@ -145,8 +157,11 @@ export function weatherCard(
   },
 ): Built {
   const tz = w.tz;
-  const { date, week } = resolveWhen(opts.when, tz);
   const today = localParts(new Date(), tz).date;
+  const asked = resolveWhen(opts.when, tz);
+  // "Today" is today's weather now: the hours left and the whole day's high and low.
+  const date = asked.date === today ? null : asked.date;
+  const week = asked.week;
   const day = date ? w.days.find((d) => d.date === date) : undefined;
   const live = liveBlock(w.sources, opts.fetchedAt, 30 * 60, {
     stale: opts.stale,

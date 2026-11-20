@@ -24,7 +24,7 @@ import {
   summaryCard,
   sunMoonCard,
   type Units,
-  unitsFor,
+  unitsForZone,
   watchlistCard,
   weatherCard,
   worldClockCard,
@@ -203,8 +203,9 @@ export class LiveEngine {
     return { place: p, tz: p.tz && isZone(p.tz) ? p.tz : "UTC" };
   }
 
-  units(person: LivePerson, country?: string): Units {
-    return { ...unitsFor(country), ...(person.units ?? {}) } as Units;
+  /** The person's units: what they chose, else their time zone's (never the place's). */
+  units(person: LivePerson, _country?: string): Units {
+    return { ...unitsForZone(person.timezone), ...(person.units ?? {}) } as Units;
   }
 
   async run(

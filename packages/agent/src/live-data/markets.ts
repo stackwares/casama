@@ -19,7 +19,7 @@ export const YAHOO: LiveSource = {
 };
 export const FRANKFURTER: LiveSource = {
   id: "frankfurter",
-  name: "Frankfurter (central bank rates)",
+  name: "Frankfurter",
   url: "https://frankfurter.dev/",
 };
 

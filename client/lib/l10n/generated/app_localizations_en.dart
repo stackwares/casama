@@ -17963,4 +17963,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get cardsSourcesIntro =>
       'Cards say where their data came from and when. These services provide it:';
+
+  @override
+  String get cardFewerServings => 'Fewer servings';
+
+  @override
+  String get cardMoreServings => 'More servings';
 }

@@ -210,7 +210,7 @@ class _WeatherState extends State<_Weather> {
                 if (_week)
                   _ForecastRows(days: days, units: u, onDark: true, today: today)
                 else if (hours.isNotEmpty)
-                  _HourStrip(hours: hours, units: u),
+                  _HourStrip(hours: hours, units: u, live: isNow),
                 const SizedBox(height: 10),
                 if (!_week && chips.isNotEmpty) Wrap(spacing: 6, runSpacing: 6, children: chips),
                 const SizedBox(height: 10),
@@ -357,9 +357,12 @@ Color severityColor(String? s) => switch (s) {
 };
 
 class _HourStrip extends StatelessWidget {
-  const _HourStrip({required this.hours, required this.units});
+  const _HourStrip({required this.hours, required this.units, this.live = true});
   final List<P> hours;
   final CardUnits units;
+
+  /// The first hour is now (the card shows the weather now), not another day's first hour.
+  final bool live;
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
@@ -379,11 +382,11 @@ class _HourStrip extends StatelessWidget {
           return Container(
             width: 52,
             padding: const EdgeInsets.symmetric(vertical: 8),
-            decoration: BoxDecoration(color: Colors.white.withValues(alpha: i == 0 ? 0.24 : 0.10), borderRadius: BorderRadius.circular(14)),
+            decoration: BoxDecoration(color: Colors.white.withValues(alpha: i == 0 && live ? 0.24 : 0.10), borderRadius: BorderRadius.circular(14)),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(i == 0 ? l.cardNow : (t == null ? '' : hourOf(context, t)), style: context.textTheme.labelSmall?.copyWith(color: Colors.white.withValues(alpha: 0.85), fontWeight: FontWeight.w600)),
+                Text(i == 0 && live ? l.cardNow : (t == null ? '' : hourOf(context, t)), style: context.textTheme.labelSmall?.copyWith(color: Colors.white.withValues(alpha: 0.85), fontWeight: FontWeight.w600)),
                 Icon(icon, size: 20, color: Colors.white),
                 Text(units.degText(h.n('temp') ?? 0), style: context.textTheme.labelLarge?.copyWith(color: Colors.white, fontWeight: FontWeight.w700, fontFeatures: AppText.tabular)),
                 Text(
@@ -808,7 +811,8 @@ class _MoonPainter extends CustomPainter {
     path.arcToPoint(Offset(c.dx, c.dy + r), radius: Radius.circular(r), clockwise: waxing);
     // The terminator: an ellipse whose width follows the phase.
     final w = (r * k).abs();
-    path.arcToPoint(Offset(c.dx, c.dy - r), radius: Radius.elliptical(math.max(w, 0.01), r), clockwise: waxing ? k > 0 : k < 0);
+    // Back up the terminator: inside the lit half for a crescent (k > 0), past it for a gibbous.
+    path.arcToPoint(Offset(c.dx, c.dy - r), radius: Radius.elliptical(math.max(w, 0.01), r), clockwise: waxing ? k <= 0 : k > 0);
     canvas.drawPath(path, lit);
   }
 

@@ -201,7 +201,7 @@ export function uiCatalog(component?: string): { content: string; preview: strin
       forms ? BINDING : null,
       checks || forms ? CHECKS : null,
       names.length
-        ? `A component goes in ui.show's flat components list as {"id": …, "component": "${names[0]}", …its properties}; the top one's id is "root".`
+        ? `A component goes in ui.show's flat components list as {"id": …, "component": "${names[0]}", …its properties}; the top one's id is "root". Nothing is on the person's screen until you call ui.show with it; several cards go in one ui.show under a Column root.`
         : null,
     ]
       .filter(Boolean)

@@ -553,7 +553,9 @@ class LiveFooter extends StatelessWidget {
     final live = ctl.live;
     final src = live.map('source');
     final composed = ctl.props.map('source');
-    final name = src.s('name') ?? composed.s('name');
+    // Every provider the card's numbers came from ("MET Norway, Open-Meteo").
+    final names = <String>{?src.s('name'), for (final x in live.rows('sources')) ?x.s('name')};
+    final name = names.isEmpty ? composed.s('name') : names.join(', ');
     final url = src.s('url') ?? composed.s('url');
     final fetched = live.t('fetchedAt');
     final stale = live.b('stale') == true || ctl.error != null;

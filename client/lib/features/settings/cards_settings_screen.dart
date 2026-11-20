@@ -95,66 +95,93 @@ class _CardsSettingsScreenState extends ConsumerState<CardsSettingsScreen> {
       children: [
         FormNote(l.cardsSettingsIntro, icon: LucideIcons.cloudSun),
         SectionHeader(title: l.cardsHomeCity),
-        if (home != null && !home.isEmpty)
-          GroupedTile(
-            key: const Key('cardsHomeCity'),
-            icon: LucideIcons.house,
-            title: placeLine(home),
-            subtitle: home.s('tz'),
-            trailing: TextButton(onPressed: _saving ? null : () => _save(clearHome: true), child: Text(l.cardsHomeClear)),
-          )
-        else
-          Text(l.cardsHomeNone, style: context.textTheme.bodyMedium?.copyWith(color: context.colorScheme.onSurfaceVariant)),
-        const SizedBox(height: AppSpace.sm),
-        TextField(
-          key: const Key('cardsHomeSearch'),
-          controller: _search,
-          onChanged: _onSearch,
-          decoration: InputDecoration(
-            prefixIcon: const Icon(LucideIcons.search, size: 18),
-            hintText: l.cardsHomeSearch,
-            suffixIcon: _searching ? const Padding(padding: EdgeInsets.all(12), child: SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))) : null,
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.tile)),
+        AppCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (home != null && !home.isEmpty)
+                ListTile(
+                  key: const Key('cardsHomeCity'),
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(LucideIcons.house, size: 20),
+                  title: Text(placeLine(home), style: context.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
+                  subtitle: home.s('tz') == null ? null : Text(home.s('tz')!),
+                  trailing: TextButton(onPressed: _saving ? null : () => _save(clearHome: true), child: Text(l.cardsHomeClear)),
+                )
+              else
+                Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpace.sm),
+                  child: Text(l.cardsHomeNone, style: context.textTheme.bodyMedium?.copyWith(color: context.colorScheme.onSurfaceVariant)),
+                ),
+              TextField(
+                key: const Key('cardsHomeSearch'),
+                controller: _search,
+                onChanged: _onSearch,
+                decoration: InputDecoration(
+                  prefixIcon: const Icon(LucideIcons.search, size: 18),
+                  hintText: l.cardsHomeSearch,
+                  suffixIcon: _searching ? const Padding(padding: EdgeInsets.all(12), child: SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))) : null,
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.tile)),
+                ),
+              ),
+              for (final f in _found)
+                ListTile(
+                  key: Key('cardsPlace-${f['name']}-${f['lat']}'),
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(LucideIcons.mapPin, size: 18),
+                  title: Text(placeLine(P.of(f))),
+                  subtitle: f['tz'] is String ? Text(f['tz']! as String) : null,
+                  onTap: _saving ? null : () => _save(home: f),
+                ),
+              Padding(padding: const EdgeInsets.only(top: AppSpace.sm), child: FormNote(l.cardsHomePrivacy, icon: LucideIcons.shieldCheck)),
+            ],
           ),
         ),
-        for (final f in _found)
-          ListTile(
-            key: Key('cardsPlace-${f['name']}-${f['lat']}'),
-            leading: const Icon(LucideIcons.mapPin, size: 18),
-            title: Text(placeLine(P.of(f))),
-            subtitle: f['tz'] is String ? Text(f['tz']! as String) : null,
-            onTap: _saving ? null : () => _save(home: f),
-          ),
-        Padding(padding: const EdgeInsets.only(top: AppSpace.xs), child: FormNote(l.cardsHomePrivacy, icon: LucideIcons.shieldCheck)),
         SectionHeader(title: l.cardsUnits),
-        segment(l.cardsTemperature, units.temp, const [('C', '°C'), ('F', '°F')], 'temp'),
-        segment(l.cardsWind, units.wind, const [('kph', 'km/h'), ('mph', 'mph'), ('ms', 'm/s')], 'wind'),
-        segment(l.cardsRain, units.precip, const [('mm', 'mm'), ('in', 'in')], 'precip'),
-        segment(l.cardsDistance, units.distance, const [('km', 'km'), ('mi', 'mi')], 'distance'),
+        AppCard(
+          child: Column(
+            children: [
+              segment(l.cardsTemperature, units.temp, const [('C', '°C'), ('F', '°F')], 'temp'),
+              segment(l.cardsWind, units.wind, const [('kph', 'km/h'), ('mph', 'mph'), ('ms', 'm/s')], 'wind'),
+              segment(l.cardsRain, units.precip, const [('mm', 'mm'), ('in', 'in')], 'precip'),
+              segment(l.cardsDistance, units.distance, const [('km', 'km'), ('mi', 'mi')], 'distance'),
+            ],
+          ),
+        ),
         SectionHeader(title: l.cardsPrices),
-        ValueListenableBuilder<bool?>(
-          valueListenable: cardRedUp,
-          builder: (context, v, _) => SwitchListTile(
-            key: const Key('cardsRedUp'),
-            contentPadding: EdgeInsets.zero,
-            title: Text(l.cardsRedUp),
-            subtitle: Text(l.cardsRedUpHint),
-            value: v ?? redUpByLocale(context),
-            onChanged: setCardRedUp,
+        AppCard(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpace.md, vertical: AppSpace.xxs),
+          child: ValueListenableBuilder<bool?>(
+            valueListenable: cardRedUp,
+            builder: (context, v, _) => SwitchListTile(
+              key: const Key('cardsRedUp'),
+              contentPadding: EdgeInsets.zero,
+              title: Text(l.cardsRedUp),
+              subtitle: Text(l.cardsRedUpHint),
+              value: v ?? redUpByLocale(context),
+              onChanged: setCardRedUp,
+            ),
           ),
         ),
         SectionHeader(title: l.cardsSources),
-        Text(l.cardsSourcesIntro, style: context.textTheme.bodySmall?.copyWith(color: context.colorScheme.onSurfaceVariant)),
-        const SizedBox(height: AppSpace.xs),
-        for (final (name, what, url) in _sources)
-          ListTile(
-            dense: true,
-            contentPadding: EdgeInsets.zero,
-            title: Text(name),
-            subtitle: Text(what),
-            trailing: const Icon(LucideIcons.externalLink, size: 14),
-            onTap: () => openWebLink(Uri.parse(url)),
+        AppCard(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpace.md, vertical: AppSpace.xs),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(l.cardsSourcesIntro, style: context.textTheme.bodySmall?.copyWith(color: context.colorScheme.onSurfaceVariant)),
+              for (final (name, what, url) in _sources)
+                ListTile(
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(name),
+                  subtitle: Text(what),
+                  trailing: const Icon(LucideIcons.externalLink, size: 14),
+                  onTap: () => openWebLink(Uri.parse(url)),
+                ),
+            ],
           ),
+        ),
       ],
     );
   }

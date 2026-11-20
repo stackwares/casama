@@ -38,10 +38,14 @@ final quakeComponent = liveCard('Quake', const ['near', 'quakes'], (context, p, 
               ClipRRect(
                 borderRadius: BorderRadius.circular(AppRadius.tile),
                 child: BotMapCard(
+                  // Fits the quakes and the place asked about, so every pin is on screen.
                   spec: MapCardSpec(
-                    center: near.isEmpty ? null : LatLng(near.n('lat')!, near.n('lng')!),
-                    zoom: near.isEmpty ? 2 : 5,
-                    markers: [for (final q in list) (point: LatLng(q.n('lat') ?? 0, q.n('lng') ?? 0), label: 'M${q.n('magnitude')}')],
+                    center: null,
+                    zoom: 5,
+                    markers: [
+                      for (final q in list.take(10)) (point: LatLng(q.n('lat') ?? 0, q.n('lng') ?? 0), label: 'M${q.n('magnitude')}'),
+                      if (!near.isEmpty) (point: LatLng(near.n('lat') ?? 0, near.n('lng') ?? 0), label: near.s('name')),
+                    ],
                     path: const [],
                     height: 180,
                   ),

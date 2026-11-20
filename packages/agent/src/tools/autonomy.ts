@@ -56,6 +56,8 @@ export const CHAT_MEDIA_MAX_BYTES = 50 * 1024 * 1024;
 
 export interface AutonomyToolDeps {
   db: Database;
+  /** False when this server has no live data tools, so web.search doesn't point at them. */
+  liveTools?: boolean;
   /** Where Noto Sans CJK lives, for Chinese, Japanese and Korean PDFs (D-351). */
   cjkFontDir?: string;
   /** Guarded fetch for outbound requests (private ranges blocked). */
@@ -227,6 +229,12 @@ export async function fetchPage(
   return { ...base, ...page, truncatedBytes: truncated };
 }
 
+/** Questions the live tools answer with real data and a card (docs/RICH-CARDS-PLAN.md §15). */
+const LIVE_QUESTION =
+  /\b(weather|forecast|temperature|rain(ing)?|humid|typhoon|bagyo|panahon|ulan|exchange rate|conversion rate|usd|php|eur|bitcoin|btc|eth|crypto|stock price|share price|time (is it )?in|earthquake|lindol|sunrise|sunset|air quality|aqi)\b/i;
+const LIVE_HINT =
+  "Tip: weather, prices, rates, time zones, earthquakes and air quality come from the live tools (tools.load live) as a card with named sources; use them for this next time unless the person asked for a web search.";
+
 export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyToolDeps) {
   const { db } = deps;
 
@@ -303,8 +311,10 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
       const text = results
         .map((r, i) => `${i + 1}. ${r.title}\n   ${r.url}\n   ${r.snippet}`)
         .join("\n");
+      // A question the live tools answer better (RICH-CARDS-PLAN §15): say so, for this and next time.
+      const live = LIVE_QUESTION.test(args.query) && deps.liveTools !== false;
       return {
-        content: wrapUntrusted("search", text || "No results."),
+        content: `${wrapUntrusted("search", text || "No results.")}${live ? `\n\n${LIVE_HINT}` : ""}`,
         preview: `${results.length} results`,
       };
     },

@@ -305,6 +305,17 @@ export function registerLiveTools(registry: ToolRegistry, deps: LiveToolDeps) {
           messages: liveSurface(surfaceId, card),
           live_card: tool,
         });
+        track(db, {
+          event: "card_shown",
+          userId,
+          orgId: ctx.orgId,
+          properties: {
+            card: built.card.component,
+            tool,
+            provider:
+              (built.card.live as { source?: { id?: string } } | undefined)?.source?.id ?? null,
+          },
+        });
         return { content: `${built.text}\n\n${LIVE_CARD_SHOWN}`, preview: built.preview };
       },
     });
@@ -387,6 +398,12 @@ function registerExtraLiveTools(registry: ToolRegistry, deps: LiveToolDeps) {
         messages: surfaceMessages(surfaceId, components),
         live_card: "dashboard",
       });
+      track(db, {
+        event: "card_shown",
+        userId,
+        orgId: ctx.orgId,
+        properties: { card: "Dashboard", tool: "dashboard", provider: null },
+      });
       return {
         content: `${ok.map(({ r }) => r.built.text).join("\n")}${failed.length ? `\n(Left out: ${failed.join("; ")})` : ""}\n\n${LIVE_CARD_SHOWN}`,
         preview: `${ok.length} cards`,
@@ -421,6 +438,11 @@ function registerExtraLiveTools(registry: ToolRegistry, deps: LiveToolDeps) {
         surface_id: surfaceId,
         messages: liveSurface(surfaceId, card),
         live_card: "page",
+      });
+      track(db, {
+        event: "card_shown",
+        orgId: ctx.orgId,
+        properties: { card: String(card.component), tool: "page", provider: null },
       });
       const title = String(
         card.title ?? (card.items as Array<{ title?: string }> | undefined)?.[0]?.title ?? "",

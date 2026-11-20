@@ -29011,6 +29011,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cards say where their data came from and when. These services provide it:'**
   String get cardsSourcesIntro;
+
+  /// No description provided for @cardFewerServings.
+  ///
+  /// In en, this message translates to:
+  /// **'Fewer servings'**
+  String get cardFewerServings;
+
+  /// No description provided for @cardMoreServings.
+  ///
+  /// In en, this message translates to:
+  /// **'More servings'**
+  String get cardMoreServings;
 }
 
 class _AppLocalizationsDelegate

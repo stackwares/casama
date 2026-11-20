@@ -289,8 +289,12 @@ class _RecipeState extends State<_Recipe> {
   final _have = <int>{};
   bool _showSteps = false;
 
-  String _qty(double q) {
-    final v = _base > 0 ? q * _servings / _base : q;
+  /// Things you count (cloves, pieces, eggs) scale to whole numbers.
+  static final _countable = RegExp(r'^(piece|pieces|clove|cloves|can|cans|slice|slices|egg|eggs)$', caseSensitive: false);
+
+  String _qty(double q, String? unit) {
+    var v = _base > 0 ? q * _servings / _base : q;
+    if (unit == null || _countable.hasMatch(unit)) v = v < 1 ? 1 : v.roundToDouble();
     if (v == v.roundToDouble()) return '${v.toInt()}';
     final fr = {0.25: '¼', 0.5: '½', 0.75: '¾', 0.33: '⅓', 0.67: '⅔'};
     final whole = v.floor();
@@ -318,9 +322,9 @@ class _RecipeState extends State<_Recipe> {
             children: [
               Text(l.cardServings, style: context.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600)),
               const Spacer(),
-              IconButton.filledTonal(onPressed: _servings > 1 ? () => setState(() => _servings--) : null, icon: const Icon(LucideIcons.minus, size: 16)),
+              IconButton.filledTonal(tooltip: l.cardFewerServings, onPressed: _servings > 1 ? () => setState(() => _servings--) : null, icon: const Icon(LucideIcons.minus, size: 16)),
               SizedBox(width: 36, child: Text('$_servings', textAlign: TextAlign.center, style: context.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800))),
-              IconButton.filledTonal(onPressed: _servings < 50 ? () => setState(() => _servings++) : null, icon: const Icon(LucideIcons.plus, size: 16)),
+              IconButton.filledTonal(tooltip: l.cardMoreServings, onPressed: _servings < 50 ? () => setState(() => _servings++) : null, icon: const Icon(LucideIcons.plus, size: 16)),
             ],
           ),
         LivePanel(
@@ -338,7 +342,7 @@ class _RecipeState extends State<_Recipe> {
                         Icon(_have.contains(i) ? LucideIcons.circleCheck : LucideIcons.circle, size: 18, color: _have.contains(i) ? context.appColors.positive : context.colorScheme.outline),
                         const SizedBox(width: 10),
                         if (x.n('qty') case final q?)
-                          Padding(padding: const EdgeInsets.only(right: 6), child: Text('${_qty(q)}${x.s('unit') == null ? '' : ' ${x.s('unit')}'}', style: context.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w800, fontFeatures: AppText.tabular))),
+                          Padding(padding: const EdgeInsets.only(right: 6), child: Text('${_qty(q, x.s('unit'))}${x.s('unit') == null ? '' : ' ${x.s('unit')}'}', style: context.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w800, fontFeatures: AppText.tabular))),
                         Expanded(child: Text(x.s('text') ?? '', style: context.cardBody?.copyWith(decoration: _have.contains(i) ? TextDecoration.lineThrough : null, color: _have.contains(i) ? context.colorScheme.onSurfaceVariant : null))),
                       ],
                     ),

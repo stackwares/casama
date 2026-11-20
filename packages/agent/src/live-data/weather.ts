@@ -437,9 +437,17 @@ export function mergeChances(met: WeatherData, om: WeatherData): WeatherData {
       ...h,
       chance: byHour.get(h.t.slice(0, 13))?.chance ?? h.chance,
     })),
+    // MET's forecast starts now, so today's high and low would miss the hours already gone:
+    // Open-Meteo's daily figures cover the whole day.
     days: met.days.map((d) => {
       const o = byDay.get(d.date);
-      return { ...d, chance: o?.chance ?? d.chance, uv: o?.uv ?? d.uv };
+      return {
+        ...d,
+        high: Number.isFinite(o?.high) ? (o?.high as number) : d.high,
+        low: Number.isFinite(o?.low) ? (o?.low as number) : d.low,
+        chance: o?.chance ?? d.chance,
+        uv: o?.uv ?? d.uv,
+      };
     }),
     sources: [...met.sources, OPEN_METEO],
   };

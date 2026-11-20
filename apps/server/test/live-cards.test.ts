@@ -275,7 +275,8 @@ describe("card preferences", () => {
       }),
     );
     expect(saved.home_place).toMatchObject({ name: "Manila", lat: 14.6, lng: 120.98 });
-    expect(saved.units).toEqual({ temp: "F" });
+    // The effective units: the person's choice over their time zone's (Asia/Manila: metric).
+    expect(saved.units).toEqual({ temp: "F", wind: "kph", precip: "mm", distance: "km" });
     const r = await call("live.weather", {});
     expect(r.content).toMatch(/°F/);
     const cleared = await j(
@@ -286,6 +287,6 @@ describe("card preferences", () => {
       }),
     );
     expect(cleared.home_place).toBeNull();
-    expect(cleared.units).toEqual({ temp: "F" });
+    expect(cleared.units).toMatchObject({ temp: "F" });
   });
 });

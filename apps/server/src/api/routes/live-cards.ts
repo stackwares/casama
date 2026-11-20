@@ -16,6 +16,7 @@ import {
   type Place,
   pinLiveCard,
   refreshLiveCard,
+  unitsForZone,
   unpinLiveCard,
 } from "@casama/agent";
 import { routes } from "@casama/contracts";
@@ -188,8 +189,9 @@ export function registerLiveCardRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
     const [p] = await db.execute<{
       home_place: Place | null;
       card_units: Record<string, string> | null;
+      timezone: string | null;
     }>(sql`
-      select home_place, card_units from public.profiles where user_id = ${userId}::uuid`);
+      select home_place, card_units, timezone from public.profiles where user_id = ${userId}::uuid`);
     const h = p?.home_place;
     return {
       home_place: h
@@ -203,7 +205,8 @@ export function registerLiveCardRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
             tz: h.tz ?? null,
           }
         : null,
-      units: p?.card_units ?? null,
+      // The units cards use: the person's choice over their time zone's, as the tools use them.
+      units: { ...unitsForZone(p?.timezone), ...(p?.card_units ?? {}) },
     };
   };
 

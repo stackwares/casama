@@ -5956,5 +5956,7 @@
   "cardsRedUp": "Red means up",
   "cardsRedUpHint": "Show rising prices in red and falling ones in green, as markets in China, Japan and Korea do.",
   "cardsSources": "Data sources",
-  "cardsSourcesIntro": "Cards say where their data came from and when. These services provide it:"
+  "cardsSourcesIntro": "Cards say where their data came from and when. These services provide it:",
+  "cardFewerServings": "Fewer servings",
+  "cardMoreServings": "More servings"
 }
