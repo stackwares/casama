@@ -2814,6 +2814,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/admin/decisions/results": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Shadow and live decision results against what really happened (owner only) */
+        get: operations["adminDecisionResults"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/decisions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Decision model settings (owner only) */
+        get: operations["adminDecisions"];
+        /** Change decision model settings (owner only) */
+        put: operations["setAdminDecisions"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/admin/checks/device/challenge": {
         parameters: {
             query?: never;
@@ -11072,6 +11107,82 @@ export interface components {
             composio_key: boolean;
             /** @description Whether Google's own servers can be chosen: this server has a Google client (GOOGLE_OAUTH_CLIENT_ID) and isn't Casama Cloud. */
             google_direct_available: boolean;
+        };
+        DecisionResults: {
+            days: number;
+            items: components["schemas"]["DecisionSignalResult"][];
+        };
+        DecisionSignalResult: {
+            use: string;
+            /** @description What is measured, e.g. scan_gate or reply_check:memory */
+            signal: string;
+            model: string;
+            rows: number;
+            answered: number;
+            errors: number;
+            latency_p50_ms: number;
+            latency_p95_ms: number;
+            cost_usd: number;
+            labelled: number;
+            /** @description Labelled rows where the thing happened (a find, a flag, an accept) */
+            positives: number;
+            thresholds: {
+                threshold: number;
+                /** @description Answered rows the code would act on */
+                acted: number;
+                acted_positive: number;
+                acted_negative: number;
+                /** @description scan_gate: skipped scans whose suggestion was accepted */
+                acted_severe: number;
+            }[];
+        };
+        DecisionSettings: {
+            /** @description OpenRouter decision model for uses that are on (pinned, e.g. typesafe/jev-1.14). Empty: nothing acts. */
+            model: string;
+            shadow_models: string[];
+            timeout_ms: number;
+            uses: {
+                scan_gate: {
+                    /** @enum {string} */
+                    mode: "off" | "shadow" | "on";
+                    skip_below: number;
+                    max_skips_in_row: number;
+                };
+                reply_check: {
+                    /** @enum {string} */
+                    mode: "off" | "shadow" | "on";
+                    flag_above: number;
+                    memory_skip_below: number;
+                    correction_above: number;
+                };
+                push_score: {
+                    /** @enum {string} */
+                    mode: "off" | "shadow" | "on";
+                    hold_below: number;
+                };
+                tool_gate: {
+                    /** @enum {string} */
+                    mode: "off" | "shadow" | "on";
+                    ask_below: number;
+                };
+                long_run: {
+                    /** @enum {string} */
+                    mode: "off" | "shadow" | "on";
+                    repeating_above: number;
+                    first_step: number;
+                    every: number;
+                };
+                effort: {
+                    /** @enum {string} */
+                    mode: "off" | "shadow" | "on";
+                    quick_above: number;
+                };
+                watcher_gate: {
+                    /** @enum {string} */
+                    mode: "off" | "shadow" | "on";
+                    skip_below: number;
+                };
+            };
         };
         AdminDeviceChallenge: {
             /** Format: uuid */
@@ -25485,6 +25596,127 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ConnectionSettings"];
+                };
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    adminDecisionResults: {
+        parameters: {
+            query?: {
+                days?: number;
+                use?: "scan_gate" | "reply_check" | "push_score" | "tool_gate" | "long_run" | "effort" | "watcher_gate";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Results */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DecisionResults"];
+                };
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    adminDecisions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Decision model settings (owner only) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DecisionSettings"];
+                };
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    setAdminDecisions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DecisionSettings"];
+            };
+        };
+        responses: {
+            /** @description Updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DecisionSettings"];
                 };
             };
             /** @description Not authenticated */

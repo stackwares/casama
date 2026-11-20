@@ -11424,6 +11424,338 @@
           "google_direct_available"
         ]
       },
+      "DecisionResults": {
+        "type": "object",
+        "properties": {
+          "days": {
+            "type": "integer"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DecisionSignalResult"
+            }
+          }
+        },
+        "required": [
+          "days",
+          "items"
+        ]
+      },
+      "DecisionSignalResult": {
+        "type": "object",
+        "properties": {
+          "use": {
+            "type": "string"
+          },
+          "signal": {
+            "type": "string",
+            "description": "What is measured, e.g. scan_gate or reply_check:memory"
+          },
+          "model": {
+            "type": "string"
+          },
+          "rows": {
+            "type": "integer"
+          },
+          "answered": {
+            "type": "integer"
+          },
+          "errors": {
+            "type": "integer"
+          },
+          "latency_p50_ms": {
+            "type": "number"
+          },
+          "latency_p95_ms": {
+            "type": "number"
+          },
+          "cost_usd": {
+            "type": "number"
+          },
+          "labelled": {
+            "type": "integer"
+          },
+          "positives": {
+            "type": "integer",
+            "description": "Labelled rows where the thing happened (a find, a flag, an accept)"
+          },
+          "thresholds": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "threshold": {
+                  "type": "number"
+                },
+                "acted": {
+                  "type": "integer",
+                  "description": "Answered rows the code would act on"
+                },
+                "acted_positive": {
+                  "type": "integer"
+                },
+                "acted_negative": {
+                  "type": "integer"
+                },
+                "acted_severe": {
+                  "type": "integer",
+                  "description": "scan_gate: skipped scans whose suggestion was accepted"
+                }
+              },
+              "required": [
+                "threshold",
+                "acted",
+                "acted_positive",
+                "acted_negative",
+                "acted_severe"
+              ]
+            }
+          }
+        },
+        "required": [
+          "use",
+          "signal",
+          "model",
+          "rows",
+          "answered",
+          "errors",
+          "latency_p50_ms",
+          "latency_p95_ms",
+          "cost_usd",
+          "labelled",
+          "positives",
+          "thresholds"
+        ]
+      },
+      "DecisionSettings": {
+        "type": "object",
+        "properties": {
+          "model": {
+            "type": "string",
+            "maxLength": 200,
+            "description": "OpenRouter decision model for uses that are on (pinned, e.g. typesafe/jev-1.14). Empty: nothing acts."
+          },
+          "shadow_models": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "maxItems": 5
+          },
+          "timeout_ms": {
+            "type": "integer",
+            "minimum": 200,
+            "maximum": 5000
+          },
+          "uses": {
+            "type": "object",
+            "properties": {
+              "scan_gate": {
+                "type": "object",
+                "properties": {
+                  "mode": {
+                    "type": "string",
+                    "enum": [
+                      "off",
+                      "shadow",
+                      "on"
+                    ]
+                  },
+                  "skip_below": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "max_skips_in_row": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 100
+                  }
+                },
+                "required": [
+                  "mode",
+                  "skip_below",
+                  "max_skips_in_row"
+                ]
+              },
+              "reply_check": {
+                "type": "object",
+                "properties": {
+                  "mode": {
+                    "type": "string",
+                    "enum": [
+                      "off",
+                      "shadow",
+                      "on"
+                    ]
+                  },
+                  "flag_above": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "memory_skip_below": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "correction_above": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  }
+                },
+                "required": [
+                  "mode",
+                  "flag_above",
+                  "memory_skip_below",
+                  "correction_above"
+                ]
+              },
+              "push_score": {
+                "type": "object",
+                "properties": {
+                  "mode": {
+                    "type": "string",
+                    "enum": [
+                      "off",
+                      "shadow",
+                      "on"
+                    ]
+                  },
+                  "hold_below": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  }
+                },
+                "required": [
+                  "mode",
+                  "hold_below"
+                ]
+              },
+              "tool_gate": {
+                "type": "object",
+                "properties": {
+                  "mode": {
+                    "type": "string",
+                    "enum": [
+                      "off",
+                      "shadow",
+                      "on"
+                    ]
+                  },
+                  "ask_below": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  }
+                },
+                "required": [
+                  "mode",
+                  "ask_below"
+                ]
+              },
+              "long_run": {
+                "type": "object",
+                "properties": {
+                  "mode": {
+                    "type": "string",
+                    "enum": [
+                      "off",
+                      "shadow",
+                      "on"
+                    ]
+                  },
+                  "repeating_above": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "first_step": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 100
+                  },
+                  "every": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 100
+                  }
+                },
+                "required": [
+                  "mode",
+                  "repeating_above",
+                  "first_step",
+                  "every"
+                ]
+              },
+              "effort": {
+                "type": "object",
+                "properties": {
+                  "mode": {
+                    "type": "string",
+                    "enum": [
+                      "off",
+                      "shadow",
+                      "on"
+                    ]
+                  },
+                  "quick_above": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  }
+                },
+                "required": [
+                  "mode",
+                  "quick_above"
+                ]
+              },
+              "watcher_gate": {
+                "type": "object",
+                "properties": {
+                  "mode": {
+                    "type": "string",
+                    "enum": [
+                      "off",
+                      "shadow",
+                      "on"
+                    ]
+                  },
+                  "skip_below": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  }
+                },
+                "required": [
+                  "mode",
+                  "skip_below"
+                ]
+              }
+            },
+            "required": [
+              "scan_gate",
+              "reply_check",
+              "push_score",
+              "tool_gate",
+              "long_run",
+              "effort",
+              "watcher_gate"
+            ]
+          }
+        },
+        "required": [
+          "model",
+          "shadow_models",
+          "timeout_ms",
+          "uses"
+        ]
+      },
       "AdminDeviceChallenge": {
         "type": "object",
         "properties": {
@@ -43072,6 +43404,181 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ConnectionSettings"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/decisions/results": {
+      "get": {
+        "operationId": "adminDecisionResults",
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Shadow and live decision results against what really happened (owner only)",
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 90
+            },
+            "required": false,
+            "name": "days",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "scan_gate",
+                "reply_check",
+                "push_score",
+                "tool_gate",
+                "long_run",
+                "effort",
+                "watcher_gate"
+              ]
+            },
+            "required": false,
+            "name": "use",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DecisionResults"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/decisions": {
+      "get": {
+        "operationId": "adminDecisions",
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Decision model settings (owner only)",
+        "responses": {
+          "200": {
+            "description": "Decision model settings (owner only)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DecisionSettings"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "operationId": "setAdminDecisions",
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Change decision model settings (owner only)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DecisionSettings"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DecisionSettings"
                 }
               }
             }

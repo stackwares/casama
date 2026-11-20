@@ -93,6 +93,7 @@ import {
   registerAdminTools,
 } from "../services/admin-bot.ts";
 import { getCloudModels } from "../services/cloud-models.ts";
+import { decisionDeps } from "../services/decisions.ts";
 import { serverPushSender } from "../services/push-sender.ts";
 import { countingSearch, createVendorCounter } from "../services/vendors/count.ts";
 import { searchDomains } from "../sites/buying.ts";
@@ -620,7 +621,16 @@ export async function startWorker(opts: WorkerOptions) {
     },
   });
   // Check-in scans leave suggestions (D-114).
-  registerSuggestionTools(tools, { db, notifications });
+  // Decision models (D-454) on the server's shared OpenRouter key; every use is off until the owner
+  // sets it in Admin.
+  const decisions = decisionDeps(db, {
+    key: opts.platformOpenRouterKey,
+    billable: Boolean(opts.billing && opts.platformOpenRouterKey),
+    fetch: opts.providerBases?.openrouter ? fetch : fetchOut,
+    base: opts.providerBases?.openrouter,
+    logger: opts.logger,
+  });
+  registerSuggestionTools(tools, { db, notifications, decisions });
   registerWatcherTools(tools, { db });
   registerHighlightTools(tools, { db });
   registerTeachTools(tools, { db });
@@ -873,6 +883,7 @@ export async function startWorker(opts: WorkerOptions) {
       billCloudModels: Boolean(opts.billing && opts.platformOpenRouterKey),
       cloudLockedModel: opts.cloudLockedModel,
       cloudModels: opts.billing ? () => getCloudModels(db) : undefined,
+      decisions,
     },
   });
 

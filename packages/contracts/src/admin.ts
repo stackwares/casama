@@ -261,6 +261,84 @@ export const CloudModels = z
   })
   .openapi("CloudModels");
 
+const decisionMode = z.enum(["off", "shadow", "on"]);
+const prob = z.number().min(0).max(1);
+const steps = z.number().int().min(1).max(100);
+
+/**
+ * Decision models (D-454): which model answers, which are compared in shadow, and per use off,
+ * shadow (asked and logged, never acted on) or on, with its thresholds. Owner only.
+ */
+export const DecisionSettings = z
+  .object({
+    model: z.string().trim().max(200).openapi({
+      description:
+        "OpenRouter decision model for uses that are on (pinned, e.g. typesafe/jev-1.14). Empty: nothing acts.",
+    }),
+    shadow_models: z.array(z.string().trim().min(1).max(200)).max(5),
+    timeout_ms: z.number().int().min(200).max(5000),
+    uses: z.object({
+      scan_gate: z.object({ mode: decisionMode, skip_below: prob, max_skips_in_row: steps }),
+      reply_check: z.object({
+        mode: decisionMode,
+        flag_above: prob,
+        memory_skip_below: prob,
+        correction_above: prob,
+      }),
+      push_score: z.object({ mode: decisionMode, hold_below: prob }),
+      tool_gate: z.object({ mode: decisionMode, ask_below: prob }),
+      long_run: z.object({
+        mode: decisionMode,
+        repeating_above: prob,
+        first_step: steps,
+        every: steps,
+      }),
+      effort: z.object({ mode: decisionMode, quick_above: prob }),
+      watcher_gate: z.object({ mode: decisionMode, skip_below: prob }),
+    }),
+  })
+  .openapi("DecisionSettings");
+
+/** How one signal of one model did against what really happened, at each threshold. */
+export const DecisionSignalResult = z
+  .object({
+    use: z.string(),
+    signal: z
+      .string()
+      .openapi({ description: "What is measured, e.g. scan_gate or reply_check:memory" }),
+    model: z.string(),
+    rows: z.number().int(),
+    answered: z.number().int(),
+    errors: z.number().int(),
+    latency_p50_ms: z.number(),
+    latency_p95_ms: z.number(),
+    cost_usd: z.number(),
+    labelled: z.number().int(),
+    positives: z
+      .number()
+      .int()
+      .openapi({
+        description: "Labelled rows where the thing happened (a find, a flag, an accept)",
+      }),
+    thresholds: z.array(
+      z.object({
+        threshold: z.number(),
+        acted: z.number().int().openapi({ description: "Answered rows the code would act on" }),
+        acted_positive: z.number().int(),
+        acted_negative: z.number().int(),
+        acted_severe: z
+          .number()
+          .int()
+          .openapi({ description: "scan_gate: skipped scans whose suggestion was accepted" }),
+      }),
+    ),
+  })
+  .openapi("DecisionSignalResult");
+
+export const DecisionResults = z
+  .object({ days: z.number().int(), items: z.array(DecisionSignalResult) })
+  .openapi("DecisionResults");
+
 /** A plan as the instance owner edits it (D-244). */
 export const AdminPlan = z
   .object({

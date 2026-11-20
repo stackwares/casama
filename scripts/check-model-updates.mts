@@ -15,6 +15,7 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { CLOUD_MODEL_DEFAULTS } from "../packages/domain/src/cloud-model-assignment.ts";
+import { DEFAULT_SHADOW_MODELS } from "../packages/domain/src/decision-settings.ts";
 
 type OrModel = {
   id: string;
@@ -79,8 +80,19 @@ type Row = {
 const rows: Row[] = [];
 const done = new Set<string>();
 
-for (const [role, family] of Object.entries(FAMILY)) {
-  const raw = (CLOUD_MODEL_DEFAULTS as unknown as Record<string, string>)[role];
+// Decision models (D-454): the shadow candidates, each against newer decision models of its maker.
+// The model running in production is in Admin → Decisions; check it here when it isn't one of these.
+const decides = (m: OrModel) => m.architecture?.output_modalities?.includes("decisions") === true;
+const checks: Array<{ role: string; raw: string; family: (m: OrModel) => boolean }> = [
+  ...Object.entries(FAMILY).map(([role, re]) => ({
+    role,
+    raw: (CLOUD_MODEL_DEFAULTS as unknown as Record<string, string>)[role] ?? "",
+    family: (m: OrModel) => re.test(m.id),
+  })),
+  ...DEFAULT_SHADOW_MODELS.map((raw) => ({ role: "decision", raw, family: decides })),
+];
+
+for (const { role, raw, family } of checks) {
   if (!raw) continue;
   const id = openRouterId(role, raw);
   if (done.has(id)) continue; // chat and background share a model
@@ -94,7 +106,7 @@ for (const [role, family] of Object.entries(FAMILY)) {
         m.id.startsWith(`${vendor}/`) &&
         m.id !== id &&
         !m.id.includes(":") && // :free, :batch
-        family.test(m.id) &&
+        family(m) &&
         m.created > since,
     )
     .sort((a, b) => b.created - a.created)

@@ -17,6 +17,7 @@ export * from "./cloud-models.ts";
 export * from "./coding-agents.ts";
 export * from "./cost-tables.ts";
 export * from "./cron.ts";
+export * from "./decision-settings.ts";
 export * from "./diff.ts";
 export * from "./display-names.ts";
 export * from "./email-copy.ts";

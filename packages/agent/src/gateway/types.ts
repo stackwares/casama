@@ -72,6 +72,8 @@ export interface Usage {
   cacheWriteTokens?: number;
   /** What the provider reported the call cost, in USD (OpenRouter's `usage.cost`). */
   providerCostUsd?: number;
+  /** Output tokens spent thinking, when the provider reports them (part of outputTokens). */
+  reasoningTokens?: number;
 }
 
 export type GatewayEvent =

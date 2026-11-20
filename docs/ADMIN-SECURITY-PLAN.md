@@ -130,7 +130,7 @@ do everything now except Mac builds".
 - [x] A P-256 key in the phone's secure chip (`biometric_signature`), unlocked by Face ID, a
   fingerprint or the passcode, signs a one-time server challenge; the server checks it with the
   stored public key and records a full check on the session.
-- [x] Migration `20270304100001_admin_device_keys.sql`; API: devices list/add/remove, challenge, check.
+- [x] Migration `20270306100001_admin_device_keys.sql`; API: devices list/add/remove, challenge, check.
 - [x] App: Face ID first on the lock screen and in confirmations, opening by itself (at most once every
   30 seconds); offer after a passkey or password unlock; Admin → Security lists and removes devices.
   Replaces D-450's local-only unlock.
