@@ -35,6 +35,7 @@ import { registerBotTemplateRoutes } from "./routes/bot-template.ts";
 import { registerBotRoutes } from "./routes/bots.ts";
 import { registerBrowserRoutes } from "./routes/browser.ts";
 import { registerBrowserMcpRoutes } from "./routes/browser-mcp.ts";
+import { registerCanvasRoutes } from "./routes/canvas.ts";
 import { registerChannelRoutes } from "./routes/channels.ts";
 import { registerChatExportRoutes } from "./routes/chat-export.ts";
 import { registerChatMediaRoutes } from "./routes/chat-media.ts";
@@ -531,6 +532,7 @@ export function createApp(deps: AppDeps) {
   registerChatMediaRoutes(app, deps);
   registerCreationRoutes(app, deps);
   registerGlanceRoutes(app, deps);
+  registerCanvasRoutes(app, deps);
   registerWatchRoutes(app, deps);
   registerChatExportRoutes(app, deps);
   registerConnectAppRoutes(app, deps, instanceOwnerCheck(deps));

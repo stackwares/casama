@@ -4,7 +4,7 @@
 import 'package:casama_api/casama_api.dart';
 
 /// All run event types known to this client version.
-const knownRunEventTypes = <String>{'run.started', 'message.delta', 'message.completed', 'tool.started', 'tool.output', 'tool.completed', 'tool.failed', 'approval.requested', 'approval.resolved', 'device.access_requested', 'device.browser_access_requested', 'local_mcp.sign_in_needed', 'mcp.question', 'mcp.question_resolved', 'device.permission_needed', 'device.data_used', 'secret.requested', 'secret.resolved', 'takeover.requested', 'takeover.resolved', 'lease.changed', 'computer.state', 'checkpoint.created', 'subrun.started', 'subrun.completed', 'memory.written', 'skill.loaded', 'usage', 'model.fallback', 'notice', 'run.completed', 'run.failed', 'run.cancelled', 'ui.shown'};
+const knownRunEventTypes = <String>{'run.started', 'message.delta', 'message.completed', 'tool.started', 'tool.output', 'tool.completed', 'tool.failed', 'approval.requested', 'approval.resolved', 'device.access_requested', 'device.browser_access_requested', 'local_mcp.sign_in_needed', 'mcp.question', 'mcp.question_resolved', 'device.permission_needed', 'device.data_used', 'secret.requested', 'secret.resolved', 'takeover.requested', 'takeover.resolved', 'lease.changed', 'computer.state', 'checkpoint.created', 'subrun.started', 'subrun.completed', 'memory.written', 'skill.loaded', 'usage', 'model.fallback', 'notice', 'run.completed', 'run.failed', 'run.cancelled', 'ui.shown', 'canvas.preview'};
 
 /// A run event: the envelope plus, for known types, the typed event.
 /// Unknown types parse to [UnknownRunEventItem] so newer servers never break older clients.
@@ -86,6 +86,8 @@ sealed class RunEventItem {
         return RunCancelledItem(envelope, RunCancelledEvent.fromJson(json));
       case 'ui.shown':
         return UiShownItem(envelope, UiShownEvent.fromJson(json));
+      case 'canvas.preview':
+        return CanvasPreviewItem(envelope, CanvasPreviewEvent.fromJson(json));
       default:
         return UnknownRunEventItem(envelope);
     }
@@ -260,6 +262,11 @@ final class RunCancelledItem extends RunEventItem {
 final class UiShownItem extends RunEventItem {
   const UiShownItem(super.envelope, this.event);
   final UiShownEvent event;
+}
+
+final class CanvasPreviewItem extends RunEventItem {
+  const CanvasPreviewItem(super.envelope, this.event);
+  final CanvasPreviewEvent event;
 }
 
 final class UnknownRunEventItem extends RunEventItem {

@@ -1,9 +1,10 @@
-import 'package:casama_sdk/casama_sdk.dart' show Bot, BotStatusEnum;
+import 'package:casama_sdk/casama_sdk.dart'
+    show Bot, BotStatusEnum, Canvas, CanvasGrant, CanvasPlacement, CanvasPlacementPlatformEnum, CanvasStatusEnum, CanvasUpdateStatusEnum;
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-import 'package:material_ui/material_ui.dart';
+import 'package:material_ui/material_ui.dart' hide Canvas;
 
 import '../../core/haptics.dart';
 import '../../core/providers.dart';
@@ -11,11 +12,14 @@ import '../../core/widgets.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
+import '../../ui/adaptive_modal.dart';
 import '../../ui/app_card.dart';
 import '../../ui/bot_avatar.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/page.dart';
 import '../app_lock/app_lock.dart';
+import 'canvas_sync.dart';
+import 'canvas_view.dart';
 import 'glance_sync.dart';
 import 'widget_settings.dart';
 
@@ -29,7 +33,9 @@ enum WidgetKind {
   brief('BriefWidget'),
   library('LibraryWidget'),
   tasks('TasksWidget'),
-  credits('CreditsWidget');
+  credits('CreditsWidget'),
+  // Bot widgets (docs/BOT-WIDGET-PLAN.md): what bots put there.
+  canvas('CanvasWidget');
 
   const WidgetKind(this.androidProvider);
   final String androidProvider;
@@ -44,6 +50,7 @@ enum WidgetKind {
     library => l10n.widgetLibrary,
     tasks => l10n.widgetTasks,
     credits => l10n.widgetCredits,
+    canvas => l10n.widgetNameCanvas,
   };
 
   String description(AppLocalizations l10n) => switch (this) {
@@ -56,6 +63,7 @@ enum WidgetKind {
     library => l10n.widgetDescLibrary,
     tasks => l10n.widgetDescTasks,
     credits => l10n.widgetDescCredits,
+    canvas => l10n.widgetDescCanvas,
   };
 }
 
@@ -115,6 +123,7 @@ class WidgetsScreen extends ConsumerWidget {
             padding: const EdgeInsets.only(bottom: AppSpace.sm),
             child: _WidgetCard(kind: kind, canPin: canPin),
           ),
+        const _FromYourBots(),
         if (ios) ...[
           SectionHeader(title: l10n.widgetsLockScreen),
           Text(l10n.widgetsLockScreenHelp, style: context.textTheme.bodyMedium),
@@ -194,6 +203,206 @@ class _WidgetCard extends ConsumerWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// **From your bots** (bot widgets, docs/BOT-WIDGET-PLAN.md §11.2): each canvas a bot keeps on the
+/// widgets, with **Hide on a locked phone**, **Pause** and **Clear**, then each bot that may write,
+/// with its switch. Hidden while it loads, and on a server from before bot widgets.
+class _FromYourBots extends ConsumerWidget {
+  const _FromYourBots();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final list = ref.watch(canvasListProvider).value;
+    if (list == null || list.version.isEmpty) return const SizedBox.shrink();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SectionHeader(title: l10n.widgetsFromBots),
+        if (list.items.isEmpty) FormNote(l10n.widgetsFromBotsEmpty, icon: LucideIcons.sparkles),
+        for (final c in list.items)
+          Padding(
+            padding: const EdgeInsets.only(bottom: AppSpace.sm),
+            child: _CanvasCard(canvas: c, placed: list.placed),
+          ),
+        if (list.grants.isNotEmpty) ...[
+          SectionHeader(title: l10n.canvasAllowedBots),
+          GroupedCard(children: [for (final g in list.grants) _GrantTile(grant: g)]),
+        ],
+      ],
+    );
+  }
+}
+
+/// Where a Canvas widget is placed, by device name.
+String canvasDevices(AppLocalizations l10n, List<CanvasPlacement> placed) => {
+  for (final p in placed)
+    (p.label ?? '').trim().isNotEmpty
+        ? p.label!.trim()
+        : switch (p.platform) {
+            CanvasPlacementPlatformEnum.ios => l10n.canvasDeviceIos,
+            CanvasPlacementPlatformEnum.android => l10n.canvasDeviceAndroid,
+            CanvasPlacementPlatformEnum.macos => l10n.canvasDeviceMac,
+          },
+}.join(', ');
+
+class _CanvasCard extends ConsumerWidget {
+  const _CanvasCard({required this.canvas, required this.placed});
+  final Canvas canvas;
+  final List<CanvasPlacement> placed;
+
+  Future<void> _change(BuildContext context, WidgetRef ref, Future<void> Function() action) async {
+    HapticsHelper.light();
+    final ok = await runGuarded(context, () async {
+      await action();
+      return true;
+    });
+    if (ok == true) canvasesChanged(ref);
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final backend = ref.read(backendProvider);
+    final muted = context.textTheme.bodySmall?.copyWith(color: context.colorScheme.onSurfaceVariant);
+    final status = switch (canvas.status) {
+      CanvasStatusEnum.paused => l10n.canvasPausedLine,
+      CanvasStatusEnum.waiting => l10n.canvasWaitingLine,
+      CanvasStatusEnum.shown => placed.isEmpty ? l10n.canvasNoWidget : l10n.canvasOnDevices(canvasDevices(l10n, placed)),
+    };
+    return Card(
+      key: Key('canvas-${canvas.id}'),
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpace.sm),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ExcludeSemantics(
+                  child: SizedBox.square(dimension: 96, child: FittedBox(child: CanvasView(canvas: canvas))),
+                ),
+                const SizedBox(width: AppSpace.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    spacing: 2,
+                    children: [
+                      Text(canvas.name, style: context.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+                      Row(
+                        spacing: 6,
+                        children: [
+                          BotAvatar(name: canvas.bot, avatar: canvas.botAvatar.isEmpty ? null : canvas.botAvatar, size: 18),
+                          Flexible(child: Text(canvas.bot, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.textTheme.bodyMedium)),
+                        ],
+                      ),
+                      Text(l10n.canvasSetAt(relativeTime(canvas.setAt, context)), style: muted),
+                      Text(status, key: Key('canvasStatus-${canvas.id}'), style: muted),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpace.xs),
+            Row(
+              children: [
+                Expanded(child: Text(l10n.canvasHideLocked, style: context.textTheme.bodyMedium)),
+                Switch(
+                  key: Key('canvasHide-${canvas.id}'),
+                  value: canvas.hideWhenLocked,
+                  onChanged: (on) => _change(context, ref, () => backend.updateCanvas(canvas.id, hideWhenLocked: on)),
+                ),
+              ],
+            ),
+            Wrap(
+              spacing: AppSpace.sm,
+              children: [
+                if (canvas.status == CanvasStatusEnum.waiting)
+                  FilledButton.tonal(
+                    key: Key('canvasAllow-${canvas.id}'),
+                    onPressed: () => _change(context, ref, () => backend.setCanvasGrant(canvas.botId, true)),
+                    child: Text(l10n.canvasShow),
+                  )
+                else
+                  OutlinedButton(
+                    key: Key('canvasPause-${canvas.id}'),
+                    onPressed: () => _change(
+                      context,
+                      ref,
+                      () => backend.updateCanvas(
+                        canvas.id,
+                        status: canvas.status == CanvasStatusEnum.paused ? CanvasUpdateStatusEnum.shown : CanvasUpdateStatusEnum.paused,
+                      ),
+                    ),
+                    child: Text(canvas.status == CanvasStatusEnum.paused ? l10n.canvasResume : l10n.canvasPause),
+                  ),
+                TextButton(
+                  key: Key('canvasClear-${canvas.id}'),
+                  onPressed: () async {
+                    final yes = await showConfirm(
+                      context: context,
+                      title: l10n.canvasClearTitle(canvas.name),
+                      message: l10n.canvasClearMessage(canvas.bot),
+                      confirmLabel: l10n.canvasClear,
+                      destructive: true,
+                      confirmKey: const Key('canvasClearConfirm'),
+                    );
+                    if (yes && context.mounted) await _change(context, ref, () => backend.clearCanvas(canvas.id));
+                  },
+                  child: Text(l10n.canvasClear),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// One bot that may write: **May show things on your widgets**. Off clears what it showed, after a
+/// confirm.
+class _GrantTile extends ConsumerWidget {
+  const _GrantTile({required this.grant});
+  final CanvasGrant grant;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final avatar = ref.watch(botsProvider).value?.where((b) => b.id == grant.botId).firstOrNull?.avatarUrl;
+    return GroupedTile(
+      key: Key('canvasGrant-${grant.botId}'),
+      icon: LucideIcons.bot,
+      leading: BotAvatar(name: grant.bot, avatar: avatar, size: 32),
+      title: grant.bot,
+      subtitle: l10n.canvasMayShow,
+      trailing: Switch(
+        key: Key('canvasGrantSwitch-${grant.botId}'),
+        value: true,
+        onChanged: (on) async {
+          if (on) return;
+          final yes = await showConfirm(
+            context: context,
+            title: l10n.canvasStopTitle(grant.bot),
+            message: l10n.canvasStopMessage(grant.bot),
+            confirmLabel: l10n.canvasStop,
+            destructive: true,
+            confirmKey: const Key('canvasStopConfirm'),
+          );
+          if (!yes || !context.mounted) return;
+          HapticsHelper.light();
+          final ok = await runGuarded(context, () async {
+            await ref.read(backendProvider).setCanvasGrant(grant.botId, false);
+            return true;
+          });
+          if (ok == true) canvasesChanged(ref);
+        },
       ),
     );
   }
@@ -340,6 +549,16 @@ class WidgetPreview extends StatelessWidget {
         crossAxisSpacing: 4,
         physics: const NeverScrollableScrollPhysics(),
         children: [for (var i = 0; i < 4; i++) Container(decoration: BoxDecoration(color: fill, borderRadius: BorderRadius.circular(6)))],
+      ),
+      WidgetKind.canvas => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('📖', style: TextStyle(fontSize: 16, height: 1)),
+          const Spacer(),
+          bar(56, h: 7, color: scheme.onSurface.withValues(alpha: 0.5)),
+          const SizedBox(height: 4),
+          bar(40),
+        ],
       ),
       WidgetKind.credits => Center(
         child: SizedBox(

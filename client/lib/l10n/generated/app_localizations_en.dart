@@ -15968,6 +15968,183 @@ class AppLocalizationsEn extends AppLocalizations {
       'Run routines from your Home screen with the Routines widget.';
 
   @override
+  String get widgetNameCanvas => 'Canvas';
+
+  @override
+  String get widgetDescCanvas =>
+      'Shows what your bots put there, like a daily verse or a countdown';
+
+  @override
+  String get canvasEmpty => 'Ask a bot to put something here';
+
+  @override
+  String get canvasTry => 'Try: put a daily verse on my Lock Screen';
+
+  @override
+  String get canvasAutomatic => 'Automatic';
+
+  @override
+  String canvasIn(String time) {
+    return 'in $time';
+  }
+
+  @override
+  String canvasSince(String time) {
+    return '$time since';
+  }
+
+  @override
+  String get canvasNow => 'Now';
+
+  @override
+  String canvasLeft(String n) {
+    return '$n left';
+  }
+
+  @override
+  String get canvasLeftUnit => 'left';
+
+  @override
+  String canvasDaysUnit(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'days',
+      one: 'day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get canvasCardLabel => 'Widgets';
+
+  @override
+  String canvasPreviewAsk(String bot) {
+    return '$bot wants to show this on your widgets';
+  }
+
+  @override
+  String canvasPreviewAskHelp(String bot) {
+    return 'Once you say yes, $bot can change it without asking. You can stop it any time in Settings, Widgets.';
+  }
+
+  @override
+  String canvasPreviewSet(String bot) {
+    return '$bot put this on your widgets';
+  }
+
+  @override
+  String get canvasShow => 'Show on my widgets';
+
+  @override
+  String get canvasShowing => 'Showing on your widgets';
+
+  @override
+  String canvasNotShown(String bot) {
+    return 'Not shown. $bot can ask again another day.';
+  }
+
+  @override
+  String get canvasGone => 'No longer on your widgets';
+
+  @override
+  String get canvasNotPlaced => 'Add the Canvas widget to see it.';
+
+  @override
+  String get canvasHowToIos =>
+      'Touch and hold the Home Screen or Lock Screen, tap Edit, then Add Widget, and pick Casama, then Canvas.';
+
+  @override
+  String get canvasHowToMac =>
+      'Right-click the desktop, choose Edit Widgets, and pick Casama, then Canvas.';
+
+  @override
+  String get canvasHowToElsewhere =>
+      'Add Casama\'s Canvas widget on your phone or Mac to see it there.';
+
+  @override
+  String get canvasAdded => 'Canvas widget added';
+
+  @override
+  String get canvasLockScreen => 'On the Lock Screen';
+
+  @override
+  String get widgetsFromBots => 'From your bots';
+
+  @override
+  String get widgetsFromBotsEmpty =>
+      'Nothing yet. Ask a bot something like \"Put a daily verse on my Lock Screen\".';
+
+  @override
+  String canvasSetAt(String time) {
+    return 'Set $time';
+  }
+
+  @override
+  String canvasOnDevices(String devices) {
+    return 'Showing on $devices';
+  }
+
+  @override
+  String get canvasNoWidget => 'No Canvas widget placed yet';
+
+  @override
+  String get canvasPausedLine => 'Paused';
+
+  @override
+  String get canvasWaitingLine => 'Waiting for your yes';
+
+  @override
+  String get canvasHideLocked => 'Hide on a locked phone';
+
+  @override
+  String get canvasPause => 'Pause';
+
+  @override
+  String get canvasResume => 'Resume';
+
+  @override
+  String get canvasClear => 'Clear';
+
+  @override
+  String canvasClearTitle(String name) {
+    return 'Clear $name?';
+  }
+
+  @override
+  String canvasClearMessage(String bot) {
+    return 'It comes off your widgets. $bot can put something there again.';
+  }
+
+  @override
+  String get canvasAllowedBots => 'Bots on your widgets';
+
+  @override
+  String get canvasMayShow => 'May show things on your widgets';
+
+  @override
+  String canvasStopTitle(String bot) {
+    return 'Stop $bot?';
+  }
+
+  @override
+  String canvasStopMessage(String bot) {
+    return 'What $bot shows on your widgets is cleared, and it has to ask again.';
+  }
+
+  @override
+  String get canvasStop => 'Stop';
+
+  @override
+  String get canvasDeviceIos => 'iPhone';
+
+  @override
+  String get canvasDeviceAndroid => 'Android phone';
+
+  @override
+  String get canvasDeviceMac => 'Mac';
+
+  @override
   String get widgetNudgeAction => 'Show me';
 
   @override

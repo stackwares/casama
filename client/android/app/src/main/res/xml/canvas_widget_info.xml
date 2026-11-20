@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Canvas (docs/BOT-WIDGET-PLAN.md §10.2): what a bot puts here. Resizable from 2×1 to 5×4, on the
+     home screen and the lock screen page; placed without choosing (Automatic), changed later. -->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:description="@string/widget_canvas_description"
+    android:initialLayout="@layout/widget_loading"
+    android:previewLayout="@layout/preview_canvas"
+    android:minWidth="250dp"
+    android:minHeight="110dp"
+    android:minResizeWidth="110dp"
+    android:minResizeHeight="40dp"
+    android:maxResizeWidth="520dp"
+    android:maxResizeHeight="420dp"
+    android:targetCellWidth="4"
+    android:targetCellHeight="2"
+    android:resizeMode="horizontal|vertical"
+    android:updatePeriodMillis="1800000"
+    android:widgetCategory="home_screen|keyguard"
+    android:configure="ai.casama.app.WidgetConfigActivity"
+    android:widgetFeatures="reconfigurable|configuration_optional" />

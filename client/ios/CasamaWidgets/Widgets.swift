@@ -189,3 +189,46 @@ struct CasamaInlineWidget: Widget {
     .supportedFamilies([.accessoryInline])
   }
 }
+
+/// What a bot put here (docs/BOT-WIDGET-PLAN.md §10.1): Automatic or one canvas, on the Home
+/// Screen and the Lock Screen. Views in WidgetViews/CanvasViews.swift.
+struct CanvasWidget: Widget {
+  var body: some WidgetConfiguration {
+    AppIntentConfiguration(kind: CanvasFetch.kind, intent: ChooseCanvasIntent.self, provider: CanvasProvider()) { entry in
+      CanvasWidgetView(entry: entry)
+    }
+    .configurationDisplayName("Canvas")
+    .description("Show what your bots put here: a verse, a countdown, a streak, a list or a picture.")
+    .supportedFamilies([
+      .systemSmall, .systemMedium, .systemLarge, .systemExtraLarge,
+      .accessoryRectangular, .accessoryInline, .accessoryCircular,
+    ])
+    .glanceDefaults()
+  }
+}
+
+/// The Canvas widget kept out of CarPlay (its small size would reach it; §10.1) and refreshed by
+/// server pushes, on the systems that have both (iOS 26).
+@available(iOS 26.0, *)
+struct CanvasWidgetPushed: Widget {
+  var body: some WidgetConfiguration {
+    CanvasWidget().body
+      .disfavoredLocations([.carPlay], for: [.systemSmall])
+      .pushHandler(GlancePushHandler.self)
+  }
+}
+
+enum CanvasBundle {
+  /// The Canvas widget under one kind on every system, as GlanceBundle.refreshable does for the
+  /// others; CarPlay only exists where pushes do.
+  static func widget() -> some Widget {
+    WidgetBundleBuilder.buildOptional(pick())
+  }
+
+  private static func pick() -> any Widget & _LimitedAvailabilityWidgetMarker {
+    if #available(iOS 26.0, *) {
+      return WidgetBundleBuilder.buildLimitedAvailability(CanvasWidgetPushed())
+    }
+    return WidgetBundleBuilder.buildLimitedAvailability(CanvasWidget())
+  }
+}

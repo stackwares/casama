@@ -611,9 +611,14 @@ Class | Method | HTTP request | Description
 [*WebhooksApi*](doc/WebhooksApi.md) | [**customWebhook**](doc/WebhooksApi.md#customwebhook) | **POST** /hooks/custom/{routine_id} | Custom webhook for a routine (X-Casama-Signature: sha256&#x3D;HMAC-SHA256 of the body)
 [*WebhooksApi*](doc/WebhooksApi.md) | [**githubWebhook**](doc/WebhooksApi.md#githubwebhook) | **POST** /hooks/github/{routine_id} | GitHub webhook for a routine (X-Hub-Signature-256)
 [*WidgetsApi*](doc/WidgetsApi.md) | [**createWidgetKey**](doc/WidgetsApi.md#createwidgetkey) | **POST** /v1/widget-keys | A key this device&#39;s widgets fetch the glance with, shown once. It reads the glance and creation covers and nothing else
+[*WidgetsApi*](doc/WidgetsApi.md) | [**deleteCanvas**](doc/WidgetsApi.md#deletecanvas) | **DELETE** /v1/canvases/{id} | Clear a canvas (also Not now on a bot&#39;s first preview)
 [*WidgetsApi*](doc/WidgetsApi.md) | [**deleteWidgetKey**](doc/WidgetsApi.md#deletewidgetkey) | **DELETE** /v1/widget-keys/{id} | Forget a widget key (sign-out): its widgets stop fetching
+[*WidgetsApi*](doc/WidgetsApi.md) | [**getCanvasPicture**](doc/WidgetsApi.md#getcanvaspicture) | **GET** /v1/canvases/{id}/pictures/{hash} | A canvas&#39;s picture or built-in painting as a JPEG; cached for good (the hash is in the path)
+[*WidgetsApi*](doc/WidgetsApi.md) | [**getCanvases**](doc/WidgetsApi.md#getcanvases) | **GET** /v1/canvases | What bots keep on the person&#39;s Canvas widgets: each canvas with the entry showing now and up to 13 planned. Takes the session or &#x60;Authorization: Widget &lt;key&gt;&#x60;; send &#x60;If-None-Match&#x60; with the last &#x60;version&#x60; to get 304
 [*WidgetsApi*](doc/WidgetsApi.md) | [**getGlance**](doc/WidgetsApi.md#getglance) | **GET** /v1/glance | What the person&#39;s widgets show, in one small document (D-405). Takes the session or &#x60;Authorization: Widget &lt;key&gt;&#x60;; send &#x60;If-None-Match&#x60; with the last &#x60;version&#x60; to get 304 when nothing changed
+[*WidgetsApi*](doc/WidgetsApi.md) | [**setCanvasGrant**](doc/WidgetsApi.md#setcanvasgrant) | **PUT** /v1/canvas-grants | Let a bot show things on the person&#39;s widgets (Show on my widgets), or stop it. Allowing shows what it left waiting; stopping clears what it showed
 [*WidgetsApi*](doc/WidgetsApi.md) | [**setWidgetPushToken**](doc/WidgetsApi.md#setwidgetpushtoken) | **PUT** /v1/widget-keys/current/push-token | Where to send refresh pushes for a key&#39;s widgets: the widget extension calls it with &#x60;Authorization: Widget &lt;key&gt;&#x60;, the app with the session and &#x60;?key_id&#x3D;&#x60;
+[*WidgetsApi*](doc/WidgetsApi.md) | [**updateCanvas**](doc/WidgetsApi.md#updatecanvas) | **PATCH** /v1/canvases/{id} | Pause a canvas or show it again; hide it on a locked phone, or not
 [*WidgetsApi*](doc/WidgetsApi.md) | [**updateWidgetKey**](doc/WidgetsApi.md#updatewidgetkey) | **PATCH** /v1/widget-keys/{id} | Make the glance this key reads private (counts and general words only), or not
 [*WorkspacesApi*](doc/WorkspacesApi.md) | [**acceptInvite**](doc/WorkspacesApi.md#acceptinvite) | **POST** /v1/invites/{token}/accept | Join an organization with an invite token
 [*WorkspacesApi*](doc/WorkspacesApi.md) | [**acceptInviteLink**](doc/WorkspacesApi.md#acceptinvitelink) | **POST** /v1/invite-links/{token}/accept | Join a workspace with an invite link
@@ -770,6 +775,19 @@ Class | Method | HTTP request | Description
  - [CalendarTriggerConfig](doc/CalendarTriggerConfig.md)
  - [CallStepRequest](doc/CallStepRequest.md)
  - [CallStepResult](doc/CallStepResult.md)
+ - [Canvas](doc/Canvas.md)
+ - [CanvasBackground](doc/CanvasBackground.md)
+ - [CanvasEntry](doc/CanvasEntry.md)
+ - [CanvasEntryItemsInner](doc/CanvasEntryItemsInner.md)
+ - [CanvasGrant](doc/CanvasGrant.md)
+ - [CanvasGrantSaved](doc/CanvasGrantSaved.md)
+ - [CanvasList](doc/CanvasList.md)
+ - [CanvasLook](doc/CanvasLook.md)
+ - [CanvasPlacement](doc/CanvasPlacement.md)
+ - [CanvasPreviewEvent](doc/CanvasPreviewEvent.md)
+ - [CanvasPreviewEventPayload](doc/CanvasPreviewEventPayload.md)
+ - [CanvasRotation](doc/CanvasRotation.md)
+ - [CanvasUpdate](doc/CanvasUpdate.md)
  - [CatalogApp](doc/CatalogApp.md)
  - [CatalogAppApiKey](doc/CatalogAppApiKey.md)
  - [CatalogSkill](doc/CatalogSkill.md)
@@ -897,6 +915,7 @@ Class | Method | HTTP request | Description
  - [DeleteMailMessagesResult](doc/DeleteMailMessagesResult.md)
  - [DeleteResult](doc/DeleteResult.md)
  - [DeletedCall](doc/DeletedCall.md)
+ - [DeletedCanvas](doc/DeletedCanvas.md)
  - [DeletedChannel](doc/DeletedChannel.md)
  - [DeletedComputer](doc/DeletedComputer.md)
  - [DeletedConversation](doc/DeletedConversation.md)
@@ -1372,6 +1391,7 @@ Class | Method | HTTP request | Description
  - [SetBotA2aRequest](doc/SetBotA2aRequest.md)
  - [SetBotAccessRequest](doc/SetBotAccessRequest.md)
  - [SetBotAccessRequestEntriesInner](doc/SetBotAccessRequestEntriesInner.md)
+ - [SetCanvasGrant](doc/SetCanvasGrant.md)
  - [SetConnectionSettingsRequest](doc/SetConnectionSettingsRequest.md)
  - [SetDeviceGrantRequest](doc/SetDeviceGrantRequest.md)
  - [SetEncryptionRequest](doc/SetEncryptionRequest.md)

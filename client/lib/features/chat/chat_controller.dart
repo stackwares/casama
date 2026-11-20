@@ -201,6 +201,15 @@ class PermissionsEntry extends ChatEntry {
   final String? runId;
 }
 
+/// A bot set a canvas on the person's widgets (bot widgets, docs/BOT-WIDGET-PLAN.md §8.5): the
+/// canvas drawn as the widget draws it, with Show on my widgets / Not now the first time. Kept by
+/// run like [DeviceAccessEntry].
+class CanvasPreviewEntry extends ChatEntry {
+  const CanvasPreviewEntry({required this.preview, this.runId});
+  final CanvasPreviewEventPayload preview;
+  final String? runId;
+}
+
 /// A suggestion the bot posted in General (D-253): Do it opens a topic, Not now dismisses it.
 class SuggestionEntry extends ChatEntry {
   const SuggestionEntry({required this.messageId, required this.suggestion});
@@ -466,7 +475,7 @@ class ChatController extends Notifier<ChatState> {
   /// [entries] with every kept Allow card after the last entry of the run that asked; a card of
   /// the run still going with nothing saved yet goes last.
   List<ChatEntry> _placeDeviceCards(List<ChatEntry> entries) {
-    final out = [for (final e in entries) if (e is! DeviceAccessEntry && e is! PermissionsEntry) e];
+    final out = [for (final e in entries) if (e is! DeviceAccessEntry && e is! PermissionsEntry && e is! CanvasPreviewEntry) e];
     if (_deviceCards.isEmpty) return out;
     for (final MapEntry(key: run, value: cards) in _deviceCards.entries) {
       final at = out.lastIndexWhere((e) => e is MessageEntry && e.runId == run);
@@ -500,6 +509,11 @@ class ChatController extends Notifier<ChatState> {
   }
 
   static ChatEntry? _deviceCardOf(RunEventItem e) {
+    // A bot's canvas (bot widgets): its preview card, kept and recovered the same way.
+    if (e case CanvasPreviewItem(:final event)) {
+      if (event.runId.isEmpty) return null;
+      return CanvasPreviewEntry(runId: event.runId, preview: event.payload);
+    }
     // System permissions on a device (D-376): their own card, kept and recovered the same way.
     if (e case DevicePermissionNeededItem(:final event)) {
       final p = event.payload;
@@ -523,13 +537,14 @@ class ChatController extends Notifier<ChatState> {
   /// Keeps [card] for its run; false when that run already has a card for the kind (a replay).
   bool _keepDeviceCard(ChatEntry card) {
     final run = switch (card) {
-      DeviceAccessEntry(:final runId) || PermissionsEntry(:final runId) => runId,
+      DeviceAccessEntry(:final runId) || PermissionsEntry(:final runId) || CanvasPreviewEntry(:final runId) => runId,
       _ => null,
     };
     if (run == null) return false;
     final cards = _deviceCards.putIfAbsent(run, () => []);
     final dup = switch (card) {
       DeviceAccessEntry(:final kind, :final botId) => cards.any((c) => c is DeviceAccessEntry && c.kind == kind && c.botId == botId),
+      CanvasPreviewEntry(:final preview) => cards.any((c) => c is CanvasPreviewEntry && c.preview.canvasId == preview.canvasId),
       PermissionsEntry(:final request) => cards.any(
         (c) => c is PermissionsEntry && c.request.deviceRef == request.deviceRef && c.request.botId == request.botId && c.request.permissions.toSet().containsAll(request.permissions),
       ),
@@ -1752,7 +1767,7 @@ class ChatController extends Notifier<ChatState> {
       case SecretRequestedItem(:final event):
         final p = event.payload;
         entries.add(SecretEntry(requestId: p.requestId, name: p.name, service: p.service, hosts: p.allowedHosts.toList(), reason: p.reason, totp: p.kind.value == 'totp'));
-      case DeviceAccessRequestedItem() || DeviceBrowserAccessRequestedItem() || DevicePermissionNeededItem():
+      case DeviceAccessRequestedItem() || DeviceBrowserAccessRequestedItem() || DevicePermissionNeededItem() || CanvasPreviewItem():
         // Kept by run so a reload puts it back; a replayed event (following the run again) adds nothing.
         final card = _deviceCardOf(e);
         if (card != null && _keepDeviceCard(card)) entries.add(card);

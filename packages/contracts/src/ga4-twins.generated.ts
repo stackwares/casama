@@ -62,6 +62,9 @@ export const ANALYTICS_CLIENT_EVENTS: Record<string, string[]> = {
     "status",
     "via"
   ],
+  "canvas_allowed": [
+    "choice"
+  ],
   "skill_installed": [
     "source",
     "skill_id"
@@ -165,7 +168,9 @@ export const ANALYTICS_CLIENT_EVENTS: Record<string, string[]> = {
   ],
   "widgets_placed": [
     "count",
-    "lock_screen"
+    "lock_screen",
+    "canvas",
+    "canvas_lock_screen"
   ],
   "widget_action": [
     "action"

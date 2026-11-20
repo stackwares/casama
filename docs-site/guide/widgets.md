@@ -21,6 +21,32 @@ press away.
 Touch and hold a **Bot**, **Ask** or **Routines** widget to choose which bot or routines it shows.
 **Settings → Widgets** in Casama shows each one and, on Android, adds it with **Add to Home screen**.
 
+## Canvas: what your bots put there
+
+**Canvas** is the one widget your bots fill in. Ask in a chat, in your own words: "put a daily verse
+on my Lock Screen", "count down to my trip", "keep my reading streak on my home screen". The bot
+can show a text, a countdown, a number with a ring, a short list or a picture, over a colour, a
+gradient, a picture or one of eight built-in paintings. Casama picks the text colour so it always
+reads.
+
+- **The first time** a bot wants to show something, the chat shows a preview with **Show on my
+  widgets** and **Not now**. After your yes, that bot keeps its canvas current without asking, from
+  chats and routines.
+- **Add the widget once.** On an iPhone or iPad: touch and hold the Home Screen or Lock Screen, tap
+  **Edit**, **Add Widget**, **Casama**, **Canvas**. On a Mac: right-click the desktop, **Edit
+  Widgets**, **Casama**, **Canvas**. On Android, the preview's **Add to Home screen** does it.
+- **It changes by itself.** A bot can give a list once (up to 400 items) that the widget cycles
+  through every day, week or few hours, or plan up to 14 changes ahead. Neither needs the bot
+  again, so a year of daily verses costs one request.
+- **Which canvas a widget shows**: touch and hold it to choose **Automatic** (the latest) or one by
+  name. A bot keeps up to three.
+- **Settings → Widgets → From your bots** lists every canvas with **Hide on a locked phone**,
+  **Pause** and **Clear**, and a switch per bot to stop it showing anything.
+
+On the Lock Screen only a short form shows: about two lines under the clock, a few words above
+it. Anything a bot marks as personal, and any canvas you set to **Hide on a locked phone**, shows
+just its name until you unlock.
+
 ## Acting from a widget
 
 - **Allow** and **Deny** appear only for a low-risk request. Anything else shows **Review**, which
@@ -41,6 +67,9 @@ OK"); the request itself appears once you unlock.
 
 Android phones that offer lock screen widgets can take **Needs you**, **Bot**, **Routines** and
 **Credits** there too, with the same rule.
+
+**Canvas** goes under the clock or above it too: a verse, a countdown or a streak a bot keeps
+there for you (see above).
 
 ## Controls (iPhone, iOS 18 and later)
 

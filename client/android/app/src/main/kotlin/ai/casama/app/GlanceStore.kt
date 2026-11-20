@@ -342,7 +342,7 @@ object GlanceStore {
 /**
  * The widgets' words (§17): the app's own from `app_en.arb`, written as `glance_words`, with an
  * English copy here for when they're missing. Placeholders: `{bot}`, `{time}`, `{n}`, `{amount}`,
- * `{title}`.
+ * `{title}`. The Canvas widget's words are the `canvas*` keys.
  */
 class Words(private val saved: JSONObject?) {
   operator fun get(key: String): String =
@@ -402,6 +402,14 @@ class Words(private val saved: JSONObject?) {
       "take_over" to "{bot} wants you to take over",
       "next_brief" to "Next brief {time}",
       "nothing_next" to "Nothing coming up",
+      // The Canvas widget (docs/BOT-WIDGET-PLAN.md §6.5).
+      "canvas" to "Canvas",
+      "canvas_empty" to "Ask a bot to put something here",
+      "canvas_try" to "Try: put a daily verse on my Lock Screen",
+      // The unit after a countdown's number of days ("12 days"), as the app writes it.
+      "canvas_day" to "day",
+      "canvas_days" to "days",
+      "canvas_now" to "Now",
     )
   }
 }

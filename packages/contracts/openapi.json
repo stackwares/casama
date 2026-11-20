@@ -126,6 +126,9 @@
           },
           {
             "$ref": "#/components/schemas/UiShownEvent"
+          },
+          {
+            "$ref": "#/components/schemas/CanvasPreviewEvent"
           }
         ],
         "discriminator": {
@@ -164,7 +167,8 @@
             "run.completed": "#/components/schemas/RunCompletedEvent",
             "run.failed": "#/components/schemas/RunFailedEvent",
             "run.cancelled": "#/components/schemas/RunCancelledEvent",
-            "ui.shown": "#/components/schemas/UiShownEvent"
+            "ui.shown": "#/components/schemas/UiShownEvent",
+            "canvas.preview": "#/components/schemas/CanvasPreviewEvent"
           }
         }
       },
@@ -2356,6 +2360,423 @@
           "bot_id",
           "type",
           "payload"
+        ]
+      },
+      "CanvasPreviewEvent": {
+        "type": "object",
+        "properties": {
+          "v": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Protocol version, currently 1"
+          },
+          "run_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "seq": {
+            "type": "integer",
+            "exclusiveMinimum": 0
+          },
+          "ts": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "bot_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "canvas.preview"
+            ]
+          },
+          "payload": {
+            "type": "object",
+            "properties": {
+              "canvas_id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "bot_id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "state": {
+                "type": "string",
+                "enum": [
+                  "waiting",
+                  "shown",
+                  "not_placed"
+                ]
+              },
+              "canvas": {
+                "$ref": "#/components/schemas/Canvas"
+              }
+            },
+            "required": [
+              "canvas_id",
+              "bot_id",
+              "state",
+              "canvas"
+            ]
+          }
+        },
+        "required": [
+          "v",
+          "run_id",
+          "seq",
+          "ts",
+          "bot_id",
+          "type",
+          "payload"
+        ]
+      },
+      "Canvas": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "org_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 40
+          },
+          "bot_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "bot": {
+            "type": "string",
+            "maxLength": 80
+          },
+          "bot_avatar": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "waiting",
+              "shown",
+              "paused"
+            ]
+          },
+          "hide_when_locked": {
+            "type": "boolean"
+          },
+          "version": {
+            "type": "integer"
+          },
+          "set_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "until": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "link": {
+            "type": "string",
+            "maxLength": 300
+          },
+          "rotation": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "count": {
+                "type": "integer"
+              },
+              "showing": {
+                "type": "integer"
+              },
+              "left": {
+                "type": "integer"
+              },
+              "every": {
+                "type": "string",
+                "maxLength": 120
+              }
+            },
+            "required": [
+              "count",
+              "showing",
+              "left",
+              "every"
+            ]
+          },
+          "entries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CanvasEntry"
+            },
+            "maxItems": 14
+          }
+        },
+        "required": [
+          "id",
+          "org_id",
+          "name",
+          "bot_id",
+          "bot",
+          "bot_avatar",
+          "status",
+          "hide_when_locked",
+          "version",
+          "set_at",
+          "until",
+          "link",
+          "rotation",
+          "entries"
+        ]
+      },
+      "CanvasEntry": {
+        "type": "object",
+        "properties": {
+          "at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "template": {
+            "type": "string",
+            "enum": [
+              "text",
+              "countdown",
+              "number",
+              "list",
+              "picture"
+            ]
+          },
+          "title": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 60
+          },
+          "text": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 280
+          },
+          "footer": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 40
+          },
+          "target": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "count": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "down",
+              "up",
+              null
+            ]
+          },
+          "value": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "of": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "unit": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 16
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "text": {
+                  "type": "string",
+                  "maxLength": 60
+                },
+                "done": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "text",
+                "done"
+              ]
+            },
+            "maxItems": 5
+          },
+          "picture": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 80
+          },
+          "short": {
+            "type": "string",
+            "maxLength": 80
+          },
+          "tiny": {
+            "type": "string",
+            "maxLength": 24
+          },
+          "look": {
+            "$ref": "#/components/schemas/CanvasLook"
+          }
+        },
+        "required": [
+          "at",
+          "template",
+          "title",
+          "text",
+          "footer",
+          "target",
+          "count",
+          "value",
+          "of",
+          "unit",
+          "items",
+          "picture",
+          "short",
+          "tiny",
+          "look"
+        ]
+      },
+      "CanvasLook": {
+        "type": "object",
+        "properties": {
+          "background": {
+            "$ref": "#/components/schemas/CanvasBackground"
+          },
+          "font": {
+            "type": "string",
+            "enum": [
+              "plain",
+              "serif",
+              "rounded",
+              "mono"
+            ]
+          },
+          "align": {
+            "type": "string",
+            "enum": [
+              "start",
+              "center"
+            ]
+          },
+          "icon": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 32
+          },
+          "accent": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 7
+          },
+          "ink": {
+            "type": "string",
+            "enum": [
+              "light",
+              "dark",
+              "auto"
+            ]
+          }
+        },
+        "required": [
+          "background",
+          "font",
+          "align",
+          "icon",
+          "accent",
+          "ink"
+        ]
+      },
+      "CanvasBackground": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "auto",
+              "color",
+              "gradient",
+              "picture"
+            ]
+          },
+          "color": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 7
+          },
+          "from": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 7
+          },
+          "to": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 7
+          },
+          "picture": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 80
+          }
+        },
+        "required": [
+          "kind",
+          "color",
+          "from",
+          "to",
+          "picture"
         ]
       },
       "RunEventEnvelope": {
@@ -27711,6 +28132,171 @@
           "emoji",
           "text"
         ]
+      },
+      "DeletedCanvas": {
+        "type": "object",
+        "properties": {
+          "deleted": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "deleted"
+        ]
+      },
+      "CanvasList": {
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "string"
+          },
+          "made_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "private": {
+            "type": "boolean"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Canvas"
+            },
+            "maxItems": 12
+          },
+          "grants": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CanvasGrant"
+            },
+            "maxItems": 200
+          },
+          "placed": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CanvasPlacement"
+            },
+            "maxItems": 20
+          }
+        },
+        "required": [
+          "version",
+          "made_at",
+          "private",
+          "items",
+          "grants",
+          "placed"
+        ]
+      },
+      "CanvasGrant": {
+        "type": "object",
+        "properties": {
+          "bot_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "bot": {
+            "type": "string",
+            "maxLength": 80
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "bot_id",
+          "bot",
+          "created_at"
+        ]
+      },
+      "CanvasPlacement": {
+        "type": "object",
+        "properties": {
+          "platform": {
+            "type": "string",
+            "enum": [
+              "ios",
+              "android",
+              "macos"
+            ]
+          },
+          "label": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "sizes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 20
+            },
+            "maxItems": 12
+          },
+          "seen_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "platform",
+          "label",
+          "sizes",
+          "seen_at"
+        ]
+      },
+      "CanvasGrantSaved": {
+        "type": "object",
+        "properties": {
+          "allowed": {
+            "type": "boolean"
+          },
+          "shown": {
+            "type": "integer"
+          },
+          "cleared": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "allowed",
+          "shown",
+          "cleared"
+        ]
+      },
+      "SetCanvasGrant": {
+        "type": "object",
+        "properties": {
+          "bot_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "allowed": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "bot_id",
+          "allowed"
+        ]
+      },
+      "CanvasUpdate": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "shown",
+              "paused"
+            ]
+          },
+          "hide_when_locked": {
+            "type": "boolean"
+          }
+        }
       },
       "WidgetKeyCreated": {
         "type": "object",
@@ -67094,6 +67680,383 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ChatStarters"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/canvases/{id}": {
+      "delete": {
+        "operationId": "deleteCanvas",
+        "tags": [
+          "widgets"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Clear a canvas (also Not now on a bot's first preview)",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeletedCanvas"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "operationId": "updateCanvas",
+        "tags": [
+          "widgets"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Pause a canvas or show it again; hide it on a locked phone, or not",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CanvasUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Canvas"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/canvases/{id}/pictures/{hash}": {
+      "get": {
+        "operationId": "getCanvasPicture",
+        "tags": [
+          "widgets"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "A canvas's picture or built-in painting as a JPEG; cached for good (the hash is in the path)",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^(painting-[a-z_]{2,20}|[0-9a-f]{16,64})$"
+            },
+            "required": true,
+            "name": "hash",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "JPEG",
+            "content": {
+              "image/jpeg": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/canvases": {
+      "get": {
+        "operationId": "getCanvases",
+        "tags": [
+          "widgets"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "What bots keep on the person's Canvas widgets: each canvas with the entry showing now and up to 13 planned. Takes the session or `Authorization: Widget <key>`; send `If-None-Match` with the last `version` to get 304",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Needed with the session; a widget key reads its own workspace"
+            },
+            "required": false,
+            "description": "Needed with the session; a widget key reads its own workspace",
+            "name": "org_id",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 200,
+              "description": "Widget keys: the Canvas sizes this device draws, comma separated (home_small, lock_rect…), so bots can say where they show"
+            },
+            "required": false,
+            "description": "Widget keys: the Canvas sizes this device draws, comma separated (home_small, lock_rect…), so bots can say where they show",
+            "name": "sizes",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The canvases",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CanvasList"
+                }
+              }
+            }
+          },
+          "304": {
+            "description": "Not changed since the version in If-None-Match"
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/canvas-grants": {
+      "put": {
+        "operationId": "setCanvasGrant",
+        "tags": [
+          "widgets"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Let a bot show things on the person's widgets (Show on my widgets), or stop it. Allowing shows what it left waiting; stopping clears what it showed",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetCanvasGrant"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Saved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CanvasGrantSaved"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
                 }
               }
             }
