@@ -6350,3 +6350,35 @@ records `voice_calls.reached`: false when no phone took it (no live VoIP token, 
 and the person has no computer or browser set up for the banner. Unreached rings don't count toward
 the cooldown or the daily cap, and the bot is told the person has nothing set up to ring, so it
 can say so instead of claiming it rang. The call still expires as missed with its notification.
+
+## D-439 Google Analytics is live everywhere: server, web app, store apps and all our websites (2026-11-20)
+
+Oliver: "let's make google analytics live everywhere, the app and all our websites of course", then
+"yes to all" for every step of `docs/GA4-LAUNCH-PLAN.md`. D-397 to D-399 had the code; this turns it on.
+
+- **Property `563408057`** (Stackwares › Casama): `scripts/ga4-setup.mts --apply` registered 43 event
+  and 4 user dimensions, 2 metrics, 6 key events and 14-month retention. Signals stays off, no Ads links.
+  The service account `casama-ga4@kasama-ai` is Editor on the property (Vaultwarden "Casama · GA4
+  service account (property 563408057)"); it runs the scripts and the server's account erasure.
+- **Server:** a new web stream "Casama server" (`G-1Q83CTXBYB`) with its own Measurement Protocol
+  secret (Vaultwarden "Casama · GA4 Measurement Protocol API secret (server stream G-1Q83CTXBYB)").
+  Prod `.env` has `ANALYTICS_PROVIDERS=posthog,ga4` and the `GA4_*` keys. This also turns on the
+  Windows/Linux relay (D-399).
+- **Web app shares the websites' stream (changes D-397's "own stream").** Firebase had already linked
+  the "Casama (web)" app to `G-4GVRF0K324`, and Firebase's web SDK sends to the stream linked to its
+  app id whatever id the build passes. A new Firebase web app would have moved web push to a new app
+  id. So `FIREBASE_WEB_MEASUREMENT_ID=G-4GVRF0K324`, and reports tell the two apart by hostname
+  (app.casama.ai) and the `app` dimension. Page-change and form events are off on that stream, so
+  Flutter's own `screen_view` isn't counted twice.
+- **Apps:** `client/config/telemetry.json` and the CI secret `CASAMA_TELEMETRY_JSON` carry
+  `GA4_ENABLED=true` and `ANALYTICS_PROVIDERS=posthog,ga4`. Web build 50 is live; store builds 50
+  carry it too. Builds 48 and older send nothing to GA4.
+- **Paywall events:** `paywall_view` carries `default_plan`/`default_period` and is sent once the
+  plans have loaded; a new `paywall_plan_select`. Their GA4 twins are `view_item_list` and
+  `select_item`, and funnel F6c measures them.
+- **Websites:** status.casama.ai counts through `casama.ai/b` (site `status`), skipping its own
+  2-minute refresh (`?refresh=1`) without storing anything. Pricing buttons send `plan_click`. The
+  privacy page lists status.casama.ai.
+- **Store forms:** App Store App Privacy adds Device ID → Analytics (Product Interaction and User ID
+  were already declared) and was published again. Play Data safety adds Analytics to App
+  interactions and Device or other IDs, and was sent for review.

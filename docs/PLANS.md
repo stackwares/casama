@@ -28,7 +28,6 @@ same commit. Shipping details (deploys, app builds) move fast, so check them bef
 
 | Plan | Decisions | What's left |
 |---|---|---|
-| [GA4-LAUNCH-PLAN](GA4-LAUNCH-PLAN.md) | D-396..D-399 | Steps 4.2 and 6.2 coded on `feat/ga4-launch`; Editor on the GA4 property for `casama-ga4@kasama-ai` (Oliver), then steps 2–7 with deploy and build yeses |
 | [GAPS-PLAN-2026-11](GAPS-PLAN-2026-11.md) | D-301..D-305 | Items 1–5 live. Item 6 (accessibility pass) and item 7 (more languages) not started; v1 is English only |
 | [LAUNCH-VIDEO-PLAN](LAUNCH-VIDEO-PLAN.md) |  | Main cut v2, 30 s cut and 15 s cut made. Launch date and the narration voice are open; every video needs narration |
 | [LIBRARY-PLAN](LIBRARY-PLAN.md) | D-274, D-276, D-281, D-291, D-294, D-295 | Pins, select several, "Recently opened", "what was made for a ticket" |
@@ -45,7 +44,8 @@ same commit. Shipping details (deploys, app builds) move fast, so check them bef
 | [CHAT-APP-FILES-PLAN](CHAT-APP-FILES-PLAN.md) | D-341, D-342 | Live; Mac build for iMessage files. Teams file consent and Telegram albums left for later |
 | [CHROME-EXTENSION-PLAN](CHROME-EXTENSION-PLAN.md) | D-323 | Push, deploy, Chrome Web Store; real-device checks (§19) |
 | [COMPUTER-UPDATES-PLAN](COMPUTER-UPDATES-PLAN.md) | D-360 | On origin/main; deploy |
-| [GA4-PLAN](GA4-PLAN.md) | D-397..D-399 | GA4 keys, streams and credentials; deploys |
+| [GA4-LAUNCH-PLAN](GA4-LAUNCH-PLAN.md) | D-439 | Live everywhere; store uploads of build 50 when Oliver says; funnels (step 7) after a week of data |
+| [GA4-PLAN](GA4-PLAN.md) | D-397..D-399, D-439 | Live (D-439); see GA4-LAUNCH-PLAN |
 | [GROK-BOT-IMPORT-PLAN](GROK-BOT-IMPORT-PLAN.md) | D-415 | Live and in build 44; checks in the real app |
 | [HELP-LINKS-PLAN](HELP-LINKS-PLAN.md) | D-431 | Server live; app builds |
 | [IPHONE-DUO-PLAN](IPHONE-DUO-PLAN.md) | D-411 | On main; no deploy or store build; never seen on a device. Store screenshots and preview live |

@@ -1,9 +1,10 @@
 # GA4 live everywhere: launch plan
 
-Status: **in progress** (written and started 2026-11-20, branch `feat/ga4-launch`, defaults taken for the
-decisions). Done in code: step 4.2 (paywall events) and step 6.2 (status.casama.ai count, per-plan pricing
-buttons). Service account `casama-ga4@kasama-ai` made, key in Vaultwarden; it still needs Editor on the
-property (step 1, Oliver). Nothing deployed or built. Oliver: "let's make google analytics live everywhere, the app and all our websites of course.
+Status: **built and live** (2026-11-20, D-439). Server, web app (build 50) and all five websites
+send to GA4; the property is set up; the store privacy forms are updated; store builds 50 are made
+and wait for Oliver to say when to upload. Left: step 7 (funnels after a week of data). The web app
+shares the websites' stream `G-4GVRF0K324` instead of its own (D-439).
+Oliver: "let's make google analytics live everywhere, the app and all our websites of course.
 write the full plan to get it up and running."
 
 ## Summary

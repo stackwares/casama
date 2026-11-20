@@ -105,6 +105,12 @@ and Analytics, linked like every other type there) and was published again (24 e
 safety already declared Crash logs, Diagnostics and Device or other IDs as collected (and crash
 logs and diagnostics as shared), so it needed no change.
 
+**Google Analytics (D-439, 2026-11-20):** build 50 and later send usage events to Google Analytics
+4 through Firebase Analytics (same Settings → Privacy switch, no ad id). App Store App Privacy now
+also lists Device ID for Analytics (Product Interaction and User ID for Analytics were already there)
+and was published again (25 entries). Play Data safety now has Analytics as a purpose of App
+interactions and of Device or other IDs, sent for review the same day.
+
 ## Still open
 
 - Screenshots (Play phone 1080x1920, tablets 1440x2560) and the review screenshots for the
