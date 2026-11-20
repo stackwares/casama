@@ -6461,23 +6461,6 @@ export interface paths {
         patch: operations["updateMailAddress"];
         trace?: never;
     };
-    "/v1/bots/{id}/email/messages/{messageId}/files/{index}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** A kept mail's attachment */
-        get: operations["downloadMailFile"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/v1/bots/{id}/email/messages/{messageId}": {
         parameters: {
             query?: never;
@@ -6487,6 +6470,41 @@ export interface paths {
         };
         /** One kept mail with its whole text */
         get: operations["getMailMessage"];
+        put?: never;
+        post?: never;
+        /** Delete one kept mail, its text and its files */
+        delete: operations["deleteMailMessage"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/bots/{id}/email/messages/delete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Delete several kept mails, or every mail older than a date */
+        post: operations["deleteMailMessages"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/bots/{id}/email/messages/{messageId}/files/{index}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** A kept mail's attachment */
+        get: operations["downloadMailFile"];
         put?: never;
         post?: never;
         delete?: never;
@@ -14481,6 +14499,8 @@ export interface components {
             status: "active" | "paused" | "retired";
             blocked_senders: string[];
             notify_new_senders: boolean;
+            storage_used?: number;
+            storage_limit?: number | null;
             /** Format: date-time */
             created_at: string;
         };
@@ -14497,6 +14517,15 @@ export interface components {
             name: string;
             /** @enum {string} */
             surface?: "profile" | "tool" | "suggestion";
+        };
+        DeleteMailMessagesResult: {
+            deleted: number;
+            freed: number;
+        };
+        DeleteMailMessagesRequest: {
+            ids?: string[];
+            /** Format: date-time */
+            before?: string;
         };
         MailMessageDetail: components["schemas"]["MailMessage"] & {
             text: string;
@@ -25208,6 +25237,8 @@ export interface operations {
                 content: {
                     "application/json": {
                         items: components["schemas"]["AdminMailAddress"][];
+                        sent_today?: number;
+                        send_ceiling?: number | null;
                     };
                 };
             };
@@ -38515,26 +38546,25 @@ export interface operations {
             };
         };
     };
-    downloadMailFile: {
+    getMailMessage: {
         parameters: {
             query?: never;
             header?: never;
             path: {
                 id: string;
                 messageId: string;
-                index: string;
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description File contents */
+            /** @description MailMessageDetail */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/octet-stream": string;
+                    "application/json": components["schemas"]["MailMessageDetail"];
                 };
             };
             /** @description Not authenticated */
@@ -38557,7 +38587,7 @@ export interface operations {
             };
         };
     };
-    getMailMessage: {
+    deleteMailMessage: {
         parameters: {
             query?: never;
             header?: never;
@@ -38569,13 +38599,126 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description MailMessageDetail */
+            /** @description Deleted */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["MailMessageDetail"];
+                    "application/json": components["schemas"]["DeleteMailMessagesResult"];
+                };
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    deleteMailMessages: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeleteMailMessagesRequest"];
+            };
+        };
+        responses: {
+            /** @description Deleted */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeleteMailMessagesResult"];
+                };
+            };
+            /** @description Validation failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    downloadMailFile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                messageId: string;
+                index: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description File contents */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": string;
                 };
             };
             /** @description Not authenticated */

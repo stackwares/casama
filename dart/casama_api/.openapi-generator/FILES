@@ -297,6 +297,8 @@ lib/src/model/credit_entry.dart
 lib/src/model/credit_pack.dart
 lib/src/model/decide_join_request.dart
 lib/src/model/delete_account_request.dart
+lib/src/model/delete_mail_messages_request.dart
+lib/src/model/delete_mail_messages_result.dart
 lib/src/model/delete_result.dart
 lib/src/model/deleted_call.dart
 lib/src/model/deleted_channel.dart

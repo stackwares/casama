@@ -36,6 +36,10 @@ class MailAddress {
 
     required  this.notifyNewSenders,
 
+     this.storageUsed,
+
+     this.storageLimit,
+
     required  this.createdAt,
   });
 
@@ -137,6 +141,30 @@ class MailAddress {
 
   @JsonKey(
     
+    name: r'storage_used',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final int? storageUsed;
+
+
+
+  @JsonKey(
+    
+    name: r'storage_limit',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final int? storageLimit;
+
+
+
+  @JsonKey(
+    
     name: r'created_at',
     required: true,
     includeIfNull: false,
@@ -159,6 +187,8 @@ class MailAddress {
       other.status == status &&
       other.blockedSenders == blockedSenders &&
       other.notifyNewSenders == notifyNewSenders &&
+      other.storageUsed == storageUsed &&
+      other.storageLimit == storageLimit &&
       other.createdAt == createdAt;
 
     @override
@@ -171,6 +201,8 @@ class MailAddress {
         status.hashCode +
         blockedSenders.hashCode +
         notifyNewSenders.hashCode +
+        storageUsed.hashCode +
+        (storageLimit == null ? 0 : storageLimit.hashCode) +
         createdAt.hashCode;
 
   factory MailAddress.fromJson(Map<String, dynamic> json) => _$MailAddressFromJson(json);

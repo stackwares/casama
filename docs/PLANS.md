@@ -19,7 +19,6 @@ same commit. Shipping details (deploys, app builds) move fast, so check them bef
 | Plan | Written | Waiting on |
 |---|---|---|
 | [ADS-ATTRIBUTION-PLAN](ADS-ATTRIBUTION-PLAN.md) | 2026-11-20 | §15 decisions; then a Meta business portfolio, ad account and app (Oliver) |
-| [BOT-EMAIL-NEXT-PLAN](BOT-EMAIL-NEXT-PLAN.md) | 2026-11-20 | Oliver's go-ahead to build; §6 decisions (the plan assumes the recommendations) |
 | [RETENTION-MESSAGING-PLAN](RETENTION-MESSAGING-PLAN.md) | 2026-11-20 | §14 decisions; then 1.0 release and Apple's access |
 | [SES-MIGRATION-PLAN](SES-MIGRATION-PLAN.md) | 2026-11-20 | §14 decisions; then an AWS account (Oliver) and AWS's sending review in Phase 0 |
 | [SIRI-AI-PLAN](SIRI-AI-PLAN.md) | 2026-11-20 | §13 decisions; then a debug build on the iPhone for Phase 0 |
@@ -41,6 +40,7 @@ same commit. Shipping details (deploys, app builds) move fast, so check them bef
 
 | Plan | Decisions | What's left |
 |---|---|---|
+| [BOT-EMAIL-NEXT-PLAN](BOT-EMAIL-NEXT-PLAN.md) | D-451 | Built 2026-11-20 on the recommendations: server, app and docs. Left: deploy, the Cloudflare limit request, an app build with the email screens |
 | [ADMIN-SECURITY-PLAN](ADMIN-SECURITY-PLAN.md) | D-448, D-450 | Server, docs and web app (build 60) live 2026-11-20, with passkey and Face ID unlock (D-450); store and desktop builds pending |
 | [LIMIT-RESETS-PLAN](LIMIT-RESETS-PLAN.md) | D-443 | Server + docs live 2026-11-20 (6d11b195); switched on, test grant on Oliver's space (expires 2026-12-04); app builds with Use Reset pending |
 | [APP-ART-PLAN](APP-ART-PLAN.md) | D-440 | Web app (51), server and gallery live 2026-11-20; store builds and a low-end Android startup check |

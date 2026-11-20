@@ -162,7 +162,7 @@ export function registerMailTools(registry: ToolRegistry, deps: MailToolDeps) {
       const rows = await deps.db.execute<MailRow>(sql`
         select id, direction, from_addr, from_name, to_tag, subject, content, verdict, sender_check,
                files, size, created_at
-        from public.mail_messages where address_id = ${a.id}::uuid
+        from public.mail_messages where address_id = ${a.id}::uuid and deleted_at is null
           ${args.sender ? sql`and from_addr ilike ${`%${likeEscape(args.sender)}%`}` : sql``}
           ${args.tag ? sql`and lower(to_tag) = lower(${args.tag})` : sql``}
           ${args.subject ? sql`and subject ilike ${`%${likeEscape(args.subject)}%`}` : sql``}
@@ -207,7 +207,8 @@ export function registerMailTools(registry: ToolRegistry, deps: MailToolDeps) {
       const [r] = await deps.db.execute<MailRow>(sql`
         select id, direction, from_addr, from_name, to_tag, subject, content, verdict, sender_check,
                files, size, created_at
-        from public.mail_messages where id = ${args.id}::uuid and address_id = ${a.id}::uuid`);
+        from public.mail_messages where id = ${args.id}::uuid and address_id = ${a.id}::uuid
+          and deleted_at is null`);
       if (!r) throw new ToolError("not_found", "There's no such mail in your inbox.");
       const text = mailText(r.content);
       const head = [
@@ -336,7 +337,7 @@ export function registerMailTools(registry: ToolRegistry, deps: MailToolDeps) {
       const fresh = [...to, ...cc].filter((r) => !senderAllowed(c.allowed_senders, r));
       // Daily caps are enforced atomically in sendHostedMail, too; map any cap error cleanly below.
       const mapSendError = (msg: string): ToolError => {
-        if (/limit/i.test(msg)) return new ToolError("limit_reached", msg);
+        if (/limit|busy/i.test(msg)) return new ToolError("limit_reached", msg);
         if (/suppressed/i.test(msg)) return new ToolError("recipient_suppressed", msg);
         return new ToolError("send_failed", msg);
       };
@@ -377,7 +378,7 @@ export function registerMailTools(registry: ToolRegistry, deps: MailToolDeps) {
           subject: string;
         }>(sql`
           select thread_key, message_id, subject from public.mail_messages
-          where id = ${args.in_reply_to}::uuid and address_id = ${a.id}::uuid`);
+          where id = ${args.in_reply_to}::uuid and address_id = ${a.id}::uuid and deleted_at is null`);
         if (!thread) throw new ToolError("not_found", "There's no such kept mail to answer.");
         if (thread.message_id) reply.in_reply_to = thread.message_id;
         threadKey = thread.thread_key ?? threadKey;
@@ -486,7 +487,8 @@ export function registerMailTools(registry: ToolRegistry, deps: MailToolDeps) {
           select id, direction, from_addr, from_name, to_tag, subject, content, verdict, sender_check,
                  files, size, created_at
           from public.mail_messages
-          where address_id = ${a.id}::uuid and direction = 'in' and created_at > ${since}::timestamptz
+          where address_id = ${a.id}::uuid and direction = 'in' and deleted_at is null
+            and created_at > ${since}::timestamptz
             and (${domain ? sql`lower(from_addr) like ${`%@${likeEscape(domain)}`}` : sql`lower(from_addr) = ${want}`})
           order by created_at desc limit 1`);
         if (r)

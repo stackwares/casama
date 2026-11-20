@@ -9,6 +9,10 @@ part of 'admin_mail_addresses200_response.dart';
 abstract class _$AdminMailAddresses200ResponseCWProxy {
   AdminMailAddresses200Response items(List<AdminMailAddress> items);
 
+  AdminMailAddresses200Response sentToday(int? sentToday);
+
+  AdminMailAddresses200Response sendCeiling(int? sendCeiling);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `AdminMailAddresses200Response(...).copyWith.fieldName(value)`.
@@ -17,7 +21,11 @@ abstract class _$AdminMailAddresses200ResponseCWProxy {
   /// ```dart
   /// AdminMailAddresses200Response(...).copyWith(id: 12, name: "My name")
   /// ```
-  AdminMailAddresses200Response call({List<AdminMailAddress> items});
+  AdminMailAddresses200Response call({
+    List<AdminMailAddress> items,
+    int? sentToday,
+    int? sendCeiling,
+  });
 }
 
 /// Callable proxy for `copyWith` functionality.
@@ -32,6 +40,14 @@ class _$AdminMailAddresses200ResponseCWProxyImpl
   AdminMailAddresses200Response items(List<AdminMailAddress> items) =>
       call(items: items);
 
+  @override
+  AdminMailAddresses200Response sentToday(int? sentToday) =>
+      call(sentToday: sentToday);
+
+  @override
+  AdminMailAddresses200Response sendCeiling(int? sendCeiling) =>
+      call(sendCeiling: sendCeiling);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `AdminMailAddresses200Response(...).copyWith.fieldName(value)`.
@@ -43,12 +59,22 @@ class _$AdminMailAddresses200ResponseCWProxyImpl
   @override
   AdminMailAddresses200Response call({
     Object? items = const $CopyWithPlaceholder(),
+    Object? sentToday = const $CopyWithPlaceholder(),
+    Object? sendCeiling = const $CopyWithPlaceholder(),
   }) {
     return AdminMailAddresses200Response(
       items: items == const $CopyWithPlaceholder() || items == null
           ? _value.items
           // ignore: cast_nullable_to_non_nullable
           : items as List<AdminMailAddress>,
+      sentToday: sentToday == const $CopyWithPlaceholder()
+          ? _value.sentToday
+          // ignore: cast_nullable_to_non_nullable
+          : sentToday as int?,
+      sendCeiling: sendCeiling == const $CopyWithPlaceholder()
+          ? _value.sendCeiling
+          // ignore: cast_nullable_to_non_nullable
+          : sendCeiling as int?,
     );
   }
 }
@@ -68,19 +94,30 @@ extension $AdminMailAddresses200ResponseCopyWith
 
 AdminMailAddresses200Response _$AdminMailAddresses200ResponseFromJson(
   Map<String, dynamic> json,
-) => $checkedCreate('AdminMailAddresses200Response', json, ($checkedConvert) {
-  $checkKeys(json, requiredKeys: const ['items']);
-  final val = AdminMailAddresses200Response(
-    items: $checkedConvert(
-      'items',
-      (v) => (v as List<dynamic>)
-          .map((e) => AdminMailAddress.fromJson(e as Map<String, dynamic>))
-          .toList(),
-    ),
-  );
-  return val;
-});
+) => $checkedCreate(
+  'AdminMailAddresses200Response',
+  json,
+  ($checkedConvert) {
+    $checkKeys(json, requiredKeys: const ['items']);
+    final val = AdminMailAddresses200Response(
+      items: $checkedConvert(
+        'items',
+        (v) => (v as List<dynamic>)
+            .map((e) => AdminMailAddress.fromJson(e as Map<String, dynamic>))
+            .toList(),
+      ),
+      sentToday: $checkedConvert('sent_today', (v) => (v as num?)?.toInt()),
+      sendCeiling: $checkedConvert('send_ceiling', (v) => (v as num?)?.toInt()),
+    );
+    return val;
+  },
+  fieldKeyMap: const {'sentToday': 'sent_today', 'sendCeiling': 'send_ceiling'},
+);
 
 Map<String, dynamic> _$AdminMailAddresses200ResponseToJson(
   AdminMailAddresses200Response instance,
-) => <String, dynamic>{'items': instance.items.map((e) => e.toJson()).toList()};
+) => <String, dynamic>{
+  'items': instance.items.map((e) => e.toJson()).toList(),
+  'sent_today': ?instance.sentToday,
+  'send_ceiling': ?instance.sendCeiling,
+};

@@ -436,7 +436,17 @@ export function registerAdminRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     const claims = requireClaims(c.get("claims"));
     await requireOwner(claims);
     const domain = deps.hostedMail?.domain ?? env.MAIL_DOMAIN ?? "mail";
-    return c.json({ items: (await mailRows()).map((r) => mailOut(domain, r)) }, 200);
+    const [day] = await db.execute<{ n: number }>(sql`
+      select count(*)::int as n from public.mail_messages
+      where direction = 'out' and created_at > now() - interval '1 day'`);
+    return c.json(
+      {
+        items: (await mailRows()).map((r) => mailOut(domain, r)),
+        sent_today: day?.n ?? 0,
+        send_ceiling: deps.hostedMail?.sender.dailyCeiling || null,
+      },
+      200,
+    );
   });
 
   app.openapi(routes.setMailAddressStatus, async (c) => {

@@ -226,8 +226,21 @@ export interface HostedMailSender {
    * events also carry; that one is kept instead.
    */
   readonly customMessageId: boolean;
+  /**
+   * Most mails every workspace together may send in a day (BOT-EMAIL-NEXT-PLAN §4): kept under
+   * the sending service's own daily allowance. Unset or 0: no ceiling.
+   */
+  readonly dailyCeiling?: number | null;
+  /**
+   * Told after a send once the day's count reaches 80% of the ceiling, and when a send is refused
+   * at it (the server notifies the instance owner, once a day per level). Best effort.
+   */
+  onCeiling?(db: import("@casama/db").Database, sent: number, max: number): Promise<void> | void;
   send(msg: HostedMailMessage, f: typeof fetch): Promise<{ messageId: string | null }>;
 }
+
+/** Message shown when the ceiling across all workspaces is reached. */
+export const MAIL_BUSY_MESSAGE = "Mail is busy right now. Try again in a few hours.";
 
 /** Largest mail either sender takes (Cloudflare's whole-message limit). */
 export const HOSTED_MAIL_MAX_BYTES = 25 * 1024 * 1024;
@@ -258,7 +271,9 @@ export class CloudflareMailSender implements HostedMailSender {
     if (size > HOSTED_MAIL_MAX_BYTES)
       throw new Error(`Mail is too large (${(size / 1048576).toFixed(1)} MiB; at most 25 MiB)`);
     // Cloudflare sets the Message-ID itself and refuses a send that sets one.
-    const kept = Object.entries(msg.headers ?? {}).filter(([k]) => k.toLowerCase() !== "message-id");
+    const kept = Object.entries(msg.headers ?? {}).filter(
+      ([k]) => k.toLowerCase() !== "message-id",
+    );
     const cfHeaders = kept.length ? Object.fromEntries(kept) : undefined;
     // Named senders go as an object (the REST API's field is `address`, not `email`).
     const named = msg.from.match(/^\s*(.*?)\s*<([^<>@\s]+@[^<>@\s]+)>\s*$/);

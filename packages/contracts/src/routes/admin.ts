@@ -306,7 +306,16 @@ export const adminMailAddresses = createRoute({
   security,
   summary: "Hosted bot addresses with recent sending health (owner only)",
   responses: {
-    200: jsonResponse("Mail addresses", z.object({ items: z.array(AdminMailAddress) })),
+    200: jsonResponse(
+      "Mail addresses",
+      z.object({
+        items: z.array(AdminMailAddress),
+        /** Mails every workspace sent in the last 24 hours. */
+        sent_today: z.number().int().optional(),
+        /** The day's ceiling across every workspace (MAIL_SEND_DAILY_MAX); null: none. */
+        send_ceiling: z.number().int().nullable().optional(),
+      }),
+    ),
     401: e401,
     403: e403,
   },

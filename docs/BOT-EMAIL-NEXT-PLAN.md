@@ -1,6 +1,7 @@
 # Bot email, next round: limits, storage, a sending ceiling and getting started
 
-Status: **not started** (written 2026-11-20). Follows `docs/BOT-EMAIL-PLAN.md` (D-449, live on
+Status: **built** (written 2026-11-20, built the same day on Oliver's "build everything now",
+D-451). Waiting on Oliver's yes for the deploy, the Cloudflare request and an app build. Follows `docs/BOT-EMAIL-PLAN.md` (D-449, live on
 `casama.app`). Oliver asked what bot email costs, how we charge for it, who pays for storage and
 how people get started, then asked for one final plan to build. No code until he says to build.
 §6 lists the decisions; the plan assumes the recommendation on each.

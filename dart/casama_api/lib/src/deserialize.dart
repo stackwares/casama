@@ -217,6 +217,8 @@ import 'package:casama_api/src/model/credit_entry.dart';
 import 'package:casama_api/src/model/credit_pack.dart';
 import 'package:casama_api/src/model/decide_join_request.dart';
 import 'package:casama_api/src/model/delete_account_request.dart';
+import 'package:casama_api/src/model/delete_mail_messages_request.dart';
+import 'package:casama_api/src/model/delete_mail_messages_result.dart';
 import 'package:casama_api/src/model/delete_result.dart';
 import 'package:casama_api/src/model/deleted_call.dart';
 import 'package:casama_api/src/model/deleted_channel.dart';
@@ -1386,6 +1388,10 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return DecideJoinRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeleteAccountRequest':
           return DeleteAccountRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'DeleteMailMessagesRequest':
+          return DeleteMailMessagesRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'DeleteMailMessagesResult':
+          return DeleteMailMessagesResult.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeleteResult':
           return DeleteResult.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeletedCall':

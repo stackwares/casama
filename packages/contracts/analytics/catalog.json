@@ -1114,7 +1114,7 @@
         },
         "surface": {
           "type": "string",
-          "values": ["bot", "computer", "run", "call"]
+          "values": ["bot", "computer", "run", "call", "mail"]
         }
       },
       "funnels": ["F6"]

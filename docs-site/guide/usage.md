@@ -153,8 +153,8 @@ On Casama Cloud, each workspace has a plan. Open **Settings → Billing** to see
 - **Your plan** shows the plan, how it's billed (**Billed on the web**, **Billed through the App
   Store** or **Billed through Google Play**), when it renews or ends, your **Credits** balance and
   the credits meter.
-- **Plans** lists what each plan includes: a number of bots, computer hours a month and credits a
-  month.
+- **Plans** lists what each plan includes: a number of bots, computer hours a month, credits a
+  month and bot email addresses.
 - **Credits** (paid plans only) lists the credit packs you can buy.
 - **Extra People** (Pro and Max, web subscriptions) sets how many people you pay for on top of the
   plan's own.
@@ -171,6 +171,15 @@ Owners and admins can change plans and buy credits. Members see the plan and usa
 | **Plus** | $15 a month or $150 a year | $5 | 10 | 2 (1) | 30 | 1 | 10 GB |
 | **Pro** | $49 a month or $490 a year | $15 | Unlimited | 5 (2) | 100 | 3 | 50 GB |
 | **Max** | $99 a month or $899 a year | $30 | Unlimited | 10 (2) | 300 | 10 | 200 GB |
+
+Each plan also gives bots [their own email addresses](/guide/bot-email):
+
+| Plan | Addresses | Mail a day | Mail to new people a day | Mailbox per address |
+| --- | --- | --- | --- | --- |
+| **Free** | 1 | 20 | none (replies to you and the people you allow) | 100 MB |
+| **Plus** | 2 | 50 | 10 | 500 MB |
+| **Pro** | 5 | 150 | 30 | 1 GB |
+| **Max** | 15 | 300 | 100 | 2 GB |
 
 Plus, Pro and Max can also be paid by the week ($7.99, $19.99 and $39.99). A weekly plan has the
 same limits as the monthly one and gets a quarter of its credits each paid week; it has no free

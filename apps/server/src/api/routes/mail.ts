@@ -77,11 +77,12 @@ export function registerMailRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     if (!b) throw new ApiError(404, "bot_not_found", "Bot not found");
     return b;
   };
-  const out = (domain: string, r: AddressRow, config: unknown) => ({
+  const out = async (domain: string, r: AddressRow, config: unknown) => ({
     ...r,
     address: `${r.local_part}@${domain}`,
     blocked_senders: blockedOf(config),
     notify_new_senders: notifyNewOf(config),
+    ...(await mailboxStorage(db, r.id)),
     created_at: iso(r.created_at),
   });
   const channelConfig = async (channelId: string) => {
@@ -134,7 +135,7 @@ export function registerMailRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
           instanceOwner: await isOwner(claims).catch(() => false),
         },
       );
-      return c.json(out(mail.domain, row, await channelConfig(row.channel_id)), 201);
+      return c.json(await out(mail.domain, row, await channelConfig(row.channel_id)), 201);
     } catch (e) {
       if (e instanceof ClaimMailError) throw new ApiError(e.status, e.code, e.message);
       throw e;
@@ -153,7 +154,7 @@ export function registerMailRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       select id, bot_id, channel_id, local_part, status, created_at from public.mail_addresses
       where bot_id = ${id}::uuid and status in ('active', 'paused')`);
     if (!row) throw new ApiError(404, "address_not_found", "This bot has no address");
-    return c.json(out(mail.domain, row, await channelConfig(row.channel_id)), 200);
+    return c.json(await out(mail.domain, row, await channelConfig(row.channel_id)), 200);
   });
 
   app.openapi(routes.checkMailName, async (c) => {
@@ -224,7 +225,7 @@ export function registerMailRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
         update public.channels
         set config = jsonb_set(coalesce(config, '{}'::jsonb), '{notify_new_senders}', ${JSON.stringify(body.notify_new_senders)}::jsonb)
         where id = ${row.channel_id}::uuid`);
-    return c.json(out(mail.domain, row, await channelConfig(row.channel_id)), 200);
+    return c.json(await out(mail.domain, row, await channelConfig(row.channel_id)), 200);
   });
 
   app.openapi(routes.moveMailAddress, async (c) => {
@@ -269,7 +270,7 @@ export function registerMailRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
           (select conversation_id from public.channel_threads where channel_id = ${moved.channel_id}::uuid)`);
       return moved;
     });
-    return c.json(out(mail.domain, row, await channelConfig(row.channel_id)), 200);
+    return c.json(await out(mail.domain, row, await channelConfig(row.channel_id)), 200);
   });
 
   app.openapi(routes.releaseMailAddress, async (c) => {
@@ -310,7 +311,7 @@ export function registerMailRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
         where address_id = ${live.id}::uuid and expires_at is null`);
       return updated!;
     });
-    return c.json(out(mail.domain, row, await channelConfig(row.channel_id)), 200);
+    return c.json(await out(mail.domain, row, await channelConfig(row.channel_id)), 200);
   });
 
   const mailRow = (r: MailRowOut) => ({
@@ -359,7 +360,7 @@ export function registerMailRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     const rows = await db.execute<MailRowOut>(sql`
       select id, direction, from_addr, from_name, to_tag, subject, content, verdict, sender_check,
              files, size, conversation_id, created_at
-      from public.mail_messages where address_id = ${a.id}::uuid
+      from public.mail_messages where address_id = ${a.id}::uuid and deleted_at is null
         ${q.verdict ? sql`and verdict = ${q.verdict}` : sql``}
         ${q.tag ? sql`and lower(to_tag) = lower(${q.tag})` : sql``}
         ${q.sender ? sql`and from_addr ilike ${`%${likeEscape(q.sender)}%`}` : sql``}
@@ -388,7 +389,7 @@ export function registerMailRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       select m.id, m.direction, m.from_addr, m.from_name, m.to_tag, m.subject, m.content, m.verdict,
              m.sender_check, m.files, m.size, m.conversation_id, m.created_at
       from public.mail_messages m join public.mail_addresses a on a.id = m.address_id
-      where m.id = ${messageId}::uuid and a.bot_id = ${id}::uuid`);
+      where m.id = ${messageId}::uuid and a.bot_id = ${id}::uuid and m.deleted_at is null`);
     if (!r) throw new ApiError(404, "message_not_found", "No such mail");
     const files = Array.isArray(r.files) ? r.files : [];
     return c.json(
@@ -419,7 +420,7 @@ export function registerMailRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       throw new ApiError(403, "forbidden", "Only people who manage this bot can read its mail");
     const [r] = await db.execute<{ files: unknown }>(sql`
       select m.files from public.mail_messages m join public.mail_addresses a on a.id = m.address_id
-      where m.id = ${messageId}::uuid and a.bot_id = ${id}::uuid`);
+      where m.id = ${messageId}::uuid and a.bot_id = ${id}::uuid and m.deleted_at is null`);
     const files = Array.isArray(r?.files) ? (r.files as Array<Record<string, unknown>>) : [];
     const f = files[Number(index)];
     const key = typeof f?.key === "string" ? f.key : null;
@@ -453,7 +454,7 @@ export function registerMailRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     if (!sender.includes("@"))
       throw new ApiError(400, "validation_failed", "That doesn't look like an email address");
     await updateBlocked(row.channel_id, (list) => [...new Set([...list, sender])].slice(0, 200));
-    return c.json(out(mail.domain, row, await channelConfig(row.channel_id)), 200);
+    return c.json(await out(mail.domain, row, await channelConfig(row.channel_id)), 200);
   });
 
   app.openapi(routes.unblockMailSender, async (c) => {
@@ -471,7 +472,44 @@ export function registerMailRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     if (!row) throw new ApiError(404, "address_not_found", "This bot has no live address");
     const gone = sender.trim().toLowerCase();
     await updateBlocked(row.channel_id, (list) => list.filter((s) => s !== gone));
-    return c.json(out(mail.domain, row, await channelConfig(row.channel_id)), 200);
+    return c.json(await out(mail.domain, row, await channelConfig(row.channel_id)), 200);
+  });
+
+  // Deleting kept mail (BOT-EMAIL-NEXT-PLAN §3.3): people only, never the bot. Retired addresses'
+  // mail can be deleted too, until the purge takes it.
+  const deletable = async (claims: JwtClaims, id: string) => {
+    if (!deps.hostedMail)
+      throw new ApiError(400, "hosted_mail_unavailable", "This server has no mail domain");
+    const b = await bot(claims, id);
+    if (!b.manage)
+      throw new ApiError(403, "forbidden", "Only people who manage this bot can delete its mail");
+    const [a] = await db.execute<{ id: string }>(sql`
+      select id from public.mail_addresses where bot_id = ${id}::uuid order by created_at desc limit 1`);
+    if (!a) throw new ApiError(404, "address_not_found", "This bot has no address");
+    return a.id;
+  };
+
+  app.openapi(routes.deleteMailMessage, async (c) => {
+    const claims = claimsOf(c);
+    const { id, messageId } = c.req.valid("param");
+    const addressId = await deletable(claims, id);
+    const res = await deleteKeptMail(db, deps.objects, addressId, { ids: [messageId] });
+    if (!res.deleted) throw new ApiError(404, "message_not_found", "No such mail");
+    return c.json(res, 200);
+  });
+
+  app.openapi(routes.deleteMailMessages, async (c) => {
+    const claims = claimsOf(c);
+    const { id } = c.req.valid("param");
+    const body = c.req.valid("json");
+    const addressId = await deletable(claims, id);
+    return c.json(
+      await deleteKeptMail(db, deps.objects, addressId, {
+        ...(body.ids ? { ids: body.ids } : {}),
+        ...(body.before ? { before: body.before } : {}),
+      }),
+      200,
+    );
   });
 
   // Read a request body up to maxBytes before signature verification or JSON parsing, so an
@@ -621,7 +659,7 @@ export function registerMailRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       !automatic && check === "pass" && (inReplyTo || bareSubj)
         ? await db.execute<{ id: string; thread_key: string | null }>(sql`
             select id, thread_key from public.mail_messages
-            where address_id = ${a.id}::uuid and direction = 'out'
+            where address_id = ${a.id}::uuid and direction = 'out' and deleted_at is null
               and to_addrs @> ${pgTextArray([email.from])}::text[]
               and (
                 ${inReplyTo ? sql`message_id = ${inReplyTo}` : sql`false`}
@@ -676,12 +714,19 @@ export function registerMailRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       sql`select plan_code, limits from public.entitlements where org_id = ${a.org_id}::uuid order by created_at desc limit 1`,
     );
     const quotaMb = ent?.limits?.mail_storage_mb;
+    // What this mail takes: the original plus its separately stored files (§3.1).
+    const incoming = bytes.length + email.files.slice(0, 10).reduce((n, f) => n + f.size, 0);
+    const quota = typeof quotaMb === "number" ? quotaMb * 1024 * 1024 : 0;
+    const used = Number(usage?.total ?? 0);
     const overQuota =
-      !kept &&
-      ent?.plan_code !== "selfhost" &&
-      (typeof quotaMb !== "number" ||
-        Number(usage?.total ?? 0) + bytes.length > quotaMb * 1024 * 1024);
+      !kept && ent?.plan_code !== "selfhost" && (quota <= 0 || used + incoming > quota);
     if (overQuota) {
+      track(db, {
+        event: "limit_reached",
+        userId: ch.created_by,
+        orgId: a.org_id,
+        properties: { kind: "mail_storage", surface: "mail" },
+      });
       if (ch.created_by) {
         const [told] = await db.execute<{ id: string }>(sql`
           select id from public.notifications
@@ -691,8 +736,8 @@ export function registerMailRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
           await deps.notifications
             ?.notify(ch.created_by, a.org_id, "mail_mailbox_full", {
               title: `${a.bot_name}'s mailbox is full`,
-              body: "New mail is being refused. Free space by releasing the address, or upgrade.",
-              link: `/bots/${a.bot_id}/settings`,
+              body: "New mail is being refused. Delete old mail to make room, or upgrade.",
+              link: `/bots/${a.bot_id}/email`,
               bot_id: a.bot_id,
               address_id: a.id,
             })
@@ -701,6 +746,29 @@ export function registerMailRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       return new Response(JSON.stringify({ code: "mailbox_full" }), { status: 413 });
     }
     const rowId = await keepInbound(db, deps, a, email, tag, check, verdict, bytes);
+    // Almost full (§3.3): once a week at 90%, before mail starts being refused.
+    if (
+      !kept &&
+      quota > 0 &&
+      ent?.plan_code !== "selfhost" &&
+      used + incoming >= quota * 0.9 &&
+      ch.created_by
+    ) {
+      const [told] = await db.execute<{ id: string }>(sql`
+        select id from public.notifications
+        where kind in ('mail_mailbox_almost_full', 'mail_mailbox_full') and payload ->> 'address_id' = ${a.id}
+          and created_at > now() - interval '7 days' limit 1`);
+      if (!told)
+        await deps.notifications
+          ?.notify(ch.created_by, a.org_id, "mail_mailbox_almost_full", {
+            title: `${a.bot_name}'s mailbox is almost full`,
+            body: "When it's full, new mail is refused. Delete old mail to make room, or upgrade.",
+            link: `/bots/${a.bot_id}/email`,
+            bot_id: a.bot_id,
+            address_id: a.id,
+          })
+          .catch(() => undefined);
+    }
     // A paused address still receives and keeps mail; nothing runs or sends. A stop-note is
     // kept and handled, but also starts nothing.
     if (a.status === "paused" || isStop)
@@ -1061,16 +1129,19 @@ async function keepInbound(
       key,
     });
   }
+  // What the mailbox holds for it (§3.1): the original and every file stored on its own.
+  const rawSize = rawKey ? bytes.length : 0;
+  const size = rawSize + files.reduce((n, f) => n + (f.key ? f.size : 0), 0);
   const [inserted] = await db.execute<{ id: string }>(sql`
     insert into public.mail_messages
       (id, address_id, org_id, direction, from_addr, from_name, to_tag, subject, content, message_id,
-       in_reply_to, thread_key, sender_check, verdict, files, size, raw_key, expires_at)
+       in_reply_to, thread_key, sender_check, verdict, files, size, raw_size, raw_key, expires_at)
     values (${id}::uuid, ${a.id}::uuid, ${a.org_id}::uuid, 'in', ${email.from},
             ${email.fromName?.slice(0, 300) ?? null}, ${tag.slice(0, 100)}, ${subject},
             ${contentKeys.sealJson(a.org_id, [{ type: "text", text: email.text }])}::jsonb,
             ${messageId}, ${inReplyTo},
             ${threadKey},
-            ${check}, ${verdict}, ${JSON.stringify(files)}::jsonb, ${bytes.length}, ${rawKey},
+            ${check}, ${verdict}, ${JSON.stringify(files)}::jsonb, ${size}, ${rawSize}, ${rawKey},
             ${verdict === "allowed" ? sql`null` : sql`now() + interval '30 days'`})
     on conflict do nothing returning id`);
   if (!inserted) {
@@ -1085,4 +1156,81 @@ async function keepInbound(
     return dup?.id ?? id;
   }
   return id;
+}
+
+/** A mailbox's bytes held and its plan's mailbox size in bytes; null when unlimited. */
+async function mailboxStorage(
+  db: AppDeps["db"],
+  addressId: string,
+): Promise<{ storage_used: number; storage_limit: number | null }> {
+  const [r] = await db.execute<{ used: string; plan_code: string | null; mb: unknown }>(sql`
+    select (select coalesce(sum(size), 0) from public.mail_messages where address_id = a.id)::text as used,
+           e.plan_code, e.limits -> 'mail_storage_mb' as mb
+    from public.mail_addresses a
+    left join lateral (
+      select plan_code, limits from public.entitlements where org_id = a.org_id
+      order by created_at desc limit 1
+    ) e on true
+    where a.id = ${addressId}::uuid`);
+  const mb = Number(r?.mb);
+  return {
+    storage_used: Number(r?.used ?? 0),
+    storage_limit:
+      r?.plan_code === "selfhost" ? null : Number.isFinite(mb) && mb > 0 ? mb * 1024 * 1024 : 0,
+  };
+}
+
+/**
+ * Deletes kept mail by id or by age (BOT-EMAIL-NEXT-PLAN §3.3): the text, the original and the
+ * files. Mail the caps still count (sent in the last day, or in a thread in the last hour) stays
+ * as an empty row until the purge takes it, so deleting can't reset a daily cap or the
+ * reply-loop guard. Chat copies of its files stay in their chats.
+ */
+export async function deleteKeptMail(
+  db: AppDeps["db"],
+  objects: AppDeps["objects"],
+  addressId: string,
+  which: { ids?: string[]; before?: string },
+): Promise<{ deleted: number; freed: number }> {
+  let deleted = 0;
+  let freed = 0;
+  for (let round = 0; round < 40; round++) {
+    const rows = await db.execute<{
+      id: string;
+      raw_key: string | null;
+      files: unknown;
+      size: number;
+      hold: boolean;
+    }>(sql`
+      select id, raw_key, files, size,
+             (direction = 'out' and created_at > now() - interval '1 day')
+               or (thread_key is not null and created_at > now() - interval '1 hour') as hold
+      from public.mail_messages
+      where address_id = ${addressId}::uuid and deleted_at is null
+        ${which.ids ? sql`and id = any(${pgTextArray(which.ids)}::uuid[])` : sql``}
+        ${which.before ? sql`and created_at < ${which.before}::timestamptz` : sql``}
+      limit 500`);
+    if (!rows.length) break;
+    for (const r of rows) {
+      if (objects) {
+        const files = Array.isArray(r.files) ? r.files : [];
+        const keys = [r.raw_key, ...files.map((f) => (f as { key?: unknown })?.key)].filter(
+          (k): k is string => typeof k === "string" && !!k,
+        );
+        for (const k of keys) await objects.delete(k).catch(() => {});
+      }
+      if (r.hold)
+        await db.execute(sql`
+          update public.mail_messages
+          set content = '[]'::jsonb, files = '[]'::jsonb, raw_key = null, raw_size = 0, size = 0,
+              subject = '', from_name = null, deleted_at = now(),
+              expires_at = least(coalesce(expires_at, now() + interval '1 day'), now() + interval '1 day')
+          where id = ${r.id}::uuid`);
+      else await db.execute(sql`delete from public.mail_messages where id = ${r.id}::uuid`);
+      deleted++;
+      freed += Number(r.size ?? 0);
+    }
+    if (which.ids || rows.length < 500) break;
+  }
+  return { deleted, freed };
 }

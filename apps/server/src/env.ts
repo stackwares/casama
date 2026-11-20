@@ -696,6 +696,12 @@ export const EnvSchema = z.object({
   MAIL_RESEND_API_URL: z.url().default("https://api.resend.com"),
   /** Pauses all hosted sending (the remote flag's server side, BOT-EMAIL-PLAN §9.4). */
   MAIL_SEND_PAUSED: bool.default(false),
+  /**
+   * Most hosted mails every workspace together sends in a day (BOT-EMAIL-NEXT-PLAN §4), kept under
+   * the sending service's own allowance. Unset: 900 with Cloudflare (it starts accounts at 1,000),
+   * none with Resend. 0: no ceiling.
+   */
+  MAIL_SEND_DAILY_MAX: z.coerce.number().int().min(0).optional(),
   /** Headless Chromium for page PDFs (unset: PDF export is off). */
   PDF_CHROMIUM_PATH: z.string().optional(),
   /**

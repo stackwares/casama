@@ -1209,6 +1209,9 @@ class FakeBackend implements Backend {
   var adminMailReserved = <String>[];
   @override
   Future<List<AdminMailAddress>> adminMailAddresses() async => List.of(adminMailList);
+  var adminMailSent = (sent: 0, ceiling: null as int?);
+  @override
+  Future<({int sent, int? ceiling})> adminMailSending() async => adminMailSent;
   @override
   Future<AdminMailAddress> setMailAddressStatus(String id, String status) async {
     adminMailActions.add('status:$id:$status');
@@ -3027,6 +3030,8 @@ class FakeBackend implements Backend {
       status: MailAddressStatusEnum.active,
       blockedSenders: const [],
       notifyNewSenders: false,
+      storageUsed: 300 * 1024 * 1024,
+      storageLimit: 500 * 1024 * 1024,
       createdAt: DateTime.utc(2026, 11, 20),
     );
     mailByBot[botId] = claimed;
@@ -3108,6 +3113,24 @@ class FakeBackend implements Backend {
     });
     mailByBot[botId] = next;
     return next;
+  }
+
+  @override
+  Future<DeleteMailMessagesResult> deleteMail(String botId, {List<String>? ids, DateTime? before}) async {
+    mailActions.add('delete:$botId:${ids?.join(',') ?? 'before'}');
+    final gone = mailList
+        .where((m) => ids != null ? ids.contains(m.id) : m.createdAt.isBefore(before!))
+        .toList();
+    mailList.removeWhere(gone.contains);
+    final freed = gone.fold<int>(0, (n, m) => n + m.size);
+    final cur = mailByBot[botId];
+    if (cur != null) {
+      mailByBot[botId] = MailAddress.fromJson({
+        ...cur.toJson(),
+        'storage_used': ((cur.storageUsed ?? 0) - freed).clamp(0, 1 << 40),
+      });
+    }
+    return DeleteMailMessagesResult(deleted: gone.length, freed: freed);
   }
 
   @override

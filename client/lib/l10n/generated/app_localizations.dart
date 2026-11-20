@@ -13270,6 +13270,126 @@ abstract class AppLocalizations {
   /// **'Hear automatic mail too'**
   String get botEmailTriggerAutomatic;
 
+  /// No description provided for @botEmailStorage.
+  ///
+  /// In en, this message translates to:
+  /// **'{used} of {limit}'**
+  String botEmailStorage(String used, String limit);
+
+  /// No description provided for @botEmailStorageUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'{used} used'**
+  String botEmailStorageUsed(String used);
+
+  /// No description provided for @botEmailStorageFull.
+  ///
+  /// In en, this message translates to:
+  /// **'The mailbox is full, so new mail is refused. Delete old mail to make room.'**
+  String get botEmailStorageFull;
+
+  /// No description provided for @botEmailSelect.
+  ///
+  /// In en, this message translates to:
+  /// **'Select'**
+  String get botEmailSelect;
+
+  /// No description provided for @botEmailSelectDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get botEmailSelectDone;
+
+  /// No description provided for @botEmailDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get botEmailDelete;
+
+  /// No description provided for @botEmailDeleteCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{n, plural, =1{Delete 1 mail} other{Delete {n} mails}}'**
+  String botEmailDeleteCount(int n);
+
+  /// No description provided for @botEmailDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{n, plural, =1{Delete this mail?} other{Delete {n} mails?}}'**
+  String botEmailDeleteTitle(int n);
+
+  /// No description provided for @botEmailDeleteBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Their text and files are gone for good. Copies already in a chat stay there.'**
+  String get botEmailDeleteBody;
+
+  /// No description provided for @botEmailDeleteOlder.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete older mail'**
+  String get botEmailDeleteOlder;
+
+  /// No description provided for @botEmailOlder30Days.
+  ///
+  /// In en, this message translates to:
+  /// **'Older than 30 days'**
+  String get botEmailOlder30Days;
+
+  /// No description provided for @botEmailOlder6Months.
+  ///
+  /// In en, this message translates to:
+  /// **'Older than 6 months'**
+  String get botEmailOlder6Months;
+
+  /// No description provided for @botEmailOlderYear.
+  ///
+  /// In en, this message translates to:
+  /// **'Older than a year'**
+  String get botEmailOlderYear;
+
+  /// No description provided for @botEmailDeleteOlderTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete all mail {age}?'**
+  String botEmailDeleteOlderTitle(String age);
+
+  /// No description provided for @botEmailDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'{n, plural, =0{Nothing to delete} =1{Deleted 1 mail} other{Deleted {n} mails}}'**
+  String botEmailDeleted(int n);
+
+  /// No description provided for @botEmailPerkAddresses.
+  ///
+  /// In en, this message translates to:
+  /// **'{n, plural, =1{1 bot email address} other{{n} bot email addresses}}'**
+  String botEmailPerkAddresses(int n);
+
+  /// No description provided for @botEmailPerkWritesNew.
+  ///
+  /// In en, this message translates to:
+  /// **'Bots write to new people by email'**
+  String get botEmailPerkWritesNew;
+
+  /// No description provided for @botEmailPerkRepliesOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Bots reply to you by email'**
+  String get botEmailPerkRepliesOnly;
+
+  /// No description provided for @adminMailSentToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent today: {sent} of {ceiling}'**
+  String adminMailSentToday(int sent, int ceiling);
+
+  /// No description provided for @adminMailSentTodayNoCeiling.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent today: {sent}'**
+  String adminMailSentTodayNoCeiling(int sent);
+
   /// No description provided for @chatAppsAdd.
   ///
   /// In en, this message translates to:

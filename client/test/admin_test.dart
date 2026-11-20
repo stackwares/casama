@@ -117,10 +117,12 @@ void main() {
         createdAt: '2026-11-01T00:00:00.000Z',
       ),
     ];
+    backend.adminMailSent = (sent: 412, ceiling: 900);
     await tester.pumpWidget(harness(backend, const AdminScreen(tab: 'mail')));
     await tester.pumpAndSettle();
     await unlockAdmin(tester);
     expect(find.text('ada@mail.test'), findsOneWidget);
+    expect(find.text('Sent today: 412 of 900'), findsOneWidget);
     expect(find.textContaining('12 sent · 3 bounced · 0 complained'), findsOneWidget);
     await tester.tap(find.byKey(const Key('adminMailStatus-ma-1')));
     await tester.pumpAndSettle();

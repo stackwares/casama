@@ -1660,6 +1660,9 @@ abstract class Backend {
   Future<void> adminSuspendDomain(String id);
   // Hosted bot mail (BOT-EMAIL-PLAN)
   Future<List<AdminMailAddress>> adminMailAddresses();
+
+  /// Mails every workspace sent in the last 24 hours, and the day's ceiling (null: none).
+  Future<({int sent, int? ceiling})> adminMailSending();
   Future<AdminMailAddress> setMailAddressStatus(String id, String status);
   Future<List<String>> adminMailReservedNames();
   Future<List<String>> setMailReservedNames(List<String> names);
@@ -2228,6 +2231,10 @@ abstract class Backend {
   Future<Uint8List> downloadMailFile(String botId, String messageId, int index);
   Future<MailAddress> blockMailSender(String botId, String sender);
   Future<MailAddress> unblockMailSender(String botId, String sender);
+
+  /// Deletes kept mail (BOT-EMAIL-NEXT-PLAN §3.3): one mail, several by id, or everything that
+  /// arrived or went out before [before]. Its text, original and files go.
+  Future<DeleteMailMessagesResult> deleteMail(String botId, {List<String>? ids, DateTime? before});
 
   /// Slack's sign-in address for adding Casama's Slack app to a Slack workspace for [botId]
   /// (D-277), or null when this server has no Slack app (409).

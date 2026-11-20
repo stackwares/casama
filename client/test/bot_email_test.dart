@@ -3,7 +3,9 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:casama/features/bots/bot_email.dart';
+import 'package:casama/features/billing/paywall.dart' show paywallFacts;
 import 'package:casama/features/bots/mail_screen.dart';
+import 'package:casama/l10n/generated/app_localizations_en.dart';
 
 import 'app_test.dart' show harness, setSize;
 import 'fake_backend.dart';
@@ -136,4 +138,109 @@ void main() {
     expect(backend.createdMessageTrigger?.toTag, 'receipts');
     expect(backend.createdMessageTrigger?.sender, '*');
   });
+
+  MailMessage mailOf(String id, String subject, {DateTime? at}) => MailMessage(
+        id: id,
+        direction: MailMessageDirectionEnum.in_,
+        fromAddr: 'friend@example.com',
+        fromName: null,
+        toTag: '',
+        subject: subject,
+        snippet: 'words',
+        verdict: MailMessageVerdictEnum.allowed,
+        senderCheck: MailMessageSenderCheckEnum.pass,
+        hasFiles: false,
+        fileCount: 0,
+        size: 1024,
+        conversationId: null,
+        createdAt: at ?? DateTime.utc(2026, 11, 20, 10),
+      );
+
+  testWidgets('the inbox shows how full it is, and deletes selected threads', (tester) async {
+    await setSize(tester, const Size(900, 1200));
+    final backend = FakeBackend();
+    await backend.claimMailAddress(botId, 'ada');
+    backend.mailList.addAll([mailOf('a1', 'Bill'), mailOf('a2', 'Re: Bill'), mailOf('b1', 'Trip')]);
+    await tester.pumpWidget(harness(backend, const Scaffold(body: MailScreen(botId: botId))));
+    await tester.pumpAndSettle();
+    expect(find.text('300 MB of 500 MB'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('mailMenu')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('mailSelect')));
+    await tester.pumpAndSettle();
+    // Picking a thread picks all of its mail.
+    await tester.tap(find.byKey(const Key('mail-a1')));
+    await tester.pumpAndSettle();
+    expect(find.text('Delete 2 mails'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('mailDeleteSelected')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('mailDeleteConfirm')));
+    await tester.pumpAndSettle();
+    expect(backend.mailActions.last, startsWith('delete:$botId:'));
+    expect(backend.mailList.map((m) => m.id), ['b1']);
+    expect(find.byKey(const Key('mail-a1')), findsNothing);
+    expect(find.byKey(const Key('mail-b1')), findsOneWidget);
+  });
+
+  testWidgets('one mail deletes from its sheet, and old mail by age', (tester) async {
+    await setSize(tester, const Size(900, 1200));
+    final backend = FakeBackend();
+    await backend.claimMailAddress(botId, 'ada');
+    backend.mailList.addAll([
+      mailOf('n1', 'New', at: DateTime.now().toUtc()),
+      mailOf('o1', 'Old', at: DateTime.now().toUtc().subtract(const Duration(days: 400))),
+    ]);
+    backend.mailDetails['n1'] = MailMessageDetail.fromJson({
+      ...backend.mailList.first.toJson(),
+      'text': 'new words',
+      'files': const [],
+    });
+    await tester.pumpWidget(harness(backend, const Scaffold(body: MailScreen(botId: botId))));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('mailMenu')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('mailDeleteOlder')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('mailOlder-2')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('mailDeleteConfirm')));
+    await tester.pumpAndSettle();
+    expect(backend.mailList.map((m) => m.id), ['n1']);
+    await tester.tap(find.byKey(const Key('mail-n1')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('mailDelete')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('mailDeleteConfirm')));
+    await tester.pumpAndSettle();
+    expect(backend.mailList, isEmpty);
+    expect(find.text('No mail yet'), findsOneWidget);
+  });
+
+  test('the offer waits for a day-old bot or three chats', () {
+    final now = DateTime(2026, 11, 20, 12);
+    expect(emailOfferDue(now.subtract(const Duration(hours: 2)), 0, now: now), isFalse);
+    expect(emailOfferDue(now.subtract(const Duration(hours: 2)), 3, now: now), isTrue);
+    expect(emailOfferDue(now.subtract(const Duration(days: 1)), 0, now: now), isTrue);
+    expect(emailOfferDue(null, null, now: now), isFalse);
+  });
+
+  test('plans list bot email when the server has it', () {
+    final l10n = AppLocalizationsEn();
+    final free = {'max_bots': 1, 'max_mail_addresses': 1, 'mail_new_day': 0};
+    final plus = {'max_bots': 3, 'max_mail_addresses': 2, 'mail_new_day': 10};
+    expect(paywallFacts(l10n, free), isNot(contains('1 bot email address')));
+    expect(paywallFacts(l10n, free, email: true), containsAll(['1 bot email address', 'Bots reply to you by email']));
+    expect(
+      paywallFacts(l10n, plus, email: true),
+      containsAll(['2 bot email addresses', 'Bots write to new people by email']),
+    );
+  });
+
+  test('mailbox sizes read like the plans', () {
+    expect(mailboxSize(512, 'en'), '1 KB');
+    expect(mailboxSize(300 * 1024 * 1024, 'en'), '300 MB');
+    expect(mailboxSize(2 * 1024 * 1024 * 1024, 'en'), '2 GB');
+    expect(mailboxSize(1536 * 1024 * 1024, 'en'), '1.5 GB');
+  });
 }
+

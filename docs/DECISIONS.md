@@ -6708,3 +6708,42 @@ password and code (D-448), and delegated the rest ("build them all now in 1 go!"
   three seconds after the sheet, the console locks.
 - **Tests:** `client/test/admin_quick_unlock_test.dart`; passkey tokens in
   `apps/server/test/admin.test.ts`.
+
+## D-451 Bot email, next round: smaller limits, real storage, deleting, a sending ceiling (2026-11-20)
+
+Oliver asked what bot email costs and how we charge for it, then to build the follow-up plan
+(`docs/BOT-EMAIL-NEXT-PLAN.md`) in one go, on its recommendations.
+
+- **Not charged per message.** People pay through plan limits and through the credits that
+  mail-started runs spend (a run costs 14 to 40 times the mail that started it). Sent mail stays in
+  `usage_ledger` as `emails_sent` with its real cost, not billable.
+- **Limits** (`20270302100001_bot_email_limits.sql`): mail a day Free 20, Plus 50, Pro 150, Max
+  300; mailbox per address 100 MB, 500 MB, 1 GB, 2 GB. Addresses (1/2/5/15) and mail to new people
+  (0/10/30/100) are unchanged. Max's old 1,000 a day equalled Cloudflare's whole allowance, and
+  15 × 20 GB was more than the server's disk.
+- **Storage counts what is stored:** `mail_messages.size` is the original plus each separately
+  stored file (`raw_size` is the original's share). The original `.eml` is deleted 30 days after
+  arrival by `purgeExpiredMail`; text and files stay. The copy a file gets in a chat stays under
+  the chat attachment allowance.
+- **People delete mail; bots don't.** `DELETE /v1/bots/{id}/email/messages/{messageId}` and
+  `POST …/messages/delete` (`ids`, up to 200, or `before`), for people who manage the bot. Mail
+  the caps still count (sent in the last day, or in a thread in the last hour) stays as an empty
+  row (`deleted_at`) until the purge, so deleting can't reset a daily cap or the reply-loop guard.
+  The address carries `storage_used` and `storage_limit`; the Mail screen shows them, selects
+  threads, and deletes mail older than 30 days, 6 months or a year. An "almost full" notice at
+  90%; the full notice says to delete old mail and opens the Mail screen.
+- **One ceiling across workspaces:** `MAIL_SEND_DAILY_MAX` (default 900 with Cloudflare, none
+  with Resend, 0 turns it off) is counted under a global advisory lock taken after the workspace's,
+  inside the same transaction as the workspace caps. At the ceiling a send fails with "Mail is busy
+  right now. Try again in a few hours." The instance owner is told once a day at 80% and at 100%,
+  and Admin → Mail shows "Sent today: N of 900".
+- **Cap hits are counted:** `limit_reached` with `surface: mail` and `kind` `mail_sent_day`,
+  `mail_new_day`, `mail_send_ceiling` or `mail_storage`.
+- **Getting started:** a bot without an address, on a server with hosted mail and a workspace with
+  room, is told it may offer one once when mail would solve the request (`mailHint`). The
+  empty-chat offer card waits until the bot is a day old or the person has had three chats with
+  it. The welcome email's tip says "ask your bot to get itself an email address", which works in
+  every app version. The paywall lists the plan's addresses and whether bots write to new people.
+- **Not in this round:** one storage allowance shared with the Library, paid extra addresses,
+  customer domains, R2, Amazon SES.
+
