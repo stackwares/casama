@@ -1,3 +1,7 @@
+---
+description: "What Casama is: open-source AI teammates (bots) with their own sandboxed Linux computers, memory and schedules, that ask before anything risky."
+---
+
 # What is Casama
 
 Casama gives you AI teammates, called bots, that keep working after you close the chat. Each bot has

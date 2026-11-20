@@ -1,3 +1,7 @@
+---
+description: "Casama on Wear OS: answer your bots, ask them by voice and see who is working from a Pixel Watch or Galaxy Watch. Needs Wear OS 3 or later."
+---
+
 # Casama on Wear OS
 
 The watch app lets you answer your bots, ask them something by voice and see who is working, from

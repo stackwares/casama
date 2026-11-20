@@ -408,7 +408,15 @@ function authorPage(a) {
   const body = `<nav class="crumbs" aria-label="Breadcrumb"><a href="/">Gallery</a><span aria-hidden="true">/</span><span>Authors</span></nav>
 <div class="title-row"><h1>${esc(a.name)}</h1><p class="sub">${esc(desc)}${a.url ? ` <a href="${esc(a.url)}" rel="noopener">${esc(a.url.replace(/^https?:\/\//, "").replace(/\/$/, ""))}</a>` : ""}</p></div>
 ${groups}`;
-  return shell({ title: `${a.name} · Casama Gallery`, description: desc, path: C.authorPath(a.handle), image: `${SITE}/og.png`, body, data: { looks: list.filter(C.isLook).map(slim) } });
+  const ld = [
+    { "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Casama Gallery", item: `${SITE}/` },
+      { "@type": "ListItem", position: 2, name: a.name, item: SITE + C.authorPath(a.handle) },
+    ] },
+    { "@context": "https://schema.org", "@type": "ProfilePage", url: SITE + C.authorPath(a.handle), name: `${a.name} · Casama Gallery`, mainEntity: { "@type": a.name === "Casama" ? "Organization" : "Person", name: a.name, ...(a.url ? { url: a.url, sameAs: [a.url] } : {}) },
+      isPartOf: { "@type": "WebSite", name: "Casama Gallery", url: `${SITE}/` } },
+  ];
+  return shell({ ld, title: `${a.name} · Casama Gallery`, description: desc, path: C.authorPath(a.handle), image: `${SITE}/og.png`, body, data: { looks: list.filter(C.isLook).map(slim) } });
 }
 
 // ---------------------------------------------------------------- share images (SVG → PNG)
