@@ -45,7 +45,9 @@ enum CanvasPlan {
   /// most recently (the list's first live one).
   static func pick(_ list: CanvasList?, id: String?, at date: Date) -> BotCanvas? {
     guard let list else { return nil }
-    if let id, let c = list.items.first(where: { $0.id == id }), isLive(c, at: date) { return c }
+    // A picked canvas that's gone (cleared, its bot stopped, past its until) shows "no canvas
+    // yet" (plan §6.5), as on Android; only Automatic moves on to another canvas.
+    if let id { return list.items.first { $0.id == id && isLive($0, at: date) } }
     return list.items.first { isLive($0, at: date) }
   }
 

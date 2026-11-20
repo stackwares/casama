@@ -144,12 +144,12 @@ struct CanvasTests {
     let verse = list.items[0], trip = list.items[1], today = list.items[3]
     eq(CanvasPlan.pick(list, id: nil, at: now)?.id, verse.id, "Automatic: the most recent")
     eq(CanvasPlan.pick(list, id: trip.id, at: now)?.id, trip.id, "a picked canvas")
-    eq(CanvasPlan.pick(list, id: "gone", at: now)?.id, verse.id, "a picked canvas that's gone: Automatic")
-    eq(CanvasPlan.pick(list, id: trip.id, at: date("2027-04-03T00:00:00Z"))?.id, verse.id, "past its until: Automatic")
+    eq(CanvasPlan.pick(list, id: "gone", at: now)?.id, nil, "a picked canvas that's gone: no canvas yet")
+    eq(CanvasPlan.pick(list, id: trip.id, at: date("2027-04-03T00:00:00Z"))?.id, nil, "past its until: no canvas yet")
     var paused = list
     paused.items[0].status = "paused"
     eq(CanvasPlan.pick(paused, id: nil, at: now)?.id, trip.id, "a paused canvas isn't drawn")
-    eq(CanvasPlan.pick(paused, id: verse.id, at: now)?.id, trip.id, "a picked paused canvas isn't drawn")
+    eq(CanvasPlan.pick(paused, id: verse.id, at: now)?.id, nil, "a picked paused canvas isn't drawn")
     check(CanvasPlan.pick(nil, id: nil, at: now) == nil, "no list, no canvas")
 
     eq(CanvasPlan.entryIndex(verse, at: now), 0, "the verse now")

@@ -44,6 +44,8 @@ const androidWidgetProviders = [
   'LibraryWidget',
   'TasksWidget',
   'CreditsWidget',
+  // Bot widgets (docs/BOT-WIDGET-PLAN.md): what bots put there.
+  'CanvasWidget',
 ];
 
 /// How often the glance is fetched at most while things change (§8.3: once in 15 seconds).
@@ -101,6 +103,18 @@ Map<String, String> glanceWords(AppLocalizations l10n) => {
   'nothing_next': l10n.widgetNothingNext,
   'low_risk': l10n.widgetLowRisk,
   'this_month': l10n.widgetThisMonth,
+  // The Canvas widget (bot widgets).
+  'canvas': l10n.widgetNameCanvas,
+  'canvas_empty': l10n.canvasEmpty,
+  'canvas_try': l10n.canvasTry,
+  'canvas_day': l10n.canvasDaysUnit(1),
+  'canvas_days': l10n.canvasDaysUnit(2),
+  'canvas_automatic': l10n.canvasAutomatic,
+  'canvas_in': l10n.canvasIn('{time}'),
+  'canvas_since': l10n.canvasSince('{time}'),
+  'canvas_now': l10n.canvasNow,
+  'canvas_left': l10n.canvasLeft('{n}'),
+  'canvas_left_unit': l10n.canvasLeftUnit,
 };
 
 /// A small glance built from what the app already holds, for a server from before `/v1/glance`
@@ -570,7 +584,18 @@ class GlanceSync {
     final lockScreen = placed.any(
       (w) => w is Map && (w['lock_screen'] == true || '${w['family'] ?? ''}'.startsWith('accessory')),
     );
-    Analytics.log('widgets_placed', {'count': placed.length, 'lock_screen': lockScreen});
+    // Canvas widgets (bot widgets): Android names the provider, iPhone the kind.
+    bool isCanvas(Object? w) => w is Map && (w['provider'] == 'CanvasWidget' || w['kind'] == 'CanvasWidget');
+    final canvases = placed.where(isCanvas).toList();
+    final canvasLock = canvases.any(
+      (w) => w is Map && (w['lock_screen'] == true || '${w['family'] ?? ''}'.startsWith('accessory')),
+    );
+    Analytics.log('widgets_placed', {
+      'count': placed.length,
+      'lock_screen': lockScreen,
+      'canvas': canvases.length,
+      'canvas_lock_screen': canvasLock,
+    });
   }
 
   static AppLocalizations _l10n() =>

@@ -32,6 +32,7 @@ import type { ObjectStore } from "@casama/sandbox";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { actingUserOf } from "../acting.ts";
+import { track } from "../analytics.ts";
 import {
   CanvasLimitError,
   type CanvasRow,
@@ -221,11 +222,15 @@ export function registerWidgetTools(registry: ToolRegistry, deps: WidgetToolDeps
   };
 
   const runTrigger = async (runId: string, userId: string) => {
-    const [r] = await db.execute<{ trigger: string; name: string | null }>(sql`
-      select r.trigger, (select split_part(p.display_name, ' ', 1) from public.profiles p
+    const [r] = await db.execute<{ trigger: string; routine: boolean; name: string | null }>(sql`
+      select r.trigger, r.routine_id is not null as routine, (select split_part(p.display_name, ' ', 1) from public.profiles p
                          where p.user_id = ${userId}::uuid) as name
       from public.runs r where r.id = ${runId}::uuid`);
-    return { chat: r?.trigger === "chat" || r?.trigger === "welcome", name: r?.name || null };
+    return {
+      chat: r?.trigger === "chat" || r?.trigger === "welcome",
+      routine: r?.routine === true,
+      name: r?.name || null,
+    };
   };
 
   /** Turns the bot's background into a look's, fetching a picture when there is one. */
@@ -509,6 +514,20 @@ export function registerWidgetTools(registry: ToolRegistry, deps: WidgetToolDeps
 
       const where = await placements(db, userId, ctx.orgId);
       const run = await runTrigger(ctx.runId, userId);
+      const firstEntry = content.rotation?.items[0] ?? content.entries?.[0];
+      track(db, {
+        event: "canvas_set",
+        userId,
+        orgId: ctx.orgId,
+        properties: {
+          template: firstEntry?.template ?? "text",
+          has_picture: pictures.size > 0 || picturesOf(content).some((h) => h.startsWith("painting-")),
+          entries: content.rotation?.items.length ?? content.entries?.length ?? 0,
+          rotation: !!content.rotation,
+          trigger: run.chat ? "chat" : run.routine ? "routine" : "other",
+          first: !old,
+        },
+      });
       const state = !allowed ? "waiting" : where.length ? "shown" : "not_placed";
       // The chat shows the canvas as the widget will (§8.5); a routine's write shows a card only
       // when the person still has to allow this bot.

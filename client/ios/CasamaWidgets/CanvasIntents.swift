@@ -46,7 +46,7 @@ struct WidgetCanvasQuery: EntityQuery {
 
   func entities(for identifiers: [String]) async throws -> [WidgetCanvasEntity] {
     let all = canvases
-    // A picked canvas that's gone keeps its id: the widget falls back to Automatic.
+    // A picked canvas that's gone keeps its id: the widget shows "no canvas yet" (plan §6.5).
     return identifiers.map { id in all.first { $0.id == id } ?? WidgetCanvasEntity(id: id, name: "Canvas", bot: "") }
   }
   func suggestedEntities() async throws -> [WidgetCanvasEntity] { canvases }
