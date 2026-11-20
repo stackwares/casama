@@ -4703,6 +4703,62 @@ class SupabaseBackend implements Backend {
     );
   }
 
+  // Bot widgets (docs/BOT-WIDGET-PLAN.md), through the generated client.
+  @override
+  Future<CanvasList?> canvases(String orgId, {String? ifNoneMatch}) async {
+    try {
+      final res = await api.widgets.getCanvases(
+        orgId: orgId,
+        headers: {'If-None-Match': ?(ifNoneMatch == null || ifNoneMatch.isEmpty ? null : '"$ifNoneMatch"')},
+        validateStatus: (s) => s != null && ((s >= 200 && s < 300) || s == 304),
+      );
+      if (res.statusCode == 304) return null;
+      return res.data!;
+    } on DioException catch (e) {
+      // A server from before bot widgets: nothing to show.
+      if (e.response?.statusCode == 404) {
+        return CanvasList(version: '', madeAt: DateTime.now().toUtc(), private: false, items: const [], grants: const [], placed: const []);
+      }
+      rethrow;
+    }
+  }
+
+  @override
+  String canvasPictureUrl(String canvasId, String hash) =>
+      '${api.baseUrl.replaceAll(RegExp(r'/+$'), '')}/v1/canvases/$canvasId/pictures/${Uri.encodeComponent(hash)}';
+
+  @override
+  Future<Uint8List?> canvasPicture(String canvasId, String hash) async {
+    try {
+      final res = await api.api.dio.get<List<int>>(
+        '/v1/canvases/$canvasId/pictures/${Uri.encodeComponent(hash)}',
+        options: Options(headers: authHeaders, responseType: ResponseType.bytes),
+      );
+      final bytes = res.data;
+      return bytes == null ? null : Uint8List.fromList(bytes);
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) return null;
+      rethrow;
+    }
+  }
+
+  @override
+  Future<Canvas> updateCanvas(String id, {CanvasUpdateStatusEnum? status, bool? hideWhenLocked}) async =>
+      (await api.widgets.updateCanvas(id: id, canvasUpdate: CanvasUpdate(status: status, hideWhenLocked: hideWhenLocked))).data!;
+
+  @override
+  Future<void> clearCanvas(String id) async {
+    try {
+      await api.widgets.deleteCanvas(id: id);
+    } on DioException catch (e) {
+      if (e.response?.statusCode != 404) rethrow;
+    }
+  }
+
+  @override
+  Future<CanvasGrantSaved> setCanvasGrant(String botId, bool allowed) async =>
+      (await api.widgets.setCanvasGrant(setCanvasGrant: SetCanvasGrant(botId: botId, allowed: allowed))).data!;
+
   // Watches (D-410). Raw JSON, like the widget keys: these routes may be newer than the generated
   // client.
   @override

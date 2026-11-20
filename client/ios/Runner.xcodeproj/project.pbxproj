@@ -21,6 +21,10 @@
 		D3B11A0D2F0000000000001C /* HomeViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3B11A0D2F0000000000001B /* HomeViews.swift */; };
 		D3B11A0D2F0000000000001E /* MoreViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3B11A0D2F0000000000001D /* MoreViews.swift */; };
 		D3B11A0D2F00000000000020 /* AccessoryViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3B11A0D2F0000000000001F /* AccessoryViews.swift */; };
+		D3B11A0D2F00000000000025 /* Canvas.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3B11A0D2F00000000000024 /* Canvas.swift */; };
+		D3B11A0D2F00000000000027 /* CanvasIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3B11A0D2F00000000000026 /* CanvasIntents.swift */; };
+		D3B11A0D2F00000000000029 /* CanvasTimeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3B11A0D2F00000000000028 /* CanvasTimeline.swift */; };
+		D3B11A0D2F0000000000002B /* CanvasViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3B11A0D2F0000000000002A /* CanvasViews.swift */; };
 		D3B11A0D2F00000000000003 /* Glance.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3B11A0D2F00000000000001 /* Glance.swift */; };
 		D3B11A0D2F00000000000006 /* WidgetKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3B11A0D2F00000000000004 /* WidgetKey.swift */; };
 		D3B11A0D2F00000000000009 /* GlanceIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3B11A0D2F00000000000007 /* GlanceIntents.swift */; };
@@ -205,6 +209,10 @@
 		D3B11A0D2F0000000000001B /* HomeViews.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HomeViews.swift; sourceTree = "<group>"; };
 		D3B11A0D2F0000000000001D /* MoreViews.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MoreViews.swift; sourceTree = "<group>"; };
 		D3B11A0D2F0000000000001F /* AccessoryViews.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AccessoryViews.swift; sourceTree = "<group>"; };
+		D3B11A0D2F00000000000024 /* Canvas.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Canvas.swift; sourceTree = "<group>"; };
+		D3B11A0D2F00000000000026 /* CanvasIntents.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CanvasIntents.swift; sourceTree = "<group>"; };
+		D3B11A0D2F00000000000028 /* CanvasTimeline.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CanvasTimeline.swift; sourceTree = "<group>"; };
+		D3B11A0D2F0000000000002A /* CanvasViews.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CanvasViews.swift; sourceTree = "<group>"; };
 		D3B11A0D2F00000000000021 /* WidgetsBridge.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WidgetsBridge.swift; sourceTree = "<group>"; };
 		D2A11A0D2F00000000000031 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		D2A11A0D2F00000000000033 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
@@ -354,6 +362,7 @@
 				D3B11A0D2F0000000000001B /* HomeViews.swift */,
 				D3B11A0D2F0000000000001D /* MoreViews.swift */,
 				D3B11A0D2F0000000000001F /* AccessoryViews.swift */,
+				D3B11A0D2F0000000000002A /* CanvasViews.swift */,
 			);
 			path = WidgetViews;
 			sourceTree = "<group>";
@@ -382,6 +391,9 @@
 				D3B11A0D2F00000000000013 /* WidgetPush.swift */,
 				D3B11A0D2F00000000000015 /* Widgets.swift */,
 				D3B11A0D2F00000000000017 /* Controls.swift */,
+				D3B11A0D2F00000000000024 /* Canvas.swift */,
+				D3B11A0D2F00000000000026 /* CanvasIntents.swift */,
+				D3B11A0D2F00000000000028 /* CanvasTimeline.swift */,
 				D3B11A0D2F00000000000023 /* WidgetViews */,
 				D2A11A0D2F00000000000021 /* Assets.xcassets */,
 				E78A7E61B67619C3B5B9EE10 /* Info.plist */,
@@ -907,6 +919,10 @@
 				D3B11A0D2F0000000000001C /* HomeViews.swift in Sources */,
 				D3B11A0D2F0000000000001E /* MoreViews.swift in Sources */,
 				D3B11A0D2F00000000000020 /* AccessoryViews.swift in Sources */,
+				D3B11A0D2F00000000000025 /* Canvas.swift in Sources */,
+				D3B11A0D2F00000000000027 /* CanvasIntents.swift in Sources */,
+				D3B11A0D2F00000000000029 /* CanvasTimeline.swift in Sources */,
+				D3B11A0D2F0000000000002B /* CanvasViews.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

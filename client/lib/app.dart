@@ -48,6 +48,7 @@ import 'ui/effects.dart';
 import 'ui/outside_shell.dart';
 import 'features/island/island_bridge.dart';
 import 'features/widgets/glance_sync.dart';
+import 'features/widgets/canvas_sync.dart' show canvasSyncProvider;
 import 'features/watch/watch_bridge.dart';
 import 'features/app_lock/lock_screen.dart';
 import 'features/permissions/permissions_reporter.dart';
@@ -82,6 +83,8 @@ class CasamaApp extends ConsumerWidget {
     keep(islandBridgeProvider);
     // Widgets on iPhone, Android and the Mac (D-405): the glance, carried while the app is open.
     keep(glanceSyncProvider);
+    // The Canvas widget (bot widgets): what bots put on the widgets, carried the same way.
+    keep(canvasSyncProvider);
     // Apple Watch and Wear OS (D-410): signs a watch in when it asks, follows workspace switches
     // and sign-out.
     keep(watchBridgeProvider);

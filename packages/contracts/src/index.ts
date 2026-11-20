@@ -12,6 +12,7 @@ export * from "./bots.ts";
 export * from "./brand.ts";
 export * from "./browser.ts";
 export * from "./browser-scripts.ts";
+export * from "./canvas.ts";
 export * from "./channels.ts";
 export * from "./checkins.ts";
 export * from "./common.ts";

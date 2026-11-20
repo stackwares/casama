@@ -11,6 +11,7 @@ import * as botSharing from "./bot-sharing.ts";
 import * as botTemplate from "./bot-template.ts";
 import * as bots from "./bots.ts";
 import * as browser from "./browser.ts";
+import * as canvas from "./canvas.ts";
 import * as channels from "./channels.ts";
 import * as chatExport from "./chat-export.ts";
 import * as chatMedia from "./chat-media.ts";
@@ -120,6 +121,7 @@ export const routes = {
   ...sites,
   ...domains,
   ...starters,
+  ...canvas,
   ...glance,
   ...watch,
 };
@@ -135,6 +137,7 @@ export {
   botSharing,
   bots,
   botTemplate,
+  canvas,
   channels,
   chatMedia,
   checkins,

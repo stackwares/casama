@@ -1,5 +1,6 @@
 package ai.casama.app
 
+import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProviderInfo
 import android.content.ComponentName
@@ -23,9 +24,11 @@ import io.flutter.plugin.common.MethodChannel
  *
  * - `setKey` {key: String?}: the widget key for fetching while closed (null deletes it, at sign-out),
  *   and re-plans the periodic refresh.
- * - `reload`: redraws every widget from the store (and fetches covers the Library lacks).
+ * - `reload`: redraws every widget from the store (and fetches covers the Library and pictures the
+ *   Canvas lack). The app writes `canvases` (the `GET /v1/canvases` body) beside `glance` first.
  * - `installed`: [{provider: simple class name, id: Int}] for every placed widget.
- * - `pin` {provider}: asks the launcher to add that widget (Settings → Widgets, "Add to Home screen").
+ * - `pin` {provider, canvas_id?}: asks the launcher to add that widget (Settings → Widgets, "Add to
+ *   Home screen"); `CanvasWidget` with a `canvas_id` is placed showing that canvas.
  * - `pinBot` {bot_id, name, avatar}: asks the launcher to add the bot as its own icon, opening its chat.
  */
 object WidgetChannel {
@@ -38,7 +41,8 @@ object WidgetChannel {
       "reload" -> {
         WidgetKit.redrawAll(context)
         GlanceRefresh.schedule(context)
-        if (GlanceRefresh.coversMissing(context)) GlanceRefresh.now(context)
+        CanvasRefresh.scheduleTick(context)
+        if (GlanceRefresh.coversMissing(context) || CanvasRefresh.picturesMissing(context)) GlanceRefresh.now(context)
         previews(context)
         result.success(true)
       }
@@ -48,7 +52,18 @@ object WidgetChannel {
       "pin" -> {
         val cls = WidgetKit.provider(call.argument<String>("provider"))
         val manager = AppWidgetManager.getInstance(context)
-        result.success(cls != null && manager.isRequestPinAppWidgetSupported && manager.requestPinAppWidget(ComponentName(context, cls), null, null))
+        // Canvas may come with its canvas chosen: the launcher calls back with the new widget's id.
+        val canvasId = call.argument<String>("canvas_id")?.takeIf { cls == CanvasWidget::class.java }
+        val callback = canvasId?.let {
+          PendingIntent.getBroadcast(
+            context,
+            it.hashCode(),
+            Intent(context, CanvasWidget::class.java).setAction(CanvasWidget.ACTION_PINNED).putExtra(CanvasWidget.EXTRA_CANVAS, it),
+            // Mutable so the launcher can add the widget's id; explicit, so only ours receives it.
+            PendingIntent.FLAG_UPDATE_CURRENT or (if (Build.VERSION.SDK_INT >= 31) PendingIntent.FLAG_MUTABLE else 0),
+          )
+        }
+        result.success(cls != null && manager.isRequestPinAppWidgetSupported && manager.requestPinAppWidget(ComponentName(context, cls), null, callback))
       }
       "pinBot" -> {
         val id = call.argument<String>("bot_id")

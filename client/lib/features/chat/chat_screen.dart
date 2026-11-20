@@ -72,6 +72,7 @@ import 'widgets/reactions.dart';
 import 'widgets/shared_files.dart';
 import '../../core/analytics.dart';
 import '../permissions/permissions_card.dart';
+import '../widgets/canvas_preview_card.dart';
 
 /// The computer a bot uses, picked as the server picks it (`Computers.forBot`): its default
 /// computer when it has one (and nothing else then), else its private computer, else the team
@@ -2044,6 +2045,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         case final DeviceAccessEntry d:
           botSide('device-${d.kind.value}-$i');
           rows.add(_Row(ValueKey('device-${d.kind.value}-$i'), AppSpace.sm, () => DeviceAccessPrompt(entry: d, botName: name), fresh: fresh, inputs: (d, name)));
+        case final CanvasPreviewEntry c:
+          // A bot's canvas on the person's widgets (bot widgets §8.5).
+          final key = 'canvas-${c.preview.canvasId}-$i';
+          botSide(key);
+          rows.add(_Row(ValueKey(key), AppSpace.sm, () => CanvasPreviewCard(preview: c.preview), fresh: fresh, inputs: c));
         case final PermissionsEntry p:
           // System permissions on a device (D-376); Continue answers as the person.
           final key = 'perms-${p.request.deviceRef}-${p.request.permissions.join(',')}-$i';

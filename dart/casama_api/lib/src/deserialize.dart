@@ -114,6 +114,19 @@ import 'package:casama_api/src/model/browser_trigger_list_items_inner.dart';
 import 'package:casama_api/src/model/calendar_trigger_config.dart';
 import 'package:casama_api/src/model/call_step_request.dart';
 import 'package:casama_api/src/model/call_step_result.dart';
+import 'package:casama_api/src/model/canvas.dart';
+import 'package:casama_api/src/model/canvas_background.dart';
+import 'package:casama_api/src/model/canvas_entry.dart';
+import 'package:casama_api/src/model/canvas_entry_items_inner.dart';
+import 'package:casama_api/src/model/canvas_grant.dart';
+import 'package:casama_api/src/model/canvas_grant_saved.dart';
+import 'package:casama_api/src/model/canvas_list.dart';
+import 'package:casama_api/src/model/canvas_look.dart';
+import 'package:casama_api/src/model/canvas_placement.dart';
+import 'package:casama_api/src/model/canvas_preview_event.dart';
+import 'package:casama_api/src/model/canvas_preview_event_payload.dart';
+import 'package:casama_api/src/model/canvas_rotation.dart';
+import 'package:casama_api/src/model/canvas_update.dart';
 import 'package:casama_api/src/model/catalog_app.dart';
 import 'package:casama_api/src/model/catalog_app_api_key.dart';
 import 'package:casama_api/src/model/catalog_skill.dart';
@@ -237,6 +250,7 @@ import 'package:casama_api/src/model/delete_mail_messages_request.dart';
 import 'package:casama_api/src/model/delete_mail_messages_result.dart';
 import 'package:casama_api/src/model/delete_result.dart';
 import 'package:casama_api/src/model/deleted_call.dart';
+import 'package:casama_api/src/model/deleted_canvas.dart';
 import 'package:casama_api/src/model/deleted_channel.dart';
 import 'package:casama_api/src/model/deleted_computer.dart';
 import 'package:casama_api/src/model/deleted_conversation.dart';
@@ -689,6 +703,7 @@ import 'package:casama_api/src/model/set_analytics_opt_out_request.dart';
 import 'package:casama_api/src/model/set_bot_a2a_request.dart';
 import 'package:casama_api/src/model/set_bot_access_request.dart';
 import 'package:casama_api/src/model/set_bot_access_request_entries_inner.dart';
+import 'package:casama_api/src/model/set_canvas_grant.dart';
 import 'package:casama_api/src/model/set_connection_settings_request.dart';
 import 'package:casama_api/src/model/set_device_grant_request.dart';
 import 'package:casama_api/src/model/set_encryption_request.dart';
@@ -1187,6 +1202,32 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return CallStepRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CallStepResult':
           return CallStepResult.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'Canvas':
+          return Canvas.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'CanvasBackground':
+          return CanvasBackground.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'CanvasEntry':
+          return CanvasEntry.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'CanvasEntryItemsInner':
+          return CanvasEntryItemsInner.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'CanvasGrant':
+          return CanvasGrant.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'CanvasGrantSaved':
+          return CanvasGrantSaved.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'CanvasList':
+          return CanvasList.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'CanvasLook':
+          return CanvasLook.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'CanvasPlacement':
+          return CanvasPlacement.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'CanvasPreviewEvent':
+          return CanvasPreviewEvent.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'CanvasPreviewEventPayload':
+          return CanvasPreviewEventPayload.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'CanvasRotation':
+          return CanvasRotation.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'CanvasUpdate':
+          return CanvasUpdate.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CatalogApp':
           return CatalogApp.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CatalogAppApiKey':
@@ -1445,6 +1486,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return DeleteResult.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeletedCall':
           return DeletedCall.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'DeletedCanvas':
+          return DeletedCanvas.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeletedChannel':
           return DeletedChannel.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeletedComputer':
@@ -2418,6 +2461,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return SetBotAccessRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SetBotAccessRequestEntriesInner':
           return SetBotAccessRequestEntriesInner.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'SetCanvasGrant':
+          return SetCanvasGrant.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SetConnectionSettingsRequest':
           return SetConnectionSettingsRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SetDeviceGrantRequest':

@@ -9,6 +9,13 @@
         <item name="android:clipToOutline">true</item>
     </style>
 
+    <!-- The Canvas widget's frame (docs/BOT-WIDGET-PLAN.md §10.2): no padding of its own, so the
+         colour fill and the picture (w_fill, w_art) reach the edges; the content pads itself. -->
+    <style name="WidgetCanvasRoot">
+        <item name="android:background">@drawable/widget_bg</item>
+        <item name="android:clipToOutline">true</item>
+    </style>
+
     <style name="WidgetText">
         <item name="android:textColor">@color/widget_fg</item>
         <item name="android:textSize">13sp</item>

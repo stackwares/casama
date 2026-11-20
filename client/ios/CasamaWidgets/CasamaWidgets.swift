@@ -659,6 +659,8 @@ struct CasamaWidgets: WidgetBundle {
     GlanceBundle.refreshable(TasksWidget.self)
     GlanceBundle.refreshable(CreditsWidget.self)
     GlanceBundle.refreshable(CasamaInlineWidget.self)
+    // What bots put on a widget (docs/BOT-WIDGET-PLAN.md), refreshed by the same pushes.
+    CanvasBundle.widget()
     AskCasamaControl()
     TalkToBotControl()
     RunRoutineControl()

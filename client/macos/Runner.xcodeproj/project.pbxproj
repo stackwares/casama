@@ -32,6 +32,10 @@
 		E4C11A0D2F0000000000002A /* HomeViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4C11A0D2F00000000000009 /* HomeViews.swift */; };
 		E4C11A0D2F0000000000002B /* MoreViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4C11A0D2F0000000000000A /* MoreViews.swift */; };
 		E4C11A0D2F0000000000002C /* AccessoryViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4C11A0D2F0000000000000B /* AccessoryViews.swift */; };
+		E4C11A0D2F00000000000035 /* Canvas.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4C11A0D2F00000000000031 /* Canvas.swift */; };
+		E4C11A0D2F00000000000036 /* CanvasIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4C11A0D2F00000000000032 /* CanvasIntents.swift */; };
+		E4C11A0D2F00000000000037 /* CanvasTimeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4C11A0D2F00000000000033 /* CanvasTimeline.swift */; };
+		E4C11A0D2F00000000000038 /* CanvasViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4C11A0D2F00000000000034 /* CanvasViews.swift */; };
 		E4C11A0D2F0000000000002D /* MacWidgets.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4C11A0D2F0000000000000C /* MacWidgets.swift */; };
 		E4C11A0D2F0000000000002E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E4C11A0D2F00000000000010 /* Assets.xcassets */; };
 		E4C11A0D2F0000000000002F /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = E4C11A0D2F00000000000011 /* PrivacyInfo.xcprivacy */; };
@@ -110,6 +114,10 @@
 		E4C11A0D2F00000000000009 /* HomeViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeViews.swift; sourceTree = "<group>"; };
 		E4C11A0D2F0000000000000A /* MoreViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoreViews.swift; sourceTree = "<group>"; };
 		E4C11A0D2F0000000000000B /* AccessoryViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessoryViews.swift; sourceTree = "<group>"; };
+		E4C11A0D2F00000000000031 /* Canvas.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Canvas.swift; sourceTree = "<group>"; };
+		E4C11A0D2F00000000000032 /* CanvasIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CanvasIntents.swift; sourceTree = "<group>"; };
+		E4C11A0D2F00000000000033 /* CanvasTimeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CanvasTimeline.swift; sourceTree = "<group>"; };
+		E4C11A0D2F00000000000034 /* CanvasViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CanvasViews.swift; sourceTree = "<group>"; };
 		E4C11A0D2F0000000000000C /* MacWidgets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacWidgets.swift; sourceTree = "<group>"; };
 		E4C11A0D2F0000000000000D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		E4C11A0D2F0000000000000E /* CasamaWidgetsMac.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = CasamaWidgetsMac.entitlements; sourceTree = "<group>"; };
@@ -198,6 +206,9 @@
 				E4C11A0D2F00000000000005 /* GlanceTimeline.swift */,
 				E4C11A0D2F00000000000006 /* BotMark.swift */,
 				E4C11A0D2F00000000000007 /* WidgetPush.swift */,
+				E4C11A0D2F00000000000031 /* Canvas.swift */,
+				E4C11A0D2F00000000000032 /* CanvasIntents.swift */,
+				E4C11A0D2F00000000000033 /* CanvasTimeline.swift */,
 				E4C11A0D2F00000000000016 /* WidgetViews */,
 				E4C11A0D2F00000000000010 /* Assets.xcassets */,
 				E4C11A0D2F00000000000011 /* PrivacyInfo.xcprivacy */,
@@ -213,6 +224,7 @@
 				E4C11A0D2F00000000000009 /* HomeViews.swift */,
 				E4C11A0D2F0000000000000A /* MoreViews.swift */,
 				E4C11A0D2F0000000000000B /* AccessoryViews.swift */,
+				E4C11A0D2F00000000000034 /* CanvasViews.swift */,
 			);
 			path = WidgetViews;
 			sourceTree = "<group>";
@@ -591,6 +603,10 @@
 				E4C11A0D2F0000000000002A /* HomeViews.swift in Sources */,
 				E4C11A0D2F0000000000002B /* MoreViews.swift in Sources */,
 				E4C11A0D2F0000000000002C /* AccessoryViews.swift in Sources */,
+				E4C11A0D2F00000000000035 /* Canvas.swift in Sources */,
+				E4C11A0D2F00000000000036 /* CanvasIntents.swift in Sources */,
+				E4C11A0D2F00000000000037 /* CanvasTimeline.swift in Sources */,
+				E4C11A0D2F00000000000038 /* CanvasViews.swift in Sources */,
 				E4C11A0D2F0000000000002D /* MacWidgets.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

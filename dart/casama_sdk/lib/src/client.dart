@@ -89,6 +89,9 @@ class CasamaClient {
   NotificationsApi get notifications => api.getNotificationsApi();
   AboutYouApi get aboutYou => api.getAboutYouApi();
 
+  /// Widgets (D-405) and what bots keep on them (bot widgets).
+  WidgetsApi get widgets => api.getWidgetsApi();
+
   /// Help & support (D-298): the support assistant and messages to the support team.
   SupportApi get support => api.getSupportApi();
 

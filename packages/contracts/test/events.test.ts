@@ -52,6 +52,7 @@ describe("run events", () => {
       "run.failed",
       "run.cancelled",
       "ui.shown",
+      "canvas.preview",
     ]);
   });
 

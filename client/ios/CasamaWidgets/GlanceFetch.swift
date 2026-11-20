@@ -15,7 +15,8 @@ enum GlanceFetch {
   /// Covers bigger than this aren't kept: a widget's memory is small.
   static let maxCoverBytes = 3_000_000
 
-  private static let session: URLSession = {
+  /// Shared with the Canvas widget's fetch (Canvas.swift).
+  static let session: URLSession = {
     let c = URLSessionConfiguration.ephemeral
     c.timeoutIntervalForRequest = timeout
     c.timeoutIntervalForResource = timeout

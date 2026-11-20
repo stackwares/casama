@@ -14,6 +14,7 @@ const analyticsClientEvents = <String>{
   'invite_shared',
   'referral_shared',
   'join_completed',
+  'canvas_allowed',
   'skill_installed',
   'connection_started',
   'connection_failed',

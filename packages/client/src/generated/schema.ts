@@ -7363,6 +7363,75 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/canvases/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Clear a canvas (also Not now on a bot's first preview) */
+        delete: operations["deleteCanvas"];
+        options?: never;
+        head?: never;
+        /** Pause a canvas or show it again; hide it on a locked phone, or not */
+        patch: operations["updateCanvas"];
+        trace?: never;
+    };
+    "/v1/canvases/{id}/pictures/{hash}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** A canvas's picture or built-in painting as a JPEG; cached for good (the hash is in the path) */
+        get: operations["getCanvasPicture"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/canvases": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** What bots keep on the person's Canvas widgets: each canvas with the entry showing now and up to 13 planned. Takes the session or `Authorization: Widget <key>`; send `If-None-Match` with the last `version` to get 304 */
+        get: operations["getCanvases"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/canvas-grants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Let a bot show things on the person's widgets (Show on my widgets), or stop it. Allowing shows what it left waiting; stopping clears what it showed */
+        put: operations["setCanvasGrant"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/widget-keys": {
         parameters: {
             query?: never;
@@ -7661,7 +7730,7 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
-        RunEvent: components["schemas"]["RunStartedEvent"] | components["schemas"]["MessageDeltaEvent"] | components["schemas"]["MessageCompletedEvent"] | components["schemas"]["ToolStartedEvent"] | components["schemas"]["ToolOutputEvent"] | components["schemas"]["ToolCompletedEvent"] | components["schemas"]["ToolFailedEvent"] | components["schemas"]["ApprovalRequestedEvent"] | components["schemas"]["ApprovalResolvedEvent"] | components["schemas"]["DeviceAccessRequestedEvent"] | components["schemas"]["DeviceBrowserAccessRequestedEvent"] | components["schemas"]["LocalMcpSignInNeededEvent"] | components["schemas"]["McpQuestionEvent"] | components["schemas"]["McpQuestionResolvedEvent"] | components["schemas"]["DevicePermissionNeededEvent"] | components["schemas"]["DeviceDataUsedEvent"] | components["schemas"]["SecretRequestedEvent"] | components["schemas"]["SecretResolvedEvent"] | components["schemas"]["TakeoverRequestedEvent"] | components["schemas"]["TakeoverResolvedEvent"] | components["schemas"]["LeaseChangedEvent"] | components["schemas"]["ComputerStateEvent"] | components["schemas"]["CheckpointCreatedEvent"] | components["schemas"]["SubrunStartedEvent"] | components["schemas"]["SubrunCompletedEvent"] | components["schemas"]["MemoryWrittenEvent"] | components["schemas"]["SkillLoadedEvent"] | components["schemas"]["UsageEvent"] | components["schemas"]["ModelFallbackEvent"] | components["schemas"]["NoticeEvent"] | components["schemas"]["RunCompletedEvent"] | components["schemas"]["RunFailedEvent"] | components["schemas"]["RunCancelledEvent"] | components["schemas"]["UiShownEvent"];
+        RunEvent: components["schemas"]["RunStartedEvent"] | components["schemas"]["MessageDeltaEvent"] | components["schemas"]["MessageCompletedEvent"] | components["schemas"]["ToolStartedEvent"] | components["schemas"]["ToolOutputEvent"] | components["schemas"]["ToolCompletedEvent"] | components["schemas"]["ToolFailedEvent"] | components["schemas"]["ApprovalRequestedEvent"] | components["schemas"]["ApprovalResolvedEvent"] | components["schemas"]["DeviceAccessRequestedEvent"] | components["schemas"]["DeviceBrowserAccessRequestedEvent"] | components["schemas"]["LocalMcpSignInNeededEvent"] | components["schemas"]["McpQuestionEvent"] | components["schemas"]["McpQuestionResolvedEvent"] | components["schemas"]["DevicePermissionNeededEvent"] | components["schemas"]["DeviceDataUsedEvent"] | components["schemas"]["SecretRequestedEvent"] | components["schemas"]["SecretResolvedEvent"] | components["schemas"]["TakeoverRequestedEvent"] | components["schemas"]["TakeoverResolvedEvent"] | components["schemas"]["LeaseChangedEvent"] | components["schemas"]["ComputerStateEvent"] | components["schemas"]["CheckpointCreatedEvent"] | components["schemas"]["SubrunStartedEvent"] | components["schemas"]["SubrunCompletedEvent"] | components["schemas"]["MemoryWrittenEvent"] | components["schemas"]["SkillLoadedEvent"] | components["schemas"]["UsageEvent"] | components["schemas"]["ModelFallbackEvent"] | components["schemas"]["NoticeEvent"] | components["schemas"]["RunCompletedEvent"] | components["schemas"]["RunFailedEvent"] | components["schemas"]["RunCancelledEvent"] | components["schemas"]["UiShownEvent"] | components["schemas"]["CanvasPreviewEvent"];
         RunStartedEvent: {
             /** @description Protocol version, currently 1 */
             v: number;
@@ -8429,6 +8498,101 @@ export interface components {
                     [key: string]: unknown;
                 }[];
             };
+        };
+        CanvasPreviewEvent: {
+            /** @description Protocol version, currently 1 */
+            v: number;
+            /** Format: uuid */
+            run_id: string;
+            seq: number;
+            /** Format: date-time */
+            ts: string;
+            /** Format: uuid */
+            bot_id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "canvas.preview";
+            payload: {
+                /** Format: uuid */
+                canvas_id: string;
+                /** Format: uuid */
+                bot_id: string;
+                /** @enum {string} */
+                state: "waiting" | "shown" | "not_placed";
+                canvas: components["schemas"]["Canvas"];
+            };
+        };
+        Canvas: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            org_id: string;
+            name: string;
+            /** Format: uuid */
+            bot_id: string;
+            bot: string;
+            bot_avatar: string;
+            /** @enum {string} */
+            status: "waiting" | "shown" | "paused";
+            hide_when_locked: boolean;
+            version: number;
+            /** Format: date-time */
+            set_at: string;
+            /** Format: date-time */
+            until: string | null;
+            link: string;
+            rotation: {
+                count: number;
+                showing: number;
+                left: number;
+                every: string;
+            } | null;
+            entries: components["schemas"]["CanvasEntry"][];
+        };
+        CanvasEntry: {
+            /** Format: date-time */
+            at: string | null;
+            /** @enum {string} */
+            template: "text" | "countdown" | "number" | "list" | "picture";
+            title: string | null;
+            text: string | null;
+            footer: string | null;
+            /** Format: date-time */
+            target: string | null;
+            /** @enum {string|null} */
+            count: "down" | "up" | null;
+            value: number | null;
+            of: number | null;
+            unit: string | null;
+            items: {
+                text: string;
+                done: boolean;
+            }[];
+            picture: string | null;
+            short: string;
+            tiny: string;
+            look: components["schemas"]["CanvasLook"];
+        };
+        CanvasLook: {
+            background: components["schemas"]["CanvasBackground"];
+            /** @enum {string} */
+            font: "plain" | "serif" | "rounded" | "mono";
+            /** @enum {string} */
+            align: "start" | "center";
+            icon: string | null;
+            accent: string | null;
+            /** @enum {string} */
+            ink: "light" | "dark" | "auto";
+        };
+        CanvasBackground: {
+            /** @enum {string} */
+            kind: "auto" | "color" | "gradient" | "picture";
+            color: string | null;
+            from: string | null;
+            to: string | null;
+            picture: string | null;
         };
         RunEventEnvelope: {
             /** @description Protocol version, currently 1 */
@@ -15319,6 +15483,49 @@ export interface components {
             /** @description Decoration only; tapping sends the text. */
             emoji: string;
             text: string;
+        };
+        DeletedCanvas: {
+            /** Format: uuid */
+            deleted: string;
+        };
+        CanvasList: {
+            version: string;
+            /** Format: date-time */
+            made_at: string;
+            private: boolean;
+            items: components["schemas"]["Canvas"][];
+            grants: components["schemas"]["CanvasGrant"][];
+            placed: components["schemas"]["CanvasPlacement"][];
+        };
+        CanvasGrant: {
+            /** Format: uuid */
+            bot_id: string;
+            bot: string;
+            /** Format: date-time */
+            created_at: string;
+        };
+        CanvasPlacement: {
+            /** @enum {string} */
+            platform: "ios" | "android" | "macos";
+            label: string | null;
+            sizes: string[];
+            /** Format: date-time */
+            seen_at: string;
+        };
+        CanvasGrantSaved: {
+            allowed: boolean;
+            shown: number;
+            cleared: number;
+        };
+        SetCanvasGrant: {
+            /** Format: uuid */
+            bot_id: string;
+            allowed: boolean;
+        };
+        CanvasUpdate: {
+            /** @enum {string} */
+            status?: "shown" | "paused";
+            hide_when_locked?: boolean;
         };
         WidgetKeyCreated: {
             /** Format: uuid */
@@ -42355,6 +42562,277 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ChatStarters"];
+                };
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    deleteCanvas: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeletedCanvas"];
+                };
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    updateCanvas: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CanvasUpdate"];
+            };
+        };
+        responses: {
+            /** @description Updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Canvas"];
+                };
+            };
+            /** @description Validation failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    getCanvasPicture: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                hash: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description JPEG */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/jpeg": string;
+                };
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Rate limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    getCanvases: {
+        parameters: {
+            query?: {
+                /** @description Needed with the session; a widget key reads its own workspace */
+                org_id?: string;
+                /** @description Widget keys: the Canvas sizes this device draws, comma separated (home_small, lock_rect…), so bots can say where they show */
+                sizes?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The canvases */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CanvasList"];
+                };
+            };
+            /** @description Not changed since the version in If-None-Match */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Rate limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    setCanvasGrant: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetCanvasGrant"];
+            };
+        };
+        responses: {
+            /** @description Saved */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CanvasGrantSaved"];
+                };
+            };
+            /** @description Validation failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
                 };
             };
             /** @description Not authenticated */
