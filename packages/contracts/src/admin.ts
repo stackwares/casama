@@ -94,6 +94,32 @@ export const SetOrgLimitsRequest = z
   })
   .openapi("SetOrgLimitsRequest");
 
+/** One hosted bot address with its recent sending health, for the instance owner. */
+export const AdminMailAddress = z
+  .object({
+    id: Uuid,
+    address: z.string(),
+    org_id: Uuid.nullable(),
+    org_name: z.string(),
+    bot_id: Uuid.nullable(),
+    bot_name: z.string(),
+    status: z.enum(["active", "paused", "retired"]),
+    auto_paused: z.boolean(),
+    sent_30d: z.number().int(),
+    bounced_30d: z.number().int(),
+    complained_30d: z.number().int(),
+    created_at: z.string(),
+  })
+  .openapi("AdminMailAddress");
+
+export const SetMailAddressStatusRequest = z
+  .object({ status: z.enum(["active", "paused"]) })
+  .openapi("SetMailAddressStatusRequest");
+
+export const AdminMailReservedNames = z
+  .object({ names: z.array(z.string()) })
+  .openapi("AdminMailReservedNames");
+
 export const AdminService = z
   .object({
     name: z.string(),

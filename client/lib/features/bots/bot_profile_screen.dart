@@ -6,6 +6,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/backend.dart';
 import '../../core/providers.dart';
+import '../../core/remote_config.dart';
 import '../../core/widgets.dart';
 import '../../core/haptics.dart';
 import '../../theme/app_colors.dart';
@@ -26,6 +27,7 @@ import '../notifications/quiet_hours.dart';
 import '../settings/model_keys_screen.dart';
 import '../settings/settings_screen.dart' show VoiceSettingsDialog;
 import 'a2a_sheet.dart';
+import 'bot_email.dart';
 import 'bot_template.dart';
 import 'bots_screen.dart' show botStatusLabel;
 import 'model_picker.dart';
@@ -541,6 +543,14 @@ class _BotProfileScreenState extends ConsumerState<BotProfileScreen> {
               subtitle: l10n.knowledgeRow,
               onTap: () => context.pushOnce('/bots/${bot.id}/knowledge'),
             ),
+            if (remoteFlag(ref, 'bot_email', fallback: false))
+              GroupedTile(
+                key: const Key('botEmail'),
+                icon: LucideIcons.mail,
+                title: l10n.botEmail,
+                subtitle: ref.watch(mailAddressProvider(bot.id)).value?.address ?? l10n.botEmailRow,
+                onTap: () => showBotEmailSheet(context, bot.id),
+              ),
           ],
         ),
 

@@ -12886,6 +12886,360 @@ abstract class AppLocalizations {
   /// **'Telegram, email, SMS, Slack, WhatsApp and more'**
   String get chatAppsRow;
 
+  /// No description provided for @botEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Email address'**
+  String get botEmail;
+
+  /// No description provided for @botEmailRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Give this bot its own address'**
+  String get botEmailRow;
+
+  /// No description provided for @botEmailClaimTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Give {name} an email address'**
+  String botEmailClaimTitle(String name);
+
+  /// No description provided for @botEmailClaimHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'People can write to it, and it answers by email. Forward it anything: bills, bookings, newsletters.'**
+  String get botEmailClaimHelp;
+
+  /// No description provided for @botEmailNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'ada'**
+  String get botEmailNameHint;
+
+  /// No description provided for @botEmailNameFixed.
+  ///
+  /// In en, this message translates to:
+  /// **'The name can\'t be changed later.'**
+  String get botEmailNameFixed;
+
+  /// No description provided for @botEmailClaim.
+  ///
+  /// In en, this message translates to:
+  /// **'Create address'**
+  String get botEmailClaim;
+
+  /// No description provided for @botEmailTaken.
+  ///
+  /// In en, this message translates to:
+  /// **'That name is taken. Try one of these:'**
+  String get botEmailTaken;
+
+  /// No description provided for @botEmailClaimed.
+  ///
+  /// In en, this message translates to:
+  /// **'Your bot has an address'**
+  String get botEmailClaimed;
+
+  /// No description provided for @botEmailClaimedHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'A welcome mail is on its way to you. Reply to it, or forward anything.'**
+  String get botEmailClaimedHelp;
+
+  /// No description provided for @botEmailCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get botEmailCopy;
+
+  /// No description provided for @botEmailCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied'**
+  String get botEmailCopied;
+
+  /// No description provided for @botEmailContacts.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to contacts'**
+  String get botEmailContacts;
+
+  /// No description provided for @botEmailWrite.
+  ///
+  /// In en, this message translates to:
+  /// **'Write to {name}'**
+  String botEmailWrite(String name);
+
+  /// No description provided for @botEmailPaused.
+  ///
+  /// In en, this message translates to:
+  /// **'Paused. It still receives and keeps mail, but answers nothing.'**
+  String get botEmailPaused;
+
+  /// No description provided for @botEmailPause.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get botEmailPause;
+
+  /// No description provided for @botEmailResume.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume'**
+  String get botEmailResume;
+
+  /// No description provided for @botEmailSenders.
+  ///
+  /// In en, this message translates to:
+  /// **'Allowed senders'**
+  String get botEmailSenders;
+
+  /// No description provided for @botEmailSendersHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Only these people get answers. Strangers\' mail is kept, and starts nothing.'**
+  String get botEmailSendersHelp;
+
+  /// No description provided for @botEmailEditSenders.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit in Chat apps'**
+  String get botEmailEditSenders;
+
+  /// No description provided for @botEmailMove.
+  ///
+  /// In en, this message translates to:
+  /// **'Move to another bot'**
+  String get botEmailMove;
+
+  /// No description provided for @botEmailMoveHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'The address and its mail move to the other bot.'**
+  String get botEmailMoveHelp;
+
+  /// No description provided for @botEmailRelease.
+  ///
+  /// In en, this message translates to:
+  /// **'Release address'**
+  String get botEmailRelease;
+
+  /// No description provided for @botEmailReleaseHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Stops receiving for good. The name is never given out again.'**
+  String get botEmailReleaseHelp;
+
+  /// No description provided for @botEmailReleaseConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Release {address}? It stops receiving at once, and the name is never given out again.'**
+  String botEmailReleaseConfirm(String address);
+
+  /// No description provided for @botEmailReleaseNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Release'**
+  String get botEmailReleaseNow;
+
+  /// No description provided for @botEmailMoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Moved'**
+  String get botEmailMoved;
+
+  /// No description provided for @botEmailNewBotRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Give {name} an email address'**
+  String botEmailNewBotRow(String name);
+
+  /// No description provided for @botEmailInbox.
+  ///
+  /// In en, this message translates to:
+  /// **'Inbox'**
+  String get botEmailInbox;
+
+  /// No description provided for @botEmailInboxRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Kept mail, strangers and files'**
+  String get botEmailInboxRow;
+
+  /// No description provided for @botEmailEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No mail yet'**
+  String get botEmailEmpty;
+
+  /// No description provided for @botEmailStrangers.
+  ///
+  /// In en, this message translates to:
+  /// **'Strangers'**
+  String get botEmailStrangers;
+
+  /// No description provided for @botEmailAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All mail'**
+  String get botEmailAll;
+
+  /// No description provided for @botEmailUnconfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t confirm this sender'**
+  String get botEmailUnconfirmed;
+
+  /// No description provided for @botEmailAllow.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow'**
+  String get botEmailAllow;
+
+  /// No description provided for @botEmailBlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Block'**
+  String get botEmailBlock;
+
+  /// No description provided for @botEmailBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Blocked. New mail from here is refused.'**
+  String get botEmailBlocked;
+
+  /// No description provided for @botEmailUnblock.
+  ///
+  /// In en, this message translates to:
+  /// **'Unblock'**
+  String get botEmailUnblock;
+
+  /// No description provided for @botEmailOpenChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Open chat'**
+  String get botEmailOpenChat;
+
+  /// No description provided for @botEmailFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Files'**
+  String get botEmailFiles;
+
+  /// No description provided for @botEmailNewSenders.
+  ///
+  /// In en, this message translates to:
+  /// **'Tell me about new senders'**
+  String get botEmailNewSenders;
+
+  /// No description provided for @botEmailNewSendersHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'At most once a day. Off unless you turn it on.'**
+  String get botEmailNewSendersHelp;
+
+  /// No description provided for @botEmailTryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Things to try'**
+  String get botEmailTryTitle;
+
+  /// No description provided for @botEmailTryForward.
+  ///
+  /// In en, this message translates to:
+  /// **'Forward a bill or a booking'**
+  String get botEmailTryForward;
+
+  /// No description provided for @botEmailTryForwardHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Forward anything to the address above. It reads it and answers here.'**
+  String get botEmailTryForwardHelp;
+
+  /// No description provided for @botEmailTryReceipts.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep my receipts'**
+  String get botEmailTryReceipts;
+
+  /// No description provided for @botEmailTryReceiptsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Makes a routine that files mail sent to {address}.'**
+  String botEmailTryReceiptsHelp(String address);
+
+  /// No description provided for @botEmailTryDigest.
+  ///
+  /// In en, this message translates to:
+  /// **'One digest a week'**
+  String get botEmailTryDigest;
+
+  /// No description provided for @botEmailTryDigestHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Makes a routine that gathers newsletters from {address} into a weekly summary.'**
+  String botEmailTryDigestHelp(String address);
+
+  /// No description provided for @botEmailTryCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Address copied'**
+  String get botEmailTryCopied;
+
+  /// No description provided for @botEmailTryMade.
+  ///
+  /// In en, this message translates to:
+  /// **'Routine made'**
+  String get botEmailTryMade;
+
+  /// No description provided for @botEmailReceiptsName.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep my receipts'**
+  String get botEmailReceiptsName;
+
+  /// No description provided for @botEmailReceiptsInstructions.
+  ///
+  /// In en, this message translates to:
+  /// **'File the receipt from this mail: what it was for, how much, and when. Say nothing unless something looks wrong.'**
+  String get botEmailReceiptsInstructions;
+
+  /// No description provided for @botEmailDigestName.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly newsletter digest'**
+  String get botEmailDigestName;
+
+  /// No description provided for @botEmailDigestInstructions.
+  ///
+  /// In en, this message translates to:
+  /// **'Collect this week\'s newsletters and send one short digest: the headlines worth knowing, nothing more.'**
+  String get botEmailDigestInstructions;
+
+  /// No description provided for @botEmailTriggerTag.
+  ///
+  /// In en, this message translates to:
+  /// **'Plus tag'**
+  String get botEmailTriggerTag;
+
+  /// No description provided for @botEmailTriggerTagHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Only mail to this tag, like shop for ada+shop@. Email addresses only.'**
+  String get botEmailTriggerTagHelp;
+
+  /// No description provided for @botEmailTriggerUnconfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'Hear unconfirmed senders too'**
+  String get botEmailTriggerUnconfirmed;
+
+  /// No description provided for @botEmailTriggerAutomatic.
+  ///
+  /// In en, this message translates to:
+  /// **'Hear automatic mail too'**
+  String get botEmailTriggerAutomatic;
+
   /// No description provided for @chatAppsAdd.
   ///
   /// In en, this message translates to:
@@ -18171,6 +18525,30 @@ abstract class AppLocalizations {
   /// **'Trial computer hours'**
   String get adminLimitTrialHours;
 
+  /// No description provided for @adminLimitMailAddresses.
+  ///
+  /// In en, this message translates to:
+  /// **'Bot email addresses'**
+  String get adminLimitMailAddresses;
+
+  /// No description provided for @adminLimitMailNewDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Mail to new people, a day'**
+  String get adminLimitMailNewDay;
+
+  /// No description provided for @adminLimitMailSentDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Mail sent, a day'**
+  String get adminLimitMailSentDay;
+
+  /// No description provided for @adminLimitMailStorage.
+  ///
+  /// In en, this message translates to:
+  /// **'Mailbox size, MB'**
+  String get adminLimitMailStorage;
+
   /// No description provided for @adminAddLimit.
   ///
   /// In en, this message translates to:
@@ -22538,6 +22916,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Domains'**
   String get adminDomains;
+
+  /// No description provided for @adminMail.
+  ///
+  /// In en, this message translates to:
+  /// **'Mail'**
+  String get adminMail;
+
+  /// No description provided for @adminMailHealth.
+  ///
+  /// In en, this message translates to:
+  /// **'{sent} sent · {bounced} bounced · {complained} complained in 30 days'**
+  String adminMailHealth(int sent, int bounced, int complained);
+
+  /// No description provided for @adminMailAutoPaused.
+  ///
+  /// In en, this message translates to:
+  /// **'Paused automatically'**
+  String get adminMailAutoPaused;
+
+  /// No description provided for @adminMailPause.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get adminMailPause;
+
+  /// No description provided for @adminMailPauseTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause {address}?'**
+  String adminMailPauseTitle(String address);
+
+  /// No description provided for @adminMailLift.
+  ///
+  /// In en, this message translates to:
+  /// **'Lift'**
+  String get adminMailLift;
+
+  /// No description provided for @adminMailLiftTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Lift the pause on {address}?'**
+  String adminMailLiftTitle(String address);
+
+  /// No description provided for @adminMailLiftBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This clears the automatic pause. The owner can pause it again themselves.'**
+  String get adminMailLiftBody;
+
+  /// No description provided for @adminMailReserved.
+  ///
+  /// In en, this message translates to:
+  /// **'Reserved names'**
+  String get adminMailReserved;
+
+  /// No description provided for @adminMailReservedHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'One name per line. Nobody can claim these, on top of the built-in list.'**
+  String get adminMailReservedHelp;
 
   /// No description provided for @adminDomainsConnected.
   ///

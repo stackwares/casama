@@ -29,6 +29,12 @@ class MessageTriggerConfig {
      this.subjectMatch,
 
      this.textMatch,
+
+     this.toTag,
+
+     this.allowUnconfirmed,
+
+     this.includeAutomatic,
   });
 
   @JsonKey(
@@ -92,6 +98,45 @@ class MessageTriggerConfig {
 
 
 
+      /// Hosted mail only: the plus tag it arrived on (ada+shop@)
+  @JsonKey(
+    
+    name: r'to_tag',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final String? toTag;
+
+
+
+      /// Hosted mail: also hear senders whose domain didn't confirm them
+  @JsonKey(
+    
+    name: r'allow_unconfirmed',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final bool? allowUnconfirmed;
+
+
+
+      /// Also hear automatic mail (bounces, out-of-office, lists)
+  @JsonKey(
+    
+    name: r'include_automatic',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final bool? includeAutomatic;
+
+
+
 
 
     @override
@@ -100,7 +145,10 @@ class MessageTriggerConfig {
       other.channelKind == channelKind &&
       other.sender == sender &&
       other.subjectMatch == subjectMatch &&
-      other.textMatch == textMatch;
+      other.textMatch == textMatch &&
+      other.toTag == toTag &&
+      other.allowUnconfirmed == allowUnconfirmed &&
+      other.includeAutomatic == includeAutomatic;
 
     @override
     int get hashCode =>
@@ -108,7 +156,10 @@ class MessageTriggerConfig {
         channelKind.hashCode +
         sender.hashCode +
         subjectMatch.hashCode +
-        textMatch.hashCode;
+        textMatch.hashCode +
+        toTag.hashCode +
+        allowUnconfirmed.hashCode +
+        includeAutomatic.hashCode;
 
   factory MessageTriggerConfig.fromJson(Map<String, dynamic> json) => _$MessageTriggerConfigFromJson(json);
 

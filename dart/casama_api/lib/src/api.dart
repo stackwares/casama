@@ -36,6 +36,7 @@ import 'package:casama_api/src/api/knowledge_api.dart';
 import 'package:casama_api/src/api/limit_resets_api.dart';
 import 'package:casama_api/src/api/links_api.dart';
 import 'package:casama_api/src/api/local_computer_api.dart';
+import 'package:casama_api/src/api/mail_api.dart';
 import 'package:casama_api/src/api/mcp_api.dart';
 import 'package:casama_api/src/api/memory_api.dart';
 import 'package:casama_api/src/api/moderation_api.dart';
@@ -292,6 +293,12 @@ class CasamaApi {
   /// by doing that all interceptors will not be executed
   LocalComputerApi getLocalComputerApi() {
     return LocalComputerApi(dio);
+  }
+
+  /// Get MailApi instance, base route and serializer can be overridden by a given but be careful,
+  /// by doing that all interceptors will not be executed
+  MailApi getMailApi() {
+    return MailApi(dio);
   }
 
   /// Get McpApi instance, base route and serializer can be overridden by a given but be careful,

@@ -83,6 +83,7 @@ void main() {
       }
       FlutterError.onError = old;
       await tester.pumpWidget(const SizedBox());
+      container.dispose();
       await tester.pump(const Duration(minutes: 1));
       tester.takeException();
       expect(problems, isEmpty, reason: problems.join('\n'));

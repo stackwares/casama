@@ -83,8 +83,9 @@ export interface ToolDefinition<S extends z.ZodType = z.ZodType> {
   /** Always asks, whatever the autonomy, grants or action rules (payments, D-142). */
   alwaysAsk?: boolean;
   /**
-   * Asks even when the workspace's Full access switch is on (D-394). Only for moving money; other
-   * always-ask tools (adding connections, loosening rules) run without asking under full access.
+   * Asks even when the workspace's Full access switch is on (D-394). Only for moving money and
+   * mail to new people (BOT-EMAIL-PLAN §13 Q6); other always-ask tools (adding connections,
+   * loosening rules) run without asking under full access.
    */
   askEvenWithFullAccess?: boolean;
   /**
@@ -96,6 +97,15 @@ export interface ToolDefinition<S extends z.ZodType = z.ZodType> {
   instanceAdmin?: boolean;
   /** Always asks for these arguments (for example loosening a rule but not tightening it, D-242). */
   alwaysAskFor?: (args: z.infer<S>) => boolean;
+  /**
+   * Always asks when this says so, with the database to consult (for example mail to an address
+   * off the allowed list, whose membership only the database knows). Runs before the autonomy
+   * check; a failure asks, so a broken check fails safe.
+   */
+  alwaysAskForAsync?: (
+    args: z.infer<S>,
+    ctx: { orgId: string; botId: string; db: import("@casama/db").Database },
+  ) => Promise<boolean>;
   /** Risk that depends on the arguments (overrides `risk`). */
   riskFor?: (args: z.infer<S>) => Risk;
   /**

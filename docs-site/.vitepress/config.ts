@@ -275,6 +275,7 @@ export default defineConfig({
           { text: "Domain terms and prices", link: "/guide/domain-terms" },
           { text: "Voice and calls", link: "/guide/voice" },
           { text: "Chat apps", link: "/guide/chat-apps" },
+          { text: "A bot's email address", link: "/guide/bot-email" },
           { text: "Appearance and themes", link: "/guide/appearance" },
         ],
       },

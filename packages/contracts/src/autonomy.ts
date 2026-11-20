@@ -246,6 +246,19 @@ export const MessageTriggerConfig = z
       .openapi({ description: "An address or id; *@domain for email" }),
     subject_match: z.string().max(200).optional(),
     text_match: z.string().max(200).optional(),
+    to_tag: z
+      .string()
+      .max(100)
+      .optional()
+      .openapi({ description: "Hosted mail only: the plus tag it arrived on (ada+shop@)" }),
+    allow_unconfirmed: z
+      .boolean()
+      .optional()
+      .openapi({ description: "Hosted mail: also hear senders whose domain didn't confirm them" }),
+    include_automatic: z
+      .boolean()
+      .optional()
+      .openapi({ description: "Also hear automatic mail (bounces, out-of-office, lists)" }),
   })
   .openapi("MessageTriggerConfig");
 

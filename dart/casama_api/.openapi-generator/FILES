@@ -33,6 +33,7 @@ lib/src/api/knowledge_api.dart
 lib/src/api/limit_resets_api.dart
 lib/src/api/links_api.dart
 lib/src/api/local_computer_api.dart
+lib/src/api/mail_api.dart
 lib/src/api/mcp_api.dart
 lib/src/api/memory_api.dart
 lib/src/api/moderation_api.dart
@@ -99,6 +100,9 @@ lib/src/model/admin_domains.dart
 lib/src/model/admin_domains_counts.dart
 lib/src/model/admin_link_server.dart
 lib/src/model/admin_link_server_list.dart
+lib/src/model/admin_mail_address.dart
+lib/src/model/admin_mail_addresses200_response.dart
+lib/src/model/admin_mail_reserved_names.dart
 lib/src/model/admin_margin.dart
 lib/src/model/admin_margin_by_day_inner.dart
 lib/src/model/admin_margin_by_kind_inner.dart
@@ -149,6 +153,7 @@ lib/src/model/billing_summary_computer_hours.dart
 lib/src/model/billing_summary_daily.dart
 lib/src/model/billing_usage.dart
 lib/src/model/billing_usage_item.dart
+lib/src/model/block_mail_sender_request.dart
 lib/src/model/block_request.dart
 lib/src/model/blocked_person.dart
 lib/src/model/blocked_person_list.dart
@@ -200,6 +205,7 @@ lib/src/model/checkpoint.dart
 lib/src/model/checkpoint_created_event.dart
 lib/src/model/checkpoint_created_event_payload.dart
 lib/src/model/checkpoint_list.dart
+lib/src/model/claim_mail_address_request.dart
 lib/src/model/clean_storage_result.dart
 lib/src/model/cloud_models.dart
 lib/src/model/coding_agent_info.dart
@@ -512,6 +518,12 @@ lib/src/model/local_mcp_integration_list.dart
 lib/src/model/local_mcp_server_info.dart
 lib/src/model/local_mcp_sign_in_needed_event.dart
 lib/src/model/local_mcp_sign_in_needed_event_payload.dart
+lib/src/model/mail_address.dart
+lib/src/model/mail_file.dart
+lib/src/model/mail_message.dart
+lib/src/model/mail_message_detail.dart
+lib/src/model/mail_message_list.dart
+lib/src/model/mail_name_availability.dart
 lib/src/model/mark_teach_secret_request.dart
 lib/src/model/mcp_auth_request_info.dart
 lib/src/model/mcp_consent_request.dart
@@ -546,6 +558,7 @@ lib/src/model/model_fallback_event_payload.dart
 lib/src/model/model_option.dart
 lib/src/model/model_option_list.dart
 lib/src/model/model_policy.dart
+lib/src/model/move_mail_address_request.dart
 lib/src/model/newsletter_status.dart
 lib/src/model/notice_event.dart
 lib/src/model/notice_event_payload.dart
@@ -766,6 +779,7 @@ lib/src/model/set_encryption_request.dart
 lib/src/model/set_git_sync_request.dart
 lib/src/model/set_join_domain_request.dart
 lib/src/model/set_local_mcp_servers_request.dart
+lib/src/model/set_mail_address_status_request.dart
 lib/src/model/set_memory_backend_request.dart
 lib/src/model/set_newsletter_request.dart
 lib/src/model/set_org_limits_request.dart
@@ -903,6 +917,7 @@ lib/src/model/update_gallery_request.dart
 lib/src/model/update_integration_request.dart
 lib/src/model/update_invite_campaign_request.dart
 lib/src/model/update_local_device_request.dart
+lib/src/model/update_mail_address_request.dart
 lib/src/model/update_memory_request.dart
 lib/src/model/update_notice.dart
 lib/src/model/update_org_settings_request.dart

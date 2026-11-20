@@ -675,6 +675,27 @@ export const EnvSchema = z.object({
    * (D-247). Set: new mail and calendar changes start check-in scans. Unset: scans keep their schedule.
    */
   COMPOSIO_WEBHOOK_SECRET: z.string().optional(),
+  /**
+   * Hosted bot mail (BOT-EMAIL-PLAN §9): the domain bot addresses live on (`ada@<domain>`).
+   * Unset: no hosted addresses on this server (the bring-your-own email chat app still works).
+   */
+  MAIL_DOMAIN: z
+    .string()
+    .regex(/^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/)
+    .optional(),
+  /** Shared secret the mail Worker signs /hooks/mail calls with (HMAC over timestamp and body). */
+  MAIL_HOOK_SECRET: z.string().optional(),
+  /** Who sends hosted mail: Cloudflare Email Sending, or Resend as the fallback (BOT-EMAIL-PLAN §6.4). */
+  MAIL_SENDER: z.enum(["cloudflare", "resend"]).default("cloudflare"),
+  /** Cloudflare account id and API token for Email Sending (scoped to it on the mail zone). */
+  MAIL_CF_ACCOUNT_ID: z.string().optional(),
+  MAIL_CF_API_TOKEN: z.string().optional(),
+  MAIL_CF_API_URL: z.url().default("https://api.cloudflare.com/client/v4"),
+  /** Resend key for the fallback sender (a different key from the monthly email's). */
+  MAIL_RESEND_API_KEY: z.string().optional(),
+  MAIL_RESEND_API_URL: z.url().default("https://api.resend.com"),
+  /** Pauses all hosted sending (the remote flag's server side, BOT-EMAIL-PLAN §9.4). */
+  MAIL_SEND_PAUSED: bool.default(false),
   /** Headless Chromium for page PDFs (unset: PDF export is off). */
   PDF_CHROMIUM_PATH: z.string().optional(),
   /**

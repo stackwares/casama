@@ -1,0 +1,29 @@
+{
+  "name": "Email sign-ups",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "email",
+    "accounts"
+  ],
+  "category": "productivity",
+  "icon": "mail-plus",
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-20",
+  "examples": [
+    "Sign me up for the Acme newsletter",
+    "Create an account for me on example-shop.com",
+    "Register us for the beta with your email address"
+  ],
+  "access": {
+    "reads": [
+      "verification mail for the bot"
+    ],
+    "credits": "medium"
+  }
+}

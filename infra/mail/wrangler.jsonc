@@ -1,0 +1,19 @@
+{
+  // Hosted bot mail's door (BOT-EMAIL-PLAN §5.1): Email Routing's catch-all rule on the mail
+  // domain sends every mail to this Worker, which posts it to the API's /hooks/mail. The rule is
+  // wired in Phase 0 (dashboard or `wrangler email routing`).
+  // Secrets (wrangler secret put): MAIL_HOOK_SECRET, the secret shared with the API.
+  "name": "casama-mail",
+  "compatibility_date": "2026-11-01",
+  "main": "mail.js",
+  "workers_dev": false,
+  "vars": {
+    "CASAMA_API_URL": "https://api.casama.ai"
+  }
+  // Delivery events (BOT-EMAIL-PLAN §6.5): Phase 0 creates the queue and the Email Sending event
+  // subscription on the mail domain, then uncomments this consumer (adding the comma after
+  // "vars"). Uncommenting before the queue exists breaks deploys.
+  // "queues": {
+  //   "consumers": [{ "queue": "casama-mail-events", "max_batch_size": 10, "max_retries": 5 }]
+  // }
+}

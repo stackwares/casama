@@ -1607,6 +1607,46 @@
       ]
     },
     {
+      "id": "email-signups",
+      "type": "skill",
+      "name": "Email sign-ups",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "email",
+        "accounts"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-20",
+      "updated": "2026-11-20",
+      "sha256": "26b45f057f3748750b824628650459c59078b4b55a4f19dc0d4f3bd15c7dc789",
+      "size": 1667,
+      "category": "productivity",
+      "icon": "mail-plus",
+      "description": "Sign up for online services with the bot's own email address and read the verification code itself.",
+      "examples": [
+        "Sign me up for the Acme newsletter",
+        "Create an account for me on example-shop.com",
+        "Register us for the beta with your email address"
+      ],
+      "access": {
+        "reads": [
+          "verification mail for the bot"
+        ],
+        "credits": "medium"
+      },
+      "files": [
+        "skills/email-signups/SKILL.md",
+        "skills/email-signups/item.json"
+      ]
+    },
+    {
       "id": "fact-check",
       "type": "skill",
       "name": "Fact check",

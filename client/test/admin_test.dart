@@ -1,3 +1,4 @@
+import 'package:casama_sdk/casama_sdk.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:casama/features/admin/admin_screen.dart';
@@ -95,5 +96,42 @@ void main() {
     await tester.pumpAndSettle();
     await unlockAdmin(tester);
     expect(find.text('Only the instance owner can open the admin console.'), findsOneWidget);
+  });
+
+  testWidgets('the mail tab pauses addresses and reserves names', (tester) async {
+    await setSize(tester, const Size(1100, 1000));
+    final backend = FakeBackend();
+    backend.adminMailList = [
+      AdminMailAddress(
+        id: 'ma-1',
+        address: 'ada@mail.test',
+        orgId: orgId,
+        orgName: 'Acme',
+        botId: botId,
+        botName: 'Ada',
+        status: AdminMailAddressStatusEnum.active,
+        autoPaused: false,
+        sent30d: 12,
+        bounced30d: 3,
+        complained30d: 0,
+        createdAt: '2026-11-01T00:00:00.000Z',
+      ),
+    ];
+    await tester.pumpWidget(harness(backend, const AdminScreen(tab: 'mail')));
+    await tester.pumpAndSettle();
+    await unlockAdmin(tester);
+    expect(find.text('ada@mail.test'), findsOneWidget);
+    expect(find.textContaining('12 sent · 3 bounced · 0 complained'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('adminMailStatus-ma-1')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('confirmMailStatus')));
+    await tester.pumpAndSettle();
+    expect(backend.adminMailActions, contains('status:ma-1:paused'));
+    await tester.tap(find.byKey(const Key('mailReserved')));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('mailReservedNames')), 'mayor\nsheriff');
+    await tester.tap(find.byKey(const Key('saveMailReserved')));
+    await tester.pumpAndSettle();
+    expect(backend.adminMailActions, contains('reserved:mayor,sheriff'));
   });
 }

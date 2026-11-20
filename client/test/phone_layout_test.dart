@@ -113,6 +113,9 @@ void main() {
       }
       FlutterError.onError = old;
       await tester.pumpWidget(const SizedBox());
+      // Disposed here, not in a tear-down: providers' timers (remote config's refresh) must be
+      // gone before the test's pending-timer check.
+      container.dispose();
       await tester.pump(const Duration(minutes: 1));
       tester.takeException();
       expect(problems, isEmpty, reason: problems.join('\n'));
@@ -125,7 +128,6 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
     final container = ProviderContainer(retry: (_, _) => null, overrides: [backendProvider.overrideWithValue(FakeBackend()), localCacheProvider.overrideWithValue(const NoCache())]);
-    addTearDown(container.dispose);
     final router = container.read(routerProvider);
     await tester.pumpWidget(
       UncontrolledProviderScope(
@@ -150,6 +152,7 @@ void main() {
     expect(find.text('Bot profile'), findsNothing);
     expect(find.byKey(const Key('messageInput')).hitTestable(), findsOneWidget);
     await tester.pumpWidget(const SizedBox());
+    container.dispose();
     await tester.pump(const Duration(minutes: 1));
   });
 }

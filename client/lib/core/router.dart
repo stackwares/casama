@@ -13,6 +13,7 @@ import '../features/bots/bot_template.dart';
 import '../features/mcp/mcp_screens.dart';
 import '../features/bots/action_rules_screen.dart';
 import '../features/bots/channels_screen.dart';
+import '../features/bots/mail_screen.dart';
 import '../features/bots/links_screen.dart';
 import '../features/calls/outbound_call_screen.dart';
 import '../features/bots/knowledge_screen.dart';
@@ -538,6 +539,12 @@ final routerProvider = Provider<GoRouter>((ref) {
                 path: ':botId/chat-apps',
                 pageBuilder: _page(
                   (_, s) => ChannelsScreen(botId: s.pathParameters['botId']!),
+                ),
+              ),
+              GoRoute(
+                path: ':botId/email',
+                pageBuilder: _page(
+                  (_, s) => MailScreen(botId: s.pathParameters['botId']!),
                 ),
               ),
               GoRoute(

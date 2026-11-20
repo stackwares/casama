@@ -774,6 +774,31 @@ class _NotificationRow extends ConsumerWidget {
                     overflow: TextOverflow.ellipsis,
                     style: context.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant, height: 1.35),
                   ),
+                  if (n.kind == 'mail_unknown_sender' && n.botId != null && n.sender != null && n.channelId != null) ...[
+                    const SizedBox(height: 6),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: FilledButton.tonalIcon(
+                        key: Key('allowMailSender-${n.id}'),
+                        icon: const Icon(LucideIcons.check, size: 16),
+                        label: Text(context.l10n.botEmailAllow),
+                        onPressed: () async {
+                          final backend = ref.read(backendProvider);
+                          final channels = await runGuarded(context, () => backend.channels(n.botId!));
+                          final ch = channels?.where((c) => c.id == n.channelId).firstOrNull;
+                          if (ch == null || !context.mounted) return;
+                          final next = {...ch.allowedSenders, n.sender!}.toList();
+                          final ok = await runGuarded(
+                            context,
+                            () => backend.updateChannel(ch.id, allowedSenders: next),
+                          );
+                          if (ok == null || !context.mounted) return;
+                          unawaited(ref.read(notificationsProvider.notifier).markRead(n.id).catchError((_) {}));
+                          showSuccess(context, context.l10n.chatAppsSenderAllowed(n.sender!));
+                        },
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),

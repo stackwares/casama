@@ -69,9 +69,15 @@ export function registerGalleryContentRoutes(
     c.header("Cache-Control", "public, max-age=60");
     const config = await getAppConfig(db);
     // Names and the quick reactions come from here so the apps keep copies only as fallbacks (D-372).
+    // bot_email is on only when this server actually has hosted mail configured (and not switched off).
+    const flags = {
+      ...config.flags,
+      bot_email: config.flags?.bot_email !== false && !!deps.hostedMail,
+    };
     return c.json(
       {
         ...config,
+        flags,
         quick_reactions: config.quick_reactions ?? [...QUICK_REACTIONS],
         names: { apps: TOOL_APP_NAMES, dns_providers: DNS_PROVIDER_NAMES },
       },
