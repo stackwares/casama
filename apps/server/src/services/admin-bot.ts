@@ -1,6 +1,7 @@
 /**
  * The admin bot (D-435, docs/ADMIN-BOT-PLAN.md): the instance owner's own bot can look things up
- * and propose admin actions (let people in, ban accounts, suspend workspaces) in their own chat.
+ * and propose admin actions (let people in, ban accounts, suspend workspaces, give free plans) in
+ * their own chat.
  *
  * The bot only ever proposes. Every write asks the owner (the run loop's `instanceAdmin` gate), and
  * each tool checks again here, from the database, before it does anything: the switch is on, the
@@ -13,6 +14,7 @@ import type { Database } from "@casama/db";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { suspendOrg, unsuspendOrg } from "./abuse.ts";
+import { registerAdminCompTools } from "./admin-bot-comps.ts";
 import { registerAdminResetTools } from "./admin-bot-resets.ts";
 import {
   addWaitlistEntries,
@@ -71,6 +73,8 @@ export interface AdminBotDeps {
   stopComputer?: (computerId: string) => Promise<void>;
   /** Whether this server bills; saved-reset tools (D-445) need it. */
   billingEnabled?: boolean;
+  /** Free plans for friends (docs/COMP-PLANS-PLAN.md): grants go through the billing service. */
+  billing?: import("../billing/service.ts").BillingService;
 }
 
 /** Whether this user is an instance owner by the explicit list: confirmed email, not banned. */
@@ -480,6 +484,8 @@ export function registerAdminTools(registry: ToolRegistry, deps: AdminBotDeps) {
 
   // Saved resets (D-445): the same gate and approvals, through the saved-reset service.
   registerAdminResetTools(registry, deps, guard, audit);
+  // Free plans for friends (docs/COMP-PLANS-PLAN.md §9): the same gate and approvals.
+  registerAdminCompTools(registry, deps, guard, audit);
 }
 
 /** Names of every admin tool, for the approval route and chat-app buttons. */

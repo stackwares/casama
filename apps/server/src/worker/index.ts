@@ -407,6 +407,7 @@ export async function startWorker(opts: WorkerOptions) {
     db,
     ownerEmails: ownerEmails(opts.instanceAdminEmails),
     billingEnabled: opts.billing?.enabled === true,
+    billing: opts.billing,
     stopComputer: computers
       ? async (id) => {
           await computers.sleep(id);
