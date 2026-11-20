@@ -14,6 +14,7 @@ export type DecisionQuestion =
 export type DecisionAnswer =
   | { type: "yesno"; p: number }
   | { type: "choice"; choice: string; p: Record<string, number> }
+  /** The expected level from 0 (lowest) to levels - 1, as a fraction. */
   | { type: "score"; score: number }
   /** Off, failed, timed out or refused: the caller does what it does today. */
   | { type: "none" };
@@ -55,17 +56,19 @@ export function decisionRequestBody(call: DecisionCall) {
   const questions: Record<string, unknown> = {};
   for (const [name, q] of Object.entries(call.questions)) {
     if (q.type === "yesno") questions[name] = { type: "noul", instructions: q.ask };
+    // Every question carries instructions: OpenAI's decision model refuses one without (400).
     else if (q.type === "choice")
       questions[name] = {
         type: "choice",
-        ...(q.ask ? { instructions: q.ask } : {}),
+        instructions: q.ask || "Pick the option that fits best.",
         criteria: q.options,
       };
     else
       questions[name] = {
         type: "score",
-        ...(q.ask ? { instructions: q.ask } : {}),
-        levels: q.levels,
+        instructions: q.ask || "Pick the level that fits best.",
+        // The route names a score's ordered levels `criteria`, like a choice's options.
+        criteria: q.levels,
       };
   }
   return {
@@ -106,7 +109,8 @@ function parseAnswer(q: DecisionQuestion, raw: unknown): DecisionAnswer {
   }
   const s = typeof a.score === "number" && Number.isFinite(a.score) ? a.score : null;
   if (s == null) return { type: "none" };
-  return { type: "score", score: Math.min(q.levels.length - 1, Math.max(0, Math.round(s))) };
+  // The expected level, a fraction (0.23 is mostly the lowest level).
+  return { type: "score", score: Math.min(q.levels.length - 1, Math.max(0, s)) };
 }
 
 /** Maps the route's response to answers; any question it didn't answer is `none`. */

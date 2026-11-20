@@ -68,6 +68,11 @@ export interface Decision<U extends DecisionUse> {
   t: DecisionUseSettings<U>;
   /** The acting row's id when `on`, for markDecision(). */
   logId: string | null;
+  /**
+   * Shadow with `wait: false`: settles when every shadow row is written, so a label added later
+   * finds them. Not kept across a durable step's replay; labels then go on whatever rows exist.
+   */
+  settled?: Promise<void>;
 }
 
 const none = (questions: Record<string, DecisionQuestion>) =>
@@ -188,9 +193,9 @@ export async function decide<U extends DecisionUse>(
         await record(db, deps, input, model, true, r).catch(warn);
       }),
     );
-    if (input.wait !== false) await all;
-    else void all;
-    return { mode, answers: none(input.questions), t, logId: null };
+    const settled = all.then(() => undefined);
+    if (input.wait !== false) await settled;
+    return { mode, answers: none(input.questions), t, logId: null, settled };
   }
 
   const r = await ask(settings.model);

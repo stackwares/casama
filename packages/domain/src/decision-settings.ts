@@ -54,12 +54,12 @@ export interface DecisionSettings {
   uses: { [U in DecisionUse]: DecisionUseSettings<U> };
 }
 
-/** The plan's three shadow candidates (§12, decision 2), used when shadow is on and none are set. */
-export const DEFAULT_SHADOW_MODELS = [
-  "typesafe/jev-1.14",
-  "openai/gpt-6-luna-decisions",
-  "perplexity/pplx-decider-flash-v1.2",
-];
+/**
+ * The shadow candidates used when shadow is on and none are set. Perplexity's Decider Flash was the
+ * plan's third; the 2026-11-20 eval dropped it (no separation on scans, rarely confident, 2 of 10
+ * calls over 2 s from the server). Add it back in settings to compare it on real traffic.
+ */
+export const DEFAULT_SHADOW_MODELS = ["typesafe/jev-1.14", "openai/gpt-6-luna-decisions"];
 
 const MODES = new Set<DecisionMode>(["off", "shadow", "on"]);
 const STEP_KEYS = new Set(["max_skips_in_row", "first_step", "every"]);

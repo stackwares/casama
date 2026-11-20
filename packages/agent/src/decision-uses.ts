@@ -20,13 +20,15 @@ export const SCAN_GATE_QUESTIONS: Record<string, DecisionQuestion> = {
     type: "yesno",
     ask: "Does any item below need this person's attention or action within the next day?",
   },
+  // Not "any payment or security notice": receipts and sign-in notices are in nearly every quiet
+  // inbox, and a real alert already scores high on needs_attention (eval, 2026-11-20).
   from_person: {
     type: "yesno",
-    ask: "Was at least one new item written by a real person to this person, not a newsletter, receipt, notification or advert?",
+    ask: "Was at least one new item written personally to this person by someone they deal with, not a newsletter, receipt, notification, alert or advert?",
   },
   time_bound: {
     type: "yesno",
-    ask: "Does any item change a meeting, set a deadline, or concern a payment or account security?",
+    ask: "Does any item ask this person to do, decide or confirm something by a specific time, or change one of their meetings?",
   },
 };
 

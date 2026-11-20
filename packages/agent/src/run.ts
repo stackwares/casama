@@ -1218,6 +1218,8 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
     let lastStepTaken = false;
     // Decision models (D-454): the reply check's answers, kept for the memory pass and corrections.
     let replyDecision: Decision<"reply_check"> | null = null;
+    /** Today's checker ran on this run: its verdict is the reply check's label. */
+    let replyChecked: { checker_flagged: boolean } | null = null;
     let longRunWarned = false;
     // When the long-run check asks, read once so every replay of this run takes the same steps.
     const longRunPlan =
@@ -1594,6 +1596,8 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
               runId: info.runId,
               state: replyCheckState(previous, task, seen, draft.text),
               questions: REPLY_CHECK_QUESTIONS,
+              // Shadow mustn't hold up the end of the run; its labels are added once it settles.
+              wait: false,
             }),
           );
           const rd = replyDecision;
@@ -1612,14 +1616,7 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
           const issue = await step(`verify-${i}`, () =>
             verifyReply(deps, info, task, turn, draft.text, chainFor, bus).catch(() => null),
           );
-          if (replyDecision && replyDecision.mode !== "off")
-            await step(`decide-reply-label-${i}`, () =>
-              labelDecisions(
-                db,
-                { runId: info.runId, use: "reply_check" },
-                { checked: true, checker_flagged: issue != null },
-              ),
-            );
+          replyChecked = { checker_flagged: issue != null };
           if (issue) {
             await step(`verify-retract-${i}`, () =>
               bus().then((b) =>
@@ -2038,17 +2035,25 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
     // correction rule says, next to what the decision model said.
     if (rd && rd.mode !== "off") {
       const task = info.current?.text ?? "";
-      await step("decide-reply-outcome", () =>
-        labelDecisions(
-          db,
-          { runId: info.runId, use: "reply_check" },
-          {
-            memories: remembered,
-            memory_skipped: skipMemory,
-            regex_correction: looksLikeCorrection(task),
-          },
-        ),
-      );
+      const checked = replyChecked as { checker_flagged: boolean } | null;
+      const settled = rd.settled;
+      await step("decide-reply-outcome", async () => {
+        const label = () =>
+          labelDecisions(
+            db,
+            { runId: info.runId, use: "reply_check" },
+            {
+              ...(checked ? { checked: true, checker_flagged: checked.checker_flagged } : {}),
+              memories: remembered,
+              memory_skipped: skipMemory,
+              regex_correction: looksLikeCorrection(task),
+            },
+          );
+        // Shadow calls still in flight: the label goes on once they're written, without the run
+        // waiting for them (best effort; a lost label only leaves that row out of the results).
+        if (settled) void settled.then(label, label);
+        else await label();
+      });
     }
     if (info.trigger === "watcher")
       await step("decide-watcher-outcome", () =>

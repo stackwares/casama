@@ -50,8 +50,16 @@ describe("the OpenRouter adapter", () => {
       state: "text",
       questions: {
         ok: { type: "noul", instructions: "Is it ok?" },
-        kind: { type: "choice", criteria: Q.kind.options },
-        level: { type: "score", levels: ["low", "mid", "high"] },
+        kind: {
+          type: "choice",
+          instructions: "Pick the option that fits best.",
+          criteria: Q.kind.options,
+        },
+        level: {
+          type: "score",
+          instructions: "Pick the level that fits best.",
+          criteria: ["low", "mid", "high"],
+        },
       },
       provider: { data_collection: "deny" },
       user: "org-1",

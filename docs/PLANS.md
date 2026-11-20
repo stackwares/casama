@@ -45,7 +45,7 @@ same commit. Shipping details (deploys, app builds) move fast, so check them bef
 | [LIMIT-RESETS-PLAN](LIMIT-RESETS-PLAN.md) | D-443 | Server + docs live 2026-11-20 (6d11b195); switched on, test grant on Oliver's space (expires 2026-12-04); app builds with Use Reset pending |
 | [APP-ART-PLAN](APP-ART-PLAN.md) | D-440 | Web app (51), server and gallery live 2026-11-20; store builds and a low-end Android startup check |
 | [ADMIN-BOT-PLAN](ADMIN-BOT-PLAN.md) | D-435 | Push and deploy; then turn it on for admin@casama.ai's bot |
-| [DECISION-MODEL-PLAN](DECISION-MODEL-PLAN.md) | D-454 | Code on branch `feat/decision-models`, every use off. Guardrail change for the three shadow models, live Phase 0 calls, privacy page and server deploys (each needs a yes); then shadow, and Phase 2 reads the results |
+| [DECISION-MODEL-PLAN](DECISION-MODEL-PLAN.md) | D-454 | Code on branch `feat/decision-models`, every use off. Guardrail, privacy page and Phase 0 live tests done 2026-11-20. Merge and server deploy (needs a yes); then shadow, and Phase 2 reads the results |
 | [CALL-RECAP-PLAN](CALL-RECAP-PLAN.md) | D-429 | Server live; app builds and a real call check |
 | [CALLS-PLAN](CALLS-PLAN.md) | D-327 | App builds; real-device checks |
 | [CHAT-APP-FILES-PLAN](CHAT-APP-FILES-PLAN.md) | D-341, D-342 | Live; Mac build for iMessage files. Teams file consent and Telegram albums left for later |

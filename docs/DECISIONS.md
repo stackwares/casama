@@ -6820,8 +6820,13 @@ quality and safety.
 - **Also:** chat steps record the reasoning tokens OpenRouter returns in the ledger's `meta`
   (plan Phase 0, for the effort picker's case), and `scripts/check-model-updates.mts` checks the
   shadow candidates against newer decision models.
-- **Still needs a yes, not done here:** adding the shadow models to the OpenRouter guardrail
-  "Casama privacy" (D-364), the live Phase 0 calls, the privacy page deploy (`site/privacy.html`
-  names TypeSafe and Perplexity now), and the server deploy.
+- **Guardrail and privacy page done the same day:** the three models are on "Casama privacy",
+  and casama.ai/privacy names TypeSafe and Perplexity (only casama.ai was deployed).
+- **Tested live (plan, "Test results"):** the guardrail refuses decision models not on it; two
+  adapter bugs fixed (OpenAI needs instructions on every question; score levels go in `criteria`);
+  the scan gate's third question reworded because receipts and sign-in notices tripped it; shadow
+  no longer holds up the end of a chat run; Perplexity dropped from the default shadow set; the
+  effort picker stays off because low effort saves DeepSeek nothing on simple messages.
+- **Still needs a yes:** the server deploy.
 - **Tests:** `packages/agent/test/decisions.test.ts`, `packages/domain/test/decision-settings.test.ts`,
   `apps/server/test/decisions.test.ts`, `supabase/tests/decision_log_rls.test.sql`.

@@ -1,9 +1,9 @@
 # Decision models: plan
 
 Status: **built** (2026-11-20, D-454), on branch `feat/decision-models`, every use off. Oliver said
-"decide all for me! go and build all this in 1 go": the §12 defaults are the decisions. Left, each
-needing its own yes: adding the three shadow models to the OpenRouter guardrail and the live
-Phase 0 calls (§11), the privacy page deploy, and the server deploy. Then switch uses to shadow,
+"decide all for me! go and build all this in 1 go": the §12 defaults are the decisions. The
+guardrail change, the privacy page and Phase 0's live tests were done the same day (results below).
+Left: merge and the server deploy, which needs a yes. Then switch uses to shadow,
 and Phase 2 reads the results.
 
 **What was built, and where it differs from the text below:**
@@ -26,6 +26,67 @@ and Phase 2 reads the results.
 
 Oliver asked on 2026-11-20 how a decision model such as Jev or OpenAI's Decisions API could lower
 our costs, improve anything, or just be useful, then said "go and write the full plan now".
+
+## Test results (2026-11-20)
+
+Run after the guardrail change, with Casama's server key. Everything here is synthetic: 77 hand-made
+labelled cases (`scratch-cases.ts`, not committed) through the real question sets and input
+builders, so no user content was used. Small numbers: these pick a direction, shadow sets thresholds.
+
+**Phase 0 (§11)**
+
+| Check | Result |
+|---|---|
+| Route | `POST /api/alpha/decisions` answers all three models; `/api/v1/systemone` answers Jev with the same body |
+| Guardrail | Listed models answer. `typesafe/jev-1.13` and `google/gemini-decision-1` get 404 "Model blocked by guardrail" |
+| `usage.cost` | Dollars (375 tokens × $0.042/M = $0.00001575) |
+| Speed from the production server (10 calls each) | Jev 0.16–0.27 s; OpenAI 0.23–0.39 s; Perplexity 0.14–0.27 s with 2 of 10 at 2.2 and 3.3 s |
+| Speed from Manila | about 0.6–0.7 s median for all three |
+| Reasoning tokens in the ledger | Recorded on chat steps (`meta.reasoning_tokens`) |
+
+**Bugs the live calls found, fixed:** OpenAI's model refuses a question without instructions (400),
+so every choice and score now carries one; score questions take their levels as `criteria`, and the
+answer is a fractional expected level, kept as is.
+
+**Quality.** "Rank" is how well a model orders true cases above false ones (1.0 = perfectly).
+
+| Use | Jev 1.14 | GPT-6 Luna Decisions | Decider Flash v1.2 | Today |
+|---|---|---|---|---|
+| Scan gate (20 scans, after rewording) | Every real find ≥ 0.78, every quiet scan ≤ 0.62 | Scored the double-booked calendar at 0.10 | No separation (0.34–0.61 both ways) | DeepSeek stand-in: 17/20 right, 1.5 s, $0.00011 |
+| Reply check: overclaims (16) | rank 1.0; at 0.9 flags 5/5, no false flags | rank 0.91; 4 false flags at 0.9 ("unfinished" is noisy) | rank 0.96; flags 2/5 at 0.9 | DeepSeek checker: 14/16, 1.4 s, $0.000073 |
+| Memory skip | rank 1.0, but never under 0.12: skips 1/14 at 0.1 | 14/14 | 14/14 | One background call every run |
+| Correction | 2/2 | 2/2, 1 false ("Actually, also add Lisa") | 2/2 | Regex |
+| Tool-call gate (8 ordinary, 8 planted) | 8/8 planted asked, no ordinary call asked | 8/8, none | 8/8, none | Nothing checks this |
+| Long-run repeating (6) | 3/3 | 3/3 | 2/3 | Nothing |
+| Watcher gate (9) | 4/5 skipped, no real match skipped | 5/5 | 5/5 | A full run per change |
+| Average cost a call | $0.000020 | $0.000054 | $0.000003 | |
+
+**What got better:** a one-step run that claims a failed send now goes to the checker and is fixed
+(live run: Jev 0.99, sent back once). A planted forward to an outside address became an approval
+ask (live run: Jev 0.03 on "asked for"). Decision calls are about 5× faster than the DeepSeek checks
+they would stand in for, and a third to a fifth of the price.
+
+**What was worse, and changed:**
+- The scan gate's third question ("concerns a payment or account security") fired on every receipt
+  and sign-in notice, so the gate would almost never skip. Reworded to "asks the person to do,
+  decide or confirm something by a specific time, or changes a meeting"; real alerts are already
+  caught by `needs_attention`.
+- In shadow the reply check held the end of every chat run with a tool step until all shadow models
+  answered (up to 1.5 s with Perplexity's spikes). Shadow is now off the main path there; its labels
+  are written once the calls settle. Measured: 0 ms added.
+- Perplexity is out of the default shadow set (see the table). It stays on the guardrail and can be
+  added back in settings.
+
+**What doesn't pay:** the effort picker. DeepSeek V4.1 Flash already thinks briefly on a simple
+message: "thanks!" at low effort took 2.1 s and 114 reasoning tokens against 2.0 s and 113 at medium,
+same cost. The picker would add about 0.2 s before the first word for nothing. Leave U6 off; the
+recorded reasoning tokens will show whether that changes on real traffic.
+
+**Thresholds still to set from shadow:** each model leans differently (Jev never goes under about
+0.12 on a "no"), so the plan's 0.1 / 0.9 defaults are safe but act rarely. On these cases Jev's
+scan gate would skip 7 of 10 quiet scans with no misses at about 0.5, against 1 of 10 at 0.1.
+
+**Leaning:** Jev 1.14 for every use, OpenAI's model kept in shadow as the comparison.
 
 ## 0. Summary
 
