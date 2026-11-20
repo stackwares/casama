@@ -44,6 +44,54 @@ describe("owner admin console (Phase 6)", () => {
     expect(await j(res)).toMatchObject({ users: 2, orgs: 1, version: expect.any(String) });
   });
 
+  it("rejects old owner proof before reads, writes and validation, while keeping discovery", async () => {
+    const stale = await h.tokenFor(
+      { id: owner.id, email: "admin-owner@example.com" },
+      {
+        amr: [{ method: "password", timestamp: Math.floor(Date.now() / 1000) - 600 }],
+      },
+    );
+    expect((await h.request("/v1/admin/overview", { token: stale })).status).toBe(200);
+    const read = await h.request("/v1/admin/users", { token: stale });
+    expect(read.status).toBe(403);
+    expect(await j(read)).toMatchObject({ code: "admin_reauthentication_required" });
+    const write = await h.request(`/v1/admin/orgs/${orgId}/limits`, {
+      token: stale,
+      method: "PATCH",
+      json: {},
+    });
+    expect(write.status).toBe(403);
+    expect(await j(write)).toMatchObject({ code: "admin_confirmation_required" });
+    expect((await h.request("/v1/orgs", { token: stale })).status).toBe(200);
+    expect((await h.request("/v1/admin/users", { token: member.token })).status).toBe(403);
+  });
+
+  it("an owner with two-step sign-in must have passed it in this session", async () => {
+    const [factor] = await h.tdb.admin<{ id: string }[]>`
+      insert into auth.mfa_factors (id, user_id, friendly_name, factor_type, status, created_at, updated_at)
+      values (gen_random_uuid(), ${owner.id}::uuid, 'test', 'totp', 'verified', now(), now())
+      returning id`;
+    try {
+      const who = { id: owner.id, email: "admin-owner@example.com" };
+      const aal1 = await h.tokenFor(who, { aal: "aal1" });
+      const read = await h.request("/v1/admin/users", { token: aal1 });
+      expect(read.status).toBe(403);
+      expect(await j(read)).toMatchObject({ code: "admin_reauthentication_required" });
+      const write = await h.request(`/v1/admin/orgs/${orgId}/limits`, {
+        token: aal1,
+        method: "PATCH",
+        json: {},
+      });
+      expect(await j(write)).toMatchObject({ code: "admin_confirmation_required" });
+      // Discovery still works, and a session that passed the code gets in.
+      expect((await h.request("/v1/admin/overview", { token: aal1 })).status).toBe(200);
+      const aal2 = await h.tokenFor(who, { aal: "aal2" });
+      expect((await h.request("/v1/admin/users", { token: aal2 })).status).toBe(200);
+    } finally {
+      await h.tdb.admin`delete from auth.mfa_factors where id = ${factor!.id}::uuid`;
+    }
+  });
+
   it("lists users and workspaces, and sets quotas", async () => {
     const usersRes = await h.request("/v1/admin/users", { token: owner.token });
     const users = await j(usersRes);

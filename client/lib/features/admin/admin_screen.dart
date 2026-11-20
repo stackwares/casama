@@ -1,5 +1,7 @@
 import '../../core/billing.dart';
 import 'resets_tab.dart';
+import 'admin_security_gate.dart';
+import '../../core/admin_security.dart';
 import 'vendors_tab.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -44,8 +46,16 @@ final _adminOrgsProvider = FutureProvider.autoDispose<List<AdminOrg>>((r) => r.w
 final _adminAbuseProvider = FutureProvider.autoDispose<List<AbuseEvent>>((r) => r.watch(backendProvider).adminAbuseEvents());
 
 /// Owner admin console: overview and update notice, users, workspace quotas, services.
-class AdminScreen extends ConsumerWidget {
+class AdminScreen extends StatelessWidget {
   const AdminScreen({super.key, this.tab});
+  final String? tab;
+
+  @override
+  Widget build(BuildContext context) => AdminSecurityGate(child: _UnlockedAdminScreen(tab: tab));
+}
+
+class _UnlockedAdminScreen extends ConsumerWidget {
+  const _UnlockedAdminScreen({this.tab});
 
   /// The tab to open on (`?tab=domains` from a notification), or the overview.
   final String? tab;
@@ -62,6 +72,11 @@ class AdminScreen extends ConsumerWidget {
       initialIndex: tabs.indexOf(tab ?? '').clamp(0, tabs.length - 1),
       child: SubPage(
         title: l10n.adminConsole,
+        actions: [TextButton.icon(
+          onPressed: () => AdminSecurity.lock?.call(),
+          icon: const Icon(LucideIcons.lock, size: 18),
+          label: Text(l10n.adminLockNow),
+        )],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(52),
           child: Padding(
@@ -223,7 +238,7 @@ class _Overview extends ConsumerWidget {
                 const SizedBox(height: AppSpace.md),
                 const CapacityCard(),
                 const MarginCard(),
-                VendorAttentionBanner(tabIndex: AdminScreen._tabs.indexOf('vendors')),
+                VendorAttentionBanner(tabIndex: _UnlockedAdminScreen._tabs.indexOf('vendors')),
                 FormNote(l10n.casamaVersion(o.version), icon: LucideIcons.badgeCheck),
               ],
             );

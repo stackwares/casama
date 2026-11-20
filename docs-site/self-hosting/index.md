@@ -211,6 +211,24 @@ The first account created on a new server becomes the **instance owner**. Owners
 console under Settings, where they can see the health of each service, manage workspaces and check
 for updates.
 
+The admin console locks after five minutes without activity, when the app goes into the
+background, and when you leave it. **Lock now** locks it immediately. Unlock with your account
+password or an emailed one-time code (emailed codes require SMTP); an account with two-step
+sign-in also enters its authenticator code. The rest of the app stays signed in. Admin changes
+ask you to confirm with a fresh sign-in, at most once every 45 seconds.
+
+The API independently requires a sign-in from the last five minutes for admin reads and the
+last minute for changes, and the two-step code when the account has an authenticator. Token
+refresh does not extend these windows, so even an active console occasionally asks you to verify
+again. The same one-minute check applies to approving the admin bot's actions, to making a
+scan-to-sign-in code as an instance owner, and to changing a gallery request. API and CLI callers
+must authenticate again when receiving `admin_reauthentication_required` or
+`admin_confirmation_required` (HTTP 403). Custom authentication hooks must preserve the signed
+`amr` authentication methods and timestamps and the `aal` claim; missing proof is refused, even
+when the token itself has just been issued. The owner-only overview used to discover the console
+in Settings remains available with the ordinary session; its aggregate instance counts remain
+visible without unlocking.
+
 1. Open the Casama app and point it at your server (see the next section).
 2. Create an account with email and password.
 3. Add a model key (or a local model endpoint) and create your first bot.

@@ -88,6 +88,19 @@ describe("scan to sign in", () => {
     expect(rows.some((r) => r.code_hash === made.code)).toBe(false);
   });
 
+  it("an instance owner needs a fresh sign-in to make one; others don't (admin security)", async () => {
+    const stale = (u: { id: string; email: string }) =>
+      h.tokenFor(u, {
+        amr: [{ method: "password", timestamp: Math.floor(Date.now() / 1000) - 600 }],
+      });
+    // The first account is this server's owner.
+    const owner = await create(await stale({ id: user.id, email: "scanner@example.com" }));
+    expect(owner.status).toBe(403);
+    expect((await j(owner)).code).toBe("admin_confirmation_required");
+    const someone = await create(await stale({ id: other.id, email: "someone-else@example.com" }));
+    expect(someone.status).toBe(201);
+  });
+
   it("the phone trades the code for a sign-in token, once", async () => {
     const made = await j(await create(user.token));
     const res = await redeem(made.code, "Pixel 9");

@@ -6599,3 +6599,36 @@ Mac with the desktop app closed. Nothing was broken and no limit was involved.
   `client/test/live_test.dart` (hours card on a cloud computer, never on a personal one).
 - **Needs an app build** for the chat notice, the names and the hours card; the server part works
   with today's apps (they show "Computer stopped" and "Offline" instead of an error).
+
+## D-448 Admin console locks and fresh server authentication (2026-11-20)
+
+Oliver authorized implementation of `docs/ADMIN-SECURITY-PLAN.md` and delegated the defaults.
+Five-minute idle locking, leaving the app (paused, hidden) and manual locking protect the native
+console. A window merely losing focus (`inactive`: a password manager, the mail app, the iOS Face ID
+autofill sheet) does not lock; the idle timer covers it. Every mutation asks for the account
+password or an emailed code; no reusable PIN or local-only biometric assertion is added. Existing
+Supabase authentication handles credential verification and rate limiting. The API checks signed
+AMR authentication timestamps, never JWT issuance time, before admin handlers and idempotency
+replay: five minutes for reads, sixty seconds for writes. Unknown, future, refresh-only and missing
+authentication proof fail closed. Ordinary owner authorization still runs. The owner-only overview
+remains exempt for Settings navigation discovery; it exposes aggregate counts, not user lists. No
+new paid dependency or stored secret.
+
+**Two-step sign-in counts.** An account with a verified authenticator must present an aal2 session:
+a fresh password alone (aal1) is refused, so the authenticator protects the console too. The lock
+screen and confirmations ask for the code in place, and while an admin sign-in form is open the
+router does not move an aal1 session to the two-step page (that move locked the console and looped).
+Without two-step sign-in, the lock screen suggests it: an inbox left open on the same device can
+unlock with an emailed code.
+
+**No way around it.** Three owner paths outside `/v1/admin` take the same one-minute fresh sign-in
+(and second step): approving an admin bot card (D-435; declining always works), making a
+scan-to-sign-in code as an instance owner (D-296; the redeemed code is a brand-new sign-in that would
+otherwise count as fresh on another device), and changing a gallery request's status. The app asks
+in a dialog over whatever screen is open when the server answers `admin_confirmation_required`,
+then retries once; the server refuses before any side effect. The admin bot approval is also enforced in the database: `decide_approval` refuses approving an `admin.*` action unless the caller's token has the same fresh sign-in (`public.fresh_admin_sign_in()`, migration `20270228100001`), so the person's token sent straight to PostgREST can't skip the API.
+
+**Friction.** After a fresh sign-in the app doesn't ask again for 45 seconds (the server allows 60),
+and two changes asked for at once share one dialog. This is a console/session safeguard, not a
+replacement for OS locking. It does not revoke an already issued JWT on a local lock: the server
+windows bound its remaining admin validity.

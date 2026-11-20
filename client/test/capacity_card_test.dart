@@ -5,6 +5,7 @@ import 'package:material_ui/material_ui.dart';
 
 import 'app_test.dart' show harness, setSize;
 import 'fake_backend.dart';
+import 'admin_test_helpers.dart';
 
 void main() {
   testWidgets(
@@ -40,6 +41,7 @@ void main() {
         );
       await tester.pumpWidget(harness(backend, const AdminScreen()));
       await tester.pumpAndSettle();
+      await unlockAdmin(tester);
       await tester.ensureVisible(find.byKey(const Key('capacityCard')));
       await tester.pumpAndSettle();
       expect(find.text('Server capacity'), findsOneWidget);

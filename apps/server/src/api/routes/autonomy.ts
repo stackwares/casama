@@ -53,6 +53,7 @@ function pickTemplateExtras(t: GalleryExtras & { stats?: object }) {
   return out as Record<string, never>;
 }
 
+import { requireFreshOwnerAction } from "../admin-security.ts";
 import { ApiError } from "../errors.ts";
 import type { AppDeps, AppEnv } from "../types.ts";
 import { iso } from "../util.ts";
@@ -335,6 +336,9 @@ export function registerAutonomyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
         throw new ApiError(400, "validation_failed", "Admin actions can't be always allowed");
       if (!(await isListedOwner({ db, ownerEmails: ownerEmails(deps.env.INSTANCE_ADMIN_EMAILS) }, claims.sub)))
         throw new ApiError(403, "not_instance_owner", "Only the instance owner can approve this");
+      // An unlocked phone left on a table must not approve bans or suspensions: approving takes a
+      // fresh sign-in, as in the admin console. Declining always works.
+      if (decision === "approved") await requireFreshOwnerAction(db, claims);
     }
     if (watch) await refuseWatchDecision(db, watch, id, decision, always_allow);
     let row: ApprovalRow | undefined;
@@ -352,6 +356,12 @@ export function registerAutonomyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
       if (code === "P0002") throw new ApiError(404, "approval_not_found", "Approval not found");
       if (code === "55000")
         throw new ApiError(409, "approval_already_decided", "This approval was already decided");
+      if (code === "28000")
+        throw new ApiError(
+          403,
+          "admin_confirmation_required",
+          "Confirm this admin action with a fresh sign-in.",
+        );
       throw err;
     }
     if (!row) throw new ApiError(404, "approval_not_found", "Approval not found");

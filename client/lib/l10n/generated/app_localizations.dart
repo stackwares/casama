@@ -3898,6 +3898,78 @@ abstract class AppLocalizations {
   /// **'Admin console'**
   String get adminConsole;
 
+  /// No description provided for @adminLockNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Lock now'**
+  String get adminLockNow;
+
+  /// No description provided for @adminUnlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock admin console'**
+  String get adminUnlock;
+
+  /// No description provided for @adminLockedHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'The admin console is locked. Verify your password or use a fresh email code. It locks after 5 minutes without activity and when you leave the app.'**
+  String get adminLockedHelp;
+
+  /// No description provided for @adminConfirmAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm admin action'**
+  String get adminConfirmAction;
+
+  /// No description provided for @adminConfirmActionHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'This action changes the instance. Verify your password or a fresh email code to continue.'**
+  String get adminConfirmActionHelp;
+
+  /// No description provided for @adminVerifyPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify password'**
+  String get adminVerifyPassword;
+
+  /// No description provided for @adminSendCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Send an email code'**
+  String get adminSendCode;
+
+  /// No description provided for @adminCodeSent.
+  ///
+  /// In en, this message translates to:
+  /// **'We sent a code to your account email. Enter it below to continue.'**
+  String get adminCodeSent;
+
+  /// No description provided for @adminVerifyCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify code'**
+  String get adminVerifyCode;
+
+  /// No description provided for @adminAuthenticationFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not verify your identity. Check your password or code and try again.'**
+  String get adminAuthenticationFailed;
+
+  /// No description provided for @adminTwoStepHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account uses two-step sign-in. Enter the 6-digit code from your authenticator app to finish.'**
+  String get adminTwoStepHelp;
+
+  /// No description provided for @adminTwoStepTip.
+  ///
+  /// In en, this message translates to:
+  /// **'Tip: turn on two-step sign-in in Settings. Without it, anyone who can read your email on this device can unlock the console with an emailed code.'**
+  String get adminTwoStepTip;
+
   /// No description provided for @adminOverview.
   ///
   /// In en, this message translates to:

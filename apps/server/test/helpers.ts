@@ -243,7 +243,12 @@ export async function startHarness(
     attachLiveRelay(server, deps);
   }
   const tokenFor = (u: { id: string; email: string }, claims: Record<string, unknown> = {}) =>
-    new SignJWT({ email: u.email, role: "authenticated", ...claims })
+    new SignJWT({
+      email: u.email,
+      role: "authenticated",
+      amr: [{ method: "password", timestamp: Math.floor(Date.now() / 1000) }],
+      ...claims,
+    })
       .setProtectedHeader({ alg: "HS256" })
       .setSubject(u.id)
       .setAudience("authenticated")

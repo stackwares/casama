@@ -25,6 +25,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app_test.dart' show harness, setSize;
 import 'fake_backend.dart';
+import 'admin_test_helpers.dart';
 
 FakeBackend _backend({bool buy = true}) => FakeBackend()
   ..sitesConfig = SitesConfig(
@@ -996,6 +997,7 @@ void main() {
         );
       await tester.pumpWidget(harness(backend, const AdminScreen()));
       await tester.pumpAndSettle();
+      await unlockAdmin(tester);
       await tester.tap(find.widgetWithText(Tab, 'Domains'));
       await tester.pumpAndSettle();
       expect(find.textContaining(r'$250.00'), findsOneWidget);

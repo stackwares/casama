@@ -415,10 +415,13 @@ it("Move to Another Registrar: owner, fresh sign-in, after the lock date, code o
   expect(signedInRecently({ amr: [{ timestamp: Math.floor(Date.now() / 1000) - 3600 }] })).toBe(
     false,
   );
-  // An old session: sign in again.
+  // Explicitly old proof: harness sessions represent fresh sign-ins by default.
+  const oldToken = await w.h.tokenFor(w.owner, {
+    amr: [{ method: "password", timestamp: Math.floor(Date.now() / 1000) - 3600 }],
+  });
   const stale = await w.h.request(url, {
     method: "POST",
-    token: w.owner.token,
+    token: oldToken,
     json: { confirm_name: "crumbkeep.com" },
   });
   expect(stale.status).toBe(401);

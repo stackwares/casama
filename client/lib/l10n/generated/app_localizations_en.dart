@@ -2463,6 +2463,48 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adminConsole => 'Admin console';
 
   @override
+  String get adminLockNow => 'Lock now';
+
+  @override
+  String get adminUnlock => 'Unlock admin console';
+
+  @override
+  String get adminLockedHelp =>
+      'The admin console is locked. Verify your password or use a fresh email code. It locks after 5 minutes without activity and when you leave the app.';
+
+  @override
+  String get adminConfirmAction => 'Confirm admin action';
+
+  @override
+  String get adminConfirmActionHelp =>
+      'This action changes the instance. Verify your password or a fresh email code to continue.';
+
+  @override
+  String get adminVerifyPassword => 'Verify password';
+
+  @override
+  String get adminSendCode => 'Send an email code';
+
+  @override
+  String get adminCodeSent =>
+      'We sent a code to your account email. Enter it below to continue.';
+
+  @override
+  String get adminVerifyCode => 'Verify code';
+
+  @override
+  String get adminAuthenticationFailed =>
+      'Could not verify your identity. Check your password or code and try again.';
+
+  @override
+  String get adminTwoStepHelp =>
+      'Your account uses two-step sign-in. Enter the 6-digit code from your authenticator app to finish.';
+
+  @override
+  String get adminTwoStepTip =>
+      'Tip: turn on two-step sign-in in Settings. Without it, anyone who can read your email on this device can unlock the console with an emailed code.';
+
+  @override
   String get adminOverview => 'Overview';
 
   @override

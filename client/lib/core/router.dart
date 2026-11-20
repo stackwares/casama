@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'admin_security.dart';
 import 'backend.dart' show PackFrom;
 import 'widgets.dart';
 
@@ -192,11 +193,13 @@ class _RouterRefresh extends ChangeNotifier {
     ref.listen(joinableWorkspacesProvider, (_, _) => notifyListeners());
     ref.listen(pendingReferralProvider, (_, _) => notifyListeners());
     GuidedSetup.active.addListener(notifyListeners);
+    AdminSecurity.authFormsClosed.addListener(notifyListeners);
   }
 
   @override
   void dispose() {
     GuidedSetup.active.removeListener(notifyListeners);
+    AdminSecurity.authFormsClosed.removeListener(notifyListeners);
     super.dispose();
   }
 }
@@ -257,6 +260,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       }
       // Two-step sign-in (D-093): the code comes before anything else.
       final codeNeeded = ref.read(backendProvider).twoStepCodeNeeded;
+      // An admin sign-in form (the console's lock, a confirmation) asks for the code itself:
+      // moving to the two-step page would lock the console it is trying to open.
+      if (codeNeeded && AdminSecurity.openAuthForms > 0) return null;
       if (codeNeeded) return loc == '/two-step' ? null : '/two-step';
       if (loc == '/two-step') return afterSignIn();
       // Back from a reset link or code: a new password before anything else.

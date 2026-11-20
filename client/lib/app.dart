@@ -30,6 +30,8 @@ import 'features/companion/companion_controller.dart';
 import 'features/companion/companion_overlay.dart';
 import 'features/companion/desktop_shell.dart';
 import 'core/router.dart';
+import 'core/admin_security.dart';
+import 'features/admin/admin_security_gate.dart';
 import 'core/remote_config.dart';
 import 'core/route_title.dart';
 import 'core/theme.dart';
@@ -113,6 +115,13 @@ class CasamaApp extends ConsumerWidget {
     });
     final appearance = ref.watch(appearanceProvider);
     final router = ref.watch(routerProvider);
+    // Owner actions outside the console (an admin bot approval, a sign-in code) confirm with a
+    // fresh sign-in over whatever screen is open; the server asks for it.
+    AdminSecurity.confirmAnywhere = () async {
+      final context = router.routerDelegate.navigatorKey.currentContext;
+      if (context == null || !context.mounted) return false;
+      return showAdminConfirmation(context);
+    };
     return MaterialApp.router(
       onGenerateTitle: (c) => AppLocalizations.of(c).appTitle,
       theme: AppTheme.light(appearance),

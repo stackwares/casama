@@ -41,6 +41,7 @@ import {
   updateGalleryInstalled,
 } from "../../services/gallery-install.ts";
 import { galleryStats, recordGalleryUse, withStats } from "../../services/gallery-usage.ts";
+import { requireFreshOwnerAction } from "../admin-security.ts";
 import { ApiError } from "../errors.ts";
 import type { AppDeps, AppEnv } from "../types.ts";
 import { instanceOwnerCheck } from "./admin.ts";
@@ -186,6 +187,7 @@ export function registerGalleryRoutes(
   app.openapi(routes.updateGalleryRequest, async (c) => {
     const claims = claimsOf(c);
     await requireOwner(claims);
+    await requireFreshOwnerAction(db, claims);
     const { id } = c.req.valid("param");
     return c.json(await setGalleryRequestStatus(db, claims.sub, id, c.req.valid("json")), 200);
   });

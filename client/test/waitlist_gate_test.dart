@@ -21,6 +21,7 @@ import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
 import 'app_test.dart' show harness, setSize;
 import 'fake_backend.dart';
+import 'admin_test_helpers.dart';
 
 /// Casama Cloud's waitlist and invite gate in the app (D-427, WAITLIST-PLAN Phase 2).
 
@@ -476,6 +477,7 @@ void main() {
         harness(backend, const AdminScreen(tab: 'waitlist')),
       );
       await tester.pumpAndSettle();
+      await unlockAdmin(tester);
       return backend;
     }
 
@@ -515,6 +517,7 @@ void main() {
         harness(backend, const AdminScreen(tab: 'waitlist')),
       );
       await tester.pumpAndSettle();
+      await unlockAdmin(tester);
       expect(find.byKey(const Key('gateBatchHour')), findsOneWidget);
       expect(find.text('15:00 UTC'), findsOneWidget);
       expect(find.text('20 let in'), findsOneWidget);

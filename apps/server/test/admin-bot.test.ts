@@ -2,7 +2,7 @@
  * The admin bot (D-435, docs/ADMIN-BOT-PLAN.md). Every test tries to get an admin action through
  * without the owner's own fresh approval in their own chat, and checks that nothing happened.
  */
-import { createDb, type DbHandle } from "@casama/db";
+import { createDb, type DbHandle, withUserSession } from "@casama/db";
 import {
   builtinTools,
   CredentialResolver,
@@ -13,6 +13,7 @@ import {
   ReplayGateway,
   runAgent,
 } from "@casama/agent";
+import { sql } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import {
   type AdminBotDeps,
@@ -333,6 +334,48 @@ describe("admin bot: approving through the API", () => {
     await h.tdb.admin`insert into public.memberships (org_id, user_id, role) values (${adminOrg}, ${stranger.id}, 'admin')`;
     expect((await answer(id, stranger.token, { decision: "approved" })).status).toBe(403);
     expect((await answer(id, owner.token, { decision: "approved" })).status).toBe(200);
+  });
+
+  it("approving takes a fresh sign-in; declining doesn't (admin security)", async () => {
+    const stale = await h.tokenFor(
+      { id: owner.id, email: owner.email },
+      { amr: [{ method: "password", timestamp: Math.floor(Date.now() / 1000) - 600 }] },
+    );
+    const id = await card();
+    const res = await answer(id, stale, { decision: "approved" });
+    expect(res.status).toBe(403);
+    expect((await j(res)).code).toBe("admin_confirmation_required");
+    expect((await answer(id, stale, { decision: "denied" })).status).toBe(200);
+  });
+
+  it("a direct database call with the owner's token can't approve without a fresh sign-in", async () => {
+    const decide = (amrAge: number, decision: string, extra: Record<string, unknown> = {}) =>
+      withUserSession(
+        h.handle.db,
+        {
+          sub: owner.id,
+          email: owner.email,
+          amr: [{ method: "password", timestamp: Math.floor(Date.now() / 1000) - amrAge }],
+          ...extra,
+        },
+        (tx) => tx.execute(sql`select public.decide_approval(${id}::uuid, ${decision}, false)`),
+      );
+    let id = await card();
+    await expect(decide(600, "approved")).rejects.toThrow();
+    await decide(5, "approved");
+    id = await card();
+    await decide(600, "denied");
+    // An account with an authenticator also needs the second step in that session.
+    await h.tdb.admin`
+      insert into auth.mfa_factors (id, user_id, friendly_name, factor_type, status, created_at, updated_at)
+      values (gen_random_uuid(), ${owner.id}::uuid, 'test', 'totp', 'verified', now(), now())`;
+    try {
+      id = await card();
+      await expect(decide(5, "approved", { aal: "aal1" })).rejects.toThrow();
+      await decide(5, "approved", { aal: "aal2" });
+    } finally {
+      await h.tdb.admin`delete from auth.mfa_factors where user_id = ${owner.id}::uuid`;
+    }
   });
 });
 

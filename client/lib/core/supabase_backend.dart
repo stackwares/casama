@@ -14,6 +14,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'admin_security.dart';
 import 'apple_sign_in.dart';
 import 'apple_token_handoff.dart';
 import 'desktop_sign_in.dart';
@@ -98,6 +99,11 @@ class SupabaseBackend implements Backend {
     );
     // Every call says whether the server answers, for the bar over the app (D-296).
     watchReachability(client.api.dio, apiUrl);
+    client.api.dio.interceptors.add(AdminSecurityInterceptor(
+      client.api.dio,
+      token: () => supabase.auth.currentSession?.accessToken,
+      userId: () => supabase.auth.currentUser?.id,
+    ));
     return client;
   }
 

@@ -13,8 +13,10 @@ import { routes } from "@casama/contracts";
 import type { JwtClaims } from "@casama/db";
 import type { OpenAPIHono } from "@hono/zod-openapi";
 import { sql } from "drizzle-orm";
+import { requireFreshOwnerAction } from "../admin-security.ts";
 import { ApiError } from "../errors.ts";
 import type { AppDeps, AppEnv } from "../types.ts";
+import { isInstanceOwner } from "./admin.ts";
 
 const CODE_TTL_MS = 5 * 60_000;
 const PER_MINUTE = 5;
@@ -53,10 +55,15 @@ export function reachableFromOutside(url: string) {
 
 export function registerSignInCodeRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
   const { db, env } = deps;
+  const isOwner = isInstanceOwner(deps);
   const serverUrl = () => (env.PUBLIC_API_URL ?? env.SUPABASE_URL).replace(/\/$/, "");
 
   app.openapi(routes.createSignInCode, async (c) => {
     const claims = requireClaims(c.get("claims"));
+    // The code becomes a brand-new sign-in on another device, which would count as a fresh one for
+    // the admin console. An instance owner proves a fresh sign-in first, so an unattended app can't
+    // mint one.
+    if (await isOwner(claims)) await requireFreshOwnerAction(db, claims);
     if (!authAdminFor(deps))
       throw new ApiError(
         409,

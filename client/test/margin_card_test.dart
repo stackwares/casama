@@ -5,6 +5,7 @@ import 'package:material_ui/material_ui.dart';
 
 import 'app_test.dart' show harness, setSize;
 import 'fake_backend.dart';
+import 'admin_test_helpers.dart';
 
 void main() {
   testWidgets('the owner sees charged, cost and margin, and picks the period', (
@@ -14,6 +15,7 @@ void main() {
     final backend = FakeBackend();
     await tester.pumpWidget(harness(backend, const AdminScreen()));
     await tester.pumpAndSettle();
+    await unlockAdmin(tester);
     await tester.ensureVisible(find.byKey(const Key('marginCard')));
     await tester.pumpAndSettle();
     expect(find.text('Usage margin'), findsOneWidget);
@@ -51,6 +53,7 @@ void main() {
     final backend = FakeBackend()..isOwner = false;
     await tester.pumpWidget(harness(backend, const AdminScreen()));
     await tester.pumpAndSettle();
+    await unlockAdmin(tester);
     expect(find.byKey(const Key('marginCard')), findsNothing);
     expect(backend.marginDays, isEmpty);
   });
