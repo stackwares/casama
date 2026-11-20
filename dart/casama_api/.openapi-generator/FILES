@@ -139,6 +139,7 @@ lib/src/model/autonomy.dart
 lib/src/model/billing_settings.dart
 lib/src/model/billing_source.dart
 lib/src/model/billing_summary.dart
+lib/src/model/billing_summary_computer_hours.dart
 lib/src/model/billing_summary_daily.dart
 lib/src/model/billing_usage.dart
 lib/src/model/billing_usage_item.dart

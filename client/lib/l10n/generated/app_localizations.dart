@@ -7114,6 +7114,30 @@ abstract class AppLocalizations {
   /// **'Resets in less than an hour.'**
   String get creditsDailyResetsSoon;
 
+  /// No description provided for @creditsHoursLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Computer hours'**
+  String get creditsHoursLabel;
+
+  /// No description provided for @creditsHoursOf.
+  ///
+  /// In en, this message translates to:
+  /// **'{used} of {limit} h'**
+  String creditsHoursOf(String used, String limit);
+
+  /// No description provided for @creditsHoursExplainer.
+  ///
+  /// In en, this message translates to:
+  /// **'Time your bots\' computers run this month. When they run out, chat keeps working; only the computer stops. Resets on {date}.'**
+  String creditsHoursExplainer(String date);
+
+  /// No description provided for @creditsHoursReached.
+  ///
+  /// In en, this message translates to:
+  /// **'This month\'s computer hours are used, so your computer can\'t start. Chat still works. Resets on {date}. Upgrade for more hours.'**
+  String creditsHoursReached(String date);
+
   /// No description provided for @kindStream.
   ///
   /// In en, this message translates to:

@@ -139,7 +139,7 @@ failed with a clear message and a stable code (for live calls, see
 | `quota_exceeded` | The workspace reached its monthly spend limit |
 | `out_of_credits` | A Casama Cloud workspace has no credits left |
 | `cloud_daily_cap` | A Casama Cloud workspace reached its plan's [daily limit](#daily-limit). It resets at midnight UTC. |
-| `computer_hours_exceeded` | A Casama Cloud workspace used its computer hours for the month |
+| `computer_hours_exceeded` | A Casama Cloud workspace used its computer hours for the month, so its computer can't start. Chat keeps working on credits. |
 | `plan_limit` | A Casama Cloud workspace is over a plan limit, such as how many bots or computers can run |
 | `max_steps_exceeded` | The run used all its steps |
 | `wall_time_exceeded` | The run ran out of time |
@@ -260,7 +260,8 @@ are asked to get an owner or admin to upgrade. This happens when:
 
 - The credit balance is at or below zero. New runs are refused until you add credits or change
   plans.
-- The workspace used its computer hours for the month.
+- The workspace used its computer hours for the month and a bot needs its computer. Only the
+  computer stops; chat keeps working on credits. **Usage** shows the hours under the credits.
 - Creating another bot or computer, or adding another member, would go over the plan's limit.
 - A bot's work hits another plan limit, such as the daily limit on Casama's models.
 

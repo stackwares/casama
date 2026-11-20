@@ -33,6 +33,8 @@ abstract class _$BillingSummaryCWProxy {
 
   BillingSummary daily(BillingSummaryDaily? daily);
 
+  BillingSummary computerHours(BillingSummaryComputerHours? computerHours);
+
   BillingSummary subscriptions(List<Subscription> subscriptions);
 
   BillingSummary providers(List<BillingSource> providers);
@@ -59,6 +61,7 @@ abstract class _$BillingSummaryCWProxy {
     bool? trialAvailable,
     num creditsUsd,
     BillingSummaryDaily? daily,
+    BillingSummaryComputerHours? computerHours,
     List<Subscription> subscriptions,
     List<BillingSource> providers,
   });
@@ -115,6 +118,10 @@ class _$BillingSummaryCWProxyImpl implements _$BillingSummaryCWProxy {
   BillingSummary daily(BillingSummaryDaily? daily) => call(daily: daily);
 
   @override
+  BillingSummary computerHours(BillingSummaryComputerHours? computerHours) =>
+      call(computerHours: computerHours);
+
+  @override
   BillingSummary subscriptions(List<Subscription> subscriptions) =>
       call(subscriptions: subscriptions);
 
@@ -145,6 +152,7 @@ class _$BillingSummaryCWProxyImpl implements _$BillingSummaryCWProxy {
     Object? trialAvailable = const $CopyWithPlaceholder(),
     Object? creditsUsd = const $CopyWithPlaceholder(),
     Object? daily = const $CopyWithPlaceholder(),
+    Object? computerHours = const $CopyWithPlaceholder(),
     Object? subscriptions = const $CopyWithPlaceholder(),
     Object? providers = const $CopyWithPlaceholder(),
   }) {
@@ -204,6 +212,10 @@ class _$BillingSummaryCWProxyImpl implements _$BillingSummaryCWProxy {
           ? _value.daily
           // ignore: cast_nullable_to_non_nullable
           : daily as BillingSummaryDaily?,
+      computerHours: computerHours == const $CopyWithPlaceholder()
+          ? _value.computerHours
+          // ignore: cast_nullable_to_non_nullable
+          : computerHours as BillingSummaryComputerHours?,
       subscriptions:
           subscriptions == const $CopyWithPlaceholder() || subscriptions == null
           ? _value.subscriptions
@@ -279,6 +291,12 @@ BillingSummary _$BillingSummaryFromJson(
             ? null
             : BillingSummaryDaily.fromJson(v as Map<String, dynamic>),
       ),
+      computerHours: $checkedConvert(
+        'computer_hours',
+        (v) => v == null
+            ? null
+            : BillingSummaryComputerHours.fromJson(v as Map<String, dynamic>),
+      ),
       subscriptions: $checkedConvert(
         'subscriptions',
         (v) => (v as List<dynamic>)
@@ -303,6 +321,7 @@ BillingSummary _$BillingSummaryFromJson(
     'extraSeats': 'extra_seats',
     'trialAvailable': 'trial_available',
     'creditsUsd': 'credits_usd',
+    'computerHours': 'computer_hours',
   },
 );
 
@@ -321,6 +340,7 @@ Map<String, dynamic> _$BillingSummaryToJson(BillingSummary instance) =>
       'trial_available': ?instance.trialAvailable,
       'credits_usd': instance.creditsUsd,
       'daily': ?instance.daily?.toJson(),
+      'computer_hours': ?instance.computerHours?.toJson(),
       'subscriptions': instance.subscriptions.map((e) => e.toJson()).toList(),
       'providers': instance.providers
           .map((e) => _$BillingSourceEnumMap[e]!)

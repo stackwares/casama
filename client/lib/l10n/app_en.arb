@@ -1372,6 +1372,34 @@
     }
   },
   "creditsDailyResetsSoon": "Resets in less than an hour.",
+  "creditsHoursLabel": "Computer hours",
+  "creditsHoursOf": "{used} of {limit} h",
+  "@creditsHoursOf": {
+    "placeholders": {
+      "used": {
+        "type": "String"
+      },
+      "limit": {
+        "type": "String"
+      }
+    }
+  },
+  "creditsHoursExplainer": "Time your bots' computers run this month. When they run out, chat keeps working; only the computer stops. Resets on {date}.",
+  "@creditsHoursExplainer": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "creditsHoursReached": "This month's computer hours are used, so your computer can't start. Chat still works. Resets on {date}. Upgrade for more hours.",
+  "@creditsHoursReached": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "kindStream": "Live view",
   "kindTts": "Read aloud",
   "computerMissingTitle": "Computer not found",

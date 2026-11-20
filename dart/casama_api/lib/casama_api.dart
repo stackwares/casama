@@ -139,6 +139,7 @@ export 'package:casama_api/src/model/autonomy.dart';
 export 'package:casama_api/src/model/billing_settings.dart';
 export 'package:casama_api/src/model/billing_source.dart';
 export 'package:casama_api/src/model/billing_summary.dart';
+export 'package:casama_api/src/model/billing_summary_computer_hours.dart';
 export 'package:casama_api/src/model/billing_summary_daily.dart';
 export 'package:casama_api/src/model/billing_usage.dart';
 export 'package:casama_api/src/model/billing_usage_item.dart';

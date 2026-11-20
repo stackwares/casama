@@ -163,7 +163,7 @@ the paywall shows the paid plans.
 
 Each plan also has a daily limit on what Casama Cloud spends for you in a day ($0.25 on Free, $5 on
 Plus, $10 on Pro and $25 on Max), which resets at midnight UTC, and a number of computer hours a
-month. When a workspace's balance drops under $1, its owners get a notification, at most once a
+month. Using up the hours stops only the bots' computers; chat keeps working on credits. When a workspace's balance drops under $1, its owners get a notification, at most once a
 week. See [When a run hits a limit](/guide/usage#when-a-run-hits-a-limit).
 
 ### Can I limit what a bot spends?

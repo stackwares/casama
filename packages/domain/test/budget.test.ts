@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { checkBudget } from "../src/index.ts";
+import { checkBudget, computerHoursMessage } from "../src/index.ts";
 
 describe("checkBudget", () => {
   const base = { runCost: 0, botToday: 0, orgPeriod: 0 };
@@ -53,12 +53,13 @@ describe("checkBudget", () => {
     expect(checkBudget({ ...base, cloudToday: 100, cloudDailyCap: null })).toEqual({ ok: true });
   });
 
-  it("monthly computer hours from the plan", () => {
-    expect(checkBudget({ ...base, computerSeconds: 5 * 3600, computerHours: 5 })).toMatchObject({
-      ok: false,
-      code: "computer_hours_exceeded",
-    });
-    expect(checkBudget({ ...base, computerSeconds: 3600, computerHours: 5 })).toEqual({ ok: true });
-    expect(checkBudget({ ...base, computerSeconds: 1e9 })).toEqual({ ok: true });
+  it("computer hours never stop a run, only the computer (D-442)", () => {
+    expect(checkBudget({ ...base, credits: 5 })).toEqual({ ok: true });
+    expect(computerHoursMessage(5, new Date("2026-11-20T10:00:00Z"))).toBe(
+      "The workspace used its 5 computer hours for this month, so its computer can't start. They reset on December 1. Upgrade in Billing for more hours.",
+    );
+    expect(computerHoursMessage(null, new Date("2026-12-31T23:00:00Z"))).toContain(
+      "used its computer hours for this month, so its computer can't start. They reset on January 1.",
+    );
   });
 });

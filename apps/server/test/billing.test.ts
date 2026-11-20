@@ -779,6 +779,51 @@ describe("billing on (Casama Cloud, Phase 7 gate)", () => {
     );
   }, 60_000);
 
+  it("used-up computer hours stop the computer, not the chat (D-442)", async () => {
+    const orgId = await newOrg("Hours");
+    // Six hours on a five-hour plan, with credits still left.
+    await h.handle.db.execute(sql`
+      insert into public.usage_ledger (org_id, kind, quantity, cost_usd) values
+        (${orgId}::uuid, 'computer_seconds', ${6 * 3600}, 0)`);
+    // The app shows them under the credits, with the day they reset.
+    expect((await billing(orgId)).computer_hours).toMatchObject({ used_hours: 6, limit_hours: 5 });
+    const bot = await j(
+      await h.request("/v1/bots", {
+        method: "POST",
+        token: owner.token,
+        json: {
+          org_id: orgId,
+          name: "Chatty",
+          model_policy: {
+            primary: { credential_id: PLATFORM_OPENROUTER_CREDENTIAL_ID, model: "meta/muse-ember" },
+          },
+        },
+      }),
+    );
+    const conv = await j(
+      await h.request("/v1/conversations", {
+        method: "POST",
+        token: owner.token,
+        json: { bot_id: bot.id },
+      }),
+    );
+    const sent = await j(
+      await h.request(`/v1/conversations/${conv.id}/messages`, {
+        method: "POST",
+        token: owner.token,
+        json: { text: "hi" },
+      }),
+    );
+    let run: { status: string; error?: { code?: string } } = { status: "queued" };
+    for (let i = 0; i < 100 && !["failed", "completed"].includes(run.status); i++) {
+      await new Promise((r) => setTimeout(r, 200));
+      run = await j(await h.request(`/v1/runs/${sent.run_id}`, { token: owner.token }));
+    }
+    // Past every limit check: the harness has no Casama model key, so the run goes on to fail there.
+    expect(run.status).not.toBe("queued");
+    expect(run.error?.code).not.toBe("computer_hours_exceeded");
+  }, 60_000);
+
   it("grants included credits once a month and keeps owner overrides across plan changes", async () => {
     const orgId = await newOrg("Monthly");
     await h.deps.billing?.recompute(orgId);

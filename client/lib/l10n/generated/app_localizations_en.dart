@@ -4519,6 +4519,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get creditsDailyResetsSoon => 'Resets in less than an hour.';
 
   @override
+  String get creditsHoursLabel => 'Computer hours';
+
+  @override
+  String creditsHoursOf(String used, String limit) {
+    return '$used of $limit h';
+  }
+
+  @override
+  String creditsHoursExplainer(String date) {
+    return 'Time your bots\' computers run this month. When they run out, chat keeps working; only the computer stops. Resets on $date.';
+  }
+
+  @override
+  String creditsHoursReached(String date) {
+    return 'This month\'s computer hours are used, so your computer can\'t start. Chat still works. Resets on $date. Upgrade for more hours.';
+  }
+
+  @override
   String get kindStream => 'Live view';
 
   @override

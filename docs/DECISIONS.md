@@ -6441,3 +6441,21 @@ to either service.
   Oliver's OK), GA4's Internal Traffic data filter activated for `traffic_type = internal`, and
   PostHog dashboards/cohorts filtering `is_internal != true`.
 
+
+## D-442 Used-up computer hours stop the computer, not the chat (2026-11-20)
+
+Oliver's Free workspace still had $14.72 of credits, but every run failed with "The workspace used
+its 5 computer hours for this month." The run admission check (`checkBudget`) refused **all** runs
+once the month's computer hours were used, including plain chat that never starts a computer, and
+the Usage screen didn't show computer hours at all, so the credits bar looked wrong.
+
+- **Rule:** computer hours limit only hosted computers. Starts are already refused past them
+  (`ComputerService.checkCanStart`, Link starts) and running ones are put to sleep
+  (`meterRunning`), both since the 2026-11-17 billing audit. Run admission no longer counts them;
+  chat, apps and models keep running on credits and the daily cap.
+- **Message:** a bot that reaches for its computer gets the tool error `computer_hours_exceeded`
+  with `computerHoursMessage()` ("…so its computer can't start. They reset on December 1. Upgrade
+  in Billing for more hours."); the API's 402 for a computer start uses the same text.
+- **Usage screen:** `BillingSummary.computer_hours` (`used_hours`, `limit_hours`, `resets_at`, null
+  when no limit applies) and a "Computer hours: 17 of 5 h" row under the credits and today's limit,
+  saying chat still works when they're used up. Older apps ignore the new field.

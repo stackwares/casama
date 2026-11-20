@@ -10803,6 +10803,18 @@ export interface components {
                  */
                 resets_at: string;
             } | null;
+            /** @description This month's hosted computer hours against the plan's. Past them only computers stop; chat keeps running on credits (D-442). Null when no limit applies */
+            computer_hours?: {
+                /** @description Hosted computer hours used this month (UTC) */
+                used_hours: number;
+                /** @description The plan's computer hours a month */
+                limit_hours: number;
+                /**
+                 * Format: date-time
+                 * @description The first of next month (UTC), when the hours reset
+                 */
+                resets_at: string;
+            } | null;
             subscriptions: components["schemas"]["Subscription"][];
             providers: components["schemas"]["BillingSource"][];
         };

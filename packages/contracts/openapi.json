@@ -12440,6 +12440,33 @@
             ],
             "description": "Today's spend against the plan's daily cap; runs stop when it is reached (D-311). Null when no cap applies"
           },
+          "computer_hours": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "used_hours": {
+                "type": "number",
+                "description": "Hosted computer hours used this month (UTC)"
+              },
+              "limit_hours": {
+                "type": "number",
+                "description": "The plan's computer hours a month"
+              },
+              "resets_at": {
+                "type": "string",
+                "format": "date-time",
+                "description": "The first of next month (UTC), when the hours reset"
+              }
+            },
+            "required": [
+              "used_hours",
+              "limit_hours",
+              "resets_at"
+            ],
+            "description": "This month's hosted computer hours against the plan's. Past them only computers stop; chat keeps running on credits (D-442). Null when no limit applies"
+          },
           "subscriptions": {
             "type": "array",
             "items": {

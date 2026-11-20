@@ -65,6 +65,7 @@ import 'package:casama_api/src/model/ask_device_permission_result.dart';
 import 'package:casama_api/src/model/attach_integration_request.dart';
 import 'package:casama_api/src/model/billing_settings.dart';
 import 'package:casama_api/src/model/billing_summary.dart';
+import 'package:casama_api/src/model/billing_summary_computer_hours.dart';
 import 'package:casama_api/src/model/billing_summary_daily.dart';
 import 'package:casama_api/src/model/billing_usage.dart';
 import 'package:casama_api/src/model/billing_usage_item.dart';
@@ -1041,6 +1042,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           
         case 'BillingSummary':
           return BillingSummary.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'BillingSummaryComputerHours':
+          return BillingSummaryComputerHours.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'BillingSummaryDaily':
           return BillingSummaryDaily.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'BillingUsage':

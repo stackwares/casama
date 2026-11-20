@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:casama_sdk/casama_sdk.dart';
+import 'package:intl/intl.dart';
 
 import '../../core/backend.dart' show UsageFilter;
 import '../../core/billing.dart';
@@ -154,6 +155,10 @@ class CreditsMeter extends ConsumerWidget {
           const SizedBox(height: AppSpace.md),
           _DailyLimit(daily: daily),
         ],
+        if (billing.computerHours case final hours?) ...[
+          const SizedBox(height: AppSpace.md),
+          _ComputerHours(hours: hours),
+        ],
       ],
     );
   }
@@ -246,6 +251,96 @@ class _DailyLimit extends StatelessWidget {
               color: scheme.onSurfaceVariant,
             ),
           ),
+      ],
+    );
+  }
+}
+
+/// This month's hosted computer hours against the plan's (D-442). Past them only computers stop,
+/// so it says so: chat keeps running on credits.
+class _ComputerHours extends StatelessWidget {
+  const _ComputerHours({required this.hours});
+
+  final BillingSummaryComputerHours hours;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final scheme = context.colorScheme;
+    final used = hours.usedHours.toDouble();
+    final limit = hours.limitHours.toDouble();
+    final share = limit <= 0 ? 1.0 : (used / limit).clamp(0.0, 1.0);
+    final reached = used >= limit;
+    final color = reached
+        ? scheme.error
+        : share >= 0.8
+        ? context.appColors.warning
+        : scheme.primary;
+    final number = NumberFormat.decimalPatternDigits(
+      locale: l10n.localeName,
+      decimalDigits: 1,
+    );
+    String h(double v) => v % 1 == 0 ? v.toInt().toString() : number.format(v);
+    final date = DateFormat.MMMMd(
+      l10n.localeName,
+    ).format(hours.resetsAt.toUtc());
+    final amount = l10n.creditsHoursOf(h(used), h(limit));
+
+    return Column(
+      key: const Key('computerHours'),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                l10n.creditsHoursLabel,
+                style: context.textTheme.labelLarge?.copyWith(
+                  color: scheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+            Text(
+              amount,
+              key: const Key('computerHoursAmount'),
+              style: context.textTheme.labelLarge?.copyWith(
+                color: color,
+                fontWeight: FontWeight.w700,
+                fontFeatures: AppText.tabular,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpace.xs),
+        Semantics(
+          label: amount,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: share,
+              minHeight: 6,
+              color: color,
+              backgroundColor: scheme.surfaceContainerHighest.withValues(
+                alpha: 0.7,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: AppSpace.xs),
+        Text(
+          reached
+              ? l10n.creditsHoursReached(date)
+              : l10n.creditsHoursExplainer(date),
+          key: reached ? const Key('computerHoursReached') : null,
+          style: reached
+              ? context.textTheme.bodyMedium?.copyWith(
+                  color: scheme.error,
+                  fontWeight: FontWeight.w600,
+                )
+              : context.textTheme.bodySmall?.copyWith(
+                  color: scheme.onSurfaceVariant,
+                ),
+        ),
       ],
     );
   }

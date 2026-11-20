@@ -4,6 +4,7 @@
 
 // ignore_for_file: unused_element
 import 'package:casama_api/src/model/billing_summary_daily.dart';
+import 'package:casama_api/src/model/billing_summary_computer_hours.dart';
 import 'package:casama_api/src/model/subscription.dart';
 import 'package:casama_api/src/model/billing_source.dart';
 import 'package:copy_with_extension/copy_with_extension.dart';
@@ -48,6 +49,8 @@ class BillingSummary {
     required  this.creditsUsd,
 
      this.daily,
+
+     this.computerHours,
 
     required  this.subscriptions,
 
@@ -215,6 +218,18 @@ class BillingSummary {
 
   @JsonKey(
     
+    name: r'computer_hours',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final BillingSummaryComputerHours? computerHours;
+
+
+
+  @JsonKey(
+    
     name: r'subscriptions',
     required: true,
     includeIfNull: false,
@@ -254,6 +269,7 @@ class BillingSummary {
       other.trialAvailable == trialAvailable &&
       other.creditsUsd == creditsUsd &&
       other.daily == daily &&
+      other.computerHours == computerHours &&
       other.subscriptions == subscriptions &&
       other.providers == providers;
 
@@ -272,6 +288,7 @@ class BillingSummary {
         trialAvailable.hashCode +
         creditsUsd.hashCode +
         (daily == null ? 0 : daily.hashCode) +
+        (computerHours == null ? 0 : computerHours.hashCode) +
         subscriptions.hashCode +
         providers.hashCode;
 

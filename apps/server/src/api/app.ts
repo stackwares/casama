@@ -3,6 +3,7 @@ import { resolveTxt as dnsResolveTxt } from "node:dns/promises";
 import { track } from "@casama/agent";
 import { openApiConfig, registerComponents } from "@casama/contracts";
 import { pgErrorCode, pgErrorMessage } from "@casama/db";
+import { computerHoursMessage } from "@casama/domain";
 import { captureError } from "@casama/observability";
 import { SandboxError } from "@casama/sandbox";
 import { OpenAPIHono } from "@hono/zod-openapi";
@@ -182,14 +183,7 @@ export function createApp(deps: AppDeps) {
         ),
       );
     if (err instanceof Error && err.message === "computer_hours_exceeded")
-      return problem(
-        c,
-        new ApiError(
-          402,
-          "computer_hours_exceeded",
-          "The workspace used its computer hours for this month. Upgrade for more.",
-        ),
-      );
+      return problem(c, new ApiError(402, "computer_hours_exceeded", computerHoursMessage()));
     if (err instanceof Error && err.message === "plan_limit")
       return problem(
         c,
