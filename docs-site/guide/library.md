@@ -6,6 +6,8 @@ dig back through a chat to find what a bot made last week.
 
 Open **Library** in the main navigation. On phones it's the tab between **Chats** and **Tasks**.
 
+<figure class="casama-shot"><img src="/screens/library.png" alt="The Library showing sites, games, documents and images your bots made"></figure>
+
 ## What lands in the Library
 
 | Kind | What it is | How it gets there |

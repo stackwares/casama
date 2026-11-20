@@ -4,6 +4,8 @@ Make Casama look the way you like: pick a whole theme in one tap, then change it
 background and fonts. Everything lives in one place, **Settings → Appearance**, under **App**.
 Your look is saved on each device, so your phone and laptop can look different.
 
+<figure class="casama-shot"><img src="/screens/appearance-dusk.png" alt="Appearance settings showing theme cards and live preview"></figure>
+
 ## Pick a theme
 
 1. Open **Settings**, and under **App**, tap **Appearance**.

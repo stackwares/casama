@@ -4,6 +4,8 @@ Connections give your bots tools beyond their own computer: your team's apps, an
 OpenAPI source, logins from a password manager, and keys they use for you. Every connection is
 stored encrypted, and each bot gets only the connections you give it.
 
+<figure class="casama-shot"><img src="/screens/connections.png" alt="Apps and connections catalog in Casama"></figure>
+
 ## Connect an app
 
 Casama ships with a catalog of apps that run their own hosted MCP servers, so you connect them

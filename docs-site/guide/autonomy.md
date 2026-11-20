@@ -7,6 +7,8 @@ with three things: the bot's **autonomy** level, the **risk** of each tool, and 
 for specific kinds of actions. Use this page to choose how much a bot may do on its own and to
 understand exactly when it will stop and ask.
 
+<figure class="casama-shot"><img src="/screens/needs-you.png" alt="Needs you screen showing pending bot approvals"></figure>
+
 ## Choose a bot's autonomy
 
 1. Open the bot's chat and tap its name at the top (or open the menu and choose **Bot profile**).

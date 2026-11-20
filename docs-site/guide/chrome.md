@@ -31,6 +31,8 @@ the side panel. It has four tabs.
 
 ### Chat
 
+<figure class="casama-shot"><img src="/screens/chrome-chat.png" alt="Casama for Chrome side panel showing a chat with Researcher about the open article"></figure>
+
 Pick a bot and a conversation at the top, type, and press <kbd>Enter</kbd>. The reply streams in,
 with the bot's cards and buttons. **Stop** ends it. Under a reply, **Copy** copies it and **Read
 aloud** plays it. Hover a message and click the smiley to react with one of six emoji; click a
@@ -48,6 +50,8 @@ Above the box, chips show what goes with your message:
 Tap a chip to switch it on or off for this message; change the defaults in Settings. Once you
 start writing, each chip shows its size, since a long page is a lot for a bot to read and uses more
 credits. The selection chip appears then too, if you've selected something.
+
+<figure class="casama-shot"><img src="/screens/chrome-context.png" alt="Casama for Chrome context chips showing Page, Selection, Page text and Screenshot"></figure>
 
 Add files with **Attach**, by pasting a picture, or by dropping files or images from the page onto
 the panel. **Region** lets you drag a box over the page to send just that part. **Mic** writes down
@@ -77,12 +81,16 @@ When you come back to a page you chatted about or highlighted, **This page befor
 
 ### Inbox
 
+<figure class="casama-shot"><img src="/screens/chrome-inbox.png" alt="Casama for Chrome Inbox tab showing pending approvals and today's brief"></figure>
+
 Today's brief, when your bot has written one, sits on top. Below it, what your bots need from you:
 steps waiting for approval (**Approve**, **Deny** or **Always
 allow**), secrets they asked for, suggestions, and runs in progress with **Stop**. The toolbar
 button's badge counts what's waiting.
 
 ### Library
+
+<figure class="casama-shot"><img src="/screens/chrome-library.png" alt="Casama for Chrome Library tab showing options to save the page as Markdown, PDF or Screenshot"></figure>
 
 Save the page to the [Library](/guide/library) as **Markdown**, a **PDF** or a **Screenshot**, into
 a project if you pick one. A PDF is a clean, readable copy of the page's text; pictures stay links. Below that, send the page to a bot: **Add page to knowledge**, **Add
