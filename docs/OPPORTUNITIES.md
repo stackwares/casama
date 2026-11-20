@@ -41,6 +41,10 @@ Research snapshot: 2026-11-21. This is a lead list, not a claim of eligibility o
 | [Microsoft FOSS Fund](https://github.com/microsoft/foss-fund) | Sponsorship selected through Microsoft employees; requires Microsoft use, OSI license and a way to receive funds. | Build adoption and a sponsorship route; not a direct public application. |
 | [NLnet NGI Zero](https://nlnet.nl/discovery/eligibility/) | Potential funding for eligible open internet work under specific calls, with open-source publication requirements. | Check active calls, European dimension and applicant eligibility; do not assume an open call. |
 
+## Positioning
+
+Oliver identifies Grok Bot, Muse, ChatGPT Dots and Claude Duet as Casama’s best alternatives. Verify each comparison and product name before making feature claims. For the prepared OpenAlternative form, use ChatGPT Dots as the proprietary alternative instead of Manus.
+
 ## Preparation and follow-up
 
 1. Assemble a reusable pack: product URL, repository and license, concise description, screenshots, short A2UI demo, architecture, maintainer role, adoption evidence and measurable results.
