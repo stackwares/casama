@@ -52,16 +52,22 @@
     }
   }
 
-  // The film (D-390): "Watch the film" opens the YouTube film in a dialog. casama.ai/#film
-  // opens it straight away. Without JavaScript the links open the YouTube URL.
+  // The film (D-390): "Watch the film" opens the YouTube film in a dialog. A phone held upright
+  // gets the 9:16 Short; everything else gets 16:9. casama.ai/#film opens it straight away. Without
+  // JavaScript the links open the YouTube URL.
   var filmVideo = film && film.querySelector(".film-video");
   if (film && filmVideo && typeof film.showModal === "function") {
-    var filmSrc = filmVideo.getAttribute("data-src") || filmVideo.getAttribute("src");
+    var wideSrc = filmVideo.getAttribute("data-src") || filmVideo.getAttribute("src");
+    var tallSrc = filmVideo.getAttribute("data-src-tall");
+    var upright = window.matchMedia ? window.matchMedia("(orientation: portrait) and (max-width: 600px)") : null;
     var counted = false;
     var openFilm = function () {
       if (reel) reel.pause();
-      if (filmSrc && filmVideo.getAttribute("src") !== filmSrc) {
-        filmVideo.setAttribute("src", filmSrc);
+      var useTall = !!(tallSrc && upright && upright.matches);
+      var pickSrc = useTall ? tallSrc : wideSrc;
+      film.classList.toggle("film--tall", useTall);
+      if (pickSrc && filmVideo.getAttribute("src") !== pickSrc) {
+        filmVideo.setAttribute("src", pickSrc);
       }
       film.showModal();
       if (!counted) { counted = true; countEvent("film_play"); }
