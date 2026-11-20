@@ -285,3 +285,9 @@ session once ran for 19 hours with nobody using it, holding memory, CPU, a port 
   Store build (`scripts/package-macos-appstore.sh`, uploaded to TestFlight or App Store Connect).
   Never release one without the other. Each build and each upload still needs the user's yes, as
   above.
+- **Install every non-sandboxed release build on this Mac.** As soon as a Developer ID build is ready
+  (the notarized DMG from `scripts/package-macos.sh`), install it into `/Applications/Casama.app`,
+  replacing the copy already there. Quit Casama first if it's running, check the app with
+  `spctl -a -vv -t exec` (it must say "Notarized Developer ID"), copy it in with `ditto`, detach the
+  DMG and confirm the installed `CFBundleVersion` is the new build. Installing needs no extra yes; the
+  build itself still does.
