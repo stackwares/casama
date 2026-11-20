@@ -12785,6 +12785,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get supportIntroVideoHelp => 'See what Casama can do in 1½ minutes';
 
   @override
+  String get supportRate => 'Rate Casama';
+
+  @override
+  String get supportRateHelp => 'Tell others what you think on the store page';
+
+  @override
   String get supportIds => 'Support IDs';
 
   @override

@@ -9,6 +9,10 @@ The server, apps, CLI, SDK and MCP server share one version number.
 
 ## [Unreleased]
 
+- Ratings (D-460): the store's rating prompt also asks after a new person's first finished reply
+  (Android on, iPhone and Mac off until switched on), and asks sooner on Android: replies 3, 10,
+  then every 20th, after 2 days of use. Help has a Rate Casama row that opens the store page.
+
 - Billing: a saved reset is its own card, with what it does (credits it refills, the limits it
   clears), days left and its end date; Use Reset sits beside the title on wide windows and spans
   the card on phones, instead of squeezing the message into a thin column (D-443).

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/providers.dart';
+import '../../core/review_prompt.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_tokens.dart';
 import '../../ui/mascot.dart';
@@ -42,6 +43,8 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     setState(() => _error = null);
     try {
       final w = await ref.read(backendProvider).startWelcome();
+      // Their first finished reply in this chat can ask for a store rating (D-460).
+      unawaited(ref.read(reviewPromptProvider).markFirstRun());
       if (!mounted) return;
       ref.read(selectedOrgIdProvider.notifier).select(w.orgId);
       // The redirect still has the empty workspace list from before this space existed. Opening

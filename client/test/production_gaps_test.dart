@@ -1,5 +1,4 @@
 import 'package:casama/core/providers.dart';
-import 'package:casama/core/review_prompt.dart';
 import 'package:casama/features/admin/reports_tab.dart';
 import 'package:casama/features/moderation/report_sheet.dart';
 import 'package:casama/features/notifications/email_tips.dart';
@@ -8,7 +7,6 @@ import 'package:casama_sdk/casama_sdk.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app_test.dart' show setSize;
 import 'fake_backend.dart';
@@ -151,70 +149,5 @@ void main() {
     await tester.tap(find.byKey(const Key('emailTipsSwitch')));
     await tester.pumpAndSettle();
     expect(backend.tipsEmails, isFalse);
-  });
-
-  group('rating prompt (D-305)', () {
-    late ProviderContainer container;
-    late int asked;
-    late DateTime now;
-    ReviewPrompt prompt({bool supported = true}) => ReviewPrompt(
-      container.read(Provider((ref) => ref)),
-      request: () async {
-        asked++;
-        return true;
-      },
-      now: () => now,
-      supported: supported,
-    );
-
-    setUp(() {
-      SharedPreferences.setMockInitialValues({});
-      container = ProviderContainer();
-      asked = 0;
-      now = DateTime(2026, 11, 1);
-      ReviewPrompt.errorThisSession = false;
-    });
-    tearDown(() => container.dispose());
-
-    Future<void> useOnDays(ReviewPrompt p, int days) async {
-      for (var i = 0; i < days; i++) {
-        await p.recordUse();
-        now = now.add(const Duration(days: 1));
-      }
-    }
-
-    test('asks after a purchase once the app was used on 5 days over a week, then not for 120 days', () async {
-      final p = prompt();
-      await useOnDays(p, 4);
-      expect(await p.moment(ReviewMoment.purchase), isFalse);
-      await useOnDays(p, 4);
-      expect(await p.moment(ReviewMoment.purchase), isTrue);
-      expect(asked, 1);
-      now = now.add(const Duration(days: 30));
-      expect(await p.moment(ReviewMoment.purchase), isFalse);
-      now = now.add(const Duration(days: 100));
-      expect(await p.moment(ReviewMoment.purchase), isTrue);
-    });
-
-    test('never after an error this session, and never where it isn\'t supported', () async {
-      var p = prompt();
-      await useOnDays(p, 8);
-      ReviewPrompt.errorThisSession = true;
-      expect(await p.moment(ReviewMoment.purchase), isFalse);
-      ReviewPrompt.errorThisSession = false;
-      p = prompt(supported: false);
-      expect(await p.moment(ReviewMoment.purchase), isFalse);
-      expect(asked, 0);
-    });
-
-    test('replies count as a moment on the 10th and every 40th after', () async {
-      expect([for (var n = 1; n <= 100; n++) if (ReviewPrompt.replyMilestone(n)) n], [10, 50, 90]);
-      final p = prompt();
-      await useOnDays(p, 8);
-      for (var i = 0; i < 9; i++) {
-        expect(await p.moment(ReviewMoment.replyFinished), isFalse);
-      }
-      expect(await p.moment(ReviewMoment.replyFinished), isTrue);
-    });
   });
 }

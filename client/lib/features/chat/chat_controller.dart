@@ -1858,8 +1858,12 @@ class ChatController extends Notifier<ChatState> {
         return;
       case RunCompletedItem() when state.activeRunId != null:
         _runs.chatEnded(state.activeRunId!, RunStatus.completed);
-        // A reply the person asked for finished: the 10th and every 40th after can ask for a rating (D-305).
-        unawaited(ref.read(reviewPromptProvider).moment(ReviewMoment.replyFinished));
+        // A reply the person asked for finished: a milestone reply, or the first one of their first
+        // session, can ask for a rating (D-305, D-460). A new run in the next few seconds cancels it.
+        unawaited(ref.read(reviewPromptProvider).moment(
+          ReviewMoment.replyFinished,
+          stillIdle: () => ref.mounted && state.activeRunId == null,
+        ));
         entries.removeWhere((x) => x is MessageEntry && x.streaming);
         _finishStreaming(entries);
         state = state.copyWith(entries: entries, clearActiveRun: true);

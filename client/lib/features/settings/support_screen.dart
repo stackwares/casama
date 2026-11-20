@@ -12,6 +12,7 @@ import '../../core/crash_reporter.dart';
 import '../../core/dev_server.dart';
 import '../../core/haptics.dart';
 import '../../core/providers.dart';
+import '../../core/review_prompt.dart';
 import '../../core/updater.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
@@ -1178,6 +1179,20 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
               ),
               onTap: () => showIntroFilm(context, 'help'),
             ),
+            // The store page, on the builds that have one (D-460).
+            if (ReviewPrompt.canRate)
+              GroupedTile(
+                key: const Key('supportRate'),
+                icon: LucideIcons.star,
+                title: l10n.supportRate,
+                subtitle: l10n.supportRateHelp,
+                trailing: Icon(
+                  LucideIcons.externalLink,
+                  size: 18,
+                  color: scheme.onSurfaceVariant,
+                ),
+                onTap: ReviewPrompt.openStore,
+              ),
             // Casama Cloud's public status page (D-304), same rule as the "Can't reach" bar.
             if (Uri.tryParse(backend.apiUrl)?.host == 'api.casama.ai')
               GroupedTile(

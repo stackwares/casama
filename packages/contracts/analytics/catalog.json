@@ -1426,13 +1426,23 @@
     {
       "name": "review_prompt_shown",
       "by": ["client"],
-      "description": "The store's rating prompt was asked for after a good moment (D-305). The store doesn't say whether it showed or what they rated.",
+      "description": "The store's rating prompt was asked for after a good moment (D-305, D-460): moment is replyFinished, purchase, or firstReply (the first finished reply of a new person's first session); rules is the platform's rule set. The store doesn't say whether it showed or what they rated.",
       "properties": {
         "moment": {
           "type": "string",
-          "values": ["replyFinished", "purchase"]
+          "values": ["replyFinished", "purchase", "firstReply"]
+        },
+        "rules": {
+          "type": "string",
+          "values": ["eager_android", "apple", "default"]
         }
       }
+    },
+    {
+      "name": "review_store_opened",
+      "by": ["client"],
+      "description": "Rate Casama in Help was tapped and opened the store page (D-460).",
+      "properties": {}
     },
     {
       "name": "purchase_completed",

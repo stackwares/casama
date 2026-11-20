@@ -1,7 +1,8 @@
 # Asking for store reviews sooner, starting in onboarding: plan
 
-Status: **not started** (written 2026-11-21). Waiting for Oliver's answers to §9 and his go-ahead.
-No code yet.
+Status: **built** (2026-11-21, D-460). Oliver said to build it with the §9 defaults. Phases 1 to 3
+are done; Phase 4 (checks on a Play internal-track build and an iOS debug run) and the release wait
+for Oliver's yes to build. What differs from the text below is in D-460.
 
 Oliver, 2026-11-21: "we want a little more aggressive asking for reviews especially on android.
 specifically asking them during the onboarding".

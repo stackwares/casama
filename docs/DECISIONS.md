@@ -6992,3 +6992,16 @@ quality and safety.
 - **Analytics:** `intro_video_opened` {surface: empty_chat or help, player: app or browser},
   `intro_video_closed` {percent, played}, `intro_video_youtube`, `intro_video_dismissed`.
 - **Tests:** `client/test/intro_video_test.dart`.
+
+## D-460 The store's rating prompt asks sooner: the first good reply of a new person's first session, and looser on Android (2026-11-21)
+
+- **Decision (2026-11-21, Oliver: "a little more aggressive asking for reviews, especially on android, specifically asking them during the onboarding"; he approved the plan's defaults, `docs/REVIEW-PROMPT-PLAN.md`):** D-305's prompt keeps its shape (the store's own sheet, never a question of ours before it, no rewards) and gets per-platform rules (`ReviewRules` in `client/lib/core/review_prompt.dart`) and one new moment.
+- **New moment `firstReply`:** `/welcome` (and the end of the manual wizard) marks the first run on the device (`casama.review.firstRun`). The first reply that finishes after that, within 24 hours, asks about 3 seconds after it lands, unless a new run started in those seconds or an error showed. It skips the days-used and first-open checks. The mark is used up by that first reply whether it asked or not, so it never asks a second time on that basis.
+- **Android** (Google Play rations the sheet itself): replies 3, 10, then every 20th; 2 days of use, 1 day since first open, 30 days between asks; the first-run ask is on.
+- **iOS and the Mac App Store build** (Apple allows three a year): replies 10 and every 40th, as before; 3 days of use, 3 days since first open, 90 days between asks; the first-run ask is **off** until the server owner turns it on.
+- **A purchase** asks right away on every platform, with no days-of-use or first-open check. The gap since the last ask still applies, so an onboarding ask and a purchase the same week don't both ask.
+- **Remote switches** (flags are booleans, so the numbers live in the app): `review_prompt` (existing, off for everything), `review_prompt_onboarding_android` (default on), `review_prompt_onboarding_ios` (default off, on to try it), `review_prompt_eager_android` (default on; off returns Android to D-305's numbers).
+- **Rate Casama** in Settings → Help opens the store page on the phone apps and the Mac App Store build (`openStoreListing`, App Store id 6833509960). It isn't an ask, so no limits apply; `review_store_opened` counts taps.
+- **Analytics:** `review_prompt_shown` now carries `moment` (`replyFinished`, `purchase`, `firstReply`) and `rules` (`eager_android`, `apple`, `default`). The stores don't say whether the sheet showed or what was rated; Play Console and App Store Connect ratings are the real numbers. Check the Android average 4 weeks after release against the 4 weeks before; a drop of more than 0.2 stars means turning `review_prompt_onboarding_android` off.
+- **Why not more:** Apple's three a year makes an ask in the first two minutes costly on iOS. Asking only happy people, or putting our own question before the sheet, breaks both stores' rules and stays out.
+- **Where it differs from the plan:** the "not typing" check became "no new run started" (the composer lives in the widget, not the controller). The event value is `firstReply`, matching the other moments, not `first_reply`.

@@ -13,6 +13,7 @@ import 'package:casama_sdk/casama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/providers.dart';
+import '../../core/review_prompt.dart';
 import '../../core/plain_text.dart';
 import '../../core/date_format.dart';
 import '../groups/group_chats.dart';
@@ -982,7 +983,11 @@ class _CreateBotSheetState extends ConsumerState<CreateBotSheet> {
                     if (bot != null) {
                       ref.invalidate(botsProvider);
                       // The manual wizard ends with the first bot (the Welcome chat reports its own end).
-                      if (widget.embedded) Analytics.log('onboarding_complete', {'path': 'manual'});
+                      if (widget.embedded) {
+                        Analytics.log('onboarding_complete', {'path': 'manual'});
+                        // Their first finished reply with this bot can ask for a store rating (D-460).
+                        unawaited(ref.read(reviewPromptProvider).markFirstRun());
+                      }
                       // The new bot itself pops up to say hi.
                       showCelebration(context, l10n.celebrateNewBot(bot.name), mascot: Mascot.fromAvatar(bot.avatarUrl));
                       final router = GoRouter.of(context);

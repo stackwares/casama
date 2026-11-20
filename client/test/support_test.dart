@@ -3,6 +3,7 @@ import 'package:casama/features/settings/support_screen.dart';
 import 'package:casama/l10n/generated/app_localizations.dart';
 import 'package:casama_sdk/casama_sdk.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -72,6 +73,22 @@ void main() {
       expect(copied, contains('App: Casama'));
     },
   );
+
+  testWidgets('Rate Casama shows on the phone apps, not on desktop builds (D-460)', (
+    tester,
+  ) async {
+    await setSize(tester, const Size(800, 1400));
+    await tester.pumpWidget(_app(FakeBackend(), const SupportScreen()));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('supportRate')), findsOneWidget);
+    expect(find.text('Rate Casama'), findsOneWidget);
+
+    debugDefaultTargetPlatformOverride = TargetPlatform.windows;
+    addTearDown(() => debugDefaultTargetPlatformOverride = null);
+    await tester.pumpWidget(_app(FakeBackend(), const SupportScreen(key: Key('again'))));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('supportRate')), findsNothing);
+  });
 
   testWidgets('Casama Cloud gets a Status row that opens status.casama.ai', (
     tester,

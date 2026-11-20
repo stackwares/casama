@@ -20283,6 +20283,18 @@ abstract class AppLocalizations {
   /// **'See what Casama can do in 1½ minutes'**
   String get supportIntroVideoHelp;
 
+  /// No description provided for @supportRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate Casama'**
+  String get supportRate;
+
+  /// No description provided for @supportRateHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Tell others what you think on the store page'**
+  String get supportRateHelp;
+
   /// No description provided for @supportIds.
   ///
   /// In en, this message translates to:

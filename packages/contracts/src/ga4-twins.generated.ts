@@ -149,8 +149,10 @@ export const ANALYTICS_CLIENT_EVENTS: Record<string, string[]> = {
     "product_id"
   ],
   "review_prompt_shown": [
-    "moment"
+    "moment",
+    "rules"
   ],
+  "review_store_opened": [],
   "purchase_completed": [
     "outcome",
     "store",

@@ -38,6 +38,7 @@ const analyticsClientEvents = <String>{
   'paywall_dismiss',
   'purchase_started',
   'review_prompt_shown',
+  'review_store_opened',
   'purchase_completed',
   'restore_purchases',
   'message_reacted',
