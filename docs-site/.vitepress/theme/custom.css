@@ -302,6 +302,24 @@ body {
 .casama-shot {
   margin: 24px 0;
 }
+.casama-video {
+  margin: 24px 0;
+}
+.casama-video-frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #000;
+}
+.casama-video-frame iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
 .casama-shot img {
   display: block;
   width: 100%;

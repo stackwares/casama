@@ -12,7 +12,7 @@ chat apps or your AI coding tools.
 
 This page explains the main ideas. To try it, go to the [Quick start](/quick-start).
 
-<figure class="casama-shot"><img class="shot-light" src="/screens/hero-light.webp" alt="Casama on Mac and iPhone: Milo publishes Stardust Drift, a game he made, while his computer's live desktop plays it in the side panel"><img class="shot-dark" src="/screens/hero-dark.webp" alt=""></figure>
+<figure class="casama-video"><div class="casama-video-frame"><iframe src="https://www.youtube-nocookie.com/embed/E9x6E04ueoY?rel=0" title="Casama walkthrough" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div></figure>
 
 ## The main ideas
 
