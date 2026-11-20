@@ -313,6 +313,15 @@ session once ran for 19 hours with nobody using it, holding memory, CPU, a port 
 
 ### How to deploy (D-299)
 
+- **Deploy in this order:** server, web, Android, iOS, Mac, Wear OS. Ship only the platforms the
+  user picked, but always in this order, and finish each one (health check, upload accepted) before
+  you start the next. "Web" covers casama.ai, docs, gallery, casama.link and app.casama.ai. Each
+  deploy still needs its own yes, as above.
+- **Builds may run in parallel; deploys stay in order.** When the machine has room (check load and
+  free memory and disk, and `scripts/heavy.sh --status`), build several of the chosen platforms at
+  once, then ship them in the order above. Parallel Flutter builds need separate checkouts (one
+  worktree per build, all on the same commit), since two in one `client/` clash on `client/build`.
+  If the machine is busy, build one at a time.
 - **Server (API and worker):** push to `main`, run `scripts/deploy-prod.sh --dry-run` and show the
   user what it will do, then after their yes `scripts/deploy-prod.sh --yes`. It builds the image on the
   production server, waits for running runs, backs up, migrates, restarts and checks health. Something
