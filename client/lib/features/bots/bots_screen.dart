@@ -774,37 +774,47 @@ class _CreateBotSheetState extends ConsumerState<CreateBotSheet> {
           if (!widget.embedded) ...[
             // The bot being made, in its own cloud: it changes with the persona and the icon picked
             // below (the dozing blank bot while it has initials).
-            Center(
-              child: AnimatedSwitcher(
-                duration: AppMotion.of(context, const Duration(milliseconds: 260)),
-                switchInCurve: Curves.easeOutBack,
-                transitionBuilder: (child, a) => FadeTransition(
-                  opacity: a,
-                  child: ScaleTransition(scale: Tween(begin: 0.85, end: 1.0).animate(a), child: child),
+            // One row like every other sheet: the bot being made beside the title.
+            Row(
+              children: [
+                AnimatedSwitcher(
+                  duration: AppMotion.of(context, const Duration(milliseconds: 260)),
+                  switchInCurve: Curves.easeOutBack,
+                  transitionBuilder: (child, a) => FadeTransition(
+                    opacity: a,
+                    child: ScaleTransition(scale: Tween(begin: 0.85, end: 1.0).animate(a), child: child),
+                  ),
+                  child: KeyedSubtree(
+                    key: ValueKey(_avatar),
+                    child: switch (Mascot.fromAvatar(_avatar)) {
+                      final m? => MascotHero([m], size: 60),
+                      null => BlankBotImage(size: 60, animate: ambientMotionOn(context)),
+                    },
+                  ),
                 ),
-                child: KeyedSubtree(
-                  key: ValueKey(_avatar),
-                  child: switch (Mascot.fromAvatar(_avatar)) {
-                    final m? => MascotHero([m], size: 96),
-                    null => BlankBotImage(size: 96, animate: ambientMotionOn(context)),
-                  },
+                const SizedBox(width: AppSpace.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.newBot,
+                        style: context.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.3,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        l10n.newBotSubtitle,
+                        style: context.textTheme.bodyMedium?.copyWith(
+                          color: context.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ),
-            const SizedBox(height: AppSpace.sm),
-            Text(
-              l10n.newBot,
-              style: context.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w800,
-                letterSpacing: -0.3,
-              ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              l10n.newBotSubtitle,
-              style: context.textTheme.bodyMedium?.copyWith(
-                color: context.colorScheme.onSurfaceVariant,
-              ),
+              ],
             ),
             const SizedBox(height: AppSpace.lg),
           ],

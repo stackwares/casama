@@ -4774,6 +4774,12 @@ abstract class AppLocalizations {
   /// **'Got It'**
   String get whatsNewGotIt;
 
+  /// No description provided for @whatsNewSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Here\'s what changed since your last update.'**
+  String get whatsNewSubtitle;
+
   /// No description provided for @whatsNew010Calls.
   ///
   /// In en, this message translates to:
@@ -8998,6 +9004,12 @@ abstract class AppLocalizations {
   /// **'New ticket'**
   String get newTicket;
 
+  /// No description provided for @newTicketSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'A task for one of your bots, tracked on the board.'**
+  String get newTicketSubtitle;
+
   /// No description provided for @allProjects.
   ///
   /// In en, this message translates to:
@@ -9261,6 +9273,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'New Workspace'**
   String get newWorkspace;
+
+  /// No description provided for @newWorkspaceSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'A separate home for a team, with its own bots, chats and people.'**
+  String get newWorkspaceSubtitle;
 
   /// No description provided for @joinWorkspaceHelp.
   ///
@@ -26079,10 +26097,16 @@ abstract class AppLocalizations {
   /// **'You\'re in. Check {email} for a sign-in link, or type its code here.'**
   String inviteCheckInbox(String email);
 
+  /// No description provided for @inviteWaitlistedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re on the waitlist'**
+  String get inviteWaitlistedTitle;
+
   /// No description provided for @inviteWaitlisted.
   ///
   /// In en, this message translates to:
-  /// **'These invites are gone. You\'re on the waitlist, ahead of the line.'**
+  /// **'These invites are gone, but you\'re ahead of the line.'**
   String get inviteWaitlisted;
 
   /// No description provided for @inviteUseEmailHere.

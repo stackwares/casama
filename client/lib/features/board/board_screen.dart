@@ -1169,6 +1169,7 @@ class _TicketFormState extends ConsumerState<_TicketForm> {
       icon: LucideIcons.squareKanban,
       art: 'tasks-ticket',
       title: l10n.newTicket,
+      subtitle: l10n.newTicketSubtitle,
       submitLabel: l10n.newTicket,
       submitKey: const Key('createTicket'),
       onSubmit: _title.text.trim().isEmpty ? null : () async {

@@ -338,7 +338,7 @@ void main() {
         expect(backend.inviteMagicLinks, isEmpty);
         expect(
           find.text(
-            "These invites are gone. You're on the waitlist, ahead of the line.",
+            "These invites are gone, but you're ahead of the line.",
           ),
           findsOneWidget,
         );
