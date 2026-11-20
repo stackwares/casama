@@ -6545,3 +6545,26 @@ deploy").
   owner's fresh yes; nobody, a stranger, a stale yes or "always allow" change nothing; routines,
   calls, group chats and the switch off get no card; no budget, no campaign; give refused while off;
   take back).
+
+## D-446 A plan's bot number limits making bots, not running them (2026-11-20)
+
+Oliver's own account went from Pro back to Free with more than three bots, and the newer ones
+refused every message. Since D-248 a run was refused (`plan_limit`) when its bot was past the plan's
+number, counted oldest first. Oliver: "I agree with all of that so build all of that now".
+
+- **Runs:** the check is gone from the run's limit checks (`packages/agent/src/run.ts`). Every bot a
+  workspace already has keeps running after a downgrade, in chat, routines and channels, on the
+  plan's credits and daily limit. A bot costs nothing until it uses credits or a computer (D-249),
+  so the block protected no cost, and which bots survived (the oldest, not the most used) looked
+  like a bug.
+- **Making bots:** unchanged. `max_bots` (Free 3, Plus 10) still refuses a new bot, an import and
+  bringing back an archived one with 402 `plan_limit` (`enforceLimit`, the `enforce_max_bots`
+  trigger), which opens the paywall. A workspace over the number adds none until it archives down or
+  upgrades.
+- **Unchanged:** computers after a downgrade (only the plan's number start, oldest first, since they
+  take server room) and check-ins (`max_proactive_bots`, D-247).
+- **Casama Help:** the bot lookup no longer reports `waiting_for_plan`.
+- **Docs:** the downgrade answer in `docs-site/faq.md` (also casama.ai Help and Pricing) and the
+  `plan_limit` row in `docs-site/guide/usage.md`.
+- **Tests:** `apps/server/test/billing.test.ts` (the newest of five bots on Free runs; a sixth is
+  refused).

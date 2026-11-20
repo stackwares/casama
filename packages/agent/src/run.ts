@@ -2521,7 +2521,6 @@ async function spend(
     credits: string | null;
     unbilled: string;
     cloud_today: string;
-    bot_rank: string;
   }>(sql`
     select
       (select cost_usd from public.runs where id = ${info.runId}::uuid) as run_cost,
@@ -2538,10 +2537,7 @@ async function spend(
       (select coalesce(sum(cost_usd), 0) from public.usage_ledger
         where org_id = ${info.orgId}::uuid and billable
           and kind <> all('{computer_seconds,stream_seconds}'::text[])
-          and created_at >= date_trunc('day', now() at time zone 'utc') at time zone 'utc') - public.limit_reset_offset(${info.orgId}::uuid,'daily') as cloud_today,
-      (select count(*) from public.bots o join public.bots me on me.id = ${info.botId}::uuid
-        where o.org_id = me.org_id and o.archived_at is null and o.id <> me.id
-          and (o.created_at, o.id) < (me.created_at, me.id)) as bot_rank`);
+          and created_at >= date_trunc('day', now() at time zone 'utc') at time zone 'utc') - public.limit_reset_offset(${info.orgId}::uuid,'daily') as cloud_today`);
   // Entitlements are the only billing input (D-070): a monthly cost cap and credits. Computer
   // hours stop only the computer, at its start (computers.ts), never the whole run (D-442).
   const limits = row?.limits ?? {};
@@ -2549,15 +2545,8 @@ async function spend(
   const caps = [row?.quota == null ? null : Number(row.quota), num(limits.monthly_usd)].filter(
     (v): v is number => v != null,
   );
-  // After a downgrade the workspace keeps its bots, but only the plan's number of them (the oldest)
-  // run; the rest wait until it upgrades or archives some (D-248).
-  const maxBots = num(limits.max_bots);
-  if (maxBots != null && Number(row?.bot_rank ?? 0) >= maxBots)
-    return {
-      ok: false as const,
-      code: "plan_limit" as const,
-      message: `Your plan runs ${maxBots} bots. Upgrade, or archive a bot, to use this one.`,
-    };
+  // max_bots limits making and bringing back bots, never running them: after a downgrade every
+  // bot the workspace already has keeps running on the plan's credits (D-446).
   const primary = info.policy.primary;
   const onPlatform = primary?.credential_id === PLATFORM_OPENROUTER_CREDENTIAL_ID;
   const gate = limits.credit_gate === true;

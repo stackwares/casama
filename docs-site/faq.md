@@ -218,9 +218,11 @@ month. A refunded credit pack takes its credits back.
 
 ### What happens if I downgrade?
 
-Your workspace keeps everything: bots, chats, files and memories. Only the new plan's number of
-bots and cloud computers run or start, oldest first, and check-ins are limited to the plan's number
-of bots in the same way. See
+Your workspace keeps everything: bots, chats, files and memories. Every bot you already have keeps
+working on the new plan's credits, even when you have more bots than the plan includes. You can't
+add another bot or bring back an archived one until you're under the plan's number or upgrade. Only
+the new plan's number of cloud computers start, oldest first, and check-ins are limited to the
+plan's number of bots in the same way. See
 [Usage, budgets and plans](/guide/usage).
 
 ## Account & data

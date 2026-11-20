@@ -824,6 +824,57 @@ describe("billing on (Casama Cloud, Phase 7 gate)", () => {
     expect(run.error?.code).not.toBe("computer_hours_exceeded");
   }, 60_000);
 
+  it("after a downgrade every bot still runs; only making another is refused (D-446)", async () => {
+    const orgId = await newOrg("Downgraded");
+    const bot = await j(
+      await h.request("/v1/bots", {
+        method: "POST",
+        token: owner.token,
+        json: {
+          org_id: orgId,
+          name: "Newest",
+          model_policy: {
+            primary: { credential_id: PLATFORM_OPENROUTER_CREDENTIAL_ID, model: "meta/muse-ember" },
+          },
+        },
+      }),
+    );
+    // Four older bots from a bigger plan: five on Free's three, and this one is the newest.
+    await h.handle.db.execute(sql`
+      insert into public.bots (org_id, created_by, name, created_at)
+      select ${orgId}::uuid, ${owner.id}::uuid, 'Older ' || n, now() - interval '1 day'
+      from generate_series(1, 4) n`);
+    const conv = await j(
+      await h.request("/v1/conversations", {
+        method: "POST",
+        token: owner.token,
+        json: { bot_id: bot.id },
+      }),
+    );
+    const sent = await j(
+      await h.request(`/v1/conversations/${conv.id}/messages`, {
+        method: "POST",
+        token: owner.token,
+        json: { text: "hi" },
+      }),
+    );
+    let run: { status: string; error?: { code?: string } } = { status: "queued" };
+    for (let i = 0; i < 100 && !["failed", "completed"].includes(run.status); i++) {
+      await new Promise((r) => setTimeout(r, 200));
+      run = await j(await h.request(`/v1/runs/${sent.run_id}`, { token: owner.token }));
+    }
+    // Past every limit check: the harness has no Casama model key, so the run goes on to fail there.
+    expect(run.status).not.toBe("queued");
+    expect(run.error?.code).not.toBe("plan_limit");
+    const another = await h.request("/v1/bots", {
+      method: "POST",
+      token: owner.token,
+      json: { org_id: orgId, name: "One more" },
+    });
+    expect(another.status).toBe(402);
+    expect((await j(another)).code).toBe("plan_limit");
+  }, 60_000);
+
   it("grants included credits once a month and keeps owner overrides across plan changes", async () => {
     const orgId = await newOrg("Monthly");
     await h.deps.billing?.recompute(orgId);

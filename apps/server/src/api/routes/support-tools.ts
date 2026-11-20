@@ -326,11 +326,6 @@ export function supportLookups(
       if (!b) return "No bot by that name that this person can see in the open workspace.";
       if (found.length > 1 && b.name.toLowerCase() !== q.toLowerCase())
         return { several_match: found.map((f) => f.name), ask: "Ask which one they mean." };
-      // Its place in line counts every bot, private ones too (as the run check does).
-      const [rank] = await db.execute<{ n: number }>(sql`
-        select count(*)::int as n from public.bots o join public.bots me on me.id = ${b.id}::uuid
-        where o.org_id = me.org_id and o.archived_at is null and o.id <> me.id
-          and (o.created_at, o.id) < (me.created_at, me.id)`);
       const [routines, apps, channels, runs, lim] = await Promise.all([
         tx.execute<{
           name: string;
@@ -363,17 +358,12 @@ export function supportLookups(
         billing.summary(orgId),
       ]);
       const primary = (b.model_policy?.primary ?? null) as { model?: string } | null;
-      const maxBots = lim.limits.max_bots;
       return {
         id: b.id,
         name: b.name,
         status: b.status,
         setup: b.setup_status,
         archived: b.archived_at ? iso(b.archived_at) : false,
-        waiting_for_plan:
-          !b.archived_at && maxBots != null && (rank?.n ?? 0) >= maxBots
-            ? `The plan runs ${maxBots} bots and this one is newer than those, so it doesn't run until they upgrade or archive a bot.`
-            : false,
         visibility: b.visibility,
         autonomy: b.autonomy,
         model: primary?.model ?? "Casama picks",

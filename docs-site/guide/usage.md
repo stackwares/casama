@@ -140,7 +140,7 @@ failed with a clear message and a stable code (for live calls, see
 | `out_of_credits` | A Casama Cloud workspace has no credits left |
 | `cloud_daily_cap` | A Casama Cloud workspace reached its plan's [daily limit](#daily-limit). It resets at midnight UTC. |
 | `computer_hours_exceeded` | A Casama Cloud workspace used its computer hours for the month, so its computer can't start. Chat keeps working on credits. |
-| `plan_limit` | A Casama Cloud workspace is over a plan limit, such as how many bots or computers can run |
+| `plan_limit` | A Casama Cloud workspace is over a plan limit, such as how many computers can run |
 | `max_steps_exceeded` | The run used all its steps |
 | `wall_time_exceeded` | The run ran out of time |
 | `stuck_looping` | The bot kept failing the same way and stopped |
