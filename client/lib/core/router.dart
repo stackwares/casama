@@ -36,6 +36,7 @@ import '../features/settings/password_managers_screen.dart';
 import '../features/teach/teach_draft_screen.dart';
 import '../features/projects/projects_screen.dart';
 import '../features/routines/run_routine_screen.dart';
+import '../features/auth/sign_in_email_link.dart';
 import '../features/auth/sign_in_screen.dart';
 import '../features/link/link_screen.dart';
 import '../features/link/link_server_screen.dart';
@@ -318,9 +319,15 @@ final routerProvider = Provider<GoRouter>((ref) {
     routes: [
       GoRoute(
         path: '/sign-in',
-        // casama.ai's invite page sends people here with the address they claimed (?email=).
+        // casama.ai's invite page sends people here with the address they claimed (?email=). On
+        // the web, boot.js has already moved it out of the page's address (so analytics never see
+        // it) and the screen takes it from there; the query is how the other platforms get it.
         pageBuilder: _outside(
-          (_, s) => SignInScreen(initialEmail: SignInScreen.emailFromLink(s.uri.queryParameters['email'])),
+          (_, s) => SignInScreen(
+            initialEmail: SignInScreen.emailFromLink(
+              s.uri.queryParameters['email'] ?? takeSignInEmailFromPage(),
+            ),
+          ),
         ),
       ),
       GoRoute(
