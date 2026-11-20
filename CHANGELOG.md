@@ -9,6 +9,10 @@ The server, apps, CLI, SDK and MCP server share one version number.
 
 ## [Unreleased]
 
+- Billing: a saved reset is its own card, with what it does (credits it refills, the limits it
+  clears), days left and its end date; Use Reset sits beside the title on wide windows and spans
+  the card on phones, instead of squeezing the message into a thin column (D-443).
+
 - Bot pictures (D-456): give a bot any picture (camera, photos, files, drag and drop, paste, a
   picture from a chat or the Library, or one Casama draws), framed in a new cropper with live
   previews at sidebar size in light and dark, rotate, mirror and backgrounds for logos. Undo,

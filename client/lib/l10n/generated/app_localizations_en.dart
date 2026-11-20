@@ -17683,4 +17683,27 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get sharePictureStays =>
       'Its picture stays in this workspace: the copy gets its earlier mascot, or its initials.';
+
+  @override
+  String savedResetRefills(String amount) {
+    return 'Refills $amount of credits';
+  }
+
+  @override
+  String get savedResetClearsDaily => 'Clears today’s limit';
+
+  @override
+  String get savedResetGivesHours => 'Gives back computer hours';
+
+  @override
+  String savedResetDaysLeft(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days left',
+      one: '1 day left',
+      zero: 'Expires today',
+    );
+    return '$_temp0';
+  }
 }

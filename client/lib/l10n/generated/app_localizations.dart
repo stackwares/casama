@@ -28489,6 +28489,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Its picture stays in this workspace: the copy gets its earlier mascot, or its initials.'**
   String get sharePictureStays;
+
+  /// No description provided for @savedResetRefills.
+  ///
+  /// In en, this message translates to:
+  /// **'Refills {amount} of credits'**
+  String savedResetRefills(String amount);
+
+  /// No description provided for @savedResetClearsDaily.
+  ///
+  /// In en, this message translates to:
+  /// **'Clears today’s limit'**
+  String get savedResetClearsDaily;
+
+  /// No description provided for @savedResetGivesHours.
+  ///
+  /// In en, this message translates to:
+  /// **'Gives back computer hours'**
+  String get savedResetGivesHours;
+
+  /// No description provided for @savedResetDaysLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0 {Expires today} =1 {1 day left} other {{count} days left}}'**
+  String savedResetDaysLeft(int count);
 }
 
 class _AppLocalizationsDelegate

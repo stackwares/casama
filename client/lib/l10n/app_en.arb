@@ -5853,5 +5853,11 @@
   "botDrawStylePixel": "Pixel Art",
   "botDrawStyleLine": "Line Art",
   "botDrawStylePhoto": "Photo",
-  "sharePictureStays": "Its picture stays in this workspace: the copy gets its earlier mascot, or its initials."
+  "sharePictureStays": "Its picture stays in this workspace: the copy gets its earlier mascot, or its initials.",
+  "savedResetRefills": "Refills {amount} of credits",
+  "@savedResetRefills": {"placeholders": {"amount": {"type": "String"}}},
+  "savedResetClearsDaily": "Clears today’s limit",
+  "savedResetGivesHours": "Gives back computer hours",
+  "savedResetDaysLeft": "{count, plural, =0 {Expires today} =1 {1 day left} other {{count} days left}}",
+  "@savedResetDaysLeft": {"placeholders": {"count": {"type": "int"}}}
 }
