@@ -1,9 +1,9 @@
 # An email address for every bot: plan
 
-Status: **built** (written 2026-11-20; Phases 1–4 built on `feat/bot-email` with audit fixes,
-D-449). §13 is built on the recommendations until Oliver says otherwise. The mail domain is not
-bought yet; Phase 0 and going live wait on the domain purchase and his yes for Cloudflare changes.
-Nothing is pushed, deployed or built for the stores without his yes.
+Status: **built, not live** (written 2026-11-20; Phases 1–4 merged to `main` with audit fixes,
+D-449, not deployed). §13 is built on the recommendations until Oliver says otherwise. It stays
+off until a server has MAIL_DOMAIN and its keys. The mail domain is not bought yet; Phase 0 and
+going live wait on the domain purchase and his yes for Cloudflare changes and the deploy.
 
 As built (Phase 1): the Worker's existence check is `GET /hooks/mail?to=…`, not HEAD (Hono
 doesn't match HEAD routes). Resend's received-email API reports sender checks in an

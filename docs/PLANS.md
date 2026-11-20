@@ -27,7 +27,7 @@ same commit. Shipping details (deploys, app builds) move fast, so check them bef
 
 | Plan | Decisions | What's left |
 |---|---|---|
-| [BOT-EMAIL-PLAN](BOT-EMAIL-PLAN.md) | D-449 | Phases 1–4 built on `feat/bot-email` (with audit fixes, on the §13 recommendations until Oliver says otherwise). Left: Phase 0 and going live need the mail domain (Oliver buys it later) and a yes for the Cloudflare changes |
+| [BOT-EMAIL-PLAN](BOT-EMAIL-PLAN.md) | D-449 | Built, not live: Phases 1–4 merged to `main` (with audit fixes, on the §13 recommendations until Oliver says otherwise), not deployed. Left: Phase 0 and going live need the mail domain (Oliver buys it later) and a yes for the Cloudflare changes |
 | [GAPS-PLAN-2026-11](GAPS-PLAN-2026-11.md) | D-301..D-305 | Items 1–5 live. Item 6 (accessibility pass) and item 7 (more languages) not started; v1 is English only |
 | [LAUNCH-VIDEO-PLAN](LAUNCH-VIDEO-PLAN.md) |  | Main cut v2, 30 s cut and 15 s cut made. Launch date and the narration voice are open; every video needs narration |
 | [LIBRARY-PLAN](LIBRARY-PLAN.md) | D-274, D-276, D-281, D-291, D-294, D-295 | Pins, select several, "Recently opened", "what was made for a ticket" |
