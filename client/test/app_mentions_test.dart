@@ -44,8 +44,129 @@ void main() {
     expect(groupAnswerers(bots, '@everyone go'), isNull);
   });
 
+  test('a catalog app connected under its id goes by its proper name; a custom name stays', () {
+    final catalog = AppCatalog(apps: FakeBackend().catalog, redirectUri: '');
+    final built = buildMentionableApps(
+      integrations: [
+        _integration('int-a', 'stripe', appId: 'stripe'),
+        _integration('int-b', 'Billing (EU)', appId: 'stripe'),
+        _integration('int-c', 'my_server'),
+      ],
+      attachedIds: {'int-a', 'int-b', 'int-c'},
+      hubApps: const [],
+      catalog: catalog,
+    );
+    expect(built.connected.map((a) => a.label), ['Stripe', 'Billing (EU)', 'my_server']);
+  });
+
+  testWidgets('a bare @ with no apps connected still opens a list: popular apps to connect', (
+    tester,
+  ) async {
+    final backend = FakeBackend();
+    final input = TextEditingController();
+    addTearDown(input.dispose);
+    final mentions = MentionController(input);
+    addTearDown(mentions.dispose);
+    await tester.pumpWidget(
+      harness(
+        backend,
+        Scaffold(
+          body: Column(
+            children: [
+              MentionPicker(botIds: const [botId], group: false, controller: mentions),
+              TextField(controller: input),
+            ],
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    input.text = '@';
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('mentionPicker')), findsOneWidget);
+    expect(find.byKey(const Key('mention-connect-stripe')), findsOneWidget);
+    expect(find.byKey(const Key('mention-connect-notion')), findsOneWidget);
+    expect(find.byKey(const Key('mention-connect-cloudflare')), findsNothing);
+  });
+
+  testWidgets('a direct chat lists your other bots; picking one starts a group chat with both, once', (
+    tester,
+  ) async {
+    final backend = FakeBackend();
+    backend.extraBots.add(backend.bot(id: 'bot-b', name: 'Bea'));
+    final input = TextEditingController();
+    addTearDown(input.dispose);
+    final mentions = MentionController(input);
+    addTearDown(mentions.dispose);
+    await tester.pumpWidget(
+      harness(
+        backend,
+        Scaffold(
+          body: Column(
+            children: [
+              MentionPicker(botIds: const [botId], group: false, controller: mentions),
+              TextField(controller: input),
+            ],
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    input.text = 'ask @be';
+    await tester.pumpAndSettle();
+    final list = find.byKey(const Key('mentionPicker'));
+    expect(find.descendant(of: list, matching: find.text('Start a group chat')), findsOneWidget);
+    // The chat's own bot is never offered, and a direct chat has no @everyone.
+    expect(find.byKey(const Key('mention-group-$botId')), findsNothing);
+    expect(find.byKey(const Key('mention-everyone')), findsNothing);
+    await tester.tap(find.byKey(const Key('mention-group-bot-b')));
+    await tester.pumpAndSettle();
+    expect(backend.groups.map((g) => g.botIds), [
+      [botId, 'bot-b'],
+    ]);
+    // The draft left with the group chat.
+    expect(input.text, isEmpty);
+
+    // Naming the same bot again opens that group chat; it doesn't make a second one.
+    input.text = '@Bea';
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('mention-group-bot-b')));
+    await tester.pumpAndSettle();
+    expect(backend.groups, hasLength(1));
+  });
+
+  testWidgets('a list that is already long gets no popular apps added', (tester) async {
+    final backend = FakeBackend();
+    for (var n = 1; n <= 6; n++) {
+      backend.integrationList.add(_integration('int-$n', 'Server $n'));
+      backend.attached.add('int-$n');
+    }
+    final input = TextEditingController();
+    addTearDown(input.dispose);
+    final mentions = MentionController(input);
+    addTearDown(mentions.dispose);
+    await tester.pumpWidget(
+      harness(
+        backend,
+        Scaffold(
+          body: Column(
+            children: [
+              MentionPicker(botIds: const [botId], group: false, controller: mentions),
+              TextField(controller: input),
+            ],
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    input.text = '@';
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('mention-app-int-6')), findsOneWidget);
+    expect(find.byKey(const Key('mention-connect-stripe')), findsNothing);
+  });
+
   testWidgets(
-    'direct chat @ menu shows attached direct + hub apps, Add to this bot, and Connect after 2 chars',
+    'direct chat @ menu shows attached direct + hub apps, Add to this bot, and Connect',
     (tester) async {
       final backend = FakeBackend();
       backend.integrationList.addAll([
@@ -86,7 +207,8 @@ void main() {
       await tester.pumpAndSettle();
 
       // Typing "@" shows attached apps (Linear + Composio's Gmail) and Add to this bot (Notion).
-      // Connect section must NOT appear yet (< 2 typed letters).
+      // The list is short, so a popular app to connect (Stripe) fills it; one that isn't popular
+      // (Cloudflare Docs) waits for 2 typed letters.
       input.text = 'check @';
       await tester.pumpAndSettle();
 
@@ -97,16 +219,23 @@ void main() {
         findsOneWidget,
       );
       expect(find.byKey(const Key('mention-add-int-notion')), findsOneWidget);
-      expect(find.byKey(const Key('mention-connect-stripe')), findsNothing);
+      expect(find.byKey(const Key('mention-connect-stripe')), findsOneWidget);
+      expect(find.byKey(const Key('mention-connect-cloudflare')), findsNothing);
+      // Notion is already in the workspace: it's an Add row, never a Connect row too.
+      expect(find.byKey(const Key('mention-connect-notion')), findsNothing);
       // Direct chat must NOT show @everyone or bots.
       expect(find.byKey(const Key('mention-everyone')), findsNothing);
 
-      // 1 char after "@" still hides Connect.
-      input.text = 'check @s';
+      // 1 char after "@": popular apps that start with it, nothing else from the catalog.
+      input.text = 'check @c';
       await tester.pumpAndSettle();
+      expect(find.byKey(const Key('mention-connect-cloudflare')), findsNothing);
       expect(find.byKey(const Key('mention-connect-stripe')), findsNothing);
 
-      // 2 chars after "@" reveals Connect (Stripe is in FakeBackend.catalog, unconnected).
+      // 2 chars after "@" searches the whole catalog.
+      input.text = 'check @cl';
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('mention-connect-cloudflare')), findsOneWidget);
       input.text = 'check @st';
       await tester.pumpAndSettle();
       expect(find.byKey(const Key('mention-connect-stripe')), findsOneWidget);

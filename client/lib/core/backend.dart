@@ -367,6 +367,7 @@ class GalleryItem {
     this.source,
     this.stats,
     this.authorHandle,
+    this.cover,
   });
 
   final String id;
@@ -429,6 +430,10 @@ class GalleryItem {
       source: j['source'] as String?,
       stats: GalleryStats.fromJson(j['stats']),
       authorHandle: authorMap['handle'] as String?,
+      cover: switch (j['cover']) {
+        final String c when c.startsWith('https://') => c,
+        _ => null,
+      },
     );
   }
 
@@ -461,6 +466,9 @@ class GalleryItem {
   final String? source;
   final GalleryStats? stats;
   final String? authorHandle;
+
+  /// The item's painted cover picture (gallery `cover.webp`), as an https URL, when it has one.
+  final String? cover;
 
   /// `<type>/<id>`, as stats and installs name it.
   String get key => '$type/$id';
@@ -499,6 +507,7 @@ class GalleryItem {
     source: source,
     stats: stats,
     authorHandle: authorHandle,
+    cover: cover,
   );
 
   /// What the item needs that older apps couldn't draw, as the gallery's checker worked it out:
@@ -2519,7 +2528,7 @@ abstract class Backend {
 
   /// A project you work on together in its chat, or with [autonomous] one its lead bot plans for
   /// your approval and then works on by itself (that needs a [goal]). [conversationId] makes a
-  /// topic of yours the project's chat.
+  /// topic of yours the project's chat. [cover] is a painted cover's name (`sailboat`).
   Future<Project> createProject(
     String orgId, {
     required String title,
@@ -2529,6 +2538,7 @@ abstract class Backend {
     double? budgetUsd,
     bool autonomous,
     String? conversationId,
+    String? cover,
   });
   Future<ProjectDetail> project(String projectId);
 
@@ -2542,6 +2552,9 @@ abstract class Backend {
     String? goal,
     String? doneCriteria,
   });
+
+  /// Picks a painted cover for a project ([cover] is its name, such as `sailboat`), or none.
+  Future<void> setProjectCover(String projectId, String? cover);
   Future<void> approveProjectPlan(String projectId);
   Future<void> signOffMilestone(String projectId, String milestoneId);
   // Ticket board (D-098)
@@ -2615,6 +2628,9 @@ abstract class Backend {
 
   /// Tells the server whether this person opted out of usage analytics (server events and rollups).
   Future<void> setAnalyticsOptOut(bool optOut);
+
+  /// Whether the signed-in account is marked internal/test by the server (`GET /v1/me`).
+  Future<bool> isInternalAccount();
 
   /// Windows and Linux: hands catalog events to the server, which forwards them to Google Analytics 4
   /// (D-399; there's no Firebase Analytics there and the GA4 secret can't ship in the app).

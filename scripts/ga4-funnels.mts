@@ -24,6 +24,8 @@ export const EXTRA_EVENTS = [
   "login",
   "tutorial_begin",
   "tutorial_complete",
+  "view_item_list",
+  "select_item",
   "begin_checkout",
   "share",
   "join_group",
@@ -143,6 +145,17 @@ export const FUNNELS: Funnel[] = [
     steps: [
       { name: "Hit a limit", events: ["limit_reached"] },
       { name: "Saw the paywall", events: ["paywall_view"] },
+      { name: "Purchased", events: ["purchase"] },
+    ],
+  },
+  {
+    id: "F6c",
+    title: "Paywall plan selection",
+    open: false,
+    steps: [
+      { name: "Saw the paywall", events: ["paywall_view", "view_item_list"] },
+      { name: "Selected a plan", events: ["paywall_plan_select", "select_item"] },
+      { name: "Started a purchase", events: ["purchase_started", "begin_checkout"] },
       { name: "Purchased", events: ["purchase"] },
     ],
   },

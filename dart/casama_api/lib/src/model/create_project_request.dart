@@ -37,6 +37,8 @@ class CreateProjectRequest {
      this.autonomous,
 
      this.conversationId,
+
+     this.cover,
   });
 
   @JsonKey(
@@ -152,6 +154,19 @@ class CreateProjectRequest {
 
 
 
+      /// A painted cover the project picked (an app art name such as sailboat); null for none
+  @JsonKey(
+    
+    name: r'cover',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final String? cover;
+
+
+
 
 
     @override
@@ -164,7 +179,8 @@ class CreateProjectRequest {
       other.budgetUsd == budgetUsd &&
       other.deadlineAt == deadlineAt &&
       other.autonomous == autonomous &&
-      other.conversationId == conversationId;
+      other.conversationId == conversationId &&
+      other.cover == cover;
 
     @override
     int get hashCode =>
@@ -176,7 +192,8 @@ class CreateProjectRequest {
         (budgetUsd == null ? 0 : budgetUsd.hashCode) +
         (deadlineAt == null ? 0 : deadlineAt.hashCode) +
         autonomous.hashCode +
-        conversationId.hashCode;
+        conversationId.hashCode +
+        (cover == null ? 0 : cover.hashCode);
 
   factory CreateProjectRequest.fromJson(Map<String, dynamic> json) => _$CreateProjectRequestFromJson(json);
 

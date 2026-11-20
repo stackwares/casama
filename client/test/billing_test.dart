@@ -7,6 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:casama_sdk/casama_sdk.dart';
 import 'package:casama/features/app_lock/app_lock.dart';
+import 'package:casama/core/analytics.dart';
 import 'package:casama/core/billing.dart';
 import 'package:casama/core/providers.dart';
 import 'package:casama/core/widgets.dart';
@@ -535,6 +536,15 @@ void main() {
         await settle(tester);
         expect(inPrice('max_yearly', find.text(r'$1,490 billed yearly')), findsOneWidget);
         expect(find.descendant(of: find.byKey(const Key('paywallBuy')), matching: find.text('Get Max')), findsOneWidget);
+        // Each tier keeps its painted picture whichever period is picked (the yearly plan's code is
+        // max_yearly, the picture is the tier's).
+        expect(find.descendant(of: find.byKey(const Key('paywallTier-max')), matching: find.byKey(const Key('paywallPlanArt-max'))),
+            findsOneWidget);
+        // Under the name, the price lines up with the text on the left instead of hanging right.
+        final big = tester.getTopLeft(inPrice('max_yearly', find.textContaining(r'$1,490', findRichText: true)).first);
+        final billed = tester.getTopLeft(inPrice('max_yearly', find.text(r'$1,490 billed yearly')));
+        final nameBottom = tester.getBottomLeft(find.descendant(of: find.byKey(const Key('paywallTier-max')), matching: find.text('Max'))).dy;
+        if (big.dy > nameBottom) expect(billed.dx, moreOrLessEquals(tester.getTopLeft(find.byKey(const Key('paywallPrice-max_yearly'))).dx));
 
         await revealInPaywall(tester, find.byKey(const Key('paywallInterval-month')));
         await tester.tap(find.byKey(const Key('paywallInterval-month')));
@@ -840,6 +850,45 @@ void main() {
       expect(store.bought, ['casama_pro@$orgId']);
       expect(backend.verified, ['google_play:casama_pro:play-token']);
       await tester.pump(const Duration(seconds: 5));
+    });
+
+    testWidgets('records paywall_view defaults and paywall_plan_select on tier or period changes', (tester) async {
+      await setSize(tester, const Size(400, 900));
+      final recorded = <Map<String, Object?>>[];
+      Analytics.onCaptureForTest = (event, props) => recorded.add({'event': event, 'props': props});
+      addTearDown(() => Analytics.onCaptureForTest = null);
+
+      final backend = FakeBackend()
+        ..billingEnabled = true
+        ..catalogPlans = [
+          for (final p in pricingPlans()) p.copyWith(paywallDefault: p.code == 'pro'),
+        ];
+      await pumpPaywall(tester, backend);
+
+      expect(recorded.where((e) => e['event'] == 'paywall_view').toList(), [
+        {
+          'event': 'paywall_view',
+          'props': {
+            'source': 'limit',
+            'paywall_kind': 'regular',
+            'default_plan': 'pro',
+            'default_period': 'month',
+          },
+        },
+      ]);
+
+      await revealInPaywall(tester, find.byKey(const Key('paywallInterval-year')));
+      await tester.tap(find.byKey(const Key('paywallInterval-year')));
+      await settle(tester);
+
+      await revealInPaywall(tester, find.byKey(const Key('paywallTier-plus')));
+      await tester.tap(find.byKey(const Key('paywallTier-plus')));
+      await settle(tester);
+
+      expect(recorded.where((e) => e['event'] == 'paywall_plan_select').toList(), [
+        {'event': 'paywall_plan_select', 'props': {'plan': 'pro_yearly', 'interval': 'year'}},
+        {'event': 'paywall_plan_select', 'props': {'plan': 'plus_yearly', 'interval': 'year'}},
+      ]);
     });
   });
 

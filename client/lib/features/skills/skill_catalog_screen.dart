@@ -18,6 +18,7 @@ import '../../ui/app_card.dart';
 import '../../ui/bot_avatar.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/page.dart';
+import '../../ui/painted_cover.dart';
 import '../chat/widgets/chat_markdown.dart';
 import 'skill_visuals.dart';
 import '../../core/analytics.dart';
@@ -168,7 +169,7 @@ class _SkillCatalogScreenState extends ConsumerState<SkillCatalogScreen> {
                     showCheckmark: false,
                     avatar: c == null
                         ? null
-                        : Icon(
+                        : paintedChipAvatar(c) ?? Icon(
                             skillCategoryIcon(c),
                             size: 16,
                             color: skillCategoryColor(context, c),
@@ -200,8 +201,10 @@ class _SkillCatalogScreenState extends ConsumerState<SkillCatalogScreen> {
         ] else
           // Browsing: one section per category, in the catalog's order.
           for (final c in categories) ...[
-            SectionHeader(
+            PaintedSectionHeader(
               key: Key('section-$c'),
+              category: c,
+              icon: skillCategoryIcon(c),
               title: skillCategoryLabel(context, c),
               count: shown.where((s) => s.category == c).length.humanizedCount(context.l10n.localeName),
             ),

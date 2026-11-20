@@ -209,6 +209,7 @@ class _HaveInviteSheetState extends ConsumerState<HaveInviteSheet> {
     return switch (_step) {
       _Step.code => FormSheet(
         key: const Key('haveInviteCode'),
+        art: 'wait-ticket',
         icon: LucideIcons.ticket,
         title: l10n.iHaveAnInvite,
         subtitle: l10n.inviteSubtitle,
@@ -241,6 +242,7 @@ class _HaveInviteSheetState extends ConsumerState<HaveInviteSheet> {
       ),
       _Step.choose => FormSheet(
         key: const Key('haveInviteChoose'),
+        art: 'wait-gift',
         icon: LucideIcons.gift,
         title: _from(preview!),
         subtitle: l10n.inviteChooseSignIn,
@@ -254,6 +256,7 @@ class _HaveInviteSheetState extends ConsumerState<HaveInviteSheet> {
       ),
       _Step.email => FormSheet(
         key: const Key('haveInviteEmail'),
+        art: 'wait-envelope',
         icon: preview?.available == false
             ? LucideIcons.hourglass
             : LucideIcons.mail,
@@ -297,6 +300,7 @@ class _HaveInviteSheetState extends ConsumerState<HaveInviteSheet> {
       ),
       _Step.inbox => FormSheet(
         key: const Key('haveInviteInbox'),
+        art: 'wait-envelope',
         icon: LucideIcons.mailCheck,
         iconColor: context.appColors.positive,
         title: l10n.checkInboxTitle,
@@ -323,6 +327,7 @@ class _HaveInviteSheetState extends ConsumerState<HaveInviteSheet> {
       ),
       _Step.waitlisted => FormSheet(
         key: const Key('haveInviteWaitlisted'),
+        art: 'wait-hourglass',
         icon: LucideIcons.hourglass,
         title: l10n.inviteWaitlisted,
         submitLabel: l10n.doneLabel,

@@ -161,6 +161,7 @@ class _AcceptSheetState extends State<_AcceptSheet> {
     final ok = _invite.text.trim().startsWith('casama-link:') && _name.text.trim().isNotEmpty;
     return FormSheet(
       icon: LucideIcons.ticket,
+      art: 'invite',
       title: l10n.linksAccept,
       subtitle: l10n.linksAcceptHelp,
       submitLabel: l10n.linksAccept,

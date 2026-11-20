@@ -113,6 +113,7 @@ Future<void> showInviteRefusal(
     dialogMaxWidth: 460,
     builder: (sheet) => FormSheet(
       key: const Key('inviteRefusal'),
+      art: 'wait-ticket',
       icon: LucideIcons.ticket,
       title: otherEmail ? message : l10n.inviteGateLine,
       subtitle: otherEmail ? null : l10n.inviteRefusedHelp,

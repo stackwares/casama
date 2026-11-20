@@ -8,6 +8,7 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
 import '../../core/remote_content.dart';
 import '../../ui/lucide_names.dart';
+import '../../ui/painted_cover.dart';
 
 /// The empty Library: the shelf as it will look, filled with things to ask for. Each cover is drawn
 /// like a real creation's (a tint, a glyph, a title) and opens quick ask with the request typed in;
@@ -118,7 +119,7 @@ class LibraryStarters extends ConsumerWidget {
                   spacing: gap,
                   runSpacing: gap,
                   children: [
-                    for (final (key, icon, hue, label, prompt) in starters)
+                    for (final (i, (key, icon, hue, label, prompt)) in starters.indexed)
                       SizedBox(
                         width: width,
                         child: _StarterCover(
@@ -126,9 +127,10 @@ class LibraryStarters extends ConsumerWidget {
                           icon: icon,
                           hue: hue,
                           label: label,
+                          art: paintedAsset('library-$key'),
                           onTap: () => onPick(prompt),
                         ),
-                      ),
+                      ).appListItemEntrance(i),
                   ],
                 );
               },
@@ -189,14 +191,19 @@ class _StarterCover extends StatelessWidget {
     required this.hue,
     required this.label,
     required this.onTap,
+    this.art,
   });
   final IconData icon;
   final double hue;
   final String label;
   final VoidCallback onTap;
 
+  /// A painted picture (visuals/round-10) for the built-in starters; others keep the drawn tint.
+  final String? art;
+
   @override
   Widget build(BuildContext context) {
+    if (art != null) return _painted(context, art!);
     final dark = context.isDark;
     // The drawn cover's tints (creation_tile.dart), so the shelf looks the way it will when full.
     final top = HSLColor.fromAHSL(1, hue, 0.55, dark ? 0.30 : 0.82).toColor();
@@ -260,6 +267,84 @@ class _StarterCover extends StatelessWidget {
                 ),
               ),
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// The painted cover: the picture fills the tile, and its label sits on a soft dark foot.
+  Widget _painted(BuildContext context, String asset) {
+    return Semantics(
+      button: true,
+      label: label,
+      child: AspectRatio(
+        aspectRatio: 4 / 3,
+        child: Material(
+          borderRadius: BorderRadius.circular(AppRadius.tile),
+          clipBehavior: Clip.antiAlias,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              PaintedArt(seed: label, asset: asset, icon: icon),
+              const DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    stops: [0.45, 1],
+                    colors: [Color(0x00000000), Color(0x8C000000)],
+                  ),
+                ),
+              ),
+              Positioned(
+                top: AppSpace.xs,
+                right: AppSpace.xs,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.82),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Padding(
+                    padding: EdgeInsets.all(5),
+                    child: Icon(
+                      LucideIcons.plus,
+                      size: 14,
+                      color: Color(0xDD1C1C1E),
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: AppSpace.sm,
+                right: AppSpace.sm,
+                bottom: AppSpace.sm,
+                child: ExcludeSemantics(
+                  child: Text(
+                    label,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: context.textTheme.titleSmall?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                      height: 1.15,
+                      shadows: const [
+                        Shadow(color: Color(0x66000000), blurRadius: 6),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              Material(
+                type: MaterialType.transparency,
+                child: InkWell(
+                  onTap: () {
+                    HapticsHelper.selection();
+                    onTap();
+                  },
+                ),
+              ),
+            ],
           ),
         ),
       ),

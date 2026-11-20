@@ -166,6 +166,8 @@ class PermissionRow extends StatelessWidget {
       final label = switch (ask) {
         PermissionAsk.casama => l10n.permChoose,
         PermissionAsk.prompt when state == PermissionState.notAsked || state == null || state == PermissionState.unknown => l10n.permTurnOn,
+        // HealthKit's switches live in the Health app, not in Settings.
+        _ when id == 'health' && permissionPlatformOf(platform) == 'ios' => l10n.permOpenHealth,
         _ => l10n.permOpenSettings,
       };
       button = FilledButton.tonal(key: Key('permTurnOn-$id'), onPressed: busy ? null : onTurnOn, child: Text(label));

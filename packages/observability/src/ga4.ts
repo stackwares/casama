@@ -76,7 +76,11 @@ export function toGa4Events(
   if (!event) return [];
   const twin = Object.hasOwn(twins, opts.event) ? twins[opts.event] : undefined;
   if (!twin) return [event];
-  const params: Record<string, unknown> = { ...superProps, ...twin.set };
+  const params: Record<string, unknown> = {
+    ...superProps,
+    ...(opts.internal ? { traffic_type: "internal" } : {}),
+    ...twin.set,
+  };
   for (const p of twin.params)
     if (opts.properties?.[p] !== undefined) params[p] = opts.properties[p];
   return [event, { name: twin.name, params: ga4Params(params) }];
@@ -89,7 +93,11 @@ export function toGa4Event(
 ): Ga4Event | null {
   if (opts.personless || GA4_SKIPPED_EVENTS.has(opts.event)) return null;
   if (opts.distinctId.startsWith("workspace:")) return null;
-  const props: Record<string, unknown> = { ...superProps, ...opts.properties };
+  const props: Record<string, unknown> = {
+    ...superProps,
+    ...(opts.internal ? { traffic_type: "internal" } : {}),
+    ...opts.properties,
+  };
   if (opts.orgId) props.workspace_id = opts.orgId;
   if (opts.event === "purchase") {
     // GA4's recommended purchase event: its revenue reports dedupe by transaction_id. No value until plans

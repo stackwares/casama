@@ -4,6 +4,15 @@ import { Creation } from "./creations.ts";
 
 const ts = z.iso.datetime({ offset: true });
 
+const ProjectCover = z
+  .string()
+  .regex(/^[a-z][a-z0-9-]{0,39}$/)
+  .nullable()
+  .optional()
+  .openapi({
+    description: "A painted cover the project picked (an app art name such as sailboat); null for none",
+  });
+
 export const ProjectStatus = z
   .enum(["planning", "active", "paused", "blocked", "done", "cancelled"])
   .openapi("ProjectStatus");
@@ -57,6 +66,7 @@ export const Project = z
     }),
     // The newest of them, for a cover; absent when there is none.
     latest_creation: Creation.optional(),
+    cover: ProjectCover,
     can_steer: z.boolean().optional().openapi({
       description: "Whether you may change it: its owner, an admin or the lead bot's managers",
     }),
@@ -98,6 +108,7 @@ export const CreateProjectRequest = z
       description:
         "With autonomous false: make this topic of yours the project's chat, and file what was made in it under the project. Without it the project gets a new topic",
     }),
+    cover: ProjectCover,
   })
   .openapi("CreateProjectRequest");
 
@@ -117,5 +128,6 @@ export const UpdateProjectRequest = z
       description:
         "true: the lead bot drafts a plan for you to approve, then works by itself (needs a goal). false: back to working on it together; nothing more starts by itself",
     }),
+    cover: ProjectCover,
   })
   .openapi("UpdateProjectRequest");

@@ -15,6 +15,7 @@ import '../../ui/edge_fade.dart';
 import '../../ui/reveal_when_selected.dart';
 import '../../ui/bot_avatar.dart';
 import '../../ui/lucide_names.dart';
+import '../../ui/painted_cover.dart';
 
 /// The Lucide icon a persona names (kebab-case, from the server's templates).
 IconData personaIcon(String? name) => switch (name) {
@@ -364,7 +365,7 @@ class _PersonaGalleryState extends ConsumerState<_PersonaGallery> {
           ),
           const SizedBox(height: AppSpace.sm),
           SizedBox(
-            height: 38,
+            height: 98,
             child: EdgeFade(child: ListView(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: AppSpace.lg),
@@ -372,13 +373,19 @@ class _PersonaGalleryState extends ConsumerState<_PersonaGallery> {
                 for (final c in [null, ...categories])
                   Padding(
                     padding: const EdgeInsets.only(right: AppSpace.xs),
-                    child: RevealWhenSelected(selected: _category == c, child: ChoiceChip(
-                      key: Key('personaCategory-${c?.name ?? 'all'}'),
-                      showCheckmark: false,
+                    child: RevealWhenSelected(
                       selected: _category == c,
-                      label: Text(c == null ? l10n.familyAll : _categoryLabel(context, c)),
-                      onSelected: (_) => setState(() => _category = c),
-                    )),
+                      child: _CategoryCard(
+                        key: Key('personaCategory-${c?.name ?? 'all'}'),
+                        category: c,
+                        label: c == null ? l10n.familyAll : _categoryLabel(context, c),
+                        selected: _category == c,
+                        onTap: () {
+                          HapticsHelper.selection();
+                          setState(() => _category = c);
+                        },
+                      ),
+                    ),
                   ),
               ],
             )),
@@ -518,8 +525,6 @@ class _Preview extends StatelessWidget {
             children: [
               IconButton(tooltip: MaterialLocalizations.of(context).backButtonTooltip, icon: const Icon(LucideIcons.arrowLeft), onPressed: onBack),
               const SizedBox(width: AppSpace.xs),
-              _PersonaIcon(template: t, size: 40),
-              const SizedBox(width: AppSpace.sm),
               Expanded(child: Text(t.name, style: context.textTheme.headlineSmall)),
             ],
           ),
@@ -528,6 +533,8 @@ class _Preview extends StatelessWidget {
           child: ListView(
             padding: EdgeInsets.fromLTRB(AppSpace.lg, AppSpace.sm, AppSpace.lg, BottomPadding.of(context, minimum: AppSpace.lg)),
             children: [
+              CoverSettleIn(child: _PreviewBanner(template: t)),
+              const SizedBox(height: AppSpace.md),
               Text(t.description, style: context.textTheme.bodyLarge),
               const SizedBox(height: AppSpace.md),
               Text(l10n.personaInstructions, style: context.textTheme.labelLarge?.copyWith(color: scheme.onSurfaceVariant)),
@@ -582,6 +589,110 @@ class _Preview extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// A category as a painted card: its picture (visuals/round-10) over its name, ringed when picked.
+/// "All" gets a drawn tile.
+class _CategoryCard extends StatelessWidget {
+  const _CategoryCard({super.key, required this.category, required this.label, required this.selected, required this.onTap});
+  final TemplateCategoryEnum? category;
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
+    final name = category?.name ?? 'all';
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: label,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppRadius.tile),
+        child: SizedBox(
+          width: 76,
+          child: Column(
+            children: [
+              AnimatedContainer(
+                duration: AppMotion.of(context, AppMotion.fast),
+                padding: const EdgeInsets.all(2.5),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: selected ? scheme.primary : Colors.transparent, width: 2),
+                ),
+                child: PaintedCover(
+                  size: 58,
+                  radius: 15,
+                  seed: 'persona-$name',
+                  asset: categoryArt(category?.name),
+                  icon: LucideIcons.layoutGrid,
+                ),
+              ),
+              const SizedBox(height: 4),
+              ExcludeSemantics(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: context.textTheme.labelMedium?.copyWith(
+                    fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                    color: selected ? scheme.onSurface : scheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The preview's header: the persona's own cover, or its category's painting, with its avatar on
+/// top, the way the starter set picker leads with a set's cover.
+class _PreviewBanner extends StatelessWidget {
+  const _PreviewBanner({required this.template});
+  final Template template;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = template;
+    return ExcludeSemantics(
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(AppRadius.card),
+        child: AspectRatio(
+          aspectRatio: 2.2,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              PaintedArt(
+                seed: 'persona-${t.category?.name ?? t.id}',
+                asset: t.cover == null ? categoryArt(t.category?.name) : null,
+                url: t.cover,
+                alignment: const Alignment(0, -0.1),
+              ),
+              Align(
+                alignment: const Alignment(-0.88, 0.8),
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: context.colorScheme.surface,
+                    boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.18), blurRadius: 14, offset: const Offset(0, 4))],
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(4),
+                    child: _PersonaIcon(template: t, size: 56),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

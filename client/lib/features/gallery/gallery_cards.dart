@@ -7,6 +7,7 @@ import '../../l10n/generated/app_localizations.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
 import '../../ui/lucide_names.dart';
+import '../../ui/painted_cover.dart';
 import '../bots/template_picker.dart' show personaIcon;
 import '../integrations/app_logo.dart';
 import '../skills/skill_visuals.dart';
@@ -56,6 +57,32 @@ IconData galleryKindIcon(String type) => switch (type) {
   _ => LucideIcons.sparkles,
 };
 
+/// Painted covers bundled for the gallery's own starter sets (visuals/round-9), in
+/// `assets/sets/<id>.webp`. Others use the gallery's `cover.webp` ([GalleryItem.cover]) when they
+/// have one, or a drawn tile, so a new set needs no app build.
+const _setCovers = {
+  'founder-kit',
+  'job-search-kit',
+  'meetings-handled',
+  'money-in-order',
+  'small-business-kit',
+  'stay-on-top-of-email',
+  'student-kit',
+  'writer-kit',
+};
+
+/// The bundled cover for a gallery item, or null (only the gallery's own starter sets have one).
+String? galleryCoverAsset(GalleryItem item) =>
+    item.type == 'set' ? setCoverAsset(item.id) : null;
+
+/// The bundled cover for the starter set [id], or null.
+String? setCoverAsset(String id) =>
+    _setCovers.contains(id) ? 'assets/sets/$id.webp' : null;
+
+/// Whether an item has a painted cover to show instead of its icon.
+bool galleryHasCover(GalleryItem item) =>
+    galleryCoverAsset(item) != null || item.cover != null;
+
 /// The icon tile for an item that isn't a look: an app's logo, a skill's category tile, or the
 /// item's own Lucide icon.
 class GalleryItemIcon extends StatelessWidget {
@@ -81,6 +108,15 @@ class GalleryItemIcon extends StatelessWidget {
       'bot' => personaIcon(iconName),
       _ => lucideByName(iconName) ?? galleryKindIcon(item.type),
     };
+    if (galleryHasCover(item)) {
+      return PaintedCover(
+        size: size,
+        seed: item.id,
+        asset: galleryCoverAsset(item),
+        url: item.cover,
+        icon: icon,
+      );
+    }
     return SkillIconTile(
       icon: icon,
       color: skillCategoryColor(context, category),

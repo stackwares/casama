@@ -448,6 +448,13 @@ export const EnvSchema = z.object({
   POSTHOG_HOST: z.url().optional(),
   /** Product analytics environment tag (production|staging|development). Defaults to NODE_ENV. */
   ANALYTICS_ENVIRONMENT: z.string().optional(),
+  /**
+   * Comma- or space-separated internal/test emails and email domains (`@` optional on domains).
+   * Accounts matching these are tagged `is_internal: true` in PostHog and `traffic_type: "internal"`
+   * in GA4, without sending any email address to analytics.
+   */
+  INTERNAL_EMAILS: z.string().optional(),
+  INTERNAL_EMAIL_DOMAINS: z.string().optional(),
   /** Product analytics events and daily rollups (Casama Cloud). Off unless "on" and POSTHOG_API_KEY is set. */
   PRODUCT_ANALYTICS: z.enum(["on", "off"]).default("off"),
   /** Which analytics providers get product events (D-397): "posthog", "ga4", both, or "none". Unset = every provider with keys. */

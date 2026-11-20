@@ -1,7 +1,6 @@
 # GA4 next to PostHog: plan
 
-Status: **built in code** (2026-11-18, D-397), with the defaults below. Not deployed, and the GA4 keys are not
-set yet. Where the build differs from this text is listed in "What changed in the build" at the end. Oliver asked: "instead of just PostHog analytics and
+Status: **live** (D-439, 2026-11-20; see `docs/GA4-LAUNCH-PLAN.md`). Built 2026-11-18 (D-397), with the defaults below. Where the build differs from this text is listed in "What changed in the build" at the end. Oliver asked: "instead of just PostHog analytics and
 funnels can we also support GA4 so it's a free alternative? but can we keep both for now?"
 
 ## Summary

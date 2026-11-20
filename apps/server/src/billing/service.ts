@@ -759,6 +759,7 @@ export class BillingService {
       trial_available: this.enabled ? await this.trialAvailable(orgId) : false,
       credits_usd: this.enabled ? await this.balance(orgId) : 0,
       daily: await this.dailyUsage(orgId, ent?.plan_code, ent?.limits),
+      computer_hours: await this.computerHours(orgId, ent?.limits),
       subscriptions: subs.map((s) => ({
         id: s.id,
         source: s.source as BillingSource,
@@ -800,6 +801,28 @@ export class BillingService {
       used_usd: Math.round(Number(r?.today ?? 0) * 1e6) / 1e6,
       cap_usd: cloudModelDailyCap(planCode ?? this.defaultPlan, limits?.cloud_daily_usd),
       resets_at: resets.toISOString(),
+    };
+  }
+
+  /**
+   * This month's hosted computer hours against the plan's, or null when no limit applies. The
+   * same sum computer starts check (packages/agent computers.ts), so the app shows why a computer
+   * won't start (D-442).
+   */
+  async computerHours(orgId: string, limits: Record<string, unknown> | undefined) {
+    const raw = limits?.computer_hours;
+    const limit =
+      typeof raw === "number" ? raw : typeof raw === "string" ? Number(raw) : Number.NaN;
+    if (!this.enabled || limits?.unlimited === true || !Number.isFinite(limit)) return null;
+    const [r] = await this.db.execute<{ seconds: string }>(sql`
+      select coalesce(sum(quantity), 0)::text as seconds from public.usage_ledger
+      where org_id = ${orgId}::uuid and kind = 'computer_seconds'
+        and created_at >= date_trunc('month', now() at time zone 'utc') at time zone 'utc'`);
+    const now = new Date();
+    return {
+      used_hours: Math.round((Number(r?.seconds ?? 0) / 3600) * 100) / 100,
+      limit_hours: limit,
+      resets_at: new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1)).toISOString(),
     };
   }
 

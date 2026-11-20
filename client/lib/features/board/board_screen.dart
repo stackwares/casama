@@ -11,6 +11,7 @@ import '../../core/widgets.dart';
 import '../../core/haptics.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
+import '../../ui/painted_cover.dart';
 import '../../ui/bottom_padding.dart';
 import '../../ui/adaptive_modal.dart';
 import '../../ui/edge_fade.dart';
@@ -1166,6 +1167,7 @@ class _TicketFormState extends ConsumerState<_TicketForm> {
     }
     return FormSheet(
       icon: LucideIcons.squareKanban,
+      art: 'tasks-ticket',
       title: l10n.newTicket,
       submitLabel: l10n.newTicket,
       submitKey: const Key('createTicket'),
@@ -1812,9 +1814,8 @@ class _BoardStarters extends ConsumerWidget {
     final l10n = context.l10n;
     final text = context.textTheme;
     final scheme = context.colorScheme;
-    Widget way(Key key, IconData icon, double hue, String title, String help, VoidCallback onTap) {
-      // The Library's cover tints, so the two empty screens read as one family.
-      final tint = HSLColor.fromAHSL(1, hue, 0.60, context.isDark ? 0.72 : 0.42).toColor();
+    Widget way(Key key, String art, IconData icon, String title, String help, VoidCallback onTap) {
+      // A painted picture, like the Library's starters, so the two empty screens read as one family.
       return AppCard(
           key: key,
           onTap: () {
@@ -1823,14 +1824,8 @@ class _BoardStarters extends ConsumerWidget {
           },
           child: Row(
             children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: tint.withValues(alpha: 0.18),
-                  borderRadius: BorderRadius.circular(AppRadius.row),
-                ),
-                child: Icon(icon, size: 20, color: tint),
+              ExcludeSemantics(
+                child: PaintedCover(size: 56, radius: 16, seed: art, asset: paintedAsset(art), icon: icon),
               ),
               const SizedBox(width: AppSpace.sm),
               Expanded(
@@ -1879,9 +1874,9 @@ class _BoardStarters extends ConsumerWidget {
                   style: text.bodyMedium?.copyWith(color: scheme.onSurfaceVariant, height: 1.4),
                 ),
                 const SizedBox(height: AppSpace.lg),
-                way(const Key('startTicket'), LucideIcons.listTodo, 210, l10n.tasksStartTicket, l10n.tasksStartTicketHelp, onTicket),
+                way(const Key('startTicket'), 'tasks-ticket', LucideIcons.listTodo, l10n.tasksStartTicket, l10n.tasksStartTicketHelp, onTicket),
                 const SizedBox(height: AppSpace.sm),
-                way(const Key('startProject'), LucideIcons.target, 265, l10n.tasksStartProject, l10n.tasksStartProjectHelp, onProject),
+                way(const Key('startProject'), 'tasks-project', LucideIcons.target, l10n.tasksStartProject, l10n.tasksStartProjectHelp, onProject),
                 const SizedBox(height: AppSpace.xl),
                 Text(
                   l10n.tasksExamples,

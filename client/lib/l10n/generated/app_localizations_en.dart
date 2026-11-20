@@ -319,6 +319,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mentionSectionConnect => 'Connect';
 
   @override
+  String get mentionSectionStartGroup => 'Start a group chat';
+
+  @override
   String get mentionBadgeBot => 'Bot';
 
   @override
@@ -3642,6 +3645,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Each bot works on a computer: the team computer everyone shares, or a private one. Files stay on it between chats.';
 
   @override
+  String get computersEmptyTitle => 'No computers yet';
+
+  @override
   String get thisDevice => 'This device';
 
   @override
@@ -4511,6 +4517,24 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get creditsDailyResetsSoon => 'Resets in less than an hour.';
+
+  @override
+  String get creditsHoursLabel => 'Computer hours';
+
+  @override
+  String creditsHoursOf(String used, String limit) {
+    return '$used of $limit h';
+  }
+
+  @override
+  String creditsHoursExplainer(String date) {
+    return 'Time your bots\' computers run this month. When they run out, chat keeps working; only the computer stops. Resets on $date.';
+  }
+
+  @override
+  String creditsHoursReached(String date) {
+    return 'This month\'s computer hours are used, so your computer can\'t start. Chat still works. Resets on $date. Upgrade for more hours.';
+  }
 
   @override
   String get kindStream => 'Live view';
@@ -6492,6 +6516,28 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get projectReopen => 'Reopen';
+
+  @override
+  String get projectCover => 'Cover';
+
+  @override
+  String get projectCoverNone => 'None';
+
+  @override
+  String projectCoverName(String name) {
+    String _temp0 = intl.Intl.selectLogic(name, {
+      'sailboat': 'Sailboat',
+      'mountain': 'Mountain',
+      'seedling': 'Seedling',
+      'compass': 'Compass',
+      'lantern': 'Lantern',
+      'telescope': 'Telescope',
+      'map': 'Map',
+      'chess': 'Chess',
+      'other': '$name',
+    });
+    return '$_temp0';
+  }
 
   @override
   String projectThings(int count) {
@@ -15045,6 +15091,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get permOpenSettings => 'Open settings';
+
+  @override
+  String get permOpenHealth => 'Open Health';
+
+  @override
+  String get permHealthIosHow =>
+      'In Health, tap your picture, then Apps, then Casama, and turn on what your bots may read.';
 
   @override
   String get permChoose => 'Choose';

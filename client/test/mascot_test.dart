@@ -10,6 +10,7 @@ import 'package:casama/features/bots/bots_screen.dart';
 import 'package:casama/l10n/generated/app_localizations.dart';
 import 'package:casama/ui/bot_avatar.dart';
 import 'package:casama/ui/casama_mark.dart';
+import 'package:casama/ui/form_sheet.dart';
 import 'package:casama/ui/mascot.dart';
 
 import 'app_test.dart' show setSize;
@@ -94,8 +95,30 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.bySemanticsLabel('Starry'));
     await tester.pumpAndSettle();
+    // The sheet's hero is the bot being made.
+    expect(find.byWidgetPredicate((w) => w is MascotHero && w.mascots.single == Mascot.starry), findsOneWidget);
     await tester.tap(find.widgetWithText(FilledButton, 'Create'));
     await tester.pumpAndSettle();
     expect(backend.createdBotAvatar, 'mascot:starry');
+  });
+
+  testWidgets('a sheet can carry a group of mascots over its title', (tester) async {
+    await tester.pumpWidget(MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: Scaffold(
+        body: FormSheet(
+          title: 'New group chat',
+          icon: Icons.group,
+          hero: const MascotHero([Mascot.winky, Mascot.giggly, Mascot.wow]),
+          submitLabel: 'Create',
+          onSubmit: () {},
+          children: const [],
+        ),
+      ),
+    ));
+    expect(find.byType(MascotImage), findsNWidgets(3));
+    // The hero replaces the icon tile.
+    expect(find.byIcon(Icons.group), findsNothing);
   });
 }

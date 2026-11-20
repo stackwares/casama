@@ -5,8 +5,16 @@ it("relays only catalog app events with their catalog properties, plus twins and
   const out = relayedGa4Events("windows", [
     {
       name: "paywall_view",
-      properties: { source: "limit", paywall_kind: "credits", email: "a@b.c", nested: { x: 1 } },
+      properties: {
+        source: "limit",
+        paywall_kind: "regular",
+        default_plan: "pro",
+        default_period: "month",
+        email: "a@b.c",
+        nested: { x: 1 },
+      },
     },
+    { name: "paywall_plan_select", properties: { plan: "plus_yearly", interval: "year" } },
     { name: "referral_shared", properties: { method: "copy" } },
     { name: "screen_view", properties: { screen: "/chat/:id" } },
     { name: "screen_view", properties: { screen: "https://evil" } },
@@ -15,6 +23,9 @@ it("relays only catalog app events with their catalog properties, plus twins and
   ]);
   expect(out.map((e) => e.event)).toEqual([
     "paywall_view",
+    "view_item_list",
+    "paywall_plan_select",
+    "select_item",
     "referral_shared",
     "share",
     "page_view",
@@ -23,15 +34,34 @@ it("relays only catalog app events with their catalog properties, plus twins and
   expect(out[0]?.properties).toEqual({
     platform: "windows",
     source: "limit",
-    paywall_kind: "credits",
+    paywall_kind: "regular",
+    default_plan: "pro",
+    default_period: "month",
   });
-  expect(out[2]?.properties).toEqual({
+  expect(out[1]?.properties).toEqual({
+    platform: "windows",
+    source: "limit",
+    item_list_id: "paywall",
+    item_list_name: "Casama plans",
+    paywall_kind: "regular",
+    default_plan: "pro",
+    default_period: "month",
+  });
+  expect(out[3]?.properties).toEqual({
+    platform: "windows",
+    source: "app",
+    item_list_id: "paywall",
+    item_list_name: "Casama plans",
+    plan: "plus_yearly",
+    interval: "year",
+  });
+  expect(out[5]?.properties).toEqual({
     platform: "windows",
     source: "app",
     content_type: "referral",
     method: "copy",
   });
-  expect(out[3]?.properties).toMatchObject({
+  expect(out[6]?.properties).toMatchObject({
     page_title: "/chat/:id",
     page_location: "https://app.casama.ai/chat/:id",
   });

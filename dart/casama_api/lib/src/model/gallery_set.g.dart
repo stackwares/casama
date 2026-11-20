@@ -25,6 +25,8 @@ abstract class _$GallerySetCWProxy {
 
   GallerySet added(String? added);
 
+  GallerySet cover(String? cover);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `GallerySet(...).copyWith.fieldName(value)`.
@@ -43,6 +45,7 @@ abstract class _$GallerySetCWProxy {
     List<GalleryRef> items,
     String? source_,
     String? added,
+    String? cover,
   });
 }
 
@@ -80,6 +83,9 @@ class _$GallerySetCWProxyImpl implements _$GallerySetCWProxy {
   @override
   GallerySet added(String? added) => call(added: added);
 
+  @override
+  GallerySet cover(String? cover) => call(cover: cover);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `GallerySet(...).copyWith.fieldName(value)`.
@@ -99,6 +105,7 @@ class _$GallerySetCWProxyImpl implements _$GallerySetCWProxy {
     Object? items = const $CopyWithPlaceholder(),
     Object? source_ = const $CopyWithPlaceholder(),
     Object? added = const $CopyWithPlaceholder(),
+    Object? cover = const $CopyWithPlaceholder(),
   }) {
     return GallerySet(
       id: id == const $CopyWithPlaceholder() || id == null
@@ -138,6 +145,10 @@ class _$GallerySetCWProxyImpl implements _$GallerySetCWProxy {
           ? _value.added
           // ignore: cast_nullable_to_non_nullable
           : added as String?,
+      cover: cover == const $CopyWithPlaceholder()
+          ? _value.cover
+          // ignore: cast_nullable_to_non_nullable
+          : cover as String?,
     );
   }
 }
@@ -185,6 +196,7 @@ GallerySet _$GallerySetFromJson(Map<String, dynamic> json) =>
         ),
         source_: $checkedConvert('source', (v) => v as String?),
         added: $checkedConvert('added', (v) => v as String?),
+        cover: $checkedConvert('cover', (v) => v as String?),
       );
       return val;
     }, fieldKeyMap: const {'source_': 'source'});
@@ -200,4 +212,5 @@ Map<String, dynamic> _$GallerySetToJson(GallerySet instance) =>
       'items': instance.items.map((e) => e.toJson()).toList(),
       'source': ?instance.source_,
       'added': ?instance.added,
+      'cover': ?instance.cover,
     };

@@ -57,6 +57,8 @@ abstract class _$TemplateCWProxy {
 
   Template stats(GalleryStats? stats);
 
+  Template cover(String? cover);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `Template(...).copyWith.fieldName(value)`.
@@ -91,6 +93,7 @@ abstract class _$TemplateCWProxy {
     String? source_,
     int? version,
     GalleryStats? stats,
+    String? cover,
   });
 }
 
@@ -177,6 +180,9 @@ class _$TemplateCWProxyImpl implements _$TemplateCWProxy {
   @override
   Template stats(GalleryStats? stats) => call(stats: stats);
 
+  @override
+  Template cover(String? cover) => call(cover: cover);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `Template(...).copyWith.fieldName(value)`.
@@ -212,6 +218,7 @@ class _$TemplateCWProxyImpl implements _$TemplateCWProxy {
     Object? source_ = const $CopyWithPlaceholder(),
     Object? version = const $CopyWithPlaceholder(),
     Object? stats = const $CopyWithPlaceholder(),
+    Object? cover = const $CopyWithPlaceholder(),
   }) {
     return Template(
       id: id == const $CopyWithPlaceholder() || id == null
@@ -315,6 +322,10 @@ class _$TemplateCWProxyImpl implements _$TemplateCWProxy {
           ? _value.stats
           // ignore: cast_nullable_to_non_nullable
           : stats as GalleryStats?,
+      cover: cover == const $CopyWithPlaceholder()
+          ? _value.cover
+          // ignore: cast_nullable_to_non_nullable
+          : cover as String?,
     );
   }
 }
@@ -421,6 +432,7 @@ Template _$TemplateFromJson(Map<String, dynamic> json) => $checkedCreate(
         (v) =>
             v == null ? null : GalleryStats.fromJson(v as Map<String, dynamic>),
       ),
+      cover: $checkedConvert('cover', (v) => v as String?),
     );
     return val;
   },
@@ -457,6 +469,7 @@ Map<String, dynamic> _$TemplateToJson(Template instance) => <String, dynamic>{
   'source': ?instance.source_,
   'version': ?instance.version,
   'stats': ?instance.stats?.toJson(),
+  'cover': ?instance.cover,
 };
 
 const _$TemplateAutonomyEnumEnumMap = {

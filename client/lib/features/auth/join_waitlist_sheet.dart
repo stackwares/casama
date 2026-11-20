@@ -87,6 +87,7 @@ class _JoinWaitlistSheetState extends ConsumerState<JoinWaitlistSheet> {
     if (_joined) {
       return FormSheet(
         key: const Key('waitlistJoined'),
+        art: 'wait-envelope',
         icon: LucideIcons.circleCheck,
         iconColor: context.appColors.positive,
         title: l10n.waitlistJoinedTitle,
@@ -122,6 +123,7 @@ class _JoinWaitlistSheetState extends ConsumerState<JoinWaitlistSheet> {
     }
     return FormSheet(
       key: const Key('joinWaitlistForm'),
+      art: 'wait-hourglass',
       icon: LucideIcons.listPlus,
       title: l10n.joinTheWaitlist,
       subtitle: l10n.waitlistSubtitle,

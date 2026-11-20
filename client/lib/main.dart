@@ -32,6 +32,7 @@ import 'theme/bundled_font_loader.dart';
 import 'theme/fonts.dart';
 import 'l10n/generated/app_localizations.dart';
 import 'ui/brand_splash.dart';
+import 'ui/splash_scene.dart';
 import 'ui/server_unreachable_view.dart';
 import 'ui/text_scale.dart';
 import 'ui/friendly_error_view.dart';
@@ -167,6 +168,7 @@ class _StartupGateState extends State<StartupGate> {
 
   /// Failed tries in a row, for the wait before the next automatic one.
   var _failures = 0;
+  var _scenePrecached = false;
   Timer? _autoRetry;
   DateTime? _nextRetryAt;
 
@@ -330,6 +332,11 @@ class _StartupGateState extends State<StartupGate> {
 
   Widget _splashPage(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    if (!_scenePrecached) {
+      // Start decoding the painted scene now; the splash shows plain until it's ready.
+      _scenePrecached = true;
+      SplashScene.precache(context);
+    }
     final failed = _error != null;
     return Scaffold(
       key: failed ? null : const Key('startupSplash'),
@@ -350,9 +357,19 @@ class _StartupGateState extends State<StartupGate> {
                 connect: l10n.connect,
               ),
             )
-          : BrandSplash(
-              composition: _brand,
-              label: Text(l10n.connectingToServer, key: const Key('startupConnecting'), textAlign: TextAlign.center),
+          : Stack(
+              fit: StackFit.expand,
+              children: [
+                // The painted scene, faded in once decoded; the welcome screen shows the same one.
+                SplashScene(
+                  brightness: MediaQuery.platformBrightnessOf(context),
+                  background: BrandSplash.backgroundOf(context),
+                ),
+                BrandSplash(
+                  composition: _brand,
+                  label: Text(l10n.connectingToServer, key: const Key('startupConnecting'), textAlign: TextAlign.center),
+                ),
+              ],
             ),
     );
   }

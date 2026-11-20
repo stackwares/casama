@@ -10,13 +10,14 @@ import 'fake_backend.dart';
 
 /// $1.00 left, $0.10 billed this month; ten runs at $0.05 each.
 class _MeterBackend extends FakeBackend {
-  _MeterBackend({this.runCount = 10, this.credits, this.daily}) {
+  _MeterBackend({this.runCount = 10, this.credits, this.daily, this.hours}) {
     billingEnabled = true;
   }
 
   final int runCount;
   final double? credits;
   final BillingSummaryDaily? daily;
+  final BillingSummaryComputerHours? hours;
 
   @override
   Future<UsageReport> usage(String orgId, {String period = 'day', UsageFilter filter = UsageFilter.none}) async =>
@@ -30,6 +31,7 @@ class _MeterBackend extends FakeBackend {
     var b = await super.billing(orgId);
     if (credits != null) b = b.copyWith(creditsUsd: credits!);
     if (daily != null) b = b.copyWith(daily: daily);
+    if (hours != null) b = b.copyWith(computerHours: hours);
     return b;
   }
 }
@@ -100,6 +102,34 @@ void main() {
       expect(find.text(r'$0.53 of $0.25'), findsOneWidget);
       expect(find.byKey(const Key('dailyLimitReached')), findsOneWidget);
       expect(find.byKey(const Key('creditsOut')), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'computer hours show under the credits; used up, they say chat still works (D-442)',
+    (tester) async {
+      BillingSummaryComputerHours hours(double used) => BillingSummaryComputerHours(
+        usedHours: used,
+        limitHours: 5,
+        resetsAt: DateTime.utc(2026, 12, 1),
+      );
+      await setSize(tester, const Size(430, 2400));
+      await tester.pumpWidget(
+        harness(_MeterBackend(hours: hours(1.5)), const UsageScreen()),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Computer hours'), findsOneWidget);
+      expect(find.text('1.5 of 5 h'), findsOneWidget);
+      expect(find.byKey(const Key('computerHoursReached')), findsNothing);
+      expect(find.textContaining('Resets on December 1.'), findsOneWidget);
+
+      await tester.pumpWidget(
+        harness(_MeterBackend(hours: hours(17)), const UsageScreen()),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('17 of 5 h'), findsOneWidget);
+      expect(find.byKey(const Key('computerHoursReached')), findsOneWidget);
+      expect(find.textContaining('Chat still works.'), findsOneWidget);
     },
   );
 

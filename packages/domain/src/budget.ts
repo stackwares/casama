@@ -18,9 +18,6 @@ export interface BudgetState {
   /** What this workspace has been charged today for Casama's model key, and that day's cap. */
   cloudToday?: number;
   cloudDailyCap?: number | null;
-  /** Computer-seconds this month and the plan's monthly computer hours. */
-  computerSeconds?: number;
-  computerHours?: number | null;
 }
 
 export type BudgetVerdict =
@@ -45,6 +42,17 @@ const over = (spent: number, limit?: number | null) =>
 /** $0.25, $10: cents only when there are any. */
 const usd = (n: number) => `$${Number.isInteger(n) ? n : n.toFixed(2)}`;
 
+/**
+ * Why a hosted computer won't start: the month's computer hours are used. Only computers stop;
+ * chat, apps and models keep running on credits. Names the reset day (UTC) and the way out.
+ */
+export function computerHoursMessage(hours?: number | null, now = new Date()): string {
+  const reset = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
+  const day = reset.toLocaleDateString("en-US", { month: "long", day: "numeric", timeZone: "UTC" });
+  const used = hours != null ? `its ${hours} computer hours` : "its computer hours";
+  return `The workspace used ${used} for this month, so its computer can't start. They reset on ${day}. Upgrade in Billing for more hours.`;
+}
+
 /** Checked at run start and after every model step. */
 export function checkBudget(s: BudgetState): BudgetVerdict {
   if (over(s.cloudToday ?? 0, s.cloudDailyCap))
@@ -64,12 +72,6 @@ export function checkBudget(s: BudgetState): BudgetVerdict {
         message: "The workspace is out of credits. Add credits or change plans in Billing.",
       };
   }
-  if (over((s.computerSeconds ?? 0) / 3600, s.computerHours))
-    return {
-      ok: false,
-      code: "computer_hours_exceeded",
-      message: `The workspace used its ${s.computerHours} computer hours for this month.`,
-    };
   if (over(s.orgPeriod, s.quotaLimit))
     return {
       ok: false,

@@ -14,6 +14,7 @@ import {
   cloudOpenRouterCharge,
   cloudOpenRouterCost,
   cloudRunPolicy,
+  computerHoursMessage,
   defaultModelFor,
   describeActionRule,
   ensureSubmit,
@@ -2520,7 +2521,6 @@ async function spend(
     credits: string | null;
     unbilled: string;
     cloud_today: string;
-    computer_seconds: string;
     bot_rank: string;
   }>(sql`
     select
@@ -2539,13 +2539,11 @@ async function spend(
         where org_id = ${info.orgId}::uuid and billable
           and kind <> all('{computer_seconds,stream_seconds}'::text[])
           and created_at >= date_trunc('day', now() at time zone 'utc') at time zone 'utc') as cloud_today,
-      (select coalesce(sum(quantity), 0) from public.usage_ledger
-        where org_id = ${info.orgId}::uuid and kind = 'computer_seconds'
-          and created_at >= date_trunc('month', now() at time zone 'utc') at time zone 'utc') as computer_seconds,
       (select count(*) from public.bots o join public.bots me on me.id = ${info.botId}::uuid
         where o.org_id = me.org_id and o.archived_at is null and o.id <> me.id
           and (o.created_at, o.id) < (me.created_at, me.id)) as bot_rank`);
-  // Entitlements are the only billing input (D-070): a monthly cost cap, credits, computer hours.
+  // Entitlements are the only billing input (D-070): a monthly cost cap and credits. Computer
+  // hours stop only the computer, at its start (computers.ts), never the whole run (D-442).
   const limits = row?.limits ?? {};
   const num = (v: unknown) => (typeof v === "number" ? v : null);
   const caps = [row?.quota == null ? null : Number(row.quota), num(limits.monthly_usd)].filter(
@@ -2596,8 +2594,6 @@ async function spend(
     cloudDailyCap: billCloudModels
       ? cloudModelDailyCap(row?.plan_code, limits.cloud_daily_usd)
       : null,
-    computerSeconds: Number(row?.computer_seconds ?? 0),
-    computerHours: num(limits.computer_hours),
   });
 }
 
@@ -3301,6 +3297,8 @@ async function toolStep(
               "out_of_credits",
               "The workspace is out of credits. Add credits or change plans in Billing.",
             );
+          if ((err as Error).message === "computer_hours_exceeded")
+            throw new ToolError("computer_hours_exceeded", computerHoursMessage());
           // After a downgrade, and when the server is full (D-248).
           if ((err as Error).message === "plan_limit")
             throw new ToolError(

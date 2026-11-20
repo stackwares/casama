@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'analytics_events.g.dart';
 import 'analytics_sinks.dart';
@@ -10,6 +11,12 @@ import 'telemetry.dart';
 /// All methods are safe no-ops when no provider is on, consent is opted out,
 /// or server_kind is not 'cloud'.
 class Analytics {
+  @visibleForTesting
+  static void Function(String event, Map<String, Object>? properties)? onCaptureForTest;
+
+  @visibleForTesting
+  static List<AnalyticsSink>? sinksOverrideForTest;
+
   static final _posthog = PosthogSink();
   static final _ga4 = Ga4Sink();
   static final _ga4Relay = Ga4RelaySink(platform: Telemetry.platformName);
@@ -21,7 +28,9 @@ class Analytics {
       _ga4Relay.send = send;
 
   /// The providers that are on in this build, in order.
-  static List<AnalyticsSink> get _sinks => [
+  static List<AnalyticsSink> get _sinks =>
+      sinksOverrideForTest ??
+      [
         if (Telemetry.posthogAnalyticsOn) _posthog,
         if (Telemetry.ga4On) _ga4,
         if (Telemetry.ga4RelayOn) _ga4Relay,
@@ -46,7 +55,10 @@ class Analytics {
 
   static const _consentKey = 'casama.analytics_enabled';
   static const _syncedKey = 'casama.analytics_opt_out_synced';
+  static const _internalKeyPrefix = 'casama.analytics_internal.';
   static bool? _consentCache;
+
+  static String _internalKey(String userId) => '$_internalKeyPrefix$userId';
 
   /// Whether analytics consent is currently active (default true on Cloud builds).
   static Future<bool> isConsentEnabled() async {
@@ -98,7 +110,37 @@ class Analytics {
     if (sinks.isEmpty || !Telemetry.isCloud) return;
     final consent = await isConsentEnabled();
     if (!consent) return;
-    await _each(sinks, (s) => s.identify(userId, setOnce: {'signup_platform': Telemetry.platformName}));
+    bool? cachedInternal;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      cachedInternal = prefs.getBool(_internalKey(userId));
+    } catch (_) {}
+    await _each(
+      sinks,
+      (s) => s.identify(
+        userId,
+        set: cachedInternal != null ? {'is_internal': cachedInternal} : null,
+        setOnce: {'signup_platform': Telemetry.platformName},
+      ),
+    );
+  }
+
+  /// Fetches whether [userId] is an internal/test account from `/v1/me` and applies it to all active sinks.
+  static Future<void> syncInternal(String userId, Future<bool> Function() fetch) async {
+    final sinks = _sinks;
+    if (sinks.isEmpty || !Telemetry.isCloud) return;
+    final consent = await isConsentEnabled();
+    if (!consent) return;
+    try {
+      final internal = await fetch();
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool(_internalKey(userId), internal);
+      } catch (_) {}
+      await _each(sinks, (s) => s.setInternal(internal));
+    } catch (_) {
+      // Offline or signed out: keep any cached flag applied during identify().
+    }
   }
 
   /// Resets distinctId on sign-out or account deletion.
@@ -112,16 +154,17 @@ class Analytics {
 
   /// Records a catalog-typed event if telemetry & consent are active.
   static Future<void> capture(String event, {Map<String, Object?>? properties}) async {
-    final sinks = _sinks;
-    if (sinks.isEmpty) return;
-    final consent = await isConsentEnabled();
-    if (!consent) return;
     final clean = properties != null
         ? {
             for (final e in properties.entries)
               if (e.value != null) e.key: e.value!,
           }
         : null;
+    onCaptureForTest?.call(event, clean);
+    final sinks = _sinks;
+    if (sinks.isEmpty) return;
+    final consent = await isConsentEnabled();
+    if (!consent) return;
     // PostHog filters in its beforeSend; GA4 gets catalog events on Casama Cloud and nothing else, so
     // the self-hosted daily ping never reaches it.
     await _each(

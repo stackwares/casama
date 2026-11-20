@@ -391,6 +391,39 @@ function appDocument(raw, errors) {
   };
 }
 
+// A painted cover (cover.webp) for sets, bots, routines, skills and plugins: presentation only, so it
+// stays out of the item's files, sha256 and size and adding one never shows as an update.
+const COVER_TYPES = ["set", "bot", "routine", "skill", "plugin"];
+const COVER_FILE = "cover.webp";
+const COVER_MAX = 80 * 1024;
+const COVER_MIN_PX = 256;
+const COVER_MAX_PX = 1024;
+
+// Width and height from a WebP's first chunk (VP8 lossy, VP8L lossless or VP8X extended), or null.
+function webpSize(b) {
+  if (b.length < 30 || b.toString("latin1", 0, 4) !== "RIFF" || b.toString("latin1", 8, 12) !== "WEBP") return null;
+  const chunk = b.toString("latin1", 12, 16);
+  if (chunk === "VP8 ") {
+    if (b[23] !== 0x9d || b[24] !== 0x01 || b[25] !== 0x2a) return null;
+    return { width: b.readUInt16LE(26) & 0x3fff, height: b.readUInt16LE(28) & 0x3fff };
+  }
+  if (chunk === "VP8L") {
+    if (b[20] !== 0x2f) return null;
+    const bits = b.readUInt32LE(21);
+    return { width: (bits & 0x3fff) + 1, height: ((bits >>> 14) & 0x3fff) + 1 };
+  }
+  if (chunk === "VP8X") return { width: b.readUIntLE(24, 3) + 1, height: b.readUIntLE(27, 3) + 1 };
+  return null;
+}
+
+function coverImage(bytes, errors) {
+  if (bytes.byteLength > COVER_MAX) errors.push(`${COVER_FILE} is over ${COVER_MAX / 1024} KB`);
+  const size = webpSize(bytes);
+  if (!size) return errors.push(`${COVER_FILE} isn't a WebP image`);
+  if (size.width !== size.height) errors.push(`${COVER_FILE} must be square (it is ${size.width}x${size.height})`);
+  else if (size.width < COVER_MIN_PX || size.width > COVER_MAX_PX) errors.push(`${COVER_FILE} must be ${COVER_MIN_PX} to ${COVER_MAX_PX} px (it is ${size.width})`);
+}
+
 function appLogo(svg, bytes, errors) {
   if (bytes > LOGO_MAX) errors.push(`logo.svg is over ${LOGO_MAX / 1024} KB`);
   if (!/^\s*(<\?xml[^>]*\?>\s*)?<svg[\s>]/.test(svg) || !/<\/svg>\s*$/.test(svg)) errors.push("logo.svg must be one <svg> element");
@@ -882,11 +915,19 @@ for (const [dir, type] of [["themes", "theme"], ["schemes", "scheme"], ["wallpap
     const where = `${dir}/${id}`;
     if (!ID.test(id)) errors.push(`${where}: folder name must be lowercase letters, digits and dashes`);
     const folder = join(parent, id);
-    const files = walk(folder).map((path) => ({
+    const walked = walk(folder).map((path) => ({
       path,
       relative: relative(folder, path).split("\\").join("/"),
       bytes: readFileSync(path),
     }));
+    // The cover is taken out before anything else sees the files (allowed lists, hash, size, files).
+    const coverFile = COVER_TYPES.includes(type) ? walked.find((f) => f.relative === COVER_FILE) : undefined;
+    const files = walked.filter((f) => f !== coverFile);
+    if (coverFile) {
+      const local = [];
+      coverImage(coverFile.bytes, local);
+      for (const e of local) errors.push(`${where}: ${e}`);
+    }
     const metaFile = files.find((f) => f.relative === "item.json");
     if (!metaFile) {
       errors.push(`${where}: missing item.json`);
@@ -943,7 +984,7 @@ for (const [dir, type] of [["themes", "theme"], ["schemes", "scheme"], ["wallpap
     if (DOCUMENTS[type]) {
       const docName = DOCUMENTS[type];
       for (const f of files)
-        if (f.relative !== "item.json" && f.relative !== docName) errors.push(`${where}: ${f.relative} isn't allowed (only item.json and ${docName})`);
+        if (f.relative !== "item.json" && f.relative !== docName) errors.push(`${where}: ${f.relative} isn't allowed (only item.json, ${docName} and cover.webp)`);
       const raw = readJson(docName);
       if (raw) {
         const local = [...inputsUsage(type, extra.inputs, raw)];
@@ -970,7 +1011,7 @@ for (const [dir, type] of [["themes", "theme"], ["schemes", "scheme"], ["wallpap
         for (const e of local) errors.push(`${where}: ${e}`);
       }
     } else if (type === "set") {
-      for (const f of files) if (f.relative !== "item.json" && f.relative !== "set.json") errors.push(`${where}: ${f.relative} isn't allowed (only item.json and set.json)`);
+      for (const f of files) if (f.relative !== "item.json" && f.relative !== "set.json") errors.push(`${where}: ${f.relative} isn't allowed (only item.json, set.json and cover.webp)`);
       const raw = readJson("set.json");
       if (raw) {
         const local = [];
@@ -1097,6 +1138,7 @@ for (const [dir, type] of [["themes", "theme"], ["schemes", "scheme"], ["wallpap
       ...(testedNow ? { tested: testedNow } : {}),
       ...(document !== undefined ? { document: indexDocument(type, document) } : {}),
       ...(template ? { template } : {}),
+      ...(coverFile ? { cover: `${dir}/${id}/${COVER_FILE}` } : {}),
       files: files.map((f) => `${dir}/${id}/${f.relative}`).sort(),
     });
   }

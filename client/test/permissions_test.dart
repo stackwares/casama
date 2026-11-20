@@ -6,6 +6,8 @@ import 'package:casama/features/permissions/permissions_card.dart';
 import 'package:casama/features/permissions/permissions_platform.dart';
 import 'package:casama/features/permissions/permissions_reporter.dart';
 import 'package:casama/features/permissions/permissions_screen.dart';
+import 'package:casama/features/permissions/permissions_view.dart';
+import 'package:casama/l10n/generated/app_localizations.dart';
 import 'package:casama_sdk/casama_sdk.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -389,5 +391,19 @@ void main() {
       reporter.dispose();
       expect(companionPermissionHandler, isNull);
     });
+  });
+
+  testWidgets('Health on an iPhone: Turn on first, then Open Health once it reads as off', (tester) async {
+    Future<void> row(String state) => tester.pumpWidget(MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: Scaffold(body: PermissionRow(id: 'health', platform: 'ios', state: state, onTurnOn: () {})),
+    ));
+    await row('not_asked');
+    expect(find.text('Turn on'), findsOneWidget);
+    await row('denied');
+    expect(find.text('Open Health'), findsOneWidget);
+    await row('granted');
+    expect(find.byKey(const Key('permTurnOn-health')), findsNothing);
   });
 }

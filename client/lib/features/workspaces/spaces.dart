@@ -24,6 +24,7 @@ import '../../ui/adaptive_modal.dart';
 import '../../ui/advanced_section.dart';
 import '../../ui/app_card.dart';
 import '../../ui/form_sheet.dart';
+import '../../ui/mascot.dart';
 import '../../ui/page.dart';
 import '../../ui/revealable.dart';
 import '../../ui/celebration.dart';
@@ -298,6 +299,7 @@ class _NewSpaceSheetState extends ConsumerState<NewSpaceSheet> {
     final l10n = context.l10n;
     return FormSheet(
       icon: LucideIcons.boxes,
+      hero: const MascotHero([Mascot.cool, Mascot.starry]),
       title: l10n.newWorkspace,
       submitLabel: l10n.newWorkspace,
       submitKey: const Key('createWorkspaceSubmit'),

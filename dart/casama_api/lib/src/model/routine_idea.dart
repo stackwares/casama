@@ -79,6 +79,8 @@ class RoutineIdea {
 
      this.stats,
 
+     this.cover,
+
      this.template,
 
      this.version,
@@ -390,6 +392,19 @@ class RoutineIdea {
 
 
 
+      /// Absolute URL of the item's painted cover picture (cover.webp), when it has one
+  @JsonKey(
+    
+    name: r'cover',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final String? cover;
+
+
+
       /// Routines and bots with install questions: the raw fields with {{key}} placeholders (document has the defaults filled)
   @JsonKey(
     
@@ -456,6 +471,7 @@ class RoutineIdea {
       other.tested == tested &&
       other.source_ == source_ &&
       other.stats == stats &&
+      other.cover == cover &&
       other.template == template &&
       other.version == version &&
       other.tags == tags;
@@ -487,6 +503,7 @@ class RoutineIdea {
         tested.hashCode +
         source_.hashCode +
         stats.hashCode +
+        cover.hashCode +
         template.hashCode +
         version.hashCode +
         tags.hashCode;

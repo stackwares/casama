@@ -646,6 +646,12 @@ abstract class AppLocalizations {
   /// **'Connect'**
   String get mentionSectionConnect;
 
+  /// No description provided for @mentionSectionStartGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Start a group chat'**
+  String get mentionSectionStartGroup;
+
   /// No description provided for @mentionBadgeBot.
   ///
   /// In en, this message translates to:
@@ -5608,6 +5614,12 @@ abstract class AppLocalizations {
   /// **'Each bot works on a computer: the team computer everyone shares, or a private one. Files stay on it between chats.'**
   String get computersHelp;
 
+  /// No description provided for @computersEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No computers yet'**
+  String get computersEmptyTitle;
+
   /// No description provided for @thisDevice.
   ///
   /// In en, this message translates to:
@@ -7101,6 +7113,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Resets in less than an hour.'**
   String get creditsDailyResetsSoon;
+
+  /// No description provided for @creditsHoursLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Computer hours'**
+  String get creditsHoursLabel;
+
+  /// No description provided for @creditsHoursOf.
+  ///
+  /// In en, this message translates to:
+  /// **'{used} of {limit} h'**
+  String creditsHoursOf(String used, String limit);
+
+  /// No description provided for @creditsHoursExplainer.
+  ///
+  /// In en, this message translates to:
+  /// **'Time your bots\' computers run this month. When they run out, chat keeps working; only the computer stops. Resets on {date}.'**
+  String creditsHoursExplainer(String date);
+
+  /// No description provided for @creditsHoursReached.
+  ///
+  /// In en, this message translates to:
+  /// **'This month\'s computer hours are used, so your computer can\'t start. Chat still works. Resets on {date}. Upgrade for more hours.'**
+  String creditsHoursReached(String date);
 
   /// No description provided for @kindStream.
   ///
@@ -10401,6 +10437,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Reopen'**
   String get projectReopen;
+
+  /// No description provided for @projectCover.
+  ///
+  /// In en, this message translates to:
+  /// **'Cover'**
+  String get projectCover;
+
+  /// No description provided for @projectCoverNone.
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get projectCoverNone;
+
+  /// No description provided for @projectCoverName.
+  ///
+  /// In en, this message translates to:
+  /// **'{name, select, sailboat{Sailboat} mountain{Mountain} seedling{Seedling} compass{Compass} lantern{Lantern} telescope{Telescope} map{Map} chess{Chess} other{{name}}}'**
+  String projectCoverName(String name);
 
   /// No description provided for @projectThings.
   ///
@@ -24020,6 +24074,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Open settings'**
   String get permOpenSettings;
+
+  /// Button on the Health permission row on iPhone: opens the Health app, where its switches are.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Health'**
+  String get permOpenHealth;
+
+  /// Note under the Health permission row on iPhone after opening the Health app.
+  ///
+  /// In en, this message translates to:
+  /// **'In Health, tap your picture, then Apps, then Casama, and turn on what your bots may read.'**
+  String get permHealthIosHow;
 
   /// No description provided for @permChoose.
   ///

@@ -23,6 +23,7 @@ import '../../ui/adaptive_modal.dart';
 import '../../ui/app_card.dart';
 import '../../ui/bot_avatar.dart';
 import '../../ui/form_sheet.dart';
+import '../../ui/mascot.dart';
 import '../../ui/shell_header.dart';
 import '../chat/chat_screen.dart';
 import '../chat/widgets/mentions.dart' show AppMentionInfo;
@@ -114,15 +115,18 @@ String groupTitle(Conversation c, List<Bot> bots) => c.title.isUsable
           .join(', ');
 
 class GroupChatScreen extends ConsumerWidget {
-  const GroupChatScreen({super.key, required this.conversationId});
+  const GroupChatScreen({super.key, required this.conversationId, this.draft});
   final String conversationId;
+
+  /// Text to start the composer with (a group chat started by naming a bot in a direct chat).
+  final String? draft;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final groups = ref.watch(groupChatsProvider).value;
     final g = groups?.where((c) => c.id == conversationId).firstOrNull;
     if (g == null) return const _GroupChatSkeleton();
-    return ChatScreen(botId: g.botId, conversationId: g.id, group: true);
+    return ChatScreen(botId: g.botId, conversationId: g.id, group: true, draft: draft);
   }
 }
 
@@ -290,6 +294,7 @@ class _NewGroupState extends ConsumerState<_NewGroup> {
         : l10n.groupLeadHint;
     return FormSheet(
       icon: LucideIcons.users,
+      hero: const MascotHero([Mascot.winky, Mascot.giggly, Mascot.wow]),
       title: l10n.newGroupChat,
       subtitle: l10n.newGroupChatHelp,
       submitLabel: l10n.groupCreate,
@@ -799,6 +804,15 @@ class AddAppMentionOption extends MentionOption {
       'mention-add-${app.integrationId}${app.toolkit != null ? ':${app.toolkit}' : ''}';
 }
 
+/// Another of your bots, offered in a direct chat: picking it opens a group chat with both.
+class GroupBotMentionOption extends MentionOption {
+  const GroupBotMentionOption(this.bot);
+  final Bot bot;
+
+  @override
+  String get keyId => 'mention-group-${bot.id}';
+}
+
 class ConnectAppMentionOption extends MentionOption {
   const ConnectAppMentionOption(this.app);
   final CatalogApp app;
@@ -844,12 +858,20 @@ buildMentionableApps({
           ),
       ];
     }
+    // A catalog app connected under its id ("linear", "zoho_apps") goes by its proper name, as the
+    // server labels it; a connection the person named themselves keeps that name.
+    final app = i.appId != null ? catalogById[i.appId!] : null;
+    final lowerName = i.name.toLowerCase();
+    final named = app != null &&
+        (lowerName == app.id.toLowerCase() ||
+            lowerName.replaceAll('-', '_') == app.id.toLowerCase() ||
+            lowerName == app.name.toLowerCase());
     return [
       AppMentionInfo(
         integrationId: i.id,
-        label: i.name,
+        label: named ? app.name : i.name,
         appId: i.appId,
-        color: i.appId != null ? catalogById[i.appId!]?.color : null,
+        color: app?.color,
         kind: i.kind,
       ),
     ];
@@ -890,6 +912,7 @@ class MentionController extends ChangeNotifier {
   final TextEditingController input;
   bool _group = true;
   List<Bot> _bots = const [];
+  List<Bot> _otherBots = const [];
   List<AppMentionInfo> _apps = const [];
   List<AppMentionInfo> _addableApps = const [];
   List<CatalogApp> _catalogApps = const [];
@@ -923,6 +946,18 @@ class MentionController extends ChangeNotifier {
       return;
     }
     _bots = v;
+    _update();
+  }
+
+  /// Direct chats: your other bots, each a way into a group chat with this one.
+  set otherBots(List<Bot> v) {
+    if (listEquals(
+      v.map((b) => '${b.id}|${b.name}').toList(),
+      _otherBots.map((b) => '${b.id}|${b.name}').toList(),
+    )) {
+      return;
+    }
+    _otherBots = v;
     _update();
   }
 
@@ -964,6 +999,10 @@ class MentionController extends ChangeNotifier {
   bool get active => options.isNotEmpty;
 
   static final _trigger = RegExp(r'(^|\s)@([\w .\-]{0,30})$');
+
+  /// The most Connect rows in one list, and the length popular apps fill a list up to.
+  static const _maxConnectRows = 5;
+  static const _shortList = 6;
 
   void _update() {
     final text = input.text;
@@ -1009,14 +1048,40 @@ class MentionController extends ChangeNotifier {
         }
       }
 
-      // 4. Unconnected catalog apps (shown after 2 typed characters).
-      if (q.length >= 2 && _catalogApps.isNotEmpty) {
+      // 4. Direct chats: your other bots. A direct chat has one bot, so naming another one
+      // starts a group chat with both.
+      if (!_group) {
+        final prefix = _otherBots.where((b) => b.name.toLowerCase().startsWith(q));
+        final contains = q.isEmpty
+            ? const <Bot>[]
+            : _otherBots.where(
+                (b) => !b.name.toLowerCase().startsWith(q) && b.name.toLowerCase().contains(q),
+              );
+        for (final b in [...prefix, ...contains].take(q.isEmpty ? 3 : 5)) {
+          items.add(GroupBotMentionOption(b));
+        }
+      }
+
+      // 5. Apps not connected yet. From 2 typed letters, any catalog app that matches. Before
+      // that, popular ones fill a short list, so a bare "@" always opens something to pick.
+      if (_catalogApps.isNotEmpty) {
         final alreadyIds = <String>{
           for (final a in _apps) ...[?a.appId?.toLowerCase(), ?a.toolkit?.toLowerCase()],
           for (final a in _addableApps) ...[?a.appId?.toLowerCase(), ?a.toolkit?.toLowerCase()],
         };
-        final matchingCatalog = _filterCatalog(_catalogApps, q, alreadyIds);
-        for (final c in matchingCatalog.take(5)) {
+        final Iterable<CatalogApp> suggested;
+        if (q.length >= 2) {
+          suggested = _filterCatalog(_catalogApps, q, alreadyIds).take(_maxConnectRows);
+        } else {
+          final room = (_shortList - items.length).clamp(0, _maxConnectRows);
+          suggested = _catalogApps
+              .where((c) =>
+                  c.popular &&
+                  !alreadyIds.contains(c.id.toLowerCase()) &&
+                  (c.name.toLowerCase().startsWith(q) || c.id.toLowerCase().startsWith(q)))
+              .take(room);
+        }
+        for (final c in suggested) {
           items.add(ConnectAppMentionOption(c));
         }
       }
@@ -1067,18 +1132,21 @@ class MentionController extends ChangeNotifier {
     return [...prefix, ...contains];
   }
 
-  /// Inserts `@[label] ` in place of what was typed after `@`, or appends it if `@` moved.
-  void insertMention(String label) {
+  /// The draft with `@[label] ` in place of what was typed after `@`, or appended if `@` moved.
+  String withMention(String label) {
     final text = input.text;
     final m = _trigger.firstMatch(text);
-    final String value;
     if (m != null) {
       final start = text.length - m.group(2)!.length;
-      value = '${text.substring(0, start)}$label ';
-    } else {
-      final sep = text.isEmpty || text.endsWith(' ') ? '' : ' ';
-      value = '$text$sep@$label ';
+      return '${text.substring(0, start)}$label ';
     }
+    final sep = text.isEmpty || text.endsWith(' ') ? '' : ' ';
+    return '$text$sep@$label ';
+  }
+
+  /// Inserts `@[label] ` in place of what was typed after `@`, or appends it if `@` moved.
+  void insertMention(String label) {
+    final value = withMention(label);
     input.value = TextEditingValue(
       text: value,
       selection: TextSelection.collapsed(offset: value.length),
@@ -1132,8 +1200,8 @@ class MentionController extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Picks option [i]: bots & connected apps complete synchronously; Add/Connect delegate to
-  /// [onActionOption].
+  /// Picks option [i]: bots & connected apps complete synchronously; Add, Connect and starting a
+  /// group chat delegate to [onActionOption].
   void pick(int i) {
     if (_match == null || i < 0 || i >= options.length) return;
     final option = options[i];
@@ -1144,6 +1212,7 @@ class MentionController extends ChangeNotifier {
         pickApp(app);
       case AddAppMentionOption():
       case ConnectAppMentionOption():
+      case GroupBotMentionOption():
         final handler = onActionOption;
         if (handler != null) {
           handler(option);
@@ -1224,9 +1293,16 @@ class MentionPicker extends ConsumerWidget {
       includeAddable: canManageBot && !isGroup && botIds.length == 1,
     );
 
+    final allBots = ref.watch(botsProvider).value ?? const <Bot>[];
     controller
       ..group = isGroup
       ..bots = isGroup ? bots : const []
+      ..otherBots = isGroup
+          ? const []
+          : [
+              for (final b in allBots)
+                if (b.archivedAt == null && !botIds.contains(b.id)) b,
+            ]
       ..apps = built.connected
       ..addableApps = built.addable
       ..catalogApps = catalog?.apps ?? const []
@@ -1261,6 +1337,7 @@ class MentionPicker extends ConsumerWidget {
         final appOptions = <(int, AppMentionOption)>[];
         final addOptions = <(int, AddAppMentionOption)>[];
         final connectOptions = <(int, ConnectAppMentionOption)>[];
+        final groupOptions = <(int, GroupBotMentionOption)>[];
         for (final (i, o) in options.indexed) {
           switch (o) {
             case BotMentionOption():
@@ -1271,52 +1348,12 @@ class MentionPicker extends ConsumerWidget {
               addOptions.add((i, o));
             case ConnectAppMentionOption():
               connectOptions.add((i, o));
+            case GroupBotMentionOption():
+              groupOptions.add((i, o));
           }
         }
 
-        final hasAppsOrActions =
-            appOptions.isNotEmpty ||
-            addOptions.isNotEmpty ||
-            connectOptions.isNotEmpty;
-
-        // Pure bots-only menu (e.g. a group chat with no apps): keep the compact chip strip.
-        if (!hasAppsOrActions) {
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 6),
-            child: Wrap(
-              key: const Key('mentionPicker'),
-              spacing: 6,
-              runSpacing: 6,
-              children: [
-                for (final (i, o) in botOptions)
-                  ActionChip(
-                    key: Key(o.keyId),
-                    backgroundColor: i == controller.index
-                        ? scheme.primaryContainer
-                        : null,
-                    side: BorderSide(
-                      color: i == controller.index
-                          ? scheme.primary.withValues(alpha: 0.5)
-                          : scheme.outlineVariant,
-                    ),
-                    avatar: o.bot == null
-                        ? GroupAvatar(bots: bots, size: 20)
-                        : BotAvatar(
-                            name: o.bot!.name,
-                            avatar: o.bot!.avatarUrl,
-                            size: 20,
-                          ),
-                    label: Text(
-                      o.bot == null ? l10n.mentionEveryone : o.label,
-                    ),
-                    onPressed: () => controller.pick(i),
-                  ),
-              ],
-            ),
-          );
-        }
-
-        // Detect bot-vs-app name collisions in group chats so rows get clear "Bot"/"App" badges.
+        // One list for bots and apps alike. Detect bot-vs-app name collisions in group chats so rows get clear "Bot"/"App" badges.
         final botNamesLower = {for (final b in bots) b.name.toLowerCase()};
         final appNamesLower = {
           for (final (_, a) in appOptions) a.app.label.toLowerCase(),
@@ -1428,6 +1465,21 @@ class MentionPicker extends ConsumerWidget {
                           onTap: () => controller.pick(i),
                         ),
                     ],
+                    if (groupOptions.isNotEmpty) ...[
+                      _MentionSectionLabel(l10n.mentionSectionStartGroup),
+                      for (final (i, o) in groupOptions)
+                        _MentionRow(
+                          key: Key(o.keyId),
+                          selected: i == controller.index,
+                          leading: BotAvatar(
+                            name: o.bot.name,
+                            avatar: o.bot.avatarUrl,
+                            size: 22,
+                          ),
+                          title: o.bot.name,
+                          onTap: () => controller.pick(i),
+                        ),
+                    ],
                     if (connectOptions.isNotEmpty) ...[
                       _MentionSectionLabel(l10n.mentionSectionConnect),
                       for (final (i, o) in connectOptions)
@@ -1531,6 +1583,26 @@ class MentionPicker extends ConsumerWidget {
             color: app.color,
             kind: created.kind,
           ),
+        );
+      case GroupBotMentionOption(:final bot):
+        final botId = botIds.firstOrNull;
+        if (botId == null) return;
+        // The draft goes along, naming the bot that was picked, so it is the one that answers.
+        final draft = controller.withMention(bot.name);
+        final group = await runGuarded(context, () async {
+          final pair = {botId, bot.id};
+          final groups = await ref.read(groupChatsProvider.future);
+          final existing = groups
+              .where((g) => g.botIds.length == 2 && g.botIds.toSet().containsAll(pair))
+              .firstOrNull;
+          return existing ?? await ref.read(backendProvider).createGroupChat(botId, [bot.id]);
+        });
+        if (group == null || !context.mounted) return;
+        Analytics.log('group_chat_from_mention');
+        ref.invalidate(groupChatsProvider);
+        controller.input.clear();
+        GoRouter.maybeOf(context)?.go(
+          Uri(path: '/groups/${group.id}', queryParameters: {'draft': draft}).toString(),
         );
       case BotMentionOption():
       case AppMentionOption():

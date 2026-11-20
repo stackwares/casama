@@ -22,6 +22,7 @@ import 'coding_agents_section.dart';
 import 'companion.dart';
 import 'companion_controller.dart';
 import '../../ui/glow_button.dart';
+import '../../ui/painted_cover.dart';
 
 /// Settings > Use this computer for bots (desktop only, D-066).
 class CompanionScreen extends ConsumerWidget {
@@ -63,7 +64,7 @@ class CompanionScreen extends ConsumerWidget {
               data: (device) {
                 if (device == null) {
                   return EmptyState(
-                    icon: LucideIcons.laptop,
+                    illustration: const PaintedHero(name: 'computer-waking', size: 132, icon: LucideIcons.laptop),
                     title: l10n.useThisComputer,
                     message: l10n.companionIntro,
                     action: GlowButton.icon(

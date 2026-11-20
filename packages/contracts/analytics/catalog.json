@@ -1101,10 +1101,42 @@
         },
         "paywall_kind": {
           "type": "string",
-          "values": ["regular"]
+          "values": ["regular", "credits"]
+        },
+        "default_plan": {
+          "type": "string"
+        },
+        "default_period": {
+          "type": "string",
+          "values": ["week", "month", "year"]
         }
       },
-      "funnels": ["F6"]
+      "funnels": ["F6"],
+      "ga4_twin": {
+        "name": "view_item_list",
+        "params": ["source", "paywall_kind", "default_plan", "default_period"],
+        "set": { "item_list_id": "paywall", "item_list_name": "Casama plans" }
+      }
+    },
+    {
+      "name": "paywall_plan_select",
+      "by": ["client"],
+      "description": "A plan tier or billing period was selected on the paywall.",
+      "properties": {
+        "plan": {
+          "type": "string"
+        },
+        "interval": {
+          "type": "string",
+          "values": ["week", "month", "year"]
+        }
+      },
+      "funnels": ["F6"],
+      "ga4_twin": {
+        "name": "select_item",
+        "params": ["plan", "interval"],
+        "set": { "item_list_id": "paywall", "item_list_name": "Casama plans" }
+      }
     },
     {
       "name": "paywall_dismiss",
@@ -1713,6 +1745,13 @@
           "type": "string"
         }
       },
+      "funnels": []
+    },
+    {
+      "name": "group_chat_from_mention",
+      "by": ["client"],
+      "description": "Someone opened or started a group chat by picking another bot from a direct chat @ menu.",
+      "properties": {},
       "funnels": []
     }
   ]

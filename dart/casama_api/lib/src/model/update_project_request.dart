@@ -35,6 +35,8 @@ class UpdateProjectRequest {
      this.doneCriteriaMd,
 
      this.autonomous,
+
+     this.cover,
   });
 
   @JsonKey(
@@ -137,6 +139,19 @@ class UpdateProjectRequest {
 
 
 
+      /// A painted cover the project picked (an app art name such as sailboat); null for none
+  @JsonKey(
+    
+    name: r'cover',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final String? cover;
+
+
+
 
 
     @override
@@ -148,7 +163,8 @@ class UpdateProjectRequest {
       other.planMd == planMd &&
       other.goalMd == goalMd &&
       other.doneCriteriaMd == doneCriteriaMd &&
-      other.autonomous == autonomous;
+      other.autonomous == autonomous &&
+      other.cover == cover;
 
     @override
     int get hashCode =>
@@ -159,7 +175,8 @@ class UpdateProjectRequest {
         planMd.hashCode +
         goalMd.hashCode +
         doneCriteriaMd.hashCode +
-        autonomous.hashCode;
+        autonomous.hashCode +
+        (cover == null ? 0 : cover.hashCode);
 
   factory UpdateProjectRequest.fromJson(Map<String, dynamic> json) => _$UpdateProjectRequestFromJson(json);
 

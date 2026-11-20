@@ -6295,9 +6295,12 @@ instead of spending a turn discovering them via `tools.load`.
 
 - **One `@` picker everywhere:** In direct chats `@` lists apps attached to the bot, workspace
   apps not yet attached (**Add to this bot**, gated on workspace admin/owner role), and
-  unconnected catalog apps (**Connect**, shown after 2 typed letters). In group chats the same
+  unconnected catalog apps (**Connect**: any that match from 2 typed letters; before that, popular
+  ones fill the list up to 6 rows, so a bare `@` always opens something). In group chats the same
   picker shows **Bots** first, then **Apps** (union across member bots), with **Bot** / **App**
-  badges on name collisions. Plain-text collisions in group chats favor the bot; picking the app
+  badges on name collisions. It is one vertical list in every case; the group chats' old chip
+  strip for a bots-only match is gone. A catalog app connected under its id shows by its proper
+  name ("Linear", not `linear`), as the server labels it. Plain-text collisions in group chats favor the bot; picking the app
   from the menu sends an explicit `apps` ref that disambiguates it. **Connect** adds the new
   connection to the bot that will answer (the chat's bot; in a group the bots the message names,
   else the last speaker, else the lead), and for a Composio or Pipedream hub the mention names the
@@ -6350,3 +6353,109 @@ records `voice_calls.reached`: false when no phone took it (no live VoIP token, 
 and the person has no computer or browser set up for the banner. Unreached rings don't count toward
 the cooldown or the daily cap, and the bot is told the person has nothing set up to ring, so it
 can say so instead of claiming it rang. The call still expires as missed with its notification.
+
+## D-439 Google Analytics is live everywhere: server, web app, store apps and all our websites (2026-11-20)
+
+Oliver: "let's make google analytics live everywhere, the app and all our websites of course", then
+"yes to all" for every step of `docs/GA4-LAUNCH-PLAN.md`. D-397 to D-399 had the code; this turns it on.
+
+- **Property `563408057`** (Stackwares › Casama): `scripts/ga4-setup.mts --apply` registered 43 event
+  and 4 user dimensions, 2 metrics, 6 key events and 14-month retention. Signals stays off, no Ads links.
+  The service account `casama-ga4@kasama-ai` is Editor on the property (Vaultwarden "Casama · GA4
+  service account (property 563408057)"); it runs the scripts and the server's account erasure.
+- **Server:** a new web stream "Casama server" (`G-1Q83CTXBYB`) with its own Measurement Protocol
+  secret (Vaultwarden "Casama · GA4 Measurement Protocol API secret (server stream G-1Q83CTXBYB)").
+  Prod `.env` has `ANALYTICS_PROVIDERS=posthog,ga4` and the `GA4_*` keys. This also turns on the
+  Windows/Linux relay (D-399).
+- **Web app shares the websites' stream (changes D-397's "own stream").** Firebase had already linked
+  the "Casama (web)" app to `G-4GVRF0K324`, and Firebase's web SDK sends to the stream linked to its
+  app id whatever id the build passes. A new Firebase web app would have moved web push to a new app
+  id. So `FIREBASE_WEB_MEASUREMENT_ID=G-4GVRF0K324`, and reports tell the two apart by hostname
+  (app.casama.ai) and the `app` dimension. Page-change and form events are off on that stream, so
+  Flutter's own `screen_view` isn't counted twice.
+- **Apps:** `client/config/telemetry.json` and the CI secret `CASAMA_TELEMETRY_JSON` carry
+  `GA4_ENABLED=true` and `ANALYTICS_PROVIDERS=posthog,ga4`. Web build 50 is live; store builds 50
+  carry it too. Builds 48 and older send nothing to GA4.
+- **Paywall events:** `paywall_view` carries `default_plan`/`default_period` and is sent once the
+  plans have loaded; a new `paywall_plan_select`. Their GA4 twins are `view_item_list` and
+  `select_item`, and funnel F6c measures them.
+- **Websites:** status.casama.ai counts through `casama.ai/b` (site `status`), skipping its own
+  2-minute refresh (`?refresh=1`) without storing anything. Pricing buttons send `plan_click`. The
+  privacy page lists status.casama.ai.
+- **Store forms:** App Store App Privacy adds Device ID → Analytics (Product Interaction and User ID
+  were already declared) and was published again. Play Data safety adds Analytics to App
+  interactions and Device or other IDs, and was sent for review.
+- **Also set the same day:** a daily BigQuery export (event and user data, no streaming, no ad ids)
+  into project `kasama-ai` (US), and reporting identity "Observed" (user id and device id, no modelled
+  users). Filtering test accounts out isn't done: nothing marks them yet (`is_internal` from
+  ANALYTICS-PLAN was never built), so it needs a server and app change.
+
+## D-440 Painted pictures across the app, and a painted splash (2026-11-20)
+
+Asked by Oliver after the starter set picker's covers: carry that look to the rest of the app, plus a
+painted background on the splash and welcome screens. Plan and full list: `docs/APP-ART-PLAN.md`.
+
+- **One family, one widget:** every picture is a gpt-6-luna painting in the round-9 style
+  (`visuals/round-10/`), drawn through `client/lib/ui/painted_cover.dart`, which falls back to a drawn
+  gradient tile with an icon whenever a picture is missing or fails.
+- **Where:** pickers and choices (persona categories, skill categories, Library starters, Tasks' two ways
+  in, paywall plans, project covers), sheet heroes (waitlist, invite code, what's new, invite friends) and
+  empty or first-use screens that had only an icon (Computers, Use this computer). Mascot screens keep
+  their mascots.
+- **Gallery covers:** an item may ship `cover.webp`; it stays out of the hash and reaches the app as an
+  absolute `cover` URL on its own catalog, so new covers need no app build.
+- **Project covers:** `projects.cover` holds the name of one of 8 painted covers, or null.
+- **Splash and welcome:** one "coming home" scene, day and night, an allowed exception to the plain
+  background rule. Kept cheap: WebP decoded at screen size, no blur, fades in when ready, never blocks
+  startup, evicted after the welcome screen. Native launch screens stay plain. The web loading page shows a
+  26–36 KB copy loaded after first paint, and Flutter reuses it.
+- **Motion:** the scene zooms very slowly (1.05 over 16 s, back and forth; web and Flutter share one
+  clock), a new preview cover settles in, and waitlist sheet heroes float gently. All of it stops under
+  Reduce Motion and when a screen isn't ticking, and nothing moves in scrolling lists.
+
+## D-441 Internal/test accounts marked without sending emails (2026-11-20)
+
+Finishes the `is_internal` gap noted in D-439 (`docs/ANALYTICS-PLAN.md` §4.4): Oliver asked to mark
+internal and test accounts in both PostHog and Google Analytics without ever sending email addresses
+to either service.
+
+- **Server rules:** `INTERNAL_EMAILS` and `INTERNAL_EMAIL_DOMAINS` (comma-separated, case-insensitive)
+  are parsed in `@casama/observability` (`parseInternalAccounts`, `isInternalEmail`).
+  `PostHogProductAnalytics` sets `$set.is_internal` (boolean) on identified captures (never on
+  `personless` captures); GA4 Measurement Protocol (`toGa4Event`, `toGa4Events`) injects
+  `traffic_type: "internal"` first within the 25-parameter limit on both primary events and GA4
+  recommended twins (GA4's built-in parameter for Data Filters, not a custom dimension).
+- **Server coverage & worker RLS:** `POST /v1/analytics/events` (desktop GA4 relay), `GET /v1/me`
+  (`Me.is_internal`, optional/nullable boolean so older clients ignore it and new clients default
+  absent `is_internal` to `false`), agent `reachMilestone`/`track`, `sweepSignups` (`signed_up`), and
+  the worker's `usage_daily` rollup (`workspace_daily` stays personless). Following D-095, the worker
+  looks up emails through `public.worker_user_emails(uuid[])` (`SECURITY DEFINER`, granted to
+  `casama_worker`) instead of reading `auth.users`.
+- **Flutter client:** `Analytics.syncInternal` fetches `isInternalAccount()` from `GET /v1/me`, caches
+  it per user in `SharedPreferences` (`casama.analytics_internal.<userId>`) so cold starts tag early
+  events before the network replies, sets PostHog person property `is_internal` (boolean), sets
+  GA4 `traffic_type: "internal"` via `setDefaultEventParameters` (native) and per-event/screen_view
+  parameters (including web, where `setDefaultEventParameters` isn't supported), and forwards
+  `internal` through `Ga4RelaySink` on Windows/Linux.
+- **Activation:** production needs `INTERNAL_EMAILS`/`INTERNAL_EMAIL_DOMAINS` in `.env` (with
+  Oliver's OK), GA4's Internal Traffic data filter activated for `traffic_type = internal`, and
+  PostHog dashboards/cohorts filtering `is_internal != true`.
+
+
+## D-442 Used-up computer hours stop the computer, not the chat (2026-11-20)
+
+Oliver's Free workspace still had $14.72 of credits, but every run failed with "The workspace used
+its 5 computer hours for this month." The run admission check (`checkBudget`) refused **all** runs
+once the month's computer hours were used, including plain chat that never starts a computer, and
+the Usage screen didn't show computer hours at all, so the credits bar looked wrong.
+
+- **Rule:** computer hours limit only hosted computers. Starts are already refused past them
+  (`ComputerService.checkCanStart`, Link starts) and running ones are put to sleep
+  (`meterRunning`), both since the 2026-11-17 billing audit. Run admission no longer counts them;
+  chat, apps and models keep running on credits and the daily cap.
+- **Message:** a bot that reaches for its computer gets the tool error `computer_hours_exceeded`
+  with `computerHoursMessage()` ("…so its computer can't start. They reset on December 1. Upgrade
+  in Billing for more hours."); the API's 402 for a computer start uses the same text.
+- **Usage screen:** `BillingSummary.computer_hours` (`used_hours`, `limit_hours`, `resets_at`, null
+  when no limit applies) and a "Computer hours: 17 of 5 h" row under the credits and today's limit,
+  saying chat still works when they're used up. Older apps ignore the new field.

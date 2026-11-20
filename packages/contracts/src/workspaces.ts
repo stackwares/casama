@@ -247,6 +247,7 @@ export const Me = z
     display_name: z.string().nullable(),
     locale: z.string(),
     timezone: z.string(),
+    is_internal: z.boolean().optional(),
     organizations: z.array(OrganizationWithRole),
   })
   .openapi("Me");

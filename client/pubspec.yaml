@@ -2,7 +2,7 @@ name: casama
 description: "Casama: persistent AI teammates."
 publish_to: none
 # The build number (+N) is shared by every platform and only goes up: raise it for each release.
-version: 0.1.0+49
+version: 0.1.0+55
 
 environment:
   sdk: ^3.13.0
@@ -136,6 +136,8 @@ flutter:
     - assets/apps/
     # Starter set covers on Picks for you (lib/features/welcome/gallery_picks_step.dart).
     - assets/sets/
+    - assets/art/
+    - assets/scene/
     - assets/fonts/
   # Type (D-087, D-163): Google Sans is the default look's face (D-266) and the one text family in
   # the font manifest, which the web app downloads in full before its first frame. Libre

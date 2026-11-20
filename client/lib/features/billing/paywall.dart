@@ -22,6 +22,7 @@ import '../../ui/effects.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/glow_button.dart';
 import '../../ui/mascot.dart';
+import '../../ui/painted_cover.dart';
 import 'billing_screen.dart';
 import 'purchase_terms.dart';
 
@@ -34,12 +35,6 @@ Future<bool> openPaywall(
   String? reason,
   String source = 'limit',
 }) async {
-  unawaited(
-    Analytics.capture(
-      'paywall_view',
-      properties: {'source': source, 'paywall_kind': 'regular'},
-    ),
-  );
   final upgraded = await Navigator.of(context, rootNavigator: true).push<bool>(
     MaterialPageRoute(
       fullscreenDialog: true,
@@ -179,6 +174,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
   // Null until the person picks a period: then the server's default plan decides (D-332).
   PaywallPeriod? _pickedPeriod;
   var _busy = false;
+  var _viewLogged = false;
   String? _startPlan;
 
   @override
@@ -342,6 +338,15 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
         tiers.where((t) => t.code == defaultPaywallTier(tiers, billing?.planCode)).firstOrNull;
     final selected = tier?.planFor(period);
     final selectedPeriod = selected == null ? null : paywallPeriodOf(selected);
+    if (!_viewLogged && empty == null && selected != null) {
+      _viewLogged = true;
+      Analytics.log('paywall_view', {
+        'source': widget.source,
+        'paywall_kind': 'regular',
+        'default_plan': selected.code,
+        'default_period': (selectedPeriod ?? period).name,
+      });
+    }
     final yearly = selectedPeriod == PaywallPeriod.year;
     final weekly = selectedPeriod == PaywallPeriod.week;
     final isCurrent = selected != null && selected.code == billing?.planCode;
@@ -575,6 +580,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
                             if (cardPrice(t) case final price?)
                               _TierCard(
                                 key: Key('paywallTier-${t.code}'),
+                                tierCode: t.code,
                                 name: t.name,
                                 tagline: switch (t.code) {
                                   'plus' => l10n.paywallTaglinePlus,
@@ -592,6 +598,13 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
                                 onTap: () {
                                   HapticsHelper.selection();
                                   setState(() => _tier = t.code);
+                                  final picked = t.planFor(period);
+                                  if (picked != null) {
+                                    Analytics.log('paywall_plan_select', {
+                                      'plan': picked.code,
+                                      'interval': picked.interval.value,
+                                    });
+                                  }
                                 },
                               ),
                         ];
@@ -655,6 +668,13 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
                                   onChanged: (v) {
                                     HapticsHelper.selection();
                                     setState(() => _pickedPeriod = v);
+                                    final picked = tier?.planFor(v);
+                                    if (picked != null) {
+                                      Analytics.log('paywall_plan_select', {
+                                        'plan': picked.code,
+                                        'interval': picked.interval.value,
+                                      });
+                                    }
                                   },
                                 ),
                               ),
@@ -1318,6 +1338,7 @@ class _PeriodToggle extends StatelessWidget {
 class _TierCard extends StatelessWidget {
   const _TierCard({
     super.key,
+    required this.tierCode,
     required this.name,
     required this.facts,
     required this.price,
@@ -1329,6 +1350,9 @@ class _TierCard extends StatelessWidget {
     this.trial,
     this.vertical = false,
   });
+  /// The tier (plus, pro, max), the same whichever period is picked; the plan's own code
+  /// changes with the period (plus_yearly, plus_weekly).
+  final String tierCode;
   final String name;
   final String? tagline;
   final List<String> facts;
@@ -1388,9 +1412,10 @@ class _TierCard extends StatelessWidget {
       ],
     );
 
-    final priceBlock = Column(
+    // Right-aligned only when it sits beside the name; under the name it lines up with the text.
+    Widget priceBlock({required bool start}) => Column(
       key: Key('paywallPrice-${price.plan.code}'),
-      crossAxisAlignment: vertical ? CrossAxisAlignment.start : CrossAxisAlignment.end,
+      crossAxisAlignment: start ? CrossAxisAlignment.start : CrossAxisAlignment.end,
       mainAxisSize: MainAxisSize.min,
       children: [
         Text.rich(
@@ -1420,24 +1445,24 @@ class _TierCard extends StatelessWidget {
                 ),
             ],
           ),
-          textAlign: vertical ? TextAlign.start : TextAlign.end,
+          textAlign: start ? TextAlign.start : TextAlign.end,
         ),
         Text(
           price.billed,
-          textAlign: vertical ? TextAlign.start : TextAlign.end,
+          textAlign: start ? TextAlign.start : TextAlign.end,
           style: context.textTheme.labelSmall?.copyWith(color: muted),
         ),
         if (price.perWeek case final perWeek?)
           Text(
             perWeek,
             key: Key('paywallPerWeek-${price.plan.code}'),
-            textAlign: vertical ? TextAlign.start : TextAlign.end,
+            textAlign: start ? TextAlign.start : TextAlign.end,
             style: context.textTheme.labelSmall?.copyWith(color: muted, fontFeatures: AppText.tabular),
           ),
         if (price.monthsFree >= 1)
           Text(
             l10n.paywallMonthsFree(price.monthsFree),
-            textAlign: vertical ? TextAlign.start : TextAlign.end,
+            textAlign: start ? TextAlign.start : TextAlign.end,
             style: context.textTheme.labelSmall?.copyWith(
               color: context.appColors.positive,
               fontWeight: FontWeight.w800,
@@ -1445,6 +1470,19 @@ class _TierCard extends StatelessWidget {
           ),
       ],
     );
+
+    // A small painted object per plan (visuals/round-10): a star, a gem, a crown.
+    final artAsset = paintedAsset('plan-$tierCode');
+    Widget? art(double size) => artAsset == null
+        ? null
+        : ExcludeSemantics(
+            child: PaintedCover(
+              key: Key('paywallPlanArt-$tierCode'),
+              size: size,
+              seed: 'plan-$tierCode',
+              asset: artAsset,
+            ),
+          );
 
     final taglineText = tagline == null
         ? null
@@ -1458,10 +1496,10 @@ class _TierCard extends StatelessWidget {
         ? Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(children: [radio, const SizedBox(width: AppSpace.sm), Expanded(child: heading)]),
+              Row(children: [radio, const SizedBox(width: AppSpace.sm), Expanded(child: heading), ?art(48)]),
               if (taglineText != null) ...[const SizedBox(height: AppSpace.xs), taglineText],
               const SizedBox(height: AppSpace.md),
-              priceBlock,
+              priceBlock(start: true),
               const SizedBox(height: AppSpace.md),
               Divider(height: 1, color: context.appColors.hairline),
               const SizedBox(height: AppSpace.sm),
@@ -1488,6 +1526,7 @@ class _TierCard extends StatelessWidget {
             children: [
               Padding(padding: const EdgeInsets.only(top: 2), child: radio),
               const SizedBox(width: AppSpace.sm),
+              if (art(40) case final a?) ...[a, const SizedBox(width: AppSpace.sm)],
               Expanded(
                 child: LayoutBuilder(
                   builder: (context, box) {
@@ -1505,14 +1544,14 @@ class _TierCard extends StatelessWidget {
                         if (box.maxWidth < 280) ...[
                           name,
                           const SizedBox(height: AppSpace.xs),
-                          Align(alignment: AlignmentDirectional.centerStart, child: priceBlock),
+                          Align(alignment: AlignmentDirectional.centerStart, child: priceBlock(start: true)),
                         ] else
                           Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Expanded(child: name),
                               const SizedBox(width: AppSpace.sm),
-                              Flexible(child: priceBlock),
+                              Flexible(child: priceBlock(start: false)),
                             ],
                           ),
                         const SizedBox(height: AppSpace.xs),

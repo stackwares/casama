@@ -25,6 +25,8 @@ abstract class _$CreateProjectRequestCWProxy {
 
   CreateProjectRequest conversationId(String? conversationId);
 
+  CreateProjectRequest cover(String? cover);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `CreateProjectRequest(...).copyWith.fieldName(value)`.
@@ -43,6 +45,7 @@ abstract class _$CreateProjectRequestCWProxy {
     DateTime? deadlineAt,
     bool? autonomous,
     String? conversationId,
+    String? cover,
   });
 }
 
@@ -86,6 +89,9 @@ class _$CreateProjectRequestCWProxyImpl
   CreateProjectRequest conversationId(String? conversationId) =>
       call(conversationId: conversationId);
 
+  @override
+  CreateProjectRequest cover(String? cover) => call(cover: cover);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `CreateProjectRequest(...).copyWith.fieldName(value)`.
@@ -105,6 +111,7 @@ class _$CreateProjectRequestCWProxyImpl
     Object? deadlineAt = const $CopyWithPlaceholder(),
     Object? autonomous = const $CopyWithPlaceholder(),
     Object? conversationId = const $CopyWithPlaceholder(),
+    Object? cover = const $CopyWithPlaceholder(),
   }) {
     return CreateProjectRequest(
       orgId: orgId == const $CopyWithPlaceholder() || orgId == null
@@ -143,6 +150,10 @@ class _$CreateProjectRequestCWProxyImpl
           ? _value.conversationId
           // ignore: cast_nullable_to_non_nullable
           : conversationId as String?,
+      cover: cover == const $CopyWithPlaceholder()
+          ? _value.cover
+          // ignore: cast_nullable_to_non_nullable
+          : cover as String?,
     );
   }
 }
@@ -179,6 +190,7 @@ CreateProjectRequest _$CreateProjectRequestFromJson(
       ),
       autonomous: $checkedConvert('autonomous', (v) => v as bool?),
       conversationId: $checkedConvert('conversation_id', (v) => v as String?),
+      cover: $checkedConvert('cover', (v) => v as String?),
     );
     return val;
   },
@@ -205,4 +217,5 @@ Map<String, dynamic> _$CreateProjectRequestToJson(
   'deadline_at': ?instance.deadlineAt?.toIso8601String(),
   'autonomous': ?instance.autonomous,
   'conversation_id': ?instance.conversationId,
+  'cover': ?instance.cover,
 };

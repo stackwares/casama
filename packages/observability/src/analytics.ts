@@ -26,6 +26,75 @@ export interface CaptureOptions {
   setOnce?: Record<string, string | number | boolean>;
   /** Only this provider gets the event (the desktop GA4 relay: PostHog already has it from the app). */
   only?: "posthog" | "ga4";
+  /** True when the user is an internal/test account: sets PostHog person `is_internal` and GA4 `traffic_type: "internal"`. */
+  internal?: boolean;
+}
+
+export interface InternalAccountRules {
+  emails: ReadonlySet<string>;
+  domains: ReadonlySet<string>;
+}
+
+/** Parses comma/whitespace-separated `INTERNAL_EMAILS` and `INTERNAL_EMAIL_DOMAINS` (case-insensitive). */
+export function parseInternalAccounts(
+  opts: { emails?: string; domains?: string } = {},
+): InternalAccountRules {
+  const split = (raw?: string) =>
+    (raw ?? "")
+      .split(/[\s,]+/)
+      .map((s) => s.trim().toLowerCase().replace(/^@+/, ""))
+      .filter(Boolean);
+  const emails = new Set(
+    (opts.emails ?? "")
+      .split(/[\s,]+/)
+      .map((s) => s.trim().toLowerCase())
+      .filter(Boolean),
+  );
+  const domains = new Set(split(opts.domains));
+  return { emails, domains };
+}
+
+export function hasInternalAccountRules(rules: InternalAccountRules): boolean {
+  return rules.emails.size > 0 || rules.domains.size > 0;
+}
+
+/** Whether `email` matches the configured internal emails or domains. Never stores or emits the email itself. */
+export function isInternalEmail(
+  email: string | null | undefined,
+  rules: InternalAccountRules,
+): boolean {
+  if (!email) return false;
+  const normalized = email.trim().toLowerCase();
+  if (!normalized) return false;
+  if (rules.emails.has(normalized)) return true;
+  const at = normalized.lastIndexOf("@");
+  if (at === -1 || at === normalized.length - 1) return false;
+  return rules.domains.has(normalized.slice(at + 1));
+}
+
+let internalRulesOverride: InternalAccountRules | null = null;
+
+export function setInternalAccountRules(
+  opts: { emails?: string; domains?: string } | InternalAccountRules | null | undefined,
+): void {
+  if (opts == null) {
+    internalRulesOverride = null;
+    return;
+  }
+  internalRulesOverride =
+    opts.emails instanceof Set && opts.domains instanceof Set
+      ? (opts as InternalAccountRules)
+      : parseInternalAccounts(opts as { emails?: string; domains?: string });
+}
+
+export function getInternalAccountRules(): InternalAccountRules {
+  return (
+    internalRulesOverride ??
+    parseInternalAccounts({
+      emails: process.env.INTERNAL_EMAILS,
+      domains: process.env.INTERNAL_EMAIL_DOMAINS,
+    })
+  );
 }
 
 export interface ProductAnalytics {
@@ -61,6 +130,8 @@ export interface AnalyticsOptions {
   /** ANALYTICS_PROVIDERS: comma list; unset or empty = every provider whose keys are set. */
   providers?: string;
   ga4?: Partial<Ga4Options>;
+  /** Internal/test account rules (`INTERNAL_EMAILS`, `INTERNAL_EMAIL_DOMAINS`). */
+  internal?: { emails?: string; domains?: string };
 }
 
 /** Parses ANALYTICS_PROVIDERS. Null means "every provider that has its keys". Unknown names are ignored. */
@@ -120,6 +191,14 @@ class PostHogProductAnalytics implements ProductAnalytics {
       properties.$set_once = opts.setOnce;
     }
 
+    if (!opts.personless && opts.internal !== undefined) {
+      const existingSet =
+        typeof properties.$set === "object" && properties.$set !== null
+          ? (properties.$set as Record<string, unknown>)
+          : {};
+      properties.$set = { ...existingSet, is_internal: opts.internal };
+    }
+
     this.client.capture({
       distinctId: opts.distinctId,
       event: opts.event,
@@ -174,6 +253,9 @@ class FanOutProductAnalytics implements ProductAnalytics {
 let analyticsInstance: ProductAnalytics | null = null;
 
 export function initProductAnalytics(opts: AnalyticsOptions): ProductAnalytics {
+  if (opts.internal !== undefined) {
+    setInternalAccountRules(opts.internal);
+  }
   const isEnabled = opts.enabled ?? process.env.PRODUCT_ANALYTICS === "on";
   const apiKey = opts.apiKey ?? process.env.POSTHOG_API_KEY;
   const wanted = parseAnalyticsProviders(opts.providers ?? process.env.ANALYTICS_PROVIDERS);

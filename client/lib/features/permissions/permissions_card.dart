@@ -54,6 +54,8 @@ mixin PermissionActions<T extends ConsumerStatefulWidget> on ConsumerState<T> {
       notes.remove(id);
     });
     String? note;
+    // Off on an iPhone: it opens the Health app, so say where in it the switches are.
+    if (id == 'health' && permissionPlatformOf(platform) == 'ios' && live.state(id) == PermissionState.denied) note = l10n.permHealthIosHow;
     if (live.isThisDevice) {
       final reporter = ref.read(permissionsReporterProvider);
       await runGuarded(context, () => reporter.perform(id, action));

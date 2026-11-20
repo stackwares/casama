@@ -105,6 +105,9 @@ export const galleryExtras = {
     description: "The extra catalog it came from (GALLERY_SOURCES); ids are source:id",
   }),
   stats: GalleryStats.optional(),
+  cover: z.string().optional().openapi({
+    description: "Absolute URL of the item's painted cover picture (cover.webp), when it has one",
+  }),
   template: z.record(z.string(), z.unknown()).optional().openapi({
     description:
       "Routines and bots with install questions: the raw fields with {{key}} placeholders (document has the defaults filled)",
@@ -175,6 +178,9 @@ export const GallerySet = z
     items: z.array(GalleryRef),
     source: z.string().optional(),
     added: z.string().optional(),
+    cover: z.string().optional().openapi({
+      description: "Absolute URL of the set's painted cover picture (cover.webp), when it has one",
+    }),
   })
   .openapi("GallerySet");
 

@@ -4712,6 +4712,7 @@ class SupabaseBackend implements Backend {
     double? budgetUsd,
     bool autonomous = false,
     String? conversationId,
+    String? cover,
   }) async => (await api.projects.createProject(
     createProjectRequest: CreateProjectRequest(
       orgId: orgId,
@@ -4723,6 +4724,7 @@ class SupabaseBackend implements Backend {
       // Always sent: a server that doesn't say otherwise plans and runs the project by itself.
       autonomous: autonomous,
       conversationId: conversationId,
+      cover: cover,
     ),
   )).data!;
 
@@ -4752,6 +4754,16 @@ class SupabaseBackend implements Backend {
         goalMd: goal,
         doneCriteriaMd: doneCriteria,
       ),
+    );
+  }
+
+  // Sent by hand: the generated request leaves a null out, and null is how a cover is dropped.
+  @override
+  Future<void> setProjectCover(String projectId, String? cover) async {
+    await api.api.dio.patch<Object>(
+      '/v1/projects/$projectId',
+      data: {'cover': cover},
+      options: Options(headers: authHeaders, contentType: 'application/json'),
     );
   }
 
@@ -4931,6 +4943,10 @@ class SupabaseBackend implements Backend {
       setAnalyticsOptOutRequest: SetAnalyticsOptOutRequest(optOut: optOut),
     );
   }
+
+  @override
+  Future<bool> isInternalAccount() async =>
+      (await api.workspaces.getMe()).data?.isInternal == true;
 
   @override
   Future<void> relayAnalytics(String platform, List<({String name, Map<String, Object> properties})> events) async {

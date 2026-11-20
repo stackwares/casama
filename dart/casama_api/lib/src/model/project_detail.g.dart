@@ -53,6 +53,8 @@ abstract class _$ProjectDetailCWProxy {
 
   ProjectDetail latestCreation(Creation? latestCreation);
 
+  ProjectDetail cover(String? cover);
+
   ProjectDetail canSteer(bool? canSteer);
 
   ProjectDetail milestones(List<ProjectMilestone> milestones);
@@ -91,6 +93,7 @@ abstract class _$ProjectDetailCWProxy {
     String? folder,
     int? creationsCount,
     Creation? latestCreation,
+    String? cover,
     bool? canSteer,
     List<ProjectMilestone> milestones,
     List<ProjectRun> runs,
@@ -182,6 +185,9 @@ class _$ProjectDetailCWProxyImpl implements _$ProjectDetailCWProxy {
       call(latestCreation: latestCreation);
 
   @override
+  ProjectDetail cover(String? cover) => call(cover: cover);
+
+  @override
   ProjectDetail canSteer(bool? canSteer) => call(canSteer: canSteer);
 
   @override
@@ -224,6 +230,7 @@ class _$ProjectDetailCWProxyImpl implements _$ProjectDetailCWProxy {
     Object? folder = const $CopyWithPlaceholder(),
     Object? creationsCount = const $CopyWithPlaceholder(),
     Object? latestCreation = const $CopyWithPlaceholder(),
+    Object? cover = const $CopyWithPlaceholder(),
     Object? canSteer = const $CopyWithPlaceholder(),
     Object? milestones = const $CopyWithPlaceholder(),
     Object? runs = const $CopyWithPlaceholder(),
@@ -324,6 +331,10 @@ class _$ProjectDetailCWProxyImpl implements _$ProjectDetailCWProxy {
           ? _value.latestCreation
           // ignore: cast_nullable_to_non_nullable
           : latestCreation as Creation?,
+      cover: cover == const $CopyWithPlaceholder()
+          ? _value.cover
+          // ignore: cast_nullable_to_non_nullable
+          : cover as String?,
       canSteer: canSteer == const $CopyWithPlaceholder()
           ? _value.canSteer
           // ignore: cast_nullable_to_non_nullable
@@ -425,6 +436,7 @@ ProjectDetail _$ProjectDetailFromJson(
         'latest_creation',
         (v) => v == null ? null : Creation.fromJson(v as Map<String, dynamic>),
       ),
+      cover: $checkedConvert('cover', (v) => v as String?),
       canSteer: $checkedConvert('can_steer', (v) => v as bool?),
       milestones: $checkedConvert(
         'milestones',
@@ -486,6 +498,7 @@ Map<String, dynamic> _$ProjectDetailToJson(ProjectDetail instance) =>
       'folder': ?instance.folder,
       'creations_count': ?instance.creationsCount,
       'latest_creation': ?instance.latestCreation?.toJson(),
+      'cover': ?instance.cover,
       'can_steer': ?instance.canSteer,
       'milestones': instance.milestones.map((e) => e.toJson()).toList(),
       'runs': instance.runs.map((e) => e.toJson()).toList(),

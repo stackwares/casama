@@ -94,6 +94,8 @@ class GalleryItem {
 
      this.stats,
 
+     this.cover,
+
      this.template,
   });
 
@@ -488,6 +490,19 @@ class GalleryItem {
 
 
 
+      /// Absolute URL of the item's painted cover picture (cover.webp), when it has one
+  @JsonKey(
+    
+    name: r'cover',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final String? cover;
+
+
+
       /// Routines and bots with install questions: the raw fields with {{key}} placeholders (document has the defaults filled)
   @JsonKey(
     
@@ -537,6 +552,7 @@ class GalleryItem {
       other.tested == tested &&
       other.source_ == source_ &&
       other.stats == stats &&
+      other.cover == cover &&
       other.template == template;
 
     @override
@@ -573,6 +589,7 @@ class GalleryItem {
         tested.hashCode +
         source_.hashCode +
         stats.hashCode +
+        cover.hashCode +
         template.hashCode;
 
   factory GalleryItem.fromJson(Map<String, dynamic> json) => _$GalleryItemFromJson(json);

@@ -33,7 +33,7 @@
 .prose .table-scroll { max-width: none; }
 .prose .compare { min-width: 560px; }
 .prose .compare tbody th { width: 20%; }
-.prose .compare td a { font-weight: 400; }
+.prose .compare td a:not(.btn) { font-weight: 400; }
 /* Comparison tables run wider than the text column on big screens. */
 @media (min-width: 1100px) { .prose .table-scroll { width: min(1088px, calc(100vw - 2 * var(--gutter))); } }
 

@@ -2,13 +2,21 @@ import { afterEach, expect, it } from "vitest";
 import {
   Ga4ProductAnalytics,
   ga4Params,
+  getInternalAccountRules,
   getProductAnalytics,
+  hasInternalAccountRules,
   initProductAnalytics,
+  isInternalEmail,
   parseAnalyticsProviders,
+  parseInternalAccounts,
+  setInternalAccountRules,
   setProductAnalytics,
 } from "../src/index.ts";
 
-afterEach(() => setProductAnalytics(null));
+afterEach(() => {
+  setProductAnalytics(null);
+  setInternalAccountRules(undefined);
+});
 
 function recorder() {
   const calls: { url: string; body: Record<string, unknown> }[] = [];
@@ -156,4 +164,96 @@ it("adds the catalog's recommended twin and the plan user property (D-398)", asy
   expect(body.events[1]?.params).toMatchObject({ method: "google", x: 1, app: "casama" });
   expect(body.events[1]?.params.extra).toBeUndefined();
   expect(body.user_properties).toEqual({ plan: { value: "pro" } });
+});
+
+it("parses INTERNAL_EMAILS and INTERNAL_EMAIL_DOMAINS case-insensitively", () => {
+  const rules = parseInternalAccounts({
+    emails: " Alice@Example.com, qa+1@test.org ",
+    domains: "@casama.ai staging.casama.ai",
+  });
+  expect(hasInternalAccountRules(rules)).toBe(true);
+  expect(isInternalEmail("alice@example.com", rules)).toBe(true);
+  expect(isInternalEmail(" QA+1@TEST.ORG ", rules)).toBe(true);
+  expect(isInternalEmail("dev@casama.ai", rules)).toBe(true);
+  expect(isInternalEmail("bot@STAGING.CASAMA.AI", rules)).toBe(true);
+  expect(isInternalEmail("user@notcasama.ai", rules)).toBe(false);
+  expect(isInternalEmail("stranger@example.com", rules)).toBe(false);
+  expect(isInternalEmail(null, rules)).toBe(false);
+  expect(hasInternalAccountRules(parseInternalAccounts({}))).toBe(false);
+});
+
+it("attaches traffic_type=internal on GA4 events and $set.is_internal on PostHog without leaking emails", async () => {
+  const { calls, fetch } = recorder();
+  const ga4 = new Ga4ProductAnalytics({
+    measurementId: "G-T",
+    apiSecret: "s",
+    fetch,
+    flushInterval: 0,
+    twins: { signed_up: { name: "sign_up", params: ["method"] } },
+  });
+  const manyProps = Object.fromEntries(Array.from({ length: 28 }, (_, i) => [`k${i}`, i]));
+  ga4.capture({
+    event: "signed_up",
+    distinctId: "u-int",
+    internal: true,
+    properties: { method: "google", ...manyProps },
+  });
+  ga4.capture({
+    event: "signed_out",
+    distinctId: "u-ext",
+    internal: false,
+  });
+  await ga4.close();
+
+  expect(calls).toHaveLength(2);
+  const intBody = calls[0]?.body as {
+    events: { name: string; params: Record<string, unknown> }[];
+  };
+  expect(intBody.events.map((e) => e.name)).toEqual(["signed_up", "sign_up"]);
+  expect(intBody.events[0]?.params.traffic_type).toBe("internal");
+  expect(Object.keys(intBody.events[0]?.params ?? {})).toHaveLength(25);
+  expect(intBody.events[1]?.params.traffic_type).toBe("internal");
+
+  const extBody = calls[1]?.body as {
+    events: { name: string; params: Record<string, unknown> }[];
+  };
+  expect(extBody.events[0]?.params.traffic_type).toBeUndefined();
+
+  const ph = initProductAnalytics({
+    enabled: true,
+    apiKey: "phc_test",
+    providers: "posthog",
+    internal: { emails: "qa@example.com", domains: "casama.ai" },
+  });
+  expect(getInternalAccountRules().emails.has("qa@example.com")).toBe(true);
+  const captured: unknown[] = [];
+  (ph as unknown as { client: { capture: (x: unknown) => void } }).client = {
+    capture: (x) => captured.push(x),
+  };
+  ph.capture({
+    event: "signed_up",
+    distinctId: "u-int",
+    internal: true,
+    properties: { $set: { plan: "pro" } },
+  });
+  ph.capture({
+    event: "signed_out",
+    distinctId: "u-ext",
+    internal: false,
+  });
+  ph.capture({
+    event: "waitlist_joined",
+    distinctId: "anon",
+    personless: true,
+    internal: true,
+  });
+  expect(captured).toHaveLength(3);
+  expect((captured[0] as { properties: Record<string, unknown> }).properties.$set).toEqual({
+    plan: "pro",
+    is_internal: true,
+  });
+  expect((captured[1] as { properties: Record<string, unknown> }).properties.$set).toEqual({
+    is_internal: false,
+  });
+  expect((captured[2] as { properties: Record<string, unknown> }).properties.$set).toBeUndefined();
 });

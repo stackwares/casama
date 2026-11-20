@@ -874,6 +874,8 @@ void main() {
         '',
       );
 
+      await tester.ensureVisible(find.byKey(const Key('modelPicker')));
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('modelPicker')));
       await tester.pumpAndSettle();
       expect(find.text('Recommended'), findsOneWidget);

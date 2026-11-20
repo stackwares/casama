@@ -65,6 +65,17 @@
     #splash { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
       font: 14px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--boot-ink);
       -webkit-font-smoothing: antialiased; }
+    /* The painted scene (visuals/round-10), ~20-60 KB: boot.js loads it at low priority after the
+       first paint and only then sets --boot-scene, so it never delays the launch screen. */
+    #splash::before { content: ""; position: absolute; inset: 0; z-index: -1; opacity: 0;
+      background: var(--boot-scene, none) center 70% / cover no-repeat; transition: opacity 0.5s ease; }
+    #splash.has-scene::before { opacity: 1; transform-origin: 50% 70%;
+      animation: casama-scene-drift 16s ease-in-out var(--boot-scene-delay, 0s) infinite alternate both; }
+    /* The same slow zoom as the Flutter splash (lib/ui/splash_scene.dart: 1.05 over 16 s each way);
+       boot.js sets the delay from performance.now(), so both sit at the same point at the hand-off. */
+    @keyframes casama-scene-drift { from { transform: scale(1); } to { transform: scale(1.05); } }
+    #splash.is-help.has-scene::before, #splash.is-failed.has-scene::before { opacity: 0.35; }
+    #splash { isolation: isolate; }
     #splash img { display: block; width: 160px; height: auto; animation: casama-splash 2.6s ease-in-out infinite; }
     @keyframes casama-splash {
       0%, 100% { transform: translateY(0) scale(1); }
@@ -116,6 +127,7 @@
     }
     @media (prefers-reduced-motion: reduce) {
       #splash img { animation: none; }
+      #splash::before { animation: none !important; }
       #boot-fill { transition: none; }
       #boot-bar.is-indeterminate #boot-fill { animation: none; left: 0; width: 100%; opacity: 0.4; }
     }

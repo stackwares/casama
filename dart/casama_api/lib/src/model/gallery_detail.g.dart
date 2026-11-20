@@ -71,6 +71,8 @@ abstract class _$GalleryDetailCWProxy {
 
   GalleryDetail stats(GalleryStats? stats);
 
+  GalleryDetail cover(String? cover);
+
   GalleryDetail template(Map<String, Object?>? template);
 
   GalleryDetail skillMd(String? skillMd);
@@ -116,6 +118,7 @@ abstract class _$GalleryDetailCWProxy {
     GalleryItemTested? tested,
     String? source_,
     GalleryStats? stats,
+    String? cover,
     Map<String, Object?>? template,
     String? skillMd,
   });
@@ -229,6 +232,9 @@ class _$GalleryDetailCWProxyImpl implements _$GalleryDetailCWProxy {
   GalleryDetail stats(GalleryStats? stats) => call(stats: stats);
 
   @override
+  GalleryDetail cover(String? cover) => call(cover: cover);
+
+  @override
   GalleryDetail template(Map<String, Object?>? template) =>
       call(template: template);
 
@@ -277,6 +283,7 @@ class _$GalleryDetailCWProxyImpl implements _$GalleryDetailCWProxy {
     Object? tested = const $CopyWithPlaceholder(),
     Object? source_ = const $CopyWithPlaceholder(),
     Object? stats = const $CopyWithPlaceholder(),
+    Object? cover = const $CopyWithPlaceholder(),
     Object? template = const $CopyWithPlaceholder(),
     Object? skillMd = const $CopyWithPlaceholder(),
   }) {
@@ -409,6 +416,10 @@ class _$GalleryDetailCWProxyImpl implements _$GalleryDetailCWProxy {
           ? _value.stats
           // ignore: cast_nullable_to_non_nullable
           : stats as GalleryStats?,
+      cover: cover == const $CopyWithPlaceholder()
+          ? _value.cover
+          // ignore: cast_nullable_to_non_nullable
+          : cover as String?,
       template: template == const $CopyWithPlaceholder()
           ? _value.template
           // ignore: cast_nullable_to_non_nullable
@@ -548,6 +559,7 @@ GalleryDetail _$GalleryDetailFromJson(
         (v) =>
             v == null ? null : GalleryStats.fromJson(v as Map<String, dynamic>),
       ),
+      cover: $checkedConvert('cover', (v) => v as String?),
       template: $checkedConvert('template', (v) => v as Map<String, dynamic>?),
       skillMd: $checkedConvert('skill_md', (v) => v as String?),
     );
@@ -597,6 +609,7 @@ Map<String, dynamic> _$GalleryDetailToJson(GalleryDetail instance) =>
       'tested': ?instance.tested?.toJson(),
       'source': ?instance.source_,
       'stats': ?instance.stats?.toJson(),
+      'cover': ?instance.cover,
       'template': ?instance.template,
       'skill_md': instance.skillMd,
     };

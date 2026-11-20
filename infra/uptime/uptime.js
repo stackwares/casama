@@ -254,7 +254,7 @@ function statusPage(d) {
   return `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Casama status</title><link rel="icon" type="image/svg+xml" href="https://casama.ai/assets/bots/casama-winky-animated.svg"><meta name="description" content="Whether Casama's services are working right now.">
-<meta http-equiv="refresh" content="120">
+<meta http-equiv="refresh" content="120;url=?refresh=1">
 <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#1c1c1e" media="(prefers-color-scheme: dark)">
 <link rel="preload" href="https://casama.ai/assets/fonts/GoogleSans-Bold.woff2" as="font" type="font/woff2" crossorigin>
 <style>
@@ -292,7 +292,9 @@ footer{margin-top:28px;font-size:15px;color:var(--ink-2)}footer a{color:var(--in
 ${incident}
 <div class="card">${rows}</div>
 <footer>Something wrong that isn't shown here? Write to <a href="mailto:support@casama.ai">support@casama.ai</a>, or use Settings &gt; Help &amp; support in the app.</footer>
-</main></body></html>`;
+</main>
+<script>(function(){try{if(!navigator.sendBeacon||location.hostname!=="status.casama.ai")return;var q=new URLSearchParams(location.search);if(q.has("refresh"))return;var f="";try{f=document.referrer?new URL(document.referrer).hostname:""}catch(e){}var u=q.get("utm_source")||"";navigator.sendBeacon("https://casama.ai/b",JSON.stringify({h:"status",p:location.pathname,r:f,u:u}))}catch(e){}})()</script>
+</body></html>`;
 }
 
 export default {

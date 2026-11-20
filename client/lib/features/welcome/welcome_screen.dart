@@ -9,6 +9,7 @@ import '../../core/providers.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_tokens.dart';
 import '../../ui/mascot.dart';
+import '../../ui/splash_scene.dart';
 import '../settings/name_step.dart';
 import '../../ui/bot_loader.dart';
 import '../../core/analytics.dart';
@@ -75,9 +76,22 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
+    final theme = Theme.of(context);
     return Scaffold(
-      body: Center(
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          // The splash's painted scene carries on behind this page (and is let go once it closes).
+          SplashScene(brightness: theme.brightness, background: theme.scaffoldBackgroundColor),
+          _body(context),
+        ],
+      ),
+    );
+  }
+
+  Widget _body(BuildContext context) {
+    final l10n = context.l10n;
+    return Center(
         child: Padding(
           padding: const EdgeInsets.all(AppSpace.xl),
           child: Column(
@@ -104,7 +118,6 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
             ],
           ),
         ),
-      ),
-    );
+      );
   }
 }

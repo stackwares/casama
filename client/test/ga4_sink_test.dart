@@ -185,8 +185,37 @@ void main() {
       expect(events.last.params, {'content_type': 'referral', 'method': 'copy'});
     });
 
+    test('paywall_view becomes view_item_list with defaults', () {
+      final events = ga4Events('paywall_view', {
+        'source': 'limit',
+        'paywall_kind': 'regular',
+        'default_plan': 'pro',
+        'default_period': 'month',
+      });
+      expect(events.map((e) => e.name), ['paywall_view', 'view_item_list']);
+      expect(events.last.params, {
+        'item_list_id': 'paywall',
+        'item_list_name': 'Casama plans',
+        'source': 'limit',
+        'paywall_kind': 'regular',
+        'default_plan': 'pro',
+        'default_period': 'month',
+      });
+    });
+
+    test('paywall_plan_select becomes select_item with plan and interval', () {
+      final events = ga4Events('paywall_plan_select', {'plan': 'pro_yearly', 'interval': 'year'});
+      expect(events.map((e) => e.name), ['paywall_plan_select', 'select_item']);
+      expect(events.last.params, {
+        'item_list_id': 'paywall',
+        'item_list_name': 'Casama plans',
+        'plan': 'pro_yearly',
+        'interval': 'year',
+      });
+    });
+
     test('an event without a twin goes alone', () {
-      expect(ga4Events('paywall_view', {'source': 'limit'}).map((e) => e.name), ['paywall_view']);
+      expect(ga4Events('paywall_dismiss', {'source': 'limit'}).map((e) => e.name), ['paywall_dismiss']);
     });
   });
 
@@ -199,12 +228,12 @@ void main() {
           sent.add([for (final e in events) e.name]);
         };
       await sink.setEnabled(true);
-      await sink.capture('paywall_view', {'source': 'limit', 'ok': true});
+      await sink.capture('paywall_dismiss', {'source': 'limit', 'ok': true});
       await sink.screen('/chat/:id');
       expect(sink.queued, 2);
       await sink.flush();
       expect(sent, [
-        ['paywall_view', 'screen_view'],
+        ['paywall_dismiss', 'screen_view'],
       ]);
       for (var i = 0; i < 19; i++) {
         await sink.capture('feature_used', {'feature': 'search'});
@@ -216,10 +245,10 @@ void main() {
     test('off: nothing queues, and turning off drops the queue', () async {
       var calls = 0;
       final sink = Ga4RelaySink(platform: 'linux', every: const Duration(hours: 1))..send = (_, _) async => calls++;
-      await sink.capture('paywall_view', null);
+      await sink.capture('paywall_dismiss', null);
       expect(sink.queued, 0);
       await sink.setEnabled(true);
-      await sink.capture('paywall_view', null);
+      await sink.capture('paywall_dismiss', null);
       await sink.setEnabled(false);
       await sink.flush();
       expect(calls, 0);
@@ -229,9 +258,55 @@ void main() {
       final sink = Ga4RelaySink(platform: 'linux', every: const Duration(hours: 1))
         ..send = (_, _) async => throw Exception('401');
       await sink.setEnabled(true);
-      await sink.capture('paywall_view', null);
+      await sink.capture('paywall_dismiss', null);
       await sink.flush();
       expect(sink.queued, 0);
+    });
+
+    test('tags queued events with traffic_type=internal while internal, and clears on reset', () async {
+      final sent = <List<({String name, Map<String, Object> properties})>>[];
+      final sink = Ga4RelaySink(platform: 'windows', every: const Duration(hours: 1))
+        ..send = (_, events) async => sent.add(events);
+      await sink.setEnabled(true);
+      await sink.identify('u1', set: {'is_internal': true});
+      await sink.capture('paywall_dismiss', {'source': 'limit'});
+      await sink.setInternal(false);
+      await sink.capture('feature_used', {'feature': 'search'});
+      await sink.setInternal(true);
+      await sink.screen('/inbox');
+      await sink.reset(); // flushes screen_view with traffic_type=internal, then clears
+      await sink.capture('paywall_dismiss', {'source': 'after_reset'});
+      await sink.flush();
+
+      expect(sent.length, 2);
+      expect(sent[0].map((e) => e.name), ['paywall_dismiss', 'feature_used', 'screen_view']);
+      expect(sent[0][0].properties['traffic_type'], 'internal');
+      expect(sent[0][1].properties.containsKey('traffic_type'), isFalse);
+      expect(sent[0][2].properties['traffic_type'], 'internal');
+      expect(sent[1][0].properties.containsKey('traffic_type'), isFalse);
+    });
+  });
+
+  group('internal account params', () {
+    test('ga4Params reserves traffic_type=internal within the 25-param cap', () {
+      final props = {
+        'traffic_type': 'external',
+        for (var i = 0; i < 30; i++) 'p$i': i,
+      };
+      final p = ga4Params(props, internal: true);
+      expect(p.length, 25);
+      expect(p['traffic_type'], 'internal');
+    });
+
+    test('ga4Events sets traffic_type=internal on main event and twin', () {
+      final events = ga4Events(
+        'paywall_plan_select',
+        {'plan': 'pro_yearly', 'interval': 'year'},
+        internal: true,
+      );
+      expect(events, hasLength(2));
+      expect(events[0].params['traffic_type'], 'internal');
+      expect(events[1].params['traffic_type'], 'internal');
     });
   });
 }

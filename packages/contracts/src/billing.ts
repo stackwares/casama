@@ -87,6 +87,22 @@ export const BillingSummary = z
         description:
           "Today's spend against the plan's daily cap; runs stop when it is reached (D-311). Null when no cap applies",
       }),
+    computer_hours: z
+      .object({
+        used_hours: z
+          .number()
+          .openapi({ description: "Hosted computer hours used this month (UTC)" }),
+        limit_hours: z.number().openapi({ description: "The plan's computer hours a month" }),
+        resets_at: ts.openapi({
+          description: "The first of next month (UTC), when the hours reset",
+        }),
+      })
+      .nullable()
+      .optional()
+      .openapi({
+        description:
+          "This month's hosted computer hours against the plan's. Past them only computers stop; chat keeps running on credits (D-442). Null when no limit applies",
+      }),
     subscriptions: z.array(Subscription),
     providers: z.array(Source),
   })

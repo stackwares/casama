@@ -388,4 +388,31 @@ describe("light projects (D-295)", () => {
     expect(p).toMatchObject({ autonomous: true, status: "active", plan_status: "approved" });
     await patch(zineId, { autonomous: false });
   });
+
+  it("a project can pick a painted cover, change it and drop it", async () => {
+    const res = await create({ title: "Voyage", autonomous: false, cover: "sailboat" });
+    expect(res.status).toBe(201);
+    const made = await j(res);
+    expect(made.cover).toBe("sailboat");
+    expect((await j(await project(made.id))).cover).toBe("sailboat");
+    const list = await j(await h.request(`/v1/projects?org_id=${orgId}`, { token: owner.token }));
+    expect(list.items.find((p: { id: string }) => p.id === made.id)?.cover).toBe("sailboat");
+    // One without a cover says so.
+    expect(list.items.find((p: { id: string }) => p.id === zineId)?.cover).toBeNull();
+
+    expect((await j(await patch(made.id, { cover: "mountain" }))).cover).toBe("mountain");
+    // A change that leaves it out keeps it.
+    expect((await j(await patch(made.id, { title: "Voyage home" }))).cover).toBe("mountain");
+    expect((await j(await patch(made.id, { cover: null }))).cover).toBeNull();
+    expect((await j(await project(made.id))).cover).toBeNull();
+
+    // Only art names: lower-case, starting with a letter, up to 40 characters.
+    for (const bad of ["Sailboat", "../x", "1boat", "a".repeat(41), ""]) {
+      expect((await patch(made.id, { cover: bad })).status).toBe(400);
+      expect((await create({ title: "Bad", autonomous: false, cover: bad })).status).toBe(400);
+    }
+    expect((await j(await project(made.id))).cover).toBeNull();
+    // Members who can't steer it can't change it either.
+    expect((await patch(made.id, { cover: "map" }, member.token)).status).toBe(403);
+  });
 });

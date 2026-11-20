@@ -757,6 +757,7 @@ class _JoinSpaceSheetState extends ConsumerState<JoinSpaceSheet> {
     final l10n = context.l10n;
     return FormSheet(
       icon: LucideIcons.link,
+      art: 'wait-envelope',
       title: l10n.joinWithLinkOrCode,
       subtitle: l10n.joinWorkspaceHelp,
       submitLabel: l10n.continueLabel,

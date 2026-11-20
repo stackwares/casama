@@ -8327,6 +8327,7 @@ export interface components {
             display_name: string | null;
             locale: string;
             timezone: string;
+            is_internal?: boolean;
             organizations: components["schemas"]["OrganizationWithRole"][];
         };
         JoinResult: {
@@ -9989,6 +9990,8 @@ export interface components {
             source?: string;
             version?: number;
             stats?: components["schemas"]["GalleryStats"];
+            /** @description Absolute URL of the item's painted cover picture (cover.webp), when it has one */
+            cover?: string;
         };
         /** @description What an item can touch, in plain words */
         GalleryAccess: {
@@ -10800,6 +10803,18 @@ export interface components {
                  */
                 resets_at: string;
             } | null;
+            /** @description This month's hosted computer hours against the plan's. Past them only computers stop; chat keeps running on credits (D-442). Null when no limit applies */
+            computer_hours?: {
+                /** @description Hosted computer hours used this month (UTC) */
+                used_hours: number;
+                /** @description The plan's computer hours a month */
+                limit_hours: number;
+                /**
+                 * Format: date-time
+                 * @description The first of next month (UTC), when the hours reset
+                 */
+                resets_at: string;
+            } | null;
             subscriptions: components["schemas"]["Subscription"][];
             providers: components["schemas"]["BillingSource"][];
         };
@@ -11420,6 +11435,8 @@ export interface components {
             /** @description How many things in the Library are filed under it, that you can see */
             creations_count?: number;
             latest_creation?: components["schemas"]["Creation"];
+            /** @description A painted cover the project picked (an app art name such as sailboat); null for none */
+            cover?: string | null;
             /** @description Whether you may change it: its owner, an admin or the lead bot's managers */
             can_steer?: boolean;
         };
@@ -11444,6 +11461,8 @@ export interface components {
              * @description With autonomous false: make this topic of yours the project's chat, and file what was made in it under the project. Without it the project gets a new topic
              */
             conversation_id?: string;
+            /** @description A painted cover the project picked (an app art name such as sailboat); null for none */
+            cover?: string | null;
         };
         ProjectDetail: components["schemas"]["Project"] & {
             milestones: components["schemas"]["ProjectMilestone"][];
@@ -11489,6 +11508,8 @@ export interface components {
             done_criteria_md?: string;
             /** @description true: the lead bot drafts a plan for you to approve, then works by itself (needs a goal). false: back to working on it together; nothing more starts by itself */
             autonomous?: boolean;
+            /** @description A painted cover the project picked (an app art name such as sailboat); null for none */
+            cover?: string | null;
         };
         AcceptedSuggestion: {
             /** Format: uuid */
@@ -12008,6 +12029,8 @@ export interface components {
             /** @description The extra catalog it came from (GALLERY_SOURCES); ids are source:id */
             source?: string;
             stats?: components["schemas"]["GalleryStats"];
+            /** @description Absolute URL of the item's painted cover picture (cover.webp), when it has one */
+            cover?: string;
             /** @description Routines and bots with install questions: the raw fields with {{key}} placeholders (document has the defaults filled) */
             template?: {
                 [key: string]: unknown;
@@ -12149,6 +12172,8 @@ export interface components {
             items: components["schemas"]["GalleryRef"][];
             source?: string;
             added?: string;
+            /** @description Absolute URL of the set's painted cover picture (cover.webp), when it has one */
+            cover?: string;
         };
         GallerySubmissionList: {
             items: components["schemas"]["GallerySubmission"][];
@@ -12346,6 +12371,8 @@ export interface components {
             /** @description The extra catalog it came from (GALLERY_SOURCES); ids are source:id */
             source?: string;
             stats?: components["schemas"]["GalleryStats"];
+            /** @description Absolute URL of the item's painted cover picture (cover.webp), when it has one */
+            cover?: string;
             /** @description Routines and bots with install questions: the raw fields with {{key}} placeholders (document has the defaults filled) */
             template?: {
                 [key: string]: unknown;
@@ -12398,6 +12425,8 @@ export interface components {
             /** @description The extra catalog it came from (GALLERY_SOURCES); ids are source:id */
             source?: string;
             stats?: components["schemas"]["GalleryStats"];
+            /** @description Absolute URL of the item's painted cover picture (cover.webp), when it has one */
+            cover?: string;
             /** @description Routines and bots with install questions: the raw fields with {{key}} placeholders (document has the defaults filled) */
             template?: {
                 [key: string]: unknown;

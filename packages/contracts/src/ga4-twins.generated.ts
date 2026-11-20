@@ -100,7 +100,13 @@ export const ANALYTICS_CLIENT_EVENTS: Record<string, string[]> = {
   ],
   "paywall_view": [
     "source",
-    "paywall_kind"
+    "paywall_kind",
+    "default_plan",
+    "default_period"
+  ],
+  "paywall_plan_select": [
+    "plan",
+    "interval"
   ],
   "paywall_dismiss": [
     "source"
@@ -172,7 +178,8 @@ export const ANALYTICS_CLIENT_EVENTS: Record<string, string[]> = {
   ],
   "app_mention_connect_started": [
     "app_id"
-  ]
+  ],
+  "group_chat_from_mention": []
 };
 
 /** The app's twins too, so relayed events get theirs. */
@@ -217,6 +224,30 @@ export const GA4_CLIENT_TWINS: Record<string, { name: string; params: string[]; 
       "via",
       "status"
     ]
+  },
+  "paywall_view": {
+    "name": "view_item_list",
+    "params": [
+      "source",
+      "paywall_kind",
+      "default_plan",
+      "default_period"
+    ],
+    "set": {
+      "item_list_id": "paywall",
+      "item_list_name": "Casama plans"
+    }
+  },
+  "paywall_plan_select": {
+    "name": "select_item",
+    "params": [
+      "plan",
+      "interval"
+    ],
+    "set": {
+      "item_list_id": "paywall",
+      "item_list_name": "Casama plans"
+    }
   },
   "purchase_started": {
     "name": "begin_checkout",

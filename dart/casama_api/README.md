@@ -668,6 +668,7 @@ Class | Method | HTTP request | Description
  - [BillingSettings](doc/BillingSettings.md)
  - [BillingSource](doc/BillingSource.md)
  - [BillingSummary](doc/BillingSummary.md)
+ - [BillingSummaryComputerHours](doc/BillingSummaryComputerHours.md)
  - [BillingSummaryDaily](doc/BillingSummaryDaily.md)
  - [BillingUsage](doc/BillingUsage.md)
  - [BillingUsageItem](doc/BillingUsageItem.md)

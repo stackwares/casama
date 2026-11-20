@@ -185,6 +185,29 @@ test("the docs, gallery and casama.link count here, and unknown sites are droppe
   );
 });
 
+test("status.casama.ai counts page views via status site key, ignoring meta-refresh repeats", async () => {
+  const { readFileSync } = await import("node:fs");
+  env.VISITS.rows = [];
+  const res = await call("/b", {
+    method: "POST",
+    headers: { origin: "https://status.casama.ai" },
+    body: JSON.stringify({ h: "status", p: "/", r: "casama.ai", u: "" }),
+  });
+  assert.equal(res.headers.get("access-control-allow-origin"), "https://status.casama.ai");
+  assert.equal(sent.length, 1);
+  assert.equal(sent[0].body.events[0].name, "page_view");
+  assert.equal(sent[0].body.events[0].params.page_location, "https://status.casama.ai/");
+  assert.equal(env.VISITS.rows[0].blobs[2], "status");
+  assert.equal(siteKey("status"), "status");
+
+  const uptimeSrc = readFileSync(new URL("../infra/uptime/uptime.js", import.meta.url), "utf8");
+  assert.match(uptimeSrc, /https:\/\/casama\.ai\/b/);
+  assert.match(uptimeSrc, /h:"status"/);
+  assert.match(uptimeSrc, /content="120;url=\?refresh=1"/);
+  assert.match(uptimeSrc, /q\.has\("refresh"\)\)return/);
+  assert.doesNotMatch(uptimeSrc, /sessionStorage|localStorage|document\.cookie/);
+});
+
 test("a page view without ids still gets random ones (gaPayload stays pure)", () => {
   const p = gaPayload({ page: "/", source: "direct", rand: () => 0.5 });
   assert.match(p.client_id, /^\d+\.\d+$/);

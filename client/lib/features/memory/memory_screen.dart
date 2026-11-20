@@ -11,6 +11,7 @@ import '../../ui/adaptive_modal.dart';
 import '../../ui/app_card.dart';
 import '../../ui/app_menu.dart';
 import '../../ui/form_sheet.dart';
+import '../../ui/mascot.dart';
 import '../../ui/page.dart';
 import '../../ui/route_focus.dart';
 import '../../ui/segmented.dart';
@@ -319,6 +320,7 @@ class _AddMemoryFormState extends State<_AddMemoryForm> {
     final text = _text.text.trim();
     return FormSheet(
       icon: LucideIcons.brain,
+      hero: const MascotHero([Mascot.thinker]),
       title: l10n.addMemory,
       subtitle: l10n.addMemoryHelp,
       submitLabel: l10n.save,

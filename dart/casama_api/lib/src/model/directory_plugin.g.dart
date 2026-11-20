@@ -55,6 +55,8 @@ abstract class _$DirectoryPluginCWProxy {
 
   DirectoryPlugin stats(GalleryStats? stats);
 
+  DirectoryPlugin cover(String? cover);
+
   DirectoryPlugin template(Map<String, Object?>? template);
 
   DirectoryPlugin version(int? version);
@@ -94,6 +96,7 @@ abstract class _$DirectoryPluginCWProxy {
     GalleryItemTested? tested,
     String? source_,
     GalleryStats? stats,
+    String? cover,
     Map<String, Object?>? template,
     int? version,
     List<String>? tags,
@@ -183,6 +186,9 @@ class _$DirectoryPluginCWProxyImpl implements _$DirectoryPluginCWProxy {
   DirectoryPlugin stats(GalleryStats? stats) => call(stats: stats);
 
   @override
+  DirectoryPlugin cover(String? cover) => call(cover: cover);
+
+  @override
   DirectoryPlugin template(Map<String, Object?>? template) =>
       call(template: template);
 
@@ -226,6 +232,7 @@ class _$DirectoryPluginCWProxyImpl implements _$DirectoryPluginCWProxy {
     Object? tested = const $CopyWithPlaceholder(),
     Object? source_ = const $CopyWithPlaceholder(),
     Object? stats = const $CopyWithPlaceholder(),
+    Object? cover = const $CopyWithPlaceholder(),
     Object? template = const $CopyWithPlaceholder(),
     Object? version = const $CopyWithPlaceholder(),
     Object? tags = const $CopyWithPlaceholder(),
@@ -328,6 +335,10 @@ class _$DirectoryPluginCWProxyImpl implements _$DirectoryPluginCWProxy {
           ? _value.stats
           // ignore: cast_nullable_to_non_nullable
           : stats as GalleryStats?,
+      cover: cover == const $CopyWithPlaceholder()
+          ? _value.cover
+          // ignore: cast_nullable_to_non_nullable
+          : cover as String?,
       template: template == const $CopyWithPlaceholder()
           ? _value.template
           // ignore: cast_nullable_to_non_nullable
@@ -448,6 +459,7 @@ DirectoryPlugin _$DirectoryPluginFromJson(
         (v) =>
             v == null ? null : GalleryStats.fromJson(v as Map<String, dynamic>),
       ),
+      cover: $checkedConvert('cover', (v) => v as String?),
       template: $checkedConvert('template', (v) => v as Map<String, dynamic>?),
       version: $checkedConvert('version', (v) => (v as num?)?.toInt()),
       tags: $checkedConvert(
@@ -492,6 +504,7 @@ Map<String, dynamic> _$DirectoryPluginToJson(DirectoryPlugin instance) =>
       'tested': ?instance.tested?.toJson(),
       'source': ?instance.source_,
       'stats': ?instance.stats?.toJson(),
+      'cover': ?instance.cover,
       'template': ?instance.template,
       'version': ?instance.version,
       'tags': ?instance.tags,
