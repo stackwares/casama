@@ -1,6 +1,6 @@
 # Admin console security implementation plan
 
-Status: **built** (2026-11-20), D-448; review fixes the same day. Authorized by Oliver: “build all now! you decide for everything!”
+Status: **live** (server and docs 2026-11-20, d4570460), D-448; app builds pending. Built and review-fixed the same day. Authorized by Oliver: “build all now! you decide for everything!”
 
 ## Goal and decisions
 
