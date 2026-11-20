@@ -1,6 +1,6 @@
 # Live data cards (weather, markets, money, time, travel and more): plan
 
-Status: **built** (2026-11-20, D-453) on branch `feat/live-cards`, not merged or deployed. Oliver
+Status: **built** (2026-11-20, D-453), merged to main, not deployed. Oliver
 said "You decide everything for me. Start building everything": every §16 decision is at its default.
 What was built, and where it differs from the text below, is in "As built" at the end.
 
