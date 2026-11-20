@@ -83,18 +83,11 @@ self-host with any AI model, and it is also offered as Casama Cloud.
 The full list is under [Features](#features).
 
 <p align="center">
-  <a href="site/assets/film/casama-film-v8-16x9.mp4">
+  <a href="https://casama.ai/assets/film/casama-film-v8-16x9.mp4">
     <img src="docs/media/film-v8-poster.jpg" width="820" alt="Watch the Casama film: your AI assistant, with a computer of its own">
   </a>
   <br>
-  <a href="site/assets/film/casama-film-v8-16x9.mp4">▶ Watch the film</a> (94 seconds, with sound)
-</p>
-
-<p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/media/screenshots/hero-dark.png">
-    <img src="docs/media/screenshots/hero-light.png" alt="Casama on Mac and iPhone: Milo publishes Stardust Drift, a game he made, while his computer's live desktop plays it in the side panel">
-  </picture>
+  <a href="https://casama.ai/assets/film/casama-film-v8-16x9.mp4">▶ Watch the film</a> (94 seconds, with sound)
 </p>
 
 ## How Casama compares
