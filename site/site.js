@@ -19,12 +19,12 @@
   var playQuietly = function (v) { var p = v.play(); if (p && p.catch) p.catch(function () { /* the player's own button starts it */ }); };
   var film = document.getElementById("film");
   if (reel) {
-    // In the hero (D-390) a phone held upright gets the 9:16 film, which suits its screen better.
-    if (reel.hasAttribute("data-src-tall") && window.matchMedia("(max-width: 600px) and (orientation: portrait)").matches) {
-      reel.setAttribute("poster", reel.getAttribute("data-poster-tall"));
-      reel.setAttribute("src", reel.getAttribute("data-src-tall"));
-      reel.setAttribute("width", "1080"); reel.setAttribute("height", "1920");
-      reel.parentNode.classList.add("tall");
+    // In the hero (D-390) wide screens and upright phones play the 9:16 film the HTML names; tablets and
+    // phones on their side get 16:9. The query matches the one in site.css that shapes the frame.
+    if (reel.hasAttribute("data-src-wide") && !window.matchMedia("(min-width: 961px), (max-width: 600px) and (orientation: portrait)").matches) {
+      reel.setAttribute("poster", reel.getAttribute("data-poster-wide"));
+      reel.setAttribute("src", reel.getAttribute("data-src-wide"));
+      reel.setAttribute("width", "1920"); reel.setAttribute("height", "1080");
     }
     var soundBtn = document.querySelector("[data-reel-sound]");
     var calm = window.matchMedia("(prefers-reduced-motion: reduce)").matches || !!(navigator.connection && navigator.connection.saveData);

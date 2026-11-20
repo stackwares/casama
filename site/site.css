@@ -135,14 +135,19 @@ button { cursor: pointer; }
 .lead { font-size: var(--fs-lead); color: var(--ink-2); max-width: 60ch; margin-top: 28px; }
 .hero-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 26px; margin-top: 36px; }
 .hero-note { margin-top: 28px; color: var(--ink-2); font-size: var(--fs-small); max-width: 56ch; }
-/* The film sits beside the copy (D-390): wide screens give it the larger column so its own title reads. */
-.hero:has(.hero-reel) { grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: clamp(32px, 4vw, 56px); }
-@media (min-width: 961px) { .hero:has(.hero-reel) h1 { font-size: min(var(--fs-display), 64px); } }
-.hero-reel { margin: 0; }
-.hero-reel .reel-note { margin-top: 12px; color: var(--ink-2); font-size: 13px; }
+/* The film sits beside the copy (D-390). Wide screens and upright phones get the 9:16 cut (site.js picks
+   the file with the same queries); on wide screens it stands about as tall as the copy beside it. */
+.hero-reel { margin: 0; --reel-h: clamp(520px, 74vh, 700px); }
+.hero-reel .reel-note { margin-top: 12px; color: var(--ink-2); font-size: 12px; }
+@media (min-width: 961px) {
+  .hero:has(.hero-reel) { grid-template-columns: minmax(0, 1fr) auto; }
+  .hero-reel { width: calc(var(--reel-h) * 9 / 16); }
+  .hero-reel .reel-frame { aspect-ratio: 9 / 16; }
+}
 @media (max-width: 960px) { .hero, .hero:has(.hero-reel) { grid-template-columns: 1fr; } }
-/* Phones held upright get the 9:16 film, no taller than most of the screen. */
-.reel-frame.tall { aspect-ratio: 9 / 16; max-height: 78svh; margin-inline: auto; }
+@media (max-width: 600px) and (orientation: portrait) {
+  .hero-reel .reel-frame { aspect-ratio: 9 / 16; max-height: 78svh; margin-inline: auto; }
+}
 /* One column from here down, so the headline takes the whole width instead of 14ch. */
 @media (max-width: 960px) { .hero h1 { max-width: none; font-size: min(8vw, 72px); } }
 /* Phones: the headline fills the column (the widest phrase, "that do the work", takes about 92% of
