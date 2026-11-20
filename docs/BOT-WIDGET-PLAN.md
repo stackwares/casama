@@ -31,7 +31,7 @@ the tools a bot uses to fill it, so it works from a chat and from a routine.
 |---|---|
 | Tools | `widget.set`, `widget.clear`, `widget.list` (§8) |
 | What a bot can show, first version | Five templates: text, countdown, number, list, picture. A background (colour, gradient, picture or a built-in painting), a type style, an icon (§6) |
-| Planned ahead | Up to 14 dated entries in one call, so "a verse every morning" switches on time with no push (§6.4) |
+| Kept changing, cheaply | A **rotation**: the bot writes a list once and the canvas cycles through it with no further model runs. Or up to 14 dated entries in one call. Or a routine that writes on the day (§6.4) |
 | Where | iPhone and iPad Home Screen, StandBy and Lock Screen; Mac desktop; Android home screen and lock screen page (§10) |
 | Who may write | A bot the person allowed, once, with a preview card. Only for the person its run acts for (§11, §12) |
 | Later phases | Live Activity, Dynamic Island and Android live notification for timers; a free layout; watches (§15) |
@@ -207,6 +207,7 @@ This is not:
 |---|---|---|
 | **Canvas** | The widget a bot fills in, and what one bot keeps on it for one person | board (that is Tasks), card (that is chat), pin (that is a bot on the home screen) |
 | **entry** | One thing a canvas shows, with the time it shows from | slide, frame |
+| **rotation** | A list of entries a canvas cycles through on a rhythm, written once | source, playlist, deck, feed |
 | **Show on my widgets** | The button that lets a bot write, the first time | approve, grant |
 | **Hide on a locked phone** | The per-canvas switch | privacy mode |
 | **From your bots** | The section of Settings → Widgets that lists canvases | bot content |
@@ -268,12 +269,51 @@ Home Screen sizes carry the bot's mark, small, in a corner, so the person can te
 
 ### 6.4 Entries and time
 
-- A canvas holds 1 to 14 entries. The first shows now; each later one has a time it shows from.
-- "A verse every morning" is either one routine a week that writes seven entries, or a routine each
-  morning that writes one. Both work. The first is exact and survives a morning without signal.
+A model run costs credits; a widget switching entries costs nothing. So there are three ways to
+keep a canvas changing, cheapest first, and the tool's description tells the bot to pick the
+cheapest one that fits:
+
+| Way | Model runs | For |
+|---|---|---|
+| **A rotation.** The bot writes a list once; the canvas cycles through it | One, ever, or one more whenever the list is refreshed | Things that don't go out of date: verses, quotes, words to learn, photos, affirmations |
+| **A schedule.** Up to 14 dated entries in one write | One a fortnight for something daily | Things written for particular days: this week's plan, a reading for each date |
+| **A write on the day,** from a routine | One per change | Things only knowable that day: a headline, the weather, what's on the calendar |
+
+**Rotations**
+
+- The bot gives the list and a rhythm: every day or week at a time ("06:00", in the person's time
+  zone, from `profiles.timezone`), or every 1 to 23 hours. In order or shuffled. At the end it
+  starts again, or stops on the last one.
+- Up to 400 items, enough for a year of days. Given in the call, up to 60 at a time with `append`
+  for more, or as a file: a list on the bot's computer or a creation in the Library (JSON, CSV, or
+  plain text with one item per line). A file lets the bot build a long list with a script instead
+  of writing every item out through the model.
+- Every item is an entry like any other: the same templates, short forms and limits. The look can
+  be set once for the whole list (one painting, a new verse each day) or per item.
+- **Nothing runs each day.** Which item shows is worked out from the clock: the start time, the
+  rhythm and the order give the item for any moment. The server hands a widget the next 14 as dated
+  entries, so widgets treat a rotation exactly like a schedule and switch on the minute, offline,
+  for up to 14 switches ahead. Their ordinary refreshes pull the window forward. No push, no
+  routine, no write.
+- A shuffle is the same on every device: it is made from the canvas's id and the lap number, not
+  from chance.
+- `widget.list` tells the bot where a rotation stands and how many items are left before it loops
+  or stops, so a monthly routine can top it up if the person wants fresh ones.
+
+**Schedules and single writes**
+
+- Without a rotation a canvas holds 1 to 14 entries. The first shows now; each later one has a
+  time it shows from.
 - Entries must be at least 5 minutes apart.
-- `until` clears the canvas by itself at a time. A countdown's default is a day after its target.
 - When the last entry's time has passed, the last entry stays until the bot writes again.
+
+**Both**
+
+- `until` clears the canvas by itself at a time. A countdown's default is a day after its target.
+
+Not in this plan: a canvas fed straight from a link (a feed or an API) with no bot in between. It
+would put words nobody chose on a Lock Screen, and the server would have to poll. A routine that
+reads the feed and writes a fortnight's schedule does the same job for one run a fortnight.
 
 ### 6.5 States
 
@@ -308,7 +348,7 @@ One migration (version chosen after checking every branch and worktree).
 |---|---|
 | `id`, `org_id`, `user_id`, `bot_id` | The canvas, its workspace, the person it is for, the bot that writes it. Cascades from each |
 | `name` | A short name the bot gives ("Daily verse"), 40 characters, unique per person and bot. Default "Main" |
-| `content` | The checked document: entries and look. Its words are sealed where the workspace seals text (D-238) and opened in code when read |
+| `content` | The checked document: entries and look, or a rotation's items, rhythm, order and start time. Its words are sealed where the workspace seals text (D-238) and opened in code when read. A rotation moving on changes nothing here |
 | `version` | Goes up on every write. The route's `ETag` and the picture cache use it |
 | `status` | `waiting` (written before the person said yes), `shown`, `paused` (the person paused it) |
 | `hide_when_locked` | Set from the bot's `private` on the first write; the person can change it |
@@ -358,6 +398,8 @@ approval flow; the grant of §11.1 is its gate.
 | `short`, `tiny` | Optional short forms |
 | `background`, `font`, `align`, `icon`, `accent` | §6.2 |
 | `schedule` | Up to 13 more entries, each with `at` and its own fields |
+| `rotate` | Makes it a rotation: `every` (`day`, `week`, or 1 to 23 hours), `at` (a time of day), `order` (`in_order` or `shuffle`), `then` (`loop` or `stop`) |
+| `items`, `items_file`, `append` | The rotation's list: up to 60 items in the call, or a file on the bot's computer or a Library creation; `append` adds to the list already there |
 | `until` | When to clear it |
 | `private` | True when it shouldn't be read on a locked phone |
 | `live` | Phase 4: also show it on the Dynamic Island and as a live notification. Only a countdown or number that ends within 8 hours |
@@ -417,7 +459,7 @@ bot's chat and waits there.
 
 | Route | Who | Does |
 |---|---|---|
-| `GET /v1/canvases?org_id=` | Session, `Widget <key>`, later `Watch <key>` | The person's shown canvases, up to 12. `ETag` and `If-None-Match`. A `sizes` parameter says which sizes the caller draws, saved to `canvas_seen`. A private key gets names and bots only |
+| `GET /v1/canvases?org_id=` | Session, `Widget <key>`, later `Watch <key>` | The person's shown canvases, up to 12, each with at most 14 entries: a rotation is dealt here as its next 14, dated. `ETag` (the version, and for a rotation the item it starts at) and `If-None-Match`. A `sizes` parameter says which sizes the caller draws, saved to `canvas_seen`. A private key gets names and bots only |
 | `GET /v1/canvases/:id/pictures/:hash` | Session, `Widget <key>` | The JPEG. Private, cached for good: the hash is in the address |
 | `PATCH /v1/canvases/:id` | Session | Pause or resume; **Hide on a locked phone** |
 | `DELETE /v1/canvases/:id` | Session | Clear it |
@@ -579,6 +621,7 @@ Held in `packages/domain/src/canvas.ts` and enforced in the store, so every path
 | Canvases per bot, per person | 3 |
 | Canvases per person, per workspace | 12 |
 | Entries per canvas | 14, at least 5 minutes apart |
+| A rotation | 400 items; 60 per call; a rhythm of one hour or longer; 30 different pictures |
 | Writes per canvas | 6 an hour, 30 a day |
 | Writes per person, all canvases | 60 a day |
 | Text | `title` 60, `text` 280, `footer` 40, `short` 80, `tiny` 24, a list row 60 |
@@ -609,13 +652,14 @@ Each has a default this plan assumes. Say "defaults" to take them all.
 | 16 | Watches | **Last phase.** Wear OS tile or Wear Widgets decided then |
 | 17 | The grant | **A `widgets` kind in `device_grants`**, shown with the bot's other device access. The other choice is a table of its own |
 | 18 | Phase 0 | **Check D-405 and D-324 on real devices first** (§15). It needs an iOS and an Android build and the Apple push key in production |
+| 19 | Rotations (§6.4): a list written once that the canvas cycles through with no further model runs | **Yes, in Phase 1.** Up to 400 items, hourly at the fastest, in order or shuffled, looping by default. A canvas fed straight from a link with no bot in between stays out |
 
 ## 14. Tests
 
 | Where | What |
 |---|---|
-| `packages/domain/test/canvas.test.ts` | Every limit; each template's required fields; cutting `short` and `tiny` at a word with the footer kept; contrast for colours, gradients and picture tones; entries too close or out of order |
-| `packages/agent/test/canvas.test.ts` | Set, replace, clear, list; waiting until allowed, then shown; **Not now** deletes; hourly and daily write limits; a run with no person is refused; one person's canvas is never another's on a shared bot; turning the grant off clears |
+| `packages/domain/test/canvas.test.ts` | Every limit; each template's required fields; cutting `short` and `tiny` at a word with the footer kept; contrast for colours, gradients and picture tones; entries too close or out of order. Rotations: the item for any moment, in order and shuffled; the same shuffle for the same canvas and lap; looping and stopping; a daily rhythm across a clock change and in another time zone; the next 14 dealt as dated entries |
+| `packages/agent/test/canvas.test.ts` | Set, replace, clear, list; a rotation from the call, from a file and with `append`; a rotation moving on writes nothing and pushes nothing; waiting until allowed, then shown; **Not now** deletes; hourly and daily write limits; a run with no person is refused; one person's canvas is never another's on a shared bot; turning the grant off clears |
 | `packages/agent/test/canvas-pictures.test.ts` | A private address is refused; a wrong type and an oversize file are refused; the output is a JPEG within size; metadata is gone; unused pictures are removed on the next write |
 | `packages/agent/test/tools-widgets.test.ts` | Each answer of §8.4; the preview card and its buttons per case; no card from a routine that is allowed |
 | `apps/server/test/canvas.test.ts` | Each route with a session and with a widget key; a widget key can't write; `ETag` answers 304; a private key gets no content; another person's canvas is 404; `canvas_seen` is saved; `GlancePusher.changed` is called on a shown write and not on a waiting one |
@@ -632,7 +676,7 @@ While building, only the files that changed. The full set once at the end, throu
 | Phase | What | Done when | Needs from Oliver |
 |---|---|---|---|
 | **0. The ground** | On a real iPhone and a real Android phone: a D-405 widget draws; it fetches with its key with Casama closed; a server push reloads it; marked text hides on a locked iPhone. Fix what fails | All four seen on both phones, and written into D-405's entry | An iOS build and an Android build; the Apple push key in production; a deploy if D-405's server side isn't live |
-| **1. Server, tools and the app** | The contract and shared samples, the rules, the migration, the store, pictures, the built-in paintings, the three tools, the routes, the grant, the push hook; in the app the model, the carrier, the preview card, **Show on my widgets**, **From your bots**, the words, analytics | Tests of §14 for the server and the app green. On the local stack: a chat sets a canvas, the card previews it, the button shows it, `GET /v1/canvases` returns it with a widget key, and a routine replaces it unattended | A yes for the paintings (decision 7) |
+| **1. Server, tools and the app** | The contract and shared samples, the rules, the migration, the store, rotations, pictures, the built-in paintings, the three tools, the routes, the grant, the push hook; in the app the model, the carrier, the preview card, **Show on my widgets**, **From your bots**, the words, analytics | Tests of §14 for the server and the app green. On the local stack: a chat sets a canvas, the card previews it, the button shows it, `GET /v1/canvases` returns it with a widget key, and a routine replaces it unattended | A yes for the paintings (decision 7) |
 | **2. iPhone, iPad and Mac** | The Canvas widget, picker, timeline and views; the Mac target | Simulator pictures of five templates in every size, light, dark, tinted, clear and on the Lock Screen. On an iPhone: add it to the Home Screen and the Lock Screen, ask a bot for a verse, see it; plan seven entries and see the next one switch at its minute with the phone offline; lock the phone with **Hide on a locked phone** on | An iOS build and a Mac build; a real iPhone |
 | **3. Android** | The Canvas widget, layouts, picker, **Add to Home screen**, the planned-entry job | The emulator on Android 17 and Android 11: every template and size, light and dark. On a phone with Casama swiped away: a bot's change shows within a minute; the lock screen page draws it and hides it when asked | An Android build; a real phone, a Pixel for the lock screen page |
 | **4. Live** | `BotActivityAttributes`, its views, push-to-start for it; Android's live notification and Live Update; the tool's `live`; the Mac notch row | On an iPhone: "time 9 minutes for the pasta" shows on the island and the Lock Screen and ends itself; the same with Casama closed, started by push. On Android 16 or later: the chip counts down | Builds; real phones (the Simulator delivers no Live Activity pushes) |
@@ -665,7 +709,9 @@ Nothing new is paid for. Apple's push service and Firebase are free. The server 
 indexed read per Canvas refresh, answered "not changed" most of the time, and a few hundred
 kilobytes of stored pictures per canvas. `docs/COSTS.md` gets a zero-cost line. A bot that makes a
 picture for a background uses the image tool that already exists, with its own cost and approval.
-A routine that refreshes a canvas spends credits as any routine does.
+A routine that refreshes a canvas spends credits as any routine does. That is the one cost a
+person feels, and §6.4 is built around it: a rotation spends one run for a year of daily changes,
+a schedule one a fortnight, and only content that can't be known ahead needs a run a day.
 
 ## 18. How we'll know it worked, and docs
 
