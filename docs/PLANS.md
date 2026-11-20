@@ -39,7 +39,6 @@ same commit. Shipping details (deploys, app builds) move fast, so check them bef
 
 | Plan | Decisions | What's left |
 |---|---|---|
-| [ADMIN-BOT-RESETS-PLAN](ADMIN-BOT-RESETS-PLAN.md) | D-445 | Built 2026-11-20; deploy, then try it in the admin bot's chat |
 | [LIMIT-RESETS-PLAN](LIMIT-RESETS-PLAN.md) | D-443 | Server + docs live 2026-11-20 (6d11b195); switched on, test grant on Oliver's space (expires 2026-12-04); app builds with Use Reset pending |
 | [APP-ART-PLAN](APP-ART-PLAN.md) | D-440 | Web app (51), server and gallery live 2026-11-20; store builds and a low-end Android startup check |
 | [ADMIN-BOT-PLAN](ADMIN-BOT-PLAN.md) | D-435 | Push and deploy; then turn it on for admin@casama.ai's bot |
@@ -70,6 +69,7 @@ same commit. Shipping details (deploys, app builds) move fast, so check them bef
 
 | Plan | Decisions | Notes |
 |---|---|---|
+| [ADMIN-BOT-RESETS-PLAN](ADMIN-BOT-RESETS-PLAN.md) | D-445 | Server and docs live 2026-11-20 (14281b6d); the admin bot was already on |
 | [ANALYTICS-PLAN](ANALYTICS-PLAN.md) | D-206..D-210 | |
 | [DOCUMENT-FILES-PLAN](DOCUMENT-FILES-PLAN.md) | D-351 | Live and in app build 32 |
 | [LINK-PLAN](LINK-PLAN.md) | D-296 | Live in prod (its status line is out of date) |

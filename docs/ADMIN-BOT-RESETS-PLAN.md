@@ -1,6 +1,6 @@
 # Saved resets through the admin bot: plan
 
-Status: **approved and built 2026-11-20 (D-445)**. Oliver asked whether admin-owned bots can use
+Status: **built and live 2026-11-20 (D-445, server and docs at 14281b6d)**. Oliver asked whether admin-owned bots can use
 tools for saved resets; they couldn't. I proposed read tools plus approved writes, and he said "Yes
 do that all now plan and build right away then commit push deploy".
 
