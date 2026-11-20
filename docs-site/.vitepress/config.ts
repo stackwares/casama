@@ -106,7 +106,8 @@ export default defineConfig({
   title: "Casama",
   // Every page's <title> reads "<what it covers> | Casama docs": the docs' own name in the search result.
   titleTemplate: ":title | Casama docs",
-  description: "Casama docs: guides, the HTTP API, SDKs and self-hosting for open-source AI teammates that have their own computers.",
+  description:
+    "Casama docs: guides, the HTTP API, SDKs and self-hosting for open-source AI teammates that have their own computers.",
   sitemap: {
     hostname: "https://docs.casama.ai",
   },
@@ -129,7 +130,15 @@ export default defineConfig({
     ["link", { rel: "icon", href: "/favicon.ico", sizes: "48x48" }],
     ["link", { rel: "apple-touch-icon", href: "/apple-touch-icon.png" }],
     // Error reports (D-416): loads Sentry only when a page breaks; no cookie (docs-site/public/errors.js).
-    ["script", { src: "/errors.js", "data-dsn": "https://86edd9eaf9c8b7f88c6a1cf3b71a1e94@o219011.ingest.us.sentry.io/4512413457776640", "data-surface": "docs" }],
+    [
+      "script",
+      {
+        src: "/errors.js",
+        "data-dsn":
+          "https://86edd9eaf9c8b7f88c6a1cf3b71a1e94@o219011.ingest.us.sentry.io/4512413457776640",
+        "data-surface": "docs",
+      },
+    ],
     ["meta", { name: "theme-color", content: "#ffffff", media: "(prefers-color-scheme: light)" }],
     ["meta", { name: "theme-color", content: "#1c1c1e", media: "(prefers-color-scheme: dark)" }],
     [
@@ -363,10 +372,26 @@ export default defineConfig({
       { icon: "github", link: repo },
       { icon: "discord", link: "https://discord.gg/e86XbXFHwz", ariaLabel: "Casama on Discord" },
       { icon: "x", link: "https://x.com/CasamaAI", ariaLabel: "Casama on X" },
-      { icon: "bluesky", link: "https://bsky.app/profile/casama.ai", ariaLabel: "Casama on Bluesky" },
-      { icon: "youtube", link: "https://www.youtube.com/@casamaai", ariaLabel: "Casama on YouTube" },
-      { icon: "instagram", link: "https://www.instagram.com/casamaai/", ariaLabel: "Casama on Instagram" },
-      { icon: "facebook", link: "https://www.facebook.com/casamaai", ariaLabel: "Casama on Facebook" },
+      {
+        icon: "bluesky",
+        link: "https://bsky.app/profile/casama.ai",
+        ariaLabel: "Casama on Bluesky",
+      },
+      {
+        icon: "youtube",
+        link: "https://www.youtube.com/@casamaai",
+        ariaLabel: "Casama on YouTube",
+      },
+      {
+        icon: "instagram",
+        link: "https://www.instagram.com/casamaai/",
+        ariaLabel: "Casama on Instagram",
+      },
+      {
+        icon: "facebook",
+        link: "https://www.facebook.com/casamaai",
+        ariaLabel: "Casama on Facebook",
+      },
     ],
     search: { provider: "local" },
     outline: { level: [2, 3] },

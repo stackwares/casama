@@ -24,12 +24,20 @@ beforeEach(() => {
   globalThis.fetch = async (url, init = {}) => {
     const u = new URL(String(url));
     calls.push({ url: String(url), method: init.method ?? "GET" });
-    const json = (body, status = 200) => new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
+    const json = (body, status = 200) =>
+      new Response(JSON.stringify(body), {
+        status,
+        headers: { "content-type": "application/json" },
+      });
     if (u.origin === "https://www.google-analytics.com") return new Response(null, { status: 204 });
     if (u.pathname === "/v1/config") {
       if (gate === "fail") throw new Error("offline");
       if (gate === "error") return new Response("nope", { status: 500 });
-      return json(gate === "on" ? { signup_gate: { mode: "invite_only", waitlist_url: "https://casama.ai/waitlist" } } : { name: "Casama" });
+      return json(
+        gate === "on"
+          ? { signup_gate: { mode: "invite_only", waitlist_url: "https://casama.ai/waitlist" } }
+          : { name: "Casama" },
+      );
     }
     if (u.pathname === "/v1/invites/preview") {
       const p = previews[u.searchParams.get("code")];
@@ -52,7 +60,11 @@ async function call(path, { ua = "Mozilla/5.0 (Macintosh)" } = {}) {
 
 test("/get/start goes to the waitlist while the gate is on, on every device, keeping from and ref", async () => {
   gate = "on";
-  for (const ua of ["Mozilla/5.0 (Macintosh)", "Mozilla/5.0 (iPhone)", "Mozilla/5.0 (Linux; Android 14)"]) {
+  for (const ua of [
+    "Mozilla/5.0 (Macintosh)",
+    "Mozilla/5.0 (iPhone)",
+    "Mozilla/5.0 (Linux; Android 14)",
+  ]) {
     const res = await call("/get/start?from=pricing&ref=hn&junk=1", { ua });
     assert.equal(res.status, 302);
     assert.equal(res.headers.get("location"), "https://casama.ai/waitlist?from=pricing&ref=hn");
@@ -76,14 +88,32 @@ test("/get/start is the app when the gate is off, and when the config can't be r
 test("other /get links ignore the gate and never read the config", async () => {
   gate = "on";
   const res = await call("/get/web");
-  assert.equal(res.headers.get("location"), "https://app.casama.ai/?utm_source=casama.ai&utm_medium=website&utm_campaign=direct");
-  assert.equal(calls.some((c) => c.url.endsWith("/v1/config")), false);
+  assert.equal(
+    res.headers.get("location"),
+    "https://app.casama.ai/?utm_source=casama.ai&utm_medium=website&utm_campaign=direct",
+  );
+  assert.equal(
+    calls.some((c) => c.url.endsWith("/v1/config")),
+    false,
+  );
 });
 
 // ------------------------------------------------------------------ /invite/<code>
 
-const personal = { kind: "personal", label: null, inviter_name: "Ada", available: true, welcome_usd: 2 };
-const campaign = { kind: "campaign", label: "Hacker News readers", inviter_name: null, available: true, welcome_usd: 0 };
+const personal = {
+  kind: "personal",
+  label: null,
+  inviter_name: "Ada",
+  available: true,
+  welcome_usd: 2,
+};
+const campaign = {
+  kind: "campaign",
+  label: "Hacker News readers",
+  inviter_name: null,
+  available: true,
+  welcome_usd: 0,
+};
 
 function assertPrivatePage(res) {
   assert.equal(res.headers.get("x-robots-tag"), "noindex");
@@ -113,7 +143,10 @@ test("/invite/<code> for an available campaign code shows the label under the he
   const res = await call("/invite/showhn-dec8");
   assert.equal(res.status, 200);
   const html = await res.text();
-  assert.match(html, /<h1>You're invited to Casama<\/h1>\s*<p class="wl-label">Hacker News readers<\/p>/);
+  assert.match(
+    html,
+    /<h1>You're invited to Casama<\/h1>\s*<p class="wl-label">Hacker News readers<\/p>/,
+  );
   assert.match(html, /data-code="SHOWHN-DEC8"/);
   assert.match(html, /Claim my invite/);
 });
@@ -147,12 +180,21 @@ test("/invite/<code> for an unknown code is a 404 page that links to the waitlis
   assert.match(html, /href="https:\/\/casama\.ai\/waitlist"/);
   // Codes that can't be codes get the same page without asking the API.
   calls.length = 0;
-  for (const path of ["/invite/abc", "/invite/has_underscore", `/invite/${"A".repeat(33)}`, "/invite/", "/invite"]) {
+  for (const path of [
+    "/invite/abc",
+    "/invite/has_underscore",
+    `/invite/${"A".repeat(33)}`,
+    "/invite/",
+    "/invite",
+  ]) {
     const bad = await call(path);
     assert.equal(bad.status, 404, path);
     assert.match(await bad.text(), /couldn't find that invite/);
   }
-  assert.equal(calls.some((c) => c.url.includes("/v1/invites/preview")), false);
+  assert.equal(
+    calls.some((c) => c.url.includes("/v1/invites/preview")),
+    false,
+  );
 });
 
 test("/invite/<code> still shows the claim form when the preview can't be read", async () => {
@@ -231,9 +273,15 @@ test("names and labels from the API are escaped on every invite page", async () 
   }
   const html = await (await call("/invite/ABC123")).text();
   assert.match(html, /&lt;script&gt;alert\(1\)&lt;\/script&gt; invited you to Casama/);
-  assert.match(await (await call("/invite/SHOWHN-DEC8")).text(), /<p class="wl-label">&lt;script&gt;alert\(1\)&lt;\/script&gt;<\/p>/);
+  assert.match(
+    await (await call("/invite/SHOWHN-DEC8")).text(),
+    /<p class="wl-label">&lt;script&gt;alert\(1\)&lt;\/script&gt;<\/p>/,
+  );
   // The code in the URL is only ever letters, digits and hyphens; and attribute values can't break out.
-  assert.match(redeemForm({ code: hostileQuote, label: "Go" }), /data-code="&quot;&gt;&lt;img src=x onerror=alert\(1\)&gt;"/);
+  assert.match(
+    redeemForm({ code: hostileQuote, label: "Go" }),
+    /data-code="&quot;&gt;&lt;img src=x onerror=alert\(1\)&gt;"/,
+  );
 });
 
 // ------------------------------------------------------------------ /waitlist/leave and the page markup
@@ -249,8 +297,14 @@ test("/waitlist/leave only asks: opening it calls no API and removes nothing", a
   assert.match(html, /Remove my address/);
   assert.match(html, /That link isn't valid any more\./);
   assert.equal(html.includes("abc.def"), false, "the token is never written into the page");
-  assert.deepEqual(calls.filter((c) => c.url.includes("/v1/waitlist")), []);
-  assert.equal(calls.some((c) => c.method === "POST"), false);
+  assert.deepEqual(
+    calls.filter((c) => c.url.includes("/v1/waitlist")),
+    [],
+  );
+  assert.equal(
+    calls.some((c) => c.method === "POST"),
+    false,
+  );
   assert.match(leaveBlock(), /data-wl-leave-button/);
 });
 
@@ -281,7 +335,10 @@ test("the /waitlist page has the form, the code box, and no counters or share lo
 function load() {
   const sandbox = { window: {}, setTimeout };
   sandbox.window.setTimeout = setTimeout;
-  vm.runInNewContext(readFileSync(new URL("../site/assets/waitlist.js", import.meta.url), "utf8"), sandbox);
+  vm.runInNewContext(
+    readFileSync(new URL("../site/assets/waitlist.js", import.meta.url), "utf8"),
+    sandbox,
+  );
   return sandbox.window.CasamaWaitlist;
 }
 const lib = load();
@@ -297,7 +354,11 @@ function zeroBits(digest) {
 
 test("the claim form has an unticked monthly email box, and sends it only when ticked", () => {
   const form = redeemForm({ code: "CASAMA-X", label: "Claim my invite", source: "invite" });
-  assert.match(form, /<input type="checkbox" name="newsletter">/, "the box is there and not ticked");
+  assert.match(
+    form,
+    /<input type="checkbox" name="newsletter">/,
+    "the box is there and not ticked",
+  );
   assert.match(form, /Also send me Casama's monthly email \(once a month at most\)/);
   const js = site("assets/waitlist.js");
   assert.match(js, /if \(f\.newsletter && f\.newsletter\.checked\) payload\.newsletter = true;/);
@@ -305,20 +366,35 @@ test("the claim form has an unticked monthly email box, and sends it only when t
 
 test("a link opened inside another app's browser is recognised, and a real browser is not", () => {
   const { embeddedBrowser } = load();
-  const iphone = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148";
-  assert.equal(embeddedBrowser(`${iphone} Instagram 350.0.0.20.90 (iPhone15,3; iOS 18_0; en_US)`), "Instagram");
+  const iphone =
+    "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148";
+  assert.equal(
+    embeddedBrowser(`${iphone} Instagram 350.0.0.20.90 (iPhone15,3; iOS 18_0; en_US)`),
+    "Instagram",
+  );
   assert.equal(embeddedBrowser(`${iphone} Barcelona 350.0.0.20.90 Instagram`), "Threads");
   assert.equal(embeddedBrowser(`${iphone} [FBAN/FBIOS;FBAV/480.0.0.30.107;FBBV/1]`), "Facebook");
-  assert.equal(embeddedBrowser(`${iphone} musical_ly_36.0.0 JsSdk/2.0 BytedanceWebview/d8a21c6`), "TikTok");
+  assert.equal(
+    embeddedBrowser(`${iphone} musical_ly_36.0.0 JsSdk/2.0 BytedanceWebview/d8a21c6`),
+    "TikTok",
+  );
   assert.equal(embeddedBrowser(`${iphone} Twitter for iPhone/10.60`), "X");
   assert.equal(embeddedBrowser(`${iphone} Version/18.0 Mobile/15E148 Safari/604.1`), "");
-  assert.equal(embeddedBrowser("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"), "");
+  assert.equal(
+    embeddedBrowser(
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
+    ),
+    "",
+  );
   assert.equal(embeddedBrowser(undefined), "");
 });
 
 test("after a claim, Open Casama goes to the web app's sign-in with the address after the #", () => {
   const { signInLink } = load();
-  assert.equal(signInLink(" rae+news@example.com "), "https://app.casama.ai/#/sign-in?email=rae%2Bnews%40example.com");
+  assert.equal(
+    signInLink(" rae+news@example.com "),
+    "https://app.casama.ai/#/sign-in?email=rae%2Bnews%40example.com",
+  );
   const link = new URL(signInLink("a&b=c@example.com"));
   assert.equal(link.search, "", "nothing before the # reaches a server");
   assert.equal(new URLSearchParams(link.hash.split("?")[1]).get("email"), "a&b=c@example.com");
@@ -334,7 +410,12 @@ test("sha256 matches Node's for the empty string, short, long and awkward inputs
     "héllo wörld ✓ 日本語 😀 \u{10FFFF}",
     "v1.18.1893456000.k3j2h4kj23h4.aGVsbG8gd29ybGQ:12345",
   ];
-  for (const text of inputs) assert.equal(lib.sha256Hex(text), nodeHash(text).toString("hex"), JSON.stringify(text.slice(0, 20)) + ` (${text.length})`);
+  for (const text of inputs)
+    assert.equal(
+      lib.sha256Hex(text),
+      nodeHash(text).toString("hex"),
+      JSON.stringify(text.slice(0, 20)) + ` (${text.length})`,
+    );
 });
 
 test("the solver's nonce really gives the leading zero bits, at difficulty 8 and 12", async () => {
@@ -348,9 +429,15 @@ test("the solver's nonce really gives the leading zero bits, at difficulty 8 and
       const nonce = lib.findNonce(challenge, difficulty);
       assert.equal(typeof nonce, "string");
       assert.ok(nonce.length >= 1 && nonce.length <= 64);
-      assert.ok(zeroBits(nodeHash(`${challenge}:${nonce}`)) >= difficulty, `${challenge} d${difficulty}`);
+      assert.ok(
+        zeroBits(nodeHash(`${challenge}:${nonce}`)) >= difficulty,
+        `${challenge} d${difficulty}`,
+      );
       const solved = await lib.solve(challenge, difficulty, { chunk: 500 });
-      assert.ok(zeroBits(nodeHash(`${challenge}:${solved}`)) >= difficulty, `solve ${challenge} d${difficulty}`);
+      assert.ok(
+        zeroBits(nodeHash(`${challenge}:${solved}`)) >= difficulty,
+        `solve ${challenge} d${difficulty}`,
+      );
     }
   }
 });
@@ -374,21 +461,39 @@ const site = (p) => readFileSync(new URL(`../site/${p}`, import.meta.url), "utf8
 const MARK = "<!-- waitlist copy: docs/WAITLIST-PLAN.md §12 -->";
 
 test("the header has a Join the waitlist button and a quiet Sign in link on a written page, the home page and a hand-written page", () => {
-  for (const p of ["about.html", "index.html", "download.html", "privacy.html", "blog/how-approvals-work.html"]) {
+  for (const p of [
+    "about.html",
+    "index.html",
+    "download.html",
+    "privacy.html",
+    "blog/how-approvals-work.html",
+  ]) {
     const html = site(p);
-    const header = html.slice(html.indexOf('<header class="site-header">'), html.indexOf("</header>"));
+    const header = html.slice(
+      html.indexOf('<header class="site-header">'),
+      html.indexOf("</header>"),
+    );
     assert.match(header, /<a class="btn sm primary" href="\/waitlist">Join the waitlist<\/a>/, p);
-    assert.match(header, /<a class="header-signin" href="https:\/\/app\.casama\.ai">Sign in<\/a>/, p);
+    assert.match(
+      header,
+      /<a class="header-signin" href="https:\/\/app\.casama\.ai">Sign in<\/a>/,
+      p,
+    );
     assert.ok(header.includes(MARK), p);
   }
-  assert.match(site("site.css"), /@media \(max-width: 480px\) \{ \.header-signin \{ display: none; \}/);
+  assert.match(
+    site("site.css"),
+    /@media \(max-width: 480px\) \{ \.header-signin \{ display: none; \}/,
+  );
 });
 
 test("the home page has an email-only inline form in the hero and the bottom call to action", () => {
   const html = site("index.html");
   const forms = html.match(/<form class="wl-inline"[\s\S]*?<\/form>/g) ?? [];
   assert.equal(forms.length, 2);
-  assert.ok(forms[0].includes('data-source="home-hero"') && forms[1].includes('data-source="home-cta"'));
+  assert.ok(
+    forms[0].includes('data-source="home-hero"') && forms[1].includes('data-source="home-cta"'),
+  );
   for (const f of forms) {
     assert.match(f, /type="email" name="email"/);
     assert.doesNotMatch(f, /name="note"|name="newsletter"/);
@@ -405,7 +510,7 @@ test("blog posts and the changelog end with a waitlist box, not the newsletter b
     assert.ok(box.includes("data-wl-inline"), p);
     assert.ok(!box.includes("data-newsletter") && !/monthly email/.test(box), p);
     assert.ok(html.includes('<script src="/assets/waitlist.js"></script>'), p);
-    assert.ok(html.includes('data-newsletter'), `${p} keeps the footer newsletter form`);
+    assert.ok(html.includes("data-newsletter"), `${p} keeps the footer newsletter form`);
   }
   const dl = site("download.html");
   const card = dl.match(/<div class="dl-news-card">[\s\S]*?<\/form>/)[0];
@@ -417,15 +522,27 @@ test("blog posts and the changelog end with a waitlist box, not the newsletter b
 
 test("the footer's Product column has a Waitlist link right after Casama Cloud", () => {
   for (const p of ["index.html", "download.html", "about.html", "blog/how-approvals-work.html"]) {
-    assert.match(site(p), /<a href="https:\/\/app\.casama\.ai">Casama Cloud<\/a>\s*(?:<!--[^>]*-->\s*)?<a href="\/waitlist">Waitlist<\/a>/, p);
+    assert.match(
+      site(p),
+      /<a href="https:\/\/app\.casama\.ai">Casama Cloud<\/a>\s*(?:<!--[^>]*-->\s*)?<a href="\/waitlist">Waitlist<\/a>/,
+      p,
+    );
   }
 });
 
 test("gallery item pages say Cloud is invite-only under the Open in Casama button", () => {
-  const html = readFileSync(new URL("../gallery/i/app/beehiiv/index.html", import.meta.url), "utf8");
+  const html = readFileSync(
+    new URL("../gallery/i/app/beehiiv/index.html", import.meta.url),
+    "utf8",
+  );
   const at = html.indexOf("Open in Casama");
   assert.ok(at > 0);
-  assert.ok(html.indexOf('Casama Cloud is invite-only for now. <a href="https://casama.ai/waitlist">Join the waitlist</a>', at) > at);
+  assert.ok(
+    html.indexOf(
+      'Casama Cloud is invite-only for now. <a href="https://casama.ai/waitlist">Join the waitlist</a>',
+      at,
+    ) > at,
+  );
 });
 
 test("the inline form shares waitlist.js's join code and shows the joined message", () => {

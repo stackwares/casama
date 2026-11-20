@@ -259,7 +259,10 @@ describe("local MCP servers", () => {
     );
     expect(
       Object.fromEntries(
-        (items as { device: { label: string }; auth: string }[]).map((i) => [i.device.label, i.auth]),
+        (items as { device: { label: string }; auth: string }[]).map((i) => [
+          i.device.label,
+          i.auth,
+        ]),
       ),
     ).toEqual({ Notes: "none", Paid: "api_key", Raw: "api_key" });
     const test = (token: string, id: string) =>

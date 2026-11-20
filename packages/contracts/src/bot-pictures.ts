@@ -43,12 +43,9 @@ export const SetBotPictureRequest = z
       .optional()
       .openapi({ description: "The picture before cropping, for Re-crop, base64" }),
     crop: BotPictureCrop.optional(),
-    source: z
-      .enum(["upload", "chat"])
-      .optional()
-      .openapi({
-        description: "upload (camera, files, paste, drop) or chat (a picture from a conversation)",
-      }),
+    source: z.enum(["upload", "chat"]).optional().openapi({
+      description: "upload (camera, files, paste, drop) or chat (a picture from a conversation)",
+    }),
   })
   .openapi("SetBotPictureRequest");
 
@@ -73,15 +70,9 @@ export const BotPictureStyle = z
 export const GenerateBotPicturesRequest = z
   .object({
     style: BotPictureStyle,
-    description: z
-      .string()
-      .trim()
-      .max(400)
-      .optional()
-      .openapi({
-        description:
-          "What to draw; empty: Casama works it out from the bot's name and instructions",
-      }),
+    description: z.string().trim().max(400).optional().openapi({
+      description: "What to draw; empty: Casama works it out from the bot's name and instructions",
+    }),
     count: z.number().int().min(1).max(2).optional(),
   })
   .openapi("GenerateBotPicturesRequest");

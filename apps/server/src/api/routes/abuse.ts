@@ -13,7 +13,6 @@ import { routes } from "@casama/contracts";
 import type { OpenAPIHono } from "@hono/zod-openapi";
 import { sql } from "drizzle-orm";
 import { verifyStandardWebhook } from "../../billing/dodo.ts";
-import { isUndeliverableAddress } from "../../services/email.ts";
 import {
   abuseControlsOn,
   newChallenge,
@@ -23,6 +22,7 @@ import {
   verifyAppCheck,
   verifyPow,
 } from "../../services/abuse.ts";
+import { isUndeliverableAddress } from "../../services/email.ts";
 import {
   claimInvite,
   cleanEmail,

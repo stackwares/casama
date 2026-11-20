@@ -6,9 +6,9 @@ import worker, {
   beaconEvent,
   campaignFor,
   gaPayload,
-  trafficSource,
   refererPage,
   siteKey,
+  trafficSource,
   visitorIds,
   withAttribution,
 } from "../site/gallery-link.js";
@@ -217,22 +217,57 @@ test("a page view without ids still gets random ones (gaPayload stays pure)", ()
 
 test("page views carry their traffic source as campaign_details, so GA4 sessions aren't (not set)", () => {
   const ids = { clientId: "1.2", sessionId: "345" };
-  const p = gaPayload({ page: "/pricing", host: "www.google.com", source: "google", ids, now: 1_700_000_000_000 });
+  const p = gaPayload({
+    page: "/pricing",
+    host: "www.google.com",
+    source: "google",
+    ids,
+    now: 1_700_000_000_000,
+  });
   assert.equal(p.events[0].name, "page_view");
   assert.equal(p.events[0].params.page_referrer, "https://www.google.com/");
   assert.equal(p.events[0].params.session_id, "345");
   assert.ok(p.events[0].params.engagement_time_msec > 0);
   const cd = p.events.find((e) => e.name === "campaign_details");
-  assert.deepEqual(cd.params, { source: "google", medium: "organic", campaign: "(organic)", session_id: "345", engagement_time_msec: 1 });
-  assert.ok(cd.timestamp_micros < p.events[0].timestamp_micros, "campaign_details applies to events after it");
+  assert.deepEqual(cd.params, {
+    source: "google",
+    medium: "organic",
+    campaign: "(organic)",
+    session_id: "345",
+    engagement_time_msec: 1,
+  });
+  assert.ok(
+    cd.timestamp_micros < p.events[0].timestamp_micros,
+    "campaign_details applies to events after it",
+  );
 
-  assert.deepEqual(trafficSource("chatgpt", "chatgpt.com", ""), { source: "chatgpt.com", medium: "referral", campaign: "(referral)" });
-  assert.deepEqual(trafficSource("chatgpt", "", "chatgpt.com"), { source: "chatgpt.com", medium: "referral", campaign: "(referral)" });
-  assert.deepEqual(trafficSource("perplexity", "www.perplexity.ai", ""), { source: "perplexity.ai", medium: "referral", campaign: "(referral)" });
-  assert.deepEqual(trafficSource("bing", "www.bing.com", ""), { source: "bing", medium: "organic", campaign: "(organic)" });
+  assert.deepEqual(trafficSource("chatgpt", "chatgpt.com", ""), {
+    source: "chatgpt.com",
+    medium: "referral",
+    campaign: "(referral)",
+  });
+  assert.deepEqual(trafficSource("chatgpt", "", "chatgpt.com"), {
+    source: "chatgpt.com",
+    medium: "referral",
+    campaign: "(referral)",
+  });
+  assert.deepEqual(trafficSource("perplexity", "www.perplexity.ai", ""), {
+    source: "perplexity.ai",
+    medium: "referral",
+    campaign: "(referral)",
+  });
+  assert.deepEqual(trafficSource("bing", "www.bing.com", ""), {
+    source: "bing",
+    medium: "organic",
+    campaign: "(organic)",
+  });
   assert.equal(trafficSource("search", "duckduckgo.com", "").source, "duckduckgo");
   assert.equal(trafficSource("github", "github.com", "").medium, "referral");
-  assert.deepEqual(trafficSource("direct", "", ""), { source: "(direct)", medium: "(none)", campaign: "(direct)" });
+  assert.deepEqual(trafficSource("direct", "", ""), {
+    source: "(direct)",
+    medium: "(none)",
+    campaign: "(direct)",
+  });
   // A hop between our own sites keeps the session's first source.
   assert.equal(trafficSource("casama", "docs.casama.ai", ""), null);
   assert.equal(gaPayload({ page: "/", host: "casama.ai", source: "casama", ids }).events.length, 1);
@@ -241,9 +276,15 @@ test("page views carry their traffic source as campaign_details, so GA4 sessions
 });
 
 test("the /b beacon sends the external referrer's source to GA4", async () => {
-  await call("/b", { method: "POST", body: JSON.stringify({ p: "/", r: "www.google.com", u: "" }) });
+  await call("/b", {
+    method: "POST",
+    body: JSON.stringify({ p: "/", r: "www.google.com", u: "" }),
+  });
   assert.equal(sent.length, 1);
-  assert.deepEqual(sent[0].body.events.map((e) => e.name), ["page_view", "campaign_details"]);
+  assert.deepEqual(
+    sent[0].body.events.map((e) => e.name),
+    ["page_view", "campaign_details"],
+  );
   assert.equal(sent[0].body.events[1].params.source, "google");
   assert.equal(sent[0].body.ip_override, undefined, "no IP address leaves the Worker");
 });

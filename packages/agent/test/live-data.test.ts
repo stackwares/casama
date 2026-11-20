@@ -304,7 +304,13 @@ describe("cards from pages", async () => {
 
   it("reads a recipe's own ingredients and steps", () => {
     const card = cardFromLd(jsonLd(page), "https://www.panlasang.test/adobo/");
-    expect(card).toMatchObject({ component: "Recipe", title: "Chicken Adobo", time: "1 h 30 min", servings: 4, calories: 646 });
+    expect(card).toMatchObject({
+      component: "Recipe",
+      title: "Chicken Adobo",
+      time: "1 h 30 min",
+      servings: 4,
+      calories: 646,
+    });
     expect(card?.ingredients).toEqual([
       { text: "chicken", qty: 2, unit: "lbs" },
       { text: "soy sauce", qty: 0.5, unit: "cup" },
@@ -312,8 +318,13 @@ describe("cards from pages", async () => {
       { text: "salt to taste" },
     ]);
     expect(card?.steps).toEqual(["Marinate.", "Simmer 30 minutes."]);
-    expect(card?.source).toEqual({ name: "panlasang.test", url: "https://www.panlasang.test/adobo/" });
-    expect(() => checkComponents([{ id: "root", ...(card as Record<string, unknown>) }], { fromBot: true })).not.toThrow();
+    expect(card?.source).toEqual({
+      name: "panlasang.test",
+      url: "https://www.panlasang.test/adobo/",
+    });
+    expect(() =>
+      checkComponents([{ id: "root", ...(card as Record<string, unknown>) }], { fromBot: true }),
+    ).not.toThrow();
   });
 
   it("parses durations and quantities", () => {

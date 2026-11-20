@@ -10,7 +10,8 @@ const ProjectCover = z
   .nullable()
   .optional()
   .openapi({
-    description: "A painted cover the project picked (an app art name such as sailboat); null for none",
+    description:
+      "A painted cover the project picked (an app art name such as sailboat); null for none",
   });
 
 export const ProjectStatus = z

@@ -49,7 +49,13 @@ test("other parts of the link stay, and only the address goes", () => {
 });
 
 test("links without an address, and other screens, are left alone", () => {
-  for (const hash of ["#/sign-in", "#/sign-in?from=invite", "#/bots?email=rae%40example.com", "#/link?code=ABC", ""]) {
+  for (const hash of [
+    "#/sign-in",
+    "#/sign-in?from=invite",
+    "#/bots?email=rae%40example.com",
+    "#/link?code=ABC",
+    "",
+  ]) {
     const r = boot(hash);
     assert.equal(r.hash, hash, hash);
     assert.deepEqual(r.stored, {}, hash);

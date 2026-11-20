@@ -538,7 +538,20 @@
       "by": ["client"],
       "description": "A bot got a picture of its own from the app (BOT-PICTURES-PLAN §10).",
       "properties": {
-        "source": { "type": "string", "values": ["camera", "library", "file", "drop", "paste", "chat", "recent", "generated", "recrop"] },
+        "source": {
+          "type": "string",
+          "values": [
+            "camera",
+            "library",
+            "file",
+            "drop",
+            "paste",
+            "chat",
+            "recent",
+            "generated",
+            "recrop"
+          ]
+        },
         "transparent": { "type": "boolean" },
         "rotated": { "type": "boolean" },
         "zoomed": { "type": "boolean" }
@@ -549,7 +562,20 @@
       "by": ["client"],
       "description": "The picture cropper was closed without using the picture.",
       "properties": {
-        "source": { "type": "string", "values": ["camera", "library", "file", "drop", "paste", "chat", "recent", "generated", "recrop"] }
+        "source": {
+          "type": "string",
+          "values": [
+            "camera",
+            "library",
+            "file",
+            "drop",
+            "paste",
+            "chat",
+            "recent",
+            "generated",
+            "recrop"
+          ]
+        }
       }
     },
     {
@@ -571,7 +597,10 @@
       "by": ["server"],
       "description": "Casama drew picture candidates for a bot (Make one with AI).",
       "properties": {
-        "style": { "type": "string", "values": ["cloud", "soft3d", "watercolor", "flat", "pixel", "line", "photo"] },
+        "style": {
+          "type": "string",
+          "values": ["cloud", "soft3d", "watercolor", "flat", "pixel", "line", "photo"]
+        },
         "count": { "type": "number" }
       }
     },
@@ -1179,7 +1208,15 @@
       "properties": {
         "action": {
           "type": "string",
-          "values": ["transcript_opened", "step_started", "step_dismissed", "call_back", "copied", "shared", "deleted"]
+          "values": [
+            "transcript_opened",
+            "step_started",
+            "step_dismissed",
+            "call_back",
+            "copied",
+            "shared",
+            "deleted"
+          ]
         }
       },
       "funnels": ["F8"]
@@ -1883,9 +1920,7 @@
     },
     {
       "name": "reset_given",
-      "by": [
-        "server"
-      ],
+      "by": ["server"],
       "description": "A workspace was given a saved reset.",
       "properties": {
         "plan": {
@@ -1899,9 +1934,7 @@
     },
     {
       "name": "reset_used",
-      "by": [
-        "server"
-      ],
+      "by": ["server"],
       "description": "A workspace owner used a saved reset.",
       "properties": {
         "plan": {
@@ -1915,9 +1948,7 @@
     },
     {
       "name": "reset_expired",
-      "by": [
-        "server"
-      ],
+      "by": ["server"],
       "description": "An unused saved reset expired.",
       "properties": {
         "plan": {
@@ -1931,9 +1962,7 @@
     },
     {
       "name": "card_shown",
-      "by": [
-        "server"
-      ],
+      "by": ["server"],
       "description": "A live data card was shown in a chat (docs/RICH-CARDS-PLAN.md §12): which card, which live tool, and the provider. Never places, symbols or words.",
       "properties": {
         "card": {
@@ -2010,9 +2039,7 @@
     },
     {
       "name": "card_refreshed",
-      "by": [
-        "client"
-      ],
+      "by": ["client"],
       "description": "A live card fetched its data again without the model: on its own while on screen, from the refresh button, or for another view (RICH-CARDS-PLAN §4.4).",
       "properties": {
         "card": {
@@ -2058,28 +2085,18 @@
         },
         "trigger": {
           "type": "string",
-          "values": [
-            "auto",
-            "manual",
-            "view"
-          ]
+          "values": ["auto", "manual", "view"]
         },
         "result": {
           "type": "string",
-          "values": [
-            "ok",
-            "stale",
-            "error"
-          ]
+          "values": ["ok", "stale", "error"]
         }
       },
       "funnels": []
     },
     {
       "name": "card_pinned",
-      "by": [
-        "client"
-      ],
+      "by": ["client"],
       "description": "A live card was pinned to the person's widgets (RICH-CARDS-PLAN §4.5).",
       "properties": {
         "card": {
@@ -2131,9 +2148,7 @@
     },
     {
       "name": "card_unpinned",
-      "by": [
-        "client"
-      ],
+      "by": ["client"],
       "description": "A pinned live card was taken off the widgets.",
       "properties": {
         "card": {
@@ -2182,9 +2197,7 @@
     },
     {
       "name": "card_shared",
-      "by": [
-        "client"
-      ],
+      "by": ["client"],
       "description": "A card was shared as a picture or copied as text.",
       "properties": {
         "card": {
@@ -2230,19 +2243,14 @@
         },
         "as": {
           "type": "string",
-          "values": [
-            "image",
-            "text"
-          ]
+          "values": ["image", "text"]
         }
       },
       "funnels": []
     },
     {
       "name": "card_reported",
-      "by": [
-        "client"
-      ],
+      "by": ["client"],
       "description": "Someone reported wrong data on a live card (the card and provider are kept server-side, no words).",
       "properties": {
         "card": {

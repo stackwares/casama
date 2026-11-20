@@ -2,7 +2,7 @@
  * The admin bot (D-435, docs/ADMIN-BOT-PLAN.md). Every test tries to get an admin action through
  * without the owner's own fresh approval in their own chat, and checks that nothing happened.
  */
-import { createDb, type DbHandle, withUserSession } from "@casama/db";
+
 import {
   builtinTools,
   CredentialResolver,
@@ -13,6 +13,7 @@ import {
   ReplayGateway,
   runAgent,
 } from "@casama/agent";
+import { createDb, type DbHandle, withUserSession } from "@casama/db";
 import { sql } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import {
@@ -105,7 +106,8 @@ async function chat(
   const [run] = await h.tdb.admin<{ id: string }[]>`
     insert into public.runs (org_id, bot_id, conversation_id, created_by, trigger)
     values (${org}, ${bot}, ${conv!.id}, ${by}, ${o.trigger ?? "chat"}) returning id`;
-  await h.tdb.admin`insert into public.messages (org_id, conversation_id, role, author_user_id, content, run_id)
+  await h.tdb
+    .admin`insert into public.messages (org_id, conversation_id, role, author_user_id, content, run_id)
     values (${org}, ${conv!.id}, 'user', ${by}, ${h.tdb.admin.json([{ type: "text", text }])}, ${run!.id})`;
   await runAgent(run!.id, {
     db: worker.db,
@@ -133,7 +135,8 @@ const banned = async () => {
   return u!.b;
 };
 
-const approveAs = (userId: string, extra: { alwaysAllow?: boolean; ageMin?: number } = {}) =>
+const approveAs =
+  (userId: string, extra: { alwaysAllow?: boolean; ageMin?: number } = {}) =>
   async (approvalId: string) => {
     await h.tdb.admin`
       update public.approvals set status = 'approved', decided_by = ${userId},
@@ -145,7 +148,8 @@ const approveAs = (userId: string, extra: { alwaysAllow?: boolean; ageMin?: numb
 async function orgWith(name: string, ownerId: string) {
   const [o] = await h.tdb.admin<{ id: string }[]>`
     insert into public.organizations (name, slug) values (${name}, ${`${name.toLowerCase()}-${Date.now()}`}) returning id`;
-  await h.tdb.admin`insert into public.memberships (org_id, user_id, role) values (${o!.id}, ${ownerId}, 'owner')`;
+  await h.tdb
+    .admin`insert into public.memberships (org_id, user_id, role) values (${o!.id}, ${ownerId}, 'owner')`;
   return o!.id;
 }
 
@@ -171,7 +175,9 @@ beforeAll(async () => {
   adminBotId = await botIn(adminOrg, owner.id);
   targetOrg = await orgWith("Target", target.id);
   await h.tdb.admin.unsafe("alter role casama_worker login password 'casama-worker-test'");
-  worker = createDb(h.tdb.url.replace("postgres@", "casama_worker:casama-worker-test@"), { max: 4 });
+  worker = createDb(h.tdb.url.replace("postgres@", "casama_worker:casama-worker-test@"), {
+    max: 4,
+  });
   deps = { db: worker.db, ownerEmails: [OWNER] };
 }, 60_000);
 afterAll(async () => {
@@ -182,9 +188,11 @@ afterAll(async () => {
 beforeEach(async () => {
   decide = async () => {};
   await h.tdb.admin`update auth.users set banned_until = null where id = ${target.id}`;
-  await h.tdb.admin`update public.organizations set suspended_at = null, suspended_reason = null where id = ${targetOrg}`;
+  await h.tdb
+    .admin`update public.organizations set suspended_at = null, suspended_reason = null where id = ${targetOrg}`;
   await h.tdb.admin`update public.organizations set full_access = false where id = ${adminOrg}`;
-  await h.tdb.admin`delete from public.memberships where org_id = ${adminOrg} and user_id <> ${owner.id}`;
+  await h.tdb
+    .admin`delete from public.memberships where org_id = ${adminOrg} and user_id <> ${owner.id}`;
   await setAdminBot(h.handle.db, { enabled: true, bot_id: adminBotId });
 });
 
@@ -217,7 +225,8 @@ describe("admin bot: who and where", () => {
   });
 
   it("not when anyone else is in the admin workspace", async () => {
-    await h.tdb.admin`insert into public.memberships (org_id, user_id, role) values (${adminOrg}, ${stranger.id}, 'member')`;
+    await h.tdb
+      .admin`insert into public.memberships (org_id, user_id, role) values (${adminOrg}, ${stranger.id}, 'member')`;
     decide = approveAs(owner.id);
     expect((await chat("ban them")).approvals).toHaveLength(0);
     expect(await banned()).toBe(false);
@@ -331,7 +340,8 @@ describe("admin bot: approving through the API", () => {
 
   it("an owner of the instance only (a workspace admin isn't enough)", async () => {
     const id = await card();
-    await h.tdb.admin`insert into public.memberships (org_id, user_id, role) values (${adminOrg}, ${stranger.id}, 'admin')`;
+    await h.tdb
+      .admin`insert into public.memberships (org_id, user_id, role) values (${adminOrg}, ${stranger.id}, 'admin')`;
     expect((await answer(id, stranger.token, { decision: "approved" })).status).toBe(403);
     expect((await answer(id, owner.token, { decision: "approved" })).status).toBe(200);
   });
@@ -404,7 +414,8 @@ describe("ban and unban", () => {
   });
 
   it("an account being deleted stays banned", async () => {
-    await h.tdb.admin`insert into public.account_deletions (user_id, purge_after) values (${stranger.id}, now() + interval '7 days')`;
+    await h.tdb
+      .admin`insert into public.account_deletions (user_id, purge_after) values (${stranger.id}, now() + interval '7 days')`;
     expect(await unbanUser(deps, stranger.id, owner.id)).toMatchObject({ ok: false });
   });
 });

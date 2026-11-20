@@ -314,12 +314,9 @@ export const DecisionSignalResult = z
     latency_p95_ms: z.number(),
     cost_usd: z.number(),
     labelled: z.number().int(),
-    positives: z
-      .number()
-      .int()
-      .openapi({
-        description: "Labelled rows where the thing happened (a find, a flag, an accept)",
-      }),
+    positives: z.number().int().openapi({
+      description: "Labelled rows where the thing happened (a find, a flag, an accept)",
+    }),
     thresholds: z.array(
       z.object({
         threshold: z.number(),

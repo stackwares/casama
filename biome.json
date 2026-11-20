@@ -20,6 +20,8 @@
       "!gallery",
       "!docs/media",
       "!docs-site/public/brand",
+      "!docs-site/public/errors.js",
+      "!visuals",
       "!link-site/assets/brand",
       "!infra/helm/**/templates",
       "!infra/compose/selfhost/kong.yml"
