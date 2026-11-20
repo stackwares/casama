@@ -580,6 +580,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
                             if (cardPrice(t) case final price?)
                               _TierCard(
                                 key: Key('paywallTier-${t.code}'),
+                                tierCode: t.code,
                                 name: t.name,
                                 tagline: switch (t.code) {
                                   'plus' => l10n.paywallTaglinePlus,
@@ -1337,6 +1338,7 @@ class _PeriodToggle extends StatelessWidget {
 class _TierCard extends StatelessWidget {
   const _TierCard({
     super.key,
+    required this.tierCode,
     required this.name,
     required this.facts,
     required this.price,
@@ -1348,6 +1350,9 @@ class _TierCard extends StatelessWidget {
     this.trial,
     this.vertical = false,
   });
+  /// The tier (plus, pro, max), the same whichever period is picked; the plan's own code
+  /// changes with the period (plus_yearly, plus_weekly).
+  final String tierCode;
   final String name;
   final String? tagline;
   final List<String> facts;
@@ -1407,9 +1412,10 @@ class _TierCard extends StatelessWidget {
       ],
     );
 
-    final priceBlock = Column(
+    // Right-aligned only when it sits beside the name; under the name it lines up with the text.
+    Widget priceBlock({required bool start}) => Column(
       key: Key('paywallPrice-${price.plan.code}'),
-      crossAxisAlignment: vertical ? CrossAxisAlignment.start : CrossAxisAlignment.end,
+      crossAxisAlignment: start ? CrossAxisAlignment.start : CrossAxisAlignment.end,
       mainAxisSize: MainAxisSize.min,
       children: [
         Text.rich(
@@ -1439,24 +1445,24 @@ class _TierCard extends StatelessWidget {
                 ),
             ],
           ),
-          textAlign: vertical ? TextAlign.start : TextAlign.end,
+          textAlign: start ? TextAlign.start : TextAlign.end,
         ),
         Text(
           price.billed,
-          textAlign: vertical ? TextAlign.start : TextAlign.end,
+          textAlign: start ? TextAlign.start : TextAlign.end,
           style: context.textTheme.labelSmall?.copyWith(color: muted),
         ),
         if (price.perWeek case final perWeek?)
           Text(
             perWeek,
             key: Key('paywallPerWeek-${price.plan.code}'),
-            textAlign: vertical ? TextAlign.start : TextAlign.end,
+            textAlign: start ? TextAlign.start : TextAlign.end,
             style: context.textTheme.labelSmall?.copyWith(color: muted, fontFeatures: AppText.tabular),
           ),
         if (price.monthsFree >= 1)
           Text(
             l10n.paywallMonthsFree(price.monthsFree),
-            textAlign: vertical ? TextAlign.start : TextAlign.end,
+            textAlign: start ? TextAlign.start : TextAlign.end,
             style: context.textTheme.labelSmall?.copyWith(
               color: context.appColors.positive,
               fontWeight: FontWeight.w800,
@@ -1466,14 +1472,14 @@ class _TierCard extends StatelessWidget {
     );
 
     // A small painted object per plan (visuals/round-10): a star, a gem, a crown.
-    final artAsset = paintedAsset('plan-${price.plan.code}');
+    final artAsset = paintedAsset('plan-$tierCode');
     Widget? art(double size) => artAsset == null
         ? null
         : ExcludeSemantics(
             child: PaintedCover(
-              key: Key('paywallPlanArt-${price.plan.code}'),
+              key: Key('paywallPlanArt-$tierCode'),
               size: size,
-              seed: 'plan-${price.plan.code}',
+              seed: 'plan-$tierCode',
               asset: artAsset,
             ),
           );
@@ -1493,7 +1499,7 @@ class _TierCard extends StatelessWidget {
               Row(children: [radio, const SizedBox(width: AppSpace.sm), Expanded(child: heading), ?art(48)]),
               if (taglineText != null) ...[const SizedBox(height: AppSpace.xs), taglineText],
               const SizedBox(height: AppSpace.md),
-              priceBlock,
+              priceBlock(start: true),
               const SizedBox(height: AppSpace.md),
               Divider(height: 1, color: context.appColors.hairline),
               const SizedBox(height: AppSpace.sm),
@@ -1538,14 +1544,14 @@ class _TierCard extends StatelessWidget {
                         if (box.maxWidth < 280) ...[
                           name,
                           const SizedBox(height: AppSpace.xs),
-                          Align(alignment: AlignmentDirectional.centerStart, child: priceBlock),
+                          Align(alignment: AlignmentDirectional.centerStart, child: priceBlock(start: true)),
                         ] else
                           Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Expanded(child: name),
                               const SizedBox(width: AppSpace.sm),
-                              Flexible(child: priceBlock),
+                              Flexible(child: priceBlock(start: false)),
                             ],
                           ),
                         const SizedBox(height: AppSpace.xs),

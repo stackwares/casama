@@ -536,6 +536,15 @@ void main() {
         await settle(tester);
         expect(inPrice('max_yearly', find.text(r'$1,490 billed yearly')), findsOneWidget);
         expect(find.descendant(of: find.byKey(const Key('paywallBuy')), matching: find.text('Get Max')), findsOneWidget);
+        // Each tier keeps its painted picture whichever period is picked (the yearly plan's code is
+        // max_yearly, the picture is the tier's).
+        expect(find.descendant(of: find.byKey(const Key('paywallTier-max')), matching: find.byKey(const Key('paywallPlanArt-max'))),
+            findsOneWidget);
+        // Under the name, the price lines up with the text on the left instead of hanging right.
+        final big = tester.getTopLeft(inPrice('max_yearly', find.textContaining(r'$1,490', findRichText: true)).first);
+        final billed = tester.getTopLeft(inPrice('max_yearly', find.text(r'$1,490 billed yearly')));
+        final nameBottom = tester.getBottomLeft(find.descendant(of: find.byKey(const Key('paywallTier-max')), matching: find.text('Max'))).dy;
+        if (big.dy > nameBottom) expect(billed.dx, moreOrLessEquals(tester.getTopLeft(find.byKey(const Key('paywallPrice-max_yearly'))).dx));
 
         await revealInPaywall(tester, find.byKey(const Key('paywallInterval-month')));
         await tester.tap(find.byKey(const Key('paywallInterval-month')));
