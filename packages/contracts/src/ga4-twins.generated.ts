@@ -178,7 +178,8 @@ export const ANALYTICS_CLIENT_EVENTS: Record<string, string[]> = {
   ],
   "app_mention_connect_started": [
     "app_id"
-  ]
+  ],
+  "group_chat_from_mention": []
 };
 
 /** The app's twins too, so relayed events get theirs. */

@@ -8327,6 +8327,7 @@ export interface components {
             display_name: string | null;
             locale: string;
             timezone: string;
+            is_internal?: boolean;
             organizations: components["schemas"]["OrganizationWithRole"][];
         };
         JoinResult: {

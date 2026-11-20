@@ -17,6 +17,8 @@ abstract class _$MeCWProxy {
 
   Me timezone(String timezone);
 
+  Me isInternal(bool? isInternal);
+
   Me organizations(List<OrganizationWithRole> organizations);
 
   /// Creates a new instance with the provided field values.
@@ -33,6 +35,7 @@ abstract class _$MeCWProxy {
     String? displayName,
     String locale,
     String timezone,
+    bool? isInternal,
     List<OrganizationWithRole> organizations,
   });
 }
@@ -60,6 +63,9 @@ class _$MeCWProxyImpl implements _$MeCWProxy {
   Me timezone(String timezone) => call(timezone: timezone);
 
   @override
+  Me isInternal(bool? isInternal) => call(isInternal: isInternal);
+
+  @override
   Me organizations(List<OrganizationWithRole> organizations) =>
       call(organizations: organizations);
 
@@ -78,6 +84,7 @@ class _$MeCWProxyImpl implements _$MeCWProxy {
     Object? displayName = const $CopyWithPlaceholder(),
     Object? locale = const $CopyWithPlaceholder(),
     Object? timezone = const $CopyWithPlaceholder(),
+    Object? isInternal = const $CopyWithPlaceholder(),
     Object? organizations = const $CopyWithPlaceholder(),
   }) {
     return Me(
@@ -101,6 +108,10 @@ class _$MeCWProxyImpl implements _$MeCWProxy {
           ? _value.timezone
           // ignore: cast_nullable_to_non_nullable
           : timezone as String,
+      isInternal: isInternal == const $CopyWithPlaceholder()
+          ? _value.isInternal
+          // ignore: cast_nullable_to_non_nullable
+          : isInternal as bool?,
       organizations:
           organizations == const $CopyWithPlaceholder() || organizations == null
           ? _value.organizations
@@ -121,35 +132,45 @@ extension $MeCopyWith on Me {
 // JsonSerializableGenerator
 // **************************************************************************
 
-Me _$MeFromJson(Map<String, dynamic> json) => $checkedCreate('Me', json, (
-  $checkedConvert,
-) {
-  $checkKeys(
-    json,
-    requiredKeys: const [
-      'user_id',
-      'email',
-      'display_name',
-      'locale',
-      'timezone',
-      'organizations',
-    ],
-  );
-  final val = Me(
-    userId: $checkedConvert('user_id', (v) => v as String),
-    email: $checkedConvert('email', (v) => v as String?),
-    displayName: $checkedConvert('display_name', (v) => v as String?),
-    locale: $checkedConvert('locale', (v) => v as String),
-    timezone: $checkedConvert('timezone', (v) => v as String),
-    organizations: $checkedConvert(
-      'organizations',
-      (v) => (v as List<dynamic>)
-          .map((e) => OrganizationWithRole.fromJson(e as Map<String, dynamic>))
-          .toList(),
-    ),
-  );
-  return val;
-}, fieldKeyMap: const {'userId': 'user_id', 'displayName': 'display_name'});
+Me _$MeFromJson(Map<String, dynamic> json) => $checkedCreate(
+  'Me',
+  json,
+  ($checkedConvert) {
+    $checkKeys(
+      json,
+      requiredKeys: const [
+        'user_id',
+        'email',
+        'display_name',
+        'locale',
+        'timezone',
+        'organizations',
+      ],
+    );
+    final val = Me(
+      userId: $checkedConvert('user_id', (v) => v as String),
+      email: $checkedConvert('email', (v) => v as String?),
+      displayName: $checkedConvert('display_name', (v) => v as String?),
+      locale: $checkedConvert('locale', (v) => v as String),
+      timezone: $checkedConvert('timezone', (v) => v as String),
+      isInternal: $checkedConvert('is_internal', (v) => v as bool?),
+      organizations: $checkedConvert(
+        'organizations',
+        (v) => (v as List<dynamic>)
+            .map(
+              (e) => OrganizationWithRole.fromJson(e as Map<String, dynamic>),
+            )
+            .toList(),
+      ),
+    );
+    return val;
+  },
+  fieldKeyMap: const {
+    'userId': 'user_id',
+    'displayName': 'display_name',
+    'isInternal': 'is_internal',
+  },
+);
 
 Map<String, dynamic> _$MeToJson(Me instance) => <String, dynamic>{
   'user_id': instance.userId,
@@ -157,5 +178,6 @@ Map<String, dynamic> _$MeToJson(Me instance) => <String, dynamic>{
   'display_name': instance.displayName,
   'locale': instance.locale,
   'timezone': instance.timezone,
+  'is_internal': ?instance.isInternal,
   'organizations': instance.organizations.map((e) => e.toJson()).toList(),
 };

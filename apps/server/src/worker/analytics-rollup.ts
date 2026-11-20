@@ -8,6 +8,7 @@
  * approvals they decided): routines, watchers, webhooks and other automated triggers never make a person look
  * active. Automation is counted in workspace_daily, which is sent personless. Every property is a number.
  */
+import { internalUserIds } from "@casama/agent";
 import type { Database } from "@casama/db";
 import {
   deterministicUuid,
@@ -110,6 +111,7 @@ export async function runDailyAnalyticsRollup(
       approvals_denied: Number(row.denied),
     });
 
+  const internal = await internalUserIds(db, [...people.keys()]);
   for (const [userId, properties] of people)
     analytics.capture({
       event: "usage_daily",
@@ -117,6 +119,7 @@ export async function runDailyAnalyticsRollup(
       uuid: rollupUuid("usage_daily", userId, dateStr),
       timestamp: endOfDay,
       properties: { runs_started: 0, ...properties },
+      internal: internal.has(userId),
     });
 
   // --- workspaces (personless) ----------------------------------------------------------------

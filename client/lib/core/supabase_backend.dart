@@ -4945,6 +4945,10 @@ class SupabaseBackend implements Backend {
   }
 
   @override
+  Future<bool> isInternalAccount() async =>
+      (await api.workspaces.getMe()).data?.isInternal == true;
+
+  @override
   Future<void> relayAnalytics(String platform, List<({String name, Map<String, Object> properties})> events) async {
     await api.privacy.relayAnalytics(
       relayAnalyticsRequest: RelayAnalyticsRequest(

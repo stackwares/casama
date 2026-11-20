@@ -19,7 +19,12 @@ import 'telemetry.dart';
 /// GA4 uses the build's Firebase project (the same settings as push, see [PushConfig]).
 abstract class AnalyticsSink {
   String get name;
-  Future<void> identify(String userId, {Map<String, Object>? setOnce});
+  Future<void> identify(
+    String userId, {
+    Map<String, Object>? set,
+    Map<String, Object>? setOnce,
+  });
+  Future<void> setInternal(bool internal);
   Future<void> reset();
   Future<void> capture(String event, Map<String, Object>? properties);
   Future<void> screen(String name);
@@ -63,11 +68,17 @@ bool ga4PlatformSupported({
 
 /// Catalog properties as GA4 takes them: strings (scrubbed, cut to 100) and numbers. Booleans become
 /// 1/0; nulls, lists and maps are dropped. GA4 keeps at most 25 parameters per event.
-Map<String, Object> ga4Params(Map<String, Object?>? properties) {
-  final out = <String, Object>{};
+Map<String, Object> ga4Params(
+  Map<String, Object?>? properties, {
+  bool internal = false,
+}) {
+  final out = <String, Object>{
+    if (internal) 'traffic_type': 'internal',
+  };
   for (final e in (properties ?? const <String, Object?>{}).entries) {
     if (out.length >= 25) break;
     final key = e.key;
+    if (internal && key == 'traffic_type') continue;
     if (key.isEmpty || key.length > 40 || key.startsWith(r'$')) continue;
     if (key.startsWith('firebase_') ||
         key.startsWith('google_') ||
@@ -91,17 +102,24 @@ Map<String, Object> ga4Params(Map<String, Object?>? properties) {
 
 /// The GA4 events for a catalog event: the event, then its recommended twin when the catalog names one
 /// (D-398: `sign_up`, `login`, `tutorial_complete`, `begin_checkout`, …), so GA4's built-in reports fill in.
-List<({String name, Map<String, Object> params})> ga4Events(String event, Map<String, Object?>? properties) {
-  final out = [(name: event, params: ga4Params(properties))];
+List<({String name, Map<String, Object> params})> ga4Events(
+  String event,
+  Map<String, Object?>? properties, {
+  bool internal = false,
+}) {
+  final out = [(name: event, params: ga4Params(properties, internal: internal))];
   final twin = analyticsGa4Twins[event];
   if (twin != null) {
     out.add((
       name: twin.name,
-      params: ga4Params({
-        ...twin.set,
-        for (final p in twin.params)
-          if (properties?[p] != null) p: properties![p],
-      }),
+      params: ga4Params(
+        {
+          ...twin.set,
+          for (final p in twin.params)
+            if (properties?[p] != null) p: properties![p],
+        },
+        internal: internal,
+      ),
     ));
   }
   return out;
@@ -124,6 +142,7 @@ class Ga4RelaySink implements AnalyticsSink {
   final _queue = <({String name, Map<String, Object> properties})>[];
   Timer? _timer;
   bool _enabled = false;
+  bool _internal = false;
 
   @override
   String get name => 'ga4_relay';
@@ -141,17 +160,34 @@ class Ga4RelaySink implements AnalyticsSink {
     }
   }
 
-  // The server knows the account from the session; nothing to identify here.
+  // The server knows the account from the session; nothing to identify here,
+  // though we also stamp cached/synced internal state locally so queued payloads carry traffic_type.
   @override
-  Future<void> identify(String userId, {Map<String, Object>? setOnce}) async {}
+  Future<void> identify(
+    String userId, {
+    Map<String, Object>? set,
+    Map<String, Object>? setOnce,
+  }) async {
+    if (set?['is_internal'] case final bool internal) {
+      _internal = internal;
+    }
+  }
 
   @override
-  Future<void> reset() => flush();
+  Future<void> setInternal(bool internal) async {
+    _internal = internal;
+  }
+
+  @override
+  Future<void> reset() async {
+    await flush();
+    _internal = false;
+  }
 
   @override
   Future<void> capture(String event, Map<String, Object>? properties) async {
     if (!_enabled) return;
-    _queue.add((name: event, properties: ga4Params(properties)));
+    _queue.add((name: event, properties: ga4Params(properties, internal: _internal)));
     if (_queue.length >= 20) {
       await flush();
     } else {
@@ -190,9 +226,25 @@ class PosthogSink implements AnalyticsSink {
   String get name => 'posthog';
 
   @override
-  Future<void> identify(String userId, {Map<String, Object>? setOnce}) async {
+  Future<void> identify(
+    String userId, {
+    Map<String, Object>? set,
+    Map<String, Object>? setOnce,
+  }) async {
     await Telemetry.posthogReady;
-    await Posthog().identify(userId: userId, userPropertiesSetOnce: setOnce);
+    await Posthog().identify(
+      userId: userId,
+      userProperties: set,
+      userPropertiesSetOnce: setOnce,
+    );
+  }
+
+  @override
+  Future<void> setInternal(bool internal) async {
+    await Telemetry.posthogReady;
+    await Posthog().setPersonProperties(
+      userPropertiesToSet: {'is_internal': internal},
+    );
   }
 
   @override
@@ -235,6 +287,7 @@ class Ga4Sink implements AnalyticsSink {
 
   Future<FirebaseAnalytics>? _instance;
   bool _enabled = false;
+  bool _internal = false;
 
   Future<FirebaseAnalytics> _analytics() => _instance ??= () async {
     if (Firebase.apps.isEmpty) {
@@ -245,6 +298,14 @@ class Ga4Sink implements AnalyticsSink {
 
   /// Whether calls may go out right now: turned on, and (on the web) loaded.
   bool get _live => _enabled && _instance != null;
+
+  Future<void> _syncDefaultTrafficType(FirebaseAnalytics a) async {
+    // setDefaultEventParameters throws UnimplementedError on web.
+    if (kIsWeb) return;
+    await a.setDefaultEventParameters(
+      _internal ? const {'traffic_type': 'internal'} : null,
+    );
+  }
 
   @override
   Future<void> setEnabled(bool enabled) async {
@@ -260,11 +321,19 @@ class Ga4Sink implements AnalyticsSink {
         value: Telemetry.distributionName,
       );
       await a.setUserProperty(name: 'environment', value: Telemetry.posthogEnv);
+      await _syncDefaultTrafficType(a);
     }
   }
 
   @override
-  Future<void> identify(String userId, {Map<String, Object>? setOnce}) async {
+  Future<void> identify(
+    String userId, {
+    Map<String, Object>? set,
+    Map<String, Object>? setOnce,
+  }) async {
+    if (set?['is_internal'] case final bool internal) {
+      _internal = internal;
+    }
     if (!_live) return;
     final a = await _analytics();
     await a.setUserId(id: userId);
@@ -272,12 +341,22 @@ class Ga4Sink implements AnalyticsSink {
     if (platform is String) {
       await a.setUserProperty(name: 'signup_platform', value: platform);
     }
+    await _syncDefaultTrafficType(a);
+  }
+
+  @override
+  Future<void> setInternal(bool internal) async {
+    _internal = internal;
+    if (!_live) return;
+    await _syncDefaultTrafficType(await _analytics());
   }
 
   @override
   Future<void> reset() async {
+    _internal = false;
     if (_instance == null) return;
     final a = await _analytics();
+    await _syncDefaultTrafficType(a);
     await a.setUserId(id: null);
     if (!kIsWeb) await a.resetAnalyticsData();
   }
@@ -286,7 +365,7 @@ class Ga4Sink implements AnalyticsSink {
   Future<void> capture(String event, Map<String, Object>? properties) async {
     if (!_live) return;
     final a = await _analytics();
-    for (final e in ga4Events(event, properties)) {
+    for (final e in ga4Events(event, properties, internal: _internal)) {
       await a.logEvent(name: e.name, parameters: e.params);
     }
   }
@@ -296,6 +375,7 @@ class Ga4Sink implements AnalyticsSink {
     if (!_live) return;
     await (await _analytics()).logScreenView(
       screenName: Telemetry.scrub(name, 100).characters100,
+      parameters: _internal ? const {'traffic_type': 'internal'} : null,
     );
   }
 }

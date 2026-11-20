@@ -5246,10 +5246,14 @@ class FakeBackend implements Backend {
 
   /// What the app last told the server about the person's analytics choice, newest last.
   final analyticsOptOutCalls = <bool>[];
+  bool internalAccount = false;
   bool workspaceAnalyticsOff = false;
 
   @override
   Future<void> setAnalyticsOptOut(bool optOut) async => analyticsOptOutCalls.add(optOut);
+
+  @override
+  Future<bool> isInternalAccount() async => internalAccount;
 
   final relayedAnalytics = <({String platform, List<({String name, Map<String, Object> properties})> events})>[];
   @override

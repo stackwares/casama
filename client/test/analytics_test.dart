@@ -1,7 +1,40 @@
 import 'package:casama/core/analytics.dart';
+import 'package:casama/core/analytics_sinks.dart';
 import 'package:casama/core/push.dart';
 import 'package:casama/core/telemetry.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+class _RecordingSink implements AnalyticsSink {
+  @override
+  String get name => 'recording';
+
+  final calls = <String>[];
+
+  @override
+  Future<void> capture(String event, Map<String, Object>? properties) async =>
+      calls.add('capture:$event');
+
+  @override
+  Future<void> identify(
+    String userId, {
+    Map<String, Object>? set,
+    Map<String, Object>? setOnce,
+  }) async =>
+      calls.add('identify:$userId:${set?['is_internal']}');
+
+  @override
+  Future<void> reset() async => calls.add('reset');
+
+  @override
+  Future<void> screen(String name) async => calls.add('screen:$name');
+
+  @override
+  Future<void> setEnabled(bool enabled) async => calls.add('enabled:$enabled');
+
+  @override
+  Future<void> setInternal(bool internal) async => calls.add('internal:$internal');
+}
 
 void main() {
   test('a notification is classified by its in-app link, and the link itself never leaves', () {
@@ -36,5 +69,31 @@ void main() {
     Analytics.errorShown(code: 'x', status: 500, kind: 'server');
     Analytics.feature('dictation');
     await Analytics.dailyPing();
+  });
+
+  test('syncInternal persists cached is_internal and identify applies it on next launch', () async {
+    SharedPreferences.setMockInitialValues({});
+    final prevKind = Telemetry.serverKind;
+    final sink = _RecordingSink();
+    Telemetry.serverKind = 'cloud';
+    Analytics.sinksOverrideForTest = [sink];
+    try {
+      await Analytics.identify('u-int');
+      await Analytics.syncInternal('u-int', () async => true);
+      expect(sink.calls, ['identify:u-int:null', 'internal:true']);
+
+      // Next cold start (even while offline) identifies immediately with cached is_internal=true.
+      sink.calls.clear();
+      await Analytics.identify('u-int');
+      await Analytics.syncInternal('u-int', () async => throw Exception('offline'));
+      expect(sink.calls, ['identify:u-int:true']);
+
+      // Later sync flips back to false when server says false.
+      await Analytics.syncInternal('u-int', () async => false);
+      expect(sink.calls, ['identify:u-int:true', 'internal:false']);
+    } finally {
+      Analytics.sinksOverrideForTest = null;
+      Telemetry.serverKind = prevKind;
+    }
   });
 }

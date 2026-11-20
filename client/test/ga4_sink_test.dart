@@ -262,5 +262,51 @@ void main() {
       await sink.flush();
       expect(sink.queued, 0);
     });
+
+    test('tags queued events with traffic_type=internal while internal, and clears on reset', () async {
+      final sent = <List<({String name, Map<String, Object> properties})>>[];
+      final sink = Ga4RelaySink(platform: 'windows', every: const Duration(hours: 1))
+        ..send = (_, events) async => sent.add(events);
+      await sink.setEnabled(true);
+      await sink.identify('u1', set: {'is_internal': true});
+      await sink.capture('paywall_dismiss', {'source': 'limit'});
+      await sink.setInternal(false);
+      await sink.capture('feature_used', {'feature': 'search'});
+      await sink.setInternal(true);
+      await sink.screen('/inbox');
+      await sink.reset(); // flushes screen_view with traffic_type=internal, then clears
+      await sink.capture('paywall_dismiss', {'source': 'after_reset'});
+      await sink.flush();
+
+      expect(sent.length, 2);
+      expect(sent[0].map((e) => e.name), ['paywall_dismiss', 'feature_used', 'screen_view']);
+      expect(sent[0][0].properties['traffic_type'], 'internal');
+      expect(sent[0][1].properties.containsKey('traffic_type'), isFalse);
+      expect(sent[0][2].properties['traffic_type'], 'internal');
+      expect(sent[1][0].properties.containsKey('traffic_type'), isFalse);
+    });
+  });
+
+  group('internal account params', () {
+    test('ga4Params reserves traffic_type=internal within the 25-param cap', () {
+      final props = {
+        'traffic_type': 'external',
+        for (var i = 0; i < 30; i++) 'p$i': i,
+      };
+      final p = ga4Params(props, internal: true);
+      expect(p.length, 25);
+      expect(p['traffic_type'], 'internal');
+    });
+
+    test('ga4Events sets traffic_type=internal on main event and twin', () {
+      final events = ga4Events(
+        'paywall_plan_select',
+        {'plan': 'pro_yearly', 'interval': 'year'},
+        internal: true,
+      );
+      expect(events, hasLength(2));
+      expect(events[0].params['traffic_type'], 'internal');
+      expect(events[1].params['traffic_type'], 'internal');
+    });
   });
 }

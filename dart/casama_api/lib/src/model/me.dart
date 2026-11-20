@@ -31,6 +31,8 @@ class Me {
 
     required  this.timezone,
 
+     this.isInternal,
+
     required  this.organizations,
   });
 
@@ -96,6 +98,18 @@ class Me {
 
   @JsonKey(
     
+    name: r'is_internal',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final bool? isInternal;
+
+
+
+  @JsonKey(
+    
     name: r'organizations',
     required: true,
     includeIfNull: false,
@@ -115,6 +129,7 @@ class Me {
       other.displayName == displayName &&
       other.locale == locale &&
       other.timezone == timezone &&
+      other.isInternal == isInternal &&
       other.organizations == organizations;
 
     @override
@@ -124,6 +139,7 @@ class Me {
         (displayName == null ? 0 : displayName.hashCode) +
         locale.hashCode +
         timezone.hashCode +
+        isInternal.hashCode +
         organizations.hashCode;
 
   factory Me.fromJson(Map<String, dynamic> json) => _$MeFromJson(json);

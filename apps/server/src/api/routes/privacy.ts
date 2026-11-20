@@ -1,10 +1,16 @@
 /** Privacy (Phase 8, D-072): data export, account deletion, retention settings. */
 
-import { track } from "@casama/agent";
+import { isUserInternal, track } from "@casama/agent";
 import { ANALYTICS_CLIENT_EVENTS, GA4_CLIENT_TWINS, routes } from "@casama/contracts";
 import { type JwtClaims, withUserSession } from "@casama/db";
 import { cleanSitePattern } from "@casama/domain";
-import { getProductAnalytics } from "@casama/observability";
+import {
+  getInternalAccountRules,
+  getProductAnalytics,
+  hasInternalAccountRules,
+  isInternalEmail,
+  parseInternalAccounts,
+} from "@casama/observability";
 import type { OpenAPIHono } from "@hono/zod-openapi";
 import { sql } from "drizzle-orm";
 import {
@@ -282,8 +288,20 @@ export function registerPrivacyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     const [profile] = await db.execute<{ analytics_opt_out: boolean | null }>(sql`
       select analytics_opt_out from public.profiles where user_id = ${claims.sub}::uuid`);
     if (profile?.analytics_opt_out) return c.body(null, 204) as never;
+    const rules =
+      env.INTERNAL_EMAILS !== undefined || env.INTERNAL_EMAIL_DOMAINS !== undefined
+        ? parseInternalAccounts({
+            emails: env.INTERNAL_EMAILS,
+            domains: env.INTERNAL_EMAIL_DOMAINS,
+          })
+        : getInternalAccountRules();
+    const internal = !hasInternalAccountRules(rules)
+      ? false
+      : typeof claims.email === "string"
+        ? isInternalEmail(claims.email, rules)
+        : await isUserInternal(db, claims.sub);
     for (const e of relayedGa4Events(body.platform, body.events)) {
-      analytics.capture({ ...e, distinctId: claims.sub, only: "ga4" });
+      analytics.capture({ ...e, distinctId: claims.sub, only: "ga4", internal });
     }
     return c.body(null, 204) as never;
   });

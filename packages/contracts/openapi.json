@@ -3934,6 +3934,9 @@
           "timezone": {
             "type": "string"
           },
+          "is_internal": {
+            "type": "boolean"
+          },
           "organizations": {
             "type": "array",
             "items": {

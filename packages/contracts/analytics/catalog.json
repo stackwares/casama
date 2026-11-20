@@ -1746,6 +1746,13 @@
         }
       },
       "funnels": []
+    },
+    {
+      "name": "group_chat_from_mention",
+      "by": ["client"],
+      "description": "Someone opened or started a group chat by picking another bot from a direct chat @ menu.",
+      "properties": {},
+      "funnels": []
     }
   ]
 }

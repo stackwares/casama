@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(6);
+select plan(7);
 
 select is(
   (select count(*)::int from pg_class c join pg_namespace n on n.oid = c.relnamespace
@@ -16,6 +16,7 @@ select ok(not (select rolsuper or rolbypassrls from pg_roles where rolname = 'ca
 set local role casama_worker;
 select lives_ok($$ select count(*) from public.runs $$, 'the worker reads public tables');
 select lives_ok($$ select public.worker_owner_email_verified(gen_random_uuid()) $$, 'the worker checks owner email verification');
+select lives_ok($$ select * from public.worker_user_emails(array[gen_random_uuid()]) $$, 'the worker resolves user emails for internal account tagging');
 select throws_ok($$ select email from auth.users limit 1 $$, '42501', null, 'but never reads auth.users');
 select throws_ok($$ create table public.worker_should_not_create (id int) $$, '42501', null, 'and cannot change the schema');
 reset role;

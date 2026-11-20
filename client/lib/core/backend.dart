@@ -2629,6 +2629,9 @@ abstract class Backend {
   /// Tells the server whether this person opted out of usage analytics (server events and rollups).
   Future<void> setAnalyticsOptOut(bool optOut);
 
+  /// Whether the signed-in account is marked internal/test by the server (`GET /v1/me`).
+  Future<bool> isInternalAccount();
+
   /// Windows and Linux: hands catalog events to the server, which forwards them to Google Analytics 4
   /// (D-399; there's no Firebase Analytics there and the GA4 secret can't ship in the app).
   Future<void> relayAnalytics(String platform, List<({String name, Map<String, Object> properties})> events);

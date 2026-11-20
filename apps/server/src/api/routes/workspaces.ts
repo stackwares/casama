@@ -2,7 +2,12 @@ import { randomBytes } from "node:crypto";
 import { track } from "@casama/agent";
 import { routes } from "@casama/contracts";
 import { type JwtClaims, pgErrorCode, pgErrorMessage, schema, withUserSession } from "@casama/db";
-import { withSpan } from "@casama/observability";
+import {
+  getInternalAccountRules,
+  isInternalEmail,
+  parseInternalAccounts,
+  withSpan,
+} from "@casama/observability";
 import type { OpenAPIHono } from "@hono/zod-openapi";
 import { eq, sql } from "drizzle-orm";
 import { appLink } from "../../env.ts";
@@ -39,7 +44,7 @@ const orgOut = (o: {
 });
 
 export function registerWorkspaceRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
-  const { db } = deps;
+  const { db, env } = deps;
 
   const listMyOrgs = (claims: JwtClaims) =>
     withUserSession(db, claims, (tx) =>
@@ -64,13 +69,22 @@ export function registerWorkspaceRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps)
     const [profile] = await withUserSession(db, claims, (tx) =>
       tx.select().from(profiles).where(eq(profiles.userId, claims.sub)),
     );
+    const rules =
+      env.INTERNAL_EMAILS !== undefined || env.INTERNAL_EMAIL_DOMAINS !== undefined
+        ? parseInternalAccounts({
+            emails: env.INTERNAL_EMAILS,
+            domains: env.INTERNAL_EMAIL_DOMAINS,
+          })
+        : getInternalAccountRules();
+    const email = typeof claims.email === "string" ? claims.email : null;
     return c.json(
       {
         user_id: claims.sub,
-        email: typeof claims.email === "string" ? claims.email : null,
+        email,
         display_name: profile?.displayName ?? null,
         locale: profile?.locale ?? "en",
         timezone: profile?.timezone ?? "UTC",
+        is_internal: isInternalEmail(email, rules),
         organizations: await listMyOrgs(claims),
       },
       200,

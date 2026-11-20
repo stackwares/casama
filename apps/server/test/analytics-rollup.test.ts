@@ -1,8 +1,14 @@
 import { createDb } from "@casama/db";
 import { createAuthUser, startTestDatabase } from "@casama/db/testing";
-import type { CaptureOptions, ProductAnalytics } from "@casama/observability";
-import { expect, it } from "vitest";
+import {
+  type CaptureOptions,
+  type ProductAnalytics,
+  setInternalAccountRules,
+} from "@casama/observability";
+import { afterEach, expect, it } from "vitest";
 import { rollupUuid, runDailyAnalyticsRollup } from "../src/worker/analytics-rollup.ts";
+
+afterEach(() => setInternalAccountRules(undefined));
 
 class Recorder implements ProductAnalytics {
   readonly enabled = true;
@@ -115,4 +121,37 @@ it("rollup ids are valid, stable UUIDs", () => {
   expect(id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-5[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
   expect(rollupUuid("usage_daily", "u1", "2027-02-03")).toBe(id);
   expect(rollupUuid("usage_daily", "u2", "2027-02-03")).not.toBe(id);
+});
+
+it("marks usage_daily internal for INTERNAL_EMAILS/DOMAINS without leaking emails", async () => {
+  const tdb = await startTestDatabase();
+  const h = createDb(tdb.url, { max: 2 });
+  try {
+    setInternalAccountRules({ domains: "internal.example" });
+    const qa = await createAuthUser(tdb.admin, "qa@internal.example");
+    const ext = await createAuthUser(tdb.admin, "ext@customer.example");
+    const [org] = await tdb.admin<{ id: string }[]>`
+      insert into public.organizations (name, slug, created_by)
+      values ('W', 'w-' || gen_random_uuid(), ${qa.id}) returning id`;
+    const [bot] = await tdb.admin<{ id: string }[]>`
+      insert into public.bots (org_id, name, created_by)
+      values (${org!.id}, 'Bot', ${qa.id}) returning id`;
+    const day = new Date("2027-02-04T12:00:00Z");
+    await tdb.admin`insert into public.runs (org_id, bot_id, created_by, trigger, status, cost_usd, created_at)
+      values (${org!.id}, ${bot!.id}, ${qa.id}, 'chat', 'completed', 0.1, ${day.toISOString()}),
+             (${org!.id}, ${bot!.id}, ${ext.id}, 'chat', 'completed', 0.1, ${day.toISOString()})`;
+
+    const rec = new Recorder();
+    await runDailyAnalyticsRollup(h.db, { date: day, analytics: rec });
+    const qaUsage = rec.events.find((e) => e.event === "usage_daily" && e.distinctId === qa.id);
+    const extUsage = rec.events.find((e) => e.event === "usage_daily" && e.distinctId === ext.id);
+    const ws = rec.events.find((e) => e.event === "workspace_daily");
+    expect(qaUsage?.internal).toBe(true);
+    expect(extUsage?.internal).toBe(false);
+    expect(ws?.internal).toBeUndefined();
+    expect(JSON.stringify(rec.events)).not.toContain("qa@internal.example");
+  } finally {
+    await h.close();
+    await tdb.stop();
+  }
 });

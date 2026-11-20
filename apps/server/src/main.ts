@@ -113,6 +113,10 @@ initProductAnalytics({
   },
   version: CASAMA_VERSION,
   environment: env.ANALYTICS_ENVIRONMENT ?? env.NODE_ENV,
+  internal: {
+    emails: env.INTERNAL_EMAILS,
+    domains: env.INTERNAL_EMAIL_DOMAINS,
+  },
 });
 
 const stoppers: Array<() => Promise<unknown>> = [];

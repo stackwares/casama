@@ -45,6 +45,7 @@ const analyticsClientEvents = <String>{
   'disable_analytics_sharing',
   'help_place_opened',
   'app_mention_connect_started',
+  'group_chat_from_mention',
 };
 
 /// The closed list of `feature_used` features.

@@ -7,13 +7,73 @@ import type { Database } from "@casama/db";
 import {
   captureError,
   deterministicUuid,
+  getInternalAccountRules,
   getProductAnalytics,
+  hasInternalAccountRules,
+  isInternalEmail,
   type ProductAnalytics,
 } from "@casama/observability";
 import { sql } from "drizzle-orm";
 
 /** Triggers that mean a person did the work (everything else is automation). */
 const INTERACTIVE = new Set(["chat", "mention", "voice"]);
+
+const internalCache = new Map<string, { at: number; internal: boolean }>();
+
+/**
+ * Returns the subset of `userIds` whose email matches `INTERNAL_EMAILS` / `INTERNAL_EMAIL_DOMAINS`.
+ * Short-circuits with no database call when no internal rules are configured, and fails open (`false`)
+ * if the lookup cannot run (e.g., partial test schemas).
+ */
+export async function internalUserIds(
+  db: Database,
+  userIds: readonly string[],
+): Promise<Set<string>> {
+  const out = new Set<string>();
+  const rules = getInternalAccountRules();
+  if (!hasInternalAccountRules(rules) || userIds.length === 0) return out;
+  const now = Date.now();
+  const missing: string[] = [];
+  for (const id of new Set(userIds)) {
+    if (!id) continue;
+    const hit = internalCache.get(id);
+    if (hit && now - hit.at < CONSENT_TTL_MS) {
+      if (hit.internal) out.add(id);
+    } else {
+      missing.push(id);
+    }
+  }
+  if (missing.length === 0) return out;
+  try {
+    const rows = await db.execute<{ user_id: string; email: string }>(sql`
+      select user_id, email
+      from public.worker_user_emails(
+        array(select jsonb_array_elements_text(${JSON.stringify(missing)}::text::jsonb))::uuid[]
+      )`);
+    const matched = new Map<string, boolean>();
+    for (const r of rows) {
+      matched.set(r.user_id, isInternalEmail(r.email, rules));
+    }
+    const fetchedAt = Date.now();
+    for (const id of missing) {
+      const internal = matched.get(id) ?? false;
+      internalCache.set(id, { at: fetchedAt, internal });
+      if (internal) out.add(id);
+    }
+  } catch {
+    // Fail open: analytics never breaks callers when worker_user_emails is absent in minimal tests.
+  }
+  return out;
+}
+
+/** Whether a single account matches `INTERNAL_EMAILS` / `INTERNAL_EMAIL_DOMAINS` (cached for a minute). */
+export async function isUserInternal(
+  db: Database,
+  userId: string | null | undefined,
+): Promise<boolean> {
+  if (!userId) return false;
+  return (await internalUserIds(db, [userId])).has(userId);
+}
 
 /**
  * Records a milestone for a person and, only the first time and if analytics is on and they have not
@@ -53,6 +113,7 @@ export async function reachMilestone(
     0,
     Math.round((Date.now() - new Date(row.created_at).getTime()) / 60_000),
   );
+  const internal = await isUserInternal(db, userId);
   analytics.capture({
     event: opts.event ?? "milestone_reached",
     distinctId: userId,
@@ -64,6 +125,7 @@ export async function reachMilestone(
       ...opts.properties,
     },
     setOnce: { [`${milestone}_at`]: new Date().toISOString(), ...opts.setOnce },
+    internal,
   });
   return true;
 }
@@ -112,9 +174,10 @@ export async function runCompletedMilestones(
 const consentCache = new Map<string, { at: number; allowed: boolean }>();
 const CONSENT_TTL_MS = 60_000;
 
-/** Forgets cached opt-outs (tests, and right after a person or admin changes a switch). */
+/** Forgets cached opt-outs and internal-account flags (tests, and right after a switch changes). */
 export function clearAnalyticsConsentCache() {
   consentCache.clear();
+  internalCache.clear();
 }
 
 /** False when the person or the workspace opted out of usage analytics (cached for a minute). */
@@ -162,6 +225,7 @@ export function track(
     const orgId = e.orgId ?? null;
     if (!userId && !orgId) return;
     if (!(await analyticsAllowed(db, userId, orgId))) return;
+    const internal = userId ? await isUserInternal(db, userId) : undefined;
     a.capture({
       event: e.event,
       distinctId: userId ?? `workspace:${orgId}`,
@@ -172,6 +236,7 @@ export function track(
         Object.entries(e.properties ?? {}).filter(([, v]) => v !== null),
       ),
       setOnce: e.setOnce,
+      internal,
     });
   })().catch((err) => captureError(err, { step: "analytics-track", event: e.event }));
 }

@@ -5,6 +5,7 @@
  * Only the provider name leaves (email, google, apple…): never an address or a name. With it goes
  * how the person got past Casama Cloud's waitlist (D-427): batch, hand, code, or none.
  */
+import { internalUserIds } from "@casama/agent";
 import type { Database } from "@casama/db";
 import {
   deterministicUuid,
@@ -30,6 +31,10 @@ export async function sweepSignups(db: Database, analytics?: ProductAnalytics): 
   } catch {
     // The event matters more than this one property.
   }
+  const internal = await internalUserIds(
+    db,
+    rows.map((r) => r.user_id),
+  );
   for (const r of rows) {
     const at = new Date(r.created_at);
     a.capture({
@@ -39,6 +44,7 @@ export async function sweepSignups(db: Database, analytics?: ProductAnalytics): 
       timestamp: at,
       properties: { method: r.provider, admitted_via: via.get(r.user_id) ?? "none" },
       setOnce: { signup_method: r.provider, signup_at: at.toISOString() },
+      internal: internal.has(r.user_id),
     });
   }
   await a.flush();

@@ -105,6 +105,7 @@ class CasamaApp extends ConsumerWidget {
         final userId = ref.read(backendProvider).userId;
         if (userId != null) {
           unawaited(Analytics.identify(userId));
+          unawaited(Analytics.syncInternal(userId, ref.read(backendProvider).isInternalAccount));
           unawaited(Analytics.syncOptOut(ref.read(backendProvider).setAnalyticsOptOut));
           Analytics.relaySend = ref.read(backendProvider).relayAnalytics;
         }

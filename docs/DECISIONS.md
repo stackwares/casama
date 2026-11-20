@@ -6412,3 +6412,32 @@ painted background on the splash and welcome screens. Plan and full list: `docs/
 - **Motion:** the scene zooms very slowly (1.05 over 16 s, back and forth; web and Flutter share one
   clock), a new preview cover settles in, and waitlist sheet heroes float gently. All of it stops under
   Reduce Motion and when a screen isn't ticking, and nothing moves in scrolling lists.
+
+## D-441 Internal/test accounts marked without sending emails (2026-11-20)
+
+Finishes the `is_internal` gap noted in D-439 (`docs/ANALYTICS-PLAN.md` §4.4): Oliver asked to mark
+internal and test accounts in both PostHog and Google Analytics without ever sending email addresses
+to either service.
+
+- **Server rules:** `INTERNAL_EMAILS` and `INTERNAL_EMAIL_DOMAINS` (comma-separated, case-insensitive)
+  are parsed in `@casama/observability` (`parseInternalAccounts`, `isInternalEmail`).
+  `PostHogProductAnalytics` sets `$set.is_internal` (boolean) on identified captures (never on
+  `personless` captures); GA4 Measurement Protocol (`toGa4Event`, `toGa4Events`) injects
+  `traffic_type: "internal"` first within the 25-parameter limit on both primary events and GA4
+  recommended twins (GA4's built-in parameter for Data Filters, not a custom dimension).
+- **Server coverage & worker RLS:** `POST /v1/analytics/events` (desktop GA4 relay), `GET /v1/me`
+  (`Me.is_internal`, optional/nullable boolean so older clients ignore it and new clients default
+  absent `is_internal` to `false`), agent `reachMilestone`/`track`, `sweepSignups` (`signed_up`), and
+  the worker's `usage_daily` rollup (`workspace_daily` stays personless). Following D-095, the worker
+  looks up emails through `public.worker_user_emails(uuid[])` (`SECURITY DEFINER`, granted to
+  `casama_worker`) instead of reading `auth.users`.
+- **Flutter client:** `Analytics.syncInternal` fetches `isInternalAccount()` from `GET /v1/me`, caches
+  it per user in `SharedPreferences` (`casama.analytics_internal.<userId>`) so cold starts tag early
+  events before the network replies, sets PostHog person property `is_internal` (boolean), sets
+  GA4 `traffic_type: "internal"` via `setDefaultEventParameters` (native) and per-event/screen_view
+  parameters (including web, where `setDefaultEventParameters` isn't supported), and forwards
+  `internal` through `Ga4RelaySink` on Windows/Linux.
+- **Activation:** production needs `INTERNAL_EMAILS`/`INTERNAL_EMAIL_DOMAINS` in `.env` (with
+  Oliver's OK), GA4's Internal Traffic data filter activated for `traffic_type = internal`, and
+  PostHog dashboards/cohorts filtering `is_internal != true`.
+
