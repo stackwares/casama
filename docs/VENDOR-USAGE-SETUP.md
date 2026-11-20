@@ -13,9 +13,9 @@ No emails or messages were sent. No Flutter build was run.
 | "Alerts" label + filter | **Done** 2026-11-20 (below) |
 | Google usage reader: key | **Done**: key created, verified, saved to the vault |
 | OpenRouter credits | **Verified**; topped up, $62.40 left on 2026-11-20 |
-| Composio org usage | **Blocked**: needs an org-level key; scope unclear (below) |
-| Cloudflare Billing Read token | **Done**: token made by API, verified, in the vault; VPS env pending |
-| MapTiler | **Not created, on purpose**: only full-access tokens exist |
+| Composio org usage | **Done**: org token (full access, accepted by Oliver), live on the VPS |
+| Cloudflare Billing Read token | **Done**: token made by API, verified, in the vault, live on the VPS |
+| MapTiler | **Not set up, decided**: only full-access tokens exist; Google tiles cover maps |
 | HERE | **Deferred**: not switched on |
 | VPS env (`VENDOR_ALERT_EMAILS`, `GOOGLE_USAGE_SA_JSON`, ...) | **Not touched**: needs Oliver's yes |
 
@@ -48,7 +48,16 @@ No emails or messages were sent. No Flutter build was run.
   (HTTP 200), so the plan can read credits with the key the server already holds.
 - Reader contract (plan §3) is confirmed. Nothing else needed for this vendor.
 
-## Composio (blocked)
+## Composio
+
+**Update 2026-11-20 (done):** Oliver accepted an org-wide token. Generated in the dashboard (org
+`casama`, Settings → General → Organization Access Tokens); the "Scoped API keys" card still only
+links to the IP allowlist. `POST /api/v3.1/org/usage/summary` with it answered HTTP 200 (318 tool
+calls this month). Vault: **Casama · Composio org access token (usage read, org casama)**
+(username `VENDOR_COMPOSIO_ORG_KEY`). Set on the VPS (env backup
+`/root/.env.bak-20261120-081424-composio`) and live after a redeploy of `d4570460`.
+
+Earlier notes:
 
 - `POST /api/v3.1/org/usage/summary` with the existing vault item **Composio API key: Casama org,
   casama_prod project**: HTTP 401, "No x-org-api-key or Authorization: Bearer token provided". A
@@ -72,8 +81,9 @@ user token `Casama usage read (Billing Read)` (id `5e9496dc…0529`) with one po
 account Stackwares (`0e39b3b828e0c3f87f8f45fa626fa720`). `GET /accounts/{id}/billable-usage` with
 the new token for this month answered HTTP 200 (9 rows, all USD). Saved to the vault as **Casama ·
 Cloudflare API token: usage read (Billing Read)** (username `VENDOR_CLOUDFLARE_BILLING_TOKEN`);
-the vault copy's hash matched. Still to do, with Oliver's yes: set `VENDOR_CLOUDFLARE_BILLING_TOKEN`
-and `VENDOR_CLOUDFLARE_ACCOUNT_ID` on the VPS and restart the API and worker.
+the vault copy's hash matched. Set on the VPS with Oliver's yes (env backup
+`/root/.env.bak-20261120-081147-cfbilling`); a redeploy of the already-live `d4570460` loaded it
+into `casama-api` and `casama-worker-1`, health 200.
 
 Earlier notes:
 
@@ -90,6 +100,9 @@ Earlier notes:
   and already used) into this session's tool output. It has expired; nothing to rotate.
 
 ## MapTiler and HERE
+
+**Decision 2026-11-20:** MapTiler stays "Not set up"; Google tiles usage covers the maps.
+
 
 - MapTiler: not created. Its Admin API issues only full read/write service tokens (plan §11 note),
   so the plan's "read-only" rule blocks it. The vault holds **Casama · MapTiler Cloud API key
@@ -134,7 +147,7 @@ Earlier notes:
 1. Production: set `VENDOR_ALERT_EMAILS=alerts@casama.ai` and `GOOGLE_USAGE_SA_JSON` on the VPS, then
    deploy (separate yes; `scripts/deploy-prod.sh --dry-run` first).
 2. ~~Zoho Alerts filter~~: done.
-3. Composio org token decision; MapTiler decision. Cloudflare token done; its VPS env needs a yes.
+3. ~~Composio, Cloudflare, MapTiler~~: done or decided; Composio and Cloudflare live on the VPS.
 4. ~~OpenRouter top-up~~: done, $62.40 left on 2026-11-20 (just above the $50 warning line).
 5. Check each reading against the vendor's own dashboard once the check runs (plan Phase 5).
 
