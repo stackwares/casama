@@ -82,6 +82,16 @@ class FakeStore implements StorePurchases {
   Stream<StorePurchase> get purchases => _purchases.stream;
   @override
   Future<void> complete(StorePurchase purchase) async => completed.add(purchase.productId);
+
+  final _changes = StreamController<void>.broadcast();
+  var watching = 0;
+
+  /// The store heard of a change on its own (a renewal, an approved Ask to Buy).
+  void changed() => _changes.add(null);
+  @override
+  Stream<void> get changes => _changes.stream;
+  @override
+  Future<void> watchChanges() async => watching++;
 }
 
 Widget app(FakeBackend backend, {StorePurchases store = const NoStore(), TargetPlatform platform = TargetPlatform.macOS, List<String>? opened}) {
@@ -344,6 +354,35 @@ void main() {
     await tester.tap(find.byKey(const Key('changePlan')));
     await settle(tester);
     expect(find.byType(PaywallScreen), findsOneWidget);
+  });
+
+  testWidgets('a store change while the app is open reads billing again, without restoring anything', (tester) async {
+    await setSize(tester, const Size(900, 1800));
+    final backend = FakeBackend()..billingEnabled = true;
+    final store = FakeStore('app_store', country: 'GBR');
+    await tester.pumpWidget(app(backend, store: store, platform: TargetPlatform.iOS));
+    await tester.pumpAndSettle();
+    expect(store.watching, greaterThan(0));
+    expect(find.descendant(of: find.byKey(const Key('currentPlan')), matching: find.text('Free')), findsOneWidget);
+    // An Ask to Buy approval reached the server through the webhook; the store tells the app.
+    backend.planCode = 'pro';
+    store.changed();
+    await tester.pumpAndSettle();
+    expect(find.descendant(of: find.byKey(const Key('currentPlan')), matching: find.text('Pro')), findsOneWidget);
+    expect(store.restoredWith, '');
+    expect(backend.verified, isEmpty);
+    // The webhook can land after the store's update, so billing is read once more a little later.
+    backend.planCode = 'free';
+    await tester.pump(PurchaseVerifier.recheckAfter);
+    await tester.pumpAndSettle();
+    expect(find.descendant(of: find.byKey(const Key('currentPlan')), matching: find.text('Free')), findsOneWidget);
+  });
+
+  test('what a store customer owns compares by content, not order, and counts renewals', () {
+    final a = ownedSignature(entitlements: ['pro'], subscriptions: ['b', 'a'], purchases: [], latestExpiration: '2026-12-01');
+    expect(a, ownedSignature(entitlements: ['pro'], subscriptions: ['a', 'b'], purchases: [], latestExpiration: '2026-12-01'));
+    expect(a, isNot(ownedSignature(entitlements: ['pro'], subscriptions: ['a', 'b'], purchases: [], latestExpiration: '2027-01-01')));
+    expect(a, isNot(ownedSignature(entitlements: ['pro'], subscriptions: ['a', 'b'], purchases: ['t1'], latestExpiration: '2026-12-01')));
   });
 
   testWidgets('iOS on the US storefront also offers web checkout', (tester) async {

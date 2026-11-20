@@ -104,6 +104,15 @@ abstract class StorePurchases {
   Future<void> restore({required String orgId});
   Stream<StorePurchase> get purchases;
   Future<void> complete(StorePurchase purchase);
+
+  /// Fires when the store learns something new about what this customer owns while the app is
+  /// open: a renewal, an Ask to Buy or pending purchase approved later, an offer code redeemed in
+  /// the store. The server stays the authority; this only says it's worth asking it again.
+  Stream<void> get changes;
+
+  /// Starts watching for [changes] (sets the store up if it isn't yet). Never prompts the person
+  /// and never restores purchases: Restore Purchases stays a button they press.
+  Future<void> watchChanges();
 }
 
 class NoStore implements StorePurchases {
@@ -124,6 +133,10 @@ class NoStore implements StorePurchases {
   Stream<StorePurchase> get purchases => const Stream.empty();
   @override
   Future<void> complete(StorePurchase purchase) async {}
+  @override
+  Stream<void> get changes => const Stream.empty();
+  @override
+  Future<void> watchChanges() async {}
 }
 
 /// The App Store (iOS and the Mac App Store build) and Google Play through RevenueCat (D-297).
@@ -139,8 +152,13 @@ class RevenueCatStore implements StorePurchases {
   /// The workspace open now, so RevenueCat starts out as that customer rather than an anonymous one.
   final String? Function() _currentOrg;
   final _purchases = StreamController<StorePurchase>.broadcast();
+  final _changes = StreamController<void>.broadcast();
   Future<void>? _configured;
   String? _user;
+
+  /// What the customer owned at the last update, so an update that changes nothing (RevenueCat
+  /// sends one on every launch and refresh) doesn't count. Null until the first one.
+  String? _owned;
 
   bool get _android => source == 'google_play';
 
@@ -149,6 +167,7 @@ class RevenueCatStore implements StorePurchases {
     _configured ??= () async {
       _user = orgId ?? _currentOrg();
       await rc.Purchases.configure(rc.PurchasesConfiguration(_apiKey)..appUserID = _user);
+      rc.Purchases.addCustomerInfoUpdateListener(_onCustomerInfo);
     }();
     await _configured;
     if (orgId != null && orgId != _user) {
@@ -282,7 +301,48 @@ class RevenueCatStore implements StorePurchases {
   /// RevenueCat finishes transactions itself.
   @override
   Future<void> complete(StorePurchase purchase) async {}
+
+  @override
+  Stream<void> get changes => _changes.stream;
+
+  @override
+  Future<void> watchChanges() async {
+    try {
+      await _ready();
+    } catch (e) {
+      debugPrint('store updates unavailable: $e');
+    }
+  }
+
+  void _onCustomerInfo(rc.CustomerInfo info) {
+    final owned = ownedSignature(
+      entitlements: info.entitlements.active.keys,
+      subscriptions: info.activeSubscriptions,
+      purchases: [for (final t in info.nonSubscriptionTransactions) t.transactionIdentifier],
+      latestExpiration: info.latestExpirationDate,
+    );
+    final before = _owned;
+    _owned = owned;
+    // The first update is where things stand when the app starts, which the server already knows.
+    if (before != null && before != owned) _changes.add(null);
+  }
 }
+
+/// What a store customer owns, as one string to compare: active entitlements and subscriptions,
+/// one-time purchases, and the latest expiry (so a renewal counts too).
+@visibleForTesting
+String ownedSignature({
+  required Iterable<String> entitlements,
+  required Iterable<String> subscriptions,
+  required Iterable<String> purchases,
+  String? latestExpiration,
+}) =>
+    [
+      (entitlements.toList()..sort()).join(','),
+      (subscriptions.toList()..sort()).join(','),
+      (purchases.toList()..sort()).join(','),
+      latestExpiration ?? '',
+    ].join('|');
 
 StorePurchases defaultStore(String? Function() currentOrg) {
   if (kIsWeb) return const NoStore();
@@ -314,6 +374,8 @@ class PurchaseVerifier {
   PurchaseVerifier(this.ref);
   final Ref ref;
   StreamSubscription<StorePurchase>? _sub;
+  StreamSubscription<void>? _changesSub;
+  Timer? _recheck;
   final _outcomes = StreamController<PurchaseOutcome>.broadcast();
 
   /// What happened to each purchase, for the screen that started it to say so (D-248).
@@ -326,8 +388,26 @@ class PurchaseVerifier {
   /// Purchase analytics carry what was bought (D-248).
   static String _kind(StorePurchase p) => p.productId.contains('credits') ? 'credit_pack' : 'subscription';
 
+  /// How long after a store update to ask the server once more, in case RevenueCat's webhook
+  /// reached the server after the app heard about the change.
+  static const recheckAfter = Duration(seconds: 10);
+
   void start() {
-    _sub ??= ref.read(storeProvider).purchases.listen(_verify);
+    final store = ref.read(storeProvider);
+    _sub ??= store.purchases.listen(_verify);
+    _changesSub ??= store.changes.listen((_) => _storeChanged());
+    // Watch only once a workspace is open, so the store never starts as an anonymous customer.
+    ref.listen(currentOrgProvider, (_, org) {
+      if (org != null) unawaited(store.watchChanges());
+    }, fireImmediately: true);
+  }
+
+  /// Something changed in the store (a renewal, an approved purchase): read billing again from
+  /// the server now and once more a little later. Nothing is restored and nothing is shown.
+  void _storeChanged() {
+    ref.invalidate(billingProvider);
+    _recheck?.cancel();
+    _recheck = Timer(recheckAfter, () => ref.invalidate(billingProvider));
   }
 
   Future<void> _verify(StorePurchase p) async {
@@ -416,6 +496,8 @@ class PurchaseVerifier {
 
   void dispose() {
     _sub?.cancel();
+    _changesSub?.cancel();
+    _recheck?.cancel();
     _outcomes.close();
   }
 }
