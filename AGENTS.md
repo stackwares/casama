@@ -348,3 +348,23 @@ session once ran for 19 hours with nobody using it, holding memory, CPU, a port 
   `spctl -a -vv -t exec` (it must say "Notarized Developer ID"), copy it in with `ditto`, detach the
   DMG and confirm the installed `CFBundleVersion` is the new build. Installing needs no extra yes; the
   build itself still does.
+
+### Release setup on this Mac
+
+Everything a release needs is already set up here. Check it rather than assume it's missing:
+
+- **Apple team** `V8V5US964Z`. Signing identities: `security find-identity -v` (Apple
+  Distribution, Developer ID Application, 3rd Party Mac Developer Installer).
+- **Mac App Store profiles** for `scripts/package-macos-appstore.sh`: "Casama Mac App Store"
+  (`ai.casama.app`, `PROVISIONING_PROFILE`) and "Casama Widgets Mac App Store"
+  (`ai.casama.app.CasamaWidgetsMac`, `WIDGET_PROVISIONING_PROFILE`), in
+  `~/Library/Developer/Xcode/UserData/Provisioning Profiles/`. Find a file by name with
+  `security cms -D -i <file> | plutil -extract Name raw -o - -`; when two match, take the one
+  with the latest `ExpirationDate`.
+- **Google Play:** package `ai.casama.app` (Play app id 4974011891118212365), the `gplay` CLI;
+  the upload key is in Vaultwarden. **App Store Connect:** the `asc` CLI.
+- The build number is `version:` in `client/pubspec.yaml`, shared by every platform.
+
+**Before you report a release blocker, check it:** run the lookup, read the script, try the dry run.
+A blocker you only suspect isn't a reason to stop. Report it only when a real check fails, and quote
+the command and the error.
