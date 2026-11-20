@@ -1,5 +1,5 @@
 // The terminal reopens by itself when the server closes it for a restart (close code 1012), and
-// any other close or a socket error shows Connect again.
+// any other close, a socket error or Disconnect shows Connect again.
 import 'dart:async';
 
 import 'package:casama/features/computer/computer_screen.dart';
@@ -13,10 +13,13 @@ import 'app_test.dart' show harness, setSize;
 import 'fake_backend.dart';
 
 class _FakeSink implements WebSocketSink {
+  var closed = false;
   @override
   void add(dynamic data) {}
   @override
-  Future<void> close([int? closeCode, String? closeReason]) async {}
+  Future<void> close([int? closeCode, String? closeReason]) async {
+    closed = true;
+  }
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
@@ -133,6 +136,31 @@ void main() {
     await tester.pump();
     expect(find.byType(TerminalView), findsNothing);
     expect(channels, hasLength(1));
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('Disconnect closes the shell and shows Connect again', (tester) async {
+    await openTerminal(tester);
+    await tester.tap(find.text('Disconnect'));
+    await tester.pump();
+    expect(channels.single.sink.closed, isTrue);
+    expect(find.byType(TerminalView), findsNothing);
+    expect(find.descendant(of: find.byType(TerminalTab), matching: find.text('Connect')), findsOneWidget);
+    expect(channels, hasLength(1));
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('Disconnect during a restart stops the reconnect', (tester) async {
+    await openTerminal(tester);
+    await tester.runAsync(() => channels.single.serverClose(1012));
+    await tester.pump();
+    await tester.tap(find.text('Disconnect'));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+    await tester.pump(const Duration(seconds: 2));
+    await tester.pump();
+    expect(channels, hasLength(1));
+    expect(find.byType(TerminalView), findsNothing);
     await tester.pumpWidget(const SizedBox());
   });
 

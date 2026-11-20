@@ -1807,6 +1807,8 @@ class _TerminalTabState extends ConsumerState<TerminalTab>
   WebSocketChannel? _channel;
   StreamSubscription<dynamic>? _sub;
   var _connected = false;
+  // Bumped by Disconnect, so a reconnect or a connect still opening when it's pressed gives up.
+  var _session = 0;
   // An open terminal keeps the computer awake only while the person is here (D-195).
   PresenceBeat? _presence;
 
@@ -1822,6 +1824,7 @@ class _TerminalTabState extends ConsumerState<TerminalTab>
   }
 
   Future<void> _connect() async {
+    final session = _session;
     final (uri, _) = await ref
         .read(backendProvider)
         .terminal(
@@ -1836,7 +1839,7 @@ class _TerminalTabState extends ConsumerState<TerminalTab>
       unawaited(channel.sink.close().catchError((Object _) {}));
       rethrow;
     }
-    if (!mounted) {
+    if (!mounted || session != _session) {
       unawaited(channel.sink.close());
       return;
     }
@@ -1876,6 +1879,21 @@ class _TerminalTabState extends ConsumerState<TerminalTab>
     }
   }
 
+  /// Closes the shell on purpose. Dropping [_channel] first makes [_onClosed] ignore the close
+  /// that follows, and bumping [_session] stops a reconnect that's waiting.
+  void _disconnect() {
+    final channel = _channel;
+    _session++;
+    _channel = null;
+    _terminal.onOutput = null;
+    _presence?.dispose();
+    _presence = null;
+    unawaited(_sub?.cancel());
+    _sub = null;
+    unawaited(channel?.sink.close().catchError((Object _) {}));
+    _disconnected();
+  }
+
   void _disconnected() {
     _terminal.write('\r\n${context.l10n.terminalDisconnected}\r\n');
     setState(() => _connected = false);
@@ -1883,9 +1901,10 @@ class _TerminalTabState extends ConsumerState<TerminalTab>
 
   Future<void> _reconnect() async {
     _terminal.write('\r\n${context.l10n.terminalReconnecting}\r\n');
+    final session = _session;
     for (final wait in terminalReconnectDelays) {
       await Future<void>.delayed(wait);
-      if (!mounted || !_connected) return;
+      if (!mounted || !_connected || session != _session) return;
       try {
         await _connect();
         return;
@@ -1911,16 +1930,38 @@ class _TerminalTabState extends ConsumerState<TerminalTab>
         ),
       );
     }
-    return Padding(
-      padding: const EdgeInsets.all(8),
-      child: TerminalView(
-        _terminal,
-        autofocus: true,
-        // xterm's default (an email keyboard) becomes an <input type="email"> on the web, and
-        // browsers drop spaces typed into those. Plain text there; the email keyboard elsewhere
-        // still keeps autocorrect and capitals away.
-        keyboardType: kIsWeb ? TextInputType.text : TextInputType.emailAddress,
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(8, 4, 4, 0),
+          child: Align(
+            alignment: AlignmentDirectional.centerEnd,
+            child: TextButton.icon(
+              onPressed: _disconnect,
+              icon: const Icon(LucideIcons.unplug, size: 16),
+              label: Text(context.l10n.disconnect),
+              style: TextButton.styleFrom(
+                foregroundColor: context.colorScheme.onSurfaceVariant,
+                visualDensity: VisualDensity.compact,
+              ),
+            ),
+          ),
+        ),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+            child: TerminalView(
+              _terminal,
+              autofocus: true,
+              // xterm's default (an email keyboard) becomes an <input type="email"> on the web, and
+              // browsers drop spaces typed into those. Plain text there; the email keyboard elsewhere
+              // still keeps autocorrect and capitals away.
+              keyboardType: kIsWeb ? TextInputType.text : TextInputType.emailAddress,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
