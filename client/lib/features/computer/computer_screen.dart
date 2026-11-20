@@ -1807,6 +1807,8 @@ class _TerminalTabState extends ConsumerState<TerminalTab>
   WebSocketChannel? _channel;
   StreamSubscription<dynamic>? _sub;
   var _connected = false;
+  // Waiting out a server restart (1012) before reopening; the status bar says so.
+  var _reconnecting = false;
   // Bumped by Disconnect, so a reconnect or a connect still opening when it's pressed gives up.
   var _session = 0;
   // An open terminal keeps the computer awake only while the person is here (D-195).
@@ -1860,7 +1862,10 @@ class _TerminalTabState extends ConsumerState<TerminalTab>
     _presence = PresenceBeat(
       () => channel.sink.add(jsonEncode({'event': 'presence'})),
     );
-    setState(() => _connected = true);
+    setState(() {
+      _connected = true;
+      _reconnecting = false;
+    });
   }
 
   void _onClosed(WebSocketChannel channel) {
@@ -1896,11 +1901,15 @@ class _TerminalTabState extends ConsumerState<TerminalTab>
 
   void _disconnected() {
     _terminal.write('\r\n${context.l10n.terminalDisconnected}\r\n');
-    setState(() => _connected = false);
+    setState(() {
+      _connected = false;
+      _reconnecting = false;
+    });
   }
 
   Future<void> _reconnect() async {
     _terminal.write('\r\n${context.l10n.terminalReconnecting}\r\n');
+    setState(() => _reconnecting = true);
     final session = _session;
     for (final wait in terminalReconnectDelays) {
       await Future<void>.delayed(wait);
@@ -1933,24 +1942,9 @@ class _TerminalTabState extends ConsumerState<TerminalTab>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(8, 4, 4, 0),
-          child: Align(
-            alignment: AlignmentDirectional.centerEnd,
-            child: TextButton.icon(
-              onPressed: _disconnect,
-              icon: const Icon(LucideIcons.unplug, size: 16),
-              label: Text(context.l10n.disconnect),
-              style: TextButton.styleFrom(
-                foregroundColor: context.colorScheme.onSurfaceVariant,
-                visualDensity: VisualDensity.compact,
-              ),
-            ),
-          ),
-        ),
         Expanded(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+            padding: const EdgeInsets.fromLTRB(8, 8, 8, 4),
             child: TerminalView(
               _terminal,
               autofocus: true,
@@ -1961,7 +1955,67 @@ class _TerminalTabState extends ConsumerState<TerminalTab>
             ),
           ),
         ),
+        SafeArea(
+          top: false,
+          child: _TerminalStatusBar(reconnecting: _reconnecting, onDisconnect: _disconnect),
+        ),
       ],
+    );
+  }
+}
+
+/// The strip under a connected terminal, like an editor's status line: whether the shell is live
+/// (or waiting out a server restart) on the left, Disconnect on the right.
+class _TerminalStatusBar extends StatelessWidget {
+  const _TerminalStatusBar({required this.reconnecting, required this.onDisconnect});
+  final bool reconnecting;
+  final VoidCallback onDisconnect;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+    final scheme = context.colorScheme;
+    final dot = reconnecting ? colors.warning : colors.positive;
+    return DecoratedBox(
+      decoration: BoxDecoration(border: Border(top: BorderSide(color: colors.hairline))),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(14, 6, 8, 6),
+        child: Row(
+          children: [
+            Container(
+              width: 8,
+              height: 8,
+              decoration: BoxDecoration(
+                color: dot,
+                shape: BoxShape.circle,
+                boxShadow: [BoxShadow(color: dot.withValues(alpha: 0.5), blurRadius: 6)],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                reconnecting ? context.l10n.terminalReconnecting : context.l10n.connectedBadge,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: context.textTheme.labelMedium?.copyWith(color: scheme.onSurfaceVariant, fontWeight: FontWeight.w600),
+              ),
+            ),
+            TextButton.icon(
+              onPressed: onDisconnect,
+              icon: const Icon(LucideIcons.unplug, size: 15),
+              label: Text(context.l10n.disconnect),
+              style: TextButton.styleFrom(
+                foregroundColor: colors.negative,
+                backgroundColor: colors.negative.withValues(alpha: context.isDark ? 0.16 : 0.1),
+                shape: const StadiumBorder(),
+                visualDensity: VisualDensity.compact,
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                textStyle: context.textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w700),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
