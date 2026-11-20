@@ -9,7 +9,7 @@ name: Desktop apps (Linux, Windows)
 #
 # Optional repo secrets (the build works without them, but then it's a test build):
 #   CASAMA_TELEMETRY_JSON  contents of client/config/telemetry.json (official builds)
-#   CASAMA_MAPS_JSON       contents of client/config/maps.json (MapTiler key, D-310)
+#   CASAMA_MAPS_JSON       contents of client/config/maps.json (Google, MapTiler and HERE keys, D-310, D-444)
 #   MSIX_CERT_BASE64       the code-signing .pfx, base64; without it no MSIX, only the zip
 #   MSIX_CERT_PASSWORD     its password
 #   WINSPARKLE_KEY         the WinSparkle DSA private key (PEM); signs the MSIX for updates and

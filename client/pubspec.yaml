@@ -139,6 +139,7 @@ flutter:
     - assets/art/
     - assets/scene/
     - assets/fonts/
+    - assets/maps/
   # Type (D-087, D-163): Google Sans is the default look's face (D-266) and the one text family in
   # the font manifest, which the web app downloads in full before its first frame. Libre
   # Baskerville, Lato, Noto Serif, Figtree, Fraunces and JetBrains Mono ship as plain assets and

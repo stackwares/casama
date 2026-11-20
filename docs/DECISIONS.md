@@ -6471,3 +6471,35 @@ Daily and computer meter resets use offsets against immutable usage records. Aud
 intersect and the recipients are frozen at launch; workspaces over the held limit are skipped.
 Notifications use the existing deferred push queue and quiet hours. Every administrative change
 and redemption is recorded in a log whose updates, deletes and truncations are rejected.
+
+## D-444 Map tiles: Google first, then MapTiler, HERE and OpenStreetMap, never a surprise bill (2026-11-20)
+
+Amends D-310 and D-428. Oliver: "use a google maps api key with a free tier … then fall back to
+maptiler … then openstreet maps", then "also add Here Maps … prioritize google first, then maptiler,
+here maps, open streetmaps. We don't want any shocked bill."
+
+- **Order** (`client/lib/features/chat/widgets/map_tiles.dart`, `bot_ui_map.dart`): Google Map Tiles
+  API → MapTiler → HERE → OpenStreetMap. A source is skipped when the build has no key for it. Any
+  non-404 tile failure (401/403/429/5xx, network) or a refused Google session moves to the next one,
+  and the session-wide fallback (D-428, now an index instead of a flag) keeps every later card and
+  the full-screen view on it for the rest of the app session.
+- **Google:** a session per light/dark style (`createSession`, 512px tiles with 2× labels drawn at
+  256 points, billed like plain tiles), reused until an hour before expiry; dark mode uses a written
+  night style, since Google has none built in. The Google Maps logo (outlined, 18 pt, from Google's
+  attribution kit in `client/assets/maps/`) sits bottom left and the viewport's data credit bottom
+  right, refreshed as the map moves, as Google's tile policy asks. Tiles are not cached by the app.
+- **No surprise bill:** project `kasama-ai` caps 2D tiles at 3,200/day and 600/min (under the
+  100k/month free cap), Street View and 3D tiles at 0, has only the Tiles API enabled, and the key
+  `Casama apps map tiles` (Vaultwarden `Casama · Google Maps Map Tiles API key`) only allows that
+  API. A $5 budget on the project emails at 20/50/100%. Over the cap Google returns 429, which is a
+  fallback, not a charge. The key has no app restriction, because flutter_map's requests carry no
+  referrer or app headers; the quota is the protection.
+- **HERE:** built in (`CASAMA_HERE_MAPS_KEY`, `explore.day`/`explore.night`, 512px tiles) but not
+  switched on. Its free Limited plan is retired; the Base plan needs a card and has alerts but no
+  hard cap, so a HERE key would turn overflow traffic into charges. It stays empty until there is a
+  watchdog that disables the HERE app at its 30k/month free limit.
+- **MapTiler** stays on its Free plan, which suspends at its limit instead of billing. Its terms
+  allow only non-commercial use, so Flex (D-428) is still the open launch item.
+- **Keys** live in gitignored `client/config/maps.json` and the `CASAMA_MAPS_JSON` Actions secret.
+- **Tests:** `client/test/map_card_test.dart` (Google first with logo and credit, Google 429 and a
+  refused session move to MapTiler, MapTiler → HERE → OpenStreetMap, no HERE key skips it, order).

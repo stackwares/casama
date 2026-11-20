@@ -9,6 +9,10 @@ The server, apps, CLI, SDK and MCP server share one version number.
 
 ## [Unreleased]
 
+- Map cards (D-444): tiles now come from Google first, then MapTiler, HERE (when configured) and
+  OpenStreetMap, moving on when a source fails or reaches its free limit. Google's logo and data
+  credit show on its maps. Google usage is capped below its free tier, so it can't bill.
+
 - Saved resets: instance owners can schedule and budget included-credit refills, pause or cancel
   campaigns, and take back unused resets or unspent refill credit. Workspace owners can use saved
   resets in Billing and Usage. The feature defaults to off and records an append-only audit trail.
