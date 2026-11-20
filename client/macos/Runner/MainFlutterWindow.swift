@@ -133,6 +133,12 @@ final class MacBridge: NSObject {
         result(nil)
       case "glance":
         result(Self.writeGlance(call.arguments as? [String: Any] ?? [:]))
+      case "canvases":
+        let args = call.arguments as? [String: Any] ?? [:]
+        DispatchQueue.global(qos: .utility).async {
+          Self.writeCanvases(args)
+          DispatchQueue.main.async { result(nil) }
+        }
       default:
         result(FlutterMethodNotImplemented)
       }
@@ -179,6 +185,56 @@ final class MacBridge: NSObject {
     let stored = WidgetKey.write(signedIn ? args["key"] as? String : nil)
     WidgetCenter.shared.reloadAllTimelines()
     return stored
+  }
+
+  /// The Canvas widget's data (docs/BOT-WIDGET-PLAN.md §10.1): `canvases {canvases: String?
+  /// (CanvasList JSON, null when signed out), pictures: {hash: JPEG bytes}}` writes the list to
+  /// `canvases.json` and each picture to `canvas-pictures/<hash>.jpg` in the app group the glance
+  /// uses (the Mac widget doesn't fetch), deletes the pictures neither sent nor drawn by the list,
+  /// and redraws the widgets. Null wipes all of it.
+  private static func writeCanvases(_ args: [String: Any]) {
+    let fm = FileManager.default
+    guard let container = fm.containerURL(forSecurityApplicationGroupIdentifier: widgetGroup) else { return }
+    let listFile = container.appendingPathComponent("canvases.json")
+    let dir = container.appendingPathComponent("canvas-pictures", isDirectory: true)
+    var keep = Set<String>()
+    if let json = args["canvases"] as? String, !json.isEmpty, let data = json.data(using: .utf8) {
+      try? data.write(to: listFile, options: .atomic)
+      try? fm.createDirectory(at: dir, withIntermediateDirectories: true)
+      keep = canvasPictureHashes(data)
+      for (hash, value) in args["pictures"] as? [String: Any] ?? [:] {
+        guard isSafeHash(hash), let bytes = (value as? FlutterStandardTypedData)?.data, !bytes.isEmpty else { continue }
+        if (try? bytes.write(to: dir.appendingPathComponent("\(hash).jpg"), options: .atomic)) != nil { keep.insert(hash) }
+      }
+    } else {
+      try? fm.removeItem(at: listFile)
+    }
+    // The widget extension never writes the list on the Mac; drop any copy so the file is the one.
+    UserDefaults(suiteName: widgetGroup)?.removeObject(forKey: "canvases")
+    if let files = try? fm.contentsOfDirectory(at: dir, includingPropertiesForKeys: nil) {
+      for f in files where !keep.contains(f.deletingPathExtension().lastPathComponent) { try? fm.removeItem(at: f) }
+    }
+    WidgetCenter.shared.reloadTimelines(ofKind: "CanvasWidget")
+  }
+
+  /// A picture hash that is safe as a file name (`painting-night_sky`, hex digests).
+  private static func isSafeHash(_ hash: String) -> Bool {
+    !hash.isEmpty && hash.count <= 80
+      && hash.unicodeScalars.allSatisfy { $0.isASCII && (CharacterSet.alphanumerics.contains($0) || $0 == "-" || $0 == "_") }
+  }
+
+  /// Every picture hash a CanvasList draws: entries' own pictures and picture backgrounds.
+  private static func canvasPictureHashes(_ data: Data) -> Set<String> {
+    guard let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return [] }
+    var out = Set<String>()
+    for item in root["items"] as? [[String: Any]] ?? [] {
+      for entry in item["entries"] as? [[String: Any]] ?? [] {
+        if let p = entry["picture"] as? String, isSafeHash(p) { out.insert(p) }
+        let bg = (entry["look"] as? [String: Any])?["background"] as? [String: Any]
+        if let p = bg?["picture"] as? String, isSafeHash(p) { out.insert(p) }
+      }
+    }
+    return out
   }
 
   @objc private func menuAction(_ sender: NSMenuItem) {

@@ -20,6 +20,7 @@ struct CasamaWidgetsMac: WidgetBundle {
     GlanceBundle.refreshable(MacLibraryWidget.self)
     GlanceBundle.refreshable(MacTasksWidget.self)
     GlanceBundle.refreshable(MacCreditsWidget.self)
+    GlanceBundle.refreshable(MacCanvasWidget.self)
   }
 }
 
@@ -115,5 +116,18 @@ struct MacCreditsWidget: Widget {
     .configurationDisplayName("Credits")
     .description("Check how much of your credits you've used.")
     .supportedFamilies([.systemSmall])
+  }
+}
+
+/// What a bot put here (docs/BOT-WIDGET-PLAN.md §10.1). The Mac app writes the canvases and their
+/// pictures into the app group (MacBridge `canvases`); the widget only reads them.
+struct MacCanvasWidget: Widget {
+  var body: some WidgetConfiguration {
+    AppIntentConfiguration(kind: CanvasFetch.kind, intent: ChooseCanvasIntent.self, provider: CanvasProvider()) { entry in
+      CanvasWidgetView(entry: entry)
+    }
+    .configurationDisplayName("Canvas")
+    .description("Show what your bots put here: a verse, a countdown, a streak, a list or a picture.")
+    .supportedFamilies([.systemSmall, .systemMedium, .systemLarge, .systemExtraLarge])
   }
 }
