@@ -6827,6 +6827,8 @@ quality and safety.
   the scan gate's third question reworded because receipts and sign-in notices tripped it; shadow
   no longer holds up the end of a chat run; Perplexity dropped from the default shadow set; the
   effort picker stays off because low effort saves DeepSeek nothing on simple messages.
-- **Still needs a yes:** the server deploy.
+- **Live 2026-11-20** (04f93f3a, no app build: nothing in the app uses it yet). Put in shadow the
+  same day: scan gate, reply check, push scoring, tool-call gate, long-run check, on Jev 1.14 and
+  GPT-6 Luna Decisions. Effort picker and watcher gate off.
 - **Tests:** `packages/agent/test/decisions.test.ts`, `packages/domain/test/decision-settings.test.ts`,
   `apps/server/test/decisions.test.ts`, `supabase/tests/decision_log_rls.test.sql`.

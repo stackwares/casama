@@ -3,7 +3,9 @@
 Status: **built** (2026-11-20, D-454), on branch `feat/decision-models`, every use off. Oliver said
 "decide all for me! go and build all this in 1 go": the §12 defaults are the decisions. The
 guardrail change, the privacy page and Phase 0's live tests were done the same day (results below).
-Left: merge and the server deploy, which needs a yes. Then switch uses to shadow,
+**Server live 2026-11-20 (04f93f3a)**, and in shadow since: scan gate, reply check, push scoring,
+tool-call gate and long-run check, on Jev and OpenAI's model; effort picker and watcher gate off.
+Next: Phase 2 around 2026-11-30. Then switch uses to shadow,
 and Phase 2 reads the results.
 
 **What was built, and where it differs from the text below:**
