@@ -6472,6 +6472,22 @@ intersect and the recipients are frozen at launch; workspaces over the held limi
 Notifications use the existing deferred push queue and quiet hours. Every administrative change
 and redemption is recorded in a log whose updates, deletes and truncations are rejected.
 
+**Audit fixes (2026-11-20, before the first deploy; Oliver: "Go and fix everything"):**
+- A cleared daily limit holds everywhere. Voice calls subtract the reset's offset like run admission;
+  Casama Link and check-ins count only part of the day's spend, so they count from the moment the
+  limit was cleared (`dailyResetAt`, `packages/agent/src/limit-resets.ts`).
+- The refill target is the smaller of the plan's amount and what the period really granted, so a
+  person's second free workspace ($0 grant, D-246) gets nothing and a trial refills to its own grant.
+- The billing summary never fails because of resets: workspaces holding none skip the period query,
+  one without a billing period shows `no_billing_period`, and the route ignores any error there.
+- What a refill records (the workspace, the campaign total and its budget) is the credit lot that
+  `credit_apply` really created; on a negative balance part of the refill pays the debt.
+- While switched off, due campaigns stay scheduled and hand nothing out until switched on, and a
+  one-off reset answers 409.
+- `CreditPack` lost a stray `resets` field. The app says why a reset can't be used, shows "Clears
+  today's limit" instead of "$0.00" when no credits refill, confirms in the app's own sheet and
+  shows what was added.
+
 ## D-444 Map tiles: Google first, then MapTiler, HERE and OpenStreetMap, never a surprise bill (2026-11-20)
 
 Amends D-310 and D-428. Oliver: "use a google maps api key with a free tier … then fall back to
@@ -6503,3 +6519,29 @@ here maps, open streetmaps. We don't want any shocked bill."
 - **Keys** live in gitignored `client/config/maps.json` and the `CASAMA_MAPS_JSON` Actions secret.
 - **Tests:** `client/test/map_card_test.dart` (Google first with logo and credit, Google 429 and a
   refused session move to MapTiler, MapTiler → HERE → OpenStreetMap, no HERE key skips it, order).
+
+## D-445 The admin bot manages saved resets, proposing every change (2026-11-20)
+
+Oliver asked whether admin-owned bots can use tools for saved resets (D-443); they couldn't. Plan:
+`docs/ADMIN-BOT-RESETS-PLAN.md` ("Yes do that all now plan and build right away then commit push
+deploy").
+
+- **Same gate as D-435:** ten `admin.resets.*` tools exist for every bot but are offered and run only
+  in the owner's own in-app chat with the chosen admin bot. Reads (`status`, `workspace`, `log`,
+  `preview`) run without asking. Changes (`settings`, `create`, `update`, `campaign`, `give`,
+  `take_back`) each need an approval decided by a listed owner in the last 15 minutes, never
+  "always allow", and count toward the 60 changes an hour.
+- **Same rules as Admin → Resets:** every change goes through the saved-reset service
+  (`apps/server/src/services/admin-bot-resets.ts` → `billing/limit-resets.ts`), so states, fields
+  fixed after launch, the per-period and held limits and the off switch behave identically. The
+  saved-reset log names the approving owner as actor; `audit_log` also gets `admin_bot.resets.*`
+  with the run and call.
+- **A budget is required** when the bot creates a campaign (the app and the script allow none), so
+  every proposed campaign's card shows its most total cost.
+- **Untrusted text:** workspace names and log entries are returned marked as data.
+- The saved-reset admin routes still refuse bots and hosted tools; the admin bot reaches the service
+  directly in the worker, under the worker's own database role.
+- **Tests:** `apps/server/test/admin-bot-resets.test.ts` (reads without a card; a change with the
+  owner's fresh yes; nobody, a stranger, a stale yes or "always allow" change nothing; routines,
+  calls, group chats and the switch off get no card; no budget, no campaign; give refused while off;
+  take back).

@@ -301,6 +301,7 @@ class _NewSpaceSheetState extends ConsumerState<NewSpaceSheet> {
       icon: LucideIcons.boxes,
       hero: const MascotHero([Mascot.cool, Mascot.starry]),
       title: l10n.newWorkspace,
+      subtitle: l10n.newWorkspaceSubtitle,
       submitLabel: l10n.newWorkspace,
       submitKey: const Key('createWorkspaceSubmit'),
       onSubmit: () async {

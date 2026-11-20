@@ -28,7 +28,6 @@ export const CreditPack = z
   .object({
     code: z.string(),
     name: z.string(),
-    resets: z.array(SavedLimitReset).optional(),
     credits_usd: z.number(),
     web: z.boolean(),
     /** The web price (D-244); store prices come from the store and are higher. */

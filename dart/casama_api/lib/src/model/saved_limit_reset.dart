@@ -137,6 +137,7 @@ class SavedLimitReset {
 
 
 
+      /// Why it can't be used now: owner_required, paused, period_limit, budget, nothing_to_refill or no_billing_period; null when it can
   @JsonKey(
     
     name: r'unavailable_reason',

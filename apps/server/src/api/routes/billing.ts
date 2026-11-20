@@ -111,7 +111,11 @@ export function registerBillingRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       tx.execute<{ ok: boolean }>(sql`select public.has_role(${id}::uuid,'owner') as ok`),
     );
     return c.json(
-      { ...summary, resets: await new LimitResets(db, billing.enabled).saved(id, !!owner?.ok) },
+      {
+        ...summary,
+        // Saved resets are extra: if reading them fails, the billing summary still answers.
+        resets: await new LimitResets(db, billing.enabled).saved(id, !!owner?.ok).catch(() => []),
+      },
       200,
     );
   });

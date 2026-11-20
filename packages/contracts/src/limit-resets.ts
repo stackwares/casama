@@ -65,7 +65,11 @@ export const SavedLimitReset = z
     reset_daily: z.boolean(),
     reset_computer: z.boolean(),
     can_use: z.boolean(),
-    unavailable_reason: z.string().nullable(),
+    // A plain string, not an enum: a reason added later must not break older apps' parse.
+    unavailable_reason: z.string().nullable().openapi({
+      description:
+        "Why it can't be used now: owner_required, paused, period_limit, budget, nothing_to_refill or no_billing_period; null when it can",
+    }),
   })
   .openapi("SavedLimitReset");
 export const LimitResetPreview = z

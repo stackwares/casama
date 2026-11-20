@@ -71,5 +71,65 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('1 reset saved'), findsOneWidget);
     expect(find.text('Use Reset'), findsNothing);
+    expect(
+      find.textContaining('Only a workspace owner can use it.'),
+      findsOneWidget,
+    );
   });
+  testWidgets(
+    'says why a reset is unavailable, even for a reason it does not know',
+    (tester) async {
+      SavedLimitReset withReason(String reason) => SavedLimitReset(
+        id: '22222222-2222-4222-8222-222222222222',
+        campaignId: null,
+        message: 'Saved',
+        expiresAt: DateTime(2027),
+        refillUsd: 0,
+        resetDaily: true,
+        resetComputer: false,
+        canUse: false,
+        unavailableReason: reason,
+      );
+      await tester.pumpWidget(
+        harness(
+          _ResetBackend([withReason('nothing_to_refill')]),
+          const Scaffold(body: SavedResets()),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Nothing to refill yet'), findsOneWidget);
+      await tester.pumpWidget(
+        harness(
+          _ResetBackend([withReason('something_new')]),
+          const Scaffold(body: SavedResets()),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Not available right now.'), findsOneWidget);
+    },
+  );
+  testWidgets(
+    'a reset with no credits to refill says it clears today\'s limit',
+    (tester) async {
+      final reset = SavedLimitReset(
+        id: '33333333-3333-4333-8333-333333333333',
+        campaignId: null,
+        message: 'Saved',
+        expiresAt: DateTime(2027),
+        refillUsd: 0,
+        resetDaily: true,
+        resetComputer: false,
+        canUse: true,
+        unavailableReason: null,
+      );
+      await tester.pumpWidget(
+        harness(_ResetBackend([reset]), const Scaffold(body: SavedResets())),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Use Reset'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Clears today’s limit'), findsOneWidget);
+      expect(find.textContaining(r'$0.00'), findsNothing);
+    },
+  );
 }

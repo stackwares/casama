@@ -4774,6 +4774,12 @@ abstract class AppLocalizations {
   /// **'Got It'**
   String get whatsNewGotIt;
 
+  /// No description provided for @whatsNewSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Here\'s what changed since your last update.'**
+  String get whatsNewSubtitle;
+
   /// No description provided for @whatsNew010Calls.
   ///
   /// In en, this message translates to:
@@ -8998,6 +9004,12 @@ abstract class AppLocalizations {
   /// **'New ticket'**
   String get newTicket;
 
+  /// No description provided for @newTicketSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'A task for one of your bots, tracked on the board.'**
+  String get newTicketSubtitle;
+
   /// No description provided for @allProjects.
   ///
   /// In en, this message translates to:
@@ -9261,6 +9273,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'New Workspace'**
   String get newWorkspace;
+
+  /// No description provided for @newWorkspaceSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'A separate home for a team, with its own bots, chats and people.'**
+  String get newWorkspaceSubtitle;
 
   /// No description provided for @joinWorkspaceHelp.
   ///
@@ -26079,10 +26097,16 @@ abstract class AppLocalizations {
   /// **'You\'re in. Check {email} for a sign-in link, or type its code here.'**
   String inviteCheckInbox(String email);
 
+  /// No description provided for @inviteWaitlistedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re on the waitlist'**
+  String get inviteWaitlistedTitle;
+
   /// No description provided for @inviteWaitlisted.
   ///
   /// In en, this message translates to:
-  /// **'These invites are gone. You\'re on the waitlist, ahead of the line.'**
+  /// **'These invites are gone, but you\'re ahead of the line.'**
   String get inviteWaitlisted;
 
   /// No description provided for @inviteUseEmailHere.
@@ -26612,10 +26636,76 @@ abstract class AppLocalizations {
   /// **'Use Reset'**
   String get savedResetUse;
 
+  /// No description provided for @savedResetConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Use this reset?'**
+  String get savedResetConfirmTitle;
+
+  /// No description provided for @savedResetConfirmDaily.
+  ///
+  /// In en, this message translates to:
+  /// **'Clears today’s limit so your bots can work again today. This can’t be undone.'**
+  String get savedResetConfirmDaily;
+
+  /// No description provided for @savedResetConfirmComputer.
+  ///
+  /// In en, this message translates to:
+  /// **'Gives back this month’s computer hours. This can’t be undone.'**
+  String get savedResetConfirmComputer;
+
+  /// No description provided for @savedResetOwnerRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Only a workspace owner can use it.'**
+  String get savedResetOwnerRequired;
+
+  /// No description provided for @savedResetPaused.
+  ///
+  /// In en, this message translates to:
+  /// **'Paused for now. Check back later.'**
+  String get savedResetPaused;
+
+  /// No description provided for @savedResetPeriodLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'You’ve used this period’s reset. You can use this one next period.'**
+  String get savedResetPeriodLimit;
+
+  /// No description provided for @savedResetNothingToRefill.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing to refill yet. Keep it for when you run low.'**
+  String get savedResetNothingToRefill;
+
+  /// No description provided for @savedResetNoBillingPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'Available once your plan finishes setting up.'**
+  String get savedResetNoBillingPeriod;
+
+  /// No description provided for @savedResetUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Not available right now.'**
+  String get savedResetUnavailable;
+
+  /// No description provided for @savedResetDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset used: {amount} added'**
+  String savedResetDone(String amount);
+
+  /// No description provided for @savedResetDoneNoCredits.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset used'**
+  String get savedResetDoneNoCredits;
+
   /// No description provided for @savedResetConfirm.
   ///
   /// In en, this message translates to:
-  /// **'Refills \${amount} of this period’s included credits. This cannot be undone.'**
+  /// **'Refills \${amount} of this period’s included credits. This can’t be undone.'**
   String savedResetConfirm(String amount);
 
   /// No description provided for @adminResets.

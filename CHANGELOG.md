@@ -13,9 +13,15 @@ The server, apps, CLI, SDK and MCP server share one version number.
   OpenStreetMap, moving on when a source fails or reaches its free limit. Google's logo and data
   credit show on its maps. Google usage is capped below its free tier, so it can't bill.
 
+- Admin bot: saved resets from a chat. It reads settings, campaigns, a workspace's resets, the log
+  and previews without asking; every change (switch, create with a required budget, edit, schedule,
+  pause, cancel, give, take back, undo) waits for the instance owner's approval (D-445).
 - Saved resets: instance owners can schedule and budget included-credit refills, pause or cancel
   campaigns, and take back unused resets or unspent refill credit. Workspace owners can use saved
   resets in Billing and Usage. The feature defaults to off and records an append-only audit trail.
+  A cleared daily limit applies to voice calls, Casama Link and check-ins as well as chat; a reset
+  never refills past what the period granted; nothing is handed out while the feature is off; and
+  the app says why a reset can't be used.
 
 
 - `@mention` connected apps in chat (D-434): type `@` in any direct or group chat to mention a

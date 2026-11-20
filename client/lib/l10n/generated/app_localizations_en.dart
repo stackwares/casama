@@ -3069,6 +3069,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get whatsNewGotIt => 'Got It';
 
   @override
+  String get whatsNewSubtitle => 'Here\'s what changed since your last update.';
+
+  @override
   String get whatsNew010Calls =>
       'Call your bots and talk things through. They answer out loud, with captions.';
 
@@ -5681,6 +5684,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get newTicket => 'New ticket';
 
   @override
+  String get newTicketSubtitle =>
+      'A task for one of your bots, tracked on the board.';
+
+  @override
   String get allProjects => 'All projects';
 
   @override
@@ -5816,6 +5823,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get newWorkspace => 'New Workspace';
+
+  @override
+  String get newWorkspaceSubtitle =>
+      'A separate home for a team, with its own bots, chats and people.';
 
   @override
   String get joinWorkspaceHelp => 'Paste the invite link someone sent you.';
@@ -16241,8 +16252,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get inviteWaitlistedTitle => 'You\'re on the waitlist';
+
+  @override
   String get inviteWaitlisted =>
-      'These invites are gone. You\'re on the waitlist, ahead of the line.';
+      'These invites are gone, but you\'re ahead of the line.';
 
   @override
   String get inviteUseEmailHere =>
@@ -16570,8 +16584,48 @@ class AppLocalizationsEn extends AppLocalizations {
   String get savedResetUse => 'Use Reset';
 
   @override
+  String get savedResetConfirmTitle => 'Use this reset?';
+
+  @override
+  String get savedResetConfirmDaily =>
+      'Clears today’s limit so your bots can work again today. This can’t be undone.';
+
+  @override
+  String get savedResetConfirmComputer =>
+      'Gives back this month’s computer hours. This can’t be undone.';
+
+  @override
+  String get savedResetOwnerRequired => 'Only a workspace owner can use it.';
+
+  @override
+  String get savedResetPaused => 'Paused for now. Check back later.';
+
+  @override
+  String get savedResetPeriodLimit =>
+      'You’ve used this period’s reset. You can use this one next period.';
+
+  @override
+  String get savedResetNothingToRefill =>
+      'Nothing to refill yet. Keep it for when you run low.';
+
+  @override
+  String get savedResetNoBillingPeriod =>
+      'Available once your plan finishes setting up.';
+
+  @override
+  String get savedResetUnavailable => 'Not available right now.';
+
+  @override
+  String savedResetDone(String amount) {
+    return 'Reset used: $amount added';
+  }
+
+  @override
+  String get savedResetDoneNoCredits => 'Reset used';
+
+  @override
   String savedResetConfirm(String amount) {
-    return 'Refills \$$amount of this period’s included credits. This cannot be undone.';
+    return 'Refills \$$amount of this period’s included credits. This can’t be undone.';
   }
 
   @override

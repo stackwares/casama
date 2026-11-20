@@ -12742,7 +12742,8 @@
             "type": [
               "string",
               "null"
-            ]
+            ],
+            "description": "Why it can't be used now: owner_required, paused, period_limit, budget, nothing_to_refill or no_billing_period; null when it can"
           }
         },
         "required": [
@@ -12904,12 +12905,6 @@
           },
           "name": {
             "type": "string"
-          },
-          "resets": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/SavedLimitReset"
-            }
           },
           "credits_usd": {
             "type": "number"

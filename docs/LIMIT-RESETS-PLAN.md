@@ -1,6 +1,6 @@
 # Saved resets: plan
 
-Status: **built; not deployed** (written and approved 2026-11-20). Oliver asked for "a banked reset like ChatGPT and
+Status: **built; server and docs live 2026-11-20 (6d11b195), switched on with one test grant** (written and approved 2026-11-20). Oliver asked for "a banked reset like ChatGPT and
 Claude", given out only by admins, with scheduling and expiration, then: "Make sure we have full
 control of this as dev and admin only. Just write full plan for now." Every decision here is made
 under his earlier "You decide everything for me". Oliver approved implementation on 2026-11-20.

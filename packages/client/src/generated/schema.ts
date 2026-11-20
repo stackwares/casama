@@ -11109,6 +11109,7 @@ export interface components {
             reset_daily: boolean;
             reset_computer: boolean;
             can_use: boolean;
+            /** @description Why it can't be used now: owner_required, paused, period_limit, budget, nothing_to_refill or no_billing_period; null when it can */
             unavailable_reason: string | null;
         };
         Subscription: {
@@ -11150,7 +11151,6 @@ export interface components {
         CreditPack: {
             code: string;
             name: string;
-            resets?: components["schemas"]["SavedLimitReset"][];
             credits_usd: number;
             web: boolean;
             price_label?: string | null;
