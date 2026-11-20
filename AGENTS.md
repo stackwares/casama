@@ -15,9 +15,9 @@ Breaking one of these does real damage. The sections below explain each one.
 - Big features get a written plan and the user's go-ahead before code. See "Before you build".
 - Stop every long-running process you started before you finish. See "Processes you start".
 - **A tool named here isn't available to you** (`request_secret`, `preview_*`, `html_render`,
-  `send_to_user`, `ListAgents`, a subagent tool or model): stop and tell the user what you
-  need. Never work around it by asking for a secret in chat, printing one, or starting your own
-  headless browser.
+  `send_to_user`, `ListAgents`): stop and tell the user what you need. Never work around it by
+  asking for a secret in chat, printing one, or starting your own headless browser. Subagents are
+  the exception: see "Subagents and model choice".
 
 ## Finding your way
 
@@ -216,6 +216,10 @@ session once ran for 19 hours with nobody using it, holding memory, CPU, a port 
   debugging, security, billing and data migrations, and reviewing other agents' work.
 - When unsure, start on the smaller model and move up if it gets stuck or its result looks wrong.
   Check a smaller model's result before you build on it.
+- **Handing work to a smaller model saves cost; it is never a condition for doing the work.** If you
+  can't start a subagent (no subagent tool, or the model isn't offered), do the task yourself,
+  including builds and deploys the user approved. Never stop or refuse because a subagent isn't
+  available. Media jobs below are the only exception.
 - **Media jobs go to set models.** Image generation (pictures, icons, wallpapers, share cards):
   `model: codex/gpt-6-luna`. Voice narration and music: `model: antigravity/gemini-4-hydrogen-medium`,
   and that agent must use Gemini TTS for voices and Lyria for music, never the system's own speech
