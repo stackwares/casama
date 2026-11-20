@@ -2,13 +2,47 @@
 
 Rules for AI coding agents working in this repository.
 
+## Hard rules
+
+Breaking one of these does real damage. The sections below explain each one.
+
+- Never print a secret (key, token, password, personal details) in chat or tool output.
+  See "Credentials and the vault".
+- Never reset or wipe the local database. See "Local data".
+- Never `git add -A`, `git add .` or `git commit -a`, and never reset, stash, check out or clean
+  files you didn't change. See "Shared working tree and git".
+- Ask before any Flutter build and before any production deploy. See "Flutter" and "Production".
+- Big features get a written plan and the user's go-ahead before code. See "Before you build".
+- Stop every long-running process you started before you finish. See "Processes you start".
+- **A tool named here isn't available to you** (`request_secret`, `preview_*`, `html_render`,
+  `send_to_user`, `ListAgents`, a subagent tool or model): stop and tell the user what you
+  need. Never work around it by asking for a secret in chat, printing one, or starting your own
+  headless browser.
+
 ## Finding your way
 
 - Map of the code: `docs-site/develop/architecture.md`. How changes are made and checked:
   `docs-site/develop/contributing.md` and `agent-kit/skills/casama-contribute/SKILL.md`. Why things
   are the way they are: `docs/DECISIONS.md`.
+- `docs/DECISIONS.md` is thousands of lines long; don't read it whole. Find the entry you need with
+  `grep -n '^## D-212 ' docs/DECISIONS.md` or a keyword search, then read only that entry.
 - Building on Casama from outside (plugins, the API, A2A, templates, the gallery): the skills in
   `agent-kit/skills/` and `docs-site/develop/agents.md`.
+
+## Everyday commands
+
+Run from the repository root unless a line says otherwise. The full list is in
+`docs-site/develop/contributing.md`.
+
+- Lint and types: `pnpm lint`, `pnpm --filter <pkg> typecheck` (one package; the full
+  `pnpm typecheck` goes through `scripts/heavy.sh`).
+- One server test file: `pnpm --filter @casama/server exec vitest run test/<file>.test.ts`.
+- One pgTAP file: `pnpm --filter @casama/db test:pgtap <part of the file name>`.
+- Flutter: `cd client && flutter analyze`, `flutter test test/<file>`.
+- Generated code after a contract change: `pnpm gen`.
+- Local stack: `scripts/dev-up.sh` (Supabase, computer services, API and worker; Ctrl-C or
+  `scripts/dev-up.sh --down` stops it). Record its PID (see "Processes you start").
+- New migrations: `supabase migration up --include-all`. Never a reset.
 
 ## Before you build
 
@@ -34,13 +68,29 @@ Rules for AI coding agents working in this repository.
 
 Several sessions edit this same checkout at once, and each one commits from it.
 
+- **When to commit:** commit your own finished work when the task is done and its tests pass, unless
+  the user said not to. Don't push unless the user asks, or the task is a deploy that needs it (see
+  "How to deploy").
+
 - **Stage by path, right before your own commit:** `git add <your files>`, never `git add -A`,
   `git add .` or `git commit -a`. Delete files with plain `rm`, not `git rm`, until you commit.
 - **Check the index is empty before you stage** (`git diff --cached --stat`). If it isn't, another
-  session is mid-commit: leave its files alone and wait. Never leave anything staged when you stop.
-- **A file with someone else's edits in it:** commit only your hunks, built from
-  `git show HEAD:<file>` plus your changes. In `docs/DECISIONS.md`, check your commit adds only your
-  own `## D-…` entry.
+  session is mid-commit: leave its files alone, wait a minute and check again. Still not empty after
+  a few minutes: stop and ask the user; never unstage or commit someone else's files. Never leave
+  anything staged when you stop.
+- **A file with someone else's edits in it** (`git diff <file>` shows hunks you didn't write): commit
+  only your hunks. `git add -p` is interactive and won't work for you; instead:
+
+  ```sh
+  git diff <file> > /tmp/mine.patch   # then delete the other session's hunks from the patch
+  git apply --cached --check /tmp/mine.patch && git apply --cached /tmp/mine.patch
+  git diff --cached <file>            # must show only your changes
+  ```
+
+  Or build your version from `git show HEAD:<file>` plus your changes and stage it with
+  `git update-index --cacheinfo 100644,$(git hash-object -w <copy>),<file>`. Never edit away the
+  other session's changes in the working file. In `docs/DECISIONS.md`, check your commit adds only
+  your own `## D-…` entry.
 - Before you commit, read `git diff --cached --stat` once more for files you didn't mean to include.
 - Never reset, stash, check out or clean files you didn't change; they may be someone's work in
   progress.
@@ -160,7 +210,8 @@ session once ran for 19 hours with nobody using it, holding memory, CPU, a port 
 - **Give small or minor tasks to a smaller model like Sonnet.** That covers lookups and searches
   across files, summarizing logs or docs, mechanical edits (renames, copy changes, formatting, bumping
   versions), running and reporting tests, and checking a single file or link. Pass the model when you
-  start the subagent (Claude Code's `Agent` tool: `model: "sonnet"`).
+  start the subagent, with whatever subagent tool your harness has (in Claude Code, the `Agent`
+  tool with `model: "sonnet"`). No subagent tool: do the task yourself.
 - Keep the larger model for work where judgment matters: design and architecture, plans, tricky
   debugging, security, billing and data migrations, and reviewing other agents' work.
 - When unsure, start on the smaller model and move up if it gets stuck or its result looks wrong.
@@ -176,7 +227,8 @@ session once ran for 19 hours with nobody using it, holding memory, CPU, a port 
   gallery, casama.link, a blog post), decide whether visuals would make it better, such as a header
   picture, an illustration or a share card. If they would, you may have them made without asking:
   start a subagent with `model: codex/gpt-6-luna` to generate the images, then check them before
-  you put them on the page. Skip it where a picture adds nothing, such as a reference page or a
+  you put them on the page. If that model isn't available, skip the pictures and say so; don't
+  pick another image model unasked. Skip it where a picture adds nothing, such as a reference page or a
   table of settings.
 
 ## Browser
@@ -231,7 +283,8 @@ session once ran for 19 hours with nobody using it, holding memory, CPU, a port 
   session is running one, wait, or work in your own worktree.
 - **Flutter 3.50** (D-212). New Dart files import `package:material_ui/material_ui.dart` (and
   `cupertino_ui`), never `package:flutter/material.dart`. Don't run `pub get` with another Flutter
-  version; it rewrites `client/.dart_tool` for everyone.
+  version; it rewrites `client/.dart_tool` for everyone. Check first: `flutter --version` must say
+  3.50.x; if it doesn't, stop and tell the user.
 - **`dart format` only files you created.** The existing client code isn't at `dart format`'s width,
   so formatting an existing file rewraps lines you never touched. Edit existing files by hand, and
   never format a whole folder.
