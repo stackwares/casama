@@ -18,6 +18,8 @@ as beautiful as that?"), then "go and do all of this", plus a painted splash and
 | New bot, persona gallery | Painted category cards (work, research, build, create, life); a banner on the preview | `bots/template_picker.dart` |
 | Skill catalog | Painted category headers and chip avatars (7 categories) | `skills/skill_catalog_screen.dart` |
 | Waitlist, invite code, invite gate | A painted hero per step (ticket, gift, envelope, hourglass) via `FormSheet.art` | `auth/*`, `ui/form_sheet.dart` |
+| Create sheets (2026-11-20) | Painted heroes on New ticket (ticket), New project and Make a project (target), Join with a link or code (envelope), Add knowledge (research), Accept a link (paper plane) | `FormSheet.art` in `board/`, `projects/`, `workspaces/join_flow.dart`, `bots/knowledge_screen.dart`, `bots/links_screen.dart` |
+| Mascot sheets (2026-11-20) | `MascotHero` via `FormSheet.hero`: three bots on New group chat, two on New workspace, Thinker on Add memory, Lovey on Add a fact; the New bot sheet shows the bot being made (its picked mascot, the blank bot for initials) | `ui/mascot.dart`, `groups/group_chats.dart`, `workspaces/spaces.dart`, `memory/memory_screen.dart`, `settings/about_you_screen.dart`, `bots/bots_screen.dart` |
 | What's new | Hot air balloon hero | `whats_new/whats_new.dart` |
 | Invite friends, invite link | Paper plane gift, open present | `referrals/invite_friends.dart` |
 | Tasks, empty | Clipboard and target pictures on the two ways in | `board/board_screen.dart` |

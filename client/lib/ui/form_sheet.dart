@@ -23,6 +23,7 @@ class FormSheet extends StatelessWidget {
     this.subtitle,
     this.icon,
     this.art,
+    this.hero,
     this.iconColor,
     this.submitIcon,
     this.submitKey,
@@ -41,6 +42,9 @@ class FormSheet extends StatelessWidget {
   /// A painted picture ([paintedArt] name) shown large over the title in place of the icon tile;
   /// [icon] is then drawn only if the picture is missing.
   final String? art;
+
+  /// Any other picture over the title, where [art] would go (a [MascotHero]); [art] wins if both.
+  final Widget? hero;
   final Color? iconColor;
   final List<Widget> children;
   final String submitLabel;
@@ -114,11 +118,14 @@ class FormSheet extends StatelessWidget {
                     child: PaintedHero(name: art!, size: compact ? 96 : 112, icon: icon ?? LucideIcons.sparkles, float: true),
                   ),
                   const SizedBox(height: AppSpace.md),
+                ] else if (hero != null) ...[
+                  Center(child: hero),
+                  const SizedBox(height: AppSpace.md),
                 ],
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    if (icon != null && art == null) ...[
+                    if (icon != null && art == null && hero == null) ...[
                       Container(
                         width: 44,
                         height: 44,

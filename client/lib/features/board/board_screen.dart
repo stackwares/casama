@@ -1167,6 +1167,7 @@ class _TicketFormState extends ConsumerState<_TicketForm> {
     }
     return FormSheet(
       icon: LucideIcons.squareKanban,
+      art: 'tasks-ticket',
       title: l10n.newTicket,
       submitLabel: l10n.newTicket,
       submitKey: const Key('createTicket'),

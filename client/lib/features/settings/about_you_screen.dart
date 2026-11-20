@@ -14,6 +14,7 @@ import '../../theme/app_tokens.dart';
 import '../../ui/adaptive_modal.dart';
 import '../../ui/app_card.dart';
 import '../../ui/form_sheet.dart';
+import '../../ui/mascot.dart';
 import '../../ui/glow_button.dart';
 import '../../ui/page.dart';
 import '../bots/agent_import.dart';
@@ -429,6 +430,7 @@ class _FactFormState extends State<_FactForm> {
     final l10n = context.l10n;
     return FormSheet(
       icon: LucideIcons.lightbulb,
+      hero: widget.initial.isEmpty ? const MascotHero([Mascot.lovey]) : null,
       title: widget.initial.isEmpty ? l10n.addFact : l10n.editFact,
       submitLabel: l10n.save,
       submitKey: const Key('factSave'),

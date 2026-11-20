@@ -182,6 +182,7 @@ class _AddSourceState extends ConsumerState<_AddSource> {
     final admin = ref.watch(currentOrgProvider)?.role.value == 'owner' || ref.watch(currentOrgProvider)?.role.value == 'admin';
     return FormSheet(
       icon: LucideIcons.library,
+      art: 'cat-research',
       title: l10n.addKnowledge,
       subtitle: l10n.addKnowledgeHelp,
       submitLabel: l10n.add,

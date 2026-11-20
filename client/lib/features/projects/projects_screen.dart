@@ -155,6 +155,7 @@ class _NewProjectState extends ConsumerState<_NewProject> {
     VoidCallback? submit;
     return FormSheet(
       icon: LucideIcons.folderKanban,
+      art: 'tasks-project',
       title: l10n.newProject,
       subtitle: l10n.newProjectHelp,
       submitLabel: _alone ? l10n.startPlanning : l10n.createProject,

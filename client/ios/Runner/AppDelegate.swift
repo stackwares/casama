@@ -1,6 +1,7 @@
 import AVFoundation
 import AppIntents
 import AuthenticationServices
+import CoreLocation
 import Flutter
 import Photos
 import PushKit
@@ -403,8 +404,8 @@ struct CasamaShortcuts: AppShortcutsProvider {
 }
 
 // MARK: - casama/permissions (D-376): what no plugin the app uses covers on iOS: the camera,
-// photos, the microphone and speech recognition, checked without prompting and asked for when the
-// person taps Turn on. `check {ids}` → {id: state}; `request {id}` → state afterwards.
+// photos, the microphone, speech recognition and "Always" location, checked without prompting and
+// asked for when the person taps Turn on. `check {ids}` → {id: state}; `request {id}` → state afterwards.
 
 final class PermissionsBridge {
   static let shared = PermissionsBridge()
@@ -465,6 +466,8 @@ final class PermissionsBridge {
       case .notDetermined: return "not_asked"
       @unknown default: return "unknown"
       }
+    case "location_always":
+      return AlwaysLocationAsk.state()
     default:
       return "unknown"
     }
@@ -480,9 +483,79 @@ final class PermissionsBridge {
       PHPhotoLibrary.requestAuthorization(for: .readWrite) { _ in done(state(id)) }
     case "speech":
       SFSpeechRecognizer.requestAuthorization { _ in done(state(id)) }
+    case "location_always":
+      DispatchQueue.main.async { AlwaysLocationAsk.start { done(state(id)) } }
     default:
       done(state(id))
     }
+  }
+}
+
+/// "Always" location. The geolocator plugin returns at once when any location access exists, so it
+/// never asks to go from "While using" to "Always"; this does. iOS shows that upgrade prompt once:
+/// after it, "While using" means the person kept it, and the switch is in Casama's Settings page.
+final class AlwaysLocationAsk: NSObject, CLLocationManagerDelegate {
+  private static let askedKey = "casama.permissions.locationAlwaysAsked"
+  private static var current: AlwaysLocationAsk?
+
+  private let manager = CLLocationManager()
+  private var done: (() -> Void)?
+  private var promptShown = false
+  private var observers: [NSObjectProtocol] = []
+
+  static func state() -> String {
+    switch CLLocationManager().authorizationStatus {
+    case .authorizedAlways: return "granted"
+    case .authorizedWhenInUse: return UserDefaults.standard.bool(forKey: askedKey) ? "denied" : "not_asked"
+    case .denied: return "denied"
+    case .restricted: return "restricted"
+    case .notDetermined: return "not_asked"
+    @unknown default: return "unknown"
+    }
+  }
+
+  /// Asks, then calls [done] once the prompt is answered, or soon when iOS shows none.
+  static func start(_ done: @escaping () -> Void) {
+    current?.finish()
+    let ask = AlwaysLocationAsk()
+    current = ask
+    ask.run(done)
+  }
+
+  private func run(_ done: @escaping () -> Void) {
+    self.done = done
+    // Only the upgrade from "While using" uses up iOS's one prompt; a first ask gets "While using"
+    // (with provisional "Always") and may still be upgraded later.
+    if manager.authorizationStatus == .authorizedWhenInUse {
+      UserDefaults.standard.set(true, forKey: AlwaysLocationAsk.askedKey)
+    }
+    let center = NotificationCenter.default
+    observers.append(center.addObserver(forName: UIApplication.willResignActiveNotification, object: nil, queue: .main) { [weak self] _ in
+      self?.promptShown = true
+    })
+    observers.append(center.addObserver(forName: UIApplication.didBecomeActiveNotification, object: nil, queue: .main) { [weak self] _ in
+      guard let self, self.promptShown else { return }
+      // The status change lands just after the prompt closes.
+      DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { self.finish() }
+    })
+    manager.delegate = self
+    manager.requestAlwaysAuthorization()
+    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
+      guard let self, !self.promptShown else { return }
+      self.finish()
+    }
+  }
+
+  func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {}
+
+  private func finish() {
+    guard let done else { return }
+    self.done = nil
+    for o in observers { NotificationCenter.default.removeObserver(o) }
+    observers = []
+    manager.delegate = nil
+    if AlwaysLocationAsk.current === self { AlwaysLocationAsk.current = nil }
+    done()
   }
 }
 

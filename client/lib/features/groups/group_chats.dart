@@ -23,6 +23,7 @@ import '../../ui/adaptive_modal.dart';
 import '../../ui/app_card.dart';
 import '../../ui/bot_avatar.dart';
 import '../../ui/form_sheet.dart';
+import '../../ui/mascot.dart';
 import '../../ui/shell_header.dart';
 import '../chat/chat_screen.dart';
 import '../chat/widgets/mentions.dart' show AppMentionInfo;
@@ -293,6 +294,7 @@ class _NewGroupState extends ConsumerState<_NewGroup> {
         : l10n.groupLeadHint;
     return FormSheet(
       icon: LucideIcons.users,
+      hero: const MascotHero([Mascot.winky, Mascot.giggly, Mascot.wow]),
       title: l10n.newGroupChat,
       subtitle: l10n.newGroupChatHelp,
       submitLabel: l10n.groupCreate,

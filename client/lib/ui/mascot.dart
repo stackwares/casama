@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:material_ui/material_ui.dart';
 import 'package:lottie/lottie.dart';
 
+import 'ambient_motion.dart';
 import 'edge_fade.dart';
 import 'reveal_when_selected.dart';
 
@@ -100,6 +101,58 @@ class BlankBotImage extends StatelessWidget {
     size: size,
     animate: animate,
   );
+}
+
+/// A sheet's hero made of cloud bots, where a painted picture would be (`FormSheet.hero`): one bot
+/// [size] across, or two or three side by side with the middle one in front and the others a size
+/// smaller behind it ("a group", "people together"). They play their loops while looping motion is
+/// on ([ambientMotionOn]).
+class MascotHero extends StatelessWidget {
+  const MascotHero(this.mascots, {super.key, this.size = 104});
+
+  /// One to three different bots; any past three are left out.
+  final List<Mascot> mascots;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final animate = ambientMotionOn(context);
+    final mascots = this.mascots.toSet().take(3).toList();
+    if (mascots.isEmpty) return SizedBox.square(dimension: size);
+    final front = mascots.length == 2 ? mascots[0] : mascots[mascots.length ~/ 2];
+    if (mascots.length == 1) {
+      return ExcludeSemantics(child: MascotImage(front, size: size, animate: animate));
+    }
+    final side = size * 0.74;
+    final behind = [
+      for (final m in mascots)
+        if (m != front) m,
+    ];
+    return ExcludeSemantics(
+      child: SizedBox(
+        width: size + side * (behind.length == 2 ? 1.2 : 0.75),
+        height: size,
+        child: Stack(
+          alignment: Alignment.bottomCenter,
+          children: [
+            Align(
+              alignment: behind.length == 2 ? Alignment.bottomLeft : Alignment.bottomRight,
+              child: MascotImage(behind[0], size: side, animate: animate),
+            ),
+            if (behind.length == 2)
+              Align(
+                alignment: Alignment.bottomRight,
+                child: MascotImage(behind[1], size: side, animate: animate),
+              ),
+            Align(
+              alignment: behind.length == 2 ? Alignment.bottomCenter : Alignment.bottomLeft,
+              child: MascotImage(front, size: size, animate: animate),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 /// The art keeps a margin around the cloud for its hops and tail swings; scale it up a little so the

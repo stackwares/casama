@@ -15,6 +15,7 @@ import '../../core/server_config_cache.dart';
 import '../../core/supabase_backend.dart';
 import '../../core/timeout_http_client.dart';
 import '../app_lock/session_store.dart';
+import '../permissions/permissions_platform.dart' show permissionsChannel;
 
 /// Device triggers (D-151): events this device reports (arrive and leave named places, watched-app
 /// notifications), kept in a small queue until the server has them. Only place names travel, never
@@ -167,7 +168,15 @@ class PluginTriggerPlatform implements DeviceTriggerPlatform {
     if (p == LocationPermission.denied) p = await Geolocator.requestPermission();
     // Arrive and leave with the app closed need "Always"; iOS asks for it after "While using". Android stops at
     // "While using" (D-414).
-    if (p == LocationPermission.whileInUse && supportsPlaceEvents) p = await Geolocator.requestPermission();
+    // geolocator returns at once once any access exists, so the upgrade goes through the app's own channel.
+    if (p == LocationPermission.whileInUse && supportsPlaceEvents) {
+      try {
+        await permissionsChannel.invokeMethod<String>('request', {'id': 'location_always'});
+      } catch (_) {
+        // An older build without it: "While using" still covers Places in the app.
+      }
+      p = await Geolocator.checkPermission();
+    }
     return p == LocationPermission.always || p == LocationPermission.whileInUse;
   }
 

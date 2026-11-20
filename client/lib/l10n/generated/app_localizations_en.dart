@@ -15075,6 +15075,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get permOpenSettings => 'Open settings';
 
   @override
+  String get permOpenHealth => 'Open Health';
+
+  @override
+  String get permHealthIosHow =>
+      'In Health, tap your picture, then Apps, then Casama, and turn on what your bots may read.';
+
+  @override
   String get permChoose => 'Choose';
 
   @override

@@ -28,6 +28,7 @@ import '../../ui/adaptive_modal.dart';
 import '../../ui/advanced_section.dart';
 import '../../ui/app_card.dart';
 import '../../ui/bot_avatar.dart';
+import '../../ui/ambient_motion.dart';
 import '../../ui/mascot.dart';
 import '../../ui/page.dart';
 import '../../ui/tab_reselect.dart';
@@ -771,6 +772,26 @@ class _CreateBotSheetState extends ConsumerState<CreateBotSheet> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (!widget.embedded) ...[
+            // The bot being made, in its own cloud: it changes with the persona and the icon picked
+            // below (the dozing blank bot while it has initials).
+            Center(
+              child: AnimatedSwitcher(
+                duration: AppMotion.of(context, const Duration(milliseconds: 260)),
+                switchInCurve: Curves.easeOutBack,
+                transitionBuilder: (child, a) => FadeTransition(
+                  opacity: a,
+                  child: ScaleTransition(scale: Tween(begin: 0.85, end: 1.0).animate(a), child: child),
+                ),
+                child: KeyedSubtree(
+                  key: ValueKey(_avatar),
+                  child: switch (Mascot.fromAvatar(_avatar)) {
+                    final m? => MascotHero([m], size: 96),
+                    null => BlankBotImage(size: 96, animate: ambientMotionOn(context)),
+                  },
+                ),
+              ),
+            ),
+            const SizedBox(height: AppSpace.sm),
             Text(
               l10n.newBot,
               style: context.textTheme.titleLarge?.copyWith(

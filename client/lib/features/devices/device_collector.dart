@@ -87,7 +87,7 @@ class PluginDeviceCollector implements DeviceCollector {
   var _healthReady = false;
 
   // Read-only types for the daily summary; the extras only when turned on (D-150).
-  static List<hc.HealthDataType> _healthTypes(DeviceKindSettings? s) => [
+  static List<hc.HealthDataType> healthTypes(DeviceKindSettings? s) => [
     hc.HealthDataType.SLEEP_SESSION,
     hc.HealthDataType.SLEEP_ASLEEP,
     hc.HealthDataType.SLEEP_DEEP,
@@ -105,9 +105,9 @@ class PluginDeviceCollector implements DeviceCollector {
     if (s?.extras?.any((e) => e.value == 'cycle') ?? false) hc.HealthDataType.MENSTRUATION_FLOW,
   ];
 
-  /// [_healthTypes] this phone's health store has: some exist only on Android (Health Connect's
+  /// [healthTypes] this phone's health store has: some exist only on Android (Health Connect's
   /// sleep sessions) or only on iOS, and asking for one the platform lacks fails the whole request.
-  List<hc.HealthDataType> _availableHealthTypes(DeviceKindSettings? s) => _healthTypes(s).where(_health.isDataTypeAvailable).toList();
+  List<hc.HealthDataType> _availableHealthTypes(DeviceKindSettings? s) => healthTypes(s).where(_health.isDataTypeAvailable).toList();
 
   Future<void> _healthInit() async {
     if (_healthReady) return;

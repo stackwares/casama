@@ -24051,6 +24051,18 @@ abstract class AppLocalizations {
   /// **'Open settings'**
   String get permOpenSettings;
 
+  /// Button on the Health permission row on iPhone: opens the Health app, where its switches are.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Health'**
+  String get permOpenHealth;
+
+  /// Note under the Health permission row on iPhone after opening the Health app.
+  ///
+  /// In en, this message translates to:
+  /// **'In Health, tap your picture, then Apps, then Casama, and turn on what your bots may read.'**
+  String get permHealthIosHow;
+
   /// No description provided for @permChoose.
   ///
   /// In en, this message translates to:

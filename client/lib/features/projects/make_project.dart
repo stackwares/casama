@@ -85,6 +85,7 @@ class _MakeProjectState extends ConsumerState<_MakeProject> {
     final bot = ref.watch(botProvider(widget.botId));
     return FormSheet(
       icon: LucideIcons.folderKanban,
+      art: 'tasks-project',
       title: l10n.makeProjectTitle,
       subtitle: l10n.makeProjectHelp(bot?.name ?? l10n.theBot),
       submitLabel: l10n.createProject,

@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_contacts/flutter_contacts.dart' as fc;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:health/health.dart' as hc;
 import 'package:notification_listener_service/notification_listener_service.dart';
 import 'package:record/record.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -39,14 +40,15 @@ abstract class PermissionsPlatform {
 
 /// The native side of what no plugin covers: on macOS Accessibility, Screen Recording,
 /// Automation, Full Disk Access, the microphone and speech, and restarting; on iOS the camera,
-/// photos, the microphone and speech. Methods: `check {ids}` → `{id: state}`, `request {id}` →
+/// photos, the microphone, speech and "Always" location (geolocator never asks to go from "While
+/// using" to "Always"). Methods: `check {ids}` → `{id: state}`, `request {id}` →
 /// state, `relaunch`.
 const permissionsChannel = MethodChannel('casama/permissions');
 
 /// Ids the native channel answers on each platform.
 const _nativeIds = <String, Set<String>>{
   'macos': {'accessibility', 'screen_recording', 'automation', 'full_disk', 'microphone', 'speech'},
-  'ios': {'camera', 'photos', 'microphone', 'speech'},
+  'ios': {'camera', 'photos', 'microphone', 'speech', 'location_always'},
 };
 
 /// System Settings panes on a Mac.
@@ -147,8 +149,7 @@ class PluginPermissionsPlatform implements PermissionsPlatform {
         if ((await dc.DeviceCalendarPlugin().hasPermissions()).data == true) return PermissionState.granted;
         return await _asked(id) ? PermissionState.denied : PermissionState.notAsked;
       case 'health':
-        // HealthKit never says whether reading is allowed; after asking, it's unknown.
-        return await _asked(id) ? PermissionState.unknown : PermissionState.notAsked;
+        return _healthState(asked: await _asked(id));
       case 'notifications':
         if (platform == 'windows') return PermissionState.unknown;
         if (Firebase.apps.isEmpty) return PermissionState.unknown;
@@ -162,6 +163,28 @@ class PluginPermissionsPlatform implements PermissionsPlatform {
         return await NotificationListenerService.isPermissionGranted() ? PermissionState.granted : PermissionState.denied;
     }
     return PermissionState.unknown;
+  }
+
+  /// Health without prompting. Health Connect (Android) says whether reading is allowed. HealthKit
+  /// (iOS) never does and shows its sheet only once, so after asking, step data Casama can read
+  /// counts as on and none as off: the switches are then in the Health app.
+  Future<String> _healthState({required bool asked}) async {
+    final health = hc.Health();
+    await health.configure();
+    if (platform == 'android') {
+      final status = await health.getHealthConnectSdkStatus();
+      if (status == hc.HealthConnectSdkStatus.sdkUnavailable) return PermissionState.unavailable;
+      // Missing or out of date: Turn on installs it first.
+      if (status != hc.HealthConnectSdkStatus.sdkAvailable) return PermissionState.notAsked;
+      final types = PluginDeviceCollector.healthTypes(null).where(health.isDataTypeAvailable).toList();
+      final ok = await health.hasPermissions(types, permissions: [for (final _ in types) hc.HealthDataAccess.READ]);
+      // Not all allowed yet: Health Connect asks again for the rest.
+      return ok == true ? PermissionState.granted : PermissionState.notAsked;
+    }
+    if (!asked) return PermissionState.notAsked;
+    final now = DateTime.now();
+    final steps = await health.getTotalStepsInInterval(now.subtract(const Duration(days: 14)), now);
+    return (steps ?? 0) > 0 ? PermissionState.granted : PermissionState.denied;
   }
 
   @override
@@ -211,16 +234,20 @@ class PluginPermissionsPlatform implements PermissionsPlatform {
     switch (id) {
       case 'location':
         await Geolocator.requestPermission();
-      case 'location_always':
-        // Places' own ask: "While using" first, then the system offers "Always".
-        var p = await Geolocator.checkPermission();
-        if (p == LocationPermission.denied) p = await Geolocator.requestPermission();
-        if (p == LocationPermission.whileInUse) await Geolocator.requestPermission();
       case 'contacts':
         await collector.requestPermission(DeviceKind.contacts);
       case 'calendar':
         await collector.requestPermission(DeviceKind.calendar);
       case 'health':
+        if (platform == 'android') {
+          final health = hc.Health();
+          await health.configure();
+          if (await health.getHealthConnectSdkStatus() != hc.HealthConnectSdkStatus.sdkAvailable) {
+            // Health Connect missing or out of date: its store page; the row turns on after it's set up.
+            await health.installHealthConnect();
+            return;
+          }
+        }
         await collector.requestPermission(DeviceKind.health);
       case 'microphone':
         await AudioRecorder().hasPermission();
@@ -245,7 +272,9 @@ class PluginPermissionsPlatform implements PermissionsPlatform {
           if (id == 'notification_access') return await NotificationListenerService.requestPermission();
           return await Geolocator.openAppSettings();
         case 'ios':
-          // iOS opens only Casama's own page in Settings, where every switch for it is.
+          // Health's switches are in the Health app (profile → Apps → Casama), not in Settings.
+          if (id == 'health') return await launchUrl(Uri.parse('x-apple-health://'));
+          // Everything else: Casama's own page in Settings, where every switch for it is.
           return await Geolocator.openAppSettings();
       }
     } catch (e) {
