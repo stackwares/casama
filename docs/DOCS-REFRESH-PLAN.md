@@ -1,8 +1,8 @@
 # Docs refresh after 2026-11-19/20: plan
 
-Status: **built** (2026-11-20). Oliver: "go build all and decide everything for me according to the written plan", so the
+Status: **done** (2026-11-20, live on docs.casama.ai). Oliver: "go build all and decide everything for me according to the written plan", so the
 recommended answers in §4 were taken: map keys documented (names only), internal-account settings in the
-telemetry table, docs deployed with the next web deploy. Tracked in `docs/PLANS.md`.
+telemetry table, docs.casama.ai deployed on 2026-11-20 from a clean checkout of e224d818 (docs only; casama.ai and the gallery were not touched). Tracked in `docs/PLANS.md`.
 
 Oliver asked how the documentation stands after the last two days of changes. Most feature commits
 updated their guide page in the same change (weekly plans, saved resets, computer hours, waitlist,
