@@ -23,6 +23,7 @@ same commit. Shipping details (deploys, app builds) move fast, so check them bef
 | [COMPUTER-PLACES-PLAN](COMPUTER-PLACES-PLAN.md) | 2026-11-21 | §12 decisions and Oliver's go-ahead. A bot keeps its own computer and may also use yours in the same chat |
 | [DECISION-MODEL-PLAN](DECISION-MODEL-PLAN.md) | 2026-11-20 | §12 decisions and Oliver's go-ahead. Phase 0 needs three decision models added to the OpenRouter guardrail |
 | [MEETING-BOT-PLAN](MEETING-BOT-PLAN.md) | 2026-11-21 | §14 decisions. The engine (Recall.ai or our own) is left open on purpose; Phase 0 tries both and needs a Recall trial key and test calls on Meet, Teams and Zoom (§17) |
+| [REVIEW-PROMPT-PLAN](REVIEW-PROMPT-PLAN.md) | 2026-11-21 | §9 decisions and Oliver's go-ahead. Store review prompt sooner, starting at the first good reply in onboarding; looser on Android |
 | [RETENTION-MESSAGING-PLAN](RETENTION-MESSAGING-PLAN.md) | 2026-11-20 | §14 decisions; then 1.0 release and Apple's access |
 | [SES-MIGRATION-PLAN](SES-MIGRATION-PLAN.md) | 2026-11-20 | §14 decisions; then an AWS account (Oliver) and AWS's sending review in Phase 0 |
 | [SIRI-AI-PLAN](SIRI-AI-PLAN.md) | 2026-11-20 | §13 decisions; then a debug build on the iPhone for Phase 0 |
