@@ -2,8 +2,8 @@
 
 Status: **built, not live** (written 2026-11-20; Phases 1–4 merged to `main` with audit fixes,
 D-449, not deployed). §13 is built on the recommendations until Oliver says otherwise. It stays
-off until a server has MAIL_DOMAIN and its keys. The mail domain is not bought yet; Phase 0 and
-going live wait on the domain purchase and his yes for Cloudflare changes and the deploy.
+off until a server has MAIL_DOMAIN and its keys. The mail domain is `casama.app` (bought, Email
+Routing and the Worker live); sending waits on Workers Paid, then Phase 0 and the deploy.
 
 As built (Phase 1): the Worker's existence check is `GET /hooks/mail?to=…`, not HEAD (Hono
 doesn't match HEAD routes). Resend's received-email API reports sender checks in an
@@ -406,10 +406,12 @@ Proposed; the numbers are §13 Q3.
 
 ### 9.1 The domain
 
-- A new domain, bought later (recommended: a `.com` such as `casamamail.com`; `casama.email` as
-  the alternative). On the Stackwares Cloudflare account, like `casama.link`.
-- Used bare (`ada@domain`). Cloudflare's catch-all rule in Wrangler works on the bare domain
-  only.
+- **`casama.app`** (bought 2026-11-20, Stackwares Cloudflare account): bots are `ada@casama.app`.
+  Its web traffic (`casama.app`, `www.casama.app`) only redirects to `casama.ai` (301, path and
+  query kept); nothing else may live on it, so bot mail has the domain's reputation to itself.
+- Used bare (`ada@domain`). Cloudflare's catch-all routing rule works on a zone's apex only; a
+  subdomain such as `mail.casama.app` takes only literal rules, at most 200 per domain, which
+  would cap the product at about 200 addresses. That ruled out `mail.casama.app`.
 - The name is a setting (`MAIL_DOMAIN`); nothing in code or copy hard-codes it. Phases 1 to 4
   can be built and tested against fakes before it's bought. Only Phase 0 and going live need it.
 - New mail domains start with no reputation. Sending starts low and grows over the first weeks
@@ -480,6 +482,17 @@ Oliver's yes.
 
 Against the local stack through `api-dev.casama.ai`, with a throwaway Worker.
 
+Findings so far (2026-11-20, on `casama.app`):
+
+- Done: Email Routing is on, with the catch-all rule sending every mail to the `casama-mail`
+  Worker, deployed with `MAIL_HOOK_SECRET` (vault: "Casama · Mail hook secret"). Until the server
+  is deployed with mail, the API answers the hook with a plain 404, which the Worker treats as
+  "try again later".
+- Blocked: Email Sending needs **Workers Paid** ($5 a month); the Stackwares account is on
+  Workers Free, so every Email Sending call is refused. Oliver subscribes in the dashboard
+  (Workers & Pages → Plans); then onboarding `casama.app` for sending, the delivery-events queue
+  and subscription, and the server's sending token follow.
+
 - A mail to any name on the domain reaches the Worker; so does a plus address.
 - The `Authentication-Results` header is there and reads as documented, including for a mail
   with a faked From line. Cloudflare's own header is always the topmost one, including when the
@@ -492,7 +505,7 @@ Against the local stack through `api-dev.casama.ai`, with a throwaway Worker.
 - Email Sending is available on the account; its starting daily quota; a mail to Gmail and to
   Outlook lands in the inbox.
 - Delivery events arrive through a queue.
-- Whether the account is already on Workers Paid.
+- Whether the account is already on Workers Paid. **No** (2026-11-20): it has to be bought.
 
 **Done when** each line has an answer written into this plan. Anything that fails changes the
 design before code starts (the fallback is Resend for sending).
@@ -570,8 +583,7 @@ into the same chat, and a complaint event pauses a test address.
 
 Each has a recommendation; the plan above assumes it.
 
-1. **The domain.** A new `.com` (recommended), `casama.email`, or a domain we own
-   (`casama.page`). Needed before Phase 0, not before building.
+1. **The domain.** Decided 2026-11-20: `casama.app`, used bare (§9.1).
 2. **One address per bot** (recommended), or one per account with plus addresses, as Grok does.
 3. **The numbers in §8.** Addresses, daily sends and mailbox sizes per plan.
 4. **Free can't write to new people** (recommended), or a small number a day.
@@ -615,7 +627,8 @@ Each has a recommendation; the plan above assumes it.
 
 ## 16. Left for Oliver
 
-- Buy the mail domain and add it to the Stackwares Cloudflare account.
+- ~~Buy the mail domain and add it to the Stackwares Cloudflare account.~~ Done: `casama.app`.
+- Subscribe the Stackwares account to Workers Paid, for Email Sending.
 - Answers to §13.
 - A yes for the Cloudflare changes (Email Routing, the Worker, Email Sending) when Phase 0
   starts, and for each deploy and app build after that.

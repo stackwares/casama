@@ -6665,5 +6665,8 @@ windows bound its remaining admin validity.
 - **Privacy & encryption:** `mail_messages.content` is included in `SEALED_COLUMNS` for
   encryption-at-rest and data key rotation (D-238); account/workspace deletion purges stored
   `.eml` and attachment objects before cascading rows.
-- **Plan:** `docs/BOT-EMAIL-PLAN.md`. Phases 1–4 built; Phase 0 and going live wait on the mail
-  domain purchase and Cloudflare setup.
+- **Domain (2026-11-20):** `casama.app`, used bare (`ada@casama.app`); its web traffic only
+  redirects to `casama.ai`. Not `mail.casama.app`: Cloudflare's catch-all routing rule works on
+  a zone's apex only, and a subdomain's literal rules stop at 200.
+- **Plan:** `docs/BOT-EMAIL-PLAN.md`. Phases 1–4 built; Email Routing and the mail Worker are live
+  on `casama.app`; sending waits on Workers Paid, then the rest of Phase 0 and the deploy.
