@@ -1,6 +1,6 @@
 # Admin console security implementation plan
 
-Status: **live** (server 2026-11-20, d4570460; docs and web app build 60 with passkeys and Face ID, e042df58), D-448 and D-450; passkey-or-PIN checks built, not deployed (D-452); store and desktop builds pending. Built and review-fixed the same day. Authorized by Oliver: “build all now! you decide for everything!”
+Status: **live** (server, docs and web app build 62, 2026-11-20), D-448, D-450 and D-452; store and desktop builds pending. Built and review-fixed the same day. Authorized by Oliver: “build all now! you decide for everything!”
 
 ## Goal and decisions
 
@@ -59,8 +59,8 @@ code kept as the fallback:
 
 ## One check, three ways: passkey, PIN, or password and code (D-452, 2026-11-20)
 
-Status: **built** (2026-11-20), not deployed. Oliver approved: "go and build all"; then "don't
-deploy". Oliver: "passkeys are enough", then "maybe
+Status: **live** (server, docs and web app build 62, 2026-11-20). Oliver approved: "go and build
+all", then the deploy. Oliver: "passkeys are enough", then "maybe
 just allow the admin set a 4-6 digit pin? either a custom PIN / Password + 2FA / Passkey?", then
 "make it 6 PIN".
 
@@ -120,7 +120,7 @@ authenticator code). Instead, each way records a **fresh admin check** on the cu
   window counted from the last check.
 - [x] Tests: server (proof checks, replay, PIN limits, two-step), pgTAP for `decide_approval`, Flutter.
 - [x] Docs (self-hosting), decision D-452, this plan and PLANS.
-- [ ] Ship: server deploy (runs the migration), docs, web app; store builds later. Held: Oliver said not to deploy.
+- [x] Ship: server (migration applied), docs and web app build 62 live 2026-11-20; store builds later.
 
 ## Validation commands
 
