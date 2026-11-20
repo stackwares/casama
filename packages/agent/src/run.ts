@@ -15,6 +15,7 @@ import {
   cloudOpenRouterCost,
   cloudRunPolicy,
   computerHoursMessage,
+  DATA_CARDS,
   defaultModelFor,
   describeActionRule,
   ensureSubmit,
@@ -4952,6 +4953,7 @@ function integrationDefs(
         const shown = spec.card
           ? await showPluginCard(spec.card, cardResult(structured, full), ctx, {
               tool: spec.fullName,
+              source: label,
               log,
             })
           : false;
@@ -4980,11 +4982,25 @@ async function showPluginCard(
   card: PluginCard,
   result: unknown,
   ctx: { emit: (type: string, payload: Record<string, unknown>) => Promise<void>; runId: string },
-  meta: { tool: string; log?: Logger },
+  meta: { tool: string; source?: string; log?: Logger },
 ): Promise<boolean> {
   let components: Array<Record<string, unknown>> | null;
   try {
     components = fillCard(card, result);
+    // A plugin filling a live data card is its source: it can't claim another provider's name or
+    // a refreshable card (docs/RICH-CARDS-PLAN.md §4.8).
+    if (components)
+      components = components.map((c) =>
+        (DATA_CARDS as readonly string[]).includes(String(c.component))
+          ? {
+              ...c,
+              live: {
+                source: { name: meta.source ?? meta.tool },
+                fetchedAt: new Date().toISOString(),
+              },
+            }
+          : c,
+      );
   } catch (err) {
     // Never fails the call: a card that doesn't fill leaves the text.
     meta.log?.info("plugin card not shown", {

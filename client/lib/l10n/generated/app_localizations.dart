@@ -28897,6 +28897,120 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'After {n} years'**
   String cardCalcAfterYears(int n);
+
+  /// No description provided for @cardsSettingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cards'**
+  String get cardsSettingsTitle;
+
+  /// No description provided for @cardsSettingsRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Home city, units and data sources'**
+  String get cardsSettingsRow;
+
+  /// No description provided for @cardsSettingsIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Bots answer weather, prices, rates, time and more with cards of real data that stay fresh. Your home city is used when you ask without naming a place.'**
+  String get cardsSettingsIntro;
+
+  /// No description provided for @cardsSettingsSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save. Try again.'**
+  String get cardsSettingsSaveFailed;
+
+  /// No description provided for @cardsHomeCity.
+  ///
+  /// In en, this message translates to:
+  /// **'Home city'**
+  String get cardsHomeCity;
+
+  /// No description provided for @cardsHomeClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get cardsHomeClear;
+
+  /// No description provided for @cardsHomeNone.
+  ///
+  /// In en, this message translates to:
+  /// **'Not set. Bots use your time zone\'s main city until you pick one.'**
+  String get cardsHomeNone;
+
+  /// No description provided for @cardsHomeSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Search for your city'**
+  String get cardsHomeSearch;
+
+  /// No description provided for @cardsHomePrivacy.
+  ///
+  /// In en, this message translates to:
+  /// **'Only a city is kept, never your address; it\'s sent to weather services as rounded coordinates.'**
+  String get cardsHomePrivacy;
+
+  /// No description provided for @cardsUnits.
+  ///
+  /// In en, this message translates to:
+  /// **'Units'**
+  String get cardsUnits;
+
+  /// No description provided for @cardsTemperature.
+  ///
+  /// In en, this message translates to:
+  /// **'Temperature'**
+  String get cardsTemperature;
+
+  /// No description provided for @cardsWind.
+  ///
+  /// In en, this message translates to:
+  /// **'Wind'**
+  String get cardsWind;
+
+  /// No description provided for @cardsRain.
+  ///
+  /// In en, this message translates to:
+  /// **'Rain'**
+  String get cardsRain;
+
+  /// No description provided for @cardsDistance.
+  ///
+  /// In en, this message translates to:
+  /// **'Distance'**
+  String get cardsDistance;
+
+  /// No description provided for @cardsPrices.
+  ///
+  /// In en, this message translates to:
+  /// **'Prices'**
+  String get cardsPrices;
+
+  /// No description provided for @cardsRedUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Red means up'**
+  String get cardsRedUp;
+
+  /// No description provided for @cardsRedUpHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Show rising prices in red and falling ones in green, as markets in China, Japan and Korea do.'**
+  String get cardsRedUpHint;
+
+  /// No description provided for @cardsSources.
+  ///
+  /// In en, this message translates to:
+  /// **'Data sources'**
+  String get cardsSources;
+
+  /// No description provided for @cardsSourcesIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Cards say where their data came from and when. These services provide it:'**
+  String get cardsSourcesIntro;
 }
 
 class _AppLocalizationsDelegate

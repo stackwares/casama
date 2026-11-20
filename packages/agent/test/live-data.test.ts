@@ -297,3 +297,33 @@ describe("pinned cards", () => {
     expect(canvasFor({ component: "Recipe" })).toBeNull();
   });
 });
+
+describe("cards from pages", async () => {
+  const { cardFromLd, ingredient, isoDuration, jsonLd } = await import("../src/live-data/page.ts");
+  const page = `<html><script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebPage"},{"@type":"Recipe","name":"Chicken Adobo","image":["https://x.test/a.jpg"],"totalTime":"PT1H30M","recipeYield":"4 servings","recipeIngredient":["2 lbs chicken","1/2 cup soy sauce","1 ½ cups water","salt to taste"],"recipeInstructions":[{"@type":"HowToStep","text":"Marinate."},{"@type":"HowToStep","text":"Simmer <b>30</b> minutes."}],"nutrition":{"calories":"646 kcal"}}]}</script></html>`;
+
+  it("reads a recipe's own ingredients and steps", () => {
+    const card = cardFromLd(jsonLd(page), "https://www.panlasang.test/adobo/");
+    expect(card).toMatchObject({ component: "Recipe", title: "Chicken Adobo", time: "1 h 30 min", servings: 4, calories: 646 });
+    expect(card?.ingredients).toEqual([
+      { text: "chicken", qty: 2, unit: "lbs" },
+      { text: "soy sauce", qty: 0.5, unit: "cup" },
+      { text: "water", qty: 1.5, unit: "cups" },
+      { text: "salt to taste" },
+    ]);
+    expect(card?.steps).toEqual(["Marinate.", "Simmer 30 minutes."]);
+    expect(card?.source).toEqual({ name: "panlasang.test", url: "https://www.panlasang.test/adobo/" });
+    expect(() => checkComponents([{ id: "root", ...(card as Record<string, unknown>) }], { fromBot: true })).not.toThrow();
+  });
+
+  it("parses durations and quantities", () => {
+    expect(isoDuration("PT120M")).toBe("2 h");
+    expect(isoDuration("PT45M")).toBe("45 min");
+    expect(ingredient("3 cloves garlic")).toEqual({ text: "garlic", qty: 3, unit: "cloves" });
+    expect(ingredient("a pinch of salt")).toEqual({ text: "a pinch of salt" });
+  });
+
+  it("returns nothing for pages without data it draws", () => {
+    expect(cardFromLd(jsonLd("<html></html>"), "https://x.test/")).toBeNull();
+  });
+});

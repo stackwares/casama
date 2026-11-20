@@ -11,7 +11,9 @@ import 'package:json_schema_builder/json_schema_builder.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../../core/analytics.dart';
 import '../../../../core/link_browser.dart';
 import '../../../../core/providers.dart';
 import '../../../../core/widgets.dart';
@@ -300,6 +302,7 @@ class LiveCardHostState extends ConsumerState<LiveCardHost> with WidgetsBindingO
         refreshing = false;
         _version++;
       });
+      Analytics.log('card_refreshed', {'card': widget.name, 'trigger': view != null && !force ? 'view' : (force ? 'manual' : 'auto'), 'result': error == null ? 'ok' : 'stale'});
       if (force) HapticFeedback.selectionClick();
     } catch (e) {
       if (!mounted) return;
@@ -308,6 +311,7 @@ class LiveCardHostState extends ConsumerState<LiveCardHost> with WidgetsBindingO
         refreshing = false;
         _version++;
       });
+      Analytics.log('card_refreshed', {'card': widget.name, 'trigger': force ? 'manual' : 'auto', 'result': 'error'});
     }
   }
 
@@ -334,6 +338,7 @@ class LiveCardHostState extends ConsumerState<LiveCardHost> with WidgetsBindingO
           _version++;
         });
         messenger?.showSnackBar(SnackBar(content: Text(l10n.cardUnpinned)));
+        Analytics.log('card_unpinned', {'card': widget.name});
       } else {
         final r = await ref.read(backendProvider).pinLiveCard(id, units: units.toJson());
         setState(() {
@@ -341,6 +346,7 @@ class LiveCardHostState extends ConsumerState<LiveCardHost> with WidgetsBindingO
           _version++;
         });
         messenger?.showSnackBar(SnackBar(content: Text(r['status'] == 'waiting' ? l10n.cardPinnedWaiting : l10n.cardPinned)));
+        Analytics.log('card_pinned', {'card': widget.name, 'waiting': r['status'] == 'waiting'});
       }
     } catch (_) {
       messenger?.showSnackBar(SnackBar(content: Text(l10n.cardPinFailed)));
@@ -355,12 +361,14 @@ class LiveCardHostState extends ConsumerState<LiveCardHost> with WidgetsBindingO
     try {
       await ref.read(backendProvider).reportLiveCard(id);
       messenger?.showSnackBar(SnackBar(content: Text(l10n.cardReported)));
+      Analytics.log('card_reported', {'card': widget.name});
     } catch (_) {}
   }
 
   Future<void> copy() async {
     final text = [props.s('summary'), _sourceLine()].whereType<String>().join('\n');
     await Clipboard.setData(ClipboardData(text: text));
+    Analytics.log('card_shared', {'card': widget.name, 'as': 'text'});
     if (!mounted) return;
     ScaffoldMessenger.maybeOf(context)?.showSnackBar(SnackBar(content: Text(context.l10n.cardCopied)));
   }
@@ -384,6 +392,7 @@ class LiveCardHostState extends ConsumerState<LiveCardHost> with WidgetsBindingO
           text: props.s('summary'),
         ),
       );
+      Analytics.log('card_shared', {'card': widget.name, 'as': 'image'});
     } catch (_) {
       await copy();
     }
@@ -688,12 +697,33 @@ class ChangePill extends StatelessWidget {
   }
 }
 
+/// Whether prices going up show red (as in China, Japan and Korea): Settings → Cards. Null until
+/// chosen, then the locale decides.
+final cardRedUp = ValueNotifier<bool?>(null);
+bool _redUpLoaded = false;
+const _redUpKey = 'cards.red_up';
+
+void _loadRedUp() {
+  if (_redUpLoaded) return;
+  _redUpLoaded = true;
+  SharedPreferences.getInstance().then((p) => cardRedUp.value = p.getBool(_redUpKey)).ignore();
+}
+
+Future<void> setCardRedUp(bool v) async {
+  cardRedUp.value = v;
+  (await SharedPreferences.getInstance()).setBool(_redUpKey, v).ignore();
+}
+
+bool redUpByLocale(BuildContext context) => const {'zh', 'ja', 'ko'}.contains(Localizations.maybeLocaleOf(context)?.languageCode);
+
 /// Up/good green, down/bad red; some people read red as up (Settings → Cards).
 Color changeColor(BuildContext context, double pct, {bool goodWhenUp = true}) {
+  _loadRedUp();
   final a = context.appColors;
   if (pct.abs() < 0.005) return context.colorScheme.onSurfaceVariant;
   final good = (pct > 0) == goodWhenUp;
-  return good ? a.positive : a.negative;
+  final flip = cardRedUp.value ?? redUpByLocale(context);
+  return good != flip ? a.positive : a.negative;
 }
 
 /// A line chart without axes: gradient fill, a dotted baseline, the last point marked. Scrub with

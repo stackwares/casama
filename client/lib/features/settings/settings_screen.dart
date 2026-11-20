@@ -280,6 +280,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   _Find(title: l10n.pushPrefsTitle, child: const PushPrefsTile()),
                   // Bots' calls ringing on the full screen, when Android 14+ has it off (D-424).
                   _Find(title: l10n.callFullScreenTitle, child: const FullScreenCallsTile()),
+                  // Live data cards: home city, units, sources (docs/RICH-CARDS-PLAN.md).
+                  GroupedTile(
+                    key: const Key('settingsCards'),
+                    icon: LucideIcons.cloudSun,
+                    title: l10n.cardsSettingsTitle,
+                    subtitle: l10n.cardsSettingsRow,
+                    onTap: () => open('/settings/cards'), selected: sel('/settings/cards'),
+                  ),
                   // Widgets on the Home screen, Lock Screen and desktop (D-405).
                   if (!kIsWeb &&
                       const {TargetPlatform.iOS, TargetPlatform.android, TargetPlatform.macOS}.contains(defaultTargetPlatform))
@@ -686,6 +694,7 @@ Map<String, String> _settingsSearchWords(AppLocalizations l10n, {String? orgName
   l10n.pairDevice: 'qr code scan sign in pair phone another device',
   l10n.passkeys: 'passkey face id touch id fingerprint biometric',
   l10n.widgetsTitle: 'widgets home screen lock screen controls control center glance pin shortcut',
+  l10n.cardsSettingsTitle: 'cards weather units celsius fahrenheit home city location currency stocks red green data sources',
   l10n.appLock: 'app lock pin passcode face id touch id fingerprint biometric windows hello screenshots privacy lock screen',
   l10n.privacy: 'data export download delete account analytics tracking history retention blocked people block',
   l10n.secrets: 'secrets passwords credentials vault environment variables',

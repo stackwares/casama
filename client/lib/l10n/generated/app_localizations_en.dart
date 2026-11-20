@@ -17901,4 +17901,66 @@ class AppLocalizationsEn extends AppLocalizations {
   String cardCalcAfterYears(int n) {
     return 'After $n years';
   }
+
+  @override
+  String get cardsSettingsTitle => 'Cards';
+
+  @override
+  String get cardsSettingsRow => 'Home city, units and data sources';
+
+  @override
+  String get cardsSettingsIntro =>
+      'Bots answer weather, prices, rates, time and more with cards of real data that stay fresh. Your home city is used when you ask without naming a place.';
+
+  @override
+  String get cardsSettingsSaveFailed => 'Couldn\'t save. Try again.';
+
+  @override
+  String get cardsHomeCity => 'Home city';
+
+  @override
+  String get cardsHomeClear => 'Clear';
+
+  @override
+  String get cardsHomeNone =>
+      'Not set. Bots use your time zone\'s main city until you pick one.';
+
+  @override
+  String get cardsHomeSearch => 'Search for your city';
+
+  @override
+  String get cardsHomePrivacy =>
+      'Only a city is kept, never your address; it\'s sent to weather services as rounded coordinates.';
+
+  @override
+  String get cardsUnits => 'Units';
+
+  @override
+  String get cardsTemperature => 'Temperature';
+
+  @override
+  String get cardsWind => 'Wind';
+
+  @override
+  String get cardsRain => 'Rain';
+
+  @override
+  String get cardsDistance => 'Distance';
+
+  @override
+  String get cardsPrices => 'Prices';
+
+  @override
+  String get cardsRedUp => 'Red means up';
+
+  @override
+  String get cardsRedUpHint =>
+      'Show rising prices in red and falling ones in green, as markets in China, Japan and Korea do.';
+
+  @override
+  String get cardsSources => 'Data sources';
+
+  @override
+  String get cardsSourcesIntro =>
+      'Cards say where their data came from and when. These services provide it:';
 }

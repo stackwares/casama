@@ -1847,6 +1847,366 @@
         }
       },
       "funnels": []
+    },
+    {
+      "name": "card_shown",
+      "by": [
+        "server"
+      ],
+      "description": "A live data card was shown in a chat (docs/RICH-CARDS-PLAN.md §12): which card, which live tool, and the provider. Never places, symbols or words.",
+      "properties": {
+        "card": {
+          "type": "string",
+          "values": [
+            "Weather",
+            "Forecast",
+            "WeatherAlert",
+            "AirQuality",
+            "SunMoon",
+            "Quote",
+            "Watchlist",
+            "Currency",
+            "Holidays",
+            "Quake",
+            "Storm",
+            "Flight",
+            "Parcel",
+            "Score",
+            "Standings",
+            "WorldClock",
+            "Countdown",
+            "Summary",
+            "Definition",
+            "Media",
+            "Recipe",
+            "Comparison",
+            "ProsCons",
+            "Steps",
+            "Timeline",
+            "Calculator",
+            "Random",
+            "Translation",
+            "Contact",
+            "Quiz",
+            "Nutrition",
+            "Status",
+            "Dashboard",
+            "Carousel",
+            "Results",
+            "Event"
+          ]
+        },
+        "tool": {
+          "type": "string",
+          "values": [
+            "weather",
+            "air",
+            "sun",
+            "alerts",
+            "quote",
+            "markets",
+            "fx",
+            "time",
+            "holidays",
+            "quakes",
+            "storms",
+            "lookup",
+            "define",
+            "book",
+            "film",
+            "sports",
+            "flight",
+            "parcel",
+            "dashboard",
+            "page"
+          ]
+        },
+        "provider": {
+          "type": "string"
+        }
+      },
+      "funnels": []
+    },
+    {
+      "name": "card_refreshed",
+      "by": [
+        "client"
+      ],
+      "description": "A live card fetched its data again without the model: on its own while on screen, from the refresh button, or for another view (RICH-CARDS-PLAN §4.4).",
+      "properties": {
+        "card": {
+          "type": "string",
+          "values": [
+            "Weather",
+            "Forecast",
+            "WeatherAlert",
+            "AirQuality",
+            "SunMoon",
+            "Quote",
+            "Watchlist",
+            "Currency",
+            "Holidays",
+            "Quake",
+            "Storm",
+            "Flight",
+            "Parcel",
+            "Score",
+            "Standings",
+            "WorldClock",
+            "Countdown",
+            "Summary",
+            "Definition",
+            "Media",
+            "Recipe",
+            "Comparison",
+            "ProsCons",
+            "Steps",
+            "Timeline",
+            "Calculator",
+            "Random",
+            "Translation",
+            "Contact",
+            "Quiz",
+            "Nutrition",
+            "Status",
+            "Dashboard",
+            "Carousel",
+            "Results",
+            "Event"
+          ]
+        },
+        "trigger": {
+          "type": "string",
+          "values": [
+            "auto",
+            "manual",
+            "view"
+          ]
+        },
+        "result": {
+          "type": "string",
+          "values": [
+            "ok",
+            "stale",
+            "error"
+          ]
+        }
+      },
+      "funnels": []
+    },
+    {
+      "name": "card_pinned",
+      "by": [
+        "client"
+      ],
+      "description": "A live card was pinned to the person's widgets (RICH-CARDS-PLAN §4.5).",
+      "properties": {
+        "card": {
+          "type": "string",
+          "values": [
+            "Weather",
+            "Forecast",
+            "WeatherAlert",
+            "AirQuality",
+            "SunMoon",
+            "Quote",
+            "Watchlist",
+            "Currency",
+            "Holidays",
+            "Quake",
+            "Storm",
+            "Flight",
+            "Parcel",
+            "Score",
+            "Standings",
+            "WorldClock",
+            "Countdown",
+            "Summary",
+            "Definition",
+            "Media",
+            "Recipe",
+            "Comparison",
+            "ProsCons",
+            "Steps",
+            "Timeline",
+            "Calculator",
+            "Random",
+            "Translation",
+            "Contact",
+            "Quiz",
+            "Nutrition",
+            "Status",
+            "Dashboard",
+            "Carousel",
+            "Results",
+            "Event"
+          ]
+        },
+        "waiting": {
+          "type": "boolean"
+        }
+      },
+      "funnels": []
+    },
+    {
+      "name": "card_unpinned",
+      "by": [
+        "client"
+      ],
+      "description": "A pinned live card was taken off the widgets.",
+      "properties": {
+        "card": {
+          "type": "string",
+          "values": [
+            "Weather",
+            "Forecast",
+            "WeatherAlert",
+            "AirQuality",
+            "SunMoon",
+            "Quote",
+            "Watchlist",
+            "Currency",
+            "Holidays",
+            "Quake",
+            "Storm",
+            "Flight",
+            "Parcel",
+            "Score",
+            "Standings",
+            "WorldClock",
+            "Countdown",
+            "Summary",
+            "Definition",
+            "Media",
+            "Recipe",
+            "Comparison",
+            "ProsCons",
+            "Steps",
+            "Timeline",
+            "Calculator",
+            "Random",
+            "Translation",
+            "Contact",
+            "Quiz",
+            "Nutrition",
+            "Status",
+            "Dashboard",
+            "Carousel",
+            "Results",
+            "Event"
+          ]
+        }
+      },
+      "funnels": []
+    },
+    {
+      "name": "card_shared",
+      "by": [
+        "client"
+      ],
+      "description": "A card was shared as a picture or copied as text.",
+      "properties": {
+        "card": {
+          "type": "string",
+          "values": [
+            "Weather",
+            "Forecast",
+            "WeatherAlert",
+            "AirQuality",
+            "SunMoon",
+            "Quote",
+            "Watchlist",
+            "Currency",
+            "Holidays",
+            "Quake",
+            "Storm",
+            "Flight",
+            "Parcel",
+            "Score",
+            "Standings",
+            "WorldClock",
+            "Countdown",
+            "Summary",
+            "Definition",
+            "Media",
+            "Recipe",
+            "Comparison",
+            "ProsCons",
+            "Steps",
+            "Timeline",
+            "Calculator",
+            "Random",
+            "Translation",
+            "Contact",
+            "Quiz",
+            "Nutrition",
+            "Status",
+            "Dashboard",
+            "Carousel",
+            "Results",
+            "Event"
+          ]
+        },
+        "as": {
+          "type": "string",
+          "values": [
+            "image",
+            "text"
+          ]
+        }
+      },
+      "funnels": []
+    },
+    {
+      "name": "card_reported",
+      "by": [
+        "client"
+      ],
+      "description": "Someone reported wrong data on a live card (the card and provider are kept server-side, no words).",
+      "properties": {
+        "card": {
+          "type": "string",
+          "values": [
+            "Weather",
+            "Forecast",
+            "WeatherAlert",
+            "AirQuality",
+            "SunMoon",
+            "Quote",
+            "Watchlist",
+            "Currency",
+            "Holidays",
+            "Quake",
+            "Storm",
+            "Flight",
+            "Parcel",
+            "Score",
+            "Standings",
+            "WorldClock",
+            "Countdown",
+            "Summary",
+            "Definition",
+            "Media",
+            "Recipe",
+            "Comparison",
+            "ProsCons",
+            "Steps",
+            "Timeline",
+            "Calculator",
+            "Random",
+            "Translation",
+            "Contact",
+            "Quiz",
+            "Nutrition",
+            "Status",
+            "Dashboard",
+            "Carousel",
+            "Results",
+            "Event"
+          ]
+        }
+      },
+      "funnels": []
     }
   ]
 }

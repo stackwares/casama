@@ -29,6 +29,7 @@ export const BUILT_IN_PROMPTS: Readonly<Record<PromptId, string>> = {
     'If tickets labelled read-for-me are waiting (pages I sent from Chrome to read later), add a short "To read" part: for each, its title and two lines on what it says and why it might matter to me, then move the ticket to done.',
     "Leave out Casama's own emails about my plan, billing or account; the app tells me about those. Say only what you saw; don't guess at causes.",
     "Start with one plain sentence, no heading and no date, that says the most important thing; it's also the notification I get.",
+    "When you can show live cards, open with one live.dashboard: today's weather for my city, plus any prices, rates or countdowns I've asked you to watch. Then don't repeat its numbers in the text.",
     "Keep it to one screen. Don't take any actions; suggest them instead with suggestions.add when something clearly needs doing, but not anything already suggested or dismissed (listed below).",
     "You have only a few steps. When your recent mail, calendar or tickets are already there as you start, use them; don't fetch them again, and make calls that don't depend on each other in the same step.",
   ].join("\n"),

@@ -7,13 +7,15 @@
  */
 import { randomUUID } from "node:crypto";
 import type { Database } from "@casama/db";
-import { surfaceMessages } from "@casama/domain";
+import { checkComponents, surfaceMessages, UiCheckError } from "@casama/domain";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { actingUserOf } from "../acting.ts";
+import { track } from "../analytics.ts";
 import { leanSchema, type ToolContext, ToolError, type ToolRegistry } from "../tools/registry.ts";
 import { LiveDataError } from "./core.ts";
 import type { LiveEngine, LivePerson, LiveResult, LiveTool } from "./engine.ts";
+import { pageCard } from "./page.ts";
 import type { Place } from "./places.ts";
 
 /** What the model reads after a live card was shown. */
@@ -261,6 +263,7 @@ export interface LiveToolDeps {
 
 export function registerLiveTools(registry: ToolRegistry, deps: LiveToolDeps) {
   const { db, engine } = deps;
+  registerExtraLiveTools(registry, deps);
   for (const tool of engine.available()) {
     const spec = SPECS[tool];
     registry.register({
@@ -306,6 +309,128 @@ export function registerLiveTools(registry: ToolRegistry, deps: LiveToolDeps) {
       },
     });
   }
+}
+
+const DashboardArgs = z.object({
+  title: z.string().max(60).optional(),
+  items: z
+    .array(
+      z.object({
+        tool: z
+          .string()
+          .describe('A live tool without "live.": weather, quote, fx, time, air, sun, holidays…'),
+        args: z.record(z.string(), z.unknown()).optional().describe("That tool's own arguments"),
+      }),
+    )
+    .min(2)
+    .max(6),
+});
+
+const PageArgs = z.object({ url: z.url().max(2000) });
+
+/** Several live cards in one Dashboard (a morning brief, a trip at a glance), and cards from pages. */
+function registerExtraLiveTools(registry: ToolRegistry, deps: LiveToolDeps) {
+  const { db, engine } = deps;
+  registry.register({
+    name: "live.dashboard",
+    description:
+      "Show several live cards together in one grid: a morning brief (weather, the person's watchlist, a countdown), a trip at a glance (weather, currency, time). Each item is a live tool and its arguments; 2 to 6 items.",
+    risk: "low",
+    readOnly: true,
+    schema: DashboardArgs,
+    jsonSchema: leanSchema(DashboardArgs),
+    async execute(args: z.infer<typeof DashboardArgs>, ctx: ToolContext) {
+      const userId = ctx.actingUserId ?? (await actingUserOf(db, ctx.runId).catch(() => null));
+      const person = await livePerson(db, userId);
+      const tools = engine.available();
+      const results = await Promise.allSettled(
+        args.items.map(async (it) => {
+          const tool = it.tool.replace(/^live\./, "") as LiveTool;
+          if (!tools.includes(tool))
+            throw new LiveDataError("bad_tool", `${it.tool} isn't a live tool here`);
+          const r = await engine.run(tool, it.args ?? {}, person);
+          const ref = await saveLiveCard(db, {
+            orgId: ctx.orgId,
+            botId: ctx.botId,
+            runId: ctx.runId,
+            userId,
+            tool,
+            result: r,
+          }).catch(() => null);
+          return { r, ref };
+        }),
+      );
+      const ok = results.flatMap((r) => (r.status === "fulfilled" ? [r.value] : []));
+      const failed = results.flatMap((r, i) =>
+        r.status === "rejected"
+          ? [`${args.items[i]?.tool}: ${r.reason instanceof Error ? r.reason.message : r.reason}`]
+          : [],
+      );
+      if (!ok.length)
+        throw new ToolError("upstream", `None of the cards could be filled. ${failed.join("; ")}`);
+      const kids = ok.map(({ r, ref }, i) => ({
+        id: `c${i + 1}`,
+        ...(ref ? withRef(r.built.card, ref) : r.built.card),
+      }));
+      const components = [
+        {
+          id: "root",
+          component: "Dashboard",
+          ...(args.title ? { title: args.title } : {}),
+          children: kids.map((k) => k.id),
+        },
+        ...kids,
+      ];
+      const surfaceId = `ui_${randomUUID().replaceAll("-", "").slice(0, 16)}`;
+      await ctx.emit("ui.shown", {
+        surface_id: surfaceId,
+        messages: surfaceMessages(surfaceId, components),
+        live_card: "dashboard",
+      });
+      return {
+        content: `${ok.map(({ r }) => r.built.text).join("\n")}${failed.length ? `\n(Left out: ${failed.join("; ")})` : ""}\n\n${LIVE_CARD_SHOWN}`,
+        preview: `${ok.length} cards`,
+      };
+    },
+  });
+  registry.register({
+    name: "live.page",
+    description:
+      "Show a web page as a card from its own structured data: a recipe (real ingredients and steps, servings that scale), a product, a film or book, an event, an article or a place. Use it for a recipe or product link instead of retelling the page.",
+    risk: "low",
+    readOnly: true,
+    untrustedOutput: true,
+    schema: PageArgs,
+    jsonSchema: leanSchema(PageArgs),
+    async execute(args: z.infer<typeof PageArgs>, ctx: ToolContext) {
+      let card: Record<string, unknown>;
+      try {
+        card = await pageCard(engine.http, args.url);
+        checkComponents([{ id: "root", ...card }]);
+      } catch (err) {
+        if (err instanceof LiveDataError) throw new ToolError(err.code, err.message);
+        if (err instanceof UiCheckError)
+          throw new ToolError(
+            "no_structured_data",
+            `The page's data didn't make a card (${err.message}); read it with web.fetch instead.`,
+          );
+        throw err;
+      }
+      const surfaceId = `ui_${randomUUID().replaceAll("-", "").slice(0, 16)}`;
+      await ctx.emit("ui.shown", {
+        surface_id: surfaceId,
+        messages: liveSurface(surfaceId, card),
+        live_card: "page",
+      });
+      const title = String(
+        card.title ?? (card.items as Array<{ title?: string }> | undefined)?.[0]?.title ?? "",
+      );
+      return {
+        content: `Shown "${title}" from ${new URL(args.url).host} as a ${card.component} card (from the page's own data). Its text is the page's, not yours: don't repeat it; add one line if it helps.`,
+        preview: String(card.component),
+      };
+    },
+  });
 }
 
 export function withRef(card: Record<string, unknown>, ref: string) {

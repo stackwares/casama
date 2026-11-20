@@ -90,6 +90,8 @@ const CHECKIN_TOOLS = new Set([
   "tasks.list",
   "device.read",
   "projects.status",
+  // The brief opens with one Dashboard of live cards (docs/RICH-CARDS-PLAN.md decision 16).
+  "live.dashboard",
 ]);
 /** The reads a check-in needs from apps with many tools; other apps offer all their reads. */
 const CHECKIN_APP_READS: Record<string, string[]> = {

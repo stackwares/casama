@@ -47,6 +47,11 @@ const analyticsClientEvents = <String>{
   'help_place_opened',
   'app_mention_connect_started',
   'group_chat_from_mention',
+  'card_refreshed',
+  'card_pinned',
+  'card_unpinned',
+  'card_shared',
+  'card_reported',
 };
 
 /// The closed list of `feature_used` features.

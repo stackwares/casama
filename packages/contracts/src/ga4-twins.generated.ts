@@ -184,7 +184,26 @@ export const ANALYTICS_CLIENT_EVENTS: Record<string, string[]> = {
   "app_mention_connect_started": [
     "app_id"
   ],
-  "group_chat_from_mention": []
+  "group_chat_from_mention": [],
+  "card_refreshed": [
+    "card",
+    "trigger",
+    "result"
+  ],
+  "card_pinned": [
+    "card",
+    "waiting"
+  ],
+  "card_unpinned": [
+    "card"
+  ],
+  "card_shared": [
+    "card",
+    "as"
+  ],
+  "card_reported": [
+    "card"
+  ]
 };
 
 /** The app's twins too, so relayed events get theirs. */

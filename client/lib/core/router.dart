@@ -23,6 +23,7 @@ import '../features/bots/watchers_screen.dart';
 import '../features/search/search_view.dart';
 import '../features/groups/group_chats.dart';
 import '../features/library/creation_detail.dart';
+import '../features/settings/cards_settings_screen.dart';
 import '../features/settings/fold_screen.dart';
 import '../ui/outside_shell.dart';
 import '../ui/shell_layout.dart';
@@ -1057,6 +1058,10 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: 'widgets',
                 pageBuilder: _page((_, _) => const WidgetsScreen()),
+              ),
+              GoRoute(
+                path: 'cards',
+                pageBuilder: _page((_, _) => const CardsSettingsScreen()),
               ),
               GoRoute(
                 path: 'watch',
