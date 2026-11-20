@@ -774,6 +774,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                 pageBuilder: _page(
                   (_, s) => LiveViewScreen(
                     computerId: s.uri.queryParameters['c'] ?? '',
+                    botId: s.uri.queryParameters['bot'],
                     takeoverId: s.uri.queryParameters['takeover'],
                   ),
                 ),

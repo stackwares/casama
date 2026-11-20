@@ -14,6 +14,7 @@ import 'package:xterm/xterm.dart';
 
 import 'computer_details.dart';
 import 'computer_manage.dart';
+import 'computer_profile_switch.dart';
 import 'computer_hours_notice.dart';
 import 'computer_update.dart';
 import 'live_view_screen.dart';
@@ -34,6 +35,7 @@ import '../../ui/app_menu.dart';
 import '../../ui/page.dart';
 import '../../ui/shell_header.dart';
 import '../chat/chat_screen.dart';
+import '../voice/active_call.dart' show liveViewPath;
 import '../files/file_preview.dart';
 import '../../ui/glow_button.dart';
 
@@ -108,7 +110,7 @@ class ComputerScreen extends ConsumerWidget {
             },
           );
         }
-        return ComputerPanel(computer: c, embedded: embedded, initialTab: initialTab, initialPath: initialPath);
+        return ComputerPanel(computer: c, botId: botId, embedded: embedded, initialTab: initialTab, initialPath: initialPath);
       },
     );
     if (embedded) return body;
@@ -328,11 +330,16 @@ class ComputerPanel extends ConsumerStatefulWidget {
   const ComputerPanel({
     super.key,
     required this.computer,
+    this.botId,
     this.embedded = false,
     this.initialTab,
     this.initialPath,
   });
   final Computer computer;
+
+  /// The bot whose computer this is opened as (its chat's side panel): the live view shows it
+  /// as the one in control.
+  final String? botId;
 
   /// The tab to open first; Screen otherwise.
   final String? initialTab;
@@ -445,37 +452,21 @@ class _ComputerPanelState extends ConsumerState<ComputerPanel> {
   }
 
   /// Switches the computer between the desktop and browser-only right on its Screen tab, both
-  /// ways, without a trip to Settings > Computers. A running one restarts (files kept): ask first.
+  /// ways, without a trip to Settings > Computers.
   Future<void> _switchProfile({required bool toDesktop}) async {
-    final l10n = context.l10n;
     final computer = widget.computer;
     final running =
         computer.state == ComputerState.running ||
         computer.state == ComputerState.idle;
-    if (running) {
-      final ok = await showConfirm(
-        context: context,
-        title: toDesktop ? l10n.switchToDesktop : l10n.switchToBrowserOnly,
-        message: l10n.switchProfileConfirm,
-        confirmLabel: l10n.switchProfileButton,
-      );
-      if (!ok || !mounted) return;
-    }
-    final done = await _run(
-      'profile',
-      () => ref
-          .read(backendProvider)
-          .updateComputer(computer.id, profile: toDesktop ? 'desktop' : 'headless'),
-    );
-    if (done == null || !mounted) return;
-    HapticsHelper.success();
-    // Once the desktop is up, the side panel opens its live view.
-    setState(() => _watchLive = toDesktop && running);
-    showToast(
+    final done = await switchComputerProfile(
       context,
-      toDesktop ? l10n.switchedToDesktopHere : l10n.switchedToBrowserOnly,
-      kind: ToastKind.success,
+      ref,
+      computer,
+      toDesktop: toDesktop,
+      run: (call) => _run('profile', call),
     );
+    // Once the desktop is up, the side panel opens its live view.
+    if (done && mounted) setState(() => _watchLive = toDesktop && running);
   }
 
   Future<void> _switchToDesktop() => _switchProfile(toDesktop: true);
@@ -624,12 +615,13 @@ class _ComputerPanelState extends ConsumerState<ComputerPanel> {
                                         child: widget.embedded
                                             ? _InlineLive(
                                                 computer: computer,
+                                                botId: widget.botId,
                                                 watching: _watchLive,
                                                 onWatch: () => setState(
                                                   () => _watchLive = true,
                                                 ),
                                               )
-                                            : _LiveEntry(computer: computer),
+                                            : _LiveEntry(computer: computer, botId: widget.botId),
                                       ),
                                     ],
                                   )
@@ -1385,8 +1377,9 @@ class _ScreenStageState extends ConsumerState<_ScreenStage> {
 
 /// Desktop computers open the live view (it starts the computer if it is asleep, and says so).
 class _LiveEntry extends ConsumerWidget {
-  const _LiveEntry({required this.computer});
+  const _LiveEntry({required this.computer, this.botId});
   final Computer computer;
+  final String? botId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -1395,7 +1388,7 @@ class _LiveEntry extends ConsumerWidget {
         computer.state == ComputerState.running ||
         computer.state == ComputerState.idle;
     Future<void> open() async {
-      await GoRouter.of(context).pushOnce('/computer/live?c=${computer.id}');
+      await GoRouter.of(context).pushOnce(liveViewPath(computer.id, botId: botId));
       // The live view may have woken it up.
       ref.invalidate(computersProvider);
     }
@@ -1421,10 +1414,12 @@ class _LiveEntry extends ConsumerWidget {
 class _InlineLive extends ConsumerStatefulWidget {
   const _InlineLive({
     required this.computer,
+    this.botId,
     required this.watching,
     required this.onWatch,
   });
   final Computer computer;
+  final String? botId;
 
   /// This person started, woke, or opened the live view during this visit to the panel.
   final bool watching;
@@ -1440,7 +1435,7 @@ class _InlineLiveState extends ConsumerState<_InlineLive> {
 
   Future<void> _expand() async {
     setState(() => _expanded = true);
-    await GoRouter.of(context).pushOnce('/computer/live?c=${widget.computer.id}');
+    await GoRouter.of(context).pushOnce(liveViewPath(widget.computer.id, botId: widget.botId));
     if (!mounted) return;
     setState(() => _expanded = false);
     ref.invalidate(computersProvider);
@@ -1513,6 +1508,7 @@ class _InlineLiveState extends ConsumerState<_InlineLive> {
     return LiveViewScreen(
       key: ValueKey(c.id),
       computerId: c.id,
+      botId: widget.botId,
       embedded: true,
       onExpand: _expand,
     );

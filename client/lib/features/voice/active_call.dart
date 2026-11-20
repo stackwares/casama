@@ -1306,7 +1306,8 @@ String callPath(CallController c) =>
     '/bots/${c.botId}/call${c.conversationId == null ? '' : '?c=${c.conversationId}'}';
 
 /// The full live view of a computer (its route in the app).
-String liveViewPath(String computerId) => '/computer/live?c=$computerId';
+String liveViewPath(String computerId, {String? botId}) =>
+    '/computer/live?c=$computerId${botId == null ? '' : '&bot=$botId'}';
 
 /// Makes the phone's call controls for each call (overridden in tests).
 final callSystemProvider = Provider<CallSystem Function()>(

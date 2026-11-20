@@ -28,6 +28,7 @@ import '../../ui/side_strip.dart';
 import '../../ui/glow_button.dart';
 import '../teach/teach_draft_screen.dart';
 import 'computer_update.dart';
+import 'computer_profile_switch.dart';
 import '../teach/teach_recorder.dart';
 import '../../core/analytics.dart';
 import '../../core/haptics.dart';
@@ -37,8 +38,12 @@ import '../app_lock/confirm_identity.dart';
 
 /// Watch a computer's desktop live and take control (deep link: /computer/live?c=&takeover=).
 class LiveViewScreen extends ConsumerStatefulWidget {
-  const LiveViewScreen({super.key, required this.computerId, this.takeoverId, this.embedded = false, this.onExpand});
+  const LiveViewScreen({super.key, required this.computerId, this.botId, this.takeoverId, this.embedded = false, this.onExpand});
   final String computerId;
+
+  /// The bot whose computer this was opened as. When a bot is in control the server doesn't say
+  /// which one, so this (or the computer's own bot) gives the dock its face.
+  final String? botId;
   final String? takeoverId;
 
   /// Inside the computer side panel on large screens: no page header, a compact bar, and a button
@@ -963,6 +968,22 @@ class _LiveViewScreenState extends ConsumerState<LiveViewScreen> with WidgetsBin
     ref.invalidate(takeoversProvider);
   }
 
+  /// The bot in control, for its face in the dock. The server names no bot (any bot run holds the
+  /// screen), so it's the bot this was opened for, or the computer's own bot.
+  Bot? _botInControl() {
+    if (_lease == null || _lease!.holderType != LeaseHolderTypeEnum.bot) return null;
+    final computer = (ref.watch(computersProvider).value ?? const <Computer>[]).where((c) => c.id == widget.computerId).firstOrNull;
+    final id = _lease!.holderId ?? widget.botId ?? computer?.ownerBotId;
+    return id == null ? null : ref.watch(botProvider(id));
+  }
+
+  /// Back to browser-only (headless) from the live view itself. The live view ends with the
+  /// desktop, so the full-screen view closes; in the side panel the Screen tab takes over.
+  Future<void> _switchToBrowserOnly(Computer computer) async {
+    final done = await switchComputerProfile(context, ref, computer, toDesktop: false);
+    if (done && mounted && !widget.embedded) await Navigator.of(context).maybePop();
+  }
+
   /// What waits behind ⋯: things done now and then, so the dock keeps to what's used all the time.
   Widget _moreMenu(BuildContext context, {required bool onDark}) {
     final l10n = context.l10n;
@@ -970,6 +991,7 @@ class _LiveViewScreenState extends ConsumerState<LiveViewScreen> with WidgetsBin
     // A newer system waiting (D-360): applied from here too, never pushed on the person.
     final computer = (ref.watch(computersProvider).value ?? const <Computer>[]).where((c) => c.id == widget.computerId).firstOrNull;
     final canUpdate = computer != null && computerUpdateWaiting(computer);
+    final canGoHeadless = computer != null && computer.profile == ComputerProfileEnum.desktop && computer.kind != ComputerKindEnum.local;
     return Builder(
       builder: (button) => PopupMenuButton<String>(
         key: const Key('liveMore'),
@@ -979,6 +1001,7 @@ class _LiveViewScreenState extends ConsumerState<LiveViewScreen> with WidgetsBin
           'screenshot' => _screenshot(button),
           'teach' => _startTeach(),
           'update' when computer != null => confirmComputerUpdate(context, ref, computer),
+          'browserOnly' when computer != null => _switchToBrowserOnly(computer),
           _ => null,
         },
         itemBuilder: (_) => [
@@ -999,6 +1022,12 @@ class _LiveViewScreenState extends ConsumerState<LiveViewScreen> with WidgetsBin
               value: 'update',
               child: ListTile(dense: true, contentPadding: EdgeInsets.zero, leading: const Icon(LucideIcons.download, size: 20), title: Text(l10n.computerUpdateMenu)),
             ),
+          if (canGoHeadless)
+            PopupMenuItem(
+              key: const Key('liveSwitchToBrowserOnly'),
+              value: 'browserOnly',
+              child: ListTile(dense: true, contentPadding: EdgeInsets.zero, leading: const Icon(LucideIcons.globe, size: 20), title: Text(l10n.switchToBrowserOnly)),
+            ),
         ],
         child: IgnorePointer(child: onDark ? _GlassButton(tooltip: l10n.liveMore, icon: LucideIcons.ellipsis, onPressed: () {}) : HeaderIconButton(tooltip: l10n.liveMore, icon: LucideIcons.ellipsis, onPressed: () {})),
       ),
@@ -1012,7 +1041,7 @@ class _LiveViewScreenState extends ConsumerState<LiveViewScreen> with WidgetsBin
     if (_lease?.you != true) {
       final someoneElse = _lease?.holderType == LeaseHolderTypeEnum.user;
       return [
-        switch (_lease?.holderType == LeaseHolderTypeEnum.bot && _lease?.holderId != null ? ref.watch(botProvider(_lease!.holderId!)) : null) {
+        switch (_botInControl()) {
           final b? => BotAvatar(name: b.name, avatar: b.avatarUrl, size: 20, animate: false),
           null => Icon(someoneElse ? LucideIcons.user : (_lease == null ? LucideIcons.eye : LucideIcons.bot), size: 18, color: context.colorScheme.onSurfaceVariant),
         },

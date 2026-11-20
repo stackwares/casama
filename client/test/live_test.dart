@@ -14,6 +14,7 @@ import 'package:casama/features/computer/computers_screen.dart';
 import 'package:casama/features/computer/live_view_screen.dart';
 import 'package:casama/features/inbox/inbox_screen.dart';
 import 'package:casama/l10n/generated/app_localizations.dart';
+import 'package:casama/ui/bot_avatar.dart';
 import 'package:casama_sdk/casama_sdk.dart';
 
 import 'app_test.dart' show harness, setSize;
@@ -345,6 +346,57 @@ void main() {
     expect(backend.computerUpdates, ['headless']);
     await tester.pumpWidget(const SizedBox());
   });
+  testWidgets('with a bot in control, the dock shows that bot, not a generic icon', (tester) async {
+    await setSize(tester, const Size(1300, 900));
+    await tester.pumpWidget(ProviderScope(
+      overrides: [backendProvider.overrideWithValue(_AwakeDesktop()), unlockersProvider.overrideWithValue(FakeUnlockers()), liveConnectorProvider.overrideWithValue(FakeLiveConnector())],
+      child: MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: const Scaffold(body: SizedBox(width: 420, child: ComputerScreen(botId: botId, embedded: true))),
+      ),
+    ));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    await tester.tap(find.byKey(const Key('openLiveView')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(find.text('Bot in control'), findsOneWidget);
+    expect(find.byType(BotAvatar), findsOneWidget);
+    expect(find.byIcon(LucideIcons.bot), findsNothing);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('the full-screen live view switches back to browser-only from its menu and closes', (tester) async {
+    await setSize(tester, const Size(1300, 900));
+    final backend = _AwakeDesktop();
+    final router = GoRouter(routes: [
+      GoRoute(path: '/', builder: (_, _) => const Scaffold(body: Text('home'))),
+      GoRoute(path: '/computer/live', builder: (_, s) => LiveViewScreen(computerId: s.uri.queryParameters['c']!)),
+    ]);
+    await tester.pumpWidget(ProviderScope(
+      overrides: [backendProvider.overrideWithValue(backend), unlockersProvider.overrideWithValue(FakeUnlockers()), liveConnectorProvider.overrideWithValue(FakeLiveConnector())],
+      child: MaterialApp.router(routerConfig: router, localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
+    ));
+    await tester.pump();
+    router.push('/computer/live?c=$computerId');
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.tap(find.byKey(const Key('liveMore')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.tap(find.byKey(const Key('liveSwitchToBrowserOnly')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(find.textContaining('The computer restarts to switch'), findsOneWidget);
+    await tester.tap(find.text('Switch'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(backend.computerUpdates, ['headless']);
+    expect(find.text('home'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+  });
+
   testWidgets('control taken in the side panel carries over to full screen', (tester) async {
     await setSize(tester, const Size(1300, 900));
     final backend = _AwakeDesktop();
