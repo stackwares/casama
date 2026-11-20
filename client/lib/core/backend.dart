@@ -1671,6 +1671,14 @@ abstract class Backend {
   Future<AdminPinState> removeAdminPin();
   /// Checks the PIN; the API records it on this sign-in session. When; throws when wrong.
   Future<DateTime> adminPinCheck(String pin);
+  // Device keys (D-453): the screen lock as the whole admin check
+  Future<List<AdminDeviceKey>> adminDeviceKeys();
+  Future<AdminDeviceKey> addAdminDeviceKey(String name, String publicKey);
+  Future<List<AdminDeviceKey>> removeAdminDeviceKey(String id);
+  /// A one-time challenge for this device's key; null when the server no longer has the key.
+  Future<({String id, String challenge})?> adminDeviceChallenge(String keyId);
+  /// Sends the signed challenge; the API records the check on this sign-in session. When.
+  Future<DateTime> adminDeviceCheck(String challengeId, String signature);
   Future<void> adminUnsuspendDomain(String id);
   Future<DomainOrder> adminRetryDomainOrder(String id);
   Future<DomainOrder> adminApproveDomainOrder(String id);

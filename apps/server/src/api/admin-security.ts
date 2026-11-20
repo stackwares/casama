@@ -1,4 +1,10 @@
-import { randomBytes, scrypt as scryptCb, timingSafeEqual } from "node:crypto";
+import {
+  createPublicKey,
+  createVerify,
+  randomBytes,
+  scrypt as scryptCb,
+  timingSafeEqual,
+} from "node:crypto";
 import { promisify } from "node:util";
 import type { Database, JwtClaims } from "@casama/db";
 import { sql } from "drizzle-orm";
@@ -68,7 +74,12 @@ function newestTimestamp(
 }
 
 /** The checks themselves (D-452): they make a session fresh, so they can't require it. */
-export const ADMIN_CHECK_PATHS = ["/v1/admin/checks/passkey", "/v1/admin/checks/pin"];
+export const ADMIN_CHECK_PATHS = [
+  "/v1/admin/checks/passkey",
+  "/v1/admin/checks/pin",
+  "/v1/admin/checks/device",
+  "/v1/admin/checks/device/challenge",
+];
 
 /** The admin console's own probe that needs no fresh sign-in (instance counts for navigation). */
 export function adminPathExempt(method: string, path: string) {
@@ -168,7 +179,7 @@ export async function hasFreshCheck(
 async function recordCheck(
   db: Database,
   claims: JwtClaims,
-  method: "passkey" | "pin",
+  method: "passkey" | "pin" | "device",
   verifiedAtSeconds: number,
   proofSession: string | null,
 ): Promise<Date> {
@@ -332,4 +343,157 @@ export async function checkPin(
   });
   if (!result.ok) return result;
   return { ok: true, at: await recordCheck(db, claims, "pin", Date.now() / 1000, null) };
+}
+
+/**
+ * Changing what can check (the PIN, a device's key): a fresh real sign-in or a passkey or device
+ * check, never a PIN check, so a guessed PIN can't make itself permanent (D-452, D-453).
+ */
+export async function requireCheckWithoutPin(db: Database, claims: JwtClaims): Promise<void> {
+  if (hasFreshAuthentication(claims, true)) {
+    await requireSecondStep(db, claims, true);
+    return;
+  }
+  const session = sessionOf(claims) ?? "";
+  const [row] = await db.execute<{ ok: boolean }>(sql`
+    select exists (
+      select 1 from public.admin_step_ups
+      where session_id::text = ${session} and user_id = ${claims.sub}::uuid
+        and method in ('passkey', 'device')
+        and verified_at <= now() and verified_at > now() - interval '60 seconds'
+    ) as ok`);
+  if (!row?.ok)
+    throw new ApiError(
+      403,
+      "admin_pin_needs_sign_in",
+      "Confirm with a passkey, Face ID or your password for this change.",
+    );
+}
+
+// --- Device keys: the screen lock as the whole check (D-453) ----------------------------------
+
+export const ADMIN_DEVICE_KEYS_MAX = 10;
+const CHALLENGE_SECONDS = 120;
+
+export type DeviceKeyRow = {
+  id: string;
+  name: string;
+  created_at: string;
+  last_used_at: string | null;
+};
+
+/** A device's public key: EC P-256, SubjectPublicKeyInfo DER in base64. */
+function devicePublicKey(spkiBase64: string) {
+  try {
+    const key = createPublicKey({
+      key: Buffer.from(spkiBase64, "base64"),
+      format: "der",
+      type: "spki",
+    });
+    if (key.asymmetricKeyType === "ec" && key.asymmetricKeyDetails?.namedCurve === "prime256v1")
+      return key;
+  } catch {}
+  return null;
+}
+
+export async function listDeviceKeys(db: Database, userId: string): Promise<DeviceKeyRow[]> {
+  return db.execute<DeviceKeyRow>(sql`
+    select id, name, created_at, last_used_at from public.admin_device_keys
+    where user_id = ${userId}::uuid order by created_at`) as unknown as Promise<DeviceKeyRow[]>;
+}
+
+export async function addDeviceKey(
+  db: Database,
+  userId: string,
+  name: string,
+  publicKey: string,
+): Promise<DeviceKeyRow> {
+  if (!devicePublicKey(publicKey))
+    throw new ApiError(400, "admin_device_key_invalid", "That isn't a P-256 public key.");
+  const [count] = await db.execute<{ n: number }>(sql`
+    select count(*)::int as n from public.admin_device_keys where user_id = ${userId}::uuid`);
+  if ((count?.n ?? 0) >= ADMIN_DEVICE_KEYS_MAX)
+    throw new ApiError(
+      409,
+      "admin_device_keys_full",
+      `Up to ${ADMIN_DEVICE_KEYS_MAX} devices. Remove one under Admin → Security first.`,
+    );
+  const [row] = await db.execute<DeviceKeyRow>(sql`
+    insert into public.admin_device_keys (user_id, name, public_key)
+    values (${userId}::uuid, ${name}, ${publicKey})
+    returning id, name, created_at, last_used_at`);
+  return row!;
+}
+
+export async function removeDeviceKey(db: Database, userId: string, id: string): Promise<void> {
+  if (!uuid.test(id)) return;
+  await db.execute(sql`
+    delete from public.admin_device_keys where id = ${id}::uuid and user_id = ${userId}::uuid`);
+}
+
+/** A one-time challenge for this device's key, for this sign-in session, good for two minutes. */
+export async function deviceChallenge(
+  db: Database,
+  claims: JwtClaims,
+  keyId: string,
+): Promise<{ challenge_id: string; challenge: string }> {
+  const session = sessionOf(claims);
+  if (!session)
+    throw new ApiError(403, "admin_check_failed", "This sign-in can't take an admin check.");
+  const gone = () =>
+    new ApiError(404, "admin_device_key_not_found", "This device isn't set up for Face ID.");
+  if (!uuid.test(keyId)) throw gone();
+  await db.execute(sql`delete from public.admin_device_challenges where expires_at < now()`);
+  const challenge = randomBytes(32).toString("base64url");
+  const [row] = await db.execute<{ id: string }>(sql`
+    insert into public.admin_device_challenges (key_id, session_id, challenge, expires_at)
+    select k.id, ${session}::uuid, ${challenge}, now() + make_interval(secs => ${CHALLENGE_SECONDS})
+    from public.admin_device_keys k
+    where k.id = ${keyId}::uuid and k.user_id = ${claims.sub}::uuid
+    returning id`);
+  if (!row) throw gone();
+  return { challenge_id: row.id, challenge };
+}
+
+/** What the device signs: the challenge, bound to this purpose. */
+export const deviceSignedText = (challenge: string) => `casama-admin-check:${challenge}`;
+
+/**
+ * Checks the device's signature over the challenge with its registered key and records the
+ * check on the session that asked. A challenge works once, for its own session, until it expires.
+ */
+export async function recordDeviceCheck(
+  db: Database,
+  claims: JwtClaims,
+  challengeId: string,
+  signatureBase64: string,
+): Promise<Date> {
+  const failed = () =>
+    new ApiError(403, "admin_check_failed", "Face ID didn't confirm this device.");
+  const session = sessionOf(claims);
+  if (!session || !uuid.test(challengeId)) throw failed();
+  const row = await db.transaction(async (tx) => {
+    const [r] = await tx.execute<{ challenge: string; public_key: string; key_id: string }>(sql`
+      update public.admin_device_challenges c set used_at = now()
+      from public.admin_device_keys k
+      where c.id = ${challengeId}::uuid and c.key_id = k.id and k.user_id = ${claims.sub}::uuid
+        and c.session_id = ${session}::uuid and c.used_at is null and c.expires_at > now()
+      returning c.challenge, k.public_key, k.id as key_id`);
+    return r;
+  });
+  if (!row) throw failed();
+  const key = devicePublicKey(row.public_key);
+  let ok = false;
+  try {
+    const v = createVerify("SHA256");
+    v.update(deviceSignedText(row.challenge));
+    v.end();
+    ok = !!key && v.verify(key, Buffer.from(signatureBase64, "base64"));
+  } catch {
+    ok = false;
+  }
+  if (!ok) throw failed();
+  await db.execute(sql`
+    update public.admin_device_keys set last_used_at = now() where id = ${row.key_id}::uuid`);
+  return recordCheck(db, claims, "device", Date.now() / 1000, null);
 }

@@ -21,11 +21,15 @@ import { mailReservedNames, setMailReservedNames } from "../../services/mail-res
 import { CASAMA_VERSION } from "../../version.ts";
 import {
   ADMIN_PIN_MAX_FAILURES,
+  addDeviceKey,
   checkPin,
-  hasFreshAuthentication,
+  deviceChallenge,
+  listDeviceKeys,
   pinState,
+  recordDeviceCheck,
   recordPasskeyCheck,
-  requireSecondStep,
+  removeDeviceKey,
+  requireCheckWithoutPin as requireCheckWithoutPinIn,
   setPin,
 } from "../admin-security.ts";
 import { ApiError } from "../errors.ts";
@@ -871,26 +875,7 @@ export function registerAdminRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
 
   // --- Admin checks (D-452): a passkey or the admin PIN instead of signing in again ------------
 
-  /** Setting or removing the PIN: a fresh real sign-in or passkey check, never the PIN itself. */
-  const requireCheckWithoutPin = async (claims: JwtClaims) => {
-    if (hasFreshAuthentication(claims, true)) {
-      await requireSecondStep(db, claims, true);
-      return;
-    }
-    const session = typeof claims.session_id === "string" ? claims.session_id : "";
-    const [row] = await db.execute<{ ok: boolean }>(sql`
-      select exists (
-        select 1 from public.admin_step_ups
-        where session_id::text = ${session} and user_id = ${claims.sub}::uuid and method = 'passkey'
-          and verified_at <= now() and verified_at > now() - interval '60 seconds'
-      ) as ok`);
-    if (!row?.ok)
-      throw new ApiError(
-        403,
-        "admin_pin_needs_sign_in",
-        "Confirm with a passkey or your password to change the admin PIN.",
-      );
-  };
+  const requireCheckWithoutPin = (claims: JwtClaims) => requireCheckWithoutPinIn(db, claims);
 
   app.openapi(routes.adminPin, async (c) => {
     const claims = requireClaims(c.get("claims"));
@@ -960,5 +945,60 @@ export function registerAdminRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       "admin_pin_wrong",
       `Wrong PIN. ${result.triesLeft} ${result.triesLeft === 1 ? "try" : "tries"} left.`,
     );
+  });
+
+  // --- Device keys (D-453): the screen lock as the whole check ---------------------------------
+
+  const deviceList = async (userId: string) => ({
+    items: (await listDeviceKeys(db, userId)).map((k) => ({
+      id: k.id,
+      name: k.name,
+      created_at: iso(k.created_at),
+      last_used_at: k.last_used_at ? iso(k.last_used_at) : null,
+    })),
+  });
+
+  app.openapi(routes.adminDeviceKeys, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    await requireOwner(claims);
+    return c.json(await deviceList(claims.sub), 200);
+  });
+
+  app.openapi(routes.addAdminDeviceKey, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    await requireOwner(claims);
+    await requireCheckWithoutPin(claims);
+    const { name, public_key } = c.req.valid("json");
+    const k = await addDeviceKey(db, claims.sub, name, public_key);
+    return c.json(
+      {
+        id: k.id,
+        name: k.name,
+        created_at: iso(k.created_at),
+        last_used_at: k.last_used_at ? iso(k.last_used_at) : null,
+      },
+      200,
+    );
+  });
+
+  app.openapi(routes.removeAdminDeviceKey, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    await requireOwner(claims);
+    await removeDeviceKey(db, claims.sub, c.req.valid("param").id);
+    return c.json(await deviceList(claims.sub), 200);
+  });
+
+  app.openapi(routes.adminDeviceChallenge, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    await requireOwner(claims);
+    return c.json(await deviceChallenge(db, claims, c.req.valid("json").key_id), 200);
+  });
+
+  app.openapi(routes.adminDeviceCheck, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    await requireOwner(claims);
+    const { challenge_id, signature } = c.req.valid("json");
+    const at = await recordDeviceCheck(db, claims, challenge_id, signature);
+    return c.json({ verified_at: at.toISOString() }, 200);
   });
 }

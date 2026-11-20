@@ -1636,6 +1636,39 @@ class SupabaseBackend implements Backend {
       (await api.admin.adminPinCheck(adminPinCheckRequest: AdminPinCheckRequest(pin: pin))).data!.verifiedAt;
 
   @override
+  Future<List<AdminDeviceKey>> adminDeviceKeys() async =>
+      (await api.admin.adminDeviceKeys()).data!.items.toList();
+
+  @override
+  Future<AdminDeviceKey> addAdminDeviceKey(String name, String publicKey) async =>
+      (await api.admin.addAdminDeviceKey(
+        addAdminDeviceKeyRequest: AddAdminDeviceKeyRequest(name: name, publicKey: publicKey),
+      )).data!;
+
+  @override
+  Future<List<AdminDeviceKey>> removeAdminDeviceKey(String id) async =>
+      (await api.admin.removeAdminDeviceKey(id: id)).data!.items.toList();
+
+  @override
+  Future<({String id, String challenge})?> adminDeviceChallenge(String keyId) async {
+    try {
+      final c = (await api.admin.adminDeviceChallenge(
+        adminDeviceChallengeRequest: AdminDeviceChallengeRequest(keyId: keyId),
+      )).data!;
+      return (id: c.challengeId, challenge: c.challenge);
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) return null;
+      rethrow;
+    }
+  }
+
+  @override
+  Future<DateTime> adminDeviceCheck(String challengeId, String signature) async =>
+      (await api.admin.adminDeviceCheck(
+        adminDeviceCheckRequest: AdminDeviceCheckRequest(challengeId: challengeId, signature: signature),
+      )).data!.verifiedAt;
+
+  @override
   Future<DomainOrder> adminRetryDomainOrder(String id) async =>
       (await api.admin.adminRetryDomainOrder(id: id)).data!;
 

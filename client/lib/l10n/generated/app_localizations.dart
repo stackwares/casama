@@ -3973,13 +3973,13 @@ abstract class AppLocalizations {
   /// No description provided for @adminUnlockDevice.
   ///
   /// In en, this message translates to:
-  /// **'Unlock with Face ID or fingerprint'**
+  /// **'Use Face ID or screen lock'**
   String get adminUnlockDevice;
 
   /// No description provided for @adminDeviceReason.
   ///
   /// In en, this message translates to:
-  /// **'Unlock the admin console'**
+  /// **'Confirm it\'s you for the admin console'**
   String get adminDeviceReason;
 
   /// No description provided for @adminVerifyPasskey.
@@ -4077,6 +4077,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Too many wrong PINs: the admin PIN is turned off. Use a passkey or your password, then set a new PIN under Security.'**
   String get adminPinTurnedOff;
+
+  /// No description provided for @adminDeviceOfferTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Use Face ID next time?'**
+  String get adminDeviceOfferTitle;
+
+  /// No description provided for @adminDeviceOfferBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock the admin console and confirm changes with Face ID, a fingerprint or this phone\'s passcode. A key in this phone\'s secure chip proves it\'s you, and it never leaves the phone.'**
+  String get adminDeviceOfferBody;
+
+  /// No description provided for @adminDeviceOfferNo.
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get adminDeviceOfferNo;
+
+  /// No description provided for @adminDeviceOfferYes.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on'**
+  String get adminDeviceOfferYes;
+
+  /// No description provided for @adminDeviceSetupReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on Face ID for the admin console'**
+  String get adminDeviceSetupReason;
+
+  /// No description provided for @adminDeviceOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Face ID is on for the admin console'**
+  String get adminDeviceOn;
+
+  /// No description provided for @adminDeviceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Face ID and screen lock'**
+  String get adminDeviceTitle;
+
+  /// No description provided for @adminDeviceTurnOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Use Face ID on this phone'**
+  String get adminDeviceTurnOn;
+
+  /// No description provided for @adminDeviceHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Face ID, a fingerprint or the passcode unlocks the console and confirms changes, with no PIN or password.'**
+  String get adminDeviceHelp;
+
+  /// No description provided for @adminDeviceThisOne.
+  ///
+  /// In en, this message translates to:
+  /// **'This phone'**
+  String get adminDeviceThisOne;
+
+  /// No description provided for @adminDeviceRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get adminDeviceRemove;
+
+  /// No description provided for @adminDeviceRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed'**
+  String get adminDeviceRemoved;
 
   /// No description provided for @adminOverview.
   ///

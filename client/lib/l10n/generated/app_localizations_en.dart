@@ -2505,10 +2505,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Tip: turn on two-step sign-in in Settings. Without it, anyone who can read your email on this device can unlock the console with an emailed code.';
 
   @override
-  String get adminUnlockDevice => 'Unlock with Face ID or fingerprint';
+  String get adminUnlockDevice => 'Use Face ID or screen lock';
 
   @override
-  String get adminDeviceReason => 'Unlock the admin console';
+  String get adminDeviceReason => 'Confirm it\'s you for the admin console';
 
   @override
   String get adminVerifyPasskey => 'Verify with a passkey';
@@ -2570,6 +2570,44 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get adminPinTurnedOff =>
       'Too many wrong PINs: the admin PIN is turned off. Use a passkey or your password, then set a new PIN under Security.';
+
+  @override
+  String get adminDeviceOfferTitle => 'Use Face ID next time?';
+
+  @override
+  String get adminDeviceOfferBody =>
+      'Unlock the admin console and confirm changes with Face ID, a fingerprint or this phone\'s passcode. A key in this phone\'s secure chip proves it\'s you, and it never leaves the phone.';
+
+  @override
+  String get adminDeviceOfferNo => 'Not now';
+
+  @override
+  String get adminDeviceOfferYes => 'Turn on';
+
+  @override
+  String get adminDeviceSetupReason => 'Turn on Face ID for the admin console';
+
+  @override
+  String get adminDeviceOn => 'Face ID is on for the admin console';
+
+  @override
+  String get adminDeviceTitle => 'Face ID and screen lock';
+
+  @override
+  String get adminDeviceTurnOn => 'Use Face ID on this phone';
+
+  @override
+  String get adminDeviceHelp =>
+      'Face ID, a fingerprint or the passcode unlocks the console and confirms changes, with no PIN or password.';
+
+  @override
+  String get adminDeviceThisOne => 'This phone';
+
+  @override
+  String get adminDeviceRemove => 'Remove';
+
+  @override
+  String get adminDeviceRemoved => 'Removed';
 
   @override
   String get adminOverview => 'Overview';

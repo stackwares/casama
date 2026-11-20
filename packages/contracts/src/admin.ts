@@ -141,6 +141,44 @@ export const AdminPinCheckRequest = z
   .object({ pin: z.string().min(1).max(12) })
   .openapi("AdminPinCheckRequest");
 
+/** A device whose secure hardware key confirms the owner with the screen lock (D-453). */
+export const AdminDeviceKey = z
+  .object({
+    id: Uuid,
+    name: z.string(),
+    created_at: z.string().datetime({ offset: true }),
+    last_used_at: z.string().datetime({ offset: true }).nullable(),
+  })
+  .openapi("AdminDeviceKey");
+
+export const AdminDeviceKeyList = z
+  .object({ items: z.array(AdminDeviceKey) })
+  .openapi("AdminDeviceKeyList");
+
+export const AddAdminDeviceKeyRequest = z
+  .object({
+    name: z.string().min(1).max(80),
+    /** EC P-256 SubjectPublicKeyInfo, DER, base64. */
+    public_key: z.string().min(80).max(400),
+  })
+  .openapi("AddAdminDeviceKeyRequest");
+
+export const AdminDeviceChallengeRequest = z
+  .object({ key_id: Uuid })
+  .openapi("AdminDeviceChallengeRequest");
+
+export const AdminDeviceChallenge = z
+  .object({
+    challenge_id: Uuid,
+    /** Sign `casama-admin-check:<challenge>` (UTF-8) with the device's key, ECDSA SHA-256. */
+    challenge: z.string(),
+  })
+  .openapi("AdminDeviceChallenge");
+
+export const AdminDeviceCheckRequest = z
+  .object({ challenge_id: Uuid, signature: z.string().min(1).max(512) })
+  .openapi("AdminDeviceCheckRequest");
+
 /** A passkey or PIN check recorded on this sign-in session (D-452). */
 export const AdminCheck = z
   .object({ verified_at: z.string().datetime({ offset: true }) })
