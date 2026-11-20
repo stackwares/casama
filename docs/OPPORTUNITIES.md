@@ -47,3 +47,20 @@ Research snapshot: 2026-11-21. This is a lead list, not a claim of eligibility o
 2. Verify which technologies and deployments Casama actually uses, especially Flutter Web Wasm, and check existing credit awards before applying.
 3. Prioritize A2UI, Google Dev Library, OpenAI's developer showcase and It's All Widgets for visibility; check Cloudflare, Microsoft and AWS startup eligibility for credits; assess Codex and Claude OSS programs against public-project traction.
 4. Record each application date, account, status, expiry, restrictions and response here when action is actually taken. Never record credentials or personal details.
+
+## Additional discovery leads (2026-11-21)
+
+All leads below are **not applied**. Confirm eligibility and existing listings before submitting.
+
+| Opportunity | Route and qualification |
+| --- | --- |
+| [Show HN](https://news.ycombinator.com/showhn.html) | Maker posts a working, nontrivial project people can try and stays available to discuss it. Avoid signup barriers and solicitation of votes. |
+| [OpenAlternative](https://openalternative.co/submit) | Open-source alternative directory with AI-agent and self-hosted categories; submission requires sign-in. Verify its current criteria, project stars, license and actual product comparison. |
+| [AlternativeTo](https://alternativeto.net/faq/#add-a-new-application) | Submit a released app as a relevant alternative. Verified email required; free review backlog can be very long; paid priority does not guarantee approval. |
+| [Peerlist Launchpad](https://peerlist.io/launchpad) | Weekly developer/product launch; check [rules](https://help.peerlist.io/individual/launchpad/guidelines-faqs) and timing before scheduling. |
+| [Awesome LLM Agent Frameworks](https://github.com/kaushikb11/awesome-llm-agents) | Suggest a project through the repository's contribution instructions; verify that Casama fits its scope. |
+| [Hugging Face Spaces](https://huggingface.co/spaces) | Publish a public interactive AI demo, subject to hosting and resource constraints; featured placement is not guaranteed. |
+| [AI Agents community](https://www.reddit.com/r/AI_Agents/) and [AgentsOfAI](https://www.reddit.com/r/AgentsOfAI/) | Share in current project showcase threads where rules permit; engage with feedback. |
+| [Agentware 2026](https://dev.to/raptorsdev/agentware-2026-build-an-agent-you-can-walk-away-from-l88) | Reported deadline November 30, 2026 18:00 UTC. Check organizer rules and eligibility of existing work before committing time. |
+| [Indie Torch](https://peerlist.io/drafto/project/indie-torch) | Weekly indie launchpad; its maker reports free submission and limited slots. Verify actual availability and terms. |
+| [Produk.co](https://peerlist.io/alfangky/project/produkco) | Maker describes free weekly launches open globally, focused on Indonesian ecosystem; verify current terms. |
