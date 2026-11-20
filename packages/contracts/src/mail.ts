@@ -17,6 +17,10 @@ export const MailAddress = z
     blocked_senders: z.array(z.string()),
     /** Whether mail from a new sender notifies (at most once a day). */
     notify_new_senders: z.boolean(),
+    /** Bytes the mailbox holds: kept originals plus separately stored files. */
+    storage_used: z.number().int().optional(),
+    /** The plan's mailbox size in bytes; null when unlimited (self-hosted). */
+    storage_limit: z.number().int().nullable().optional(),
     created_at: ts,
   })
   .openapi("MailAddress");
@@ -100,3 +104,22 @@ export const BlockMailSenderRequest = z
     sender: z.string().min(1).max(300),
   })
   .openapi("BlockMailSenderRequest");
+
+/** Delete several kept mails: by id, or everything older than a date. */
+export const DeleteMailMessagesRequest = z
+  .object({
+    ids: z.array(Uuid).min(1).max(200).optional(),
+    /** Delete every kept mail that arrived or went out before this moment. */
+    before: ts.optional(),
+  })
+  .refine((b) => !!b.ids !== !!b.before, { message: "Give ids or before, not both" })
+  .openapi("DeleteMailMessagesRequest");
+
+export const DeleteMailMessagesResult = z
+  .object({
+    /** Mails deleted. */
+    deleted: z.number().int(),
+    /** Bytes freed. */
+    freed: z.number().int(),
+  })
+  .openapi("DeleteMailMessagesResult");

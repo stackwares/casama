@@ -1597,6 +1597,12 @@ class SupabaseBackend implements Backend {
       (await api.admin.adminMailAddresses()).data!.items.toList();
 
   @override
+  Future<({int sent, int? ceiling})> adminMailSending() async {
+    final r = (await api.admin.adminMailAddresses()).data!;
+    return (sent: r.sentToday ?? 0, ceiling: r.sendCeiling);
+  }
+
+  @override
   Future<AdminMailAddress> setMailAddressStatus(String id, String status) async =>
       (await api.admin.setMailAddressStatus(
         id: id,
@@ -4081,6 +4087,17 @@ class SupabaseBackend implements Backend {
   @override
   Future<MailAddress> unblockMailSender(String botId, String sender) async =>
       (await api.mail.unblockMailSender(id: botId, sender: sender)).data!;
+
+  @override
+  Future<DeleteMailMessagesResult> deleteMail(String botId, {List<String>? ids, DateTime? before}) async {
+    if (ids != null && ids.length == 1 && before == null) {
+      return (await api.mail.deleteMailMessage(id: botId, messageId: ids.single)).data!;
+    }
+    return (await api.mail.deleteMailMessages(
+      id: botId,
+      deleteMailMessagesRequest: DeleteMailMessagesRequest(ids: ids, before: before?.toUtc()),
+    )).data!;
+  }
 
   @override
   Future<Uint8List> exportWorkspaceFiles(String orgId) async => base64Decode(

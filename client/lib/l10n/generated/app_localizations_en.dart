@@ -8537,6 +8537,111 @@ class AppLocalizationsEn extends AppLocalizations {
   String get botEmailTriggerAutomatic => 'Hear automatic mail too';
 
   @override
+  String botEmailStorage(String used, String limit) {
+    return '$used of $limit';
+  }
+
+  @override
+  String botEmailStorageUsed(String used) {
+    return '$used used';
+  }
+
+  @override
+  String get botEmailStorageFull =>
+      'The mailbox is full, so new mail is refused. Delete old mail to make room.';
+
+  @override
+  String get botEmailSelect => 'Select';
+
+  @override
+  String get botEmailSelectDone => 'Done';
+
+  @override
+  String get botEmailDelete => 'Delete';
+
+  @override
+  String botEmailDeleteCount(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: 'Delete $n mails',
+      one: 'Delete 1 mail',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String botEmailDeleteTitle(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: 'Delete $n mails?',
+      one: 'Delete this mail?',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get botEmailDeleteBody =>
+      'Their text and files are gone for good. Copies already in a chat stay there.';
+
+  @override
+  String get botEmailDeleteOlder => 'Delete older mail';
+
+  @override
+  String get botEmailOlder30Days => 'Older than 30 days';
+
+  @override
+  String get botEmailOlder6Months => 'Older than 6 months';
+
+  @override
+  String get botEmailOlderYear => 'Older than a year';
+
+  @override
+  String botEmailDeleteOlderTitle(String age) {
+    return 'Delete all mail $age?';
+  }
+
+  @override
+  String botEmailDeleted(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: 'Deleted $n mails',
+      one: 'Deleted 1 mail',
+      zero: 'Nothing to delete',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String botEmailPerkAddresses(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n bot email addresses',
+      one: '1 bot email address',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get botEmailPerkWritesNew => 'Bots write to new people by email';
+
+  @override
+  String get botEmailPerkRepliesOnly => 'Bots reply to you by email';
+
+  @override
+  String adminMailSentToday(int sent, int ceiling) {
+    return 'Sent today: $sent of $ceiling';
+  }
+
+  @override
+  String adminMailSentTodayNoCeiling(int sent) {
+    return 'Sent today: $sent';
+  }
+
+  @override
   String get chatAppsAdd => 'Connect a chat app';
 
   @override

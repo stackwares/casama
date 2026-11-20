@@ -413,6 +413,8 @@ Class | Method | HTTP request | Description
 [*MailApi*](doc/MailApi.md) | [**blockMailSender**](doc/MailApi.md#blockmailsender) | **POST** /v1/bots/{id}/email/block | Refuse a sender&#39;s mail at the door
 [*MailApi*](doc/MailApi.md) | [**checkMailName**](doc/MailApi.md#checkmailname) | **GET** /v1/bots/{id}/email/availability | Whether a mail name is free, with alternatives
 [*MailApi*](doc/MailApi.md) | [**claimMailAddress**](doc/MailApi.md#claimmailaddress) | **POST** /v1/bots/{id}/email | Claim a hosted email address for a bot
+[*MailApi*](doc/MailApi.md) | [**deleteMailMessage**](doc/MailApi.md#deletemailmessage) | **DELETE** /v1/bots/{id}/email/messages/{messageId} | Delete one kept mail, its text and its files
+[*MailApi*](doc/MailApi.md) | [**deleteMailMessages**](doc/MailApi.md#deletemailmessages) | **POST** /v1/bots/{id}/email/messages/delete | Delete several kept mails, or every mail older than a date
 [*MailApi*](doc/MailApi.md) | [**downloadMailFile**](doc/MailApi.md#downloadmailfile) | **GET** /v1/bots/{id}/email/messages/{messageId}/files/{index} | A kept mail&#39;s attachment
 [*MailApi*](doc/MailApi.md) | [**getMailAddress**](doc/MailApi.md#getmailaddress) | **GET** /v1/bots/{id}/email | A bot&#39;s hosted email address
 [*MailApi*](doc/MailApi.md) | [**getMailMessage**](doc/MailApi.md#getmailmessage) | **GET** /v1/bots/{id}/email/messages/{messageId} | One kept mail with its whole text
@@ -865,6 +867,8 @@ Class | Method | HTTP request | Description
  - [CreditPack](doc/CreditPack.md)
  - [DecideJoinRequest](doc/DecideJoinRequest.md)
  - [DeleteAccountRequest](doc/DeleteAccountRequest.md)
+ - [DeleteMailMessagesRequest](doc/DeleteMailMessagesRequest.md)
+ - [DeleteMailMessagesResult](doc/DeleteMailMessagesResult.md)
  - [DeleteResult](doc/DeleteResult.md)
  - [DeletedCall](doc/DeletedCall.md)
  - [DeletedChannel](doc/DeletedChannel.md)

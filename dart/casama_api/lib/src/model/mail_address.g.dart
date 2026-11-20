@@ -23,6 +23,10 @@ abstract class _$MailAddressCWProxy {
 
   MailAddress notifyNewSenders(bool notifyNewSenders);
 
+  MailAddress storageUsed(int? storageUsed);
+
+  MailAddress storageLimit(int? storageLimit);
+
   MailAddress createdAt(DateTime createdAt);
 
   /// Creates a new instance with the provided field values.
@@ -42,6 +46,8 @@ abstract class _$MailAddressCWProxy {
     MailAddressStatusEnum status,
     List<String> blockedSenders,
     bool notifyNewSenders,
+    int? storageUsed,
+    int? storageLimit,
     DateTime createdAt,
   });
 }
@@ -80,6 +86,13 @@ class _$MailAddressCWProxyImpl implements _$MailAddressCWProxy {
       call(notifyNewSenders: notifyNewSenders);
 
   @override
+  MailAddress storageUsed(int? storageUsed) => call(storageUsed: storageUsed);
+
+  @override
+  MailAddress storageLimit(int? storageLimit) =>
+      call(storageLimit: storageLimit);
+
+  @override
   MailAddress createdAt(DateTime createdAt) => call(createdAt: createdAt);
 
   /// Creates a new instance with the provided field values.
@@ -100,6 +113,8 @@ class _$MailAddressCWProxyImpl implements _$MailAddressCWProxy {
     Object? status = const $CopyWithPlaceholder(),
     Object? blockedSenders = const $CopyWithPlaceholder(),
     Object? notifyNewSenders = const $CopyWithPlaceholder(),
+    Object? storageUsed = const $CopyWithPlaceholder(),
+    Object? storageLimit = const $CopyWithPlaceholder(),
     Object? createdAt = const $CopyWithPlaceholder(),
   }) {
     return MailAddress(
@@ -139,6 +154,14 @@ class _$MailAddressCWProxyImpl implements _$MailAddressCWProxy {
           ? _value.notifyNewSenders
           // ignore: cast_nullable_to_non_nullable
           : notifyNewSenders as bool,
+      storageUsed: storageUsed == const $CopyWithPlaceholder()
+          ? _value.storageUsed
+          // ignore: cast_nullable_to_non_nullable
+          : storageUsed as int?,
+      storageLimit: storageLimit == const $CopyWithPlaceholder()
+          ? _value.storageLimit
+          // ignore: cast_nullable_to_non_nullable
+          : storageLimit as int?,
       createdAt: createdAt == const $CopyWithPlaceholder() || createdAt == null
           ? _value.createdAt
           // ignore: cast_nullable_to_non_nullable
@@ -191,6 +214,11 @@ MailAddress _$MailAddressFromJson(Map<String, dynamic> json) => $checkedCreate(
         (v) => (v as List<dynamic>).map((e) => e as String).toList(),
       ),
       notifyNewSenders: $checkedConvert('notify_new_senders', (v) => v as bool),
+      storageUsed: $checkedConvert('storage_used', (v) => (v as num?)?.toInt()),
+      storageLimit: $checkedConvert(
+        'storage_limit',
+        (v) => (v as num?)?.toInt(),
+      ),
       createdAt: $checkedConvert(
         'created_at',
         (v) => DateTime.parse(v as String),
@@ -204,6 +232,8 @@ MailAddress _$MailAddressFromJson(Map<String, dynamic> json) => $checkedCreate(
     'localPart': 'local_part',
     'blockedSenders': 'blocked_senders',
     'notifyNewSenders': 'notify_new_senders',
+    'storageUsed': 'storage_used',
+    'storageLimit': 'storage_limit',
     'createdAt': 'created_at',
   },
 );
@@ -218,6 +248,8 @@ Map<String, dynamic> _$MailAddressToJson(MailAddress instance) =>
       'status': _$MailAddressStatusEnumEnumMap[instance.status]!,
       'blocked_senders': instance.blockedSenders,
       'notify_new_senders': instance.notifyNewSenders,
+      'storage_used': ?instance.storageUsed,
+      'storage_limit': ?instance.storageLimit,
       'created_at': instance.createdAt.toIso8601String(),
     };
 

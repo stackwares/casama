@@ -12,6 +12,7 @@ import '../../core/billing.dart';
 import '../../core/haptics.dart';
 import '../../core/number_format.dart';
 import '../../core/providers.dart';
+import '../../core/remote_config.dart';
 import '../../core/widgets.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../theme/app_colors.dart';
@@ -588,7 +589,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
                                   'max' => l10n.paywallTaglineMax,
                                   _ => null,
                                 },
-                                facts: _facts(l10n, price.plan.limits),
+                                facts: _facts(l10n, price.plan.limits, email: remoteFlag(ref, 'bot_email')),
                                 price: price,
                                 selected: t.code == tier?.code,
                                 current: currentTier == t.code && paidVia != null,
@@ -1218,14 +1219,23 @@ class _CardPrice {
   final String? perWeek;
 }
 
-/// The plan's headline numbers on one line each: bots, computer time, credits, people.
-List<String> _facts(AppLocalizations l10n, Map<String, num> limits) => [
+/// The plan's headline numbers on one line each: bots, computer time, credits, people, and bot
+/// email where this server has it ([email], BOT-EMAIL-NEXT-PLAN §5).
+@visibleForTesting
+List<String> paywallFacts(AppLocalizations l10n, Map<String, num> limits, {bool email = false}) =>
+    _facts(l10n, limits, email: email);
+
+List<String> _facts(AppLocalizations l10n, Map<String, num> limits, {bool email = false}) => [
   // No bot limit on a plan means unlimited (D-249).
   if (limits['max_bots'] case final v?) l10n.limitBots(v.toInt()) else l10n.limitBotsUnlimited,
   if (limits['computer_hours'] case final v?) l10n.paywallFactHours(v.toInt()),
   if (limits['monthly_credits_usd'] case final v?)
     l10n.limitCredits(v.humanizedCurrency(l10n.localeName, 'USD', decimalDigits: 0)),
   if (limits['seats'] case final v?) l10n.paywallPeople(v.toInt()),
+  if (email && (limits['max_mail_addresses'] ?? 0) > 0) ...[
+    l10n.botEmailPerkAddresses(limits['max_mail_addresses']!.toInt()),
+    if ((limits['mail_new_day'] ?? 0) > 0) l10n.botEmailPerkWritesNew else l10n.botEmailPerkRepliesOnly,
+  ],
 ];
 
 /// Weekly | Monthly | Yearly as one pill, with what yearly saves riding on its segment.

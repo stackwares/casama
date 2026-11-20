@@ -22,6 +22,10 @@ class AdminMailAddresses200Response {
   AdminMailAddresses200Response({
 
     required  this.items,
+
+     this.sentToday,
+
+     this.sendCeiling,
   });
 
   @JsonKey(
@@ -36,15 +40,43 @@ class AdminMailAddresses200Response {
 
 
 
+  @JsonKey(
+    
+    name: r'sent_today',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final int? sentToday;
+
+
+
+  @JsonKey(
+    
+    name: r'send_ceiling',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final int? sendCeiling;
+
+
+
 
 
     @override
     bool operator ==(Object other) => identical(this, other) || other is AdminMailAddresses200Response &&
-      other.items == items;
+      other.items == items &&
+      other.sentToday == sentToday &&
+      other.sendCeiling == sendCeiling;
 
     @override
     int get hashCode =>
-        items.hashCode;
+        items.hashCode +
+        sentToday.hashCode +
+        (sendCeiling == null ? 0 : sendCeiling.hashCode);
 
   factory AdminMailAddresses200Response.fromJson(Map<String, dynamic> json) => _$AdminMailAddresses200ResponseFromJson(json);
 

@@ -17,6 +17,7 @@ import {
 import { FsObjectStore } from "@casama/sandbox";
 import { sql } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { deleteKeptMail } from "../src/api/routes/mail.ts";
 import { type Harness, j, startHarness } from "./helpers.ts";
 
 let h: Harness;
@@ -1971,5 +1972,264 @@ describe("audit hardening", () => {
       json: { name: "oliver" },
     });
     expect(res.status).toBe(201);
+  });
+});
+
+describe("storage, deleting and the sending ceiling (BOT-EMAIL-NEXT-PLAN)", () => {
+  const claim = async (email: string, name: string) => {
+    const { u, orgId, botId } = await setup(email, name);
+    const claimed = await j(
+      await h.request(`/v1/bots/${botId}/email`, {
+        method: "POST",
+        token: u.token,
+        json: { name: name.toLowerCase() },
+      }),
+    );
+    const [a] = await h.handle.db.execute<{ id: string }>(
+      sql`select id from public.mail_addresses where local_part = ${name.toLowerCase()}`,
+    );
+    return { u, orgId, botId, claimed, addressId: a!.id };
+  };
+
+  it("counts the original and the files, and shows it on the address", async () => {
+    const { u, orgId, botId, addressId } = await claim("store@example.com", "Store");
+    await hook("store@mail.test", mimeFile({ from: "x@y.test", to: "store@mail.test" }));
+    const [r] = await h.handle.db.execute<{ size: number; raw_size: number }>(sql`
+      select size, raw_size from public.mail_messages where address_id = ${addressId}::uuid and direction = 'in'`);
+    expect(r!.raw_size).toBeGreaterThan(0);
+    // The attachment ("hello", 5 bytes) is stored on its own too.
+    expect(r!.size).toBe(r!.raw_size + 5);
+    // Self-hosted: no mailbox limit.
+    const addr = await j(await h.request(`/v1/bots/${botId}/email`, { token: u.token }));
+    expect(addr.storage_used).toBeGreaterThanOrEqual(r!.size);
+    expect(addr.storage_limit).toBeNull();
+    await h.handle.db.execute(sql`
+      insert into public.entitlements (org_id, plan_code, limits)
+      values (${orgId}::uuid, 'plus', '{"max_mail_addresses": 2, "mail_storage_mb": 500}'::jsonb)`);
+    const plus = await j(await h.request(`/v1/bots/${botId}/email`, { token: u.token }));
+    expect(plus.storage_limit).toBe(500 * 1024 * 1024);
+  });
+
+  it("expires originals after 30 days, keeping the text and the files", async () => {
+    const { addressId } = await claim("aged@example.com", "Aged");
+    await hook("aged@mail.test", mimeFile({ from: "x@y.test", to: "aged@mail.test" }));
+    const [r] = await h.handle.db.execute<{ id: string; raw_key: string; size: number }>(sql`
+      select id, raw_key, size from public.mail_messages where address_id = ${addressId}::uuid and direction = 'in'`);
+    await h.handle.db.execute(
+      sql`update public.mail_messages set created_at = now() - interval '31 days', expires_at = null where id = ${r!.id}::uuid`,
+    );
+    await purgeExpiredMail(h.handle.db, h.deps.objects);
+    const [after] = await h.handle.db.execute<{
+      raw_key: string | null;
+      size: number;
+      files: unknown[];
+    }>(sql`
+      select raw_key, size, files from public.mail_messages where id = ${r!.id}::uuid`);
+    expect(after).toMatchObject({ raw_key: null, size: 5 });
+    expect(after!.files).toHaveLength(1);
+    expect(
+      await h.deps.objects!.get(r!.raw_key).then(
+        () => true,
+        () => false,
+      ),
+    ).toBe(false);
+  });
+
+  it("deletes mail by id and by age; only people who manage the bot", async () => {
+    const { u, botId, addressId } = await claim("deleter@example.com", "Deleter");
+    for (const n of [1, 2, 3])
+      await hook(
+        "deleter@mail.test",
+        mime({
+          from: "deleter@example.com",
+          to: "deleter@mail.test",
+          subject: `s${n}`,
+          messageId: `<d${n}@example.com>`,
+        }),
+      );
+    // Older than the reply-loop window, so nothing is held back.
+    await h.handle.db.execute(sql`
+      update public.mail_messages set created_at = now() - interval '2 hours' where address_id = ${addressId}::uuid`);
+    const list = await j(await h.request(`/v1/bots/${botId}/email/messages`, { token: u.token }));
+    expect(list.items).toHaveLength(3);
+    const stranger = await h.user("not-a-member@example.com");
+    expect(
+      (
+        await h.request(`/v1/bots/${botId}/email/messages/${list.items[0].id}`, {
+          method: "DELETE",
+          token: stranger.token,
+        })
+      ).status,
+    ).toBeGreaterThanOrEqual(403);
+    const one = await j(
+      await h.request(`/v1/bots/${botId}/email/messages/${list.items[0].id}`, {
+        method: "DELETE",
+        token: u.token,
+      }),
+    );
+    expect(one.deleted).toBe(1);
+    expect(
+      (
+        await h.request(`/v1/bots/${botId}/email/messages/${list.items[0].id}`, {
+          method: "DELETE",
+          token: u.token,
+        })
+      ).status,
+    ).toBe(404);
+    const older = await j(
+      await h.request(`/v1/bots/${botId}/email/messages/delete`, {
+        method: "POST",
+        token: u.token,
+        json: { before: new Date().toISOString() },
+      }),
+    );
+    expect(older.deleted).toBe(2);
+    const [left] = await h.handle.db.execute<{ n: number }>(sql`
+      select count(*)::int as n from public.mail_messages where address_id = ${addressId}::uuid`);
+    expect(left!.n).toBe(0);
+    expect(
+      (
+        await h.request(`/v1/bots/${botId}/email/messages/delete`, {
+          method: "POST",
+          token: u.token,
+          json: {},
+        })
+      ).status,
+    ).toBe(400);
+  });
+
+  it("deleting sent mail can't reset the daily cap", async () => {
+    const { orgId, botId, claimed } = await claim("capkeep@acme.org", "Capkeep");
+    await h.handle.db.execute(sql`
+      insert into public.entitlements (org_id, plan_code, limits)
+      values (${orgId}::uuid, 'free', '{"max_mail_addresses": 1, "mail_sent_day": 2, "mail_new_day": 0, "mail_storage_mb": 100}'::jsonb)`);
+    const ch = (await loadChannel(h.handle.db, claimed.channel_id))!;
+    const send = () =>
+      sendThrough(
+        h.handle.db,
+        ch,
+        { to: "capkeep@acme.org", subject: "hi" },
+        "x",
+        fetch,
+        undefined,
+        undefined,
+        undefined,
+        h.deps.hostedMail!.sender,
+      );
+    // The welcome mail was the first; one more fills the cap.
+    expect(await send()).toBeNull();
+    expect(await send()).toContain("limit");
+    const u = (
+      await h.handle.db.execute<{ id: string }>(sql`
+      select id from public.mail_messages m where m.direction = 'out' and m.address_id =
+        (select id from public.mail_addresses where local_part = 'capkeep')`)
+    ).map((r) => r.id);
+    const res = await deleteKeptMail(
+      h.handle.db,
+      h.deps.objects,
+      (
+        await h.handle.db.execute<{ id: string }>(
+          sql`select id from public.mail_addresses where local_part = 'capkeep'`,
+        )
+      )[0]!.id,
+      { ids: u },
+    );
+    expect(res.deleted).toBe(u.length);
+    // Held as empty rows: still counted, gone from the inbox.
+    expect(await send()).toContain("limit");
+    const [held] = await h.handle.db.execute<{ n: number; text: number }>(sql`
+      select count(*)::int as n, count(*) filter (where subject <> '')::int as text
+      from public.mail_messages where id = any(${`{${u.join(",")}}`}::uuid[]) and deleted_at is not null`);
+    expect(held).toMatchObject({ n: u.length, text: 0 });
+    void botId;
+  });
+
+  it("stops every workspace at the daily ceiling and tells the instance owner", async () => {
+    const { claimed } = await claim("ceiling@acme.org", "Ceiling");
+    const ch = (await loadChannel(h.handle.db, claimed.channel_id))!;
+    const [all] = await h.handle.db.execute<{ n: number }>(sql`
+      select count(*)::int as n from public.mail_messages where direction = 'out' and created_at > now() - interval '1 day'`);
+    const told: Array<[number, number]> = [];
+    const sender = {
+      name: "cloudflare" as const,
+      customMessageId: false,
+      dailyCeiling: all!.n + 1,
+      send: async () => ({ messageId: `<c-${Math.random()}@mail.test>` }),
+      onCeiling: async (_db: unknown, sent: number, max: number) => {
+        told.push([sent, max]);
+      },
+    };
+    const send = () =>
+      sendThrough(
+        h.handle.db,
+        ch,
+        { to: "ceiling@acme.org", subject: "hi" },
+        "x",
+        fetch,
+        undefined,
+        undefined,
+        undefined,
+        sender,
+      );
+    expect(await send()).toBeNull();
+    expect(await send()).toContain("Mail is busy right now");
+    expect(told.length).toBe(2);
+    expect(told[1]![0]).toBe(told[1]![1]);
+  });
+
+  it("warns at 90% and points a full mailbox to deleting", async () => {
+    const { u, orgId, addressId } = await claim("nearly@example.com", "Nearly");
+    await h.handle.db.execute(sql`
+      insert into public.entitlements (org_id, plan_code, limits)
+      values (${orgId}::uuid, 'free', '{"max_mail_addresses": 1, "mail_sent_day": 20, "mail_new_day": 0, "mail_storage_mb": 1}'::jsonb)`);
+    await h.handle.db.execute(sql`
+      insert into public.mail_messages (address_id, org_id, direction, from_addr, verdict, size)
+      values (${addressId}::uuid, ${orgId}::uuid, 'in', 'old@example.com', 'allowed', ${Math.floor(0.95 * 1024 * 1024)})`);
+    expect(
+      (
+        await hook(
+          "nearly@mail.test",
+          mime({
+            from: "nearly@example.com",
+            to: "nearly@mail.test",
+            messageId: "<n1@example.com>",
+          }),
+        )
+      ).status,
+    ).toBe(200);
+    const almost = await h.handle.db.execute<{ id: string }>(sql`
+      select id from public.notifications where user_id = ${u.id}::uuid and kind = 'mail_mailbox_almost_full'`);
+    expect(almost).toHaveLength(1);
+    await h.handle.db.execute(sql`
+      update public.mail_messages set size = 1024 * 1024 where address_id = ${addressId}::uuid and from_addr = 'old@example.com'`);
+    expect(
+      (
+        await hook(
+          "nearly@mail.test",
+          mime({
+            from: "nearly@example.com",
+            to: "nearly@mail.test",
+            messageId: "<n2@example.com>",
+          }),
+        )
+      ).status,
+    ).toBe(413);
+    const [full] = await h.handle.db.execute<{ payload: { body: string; link: string } }>(sql`
+      select payload from public.notifications where user_id = ${u.id}::uuid and kind = 'mail_mailbox_full'`);
+    expect(full!.payload.body).toContain("Delete old mail");
+    expect(full!.payload.link).toContain("/email");
+  });
+
+  it("tells a bot without an address that it may offer one, while there is room", async () => {
+    const { orgId, botId } = await setup("offer@example.com", "Offer");
+    await h.handle.db.execute(sql`
+      insert into public.entitlements (org_id, plan_code, limits)
+      values (${orgId}::uuid, 'free', '{"max_mail_addresses": 1}'::jsonb)`);
+    expect(await mailHint(h.handle.db, botId)).toBeNull();
+    expect(await mailHint(h.handle.db, botId, { offer: true })).toContain("mail.claim");
+    await h.handle.db.execute(sql`
+      insert into public.entitlements (org_id, plan_code, limits)
+      values (${orgId}::uuid, 'free', '{"max_mail_addresses": 0}'::jsonb)`);
+    expect(await mailHint(h.handle.db, botId, { offer: true })).toBeNull();
   });
 });

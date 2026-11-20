@@ -3,6 +3,8 @@ import { jsonBody, jsonResponse, problemResponses, Uuid } from "../common.ts";
 import {
   BlockMailSenderRequest,
   ClaimMailAddressRequest,
+  DeleteMailMessagesRequest,
+  DeleteMailMessagesResult,
   MailAddress,
   MailMessageDetail,
   MailMessageList,
@@ -182,6 +184,39 @@ export const downloadMailFile = createRoute({
       content: { "application/octet-stream": { schema: z.string().openapi({ format: "binary" }) } },
     },
     401: e401,
+    404: e404,
+  },
+});
+
+export const deleteMailMessage = createRoute({
+  operationId: "deleteMailMessage",
+  method: "delete",
+  path: "/v1/bots/{id}/email/messages/{messageId}",
+  tags,
+  security,
+  summary: "Delete one kept mail, its text and its files",
+  request: { params: botParam.extend({ messageId: Uuid }) },
+  responses: {
+    200: jsonResponse("Deleted", DeleteMailMessagesResult),
+    401: e401,
+    403: e403,
+    404: e404,
+  },
+});
+
+export const deleteMailMessages = createRoute({
+  operationId: "deleteMailMessages",
+  method: "post",
+  path: "/v1/bots/{id}/email/messages/delete",
+  tags,
+  security,
+  summary: "Delete several kept mails, or every mail older than a date",
+  request: { params: botParam, body: jsonBody(DeleteMailMessagesRequest) },
+  responses: {
+    200: jsonResponse("Deleted", DeleteMailMessagesResult),
+    400: e400,
+    401: e401,
+    403: e403,
     404: e404,
   },
 });

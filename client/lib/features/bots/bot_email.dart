@@ -486,6 +486,13 @@ class _TryCard extends StatelessWidget {
 
 /// One optional row in an empty chat (BOT-EMAIL-PLAN §4.5): offer the bot an address until it
 /// has one or the person dismisses it.
+/// Whether the empty-chat offer is due (BOT-EMAIL-NEXT-PLAN §5): once the bot is a day old or the
+/// person has had three chats with it, so it doesn't crowd a brand-new bot's first chat.
+bool emailOfferDue(DateTime? botCreatedAt, int? chats, {DateTime? now}) {
+  final age = botCreatedAt == null ? Duration.zero : (now ?? DateTime.now()).difference(botCreatedAt);
+  return age >= const Duration(days: 1) || (chats ?? 0) >= 3;
+}
+
 class EmailOfferTile extends ConsumerStatefulWidget {
   const EmailOfferTile({super.key, required this.botId, required this.botName});
   final String botId;
@@ -522,6 +529,12 @@ class _EmailOfferTileState extends ConsumerState<EmailOfferTile> {
     final l10n = context.l10n;
     final address = ref.watch(mailAddressProvider(widget.botId));
     if (address.value != null || address.isLoading) return const SizedBox.shrink();
+    if (!emailOfferDue(
+      ref.watch(botProvider(widget.botId))?.createdAt,
+      ref.watch(conversationsProvider(widget.botId)).value?.length,
+    )) {
+      return const SizedBox.shrink();
+    }
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpace.md),
       child: AppCard(

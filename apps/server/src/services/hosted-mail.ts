@@ -1,5 +1,7 @@
 import { CloudflareMailSender, type HostedMailSender, ResendMailSender } from "@casama/agent";
+import { sql } from "drizzle-orm";
 import type { Env } from "../env.ts";
+import { noticeInstanceOwners } from "../sites/domains.ts";
 
 export interface HostedMail {
   /** The domain bot addresses live on (`ada@<domain>`). */
@@ -25,6 +27,8 @@ export function hostedMailFromEnv(
     | "MAIL_RESEND_API_KEY"
     | "MAIL_RESEND_API_URL"
     | "MAIL_SEND_PAUSED"
+    | "MAIL_SEND_DAILY_MAX"
+    | "INSTANCE_ADMIN_EMAILS"
   >,
 ): HostedMail | undefined {
   if (!env.MAIL_DOMAIN) return undefined;
@@ -44,7 +48,50 @@ export function hostedMailFromEnv(
           })
         : undefined;
   if (!sender) return undefined;
-  return { domain: env.MAIL_DOMAIN, sender, sendPaused: env.MAIL_SEND_PAUSED };
+  const ceiling = env.MAIL_SEND_DAILY_MAX ?? (sender.name === "cloudflare" ? 900 : 0);
+  return {
+    domain: env.MAIL_DOMAIN,
+    sender: withCeiling(sender, ceiling, env.INSTANCE_ADMIN_EMAILS),
+    sendPaused: env.MAIL_SEND_PAUSED,
+  };
+}
+
+/**
+ * The sender with the day's ceiling across every workspace (BOT-EMAIL-NEXT-PLAN §4), and the
+ * instance owner told once a day at 80% and at 100%.
+ */
+function withCeiling(
+  inner: HostedMailSender,
+  ceiling: number,
+  adminEmails: string | undefined,
+): HostedMailSender {
+  if (ceiling <= 0) return inner;
+  return {
+    name: inner.name,
+    customMessageId: inner.customMessageId,
+    dailyCeiling: ceiling,
+    send: (msg, f) => inner.send(msg, f),
+    async onCeiling(db, sent, max) {
+      const level = sent >= max ? "full" : "high";
+      const [told] = await db.execute<{ id: string }>(sql`
+        select id from public.notifications
+        where kind = 'mail_send_ceiling' and payload ->> 'level' = ${level}
+          and created_at > now() - interval '1 day' limit 1`);
+      if (told) return;
+      await noticeInstanceOwners(db, adminEmails, "mail_send_ceiling", {
+        title:
+          level === "full"
+            ? `Bot mail stopped for today: ${max} sent`
+            : `Bot mail is at ${Math.round((sent / max) * 100)}% of today's ${max}`,
+        body:
+          level === "full"
+            ? "Every workspace's sends wait until the oldest of today's mail is a day old. Raise MAIL_SEND_DAILY_MAX once Cloudflare raises the allowance."
+            : "Sends stop at the daily ceiling. Ask Cloudflare for a higher allowance before it's reached.",
+        link: "/admin?tab=mail",
+        level,
+      });
+    },
+  };
 }
 
 /**
@@ -57,6 +104,7 @@ export function workerMailSender(mail: HostedMail | undefined): HostedMailSender
   return {
     name: mail.sender.name,
     customMessageId: mail.sender.customMessageId,
+    dailyCeiling: mail.sender.dailyCeiling,
     send: async () => {
       throw new Error("Hosted mail sending is paused on this server");
     },

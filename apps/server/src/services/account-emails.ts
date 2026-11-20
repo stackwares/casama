@@ -644,7 +644,7 @@ function baseContent(
             "Routines: ask a bot to do something every morning, and it will.",
             "Computers: a bot can use its own computer to browse, fill in forms and make files, and you can watch.",
             "Voice: call your bot and talk it through.",
-            "Email: give a bot its own address, and forward it anything — bills, bookings, newsletters.",
+            "Email: ask your bot to get itself an email address, then forward it anything — bills, bookings, newsletters.",
           ],
           button: { label: "Open Casama", url: home },
         },

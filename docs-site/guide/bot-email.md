@@ -72,7 +72,35 @@ A bot can sign up for things with its own address and read the verification code
 to, approve the sign-up, and it calls out when the code arrives. Never use a bot's address as the
 recovery address for a bank, a domain registrar or an admin account.
 
+## Storage and deleting mail
+
+The Mail screen shows how full the mailbox is, such as **312 MB of 500 MB**. A mail counts with
+its original and its attachments. Thirty days after a mail arrives, its original copy is deleted;
+the text and attachments stay, and the space comes back.
+
+To make room, delete mail yourself:
+
+- **One mail:** open it and tap **Delete**.
+- **Several, or whole threads:** **⋯ → Select**, pick them (or long-press a thread), then
+  **Delete**.
+- **Old mail:** **⋯ → Delete older mail**, then older than 30 days, 6 months or a year.
+
+Deleted mail is gone for good. Files the bot already put into a chat stay in that chat. Bots
+can't delete mail. Deleting doesn't reset the daily sending limit.
+
+You get a notice when the mailbox is 90% full. When it's full, new mail is refused until you
+delete some or upgrade.
+
 ## Limits
 
-See [Limits](/guide/limits) for addresses per workspace, daily sends and mailbox sizes on each
-plan. Mail-started runs spend the owner's credits like any run; sending itself isn't charged.
+| | Free | Plus | Pro | Max |
+| --- | --- | --- | --- | --- |
+| Addresses per workspace | 1 | 2 | 5 | 15 |
+| Mail a day | 20 | 50 | 150 | 300 |
+| Mail to new people a day | none | 10 | 30 | 100 |
+| Mailbox per address | 100 MB | 500 MB | 1 GB | 2 GB |
+
+See [Limits](/guide/limits) for the rest. Mail-started runs spend the owner's credits like any
+run; sending itself isn't charged. Casama Cloud also caps how much mail all workspaces send
+together in a day; when that's reached, a send fails with "Mail is busy right now" and works
+again a few hours later.

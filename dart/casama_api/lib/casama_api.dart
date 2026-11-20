@@ -301,6 +301,8 @@ export 'package:casama_api/src/model/credit_entry.dart';
 export 'package:casama_api/src/model/credit_pack.dart';
 export 'package:casama_api/src/model/decide_join_request.dart';
 export 'package:casama_api/src/model/delete_account_request.dart';
+export 'package:casama_api/src/model/delete_mail_messages_request.dart';
+export 'package:casama_api/src/model/delete_mail_messages_result.dart';
 export 'package:casama_api/src/model/delete_result.dart';
 export 'package:casama_api/src/model/deleted_call.dart';
 export 'package:casama_api/src/model/deleted_channel.dart';

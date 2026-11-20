@@ -40,6 +40,7 @@ same commit. Shipping details (deploys, app builds) move fast, so check them bef
 
 | Plan | Decisions | What's left |
 |---|---|---|
+| [BOT-EMAIL-NEXT-PLAN](BOT-EMAIL-NEXT-PLAN.md) | D-451 | Built 2026-11-20 on the recommendations: server, app and docs. Left: deploy, the Cloudflare limit request, an app build with the email screens |
 | [ADMIN-SECURITY-PLAN](ADMIN-SECURITY-PLAN.md) | D-448, D-450, D-452 | Server, docs and web app (build 60) live 2026-11-20, with passkey and Face ID unlock (D-450); passkey-or-PIN checks (D-452) built, waiting on a server, docs and web app deploy; store and desktop builds pending |
 | [LIMIT-RESETS-PLAN](LIMIT-RESETS-PLAN.md) | D-443 | Server + docs live 2026-11-20 (6d11b195); switched on, test grant on Oliver's space (expires 2026-12-04); app builds with Use Reset pending |
 | [APP-ART-PLAN](APP-ART-PLAN.md) | D-440 | Web app (51), server and gallery live 2026-11-20; store builds and a low-end Android startup check |

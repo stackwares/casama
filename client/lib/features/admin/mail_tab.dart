@@ -13,6 +13,11 @@ final _adminMailProvider = FutureProvider.autoDispose<List<AdminMailAddress>>(
   (r) => r.watch(backendProvider).adminMailAddresses(),
 );
 
+/// Mails every workspace sent today and the day's ceiling (BOT-EMAIL-NEXT-PLAN §4).
+final _adminMailSendingProvider = FutureProvider.autoDispose<({int sent, int? ceiling})>(
+  (r) => r.watch(backendProvider).adminMailSending(),
+);
+
 final _adminMailReservedProvider = FutureProvider.autoDispose<List<String>>(
   (r) => r.watch(backendProvider).adminMailReservedNames(),
 );
@@ -83,9 +88,13 @@ class AdminMailTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final reserved = ref.watch(_adminMailReservedProvider).value ?? const [];
+    final sending = ref.watch(_adminMailSendingProvider).value;
     return AsyncView(
       value: ref.watch(_adminMailProvider),
-      onRetry: () => ref.invalidate(_adminMailProvider),
+      onRetry: () {
+        ref.invalidate(_adminMailProvider);
+        ref.invalidate(_adminMailSendingProvider);
+      },
       data: (items) => ListView(
         padding: const EdgeInsets.symmetric(vertical: 8),
         children: [
@@ -93,6 +102,17 @@ class AdminMailTab extends ConsumerWidget {
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
             child: GroupedCard(
               children: [
+                if (sending != null)
+                  GroupedTile(
+                    key: const Key('mailSentToday'),
+                    icon: LucideIcons.send,
+                    iconColor: sending.ceiling != null && sending.sent >= sending.ceiling! * 0.8
+                        ? Theme.of(context).colorScheme.error
+                        : null,
+                    title: sending.ceiling != null
+                        ? l10n.adminMailSentToday(sending.sent, sending.ceiling!)
+                        : l10n.adminMailSentTodayNoCeiling(sending.sent),
+                  ),
                 GroupedTile(
                   key: const Key('mailReserved'),
                   icon: LucideIcons.shieldAlert,

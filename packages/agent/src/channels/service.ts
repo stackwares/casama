@@ -49,6 +49,7 @@ import {
   type HostedMailSender,
   hostedFromAddress,
   isHostedEmail,
+  MAIL_BUSY_MESSAGE,
 } from "./hosted-mail.ts";
 
 export interface ChannelRow {
@@ -138,8 +139,28 @@ export async function purgeExpiredMail(
     }
     if (rows.length < batch) break;
   }
+  // Originals go 30 days after the mail arrived (BOT-EMAIL-NEXT-PLAN §3.2); the sealed text and
+  // the files stay, and the mailbox gets the space back.
+  for (let rounds = 0; rounds < 10; rounds++) {
+    const raws = await db.execute<{ id: string; raw_key: string }>(sql`
+      select id, raw_key from public.mail_messages
+      where raw_key is not null and created_at < now() - interval '${sql.raw(String(MAIL_ORIGINAL_DAYS))} days'
+      limit ${batch}`);
+    if (!raws.length) break;
+    for (const r of raws) {
+      if (objects) await objects.delete(r.raw_key).catch(() => {});
+      await db.execute(sql`
+        update public.mail_messages
+        set raw_key = null, size = greatest(size - raw_size, 0), raw_size = 0
+        where id = ${r.id}::uuid`);
+    }
+    if (raws.length < batch) break;
+  }
   return gone;
 }
+
+/** Days a kept mail's original (.eml) stays before the purge deletes it (BOT-EMAIL-NEXT-PLAN §3.2). */
+export const MAIL_ORIGINAL_DAYS = 30;
 
 /** Routine message filters (D-134): channel, sender, subject and text, all optional; words match case-insensitively. */
 export interface MessageTrigger {
@@ -633,6 +654,21 @@ async function sendHostedMail(
   // Atomically verify status, suppressions, daily caps and the reply-loop guard, then insert a
   // placeholder mail_messages row under an org-scoped advisory lock so parallel runs can't
   // overshoot any cap. If the actual send fails, the reserved row is removed.
+  // A cap that stops a send is counted by kind (BOT-EMAIL-NEXT-PLAN §4), then the send fails.
+  const capHit = (kind: string, message: string): never => {
+    track(db, {
+      event: "limit_reached",
+      userId: c.created_by,
+      orgId: c.org_id,
+      properties: { kind, surface: "mail" },
+    });
+    throw new Error(message);
+  };
+  const ceiling =
+    typeof o.sender.dailyCeiling === "number" && o.sender.dailyCeiling > 0
+      ? o.sender.dailyCeiling
+      : null;
+  let sentToday = 0;
   const reserved = await db.transaction(async (tx) => {
     await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${`mail_send:${c.org_id}`}))`);
     const [a] = await tx.execute<{ id: string; local_part: string; status: string }>(sql`
@@ -654,26 +690,37 @@ async function sendHostedMail(
     const sentDay = ent?.limits?.mail_sent_day;
     const newDay = ent?.limits?.mail_new_day;
     if (!isSelfhost) {
-      if (typeof sentDay !== "number" || sentDay <= 0)
-        throw new Error("Today's sending limit is used up. Try tomorrow.");
+      const sentUp = "Today's sending limit is used up. Try tomorrow.";
+      if (typeof sentDay !== "number" || sentDay <= 0) capHit("mail_sent_day", sentUp);
       const [orgCount] = await tx.execute<{ n: number }>(sql`
         select count(*)::int as n from public.mail_messages m join public.mail_addresses x on x.id = m.address_id
         where x.org_id = ${c.org_id}::uuid and m.direction = 'out' and m.created_at > now() - interval '1 day'`);
-      if ((orgCount?.n ?? 0) >= sentDay)
-        throw new Error("Today's sending limit is used up. Try tomorrow.");
+      if ((orgCount?.n ?? 0) >= (sentDay as number)) capHit("mail_sent_day", sentUp);
       const [addrCount] = await tx.execute<{ n: number }>(sql`
         select count(*)::int as n from public.mail_messages
         where address_id = ${a.id}::uuid and direction = 'out' and created_at > now() - interval '1 day'`);
-      if ((addrCount?.n ?? 0) >= sentDay)
-        throw new Error("This address sent its daily limit. Try tomorrow.");
+      if ((addrCount?.n ?? 0) >= (sentDay as number))
+        capHit("mail_sent_day", "This address sent its daily limit. Try tomorrow.");
       if (toNew) {
-        if (typeof newDay !== "number" || newDay <= 0)
-          throw new Error("Today's limit for mail to new people is used up. Try tomorrow.");
+        const newUp = "Today's limit for mail to new people is used up. Try tomorrow.";
+        if (typeof newDay !== "number" || newDay <= 0) capHit("mail_new_day", newUp);
         const [newCount] = await tx.execute<{ n: number }>(sql`
           select count(*)::int as n from public.mail_messages m join public.mail_addresses x on x.id = m.address_id
           where x.org_id = ${c.org_id}::uuid and m.direction = 'out' and m.to_new and m.created_at > now() - interval '1 day'`);
-        if ((newCount?.n ?? 0) >= newDay)
-          throw new Error("Today's limit for mail to new people is used up. Try tomorrow.");
+        if ((newCount?.n ?? 0) >= (newDay as number)) capHit("mail_new_day", newUp);
+      }
+    }
+    // The ceiling across every workspace (BOT-EMAIL-NEXT-PLAN §4), under one more lock, always
+    // taken after the workspace's so two sends can't wait on each other.
+    if (ceiling) {
+      await tx.execute(sql`select pg_advisory_xact_lock(hashtext('mail_send:all'))`);
+      const [all] = await tx.execute<{ n: number }>(sql`
+        select count(*)::int as n from public.mail_messages
+        where direction = 'out' and created_at > now() - interval '1 day'`);
+      sentToday = all?.n ?? 0;
+      if (sentToday >= ceiling) {
+        await Promise.resolve(o.sender.onCeiling?.(db, sentToday, ceiling)).catch(() => {});
+        capHit("mail_send_ceiling", MAIL_BUSY_MESSAGE);
       }
     }
     if (threadKey) {
@@ -760,6 +807,8 @@ async function sendHostedMail(
           message_id = coalesce(message_id, ${providerId.slice(0, 500)})
       where id = ${reserved.rowId}::uuid`);
   track(db, { event: "mail_sent", userId: c.created_by, orgId: c.org_id });
+  if (ceiling && sentToday + 1 >= ceiling * 0.8)
+    await Promise.resolve(o.sender.onCeiling?.(db, sentToday + 1, ceiling)).catch(() => {});
   // Every sent mail is counted with its real cost, never billed (BOT-EMAIL-PLAN §10).
   await db.execute(sql`
     insert into public.usage_ledger (org_id, bot_id, kind, quantity, cost_usd, billable, meta)
@@ -1077,12 +1126,17 @@ export async function chatAppHint(db: Database, conversationId: string): Promise
  * One note for the bot's context on every run while it has a hosted address (BOT-EMAIL-PLAN
  * Phase 4): what the address is, what mail does, and how sign-ups work.
  */
-export async function mailHint(db: Database, botId: string): Promise<string | null> {
+export async function mailHint(
+  db: Database,
+  botId: string,
+  /** `offer`: this server has hosted mail, so a bot without an address may offer to claim one. */
+  o: { offer?: boolean } = {},
+): Promise<string | null> {
   const [a] = await db.execute<{ address: string; status: string; auto: boolean }>(sql`
     select c.config ->> 'address' as address, m.status, m.auto_paused_at is not null as auto
     from public.mail_addresses m join public.channels c on c.id = m.channel_id
     where m.bot_id = ${botId}::uuid and m.status in ('active', 'paused')`);
-  if (!a?.address) return null;
+  if (!a?.address) return o.offer ? mailOfferHint(db, botId) : null;
   const paused =
     a.status !== "paused"
       ? ""
@@ -1095,6 +1149,32 @@ export async function mailHint(db: Database, botId: string): Promise<string | nu
     `Strangers' mail is kept in your inbox (read it with mail.search and mail.read) but starts nothing by itself. ` +
     `When the person asks you to sign up for a service, use this address, read the verification code with mail.wait, ` +
     `and say when you're in. Never use it as the recovery address for a bank, a domain registrar, or an admin account.`
+  );
+}
+
+/**
+ * For a bot without an address whose workspace still has room for one (BOT-EMAIL-NEXT-PLAN §5):
+ * it may offer, once, when mail would solve what the person asked. The claim still asks.
+ */
+async function mailOfferHint(db: Database, botId: string): Promise<string | null> {
+  const [r] = await db.execute<{ plan_code: string | null; max: unknown; live: number }>(sql`
+    select e.plan_code, e.limits -> 'max_mail_addresses' as max,
+           (select count(*)::int from public.mail_addresses x
+             where x.org_id = b.org_id and x.status in ('active', 'paused')) as live
+    from public.bots b
+    left join lateral (
+      select plan_code, limits from public.entitlements where org_id = b.org_id
+      order by created_at desc limit 1
+    ) e on true
+    where b.id = ${botId}::uuid and b.archived_at is null`);
+  if (!r) return null;
+  const max = Number(r.max);
+  const room = r.plan_code === "selfhost" || (Number.isFinite(max) && (r.live ?? 0) < max);
+  if (!room) return null;
+  return (
+    "You can have your own email address. When the person asks for something mail would solve " +
+    "(forwarding you things, keeping receipts, signing up for a service, writing to someone), " +
+    "offer once in this chat to claim one with mail.claim. Don't bring it up otherwise."
   );
 }
 

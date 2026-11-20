@@ -390,6 +390,9 @@ No new machinery, mostly instructions:
 
 ## 8. Plans and limits
 
+The numbers below were changed by D-451 (`docs/BOT-EMAIL-NEXT-PLAN.md` §2): mail a day 20 / 50 /
+150 / 300 and mailboxes of 100 MB / 500 MB / 1 GB / 2 GB.
+
 Proposed; the numbers are §13 Q3.
 
 | | Free | Plus | Pro | Max |

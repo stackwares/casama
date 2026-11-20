@@ -667,7 +667,9 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
         )
       : null;
   // Hosted mail (BOT-EMAIL-PLAN Phase 4): the bot knows its address on every run with one.
-  const mail = await step("mail-hint", () => mailHint(db, info.botId)).catch(() => null);
+  const mail = await step("mail-hint", () =>
+    mailHint(db, info.botId, { offer: !!deps.hostedMail }),
+  ).catch(() => null);
   // Someone off the allowed list answering mail the bot sent (BOT-EMAIL-PLAN §6.1): the answer
   // goes straight back to them, so the run gets none of the person's private context (about-you
   // facts, memories, projects) and learns nothing from it. A failing check counts as external.
