@@ -564,6 +564,9 @@ class ChatController extends Notifier<ChatState> {
   /// The run this chat last followed, for handing it back to the tracker when the chat closes
   /// (state can't be read while disposing). The tracker ignores it if it has ended.
   String? _followedRun;
+
+  /// The last run this chat started from the composer (not a check-in or a run picked up later).
+  String? _sentRun;
   RunTracker get _runs {
     final known = _tracker;
     if (known != null) return known;
@@ -1530,6 +1533,7 @@ class ChatController extends Notifier<ChatState> {
     _quietChecks = 0;
     _startWatchdog(runId);
     _followedRun = runId;
+    if (sentHere) _sentRun = runId;
     _runs.chatStarted(runId, botId: botId, conversationId: state.conversationId, sentHere: sentHere);
     // Group chats (D-118): the run may belong to any member (an @mention, the last speaker).
     if (group) {
@@ -1860,8 +1864,10 @@ class ChatController extends Notifier<ChatState> {
         _runs.chatEnded(state.activeRunId!, RunStatus.completed);
         // A reply the person asked for finished: a milestone reply, or the first one of their first
         // session, can ask for a rating (D-305, D-460). A new run in the next few seconds cancels it.
+        // Only a run the person sent from here can be the onboarding moment, not a check-in.
         unawaited(ref.read(reviewPromptProvider).moment(
           ReviewMoment.replyFinished,
+          personAsked: state.activeRunId == _sentRun,
           stillIdle: () => ref.mounted && state.activeRunId == null,
         ));
         entries.removeWhere((x) => x is MessageEntry && x.streaming);

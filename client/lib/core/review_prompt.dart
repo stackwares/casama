@@ -211,8 +211,14 @@ class ReviewPrompt {
   }
 
   /// A good moment happened; asks when every rule above holds. Returns whether it asked.
+  /// [personAsked]: the reply answers something the person sent (not a check-in); only those can be
+  /// the first-run moment, and other replies leave the first-run mark for the person's own.
   /// [stillIdle] is checked again after the first-reply delay: false (a new run started) skips the ask.
-  Future<bool> moment(ReviewMoment m, {bool Function()? stillIdle}) async {
+  Future<bool> moment(
+    ReviewMoment m, {
+    bool personAsked = true,
+    bool Function()? stillIdle,
+  }) async {
     if (!_supported || errorThisSession) return false;
     try {
       final p = await SharedPreferences.getInstance();
@@ -226,7 +232,7 @@ class ReviewPrompt {
         await p.setInt(_repliesKey, n);
         // The first reply of the first-run session is the onboarding moment; it's used up either way.
         final marked = DateTime.tryParse(p.getString(_firstRunKey) ?? '');
-        if (marked != null) {
+        if (marked != null && personAsked) {
           await p.remove(_firstRunKey);
           if (rules.onboarding &&
               _now().difference(marked) < firstRunWindow) {

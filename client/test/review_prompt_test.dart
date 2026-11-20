@@ -104,6 +104,15 @@ void main() {
       expect(asked, 1);
     });
 
+    test('a check-in finishing first leaves the mark for the person\'s own first reply', () async {
+      final p = await prompt(TargetPlatform.android);
+      await p.markFirstRun();
+      expect(await p.moment(ReviewMoment.replyFinished, personAsked: false), isFalse);
+      expect(asked, 0);
+      expect(await p.moment(ReviewMoment.replyFinished), isTrue);
+      expect(asked, 1);
+    });
+
     test('a first-run mark older than a day no longer counts', () async {
       final p = await prompt(TargetPlatform.android);
       await p.markFirstRun();
