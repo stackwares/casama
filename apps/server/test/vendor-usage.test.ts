@@ -239,6 +239,8 @@ describe("vendor monitoring persistence and alert dedupe", () => {
     const db = h.handle.db;
     await db.execute(sql`update public.vendor_limits set enabled=false`);
     await db.execute(sql`update public.vendor_limits set enabled=true where vendor='openrouter'`);
+    // Time spent waiting for credentials is not a failed monitoring check.
+    await checkVendor(db, env, "openrouter", { now: new Date("2027-03-02T01:00:00Z") });
     const failing = { ...env, VENDOR_OPENROUTER_MANAGEMENT_KEY: "fixture" };
     const f = (async () => new Response("", { status: 503 })) as typeof fetch;
     const initial = messages.length;

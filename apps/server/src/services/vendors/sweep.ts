@@ -66,7 +66,12 @@ export async function vendorUsageSweep(
       // Consecutive failures must span three hours, not merely three manual clicks.
       const failures = [];
       for (const reading of v.history) {
-        if (!reading.error) break;
+        if (
+          !reading.error ||
+          reading.error === "not_configured" ||
+          reading.error === "limit_not_configured"
+        )
+          break;
         failures.push(reading);
       }
       const failureStart = failures.at(-1)?.checked_at;

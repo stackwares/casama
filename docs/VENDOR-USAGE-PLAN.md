@@ -1,7 +1,7 @@
 # Vendor usage and balances in Admin, with alerts: plan
 
 Status: **in progress** (approved 2026-11-20). Phases 1–4 implemented locally. Full server
-checks and database policy tests pass; Flutter full verification is in progress. Phase 5 account
+checks, database policy tests, Flutter analysis/tests and the docs build pass. Phase 5 account
 setup and live verification remain incomplete. No production environment change or deployment
 has been performed.
 
@@ -246,3 +246,10 @@ was not exposed by the shared browser's download inventory or local Downloads fo
 was immediately deleted, and the account's Keys page confirmed no keys remain. No uncollected
 active credential is left behind. Google credential capture into Vaultwarden and metric-method
 verification remain pending; the service account itself is ready.
+
+Implementation committed locally as `54831139` (not pushed or deployed). Final verification:
+`pnpm typecheck`, `pnpm test`, full pgTAP, full Flutter analysis and tests, and docs build passed
+through the heavy-command lock. Server: 1,345 tests passed, 2 skipped; Flutter: 1,749 passed,
+22 skipped. A final focused regression verifies that unconfigured history does not prematurely
+trigger a three-hour failure alert. Provider setup continues separately; this is not a claim that
+Phase 5 has shipped.
