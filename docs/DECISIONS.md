@@ -6295,9 +6295,12 @@ instead of spending a turn discovering them via `tools.load`.
 
 - **One `@` picker everywhere:** In direct chats `@` lists apps attached to the bot, workspace
   apps not yet attached (**Add to this bot**, gated on workspace admin/owner role), and
-  unconnected catalog apps (**Connect**, shown after 2 typed letters). In group chats the same
+  unconnected catalog apps (**Connect**: any that match from 2 typed letters; before that, popular
+  ones fill the list up to 6 rows, so a bare `@` always opens something). In group chats the same
   picker shows **Bots** first, then **Apps** (union across member bots), with **Bot** / **App**
-  badges on name collisions. Plain-text collisions in group chats favor the bot; picking the app
+  badges on name collisions. It is one vertical list in every case; the group chats' old chip
+  strip for a bots-only match is gone. A catalog app connected under its id shows by its proper
+  name ("Linear", not `linear`), as the server labels it. Plain-text collisions in group chats favor the bot; picking the app
   from the menu sends an explicit `apps` ref that disambiguates it. **Connect** adds the new
   connection to the bot that will answer (the chat's bot; in a group the bots the message names,
   else the last speaker, else the lead), and for a Composio or Pipedream hub the mention names the

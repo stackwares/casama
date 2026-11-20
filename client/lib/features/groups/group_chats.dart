@@ -844,12 +844,20 @@ buildMentionableApps({
           ),
       ];
     }
+    // A catalog app connected under its id ("linear", "zoho_apps") goes by its proper name, as the
+    // server labels it; a connection the person named themselves keeps that name.
+    final app = i.appId != null ? catalogById[i.appId!] : null;
+    final lowerName = i.name.toLowerCase();
+    final named = app != null &&
+        (lowerName == app.id.toLowerCase() ||
+            lowerName.replaceAll('-', '_') == app.id.toLowerCase() ||
+            lowerName == app.name.toLowerCase());
     return [
       AppMentionInfo(
         integrationId: i.id,
-        label: i.name,
+        label: named ? app.name : i.name,
         appId: i.appId,
-        color: i.appId != null ? catalogById[i.appId!]?.color : null,
+        color: app?.color,
         kind: i.kind,
       ),
     ];
@@ -965,6 +973,10 @@ class MentionController extends ChangeNotifier {
 
   static final _trigger = RegExp(r'(^|\s)@([\w .\-]{0,30})$');
 
+  /// The most Connect rows in one list, and the length popular apps fill a list up to.
+  static const _maxConnectRows = 5;
+  static const _shortList = 6;
+
   void _update() {
     final text = input.text;
     // Prune any picked app whose @Label was deleted from the draft text.
@@ -1009,14 +1021,26 @@ class MentionController extends ChangeNotifier {
         }
       }
 
-      // 4. Unconnected catalog apps (shown after 2 typed characters).
-      if (q.length >= 2 && _catalogApps.isNotEmpty) {
+      // 4. Apps not connected yet. From 2 typed letters, any catalog app that matches. Before
+      // that, popular ones fill a short list, so a bare "@" always opens something to pick.
+      if (_catalogApps.isNotEmpty) {
         final alreadyIds = <String>{
           for (final a in _apps) ...[?a.appId?.toLowerCase(), ?a.toolkit?.toLowerCase()],
           for (final a in _addableApps) ...[?a.appId?.toLowerCase(), ?a.toolkit?.toLowerCase()],
         };
-        final matchingCatalog = _filterCatalog(_catalogApps, q, alreadyIds);
-        for (final c in matchingCatalog.take(5)) {
+        final Iterable<CatalogApp> suggested;
+        if (q.length >= 2) {
+          suggested = _filterCatalog(_catalogApps, q, alreadyIds).take(_maxConnectRows);
+        } else {
+          final room = (_shortList - items.length).clamp(0, _maxConnectRows);
+          suggested = _catalogApps
+              .where((c) =>
+                  c.popular &&
+                  !alreadyIds.contains(c.id.toLowerCase()) &&
+                  (c.name.toLowerCase().startsWith(q) || c.id.toLowerCase().startsWith(q)))
+              .take(room);
+        }
+        for (final c in suggested) {
           items.add(ConnectAppMentionOption(c));
         }
       }
@@ -1274,49 +1298,7 @@ class MentionPicker extends ConsumerWidget {
           }
         }
 
-        final hasAppsOrActions =
-            appOptions.isNotEmpty ||
-            addOptions.isNotEmpty ||
-            connectOptions.isNotEmpty;
-
-        // Pure bots-only menu (e.g. a group chat with no apps): keep the compact chip strip.
-        if (!hasAppsOrActions) {
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 6),
-            child: Wrap(
-              key: const Key('mentionPicker'),
-              spacing: 6,
-              runSpacing: 6,
-              children: [
-                for (final (i, o) in botOptions)
-                  ActionChip(
-                    key: Key(o.keyId),
-                    backgroundColor: i == controller.index
-                        ? scheme.primaryContainer
-                        : null,
-                    side: BorderSide(
-                      color: i == controller.index
-                          ? scheme.primary.withValues(alpha: 0.5)
-                          : scheme.outlineVariant,
-                    ),
-                    avatar: o.bot == null
-                        ? GroupAvatar(bots: bots, size: 20)
-                        : BotAvatar(
-                            name: o.bot!.name,
-                            avatar: o.bot!.avatarUrl,
-                            size: 20,
-                          ),
-                    label: Text(
-                      o.bot == null ? l10n.mentionEveryone : o.label,
-                    ),
-                    onPressed: () => controller.pick(i),
-                  ),
-              ],
-            ),
-          );
-        }
-
-        // Detect bot-vs-app name collisions in group chats so rows get clear "Bot"/"App" badges.
+        // One list for bots and apps alike. Detect bot-vs-app name collisions in group chats so rows get clear "Bot"/"App" badges.
         final botNamesLower = {for (final b in bots) b.name.toLowerCase()};
         final appNamesLower = {
           for (final (_, a) in appOptions) a.app.label.toLowerCase(),

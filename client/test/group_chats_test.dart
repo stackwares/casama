@@ -158,6 +158,15 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('mention-everyone')), findsOneWidget);
     expect(find.byKey(const Key('mention-Ada')), findsOneWidget);
+    // Bots and apps share one list: the bots sit under their own heading, above apps to connect.
+    expect(find.byType(ActionChip), findsNothing);
+    final list = find.byKey(const Key('mentionPicker'));
+    expect(find.descendant(of: list, matching: find.text('Bots')), findsOneWidget);
+    expect(find.descendant(of: list, matching: find.byKey(const Key('mention-connect-stripe'))), findsOneWidget);
+    expect(
+      tester.getTopLeft(find.byKey(const Key('mention-Bea'))).dy,
+      lessThan(tester.getTopLeft(find.byKey(const Key('mention-connect-stripe'))).dy),
+    );
   });
 
   testWidgets('Tab completes the highlighted bot, arrows move, and the line says who will answer', (tester) async {
