@@ -1,7 +1,7 @@
 ---
 title: What is an AI employee? AI workers and AI interns explained
 h1: What is an AI employee?
-description: An AI employee is an AI agent given a standing job, with tools, memory, a schedule and limits. What AI workers and AI interns can do, what they cost, and where they fail.
+description: An AI employee is an AI agent given a standing job, with tools, memory, a schedule and limits. What AI workers can do, what they cost, and where they fail.
 lead: An AI employee is an AI agent given a standing job. It has a role, the tools for that role, a memory, a schedule and limits on what it may do alone. "AI worker", "AI intern", "AI coworker" and "digital employee" are names for the same idea. It is software, so it doesn't replace a person's judgement, but it can take over work that is repeatable and checkable.
 updated: 2026-11-18
 order: 13

@@ -3,7 +3,7 @@ title: Grok Bot pricing in 2026: plans, weekly limits, real cost
 h1: Grok Bot pricing in 2026: plans, weekly limits and what you really pay
 card: Grok Bot pricing
 crumb: Grok Bot pricing
-description: Grok Bot costs $30, $100 or $200 a month, with a weekly usage pool and token-cost billing beyond it. Plans, limits, team pricing and cheaper options, with sources.
+description: Grok Bot costs $30, $100 or $200 a month, with a weekly usage pool and token-cost billing beyond it. Plans, limits, team pricing and cheaper options.
 lead: Grok Bot costs $30, $100 or $200 a month on the Premium, Super and Ultra plans. Each plan includes a weekly pool of usage, and anything beyond the pool is billed by token cost. xAI doesn't publish the size of the pool or the per-token rate, so the monthly bill for heavy use can't be worked out in advance. Here is what is published, what isn't, and cheaper ways to get the same thing.
 updated: 2026-11-19
 order: 25

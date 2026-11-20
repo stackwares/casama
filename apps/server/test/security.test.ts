@@ -274,7 +274,7 @@ describe("cross-tenant sweep (Phase 8 security review)", () => {
       // Sign Out Everywhere removes the caller's own watches and nobody else's; watch.test.ts
       // checks another person's watch keeps working.
       "deleteAllWatchKeys",
-      // Live cards (D-453): the caller's own home city and units, and a city search with no
+      // Live cards (D-458): the caller's own home city and units, and a city search with no
       // tenant data; live-cards.test.ts checks card routes refuse people outside the chat.
       "getCardPrefs",
       "updateCardPrefs",

@@ -1,3 +1,7 @@
+---
+description: "Answers to common Casama questions: what bots are, pricing and plans, privacy, which AI models it uses, self-hosting, apps and approvals."
+---
+
 # FAQ
 
 ## Getting started

@@ -13,6 +13,7 @@ import '../features/bots/bot_template.dart';
 import '../features/mcp/mcp_screens.dart';
 import '../features/bots/action_rules_screen.dart';
 import '../features/bots/channels_screen.dart';
+import '../features/bots/mail_screen.dart';
 import '../features/bots/links_screen.dart';
 import '../features/calls/outbound_call_screen.dart';
 import '../features/bots/knowledge_screen.dart';
@@ -37,6 +38,7 @@ import '../features/settings/password_managers_screen.dart';
 import '../features/teach/teach_draft_screen.dart';
 import '../features/projects/projects_screen.dart';
 import '../features/routines/run_routine_screen.dart';
+import '../features/auth/sign_in_email_link.dart';
 import '../features/auth/sign_in_screen.dart';
 import '../features/link/link_screen.dart';
 import '../features/link/link_server_screen.dart';
@@ -320,9 +322,15 @@ final routerProvider = Provider<GoRouter>((ref) {
     routes: [
       GoRoute(
         path: '/sign-in',
-        // casama.ai's invite page sends people here with the address they claimed (?email=).
+        // casama.ai's invite page sends people here with the address they claimed (?email=). On
+        // the web, boot.js has already moved it out of the page's address (so analytics never see
+        // it) and the screen takes it from there; the query is how the other platforms get it.
         pageBuilder: _outside(
-          (_, s) => SignInScreen(initialEmail: SignInScreen.emailFromLink(s.uri.queryParameters['email'])),
+          (_, s) => SignInScreen(
+            initialEmail: SignInScreen.emailFromLink(
+              s.uri.queryParameters['email'] ?? takeSignInEmailFromPage(),
+            ),
+          ),
         ),
       ),
       GoRoute(
@@ -533,6 +541,12 @@ final routerProvider = Provider<GoRouter>((ref) {
                 path: ':botId/chat-apps',
                 pageBuilder: _page(
                   (_, s) => ChannelsScreen(botId: s.pathParameters['botId']!),
+                ),
+              ),
+              GoRoute(
+                path: ':botId/email',
+                pageBuilder: _page(
+                  (_, s) => MailScreen(botId: s.pathParameters['botId']!),
                 ),
               ),
               GoRoute(

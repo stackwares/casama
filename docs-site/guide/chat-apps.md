@@ -91,6 +91,12 @@ Matching is exact and ignores case. `*@example.com` matches any email address at
 To change the list later, tap the chat app on the **Chat apps** screen, edit **Allowed senders**
 and tap **Save**.
 
+On a bring-your-own email chat app, allowed senders are matched on the From line. Resend's
+webhook carries no sender-check results, so Casama reads the results its received-email API
+reports when it fetches the body, and the bot says in Activity when the sender's domain couldn't
+be confirmed. A bot's [hosted address](/guide/bot-email) refuses unconfirmed mail instead of
+just marking it.
+
 ## Threads and replies
 
 | App       | One conversation per                                         | How the reply goes back                       |
@@ -335,6 +341,7 @@ On the **Chat apps** screen:
 
 ## Related
 
+- [A bot's email address](/guide/bot-email)
 - [Chat](/guide/chat)
 - [Routines](/guide/routines)
 - [Your own computer](/guide/companion)

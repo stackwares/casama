@@ -1,5 +1,5 @@
 /**
- * Pinned cards (RICH-CARDS-PLAN §4.5, Stage A): a live card on the person's widgets is a D-452
+ * Pinned cards (RICH-CARDS-PLAN §4.5, Stage A): a live card on the person's widgets is a D-455
  * canvas the server keeps fresh by itself, with no model run. Weather is written as an hourly
  * schedule (up to 14 entries), so it changes every hour while being written every few hours,
  * inside the canvas write limits; prices and rates are written when they change enough.

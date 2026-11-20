@@ -1,3 +1,7 @@
+---
+description: "Casama on Apple Watch: answer your bots, ask them something by voice and see who is working. Needs watchOS 26 and works without your iPhone nearby."
+---
+
 # Casama on Apple Watch
 
 The watch app lets you answer your bots, ask them something by voice and see who is working, from

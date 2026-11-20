@@ -12,6 +12,8 @@ import { actingUserOf } from "./acting.ts";
 import { track } from "./analytics.ts";
 import { deviceDataOfRun } from "./attention.ts";
 import { wrapUntrusted } from "./context.ts";
+import { type DecisionDeps, decide, markDecision, yes } from "./decide.ts";
+import { PUSH_QUESTIONS, pushScoreState } from "./decision-uses.ts";
 import { mainConversation, postFromBot } from "./general.ts";
 import { dailyResetAt } from "./limit-resets.ts";
 import type { NotificationService } from "./notifications.ts";
@@ -472,6 +474,7 @@ async function pushSuggestion(
   notifications: NotificationService,
   s: SuggestionPush,
   kind: "suggestion" | "timed" = "suggestion",
+  decisions?: DecisionDeps,
 ) {
   const [bot] = await db.execute<{ name: string }>(
     sql`select name from public.bots where id = ${s.bot_id}::uuid`,
@@ -487,6 +490,30 @@ async function pushSuggestion(
   // urgent one still pushes.
   const fromBrief = run?.kind === "brief";
   if (fromBrief && kind === "suggestion" && s.urgency !== "urgent") return;
+  // Push scoring (D-454): a normal suggestion this person is unlikely to want now waits for the
+  // next brief, through the hold low ones already get. Urgent ones are never scored or held, and
+  // the attention rules still apply on top.
+  let urgency = s.urgency;
+  if (decisions && s.urgency === "normal") {
+    const state = await pushScoreState(db, s).catch(() => null);
+    if (state) {
+      const d = await decide(db, decisions, {
+        use: "push_score",
+        orgId: s.org_id,
+        botId: s.bot_id,
+        runId: s.run_id,
+        subjectId: s.id,
+        state,
+        questions: PUSH_QUESTIONS,
+      });
+      const p = yes(d.answers, "worth_a_push");
+      if (d.mode === "on") {
+        const hold = p != null && p < d.t.hold_below;
+        if (hold) urgency = "low";
+        await markDecision(db, d.logId, hold ? "held" : "pushed");
+      }
+    }
+  }
   track(db, {
     event: "proactive_message_sent",
     userId: s.user_id,
@@ -510,7 +537,7 @@ async function pushSuggestion(
       bot_id: s.bot_id,
     },
     {
-      urgency: s.urgency,
+      urgency,
       why: {
         rule: `A suggestion from ${bot?.name ?? "your bot"} during ${fromBrief ? "your morning brief" : "a check-in scan"}`,
         data: s.run_id ? await deviceDataOfRun(db, s.run_id).catch(() => []) : [],
@@ -524,6 +551,7 @@ export async function sendDueSuggestions(
   db: Database,
   notifications: NotificationService | undefined,
   limit = 100,
+  decisions?: DecisionDeps,
 ) {
   if (!notifications) return 0;
   const due = await db.execute<SuggestionPush>(sql`
@@ -532,7 +560,8 @@ export async function sendDueSuggestions(
                  where status = 'pending' and notified_at is null and notify_at <= now() and expires_at > now()
                  order by notify_at limit ${limit} for update skip locked)
     returning id, org_id, bot_id, user_id, run_id, title, body_md, push_text, urgency`);
-  for (const s of due) await pushSuggestion(db, notifications, s, "timed").catch(() => {});
+  for (const s of due)
+    await pushSuggestion(db, notifications, s, "timed", decisions).catch(() => {});
   return due.length;
 }
 
@@ -668,7 +697,7 @@ async function hadCatchup(db: Database, botId: string) {
 
 export function registerSuggestionTools(
   registry: ToolRegistry,
-  deps: { db: Database; notifications?: NotificationService },
+  deps: { db: Database; notifications?: NotificationService; decisions?: DecisionDeps },
 ) {
   const { db } = deps;
   registry.register({
@@ -738,17 +767,23 @@ export function registerSuggestionTools(
       // Attention rules (D-153): urgent ones push now; normal ones push unless the person is busy
       // or the bot is over its daily cap (then the next brief carries them); low ones wait for the brief.
       if (row && deps.notifications && run?.reason !== "setup" && !later)
-        await pushSuggestion(db, deps.notifications, {
-          id: row.id,
-          org_id: ctx.orgId,
-          bot_id: ctx.botId,
-          user_id: user,
-          run_id: ctx.runId,
-          title: args.title,
-          body_md: args.body ?? "",
-          push_text: args.push_text ?? null,
-          urgency: args.urgency ?? "normal",
-        }).catch(() => {});
+        await pushSuggestion(
+          db,
+          deps.notifications,
+          {
+            id: row.id,
+            org_id: ctx.orgId,
+            bot_id: ctx.botId,
+            user_id: user,
+            run_id: ctx.runId,
+            title: args.title,
+            body_md: args.body ?? "",
+            push_text: args.push_text ?? null,
+            urgency: args.urgency ?? "normal",
+          },
+          "suggestion",
+          deps.decisions,
+        ).catch(() => {});
       return {
         content: later
           ? `Suggested: ${args.title}. The push goes out at ${later.toISOString()}.`

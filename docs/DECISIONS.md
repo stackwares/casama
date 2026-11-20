@@ -6633,6 +6633,50 @@ and two changes asked for at once share one dialog. This is a console/session sa
 replacement for OS locking. It does not revoke an already issued JWT on a local lock: the server
 windows bound its remaining admin validity.
 
+## D-449 Hosted email address for every bot (2026-11-20)
+
+- **One address per bot on Casama Cloud's mail domain** (`name@<MAIL_DOMAIN>`), backed by
+  `public.mail_addresses`, `public.mail_messages`, `public.mail_suppressions`, and
+  `public.mail_events` (`supabase/migrations/20270301100001_bot_email.sql`). Claimed names are
+  never reissued: releasing, archiving a bot, or deleting its bot/workspace retires the row as a
+  tombstone and sets a 30-day expiry on its kept mail. Removing a hosted email channel directly
+  from Chat apps is blocked; owners pause or release from the bot's Email screen.
+- **Inbound:** Cloudflare Email Routing catch-all Worker (`infra/mail/mail.js`) posts raw MIME
+  bytes (`message/rfc822`) signed by SHA-256 digest to `POST /hooks/mail` (under `PROVIDER_HOOKS`
+  rate budget, with upfront body size limits before signature verification). Permanent rejections
+  are limited to unknown/blocked addresses, mailbox full, oversized (>25 MiB), and unparseable
+  MIME; auth/clock drift, rate limits, and unconfigured servers throw so senders retry. Sender
+  checks strip RFC 822 comments before splitting RFC 8601 `Authentication-Results` clauses,
+  require DMARC `header.from` alignment, and reject multiple `From` addresses.
+- **Outbound & abuse controls:** `sendHostedMail` enforces single-address validation,
+  undeliverable-domain blocking, suppression checks, `Auto-Submitted` headers, a per-thread
+  hourly reply guard (resetting for allowed human replies up to a hard ceiling), and atomic
+  workspace/address daily caps (serialized with a per-org advisory lock) across every send path
+  (`mail.send`, `replyToChannel`, `channel.send`, welcome mail). Missing plan limits fail closed
+  on Casama Cloud. Claims and releases serialize per workspace. Releasing always works; what's capped
+  is claiming: addresses claimed in the last 365 days can't exceed the plan's address limit plus 3,
+  so archiving or releasing can't be used to cycle through names. New claims are blocked while an
+  automatic abuse pause is unresolved. Mail to anyone off `allowed_senders` and `mail.claim` always ask even under Full
+  access. External thread replies (someone off the allowed list answering mail the bot sent)
+  never run with the owner's full access, every non-`selfOnly` tool asks, and the run is built
+  without the person's private context (about-you facts, memories), so an injected question can't
+  be answered from it. Outbound mail keeps a real `Message-ID` (Casama's own where the sender takes one, else the
+  sender's) next to the sender's id, so reply threading and bounce counting work on either sender.
+- **Privacy & encryption:** `mail_messages.content` is included in `SEALED_COLUMNS` for
+  encryption-at-rest and data key rotation (D-238); account/workspace deletion purges stored
+  `.eml` and attachment objects before cascading rows.
+- **Domain (2026-11-20):** `casama.app`, used bare (`ada@casama.app`); its web traffic only
+  redirects to `casama.ai`. Not `mail.casama.app`: Cloudflare's catch-all routing rule works on
+  a zone's apex only, and a subdomain's literal rules stop at 200.
+- **Message-ID (Phase 0, 2026-11-20):** Cloudflare Email Sending refuses a send carrying a custom
+  `Message-ID`, and sets its own, which its delivery events carry. Senders declare
+  `customMessageId`; on Cloudflare the returned id is kept, on Resend Casama's own goes out.
+- **Reserved names (2026-11-20):** the instance owner may claim reserved names, so Admin's list
+  holds names for them; names held in Admin block only the exact name. Brands are split: distinctive
+  ones also block as a part of a name, everyday-word ones only whole.
+- **Plan:** `docs/BOT-EMAIL-PLAN.md`. Live 2026-11-20: deployed with `MAIL_DOMAIN=casama.app`,
+  Cloudflare set up (routing, Worker, sending on Workers Paid, delivery events).
+
 ## D-450 Admin console: passkeys and Face ID instead of typing (2026-11-20)
 
 Oliver asked for passkeys, then Face ID or a fingerprint on mobile, instead of re-entering the
@@ -6665,16 +6709,164 @@ password and code (D-448), and delegated the rest ("build them all now in 1 go!"
 - **Tests:** `client/test/admin_quick_unlock_test.dart`; passkey tokens in
   `apps/server/test/admin.test.ts`.
 
-## D-451 Connected AI apps can be seen and disconnected from Casama (2026-11-20)
+## D-451 Bot email, next round: smaller limits, real storage, deleting, a sending ceiling (2026-11-20)
 
-- **Why:** an app connected with OAuth (D-117) could only be cut off from the app's own side, or by leaving the workspace. Connector directories (Claude, ChatGPT) expect people to see and end a connection from the service too.
-- **What a connection is:** one person's grant to one registered app (`client_id`) in one workspace, live while it has an unrevoked, unexpired access or refresh token. Refreshing keeps the same grant.
-- **API:** `GET /v1/orgs/{id}/mcp-connections` lists them with the app's registered name, who connected it, when, and when it was last used. Members see their own; owners and admins see everyone's. `DELETE /v1/orgs/{id}/mcp-connections/{client_id}` (`?user_id=` for someone else's, admins only) revokes every access and refresh token of that grant at once, so the app's next call gets 401 and its refresh fails. Audited as `mcp.disconnected`.
-- **Apps can disconnect themselves:** `POST /oauth/revoke` (RFC 7009, announced as `revocation_endpoint`) takes an access or refresh token and ends its whole grant. It always answers 200. API keys aren't revoked there; admins revoke them in the app.
-- **App:** Workspace settings → Advanced → Connect AI Apps → **Connected AI Apps** (admins, all of them, with the person's name), and the same list for members with only their own, shown only when they have one. **Disconnect** asks first.
-- **Tests:** `apps/server/test/hosted-mcp.test.ts` (list scoped by role, a member can't cut off another's app, access and refresh both stop, 404 the second time, admin disconnects a member's, RFC 7009), `client/test/mcp_test.dart`.
+Oliver asked what bot email costs and how we charge for it, then to build the follow-up plan
+(`docs/BOT-EMAIL-NEXT-PLAN.md`) in one go, on its recommendations.
 
-## D-452 Bot widgets: a Canvas widget bots fill in, kept changing without more runs (2026-11-20)
+- **Not charged per message.** People pay through plan limits and through the credits that
+  mail-started runs spend (a run costs 14 to 40 times the mail that started it). Sent mail stays in
+  `usage_ledger` as `emails_sent` with its real cost, not billable.
+- **Limits** (`20270302100001_bot_email_limits.sql`): mail a day Free 20, Plus 50, Pro 150, Max
+  300; mailbox per address 100 MB, 500 MB, 1 GB, 2 GB. Addresses (1/2/5/15) and mail to new people
+  (0/10/30/100) are unchanged. Max's old 1,000 a day equalled Cloudflare's whole allowance, and
+  15 × 20 GB was more than the server's disk.
+- **Storage counts what is stored:** `mail_messages.size` is the original plus each separately
+  stored file (`raw_size` is the original's share). The original `.eml` is deleted 30 days after
+  arrival by `purgeExpiredMail`; text and files stay. The copy a file gets in a chat stays under
+  the chat attachment allowance.
+- **People delete mail; bots don't.** `DELETE /v1/bots/{id}/email/messages/{messageId}` and
+  `POST …/messages/delete` (`ids`, up to 200, or `before`), for people who manage the bot. Mail
+  the caps still count (sent in the last day, or in a thread in the last hour) stays as an empty
+  row (`deleted_at`) until the purge, so deleting can't reset a daily cap or the reply-loop guard.
+  The address carries `storage_used` and `storage_limit`; the Mail screen shows them, selects
+  threads, and deletes mail older than 30 days, 6 months or a year. An "almost full" notice at
+  90%; the full notice says to delete old mail and opens the Mail screen.
+- **One ceiling across workspaces:** `MAIL_SEND_DAILY_MAX` (default 900 with Cloudflare, none
+  with Resend, 0 turns it off) is counted under a global advisory lock taken after the workspace's,
+  inside the same transaction as the workspace caps. At the ceiling a send fails with "Mail is busy
+  right now. Try again in a few hours." The instance owner is told once a day at 80% and at 100%,
+  and Admin → Mail shows "Sent today: N of 900".
+- **Cap hits are counted:** `limit_reached` with `surface: mail` and `kind` `mail_sent_day`,
+  `mail_new_day`, `mail_send_ceiling` or `mail_storage`.
+- **Getting started:** a bot without an address, on a server with hosted mail and a workspace with
+  room, is told it may offer one once when mail would solve the request (`mailHint`). The
+  empty-chat offer card waits until the bot is a day old or the person has had three chats with
+  it. The welcome email's tip says "ask your bot to get itself an email address", which works in
+  every app version. The paywall lists the plan's addresses and whether bots write to new people.
+- **Not in this round:** one storage allowance shared with the Library, paid extra addresses,
+  customer domains, R2, Amazon SES.
+
+## D-452 Admin console: a passkey or a 6-digit admin PIN is the whole check (2026-11-20)
+
+After D-450 shipped, Oliver found a passkey still asked for the authenticator code, and decided:
+"passkeys are enough", then a custom admin PIN as a third way ("make it 6 PIN"), and approved
+building it.
+
+- **A check on the session, not a new sign-in.** `POST /v1/admin/checks/passkey` takes the token of
+  a passkey sign-in the app made on the side (Supabase's passkey endpoints, as D-450's
+  `confirmWithPasskey`) as proof: signed by the Auth server, the same account, a `passkey` `amr`
+  entry under a minute old, from another sign-in session. The API records it in
+  `public.admin_step_ups` against the caller's `session_id`, timed by the passkey's own timestamp;
+  one proof counts for one session (`proof_session_id` unique). The app ends the extra session at
+  once and keeps its own, which removes D-450's `signInAgainWithPasskey` and its session swap.
+- **Counts as both steps.** The API's admin rules (`requireFreshAdmin`, `requireFreshOwnerAction`)
+  and the database's `fresh_admin_sign_in()` (so `decide_approval`) accept a check on this session
+  within the same windows (reads 5 minutes, changes 1), and treat it, or a fresh `passkey` sign-in
+  in the token, as the second step even with an authenticator. Accepted trade-off: Supabase's
+  passkeys prefer but don't require user verification, so a security key without a PIN passes on
+  possession alone; the server can't tell.
+- **The admin PIN.** Exactly 6 digits; all-same, runs (either way, wrapping) and repeated pairs or
+  triples are refused. A salted scrypt hash (N 2^15, r 8, p 1) in `public.admin_pins` (RLS on, no
+  policies), never on the device. `POST /v1/admin/checks/pin` checks it under a row lock and
+  records a check; wrong tries count per account on the server, and the fifth in a row clears the
+  hash (the PIN is off), logs, and emails the owner. A PIN never signs anyone in: it only confirms
+  a session already signed in to that account. Setting, changing or removing it (`PUT`/`DELETE
+  /v1/admin/pin`, Admin → Security) needs a fresh real sign-in or passkey check, never a PIN check.
+  `GET /v1/admin/pin` and the two check endpoints are exempt from the freshness rule they satisfy;
+  all are owner-only.
+- **The form.** Face ID (D-450, now counted from the last check too), passkey, PIN, then password
+  (and the code after a password). A session that still owes its code starts at the code step with
+  the passkey offered there too. Confirming a PIN change hides the PIN.
+- **Tests:** `apps/server/test/admin-checks.test.ts`, `apps/server/test/admin.test.ts`,
+  `client/test/admin_quick_unlock_test.dart`. Migration `20270303100001_admin_checks.sql`.
+
+## D-453 Admin console: the screen lock is the whole check (2026-11-20)
+
+Oliver: "The passkey alone is enough, or a pin is enough, or Face ID or fingerprint or screen lock
+is enough. Actually a screen lock is totally enough", then "go and do everything now except Mac
+builds".
+
+- **A key in the phone's secure chip.** The server can't trust a local Face ID yes, so the app makes
+  an EC P-256 key with `biometric_signature` (Secure Enclave on iPhone and iPad, Keystore on
+  Android), usable only after Face ID, a fingerprint or the device passcode (device credentials
+  allowed; adding a face or finger keeps the key). Its public half (SPKI, DER) goes to
+  `POST /v1/admin/devices` and `public.admin_device_keys` (RLS on, no policies; up to 10 per owner).
+- **The check.** `POST /v1/admin/checks/device/challenge` gives a 32-byte challenge for one key and
+  the caller's sign-in session, good for two minutes and once; the phone signs
+  `casama-admin-check:<challenge>` (ECDSA SHA-256) after the screen lock, and
+  `POST /v1/admin/checks/device` checks it with the stored key and records an `admin_step_ups` row
+  (method `device`) for that session: the same full check, both steps, as a passkey or PIN
+  (D-452), in the API and in `decide_approval`.
+- **Adding a phone** takes a check that isn't the PIN (a real sign-in, a passkey, or another phone's
+  key), like changing the PIN. After a passkey or password unlock, the app offers it once per phone
+  ("Not now" is remembered); **Admin → Security** lists devices, turns this phone on and removes
+  any. A key the server no longer has, or one the phone lost, is forgotten here and the button
+  hides.
+- **Replaces D-450's local Face ID unlock**, which the server couldn't check and which only worked
+  briefly after a sign-in. Phones only for now: the Mac needs a signed build with keychain access
+  for the Secure Enclave, and the web has no such key.
+- **The loop Oliver recorded** (Face ID passed, the lock screen came back and asked again) wasn't
+  reproduced in tests. Face ID now opens by itself at most once every 30 seconds across new lock
+  screens, so nothing can repeat it, and a lock within five seconds of an unlock reports its reason
+  (route change, leaving the app, account change, idle) to error tracking as a warning.
+- **Tests:** `apps/server/test/admin-checks.test.ts` (real P-256 keys: signatures, replay, other
+  sessions, PIN can't add a phone), `client/test/admin_quick_unlock_test.dart`. Migration
+  `20270306100001_admin_device_keys.sql`.
+
+## D-454 Decision models next to Casama's own rules, shadow first (2026-11-20)
+
+Oliver asked how a decision model (Jev, OpenAI's Decisions) could lower costs or improve anything,
+had the plan written (`docs/DECISION-MODEL-PLAN.md`), then said "decide all for me! go and build
+all this in 1 go". Production numbers (plan §2) showed it is about break-even on cost; the case is
+quality and safety.
+
+- **Decided (plan §12, all defaults):** shadow first for every use; compare Jev 1.14, GPT-6 Luna
+  Decisions and Perplexity Decider Flash v1.2; Casama pays for shadow calls, a use that is on is
+  charged like other background calls; the scan gate may miss at most 2% of scans that made a
+  suggestion and none whose suggestion was accepted; the tool-call gate only ever adds an ask;
+  push scoring works under the 5-a-day rule; self-hosted servers are off by default; model ids are
+  pinned versions.
+- **One function, one adapter.** `decide()` (`packages/agent/src/decide.ts`) asks a question set in
+  the use's mode: `off` calls nothing, `shadow` asks every shadow model side by side, logs them and
+  returns no answers, `on` asks the chosen model. A timeout (1.5 s), an error or a refusal is "no
+  answer", and no answer is always today's behaviour. `gateway/decisions.ts` is the only code that
+  knows OpenRouter's alpha route (`POST /api/alpha/decisions`, `data_collection: deny`).
+- **Settings live in `instance_settings` "decisions"**, not in `CloudModelAssignment` as the plan
+  first said: self-hosted servers don't read the cloud model assignment, and a new field there
+  would have needed an app build for the Cloud models screen. Owner API: `GET`/`PUT
+  /v1/admin/decisions`, `GET /v1/admin/decisions/results`. Everything starts off.
+- **All seven uses are built behind their modes** (scan gate, reply check with memory and
+  correction signals, push scoring, tool-call gate, long-run check, effort picker, watcher gate),
+  so turning one on is a setting, not a deploy. The plan's order still decides what is switched
+  to shadow and on, and when.
+- **The tool-call gate leaves Full access (D-394) and allow rules alone:** the person chose no asks
+  there. It checks outgoing or changing calls that wouldn't ask today, in chats with a request.
+- **The log keeps numbers, never content.** `decision_log` (service role only, 90 days, goes with
+  the workspace) holds question names, probabilities, the action and the label. Labels come from
+  the product: the run itself (the checker's verdict, memories saved, the correction rule, whether
+  a watcher told the person) and an hourly sweep (suggestions made and accepted, push answers, how
+  runs ended).
+- **Money:** each call is a `tokens_in` ledger row with `meta.purpose = "decide:<use>"`. Shadow
+  rows are `billable` false at `cost_usd` 0, so no workspace budget moves, with Casama's cost in
+  `upstream_cost_usd`.
+- **Also:** chat steps record the reasoning tokens OpenRouter returns in the ledger's `meta`
+  (plan Phase 0, for the effort picker's case), and `scripts/check-model-updates.mts` checks the
+  shadow candidates against newer decision models.
+- **Guardrail and privacy page done the same day:** the three models are on "Casama privacy",
+  and casama.ai/privacy names TypeSafe and Perplexity (only casama.ai was deployed).
+- **Tested live (plan, "Test results"):** the guardrail refuses decision models not on it; two
+  adapter bugs fixed (OpenAI needs instructions on every question; score levels go in `criteria`);
+  the scan gate's third question reworded because receipts and sign-in notices tripped it; shadow
+  no longer holds up the end of a chat run; Perplexity dropped from the default shadow set; the
+  effort picker stays off because low effort saves DeepSeek nothing on simple messages.
+- **Live 2026-11-20** (04f93f3a, no app build: nothing in the app uses it yet). Put in shadow the
+  same day: scan gate, reply check, push scoring, tool-call gate, long-run check, on Jev 1.14 and
+  GPT-6 Luna Decisions. Effort picker and watcher gate off.
+- **Tests:** `packages/agent/test/decisions.test.ts`, `packages/domain/test/decision-settings.test.ts`,
+  `apps/server/test/decisions.test.ts`, `supabase/tests/decision_log_rls.test.sql`.
+
+## D-455 Bot widgets: a Canvas widget bots fill in, kept changing without more runs (2026-11-20)
 
 - **Decision (2026-11-20, Oliver: bots should put "whatever they like" on a person's widgets, then "can it build a source and assign it to the widget so it cycles through them?", then "let's get to work now"):** plan in `docs/BOT-WIDGET-PLAN.md`; every §13 default taken, including rotations (decision 19). Phases 1–3 are written; 0 (real devices), 4 (Live), 5 (free layout) and 6 (watches) are not started.
 - **One widget a bot fills in, called Canvas,** beside D-405's nine. A canvas is one bot's content for one person: five templates (text, countdown, number, list, picture), a look (colour, gradient, picture or one of eight built-in paintings; plain, serif, rounded or mono; alignment, icon, accent), and either up to 14 dated entries or a **rotation**: up to 400 items the widget cycles through every day, week or 1–23 hours, in order or shuffled, looping or stopping, worked out from the clock (`rotationAt` and `dealRotation` in `packages/domain/src/canvas.ts`), so a year of daily verses is one model run. The server deals a rotation to widgets as its next 14 dated entries; shuffles are seeded by the canvas id and lap, so every device agrees. **The server picks the text colour** for contrast (`inkFor`) and makes the Lock Screen's 80- and 24-character forms when the bot gives none.
@@ -6688,14 +6880,88 @@ password and code (D-448), and delegated the rest ("build them all now in 1 go!"
 - **Not verified, because nothing was built:** every look, Lock Screen redaction of `privacySensitive`, Android launchers and the lock screen page, Xcode and Gradle linking, pushes on devices. Swift type-checked for iOS 18 and macOS 14 and tested against the sample canvases (`scripts/test-canvas-swift.sh`); Kotlin compiled against android-36 and tested (`scripts/test-canvas-kotlin.sh`); XML with `xmllint`. The migration isn't applied to the shared local database. Not built: the stale "as of 9:41" line, an Android 15 generated preview, Mac placements reported to the server. Left for Oliver: Phase 0 on real devices, builds, a deploy.
 - **Tests:** `packages/domain/test/canvas.test.ts`, `apps/server/test/canvas.test.ts`, `packages/contracts/test/canvas-fixtures.test.ts`, `supabase/tests/widget_canvases_rls.test.sql`, `client/test/canvas_test.dart`, `client/test/canvas_settings_test.dart`, and the two scripts above.
 
-## D-453 Live data cards: weather, prices, rates and more from named sources, refreshed without the model (2026-11-20)
+## D-456 Bots get pictures of their own, framed in one cropper for every avatar (2026-11-20)
+
+- **Decision** (Oliver, 2026-11-20: "support custom images for our bots", with cropping before
+  upload; he took every default in docs/BOT-PICTURES-PLAN.md §14): a bot can use any picture next
+  to the mascots and initials, and every avatar in the app (bots and profile photos) is framed by
+  hand in one cropper.
+- **Storage:** `public.bot_images` in Postgres like profile photos (D-202): 512 and 128 px WebP made
+  by sharp, which drops EXIF, GPS and camera details; the uncropped original (≤ 2,048 px, ≤ 3 MB, no
+  metadata) and the crop for Re-crop, kept for the newest two; five recent per bot plus the one in
+  use. Served at `/v1/bot-images/{id}` without a token, cached `immutable`; `?size=128`,
+  `?format=png` for native widgets. 20 uploads and 20 drawings a day per bot
+  (`bot_image_counts`; counting rows didn't work because pruning removes them).
+- **The value:** `bots.avatar_url = image:<id>:<rrggbb><rrggbb>`, the two colours taken from the
+  picture (most common colourful colour, then the most vivid other hue, nudged to luminance
+  0.14–0.30 so they read on light and dark; grey pictures use the name's gradient). 55 characters,
+  so glance, watch, Live Activity and notification payloads keep their shape and older apps show
+  initials. One test-vector file (`packages/domain/test/fixtures/bot-avatar-vectors.json`) for the
+  TypeScript, Dart, Swift, Kotlin and extension parsers.
+- **Rules in the database:** the app writes `avatar_url` through PostgREST, so a trigger refuses
+  anything but null, a shipped mascot, or one of this bot's own pictures with its real colours.
+  Existing web links were cleared: any editor could point teammates' browsers (the extension
+  loaded https values) at a tracking pixel. Leaving a mascot for a picture stores it in
+  `bots.prior_mascot`: Remove Picture goes back to it, and templates, packs and the A2A card carry
+  it instead of the picture (pictures never leave the workspace; the share sheet says so).
+- **API:** `PUT/DELETE /v1/bots/{id}/image`, `GET /v1/bots/{id}/images` (Recent, or drawn
+  candidates), `POST …/images/{image_id}/use` (Recent and Undo), `GET …/images/{image_id}/original`
+  (Re-crop), `POST …/images/generate`.
+- **Drawing:** "Make One with AI" asks the worker (`generateBotPictures` workflow, no retries, as
+  each try is paid) to draw 1–2 candidates through the same provider, D-419 safety check, credit
+  check and usage rows as `media.image.generate` (`meta.purpose = "bot_picture"`). Seven looks;
+  "Casama Cloud" draws new cloud mascots. Candidates don't change the bot; unused ones go after a
+  day. The bot's own `profile.set_picture` tool (from a chat picture, a drawing, or `undo`) only
+  works for someone who manages it; its Undo is "undo" in chat rather than a chip in the reply.
+- **The cropper** (`client/lib/ui/avatar_cropper.dart`): a still frame in the final shape (the bot
+  squircle at 0.32 × side, or a circle) over a picture that moves and scales under it, always
+  covering it and rubber-banding past an edge; pinch, drag, scroll, double-tap, slider, rotate,
+  mirror, Reset; previews at 56, 40 and 24 px with sidebar rows on light and dark; portraits start
+  high; see-through pictures may sit smaller with None, the bot's colour, white or black behind;
+  keys (arrows, +/−, R, M, 0, Return, Esc), one screen-reader element with zoom and move actions,
+  reduced motion. Phones get a full-screen black page, larger windows a dialog. Output is a 768 px
+  PNG (512 for profile photos). It's ours rather than `pro_image_editor`'s crop screen (still used
+  for chat photos), which has no squircle, works by corner handles and can't host the previews.
+- **Ways in:** the bot profile's big avatar (camera badge, drop target, Cmd/Ctrl+V when focused),
+  the Picture tile first in the icon picker (also on New Bot, saved right after the bot is made),
+  "Use as … Picture" on any picture in the file preview (chat pictures and the Library). The new
+  picture shows from memory at once, with a ring while it uploads, then 10 s of Undo; a failed
+  upload offers Try again with the same crop. Desktop gets the same choices as a dialog rather
+  than an anchored menu.
+- **Everywhere it shows:** `BotAvatar` (every Flutter screen, the companion), the call screen (the
+  picture breathes and a ring in its colours swells with the voice; same mute, failure and
+  reduced-motion rules as the mascot), the extension, and natively: iOS/macOS widgets, Live
+  Activities and the watch read a 128 px PNG the widget refresh, the app and the watch fetch into
+  their shared containers (`client/ios/Shared/BotPictureStore.swift`); Android widgets and the
+  live-run and call notifications the same from the app's files (`BotPictures.kt`).
+- **Not done:** the plan's Phase 0 checks on real devices (HEIC, a 48 MP photo on a low-end
+  Android, each platform's decoder) need app builds; the server's sharp can't read HEIC, so a HEIC
+  picked on a desktop keeps no original for Re-crop (the cropped picture is fine: it's encoded on
+  the device). Bot pictures on push notifications, face-aware first framing and workspace icons
+  stay for later (§13).
+- **Tests:** `apps/server/test/bot-images.test.ts`, `supabase/tests/bot_images.test.sql`,
+  `packages/agent/test/bot-pictures.test.ts`, `packages/domain/test/bot-avatar.test.ts`,
+  `apps/extension/test/look.test.ts`, `client/test/avatar_cropper_test.dart`,
+  `client/test/bot_picture_test.dart`, the watch Swift checks (`scripts/test-watch-swift.sh`) and
+  `scripts/test-bot-avatar-kotlin.sh`.
+
+## D-457 Connected AI apps can be seen and disconnected from Casama (2026-11-20)
+
+- **Why:** an app connected with OAuth (D-117) could only be cut off from the app's own side, or by leaving the workspace. Connector directories (Claude, ChatGPT) expect people to see and end a connection from the service too.
+- **What a connection is:** one person's grant to one registered app (`client_id`) in one workspace, live while it has an unrevoked, unexpired access or refresh token. Refreshing keeps the same grant.
+- **API:** `GET /v1/orgs/{id}/mcp-connections` lists them with the app's registered name, who connected it, when, and when it was last used. Members see their own; owners and admins see everyone's. `DELETE /v1/orgs/{id}/mcp-connections/{client_id}` (`?user_id=` for someone else's, admins only) revokes every access and refresh token of that grant at once, so the app's next call gets 401 and its refresh fails. Audited as `mcp.disconnected`.
+- **Apps can disconnect themselves:** `POST /oauth/revoke` (RFC 7009, announced as `revocation_endpoint`) takes an access or refresh token and ends its whole grant. It always answers 200. API keys aren't revoked there; admins revoke them in the app.
+- **App:** Workspace settings → Advanced → Connect AI Apps → **Connected AI Apps** (admins, all of them, with the person's name), and the same list for members with only their own, shown only when they have one. **Disconnect** asks first.
+- **Tests:** `apps/server/test/hosted-mcp.test.ts` (list scoped by role, a member can't cut off another's app, access and refresh both stop, 404 the second time, admin disconnects a member's, RFC 7009), `client/test/mcp_test.dart`.
+
+## D-458 Live data cards: weather, prices, rates and more from named sources, refreshed without the model (2026-11-20)
 
 - **Decision (2026-11-20, Oliver showed two weather answers stitched from search snippets, one explaining "cached Yandex mirror pages with conflicting data", and asked for "beautiful cards for weather, stock prices, crypto prices, currency stuffs, and even more"; then "You decide everything for me. Start building everything"):** plan in `docs/RICH-CARDS-PLAN.md`, every §16 decision at its default, except where "As built" says otherwise. Bots answer everyday questions about the world with a card of real data and one sentence.
 - **Data tools** (`packages/agent/src/live-data/`): `live.weather`, `live.air`, `live.sun`, `live.alerts`, `live.quote`, `live.markets`, `live.fx`, `live.time`, `live.holidays`, `live.quakes`, `live.storms`, `live.lookup`, `live.define`, `live.book`, `live.film`, `live.sports`, `live.flight`, `live.parcel`, plus `live.dashboard` (2–6 live cards in one grid) and `live.page` (a card from a page's own schema.org data: recipes, products, films, books, events, articles, places). One lazy group, `live`, not core tools: as core they'd add ~700 tokens to every model call (USAGE-PLAN step 4, `core-tools-size.test.ts`); remembered groups make them free after a conversation's first use. Not on voice calls: the call's tool budget (D-355, `voice-call-tools.test.ts`) has no room; calls still have web search.
 - **Providers** through the egress guard with our User-Agent: MET Norway (forecasts, CC BY 4.0), Open-Meteo (rain chances, UV, air quality, pollen; free API is non-commercial, so `LIVE_OPEN_METEO=auto` uses it only where `BILLING_ENABLED` is off or with `LIVE_OPEN_METEO_KEY`), NWS (US alerts), GeoNames via Open-Meteo (places), Frankfurter (rates), CoinGecko (crypto), USGS (earthquakes), GDACS (storms), Wikipedia, Wiktionary, Open Library, Nager.Date (holidays), sun and moon worked out locally (a SunCalc port). Yahoo Finance (stocks, movers) and ESPN (scores, standings) have no published API terms: `LIVE_UNOFFICIAL=auto` uses them only where billing is off; Casama Cloud needs `LIVE_FINNHUB_KEY` for stocks. Flights (aviationstack), parcels (17TRACK) and films (TMDB) are on only with a key; without one their tools aren't registered.
 - **Numbers come only from the server.** A data card (Weather, Forecast, WeatherAlert, AirQuality, SunMoon, Quote, Watchlist, Currency, Holidays, Quake, Storm, Flight, Parcel, Score, Standings) is filled by the tool and refused from `ui.show` (`checkLiveCard` with `fromBot`); a plugin filling one (D-345) is named as its source. Each card carries `live: {ref, source, sources?, fetchedAt, staleAfter, delayed?}` and a `summary` (Copy, screen readers). The model gets a short text and "don't repeat the numbers"; the turn goes on, so one reply can hold several cards.
 - **Refresh without the model:** `live_cards` keeps each shown card's call (arguments resolved, a place already geocoded); `POST /v1/live-cards/:id/refresh` repeats it through the shared cache (`live_data_cache`, no person in a key, one upstream call per key at a time, a stale answer when a provider fails), `{view}` gives another day or chart range without saving, row-level security limits it to whoever can read the run's chat (personal cards to their person). The app refreshes cards on screen once they're past `staleAfter` for 30 minutes after showing them; ↻ forces it.
-- **Pins (Stage A):** ⋯ → Pin to widgets writes a D-452 canvas the worker keeps fresh with no model run (weather as a 14-entry hourly schedule, prices and rates as numbers), inside the canvas write limits; the bot's widget permission applies. Native live widgets (Stage B) wait for pins to prove use (decision 9).
+- **Pins (Stage A):** ⋯ → Pin to widgets writes a D-455 canvas the worker keeps fresh with no model run (weather as a 14-entry hourly schedule, prices and rates as numbers), inside the canvas write limits; the bot's widget permission applies. Native live widgets (Stage B) wait for pins to prove use (decision 9).
 - **Composed cards** for what bots write themselves: WorldClock, Countdown, Summary, Definition, Media, Recipe, Comparison, ProsCons, Steps, Timeline, Calculator, Random, Translation, Contact, Quiz (`quiz.answer` events), Nutrition, Status (`jobs`, not `checks`: every component's `checks` are its input checks), and the Dashboard and Carousel containers; they say "Written by the bot; it may be wrong" unless they name a source.
 - **Units** follow the person's choice (Settings → Cards, `profiles.card_units`), else their time zone (US, Liberia and Myanmar zones → °F and miles), the same rule in the tools and the app, so a card and the bot's sentence agree. A home city (`profiles.home_place`, a city rounded to 0.01°) answers "here"; without one, the time zone's main city with a note.
 - **The morning brief** opens with one `live.dashboard` (gallery prompt `checkin.brief` v2; `live.dashboard` added to the check-in tools).
@@ -6703,3 +6969,4 @@ password and code (D-448), and delegated the rest ("build them all now in 1 go!"
 - **Analytics:** `card_shown` (server), `card_refreshed`, `card_pinned`, `card_unpinned`, `card_shared`, `card_reported` (app); no places, symbols or words.
 - **Tests:** `packages/agent/test/live-data.test.ts` (recorded provider answers, cache, sun and moon, pins, pages), `packages/domain/test/live-cards.test.ts`, `apps/server/test/live-cards.test.ts`, `supabase/tests/live_cards_rls.test.sql`, `client/test/live_cards_test.dart` (every card from real provider fixtures at phone and desktop widths, refresh, views, quiz). Checked end to end in the web app against this branch's server on 2026-11-20: weather, forecast, watchlist, currency, world clock, earthquakes, recipe from a page, dictionary, dashboard, scores, comparison, calculator, sun and moon, summary, holidays, air quality; refresh, views, pin and Settings → Cards. Fixed from that pass: units, today's full-day high (MET's forecast starts now; Open-Meteo's daily figures cover the day), the moon's drawing, the quake map's fit, all sources in footers.
 - **Not done:** native Live card widgets and watch complications (Stage B), live tools on voice calls, health cards (decision 12: a separate plan), the long tail of §6 rows marked "—" (picked from `card_shown` and `card_reported` once there's data), a licensed stock provider on Casama Cloud (needs a key and a COSTS update), production deploy and app builds.
+

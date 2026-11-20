@@ -16,6 +16,7 @@ xcrun --sdk macosx swiftc -parse-as-library -swift-version 5 -target "$(uname -m
   "$W/Glance.swift" \
   "$W/WidgetKey.swift" \
   "$W/GlanceFetch.swift" \
+  "$ROOT/client/ios/Shared/BotPictureStore.swift" \
   "$W/Canvas.swift" \
   "$W/CanvasIntents.swift" \
   "$W/CanvasTimeline.swift" \

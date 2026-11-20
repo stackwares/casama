@@ -14,6 +14,10 @@
 		D3B11A0D2F0000000000000E /* GlanceFetch.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3B11A0D2F0000000000000D /* GlanceFetch.swift */; };
 		D3B11A0D2F00000000000010 /* GlanceTimeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3B11A0D2F0000000000000F /* GlanceTimeline.swift */; };
 		D3B11A0D2F00000000000012 /* BotMark.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3B11A0D2F00000000000011 /* BotMark.swift */; };
+		D5B11A0D2F00000000000002 /* BotPictureStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5B11A0D2F00000000000001 /* BotPictureStore.swift */; };
+		D5B11A0D2F00000000000003 /* BotPictureStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5B11A0D2F00000000000001 /* BotPictureStore.swift */; };
+		D5B11A0D2F00000000000004 /* BotPictureStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5B11A0D2F00000000000001 /* BotPictureStore.swift */; };
+		D5B11A0D2F00000000000005 /* BotPictureStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5B11A0D2F00000000000001 /* BotPictureStore.swift */; };
 		D3B11A0D2F00000000000014 /* WidgetPush.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3B11A0D2F00000000000013 /* WidgetPush.swift */; };
 		D3B11A0D2F00000000000016 /* Widgets.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3B11A0D2F00000000000015 /* Widgets.swift */; };
 		D3B11A0D2F00000000000018 /* Controls.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3B11A0D2F00000000000017 /* Controls.swift */; };
@@ -259,6 +263,7 @@
 		E78A7E61B67619C3B5B9EE10 /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		EE968A3A92DD423E10EE6E0B /* Pods-Runner.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.release.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.release.xcconfig"; sourceTree = "<group>"; };
 		FAD7F69A47C113EA4A9C3207 /* Pods-RunnerTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.debug.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.debug.xcconfig"; sourceTree = "<group>"; };
+		D5B11A0D2F00000000000001 /* BotPictureStore.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BotPictureStore.swift; sourceTree = "<group>"; };
 		D4C11A0D2F00000000000001 /* BotMark.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BotMark.swift; sourceTree = "<group>"; };
 		D4C11A0D2F00000000000002 /* WatchAPI.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WatchAPI.swift; sourceTree = "<group>"; };
 		D4C11A0D2F00000000000003 /* WatchIntents.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WatchIntents.swift; sourceTree = "<group>"; };
@@ -515,6 +520,7 @@
 			isa = PBXGroup;
 			children = (
 				D4C11A0D2F00000000000001 /* BotMark.swift */,
+				D5B11A0D2F00000000000001 /* BotPictureStore.swift */,
 				D4C11A0D2F00000000000002 /* WatchAPI.swift */,
 				D4C11A0D2F00000000000003 /* WatchIntents.swift */,
 				D4C11A0D2F00000000000004 /* WatchKeyStore.swift */,
@@ -912,6 +918,7 @@
 				D3B11A0D2F0000000000000E /* GlanceFetch.swift in Sources */,
 				D3B11A0D2F00000000000010 /* GlanceTimeline.swift in Sources */,
 				D3B11A0D2F00000000000012 /* BotMark.swift in Sources */,
+				D5B11A0D2F00000000000002 /* BotPictureStore.swift in Sources */,
 				D3B11A0D2F00000000000014 /* WidgetPush.swift in Sources */,
 				D3B11A0D2F00000000000016 /* Widgets.swift in Sources */,
 				D3B11A0D2F00000000000018 /* Controls.swift in Sources */,
@@ -936,6 +943,7 @@
 				7884E8682EC3CC0700C636F2 /* SceneDelegate.swift in Sources */,
 				D2A11A0D2F00000000000003 /* RunActivityAttributes.swift in Sources */,
 				D2A11A0D2F00000000000005 /* IslandActivities.swift in Sources */,
+				D5B11A0D2F00000000000003 /* BotPictureStore.swift in Sources */,
 				D2A11A0D2F00000000000013 /* RunActionIntents.swift in Sources */,
 				D3B11A0D2F00000000000003 /* Glance.swift in Sources */,
 				D3B11A0D2F00000000000006 /* WidgetKey.swift in Sources */,
@@ -958,6 +966,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				D4C11A0D2F00000000000026 /* BotMark.swift in Sources */,
+				D5B11A0D2F00000000000004 /* BotPictureStore.swift in Sources */,
 				D4C11A0D2F00000000000028 /* WatchAPI.swift in Sources */,
 				D4C11A0D2F0000000000002A /* WatchIntents.swift in Sources */,
 				D4C11A0D2F0000000000002C /* WatchKeyStore.swift in Sources */,
@@ -989,6 +998,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				D4C11A0D2F00000000000027 /* BotMark.swift in Sources */,
+				D5B11A0D2F00000000000005 /* BotPictureStore.swift in Sources */,
 				D4C11A0D2F00000000000029 /* WatchAPI.swift in Sources */,
 				D4C11A0D2F0000000000002B /* WatchIntents.swift in Sources */,
 				D4C11A0D2F0000000000002D /* WatchKeyStore.swift in Sources */,

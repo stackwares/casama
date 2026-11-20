@@ -12,6 +12,7 @@ import 'package:casama_api/src/model/action_admin_workspace_limit_reset_request.
 import 'package:casama_api/src/model/action_rule.dart';
 import 'package:casama_api/src/model/action_rule_list.dart';
 import 'package:casama_api/src/model/action_rule_target.dart';
+import 'package:casama_api/src/model/add_admin_device_key_request.dart';
 import 'package:casama_api/src/model/add_teach_step_request.dart';
 import 'package:casama_api/src/model/add_user_facts_request.dart';
 import 'package:casama_api/src/model/add_user_facts_request_items_inner.dart';
@@ -19,13 +20,22 @@ import 'package:casama_api/src/model/add_waitlist_entries_request.dart';
 import 'package:casama_api/src/model/admin_bot_setting.dart';
 import 'package:casama_api/src/model/admin_browser_guard.dart';
 import 'package:casama_api/src/model/admin_call_limits.dart';
+import 'package:casama_api/src/model/admin_check.dart';
 import 'package:casama_api/src/model/admin_credit_pack.dart';
+import 'package:casama_api/src/model/admin_device_challenge.dart';
+import 'package:casama_api/src/model/admin_device_challenge_request.dart';
+import 'package:casama_api/src/model/admin_device_check_request.dart';
+import 'package:casama_api/src/model/admin_device_key.dart';
+import 'package:casama_api/src/model/admin_device_key_list.dart';
 import 'package:casama_api/src/model/admin_domain.dart';
 import 'package:casama_api/src/model/admin_domain_order.dart';
 import 'package:casama_api/src/model/admin_domains.dart';
 import 'package:casama_api/src/model/admin_domains_counts.dart';
 import 'package:casama_api/src/model/admin_link_server.dart';
 import 'package:casama_api/src/model/admin_link_server_list.dart';
+import 'package:casama_api/src/model/admin_mail_address.dart';
+import 'package:casama_api/src/model/admin_mail_addresses200_response.dart';
+import 'package:casama_api/src/model/admin_mail_reserved_names.dart';
 import 'package:casama_api/src/model/admin_margin.dart';
 import 'package:casama_api/src/model/admin_margin_by_day_inner.dart';
 import 'package:casama_api/src/model/admin_margin_by_kind_inner.dart';
@@ -34,6 +44,9 @@ import 'package:casama_api/src/model/admin_model_catalog.dart';
 import 'package:casama_api/src/model/admin_org.dart';
 import 'package:casama_api/src/model/admin_org_list.dart';
 import 'package:casama_api/src/model/admin_overview.dart';
+import 'package:casama_api/src/model/admin_passkey_check_request.dart';
+import 'package:casama_api/src/model/admin_pin_check_request.dart';
+import 'package:casama_api/src/model/admin_pin_state.dart';
 import 'package:casama_api/src/model/admin_plan.dart';
 import 'package:casama_api/src/model/admin_price_tables.dart';
 import 'package:casama_api/src/model/admin_pricing.dart';
@@ -74,6 +87,7 @@ import 'package:casama_api/src/model/billing_summary_computer_hours.dart';
 import 'package:casama_api/src/model/billing_summary_daily.dart';
 import 'package:casama_api/src/model/billing_usage.dart';
 import 'package:casama_api/src/model/billing_usage_item.dart';
+import 'package:casama_api/src/model/block_mail_sender_request.dart';
 import 'package:casama_api/src/model/block_request.dart';
 import 'package:casama_api/src/model/blocked_person.dart';
 import 'package:casama_api/src/model/blocked_person_list.dart';
@@ -90,6 +104,9 @@ import 'package:casama_api/src/model/bot_list.dart';
 import 'package:casama_api/src/model/bot_model_privacy.dart';
 import 'package:casama_api/src/model/bot_page.dart';
 import 'package:casama_api/src/model/bot_page_detail.dart';
+import 'package:casama_api/src/model/bot_picture.dart';
+import 'package:casama_api/src/model/bot_picture_crop.dart';
+import 'package:casama_api/src/model/bot_picture_list.dart';
 import 'package:casama_api/src/model/bot_secret_request.dart';
 import 'package:casama_api/src/model/bot_secret_request_list.dart';
 import 'package:casama_api/src/model/bot_share_link.dart';
@@ -141,6 +158,7 @@ import 'package:casama_api/src/model/checkpoint.dart';
 import 'package:casama_api/src/model/checkpoint_created_event.dart';
 import 'package:casama_api/src/model/checkpoint_created_event_payload.dart';
 import 'package:casama_api/src/model/checkpoint_list.dart';
+import 'package:casama_api/src/model/claim_mail_address_request.dart';
 import 'package:casama_api/src/model/clean_storage_result.dart';
 import 'package:casama_api/src/model/cloud_models.dart';
 import 'package:casama_api/src/model/coding_agent_info.dart';
@@ -228,7 +246,21 @@ import 'package:casama_api/src/model/credential_test_result.dart';
 import 'package:casama_api/src/model/credit_entry.dart';
 import 'package:casama_api/src/model/credit_pack.dart';
 import 'package:casama_api/src/model/decide_join_request.dart';
+import 'package:casama_api/src/model/decision_results.dart';
+import 'package:casama_api/src/model/decision_settings.dart';
+import 'package:casama_api/src/model/decision_settings_uses.dart';
+import 'package:casama_api/src/model/decision_settings_uses_effort.dart';
+import 'package:casama_api/src/model/decision_settings_uses_long_run.dart';
+import 'package:casama_api/src/model/decision_settings_uses_push_score.dart';
+import 'package:casama_api/src/model/decision_settings_uses_reply_check.dart';
+import 'package:casama_api/src/model/decision_settings_uses_scan_gate.dart';
+import 'package:casama_api/src/model/decision_settings_uses_tool_gate.dart';
+import 'package:casama_api/src/model/decision_settings_uses_watcher_gate.dart';
+import 'package:casama_api/src/model/decision_signal_result.dart';
+import 'package:casama_api/src/model/decision_signal_result_thresholds_inner.dart';
 import 'package:casama_api/src/model/delete_account_request.dart';
+import 'package:casama_api/src/model/delete_mail_messages_request.dart';
+import 'package:casama_api/src/model/delete_mail_messages_result.dart';
 import 'package:casama_api/src/model/delete_result.dart';
 import 'package:casama_api/src/model/deleted_call.dart';
 import 'package:casama_api/src/model/deleted_canvas.dart';
@@ -350,6 +382,7 @@ import 'package:casama_api/src/model/gallery_submission.dart';
 import 'package:casama_api/src/model/gallery_submission_list.dart';
 import 'package:casama_api/src/model/gallery_update_request.dart';
 import 'package:casama_api/src/model/gallery_update_result.dart';
+import 'package:casama_api/src/model/generate_bot_pictures_request.dart';
 import 'package:casama_api/src/model/git_hub_skill_preview.dart';
 import 'package:casama_api/src/model/git_hub_skill_preview_request.dart';
 import 'package:casama_api/src/model/git_sync_status.dart';
@@ -445,6 +478,12 @@ import 'package:casama_api/src/model/local_mcp_integration_list.dart';
 import 'package:casama_api/src/model/local_mcp_server_info.dart';
 import 'package:casama_api/src/model/local_mcp_sign_in_needed_event.dart';
 import 'package:casama_api/src/model/local_mcp_sign_in_needed_event_payload.dart';
+import 'package:casama_api/src/model/mail_address.dart';
+import 'package:casama_api/src/model/mail_file.dart';
+import 'package:casama_api/src/model/mail_message.dart';
+import 'package:casama_api/src/model/mail_message_detail.dart';
+import 'package:casama_api/src/model/mail_message_list.dart';
+import 'package:casama_api/src/model/mail_name_availability.dart';
 import 'package:casama_api/src/model/mark_teach_secret_request.dart';
 import 'package:casama_api/src/model/mcp_auth_request_info.dart';
 import 'package:casama_api/src/model/mcp_connection.dart';
@@ -481,6 +520,7 @@ import 'package:casama_api/src/model/model_fallback_event_payload.dart';
 import 'package:casama_api/src/model/model_option.dart';
 import 'package:casama_api/src/model/model_option_list.dart';
 import 'package:casama_api/src/model/model_policy.dart';
+import 'package:casama_api/src/model/move_mail_address_request.dart';
 import 'package:casama_api/src/model/newsletter_status.dart';
 import 'package:casama_api/src/model/notice_event.dart';
 import 'package:casama_api/src/model/notice_event_payload.dart';
@@ -682,10 +722,12 @@ import 'package:casama_api/src/model/server_capacity_alerts_inner.dart';
 import 'package:casama_api/src/model/server_capacity_days_inner.dart';
 import 'package:casama_api/src/model/server_capacity_latest.dart';
 import 'package:casama_api/src/model/set_admin_bot_request.dart';
+import 'package:casama_api/src/model/set_admin_pin_request.dart';
 import 'package:casama_api/src/model/set_analytics_opt_out_request.dart';
 import 'package:casama_api/src/model/set_bot_a2a_request.dart';
 import 'package:casama_api/src/model/set_bot_access_request.dart';
 import 'package:casama_api/src/model/set_bot_access_request_entries_inner.dart';
+import 'package:casama_api/src/model/set_bot_picture_request.dart';
 import 'package:casama_api/src/model/set_canvas_grant.dart';
 import 'package:casama_api/src/model/set_connection_settings_request.dart';
 import 'package:casama_api/src/model/set_device_grant_request.dart';
@@ -693,6 +735,7 @@ import 'package:casama_api/src/model/set_encryption_request.dart';
 import 'package:casama_api/src/model/set_git_sync_request.dart';
 import 'package:casama_api/src/model/set_join_domain_request.dart';
 import 'package:casama_api/src/model/set_local_mcp_servers_request.dart';
+import 'package:casama_api/src/model/set_mail_address_status_request.dart';
 import 'package:casama_api/src/model/set_memory_backend_request.dart';
 import 'package:casama_api/src/model/set_newsletter_request.dart';
 import 'package:casama_api/src/model/set_org_limits_request.dart';
@@ -826,6 +869,7 @@ import 'package:casama_api/src/model/update_gallery_request.dart';
 import 'package:casama_api/src/model/update_integration_request.dart';
 import 'package:casama_api/src/model/update_invite_campaign_request.dart';
 import 'package:casama_api/src/model/update_local_device_request.dart';
+import 'package:casama_api/src/model/update_mail_address_request.dart';
 import 'package:casama_api/src/model/update_memory_request.dart';
 import 'package:casama_api/src/model/update_notice.dart';
 import 'package:casama_api/src/model/update_org_settings_request.dart';
@@ -974,6 +1018,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return ActionRuleList.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ActionRuleTarget':
           return ActionRuleTarget.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'AddAdminDeviceKeyRequest':
+          return AddAdminDeviceKeyRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AddTeachStepRequest':
           return AddTeachStepRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AddUserFactsRequest':
@@ -988,8 +1034,20 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return AdminBrowserGuard.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AdminCallLimits':
           return AdminCallLimits.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'AdminCheck':
+          return AdminCheck.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AdminCreditPack':
           return AdminCreditPack.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'AdminDeviceChallenge':
+          return AdminDeviceChallenge.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'AdminDeviceChallengeRequest':
+          return AdminDeviceChallengeRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'AdminDeviceCheckRequest':
+          return AdminDeviceCheckRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'AdminDeviceKey':
+          return AdminDeviceKey.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'AdminDeviceKeyList':
+          return AdminDeviceKeyList.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AdminDomain':
           return AdminDomain.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AdminDomainOrder':
@@ -1002,6 +1060,12 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return AdminLinkServer.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AdminLinkServerList':
           return AdminLinkServerList.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'AdminMailAddress':
+          return AdminMailAddress.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'AdminMailAddresses200Response':
+          return AdminMailAddresses200Response.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'AdminMailReservedNames':
+          return AdminMailReservedNames.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AdminMargin':
           return AdminMargin.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AdminMarginByDayInner':
@@ -1018,6 +1082,12 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return AdminOrgList.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AdminOverview':
           return AdminOverview.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'AdminPasskeyCheckRequest':
+          return AdminPasskeyCheckRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'AdminPinCheckRequest':
+          return AdminPinCheckRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'AdminPinState':
+          return AdminPinState.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AdminPlan':
           return AdminPlan.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AdminPriceTables':
@@ -1104,6 +1174,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return BillingUsage.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'BillingUsageItem':
           return BillingUsageItem.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'BlockMailSenderRequest':
+          return BlockMailSenderRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'BlockRequest':
           return BlockRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'BlockedPerson':
@@ -1136,6 +1208,15 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return BotPage.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'BotPageDetail':
           return BotPageDetail.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'BotPicture':
+          return BotPicture.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'BotPictureCrop':
+          return BotPictureCrop.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'BotPictureList':
+          return BotPictureList.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'BotPictureStyle':
+          
+          
         case 'BotSecretRequest':
           return BotSecretRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'BotSecretRequestList':
@@ -1241,6 +1322,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return CheckpointCreatedEventPayload.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CheckpointList':
           return CheckpointList.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ClaimMailAddressRequest':
+          return ClaimMailAddressRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CleanStorageResult':
           return CleanStorageResult.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CloudModels':
@@ -1424,8 +1507,36 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return CreditPack.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DecideJoinRequest':
           return DecideJoinRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'DecisionResults':
+          return DecisionResults.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'DecisionSettings':
+          return DecisionSettings.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'DecisionSettingsUses':
+          return DecisionSettingsUses.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'DecisionSettingsUsesEffort':
+          return DecisionSettingsUsesEffort.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'DecisionSettingsUsesLongRun':
+          return DecisionSettingsUsesLongRun.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'DecisionSettingsUsesPushScore':
+          return DecisionSettingsUsesPushScore.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'DecisionSettingsUsesReplyCheck':
+          return DecisionSettingsUsesReplyCheck.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'DecisionSettingsUsesScanGate':
+          return DecisionSettingsUsesScanGate.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'DecisionSettingsUsesToolGate':
+          return DecisionSettingsUsesToolGate.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'DecisionSettingsUsesWatcherGate':
+          return DecisionSettingsUsesWatcherGate.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'DecisionSignalResult':
+          return DecisionSignalResult.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'DecisionSignalResultThresholdsInner':
+          return DecisionSignalResultThresholdsInner.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeleteAccountRequest':
           return DeleteAccountRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'DeleteMailMessagesRequest':
+          return DeleteMailMessagesRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'DeleteMailMessagesResult':
+          return DeleteMailMessagesResult.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeleteResult':
           return DeleteResult.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeletedCall':
@@ -1686,6 +1797,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
         case 'GalleryWorkspaceKind':
           
           
+        case 'GenerateBotPicturesRequest':
+          return GenerateBotPicturesRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'GitHubSkillPreview':
           return GitHubSkillPreview.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'GitHubSkillPreviewRequest':
@@ -1882,6 +1995,18 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return LocalMcpSignInNeededEvent.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'LocalMcpSignInNeededEventPayload':
           return LocalMcpSignInNeededEventPayload.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'MailAddress':
+          return MailAddress.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'MailFile':
+          return MailFile.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'MailMessage':
+          return MailMessage.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'MailMessageDetail':
+          return MailMessageDetail.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'MailMessageList':
+          return MailMessageList.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'MailNameAvailability':
+          return MailNameAvailability.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'MarkTeachSecretRequest':
           return MarkTeachSecretRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'McpAuthRequestInfo':
@@ -1954,6 +2079,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return ModelOptionList.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ModelPolicy':
           return ModelPolicy.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'MoveMailAddressRequest':
+          return MoveMailAddressRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'NewsletterStatus':
           return NewsletterStatus.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'NoticeEvent':
@@ -2401,6 +2528,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return ServerCapacityLatest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SetAdminBotRequest':
           return SetAdminBotRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'SetAdminPinRequest':
+          return SetAdminPinRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SetAnalyticsOptOutRequest':
           return SetAnalyticsOptOutRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SetBotA2aRequest':
@@ -2409,6 +2538,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return SetBotAccessRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SetBotAccessRequestEntriesInner':
           return SetBotAccessRequestEntriesInner.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'SetBotPictureRequest':
+          return SetBotPictureRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SetCanvasGrant':
           return SetCanvasGrant.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SetConnectionSettingsRequest':
@@ -2423,6 +2554,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return SetJoinDomainRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SetLocalMcpServersRequest':
           return SetLocalMcpServersRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'SetMailAddressStatusRequest':
+          return SetMailAddressStatusRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SetMemoryBackendRequest':
           return SetMemoryBackendRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SetNewsletterRequest':
@@ -2704,6 +2837,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return UpdateInviteCampaignRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'UpdateLocalDeviceRequest':
           return UpdateLocalDeviceRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'UpdateMailAddressRequest':
+          return UpdateMailAddressRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'UpdateMemoryRequest':
           return UpdateMemoryRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'UpdateNotice':

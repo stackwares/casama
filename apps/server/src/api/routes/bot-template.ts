@@ -10,6 +10,7 @@ import {
   isValidTimezone,
   nextRunAt,
   PLATFORM_OPENROUTER_CREDENTIAL_ID,
+  portableBotAvatar,
 } from "@casama/domain";
 import type { OpenAPIHono, z } from "@hono/zod-openapi";
 import { sql } from "drizzle-orm";
@@ -42,9 +43,10 @@ export async function exportTemplate(
       persona_md: string;
       autonomy: Template["autonomy"];
       avatar_url: string | null;
+      prior_mascot: string | null;
       manage: boolean;
     }>(sql`
-      select name, persona_md, autonomy, avatar_url, public.can_manage_bot(id) as manage from public.bots where id = ${botId}::uuid`),
+      select name, persona_md, autonomy, avatar_url, prior_mascot, public.can_manage_bot(id) as manage from public.bots where id = ${botId}::uuid`),
   );
   if (!bot) throw new ApiError(404, "bot_not_found", "Bot not found");
   const skills = await db.execute<{
@@ -91,8 +93,9 @@ export async function exportTemplate(
     description: "",
     persona_md: bot.persona_md,
     autonomy: bot.autonomy,
-    // Only built-in mascots travel; uploaded pictures stay in this workspace.
-    avatar: bot.avatar_url?.startsWith("mascot:") ? bot.avatar_url : null,
+    // Only built-in mascots travel; a bot's own picture stays in this workspace, and the mascot it
+    // had before stands in for it.
+    avatar: portableBotAvatar(bot.avatar_url, bot.prior_mascot),
     skills: skills.map((k) => ({
       name: k.name,
       description: k.description,
@@ -212,7 +215,7 @@ export function registerBotTemplateRoutes(app: OpenAPIHono<AppEnv>, deps: AppDep
         insert into public.bots (org_id, created_by, name, persona_md, model_policy, autonomy, avatar_url)
         values (${body.org_id}::uuid, ${claims.sub}::uuid, ${t.name}, ${t.persona_md},
                 ${JSON.stringify({ primary: { credential_id: credentialId, model } })}::jsonb,
-                ${t.autonomy}, ${t.avatar?.startsWith("mascot:") ? t.avatar : null})
+                ${t.autonomy}, ${portableBotAvatar(t.avatar)})
         returning id`);
       if (!b) throw new ApiError(403, "forbidden", "You can't create bots in this workspace");
       return b.id;

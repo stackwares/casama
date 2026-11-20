@@ -33,6 +33,11 @@ const _knownLimits = [
   'trial_days',
   'trial_credits_usd',
   'trial_computer_hours',
+  // Hosted bot mail (BOT-EMAIL-PLAN §8).
+  'max_mail_addresses',
+  'mail_new_day',
+  'mail_sent_day',
+  'mail_storage_mb',
 ];
 
 String _limitLabel(BuildContext context, String key) {
@@ -50,6 +55,10 @@ String _limitLabel(BuildContext context, String key) {
     'trial_days' => l10n.adminLimitTrialDays,
     'trial_credits_usd' => l10n.adminLimitTrialCredits,
     'trial_computer_hours' => l10n.adminLimitTrialHours,
+    'max_mail_addresses' => l10n.adminLimitMailAddresses,
+    'mail_new_day' => l10n.adminLimitMailNewDay,
+    'mail_sent_day' => l10n.adminLimitMailSentDay,
+    'mail_storage_mb' => l10n.adminLimitMailStorage,
     _ => key,
   };
 }

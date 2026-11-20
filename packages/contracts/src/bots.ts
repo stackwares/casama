@@ -90,7 +90,14 @@ export const CreateBotRequest = z
     org_id: Uuid,
     name: z.string().trim().min(1).max(80),
     persona_md: z.string().max(20000).optional(),
-    avatar_url: z.url().optional(),
+    avatar_url: z
+      .string()
+      .regex(/^mascot:(winky|sleepy|starry|lovey|cool|thinker|giggly|shy|focused|wow)$/)
+      .optional()
+      .openapi({
+        description:
+          "A mascot (`mascot:<name>`); a picture of its own is set afterwards with setBotPicture",
+      }),
     model_policy: ModelPolicy.optional(),
     autonomy: Autonomy.optional(),
     visibility: Visibility.optional(),

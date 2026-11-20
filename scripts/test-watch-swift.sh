@@ -18,6 +18,7 @@ xcrun --sdk macosx swiftc -parse-as-library -swift-version 5 -target "$(uname -m
   "$SHARED/WatchLinks.swift" \
   "$SHARED/WatchSSE.swift" \
   "$SHARED/WatchStore.swift" \
+  "$SHARED/BotPictureStore.swift" \
   "$ROOT/client/ios/CasamaWatchTests/ModelTests.swift"
 
-"$OUT/model-tests" "$ROOT/packages/contracts/fixtures/watch"
+"$OUT/model-tests" "$ROOT/packages/contracts/fixtures/watch" "$ROOT/packages/domain/test/fixtures/bot-avatar-vectors.json"

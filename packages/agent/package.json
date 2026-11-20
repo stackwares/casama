@@ -34,6 +34,7 @@
     "pdf-lib": "1.17.1",
     "pdfjs-dist": "6.5.438",
     "pdfmake": "0.3.14",
+    "postal-mime": "^4.2.1",
     "qrcode": "1.5.4",
     "sharp": "0.34.5",
     "undici": "^8.12.4",

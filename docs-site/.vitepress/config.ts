@@ -32,10 +32,10 @@ const firstParagraph = (relativePath: string) => {
     .replace(/[`*_]/g, "")
     .replace(/\s+/g, " ")
     .trim();
-  if (text.length <= 170) return text;
-  const cut = text.slice(0, 170);
+  if (text.length <= 160) return text;
+  const cut = text.slice(0, 160);
   const end = Math.max(cut.lastIndexOf(". "), cut.lastIndexOf("? "));
-  return end > 80 ? cut.slice(0, end + 1) : `${cut.slice(0, cut.lastIndexOf(" "))}…`;
+  return end > 80 ? cut.slice(0, end + 1) : `${cut.slice(0, cut.lastIndexOf(" ", 158))}…`;
 };
 
 /** Markdown to plain text for structured data: links keep their words, formatting goes. */
@@ -78,9 +78,35 @@ const faqQuestions = (relativePath: string) => {
     .filter((q) => q.question && q.answer);
 };
 
+const searchTitles: Record<string, string> = {
+  "develop/cli.md": "Casama CLI: commands for bots, runs and servers",
+  "develop/packs.md": "Pack format: build and publish a pack",
+  "guide/packs.md": "Packs: install whole bots, routines and apps",
+  "develop/plugins.md": "Plugins: give a Casama bot new skills and tools",
+  "develop/webhooks.md": "Webhooks: send Casama events to your own URL",
+  "develop/api.md": "Casama HTTP API reference (OpenAPI 3.1)",
+  "develop/sdk.md": "Dart SDK for the Casama API",
+  "faq.md": "Casama FAQ: pricing, privacy and self-hosting",
+  "guide/skills.md": "Skills: a repeatable way of working for a bot",
+  "guide/routines.md": "Routines: scheduled and triggered bot work",
+  "guide/computers.md": "Computers: a Linux machine for every Casama bot",
+  "guide/limits.md": "Limits: every default cap, timeout and budget",
+  "guide/pages.md": "Pages: reports and dashboards a bot publishes",
+  "guide/memory.md": "Memory and knowledge: what a Casama bot remembers",
+  "guide/library.md": "The Library: files and pages your bots keep for you",
+  "guide/chat.md": "Chatting with a bot: messages, files and voice",
+  "guide/bots.md": "Bots and models: pick the AI model for each bot",
+  "self-hosting/index.md": "Self-hosting Casama: run it on your own server",
+  "self-hosting/configuration.md": "Self-hosting configuration: all settings",
+  "self-hosting/operations.md": "Operating a Casama server: updates and backups",
+  "self-hosting/troubleshooting.md": "Self-hosting troubleshooting: common fixes",
+};
+
 export default defineConfig({
   title: "Casama",
-  description: "Self-hostable AI teammates with their own computers.",
+  // Every page's <title> reads "<what it covers> | Casama docs": the docs' own name in the search result.
+  titleTemplate: ":title | Casama docs",
+  description: "Casama docs: guides, the HTTP API, SDKs and self-hosting for open-source AI teammates that have their own computers.",
   sitemap: {
     hostname: "https://docs.casama.ai",
   },
@@ -100,6 +126,8 @@ export default defineConfig({
   },
   head: [
     ["link", { rel: "icon", type: "image/svg+xml", href: "/casama-winky-animated.svg" }],
+    ["link", { rel: "icon", href: "/favicon.ico", sizes: "48x48" }],
+    ["link", { rel: "apple-touch-icon", href: "/apple-touch-icon.png" }],
     // Error reports (D-416): loads Sentry only when a page breaks; no cookie (docs-site/public/errors.js).
     ["script", { src: "/errors.js", "data-dsn": "https://86edd9eaf9c8b7f88c6a1cf3b71a1e94@o219011.ingest.us.sentry.io/4512413457776640", "data-surface": "docs" }],
     ["meta", { name: "theme-color", content: "#ffffff", media: "(prefers-color-scheme: light)" }],
@@ -124,6 +152,10 @@ export default defineConfig({
   // A page with no description of its own gets its first paragraph, so search results and share
   // cards say what the page is about instead of repeating the site's one line.
   transformPageData: (pageData) => {
+    // A one-word page title ("Packs", "CLI") says little in a search result, and two pages shared
+    // "Packs". These pages get a fuller <title>; their on-page heading stays as written.
+    const fuller = searchTitles[pageData.relativePath];
+    if (fuller) pageData.title = fuller;
     if (pageData.frontmatter.description) return;
     const description = firstParagraph(pageData.relativePath);
     if (description) pageData.description = description;
@@ -243,6 +275,7 @@ export default defineConfig({
           { text: "Domain terms and prices", link: "/guide/domain-terms" },
           { text: "Voice and calls", link: "/guide/voice" },
           { text: "Chat apps", link: "/guide/chat-apps" },
+          { text: "A bot's email address", link: "/guide/bot-email" },
           { text: "Appearance and themes", link: "/guide/appearance" },
         ],
       },

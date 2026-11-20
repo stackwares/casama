@@ -900,7 +900,13 @@ class NotificationView {
     this.conversationId,
     this.runId,
     this.pushStatus,
+    this.sender,
+    this.channelId,
   });
+
+  /// Hosted mail: sender address and channel id for one-tap Allow on `mail_unknown_sender`.
+  final String? sender;
+  final String? channelId;
 
   /// The conversation a reply is in (D-325).
   final String? conversationId;
@@ -1416,12 +1422,11 @@ abstract class Backend {
   /// the sheet. Throws `PasskeyProblem` when this device has no passkey to offer.
   Future<bool?> confirmWithPasskey();
 
-  /// Signs in again with one of the person's passkeys, for a fresh sign-in the server can check
-  /// (the admin console, D-450). The new session replaces this one only when the passkey belongs
-  /// to the signed-in account. True when it did; false for another account's or a refused one;
-  /// null when the person closed the sheet. Throws `PasskeyProblem` when this device has no
-  /// passkey to offer.
-  Future<bool?> signInAgainWithPasskey();
+  /// The admin console's passkey check (D-452): one of the person's passkeys, recorded by the
+  /// API on this sign-in session; the session itself stays as it is. When the check was made;
+  /// null when the person closed the sheet. Throws when the passkey wasn't this account's or the
+  /// server refused it, and `PasskeyProblem` when this device has no passkey to offer.
+  Future<DateTime?> adminPasskeyCheck();
 
   // Passkeys on this account
   Future<List<PasskeyInfo>> passkeys();
@@ -1598,6 +1603,40 @@ abstract class Backend {
   });
   Future<UsageReport> usage(String orgId, {String period, UsageFilter filter});
 
+  // Bot pictures (docs/BOT-PICTURES-PLAN.md)
+  /// Gives a bot a picture of its own: [square] is the cropped picture, [original] the picture
+  /// before cropping (kept for Re-crop) and [crop] where the frame sat on it.
+  Future<Bot> setBotPicture(
+    String botId,
+    Uint8List square, {
+    Uint8List? original,
+    BotPictureCrop? crop,
+    String source = 'upload',
+  });
+
+  /// Back to the mascot the bot had before its picture, or its initials.
+  Future<Bot> removeBotPicture(String botId);
+
+  /// The bot's recent pictures (the one in use first), or the drawn ones not used yet.
+  Future<List<BotPicture>> botPictures(String botId, {bool candidates = false});
+
+  /// Switches to one of [botPictures] (also Undo).
+  Future<Bot> useBotPicture(String botId, String imageId);
+
+  /// The picture before it was cropped, for Re-crop.
+  Future<Uint8List> botPictureOriginal(String botId, String imageId);
+
+  /// Draws one or two candidates with AI; they don't change the bot until one is used.
+  Future<List<BotPicture>> drawBotPictures(
+    String botId, {
+    required BotPictureStyle style,
+    String? description,
+    int count = 2,
+  });
+
+  /// Where a bot picture is served: 128 px for small avatars, 512 px for big ones.
+  String botImageUrl(String imageId, {bool small = false});
+
   /// Workspace search (D-103), including files on awake computers. [kinds] scopes it (D-235):
   /// message, chat, memory, skill, routine, ticket or file; files only when `file` is listed.
   Future<SearchResponse> search(String orgId, String query, {List<String>? kinds});
@@ -1652,6 +1691,28 @@ abstract class Backend {
   /// Admin → Domains (SITES-AND-DOMAINS-PLAN §7.16): counts, the registrar balance, orders and domains.
   Future<AdminDomains> adminDomains();
   Future<void> adminSuspendDomain(String id);
+  // Hosted bot mail (BOT-EMAIL-PLAN)
+  Future<List<AdminMailAddress>> adminMailAddresses();
+
+  /// Mails every workspace sent in the last 24 hours, and the day's ceiling (null: none).
+  Future<({int sent, int? ceiling})> adminMailSending();
+  Future<AdminMailAddress> setMailAddressStatus(String id, String status);
+  Future<List<String>> adminMailReservedNames();
+  Future<List<String>> setMailReservedNames(List<String> names);
+  // Admin checks (D-452): the owner's 6-digit admin PIN, kept on the server only
+  Future<AdminPinState> adminPinState();
+  Future<AdminPinState> setAdminPin(String pin);
+  Future<AdminPinState> removeAdminPin();
+  /// Checks the PIN; the API records it on this sign-in session. When; throws when wrong.
+  Future<DateTime> adminPinCheck(String pin);
+  // Device keys (D-453): the screen lock as the whole admin check
+  Future<List<AdminDeviceKey>> adminDeviceKeys();
+  Future<AdminDeviceKey> addAdminDeviceKey(String name, String publicKey);
+  Future<List<AdminDeviceKey>> removeAdminDeviceKey(String id);
+  /// A one-time challenge for this device's key; null when the server no longer has the key.
+  Future<({String id, String challenge})?> adminDeviceChallenge(String keyId);
+  /// Sends the signed challenge; the API records the check on this sign-in session. When.
+  Future<DateTime> adminDeviceCheck(String challengeId, String signature);
   Future<void> adminUnsuspendDomain(String id);
   Future<DomainOrder> adminRetryDomainOrder(String id);
   Future<DomainOrder> adminApproveDomainOrder(String id);
@@ -2201,6 +2262,30 @@ abstract class Backend {
   });
   Future<void> deleteChannel(String id);
   Future<List<ChannelEvent>> channelEvents(String id);
+  // Hosted bot mail (BOT-EMAIL-PLAN)
+  Future<MailAddress?> mailAddress(String botId);
+  Future<MailAddress> claimMailAddress(String botId, String name, {String surface = 'profile'});
+  Future<MailNameAvailability> checkMailName(String botId, String name);
+  Future<MailAddress> updateMailAddress(String botId, {String? status, bool? notifyNewSenders});
+  Future<MailAddress> moveMailAddress(String botId, String toBotId);
+  Future<MailAddress> releaseMailAddress(String botId);
+  Future<MailMessageList> mailMessages(
+    String botId, {
+    String? verdict,
+    String? tag,
+    String? sender,
+    String? q,
+    int? limit,
+    String? cursor,
+  });
+  Future<MailMessageDetail> mailMessage(String botId, String messageId);
+  Future<Uint8List> downloadMailFile(String botId, String messageId, int index);
+  Future<MailAddress> blockMailSender(String botId, String sender);
+  Future<MailAddress> unblockMailSender(String botId, String sender);
+
+  /// Deletes kept mail (BOT-EMAIL-NEXT-PLAN §3.3): one mail, several by id, or everything that
+  /// arrived or went out before [before]. Its text, original and files go.
+  Future<DeleteMailMessagesResult> deleteMail(String botId, {List<String>? ids, DateTime? before});
 
   /// Slack's sign-in address for adding Casama's Slack app to a Slack workspace for [botId]
   /// (D-277), or null when this server has no Slack app (409).

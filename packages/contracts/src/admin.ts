@@ -94,6 +94,100 @@ export const SetOrgLimitsRequest = z
   })
   .openapi("SetOrgLimitsRequest");
 
+/** One hosted bot address with its recent sending health, for the instance owner. */
+export const AdminMailAddress = z
+  .object({
+    id: Uuid,
+    address: z.string(),
+    org_id: Uuid.nullable(),
+    org_name: z.string(),
+    bot_id: Uuid.nullable(),
+    bot_name: z.string(),
+    status: z.enum(["active", "paused", "retired"]),
+    auto_paused: z.boolean(),
+    sent_30d: z.number().int(),
+    bounced_30d: z.number().int(),
+    complained_30d: z.number().int(),
+    created_at: z.string(),
+  })
+  .openapi("AdminMailAddress");
+
+export const SetMailAddressStatusRequest = z
+  .object({ status: z.enum(["active", "paused"]) })
+  .openapi("SetMailAddressStatusRequest");
+
+/** The owner's admin PIN (D-452): whether one is set; the PIN itself never leaves the server. */
+export const AdminPinState = z
+  .object({
+    set: z.boolean(),
+    /** Turned off after too many wrong PINs in a row; set a new one. */
+    disabled: z.boolean(),
+    tries_left: z.number().int(),
+  })
+  .openapi("AdminPinState");
+
+export const SetAdminPinRequest = z
+  .object({ pin: z.string().regex(/^\d{6}$/) })
+  .openapi("SetAdminPinRequest");
+
+export const AdminPasskeyCheckRequest = z
+  .object({
+    /** The access token of the passkey sign-in the app made on the side, as proof. */
+    token: z.string().min(1).max(8192),
+  })
+  .openapi("AdminPasskeyCheckRequest");
+
+export const AdminPinCheckRequest = z
+  .object({ pin: z.string().min(1).max(12) })
+  .openapi("AdminPinCheckRequest");
+
+/** A device whose secure hardware key confirms the owner with the screen lock (D-453). */
+export const AdminDeviceKey = z
+  .object({
+    id: Uuid,
+    name: z.string(),
+    created_at: z.string().datetime({ offset: true }),
+    last_used_at: z.string().datetime({ offset: true }).nullable(),
+  })
+  .openapi("AdminDeviceKey");
+
+export const AdminDeviceKeyList = z
+  .object({ items: z.array(AdminDeviceKey) })
+  .openapi("AdminDeviceKeyList");
+
+export const AddAdminDeviceKeyRequest = z
+  .object({
+    name: z.string().min(1).max(80),
+    /** EC P-256 SubjectPublicKeyInfo, DER, base64. */
+    public_key: z.string().min(80).max(400),
+  })
+  .openapi("AddAdminDeviceKeyRequest");
+
+export const AdminDeviceChallengeRequest = z
+  .object({ key_id: Uuid })
+  .openapi("AdminDeviceChallengeRequest");
+
+export const AdminDeviceChallenge = z
+  .object({
+    challenge_id: Uuid,
+    /** Sign `casama-admin-check:<challenge>` (UTF-8) with the device's key, ECDSA SHA-256. */
+    challenge: z.string(),
+  })
+  .openapi("AdminDeviceChallenge");
+
+export const AdminDeviceCheckRequest = z
+  .object({ challenge_id: Uuid, signature: z.string().min(1).max(512) })
+  .openapi("AdminDeviceCheckRequest");
+
+/** A passkey or PIN check recorded on this sign-in session (D-452). */
+export const AdminCheck = z
+  .object({ verified_at: z.string().datetime({ offset: true }) })
+  .openapi("AdminCheck");
+
+export const AdminMailReservedNames = z
+  .object({ names: z.array(z.string()) })
+  .openapi("AdminMailReservedNames");
+
 export const AdminService = z
   .object({
     name: z.string(),
@@ -166,6 +260,84 @@ export const CloudModels = z
     }),
   })
   .openapi("CloudModels");
+
+const decisionMode = z.enum(["off", "shadow", "on"]);
+const prob = z.number().min(0).max(1);
+const steps = z.number().int().min(1).max(100);
+
+/**
+ * Decision models (D-454): which model answers, which are compared in shadow, and per use off,
+ * shadow (asked and logged, never acted on) or on, with its thresholds. Owner only.
+ */
+export const DecisionSettings = z
+  .object({
+    model: z.string().trim().max(200).openapi({
+      description:
+        "OpenRouter decision model for uses that are on (pinned, e.g. typesafe/jev-1.14). Empty: nothing acts.",
+    }),
+    shadow_models: z.array(z.string().trim().min(1).max(200)).max(5),
+    timeout_ms: z.number().int().min(200).max(5000),
+    uses: z.object({
+      scan_gate: z.object({ mode: decisionMode, skip_below: prob, max_skips_in_row: steps }),
+      reply_check: z.object({
+        mode: decisionMode,
+        flag_above: prob,
+        memory_skip_below: prob,
+        correction_above: prob,
+      }),
+      push_score: z.object({ mode: decisionMode, hold_below: prob }),
+      tool_gate: z.object({ mode: decisionMode, ask_below: prob }),
+      long_run: z.object({
+        mode: decisionMode,
+        repeating_above: prob,
+        first_step: steps,
+        every: steps,
+      }),
+      effort: z.object({ mode: decisionMode, quick_above: prob }),
+      watcher_gate: z.object({ mode: decisionMode, skip_below: prob }),
+    }),
+  })
+  .openapi("DecisionSettings");
+
+/** How one signal of one model did against what really happened, at each threshold. */
+export const DecisionSignalResult = z
+  .object({
+    use: z.string(),
+    signal: z
+      .string()
+      .openapi({ description: "What is measured, e.g. scan_gate or reply_check:memory" }),
+    model: z.string(),
+    rows: z.number().int(),
+    answered: z.number().int(),
+    errors: z.number().int(),
+    latency_p50_ms: z.number(),
+    latency_p95_ms: z.number(),
+    cost_usd: z.number(),
+    labelled: z.number().int(),
+    positives: z
+      .number()
+      .int()
+      .openapi({
+        description: "Labelled rows where the thing happened (a find, a flag, an accept)",
+      }),
+    thresholds: z.array(
+      z.object({
+        threshold: z.number(),
+        acted: z.number().int().openapi({ description: "Answered rows the code would act on" }),
+        acted_positive: z.number().int(),
+        acted_negative: z.number().int(),
+        acted_severe: z
+          .number()
+          .int()
+          .openapi({ description: "scan_gate: skipped scans whose suggestion was accepted" }),
+      }),
+    ),
+  })
+  .openapi("DecisionSignalResult");
+
+export const DecisionResults = z
+  .object({ days: z.number().int(), items: z.array(DecisionSignalResult) })
+  .openapi("DecisionResults");
 
 /** A plan as the instance owner edits it (D-244). */
 export const AdminPlan = z

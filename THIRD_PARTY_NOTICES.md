@@ -19,6 +19,7 @@ Update this file in the same pull request that adds or removes a dependency.
 | pdfmake (bundles the Roboto font)       | @casama/agent (runtime)                               | MIT; Roboto Apache-2.0 |
 | docx                                    | @casama/agent (runtime)                               | MIT               |
 | marked                                  | @casama/agent (runtime)                               | MIT               |
+| postal-mime                           | @casama/agent (runtime)                               | MIT-0             |
 | superjson                               | @casama/server (runtime)                              | MIT               |
 | @hono/node-server                       | @casama/server (runtime)                              | MIT               |
 | @hono/zod-openapi                       | @casama/contracts (runtime), @casama/server (runtime) | MIT               |
@@ -94,6 +95,7 @@ Update this file in the same pull request that adds or removes a dependency.
 | stupid_simple_sheet, motor, scroll_drag_detector                      | client                             | MIT                           |
 | phone_numbers_parser                                                  | client (phone number formatting)   | MIT                           |
 | passkeys (Corbado; web bundle with @github/webauthn-json vendored)    | client (passkey sign-in)           | MIT                           |
+| biometric_signature                                                   | client (admin screen-lock check)   | MIT                           |
 
 ## Other software
 
@@ -118,7 +120,7 @@ Update this file in the same pull request that adds or removes a dependency.
   Vladimir Agafonkin. Redistribution and use in source and binary forms, with or without
   modification, are permitted provided that the copyright notice, this list of conditions and the
   disclaimer are retained.
-- **Live card data** (D-453) is credited on each card and in Settings → Cards: MET Norway and
+- **Live card data** (D-458) is credited on each card and in Settings → Cards: MET Norway and
   Open-Meteo (CC BY 4.0), GeoNames (CC BY 4.0), Wikipedia (CC BY-SA 4.0), Wiktionary (CC BY-SA),
   Frankfurter, CoinGecko, USGS, GDACS, the US National Weather Service, Open Library, Nager.Date.
 

@@ -1,11 +1,23 @@
 import { createRoute, z } from "@hono/zod-openapi";
 import {
   AbuseEvent,
+  AddAdminDeviceKeyRequest,
   AdminBotSetting,
+  AdminCheck,
   AdminCreditPack,
+  AdminDeviceChallenge,
+  AdminDeviceChallengeRequest,
+  AdminDeviceCheckRequest,
+  AdminDeviceKey,
+  AdminDeviceKeyList,
+  AdminMailAddress,
+  AdminMailReservedNames,
   AdminMargin,
   AdminOrg,
   AdminOverview,
+  AdminPasskeyCheckRequest,
+  AdminPinCheckRequest,
+  AdminPinState,
   AdminPlan,
   AdminPricing,
   AdminService,
@@ -13,12 +25,16 @@ import {
   BillingSettings,
   CloudModels,
   ConnectionSettings,
+  DecisionResults,
+  DecisionSettings,
   ReportedCreation,
   SaveCreditPackRequest,
   SavePlanRequest,
   ServerCapacity,
   SetAdminBotRequest,
+  SetAdminPinRequest,
   SetConnectionSettingsRequest,
+  SetMailAddressStatusRequest,
   SetOrgLimitsRequest,
   SuspendOrgRequest,
   UpdateNotice,
@@ -109,6 +125,50 @@ export const setAdminCloudModels = createRoute({
   summary: "Change the models Casama Cloud runs (owner only)",
   request: { body: jsonBody(CloudModels) },
   responses: { 200: jsonResponse("Updated", CloudModels), 401: e401, 403: e403 },
+});
+
+export const adminDecisions = get(
+  "adminDecisions",
+  "/v1/admin/decisions",
+  "Decision model settings (owner only)",
+  DecisionSettings,
+);
+
+export const setAdminDecisions = createRoute({
+  operationId: "setAdminDecisions",
+  method: "put",
+  path: "/v1/admin/decisions",
+  tags: ["admin"],
+  security,
+  summary: "Change decision model settings (owner only)",
+  request: { body: jsonBody(DecisionSettings) },
+  responses: { 200: jsonResponse("Updated", DecisionSettings), 401: e401, 403: e403 },
+});
+
+export const adminDecisionResults = createRoute({
+  operationId: "adminDecisionResults",
+  method: "get",
+  path: "/v1/admin/decisions/results",
+  tags: ["admin"],
+  security,
+  summary: "Shadow and live decision results against what really happened (owner only)",
+  request: {
+    query: z.object({
+      days: z.coerce.number().int().min(1).max(90).optional(),
+      use: z
+        .enum([
+          "scan_gate",
+          "reply_check",
+          "push_score",
+          "tool_gate",
+          "long_run",
+          "effort",
+          "watcher_gate",
+        ])
+        .optional(),
+    }),
+  },
+  responses: { 200: jsonResponse("Results", DecisionResults), 401: e401, 403: e403 },
 });
 
 export const setAdminConnectionSettings = createRoute({
@@ -293,4 +353,175 @@ export const checkAdminVendor = createRoute({
   security,
   request: { params: z.object({ vendor: z.string().min(1).max(80) }) },
   responses: { 200: jsonResponse("Latest vendor reading", AdminVendor), ...problemResponses },
+});
+
+export const adminMailAddresses = createRoute({
+  operationId: "adminMailAddresses",
+  method: "get",
+  path: "/v1/admin/mail",
+  tags: ["admin"],
+  security,
+  summary: "Hosted bot addresses with recent sending health (owner only)",
+  responses: {
+    200: jsonResponse(
+      "Mail addresses",
+      z.object({
+        items: z.array(AdminMailAddress),
+        /** Mails every workspace sent in the last 24 hours. */
+        sent_today: z.number().int().optional(),
+        /** The day's ceiling across every workspace (MAIL_SEND_DAILY_MAX); null: none. */
+        send_ceiling: z.number().int().nullable().optional(),
+      }),
+    ),
+    401: e401,
+    403: e403,
+  },
+});
+
+export const setMailAddressStatus = createRoute({
+  operationId: "setMailAddressStatus",
+  method: "patch",
+  path: "/v1/admin/mail/addresses/{id}",
+  tags: ["admin"],
+  security,
+  summary: "Pause an address, or lift a pause including an automatic one (owner only)",
+  request: { params: z.object({ id: Uuid }), body: jsonBody(SetMailAddressStatusRequest) },
+  responses: {
+    200: jsonResponse("Mail address", AdminMailAddress),
+    401: e401,
+    403: e403,
+    404: e404,
+  },
+});
+
+export const adminMailReservedNames = createRoute({
+  operationId: "adminMailReservedNames",
+  method: "get",
+  path: "/v1/admin/mail-reserved-names",
+  tags: ["admin"],
+  security,
+  summary: "Instance-added reserved mail names (owner only)",
+  responses: { 200: jsonResponse("Reserved names", AdminMailReservedNames), 401: e401, 403: e403 },
+});
+
+export const setMailReservedNames = createRoute({
+  operationId: "setMailReservedNames",
+  method: "put",
+  path: "/v1/admin/mail-reserved-names",
+  tags: ["admin"],
+  security,
+  summary: "Replace the instance-added reserved mail names (owner only)",
+  request: { body: jsonBody(AdminMailReservedNames) },
+  responses: { 200: jsonResponse("Reserved names", AdminMailReservedNames), 401: e401, 403: e403 },
+});
+
+// --- Admin checks (D-452): a passkey or the admin PIN instead of signing in again --------------
+
+export const adminPin = createRoute({
+  operationId: "adminPin",
+  method: "get",
+  path: "/v1/admin/pin",
+  tags: ["admin"],
+  security,
+  summary: "Whether the owner has an admin PIN (owner only)",
+  responses: { 200: jsonResponse("Admin PIN", AdminPinState), 401: e401, 403: e403 },
+});
+
+export const setAdminPin = createRoute({
+  operationId: "setAdminPin",
+  method: "put",
+  path: "/v1/admin/pin",
+  tags: ["admin"],
+  security,
+  summary: "Set or change the admin PIN (owner only; a fresh passkey or sign-in, not the PIN)",
+  request: { body: jsonBody(SetAdminPinRequest) },
+  responses: { 200: jsonResponse("Admin PIN", AdminPinState), ...problemResponses },
+});
+
+export const removeAdminPin = createRoute({
+  operationId: "removeAdminPin",
+  method: "delete",
+  path: "/v1/admin/pin",
+  tags: ["admin"],
+  security,
+  summary: "Remove the admin PIN (owner only; a fresh passkey or sign-in, not the PIN)",
+  responses: { 200: jsonResponse("Admin PIN", AdminPinState), ...problemResponses },
+});
+
+export const adminPasskeyCheck = createRoute({
+  operationId: "adminPasskeyCheck",
+  method: "post",
+  path: "/v1/admin/checks/passkey",
+  tags: ["admin"],
+  security,
+  summary: "Record a passkey check on this sign-in session (owner only)",
+  request: { body: jsonBody(AdminPasskeyCheckRequest) },
+  responses: { 200: jsonResponse("Check recorded", AdminCheck), ...problemResponses },
+});
+
+export const adminPinCheck = createRoute({
+  operationId: "adminPinCheck",
+  method: "post",
+  path: "/v1/admin/checks/pin",
+  tags: ["admin"],
+  security,
+  summary: "Check the admin PIN and record it on this sign-in session (owner only)",
+  request: { body: jsonBody(AdminPinCheckRequest) },
+  responses: { 200: jsonResponse("Check recorded", AdminCheck), ...problemResponses },
+});
+
+// --- Device keys (D-453): the screen lock as the whole check -----------------------------------
+
+export const adminDeviceKeys = createRoute({
+  operationId: "adminDeviceKeys",
+  method: "get",
+  path: "/v1/admin/devices",
+  tags: ["admin"],
+  security,
+  summary: "Devices that confirm the owner with the screen lock (owner only)",
+  responses: { 200: jsonResponse("Devices", AdminDeviceKeyList), 401: e401, 403: e403 },
+});
+
+export const addAdminDeviceKey = createRoute({
+  operationId: "addAdminDeviceKey",
+  method: "post",
+  path: "/v1/admin/devices",
+  tags: ["admin"],
+  security,
+  summary: "Add this device's key (owner only; a fresh passkey, Face ID or sign-in, not the PIN)",
+  request: { body: jsonBody(AddAdminDeviceKeyRequest) },
+  responses: { 200: jsonResponse("Device", AdminDeviceKey), ...problemResponses },
+});
+
+export const removeAdminDeviceKey = createRoute({
+  operationId: "removeAdminDeviceKey",
+  method: "delete",
+  path: "/v1/admin/devices/{id}",
+  tags: ["admin"],
+  security,
+  summary: "Remove a device's key (owner only)",
+  request: { params: z.object({ id: Uuid }) },
+  responses: { 200: jsonResponse("Devices", AdminDeviceKeyList), ...problemResponses },
+});
+
+export const adminDeviceChallenge = createRoute({
+  operationId: "adminDeviceChallenge",
+  method: "post",
+  path: "/v1/admin/checks/device/challenge",
+  tags: ["admin"],
+  security,
+  summary: "A one-time challenge for this device's key (owner only)",
+  request: { body: jsonBody(AdminDeviceChallengeRequest) },
+  responses: { 200: jsonResponse("Challenge", AdminDeviceChallenge), ...problemResponses },
+});
+
+export const adminDeviceCheck = createRoute({
+  operationId: "adminDeviceCheck",
+  method: "post",
+  path: "/v1/admin/checks/device",
+  tags: ["admin"],
+  security,
+  summary: "Check the device's signature and record it on this sign-in session (owner only)",
+  request: { body: jsonBody(AdminDeviceCheckRequest) },
+  responses: { 200: jsonResponse("Check recorded", AdminCheck), ...problemResponses },
 });

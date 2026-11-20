@@ -356,6 +356,9 @@ class _NewRoutineSheetState extends ConsumerState<NewRoutineSheet> {
   final _msgSender = TextEditingController();
   final _msgSubject = TextEditingController();
   final _msgText = TextEditingController();
+  final _msgTag = TextEditingController();
+  bool _msgUnconfirmed = false;
+  bool _msgAutomatic = false;
   DateTime _runAt = DateTime.now().add(const Duration(hours: 1));
   // How a repeating or event routine ends (D-262).
   var _end = RoutineEnd.never;
@@ -448,7 +451,7 @@ class _NewRoutineSheetState extends ConsumerState<NewRoutineSheet> {
         (_trigger == 'once' || _end != RoutineEnd.onDate || _endsAt.isAfter(DateTime.now())) &&
         (_trigger != 'schedule' || _cron.text.trim().isNotEmpty) &&
         (_trigger != 'calendar_event' || _calendarId != null) &&
-        (_trigger != 'message' || _msgKind != null || [_msgSender, _msgSubject, _msgText].any((c) => c.text.trim().isNotEmpty));
+        (_trigger != 'message' || _msgKind != null || [_msgSender, _msgSubject, _msgText, _msgTag].any((c) => c.text.trim().isNotEmpty));
     final now = DateTime.now();
     final tomorrow9 = DateTime(now.year, now.month, now.day + 1, 9);
     final quick = <(String, DateTime)>[(l10n.inMinutes(15), now.add(const Duration(minutes: 15))), (l10n.inHours(1), now.add(const Duration(hours: 1))), (l10n.tomorrowAt9, tomorrow9)];
@@ -600,11 +603,40 @@ class _NewRoutineSheetState extends ConsumerState<NewRoutineSheet> {
             TextField(
               key: const Key('messageText'),
               controller: _msgText,
-              textInputAction: TextInputAction.done,
-              onSubmitted: (_) => create?.call(),
+              textInputAction: TextInputAction.next,
               onChanged: (_) => setState(() {}),
               decoration: InputDecoration(labelText: l10n.messageTriggerWords),
             ),
+            if (_msgKind == null || _msgKind == MessageTriggerConfigChannelKindEnum.email) ...[
+              const SizedBox(height: AppSpace.sm),
+              TextField(
+                key: const Key('messageTag'),
+                controller: _msgTag,
+                textInputAction: TextInputAction.done,
+                onSubmitted: (_) => create?.call(),
+                onChanged: (_) => setState(() {}),
+                decoration: InputDecoration(
+                  labelText: l10n.botEmailTriggerTag,
+                  helperText: l10n.botEmailTriggerTagHelp,
+                ),
+              ),
+              CheckboxListTile(
+                key: const Key('messageUnconfirmed'),
+                title: Text(l10n.botEmailTriggerUnconfirmed),
+                value: _msgUnconfirmed,
+                onChanged: (v) => setState(() => _msgUnconfirmed = v ?? false),
+                controlAffinity: ListTileControlAffinity.leading,
+                contentPadding: EdgeInsets.zero,
+              ),
+              CheckboxListTile(
+                key: const Key('messageAutomatic'),
+                title: Text(l10n.botEmailTriggerAutomatic),
+                value: _msgAutomatic,
+                onChanged: (v) => setState(() => _msgAutomatic = v ?? false),
+                controlAffinity: ListTileControlAffinity.leading,
+                contentPadding: EdgeInsets.zero,
+              ),
+            ],
           ],
           if (_trigger == 'schedule') ...[
             const SizedBox(height: AppSpace.sm),
@@ -752,6 +784,9 @@ class _NewRoutineSheetState extends ConsumerState<NewRoutineSheet> {
                                     sender: _msgSender.text.trim().isEmpty ? null : _msgSender.text.trim(),
                                     subjectMatch: _msgSubject.text.trim().isEmpty ? null : _msgSubject.text.trim(),
                                     textMatch: _msgText.text.trim().isEmpty ? null : _msgText.text.trim(),
+                                    toTag: _msgTag.text.trim().isEmpty ? null : _msgTag.text.trim(),
+                                    allowUnconfirmed: _msgUnconfirmed ? true : null,
+                                    includeAutomatic: _msgAutomatic ? true : null,
                                   )
                                 : null,
                             endsAt: _trigger != 'once' && _end == RoutineEnd.onDate ? _endsAt : null,

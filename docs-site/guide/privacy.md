@@ -79,6 +79,14 @@ There's no screen for making someone else an owner yet, so ask for help first if
 should stay.
 :::
 
+## Pictures
+
+Profile photos and bots' pictures are cropped on your device. The server removes their metadata
+(the camera, the place a photo was taken) before storing them, and serves them only by an address
+that changes with every new picture and is given only to people who can see the profile or the
+bot. A bot keeps its last five pictures and the uncropped copies of its newest two (for
+**Re-crop**); they're deleted with the bot. See [Give your bot a picture](/guide/bots#give-your-bot-a-picture).
+
 ## Run history retention
 
 Every run keeps a timeline of events: tool calls, outputs and errors. Workspace owners and admins
@@ -89,6 +97,11 @@ choose how long to keep it.
 
 The default is 180 days. Older run events are deleted automatically every day. Through the API you
 can set any value from 7 to 3650 days (`run_event_retention_days`).
+
+Mail to a bot's [email address](/guide/bot-email) is stored like chat content: sealed the same
+way, deleted with the workspace, and never used for analytics. Mail from strangers expires after
+30 days. Releasing an address deletes its mail after 30 days, and deleting the bot, workspace or
+account deletes it with the rest of the data.
 
 ## Encrypt workspace content
 

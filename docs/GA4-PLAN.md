@@ -268,3 +268,31 @@ gallery and casama.link:
   the desktop workflow builds Windows and Linux from the repo secret `CASAMA_TELEMETRY_JSON`, and that secret
   didn't exist, so those builds had no keys. It now holds the PostHog key and Sentry DSN (Vaultwarden: "Casama ·
   PostHog project key", "Casama · Sentry DSNs") plus `GA4_ENABLED=true` (set 2026-11-18).
+
+## Attribution
+
+Measured on 2026-11-20: 100 of 101 website sessions in 10 days showed `(not set)` source and medium
+in GA4, and none counted as engaged. Over the same days our own counter (`casama_site_visits`)
+sorted the same visits into google, bing, github, direct and so on. The cause: a Measurement
+Protocol hit gets no session attribution from its `page_location` or `page_referrer`. A browser tag
+sets the traffic source on `session_start`, and there's no browser tag here.
+
+The fix, in `gaPayload` and `trafficSource` in `site/gallery-link.js`: every page view from outside
+our sites also sends a `campaign_details` event, timed 1 ms before the page view. Google documents
+this event for Measurement Protocol traffic sources, and GA4 applies it to the events after it. The
+event never shows up in reports itself.
+
+| Worker source | source | medium | campaign |
+| --- | --- | --- | --- |
+| google, bing | `google`, `bing` | `organic` | `(organic)` |
+| search (DuckDuckGo, Brave, Yandex, Ecosia, Startpage, Yahoo) | the engine's name | `organic` | `(organic)` |
+| chatgpt, perplexity, claude, gemini, copilot, other-ai, github, community, other | the referring host (or `utm_source`), without `www.` | `referral` | `(referral)` |
+| direct (no referrer) | `(direct)` | `(none)` | `(direct)` |
+| casama (a hop between our own sites) | nothing sent, so the session keeps its first source | | |
+
+Funnel events never send `campaign_details`. Nothing about privacy changes: no IP address, cookie
+or storage. Tests are in `scripts/site-worker.test.mjs`.
+
+Engagement still reads low. A page view says `engagement_time_msec: 1`, because the Worker can't
+measure how long anyone reads, so a session counts as engaged only with two or more page views or a
+key event. Real reading time would need a beacon on leaving the page. That isn't built.

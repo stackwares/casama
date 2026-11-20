@@ -14,6 +14,8 @@ import android.graphics.Rect
 import android.graphics.drawable.Icon
 import android.net.Uri
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
@@ -42,7 +44,7 @@ object WidgetChannel {
         WidgetKit.redrawAll(context)
         GlanceRefresh.schedule(context)
         CanvasRefresh.scheduleTick(context)
-        if (GlanceRefresh.coversMissing(context) || CanvasRefresh.picturesMissing(context)) GlanceRefresh.now(context)
+        if (GlanceRefresh.coversMissing(context) || CanvasRefresh.picturesMissing(context) || BotPictures.missing(context)) GlanceRefresh.now(context)
         previews(context)
         result.success(true)
       }
@@ -68,7 +70,20 @@ object WidgetChannel {
       "pinBot" -> {
         val id = call.argument<String>("bot_id")
         val name = call.argument<String>("name") ?: ""
-        result.success(id != null && pinBot(context, id, name, call.argument<String>("avatar")))
+        val avatar = call.argument<String>("avatar")
+        val picture = BotAvatarValue.picture(avatar)
+        val server = BotPictures.server(context)
+        if (id != null && picture != null && server != null && !BotPictures.has(context, picture.id)) {
+          // The icon is cut from the picture's file, so fetch it first, off the main thread. With no
+          // picture to be had it is pinned with the initials on the picture's colours.
+          val app = context.applicationContext
+          Thread {
+            runCatching { BotPictures.ensure(app, listOf(picture.id), server) }
+            Handler(Looper.getMainLooper()).post { result.success(pinBot(app, id, name, avatar)) }
+          }.start()
+        } else {
+          result.success(id != null && pinBot(context, id, name, avatar))
+        }
       }
       else -> result.notImplemented()
     }

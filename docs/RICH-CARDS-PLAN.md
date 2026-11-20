@@ -1,6 +1,6 @@
 # Live data cards (weather, markets, money, time, travel and more): plan
 
-Status: **built** (2026-11-20, D-453), merged to main, not deployed. Oliver
+Status: **built** (2026-11-20, D-458), merged to main, not deployed. Oliver
 said "You decide everything for me. Start building everything": every §16 decision is at its default.
 What was built, and where it differs from the text below, is in "As built" at the end.
 
@@ -36,7 +36,7 @@ commit. Push only when Oliver asks or a deploy needs it.
 |---|---|
 | Accounts and keys for paid providers he picks in §16 (stocks, flights, parcels, sports) | Build each provider behind its interface; a missing key hides that tool and its cards |
 | A commercial Open-Meteo plan, if decision 3 picks it | MET Norway (free for commercial use) is the default for forecasts |
-| Approving Flutter builds and devices for the widget and watch phases | Golden tests and type checks as with D-405 and D-452 |
+| Approving Flutter builds and devices for the widget and watch phases | Golden tests and type checks as with D-405 and D-455 |
 
 ## 0. Summary
 
@@ -58,7 +58,7 @@ This plan adds:
 4. **Live refresh:** each data card keeps its query on the server. ↻, opening the chat, or a chart
    range switch calls the provider again (through the cache) with no model call and no tokens.
 5. **Pin to widgets and watches:** a data card can become a home screen, Lock Screen, Mac or watch
-   widget that the server keeps fresh, built on D-405 and D-452.
+   widget that the server keeps fresh, built on D-405 and D-455.
 6. **One design system** for every card: the same anatomy, type, colors, motion and states, each
    card with its own character (weather follows the sky, prices follow their direction).
 7. **A catalog of about 150 cards** in 16 groups (§6), built in waves: weather and money first.
@@ -111,7 +111,7 @@ a tool and a few card widgets on the shared kit.
 
 - D-405: nine widgets on iPhone, iPad, Mac and Android, fed by the glance (`GET /v1/glance`),
   refresh pushes that carry nothing but "changed", widget keys.
-- D-452: the **Canvas** widget a bot fills in (five templates: text, countdown, number, list,
+- D-455: the **Canvas** widget a bot fills in (five templates: text, countdown, number, list,
   picture; looks; rotations), `widget.set`, a per-bot grant, `widget_canvases`. Its tool text
   already says a routine may "write on the day… the weather", which costs a model run each time.
 - D-410: Apple Watch and Wear OS apps, complications, watch keys.
@@ -395,14 +395,14 @@ A data card's overflow menu gets **Pin to Home Screen** (and **Add to Watch** wh
 paired). Two stages:
 
 **Stage A (Wave 1, no native widget work): a Canvas fed by the server.**
-- Pinning creates a D-452 canvas for the person, owned by the card's bot, with a new `source`:
+- Pinning creates a D-455 canvas for the person, owned by the card's bot, with a new `source`:
   `{live_card: "lc_…"}`, using the existing templates: Weather → `number` (temperature, condition
   word, icon, sky gradient look), Quote → `number` (price, change), Countdown → `countdown`,
   Watchlist / WorldClock → `list`.
 - A worker job refreshes pinned live cards at their kind's window (weather 30 min, quotes 15 min
   during market hours, FX 6 h), writes the canvas, and lets `GlancePusher.changed()` push. **No
   model run, no credits.**
-- The D-452 grant still applies: the first pin shows the canvas preview card.
+- The D-455 grant still applies: the first pin shows the canvas preview card.
 - Lock Screen forms (80 and 24 characters) come from the card's `text` and a short form per card
   ("31° Showers", "BTC $97,412 ▲2.1%").
 
@@ -532,7 +532,7 @@ Shared widgets in `client/lib/features/chat/widgets/cards/kit/` (new folder; exi
 - **Signature palettes:**
   - Weather: `SkyBackground` gradients for 14 condition groups × day/dusk/night (clear, mostly clear,
     partly cloudy, cloudy, fog, drizzle, rain, heavy rain, thunder, snow, sleet, hail, wind, smoke/haze),
-    with the text color picked for contrast like D-452's `inkFor`.
+    with the text color picked for contrast like D-455's `inkFor`.
   - Air quality and UV: the standard bands (AQI green→maroon, UV green→violet).
   - Crypto and stocks: neutral card, direction only in the pill and the line.
   - Sports: team colors as a thin top accent only (never as text background).
@@ -1023,7 +1023,7 @@ on it. A provider only ships after its row here says "checked".
    limited; Wikipedia and news text count as untrusted when shown to the model (`wrapUntrusted`).
 8. **Abuse:** refresh and view routes are rate-limited; args come from the stored row, never the
    client; providers' hosts are fixed; widget keys may read pinned live cards only (added to
-   `WIDGET_ROUTES` like D-452).
+   `WIDGET_ROUTES` like D-455).
 9. **App Store:** no gambling (no odds), no trading; weather alerts state their issuer and don't
    claim to be official warnings unless they are.
 
@@ -1078,7 +1078,7 @@ North-star check after Wave 1: share of weather/price/rate questions answered wi
   states (fresh, stale, error, empty) on the Wave's cards (`client/test/cards/`), contrast checks on
   every sky background, unit conversion tests, number formatting per locale (en-US, en-PH, fil, ja,
   de), reduced-motion test.
-- **Native widgets (Stage B):** Swift and Kotlin model tests like D-452's scripts.
+- **Native widgets (Stage B):** Swift and Kotlin model tests like D-455's scripts.
 - **Evals:** §11.
 
 ## 14. Phases
@@ -1211,7 +1211,7 @@ Defaults are what the plan assumes if he says "defaults".
   (`web.search` text, `web.fetch` JSON-LD), `voice.ts`, `glance.ts`/canvas worker (pins),
   `bot_ui.dart` (registering cards), settings screens (units, home place).
 
-## As built (2026-11-20, D-453)
+## As built (2026-11-20, D-458)
 
 Phases 0–5 and Stage A of §4.5 are built; Phase 6 (native live widgets) and Phase 7 (the long tail)
 wait as decisions 9 and §14 say. Differences from the plan above:
@@ -1249,5 +1249,5 @@ wait as decisions 9 and §14 say. Differences from the plan above:
 - **Not built:** Stage B native widgets and watch complications, health cards (decision 12), the
   §6 rows marked "—" without a component above, pollen outside Europe, alerts outside the US,
   PAGASA signals (decision 11: links only), evals in `packages/evals` (the plan's 40 prompts; the
-  web E2E pass in D-453 stood in for them).
+  web E2E pass in D-458 stood in for them).
 

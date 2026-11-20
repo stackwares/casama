@@ -203,6 +203,14 @@ final class IslandActivities {
       }
     }
 
+    // A Live Activity can't fetch anything, so the bot's own picture is saved into the app group
+    // first (a no-op when it is there); the activity's view only reads the file. Without it the
+    // view draws initials on the picture's colours.
+    if let base = Self.pictureServer {
+      let avatars = wanted.values.map { $0["bot_avatar"] as? String }
+      await BotPictureStore.shared.ensure(ids: Array(BotPicture.ids(avatars)), server: base)
+    }
+
     for (run, item) in wanted {
       let content = Self.content(item)
       if let activity = existing[run] {
@@ -272,6 +280,13 @@ final class IslandActivities {
         }
       }
     }
+  }
+
+  /// The server's API base, as the app wrote it for the widgets (`glance_server`).
+  private static var pictureServer: URL? {
+    guard var raw = GlanceStore.defaults?.string(forKey: GlanceStore.serverKey)?.trimmingCharacters(in: .whitespaces), !raw.isEmpty else { return nil }
+    while raw.hasSuffix("/") { raw.removeLast() }
+    return URL(string: raw)
   }
 
   /// Whether two states show the same thing (when they were made doesn't count).

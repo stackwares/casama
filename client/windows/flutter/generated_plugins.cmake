@@ -5,6 +5,7 @@
 list(APPEND FLUTTER_PLUGIN_LIST
   app_links
   auto_updater_windows
+  biometric_signature
   desktop_drop
   emoji_picker_flutter
   file_selector_windows

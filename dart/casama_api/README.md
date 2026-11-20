@@ -87,6 +87,7 @@ Class | Method | HTTP request | Description
 [*ActionRulesApi*](doc/ActionRulesApi.md) | [**createActionRule**](doc/ActionRulesApi.md#createactionrule) | **POST** /v1/action-rules | 
 [*ActionRulesApi*](doc/ActionRulesApi.md) | [**deleteActionRule**](doc/ActionRulesApi.md#deleteactionrule) | **DELETE** /v1/action-rules/{id} | 
 [*ActionRulesApi*](doc/ActionRulesApi.md) | [**listActionRules**](doc/ActionRulesApi.md#listactionrules) | **GET** /v1/action-rules | A bot&#39;s rules plus the workspace&#39;s (or only the workspace&#39;s without bot_id)
+[*AdminApi*](doc/AdminApi.md) | [**addAdminDeviceKey**](doc/AdminApi.md#addadmindevicekey) | **POST** /v1/admin/devices | Add this device&#39;s key (owner only; a fresh passkey, Face ID or sign-in, not the PIN)
 [*AdminApi*](doc/AdminApi.md) | [**adminAbuseEvents**](doc/AdminApi.md#adminabuseevents) | **GET** /v1/admin/abuse | Recent abuse signals and actions (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**adminAddWaitlistEntries**](doc/AdminApi.md#adminaddwaitlistentries) | **POST** /v1/admin/waitlist/entries | Let addresses in by hand (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**adminAdmitWaitlist**](doc/AdminApi.md#adminadmitwaitlist) | **POST** /v1/admin/waitlist/admit | Let people in: chosen entries, or the next N (owner only)
@@ -99,14 +100,24 @@ Class | Method | HTTP request | Description
 [*AdminApi*](doc/AdminApi.md) | [**adminCloudModels**](doc/AdminApi.md#admincloudmodels) | **GET** /v1/admin/models | The models Casama Cloud runs (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**adminConnectionSettings**](doc/AdminApi.md#adminconnectionsettings) | **GET** /v1/admin/connections | How apps without their own sign-in connect (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**adminCreateInviteCampaign**](doc/AdminApi.md#admincreateinvitecampaign) | **POST** /v1/admin/invite-campaigns | Make a campaign invite code with a total (owner only)
+[*AdminApi*](doc/AdminApi.md) | [**adminDecisionResults**](doc/AdminApi.md#admindecisionresults) | **GET** /v1/admin/decisions/results | Shadow and live decision results against what really happened (owner only)
+[*AdminApi*](doc/AdminApi.md) | [**adminDecisions**](doc/AdminApi.md#admindecisions) | **GET** /v1/admin/decisions | Decision model settings (owner only)
+[*AdminApi*](doc/AdminApi.md) | [**adminDeviceChallenge**](doc/AdminApi.md#admindevicechallenge) | **POST** /v1/admin/checks/device/challenge | A one-time challenge for this device&#39;s key (owner only)
+[*AdminApi*](doc/AdminApi.md) | [**adminDeviceCheck**](doc/AdminApi.md#admindevicecheck) | **POST** /v1/admin/checks/device | Check the device&#39;s signature and record it on this sign-in session (owner only)
+[*AdminApi*](doc/AdminApi.md) | [**adminDeviceKeys**](doc/AdminApi.md#admindevicekeys) | **GET** /v1/admin/devices | Devices that confirm the owner with the screen lock (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**adminDomains**](doc/AdminApi.md#admindomains) | **GET** /v1/admin/domains | Every domain, the registrar balance and orders that need attention (instance owners)
 [*AdminApi*](doc/AdminApi.md) | [**adminEmailCopy**](doc/AdminApi.md#adminemailcopy) | **GET** /v1/admin/email-copy | The words of the welcome emails and gallery digest, and the defaults (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**adminInviteCampaigns**](doc/AdminApi.md#admininvitecampaigns) | **GET** /v1/admin/invite-campaigns | Campaign invite codes (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**adminLinkServers**](doc/AdminApi.md#adminlinkservers) | **GET** /v1/admin/link/servers | Every linked server on this cloud (owner only)
+[*AdminApi*](doc/AdminApi.md) | [**adminMailAddresses**](doc/AdminApi.md#adminmailaddresses) | **GET** /v1/admin/mail | Hosted bot addresses with recent sending health (owner only)
+[*AdminApi*](doc/AdminApi.md) | [**adminMailReservedNames**](doc/AdminApi.md#adminmailreservednames) | **GET** /v1/admin/mail-reserved-names | Instance-added reserved mail names (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**adminMargin**](doc/AdminApi.md#adminmargin) | **GET** /v1/admin/margin | Usage charged against what it cost the server (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**adminModelCatalog**](doc/AdminApi.md#adminmodelcatalog) | **GET** /v1/admin/model-catalog | The model catalog: saved values and the ones in code (owner only; D-373)
 [*AdminApi*](doc/AdminApi.md) | [**adminOrgs**](doc/AdminApi.md#adminorgs) | **GET** /v1/admin/orgs | Workspaces with their limits and spend
 [*AdminApi*](doc/AdminApi.md) | [**adminOverview**](doc/AdminApi.md#adminoverview) | **GET** /v1/admin/overview | Instance totals (owner only)
+[*AdminApi*](doc/AdminApi.md) | [**adminPasskeyCheck**](doc/AdminApi.md#adminpasskeycheck) | **POST** /v1/admin/checks/passkey | Record a passkey check on this sign-in session (owner only)
+[*AdminApi*](doc/AdminApi.md) | [**adminPin**](doc/AdminApi.md#adminpin) | **GET** /v1/admin/pin | Whether the owner has an admin PIN (owner only)
+[*AdminApi*](doc/AdminApi.md) | [**adminPinCheck**](doc/AdminApi.md#adminpincheck) | **POST** /v1/admin/checks/pin | Check the admin PIN and record it on this sign-in session (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**adminPriceTables**](doc/AdminApi.md#adminpricetables) | **GET** /v1/admin/price-tables | Cost tables and domain sale settings (owner only; D-373)
 [*AdminApi*](doc/AdminApi.md) | [**adminPricing**](doc/AdminApi.md#adminpricing) | **GET** /v1/admin/pricing | Plans, credit packs and the usage markup (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**adminRemoteAccess**](doc/AdminApi.md#adminremoteaccess) | **GET** /v1/admin/remote-access | This server&#39;s public address through Casama Link, and whether it works (owner only)
@@ -131,6 +142,8 @@ Class | Method | HTTP request | Description
 [*AdminApi*](doc/AdminApi.md) | [**listContentReports**](doc/AdminApi.md#listcontentreports) | **GET** /v1/admin/content-reports | Reports from inside the app, open first (instance owners)
 [*AdminApi*](doc/AdminApi.md) | [**listReportedCreations**](doc/AdminApi.md#listreportedcreations) | **GET** /v1/admin/reports | Public links people reported, most reported first (owner only; D-281)
 [*AdminApi*](doc/AdminApi.md) | [**listSupportTickets**](doc/AdminApi.md#listsupporttickets) | **GET** /v1/admin/support-tickets | Messages sent to support from the app, newest first (instance owners)
+[*AdminApi*](doc/AdminApi.md) | [**removeAdminDeviceKey**](doc/AdminApi.md#removeadmindevicekey) | **DELETE** /v1/admin/devices/{id} | Remove a device&#39;s key (owner only)
+[*AdminApi*](doc/AdminApi.md) | [**removeAdminPin**](doc/AdminApi.md#removeadminpin) | **DELETE** /v1/admin/pin | Remove the admin PIN (owner only; a fresh passkey or sign-in, not the PIN)
 [*AdminApi*](doc/AdminApi.md) | [**reviewContentReport**](doc/AdminApi.md#reviewcontentreport) | **POST** /v1/admin/content-reports/{id} | Close a report: acted on (optionally suspending the workspace) or dismissed
 [*AdminApi*](doc/AdminApi.md) | [**saveBrowserGuard**](doc/AdminApi.md#savebrowserguard) | **PUT** /v1/admin/browser-guard | Replace the added sites; the built-in lists can&#39;t be shortened (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**saveCallLimits**](doc/AdminApi.md#savecalllimits) | **PUT** /v1/admin/call-limits | Replace the saved call limits; refused when a value is unknown or out of range
@@ -141,8 +154,12 @@ Class | Method | HTTP request | Description
 [*AdminApi*](doc/AdminApi.md) | [**setAdminBot**](doc/AdminApi.md#setadminbot) | **PUT** /v1/admin/admin-bot | Turn the admin bot on or off, or choose its bot (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**setAdminCloudModels**](doc/AdminApi.md#setadmincloudmodels) | **PUT** /v1/admin/models | Change the models Casama Cloud runs (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**setAdminConnectionSettings**](doc/AdminApi.md#setadminconnectionsettings) | **PUT** /v1/admin/connections | Choose how apps without their own sign-in connect (owner only)
+[*AdminApi*](doc/AdminApi.md) | [**setAdminDecisions**](doc/AdminApi.md#setadmindecisions) | **PUT** /v1/admin/decisions | Change decision model settings (owner only)
+[*AdminApi*](doc/AdminApi.md) | [**setAdminPin**](doc/AdminApi.md#setadminpin) | **PUT** /v1/admin/pin | Set or change the admin PIN (owner only; a fresh passkey or sign-in, not the PIN)
 [*AdminApi*](doc/AdminApi.md) | [**setAdminVendor**](doc/AdminApi.md#setadminvendor) | **PUT** /v1/admin/vendors/{vendor} | 
 [*AdminApi*](doc/AdminApi.md) | [**setBillingSettings**](doc/AdminApi.md#setbillingsettings) | **PATCH** /v1/admin/billing-settings | Change the markup on usage paid with Casama&#39;s keys
+[*AdminApi*](doc/AdminApi.md) | [**setMailAddressStatus**](doc/AdminApi.md#setmailaddressstatus) | **PATCH** /v1/admin/mail/addresses/{id} | Pause an address, or lift a pause including an automatic one (owner only)
+[*AdminApi*](doc/AdminApi.md) | [**setMailReservedNames**](doc/AdminApi.md#setmailreservednames) | **PUT** /v1/admin/mail-reserved-names | Replace the instance-added reserved mail names (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**setOrgLimits**](doc/AdminApi.md#setorglimits) | **PATCH** /v1/admin/orgs/{id}/limits | Set a workspace&#39;s quotas
 [*AdminApi*](doc/AdminApi.md) | [**setRemoteAccessSettings**](doc/AdminApi.md#setremoteaccesssettings) | **PUT** /v1/admin/remote-access/settings | Casama Link settings on this server: private notifications (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**setSupportTicketStatus**](doc/AdminApi.md#setsupportticketstatus) | **POST** /v1/admin/support-tickets/{reference} | Mark a support message closed or open again
@@ -170,15 +187,22 @@ Class | Method | HTTP request | Description
 [*BotsApi*](doc/BotsApi.md) | [**createBot**](doc/BotsApi.md#createbot) | **POST** /v1/bots | 
 [*BotsApi*](doc/BotsApi.md) | [**createBotShare**](doc/BotsApi.md#createbotshare) | **POST** /v1/bots/{id}/share | Make a share link for a bot template (a snapshot; anyone signed in with the link can import it)
 [*BotsApi*](doc/BotsApi.md) | [**exportBot**](doc/BotsApi.md#exportbot) | **GET** /v1/bots/{id}/export | A bot as a shareable template file (no secrets; memories only when asked)
+[*BotsApi*](doc/BotsApi.md) | [**generateBotPictures**](doc/BotsApi.md#generatebotpictures) | **POST** /v1/bots/{id}/images/generate | Draw pictures for a bot with AI
 [*BotsApi*](doc/BotsApi.md) | [**getBotAccess**](doc/BotsApi.md#getbotaccess) | **GET** /v1/bots/{id}/access | Who can chat with, edit or administer this bot
+[*BotsApi*](doc/BotsApi.md) | [**getBotImage**](doc/BotsApi.md#getbotimage) | **GET** /v1/bot-images/{id} | A bot&#39;s picture (no token; cached for good)
+[*BotsApi*](doc/BotsApi.md) | [**getBotPictureOriginal**](doc/BotsApi.md#getbotpictureoriginal) | **GET** /v1/bots/{id}/images/{image_id}/original | The picture before it was cropped, for Re-crop
 [*BotsApi*](doc/BotsApi.md) | [**getBotShare**](doc/BotsApi.md#getbotshare) | **GET** /v1/bot-shares/{token} | Read a shared bot template, to preview before importing
 [*BotsApi*](doc/BotsApi.md) | [**getBotStarters**](doc/BotsApi.md#getbotstarters) | **GET** /v1/bots/{id}/starters | Starter requests for an empty chat with this bot, written for you
 [*BotsApi*](doc/BotsApi.md) | [**importBot**](doc/BotsApi.md#importbot) | **POST** /v1/bots/import | Create a bot from a template file
+[*BotsApi*](doc/BotsApi.md) | [**listBotPictures**](doc/BotsApi.md#listbotpictures) | **GET** /v1/bots/{id}/images | A bot&#39;s recent pictures, the one in use first, then by when they were last used
 [*BotsApi*](doc/BotsApi.md) | [**listBots**](doc/BotsApi.md#listbots) | **GET** /v1/bots | 
 [*BotsApi*](doc/BotsApi.md) | [**listTemplates**](doc/BotsApi.md#listtemplates) | **GET** /v1/templates | 
+[*BotsApi*](doc/BotsApi.md) | [**removeBotPicture**](doc/BotsApi.md#removebotpicture) | **DELETE** /v1/bots/{id}/image | Stop using a picture: back to the mascot it had before, or its initials
 [*BotsApi*](doc/BotsApi.md) | [**setBotAccess**](doc/BotsApi.md#setbotaccess) | **PUT** /v1/bots/{id}/access | Replace the bot&#39;s visibility and access list
+[*BotsApi*](doc/BotsApi.md) | [**setBotPicture**](doc/BotsApi.md#setbotpicture) | **PUT** /v1/bots/{id}/image | Give a bot a picture of its own
 [*BotsApi*](doc/BotsApi.md) | [**startBotSetup**](doc/BotsApi.md#startbotsetup) | **POST** /v1/bots/{id}/setup | Start (or rerun) the bot&#39;s setup interview in a new conversation
 [*BotsApi*](doc/BotsApi.md) | [**startWelcome**](doc/BotsApi.md#startwelcome) | **POST** /v1/welcome | A new person&#39;s personal workspace, bot and welcome chat; the same chat again if it exists
+[*BotsApi*](doc/BotsApi.md) | [**useBotPicture**](doc/BotsApi.md#usebotpicture) | **POST** /v1/bots/{id}/images/{image_id}/use | Switch to one of the bot&#39;s recent or drawn pictures (also how Undo works)
 [*BrowserApi*](doc/BrowserApi.md) | [**createHighlight**](doc/BrowserApi.md#createhighlight) | **POST** /v1/me/highlights | 
 [*BrowserApi*](doc/BrowserApi.md) | [**createPageCommand**](doc/BrowserApi.md#createpagecommand) | **POST** /v1/me/page-commands | 
 [*BrowserApi*](doc/BrowserApi.md) | [**deleteHighlight**](doc/BrowserApi.md#deletehighlight) | **DELETE** /v1/me/highlights/{id} | 
@@ -409,6 +433,19 @@ Class | Method | HTTP request | Description
 [*LocalComputerApi*](doc/LocalComputerApi.md) | [**setOwnCodingAgents**](doc/LocalComputerApi.md#setowncodingagents) | **PUT** /v1/local-devices/{id}/coding-agents | Replace your own coding agents on this computer (D-371); only the device&#39;s owner can, admins included
 [*LocalComputerApi*](doc/LocalComputerApi.md) | [**testOwnCodingAgent**](doc/LocalComputerApi.md#testowncodingagent) | **POST** /v1/local-devices/{id}/coding-agents/test | Run an agent on this computer with a tiny task (\&quot;Reply with just the word pong\&quot;) and return what it printed
 [*LocalComputerApi*](doc/LocalComputerApi.md) | [**updateLocalDevice**](doc/LocalComputerApi.md#updatelocaldevice) | **PATCH** /v1/local-devices/{id} | Change capabilities, shared folders, allowed bots or turn the device off
+[*MailApi*](doc/MailApi.md) | [**blockMailSender**](doc/MailApi.md#blockmailsender) | **POST** /v1/bots/{id}/email/block | Refuse a sender&#39;s mail at the door
+[*MailApi*](doc/MailApi.md) | [**checkMailName**](doc/MailApi.md#checkmailname) | **GET** /v1/bots/{id}/email/availability | Whether a mail name is free, with alternatives
+[*MailApi*](doc/MailApi.md) | [**claimMailAddress**](doc/MailApi.md#claimmailaddress) | **POST** /v1/bots/{id}/email | Claim a hosted email address for a bot
+[*MailApi*](doc/MailApi.md) | [**deleteMailMessage**](doc/MailApi.md#deletemailmessage) | **DELETE** /v1/bots/{id}/email/messages/{messageId} | Delete one kept mail, its text and its files
+[*MailApi*](doc/MailApi.md) | [**deleteMailMessages**](doc/MailApi.md#deletemailmessages) | **POST** /v1/bots/{id}/email/messages/delete | Delete several kept mails, or every mail older than a date
+[*MailApi*](doc/MailApi.md) | [**downloadMailFile**](doc/MailApi.md#downloadmailfile) | **GET** /v1/bots/{id}/email/messages/{messageId}/files/{index} | A kept mail&#39;s attachment
+[*MailApi*](doc/MailApi.md) | [**getMailAddress**](doc/MailApi.md#getmailaddress) | **GET** /v1/bots/{id}/email | A bot&#39;s hosted email address
+[*MailApi*](doc/MailApi.md) | [**getMailMessage**](doc/MailApi.md#getmailmessage) | **GET** /v1/bots/{id}/email/messages/{messageId} | One kept mail with its whole text
+[*MailApi*](doc/MailApi.md) | [**listMailMessages**](doc/MailApi.md#listmailmessages) | **GET** /v1/bots/{id}/email/messages | A bot&#39;s kept mail, newest first
+[*MailApi*](doc/MailApi.md) | [**moveMailAddress**](doc/MailApi.md#movemailaddress) | **POST** /v1/bots/{id}/email/move | Move a hosted email address to another bot in the workspace
+[*MailApi*](doc/MailApi.md) | [**releaseMailAddress**](doc/MailApi.md#releasemailaddress) | **DELETE** /v1/bots/{id}/email | Release a hosted email address for good (its name is never reissued)
+[*MailApi*](doc/MailApi.md) | [**unblockMailSender**](doc/MailApi.md#unblockmailsender) | **DELETE** /v1/bots/{id}/email/block | Let a blocked sender&#39;s mail through again
+[*MailApi*](doc/MailApi.md) | [**updateMailAddress**](doc/MailApi.md#updatemailaddress) | **PATCH** /v1/bots/{id}/email | Pause or resume a bot&#39;s hosted email address
 [*McpApi*](doc/McpApi.md) | [**createMcpKey**](doc/McpApi.md#createmcpkey) | **POST** /v1/orgs/{id}/mcp-keys | A workspace API key for the hosted MCP endpoint (admins); it acts as you in this workspace
 [*McpApi*](doc/McpApi.md) | [**decideMcpAuthRequest**](doc/McpApi.md#decidemcpauthrequest) | **POST** /v1/oauth/requests/{id}/consent | Allow or refuse an AI app&#39;s access to one workspace; returns where to send the browser
 [*McpApi*](doc/McpApi.md) | [**getMcpAuthRequest**](doc/McpApi.md#getmcpauthrequest) | **GET** /v1/oauth/requests/{id} | An AI app asking to connect, for the consent screen
@@ -645,6 +682,7 @@ Class | Method | HTTP request | Description
  - [ActionRule](doc/ActionRule.md)
  - [ActionRuleList](doc/ActionRuleList.md)
  - [ActionRuleTarget](doc/ActionRuleTarget.md)
+ - [AddAdminDeviceKeyRequest](doc/AddAdminDeviceKeyRequest.md)
  - [AddTeachStepRequest](doc/AddTeachStepRequest.md)
  - [AddUserFactsRequest](doc/AddUserFactsRequest.md)
  - [AddUserFactsRequestItemsInner](doc/AddUserFactsRequestItemsInner.md)
@@ -652,13 +690,22 @@ Class | Method | HTTP request | Description
  - [AdminBotSetting](doc/AdminBotSetting.md)
  - [AdminBrowserGuard](doc/AdminBrowserGuard.md)
  - [AdminCallLimits](doc/AdminCallLimits.md)
+ - [AdminCheck](doc/AdminCheck.md)
  - [AdminCreditPack](doc/AdminCreditPack.md)
+ - [AdminDeviceChallenge](doc/AdminDeviceChallenge.md)
+ - [AdminDeviceChallengeRequest](doc/AdminDeviceChallengeRequest.md)
+ - [AdminDeviceCheckRequest](doc/AdminDeviceCheckRequest.md)
+ - [AdminDeviceKey](doc/AdminDeviceKey.md)
+ - [AdminDeviceKeyList](doc/AdminDeviceKeyList.md)
  - [AdminDomain](doc/AdminDomain.md)
  - [AdminDomainOrder](doc/AdminDomainOrder.md)
  - [AdminDomains](doc/AdminDomains.md)
  - [AdminDomainsCounts](doc/AdminDomainsCounts.md)
  - [AdminLinkServer](doc/AdminLinkServer.md)
  - [AdminLinkServerList](doc/AdminLinkServerList.md)
+ - [AdminMailAddress](doc/AdminMailAddress.md)
+ - [AdminMailAddresses200Response](doc/AdminMailAddresses200Response.md)
+ - [AdminMailReservedNames](doc/AdminMailReservedNames.md)
  - [AdminMargin](doc/AdminMargin.md)
  - [AdminMarginByDayInner](doc/AdminMarginByDayInner.md)
  - [AdminMarginByKindInner](doc/AdminMarginByKindInner.md)
@@ -667,6 +714,9 @@ Class | Method | HTTP request | Description
  - [AdminOrg](doc/AdminOrg.md)
  - [AdminOrgList](doc/AdminOrgList.md)
  - [AdminOverview](doc/AdminOverview.md)
+ - [AdminPasskeyCheckRequest](doc/AdminPasskeyCheckRequest.md)
+ - [AdminPinCheckRequest](doc/AdminPinCheckRequest.md)
+ - [AdminPinState](doc/AdminPinState.md)
  - [AdminPlan](doc/AdminPlan.md)
  - [AdminPriceTables](doc/AdminPriceTables.md)
  - [AdminPricing](doc/AdminPricing.md)
@@ -709,6 +759,7 @@ Class | Method | HTTP request | Description
  - [BillingSummaryDaily](doc/BillingSummaryDaily.md)
  - [BillingUsage](doc/BillingUsage.md)
  - [BillingUsageItem](doc/BillingUsageItem.md)
+ - [BlockMailSenderRequest](doc/BlockMailSenderRequest.md)
  - [BlockRequest](doc/BlockRequest.md)
  - [BlockedPerson](doc/BlockedPerson.md)
  - [BlockedPersonList](doc/BlockedPersonList.md)
@@ -725,6 +776,10 @@ Class | Method | HTTP request | Description
  - [BotModelPrivacy](doc/BotModelPrivacy.md)
  - [BotPage](doc/BotPage.md)
  - [BotPageDetail](doc/BotPageDetail.md)
+ - [BotPicture](doc/BotPicture.md)
+ - [BotPictureCrop](doc/BotPictureCrop.md)
+ - [BotPictureList](doc/BotPictureList.md)
+ - [BotPictureStyle](doc/BotPictureStyle.md)
  - [BotSecretRequest](doc/BotSecretRequest.md)
  - [BotSecretRequestList](doc/BotSecretRequestList.md)
  - [BotShareLink](doc/BotShareLink.md)
@@ -777,6 +832,7 @@ Class | Method | HTTP request | Description
  - [CheckpointCreatedEvent](doc/CheckpointCreatedEvent.md)
  - [CheckpointCreatedEventPayload](doc/CheckpointCreatedEventPayload.md)
  - [CheckpointList](doc/CheckpointList.md)
+ - [ClaimMailAddressRequest](doc/ClaimMailAddressRequest.md)
  - [CleanStorageResult](doc/CleanStorageResult.md)
  - [CloudModels](doc/CloudModels.md)
  - [CodingAgentInfo](doc/CodingAgentInfo.md)
@@ -867,7 +923,21 @@ Class | Method | HTTP request | Description
  - [CreditEntry](doc/CreditEntry.md)
  - [CreditPack](doc/CreditPack.md)
  - [DecideJoinRequest](doc/DecideJoinRequest.md)
+ - [DecisionResults](doc/DecisionResults.md)
+ - [DecisionSettings](doc/DecisionSettings.md)
+ - [DecisionSettingsUses](doc/DecisionSettingsUses.md)
+ - [DecisionSettingsUsesEffort](doc/DecisionSettingsUsesEffort.md)
+ - [DecisionSettingsUsesLongRun](doc/DecisionSettingsUsesLongRun.md)
+ - [DecisionSettingsUsesPushScore](doc/DecisionSettingsUsesPushScore.md)
+ - [DecisionSettingsUsesReplyCheck](doc/DecisionSettingsUsesReplyCheck.md)
+ - [DecisionSettingsUsesScanGate](doc/DecisionSettingsUsesScanGate.md)
+ - [DecisionSettingsUsesToolGate](doc/DecisionSettingsUsesToolGate.md)
+ - [DecisionSettingsUsesWatcherGate](doc/DecisionSettingsUsesWatcherGate.md)
+ - [DecisionSignalResult](doc/DecisionSignalResult.md)
+ - [DecisionSignalResultThresholdsInner](doc/DecisionSignalResultThresholdsInner.md)
  - [DeleteAccountRequest](doc/DeleteAccountRequest.md)
+ - [DeleteMailMessagesRequest](doc/DeleteMailMessagesRequest.md)
+ - [DeleteMailMessagesResult](doc/DeleteMailMessagesResult.md)
  - [DeleteResult](doc/DeleteResult.md)
  - [DeletedCall](doc/DeletedCall.md)
  - [DeletedCanvas](doc/DeletedCanvas.md)
@@ -995,6 +1065,7 @@ Class | Method | HTTP request | Description
  - [GalleryUpdateRequest](doc/GalleryUpdateRequest.md)
  - [GalleryUpdateResult](doc/GalleryUpdateResult.md)
  - [GalleryWorkspaceKind](doc/GalleryWorkspaceKind.md)
+ - [GenerateBotPicturesRequest](doc/GenerateBotPicturesRequest.md)
  - [GitHubSkillPreview](doc/GitHubSkillPreview.md)
  - [GitHubSkillPreviewRequest](doc/GitHubSkillPreviewRequest.md)
  - [GitSyncStatus](doc/GitSyncStatus.md)
@@ -1092,6 +1163,12 @@ Class | Method | HTTP request | Description
  - [LocalMcpServerInfo](doc/LocalMcpServerInfo.md)
  - [LocalMcpSignInNeededEvent](doc/LocalMcpSignInNeededEvent.md)
  - [LocalMcpSignInNeededEventPayload](doc/LocalMcpSignInNeededEventPayload.md)
+ - [MailAddress](doc/MailAddress.md)
+ - [MailFile](doc/MailFile.md)
+ - [MailMessage](doc/MailMessage.md)
+ - [MailMessageDetail](doc/MailMessageDetail.md)
+ - [MailMessageList](doc/MailMessageList.md)
+ - [MailNameAvailability](doc/MailNameAvailability.md)
  - [MarkTeachSecretRequest](doc/MarkTeachSecretRequest.md)
  - [McpAuthRequestInfo](doc/McpAuthRequestInfo.md)
  - [McpConnection](doc/McpConnection.md)
@@ -1128,6 +1205,7 @@ Class | Method | HTTP request | Description
  - [ModelOption](doc/ModelOption.md)
  - [ModelOptionList](doc/ModelOptionList.md)
  - [ModelPolicy](doc/ModelPolicy.md)
+ - [MoveMailAddressRequest](doc/MoveMailAddressRequest.md)
  - [NewsletterStatus](doc/NewsletterStatus.md)
  - [NoticeEvent](doc/NoticeEvent.md)
  - [NoticeEventPayload](doc/NoticeEventPayload.md)
@@ -1344,10 +1422,12 @@ Class | Method | HTTP request | Description
  - [ServerCapacityDaysInner](doc/ServerCapacityDaysInner.md)
  - [ServerCapacityLatest](doc/ServerCapacityLatest.md)
  - [SetAdminBotRequest](doc/SetAdminBotRequest.md)
+ - [SetAdminPinRequest](doc/SetAdminPinRequest.md)
  - [SetAnalyticsOptOutRequest](doc/SetAnalyticsOptOutRequest.md)
  - [SetBotA2aRequest](doc/SetBotA2aRequest.md)
  - [SetBotAccessRequest](doc/SetBotAccessRequest.md)
  - [SetBotAccessRequestEntriesInner](doc/SetBotAccessRequestEntriesInner.md)
+ - [SetBotPictureRequest](doc/SetBotPictureRequest.md)
  - [SetCanvasGrant](doc/SetCanvasGrant.md)
  - [SetConnectionSettingsRequest](doc/SetConnectionSettingsRequest.md)
  - [SetDeviceGrantRequest](doc/SetDeviceGrantRequest.md)
@@ -1355,6 +1435,7 @@ Class | Method | HTTP request | Description
  - [SetGitSyncRequest](doc/SetGitSyncRequest.md)
  - [SetJoinDomainRequest](doc/SetJoinDomainRequest.md)
  - [SetLocalMcpServersRequest](doc/SetLocalMcpServersRequest.md)
+ - [SetMailAddressStatusRequest](doc/SetMailAddressStatusRequest.md)
  - [SetMemoryBackendRequest](doc/SetMemoryBackendRequest.md)
  - [SetNewsletterRequest](doc/SetNewsletterRequest.md)
  - [SetOrgLimitsRequest](doc/SetOrgLimitsRequest.md)
@@ -1493,6 +1574,7 @@ Class | Method | HTTP request | Description
  - [UpdateIntegrationRequest](doc/UpdateIntegrationRequest.md)
  - [UpdateInviteCampaignRequest](doc/UpdateInviteCampaignRequest.md)
  - [UpdateLocalDeviceRequest](doc/UpdateLocalDeviceRequest.md)
+ - [UpdateMailAddressRequest](doc/UpdateMailAddressRequest.md)
  - [UpdateMemoryRequest](doc/UpdateMemoryRequest.md)
  - [UpdateNotice](doc/UpdateNotice.md)
  - [UpdateOrgSettingsRequest](doc/UpdateOrgSettingsRequest.md)

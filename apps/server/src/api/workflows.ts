@@ -43,6 +43,10 @@ export interface Workflows {
   refreshStarters(userId: string, orgId: string, botId: string): Promise<void>;
   /** Writes a finished call's summary and next steps into its card (call card plan); once per call. */
   summarizeCall(liveCallId: string): Promise<void>;
+  /** Draws bot picture candidates in the worker (docs/BOT-PICTURES-PLAN.md §8); waits for them. */
+  generateBotPictures(
+    a: import("@casama/agent").BotPictureDrawRequest,
+  ): Promise<{ ok: true; ids: string[] } | { ok: false; code: string; error: string }>;
   /** Voice (D-065): keyed operations run in the worker; each returns quickly. */
   voiceTranscribe(
     orgId: string,
@@ -181,6 +185,14 @@ export async function dbosWorkflows(databaseUrl: string): Promise<Workflows> {
         body,
         headers,
       );
+    },
+    async generateBotPictures(a) {
+      const h = await client.enqueue<(...x: unknown[]) => Promise<never>>(
+        { queueName: "system", workflowName: "generateBotPictures" },
+        a,
+      );
+      // Two drawings in parallel take 6–20 s; the safety check and saving add a little.
+      return withTimeout(h.getResult({ pollingIntervalMs: 250 }), 90_000, "drawing");
     },
     async voiceTranscribe(orgId, botId, audioB64, mime, language) {
       const h = await client.enqueue<(...a: unknown[]) => Promise<never>>(

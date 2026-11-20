@@ -25,6 +25,7 @@ import '../../core/haptics.dart';
 import '../../core/local_cache.dart';
 import '../../core/media_cache.dart';
 import '../../core/providers.dart';
+import '../../core/remote_config.dart';
 import '../../core/voice.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
@@ -38,6 +39,7 @@ import '../integrations/integrations_screen.dart' show HubApp, hubAppsProvider;
 import '../island/run_tracker.dart';
 import '../billing/out_of_credits.dart';
 import '../billing/paywall.dart';
+import '../bots/bot_email.dart';
 import '../../ui/edge_fade.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/adaptive_modal.dart';
@@ -2628,6 +2630,8 @@ class _EmptyThread extends ConsumerWidget {
                 // Apps to connect first, until two are connected (D-204).
                 ConnectAppTiles(botId: botId, botName: name, width: width - 2 * side),
                 const SizedBox(height: AppSpace.md),
+                // One offer of an email address for a bot without one (BOT-EMAIL-PLAN §4.5).
+                if (remoteFlag(ref, 'bot_email', fallback: false)) EmailOfferTile(botId: botId, botName: name),
                 AnimatedOpacity(
                   opacity: waiting ? 0 : 1,
                   duration: AppMotion.duration,

@@ -86,6 +86,8 @@ export interface AppDeps {
   liveEngine?: import("@casama/agent").LiveEngine | null;
   /** Pushes the API sends itself, such as a watch's "Open on phone" (D-410); unset: none. */
   notifications?: import("@casama/agent").NotificationService;
+  /** Hosted bot mail (BOT-EMAIL-PLAN §9); unset: no hosted addresses on this server. */
+  hostedMail?: import("../services/hosted-mail.ts").HostedMail;
 }
 
 /** A request signed with a watch key (D-410): whose watch, in which workspace, with which limits. */

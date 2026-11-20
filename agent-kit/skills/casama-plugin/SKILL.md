@@ -179,7 +179,7 @@ Casama's existing catalog (no new widgets, no HTML, no web views):
 - `format: 1` required. `card` = `Details`, `Checklist`, `Event`, `Agenda`, `Schedule`, `Results`,
   `MessageList`, `Stats`, `Map`, `PersonPicker`, `MessageDraft`, a live card (`Weather`, `Quote`,
   `Watchlist`, `Currency`, `Score`, `Flight`, `Parcel`…; your plugin is named as its source), a
-  composed card (`Recipe`, `Summary`, `Media`, `Comparison`, `Status`, `Timeline`…; D-453) or a
+  composed card (`Recipe`, `Summary`, `Media`, `Comparison`, `Status`, `Timeline`…; D-458) or a
   basic A2UI component; the rest of the file is its fields (same as `ui.show`, see `ui.catalog`).
   Or `"components": [...]` (flat list, one `root`).
 - `{{result.a.b}}` / `{{result.items[0].x}}` read `structuredContent` (else the text as JSON). A

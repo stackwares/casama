@@ -1784,6 +1784,7 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String toolDoing(String tool) {
     String _temp0 = intl.Intl.selectLogic(tool, {
+      'profile_set_picture': 'Changing its picture',
       'memory_search': 'Searching your memories',
       'memory_write': 'Saving that to memory',
       'memory': 'Updating its memory',
@@ -1870,6 +1871,7 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String toolDid(String tool) {
     String _temp0 = intl.Intl.selectLogic(tool, {
+      'profile_set_picture': 'Changed its picture',
       'memory_search': 'Searched your memories',
       'memory_write': 'Saved to memory',
       'memory': 'Updated its memory',
@@ -2505,10 +2507,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Tip: turn on two-step sign-in in Settings. Without it, anyone who can read your email on this device can unlock the console with an emailed code.';
 
   @override
-  String get adminUnlockDevice => 'Unlock with Face ID or fingerprint';
+  String get adminUnlockDevice => 'Use Face ID or screen lock';
 
   @override
-  String get adminDeviceReason => 'Unlock the admin console';
+  String get adminDeviceReason => 'Confirm it\'s you for the admin console';
 
   @override
   String get adminVerifyPasskey => 'Verify with a passkey';
@@ -2519,6 +2521,95 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get adminPasskeyTip =>
       'Tip: add a passkey in Settings → Passkeys to verify with Face ID or a fingerprint instead of your password.';
+
+  @override
+  String get adminSecurity => 'Security';
+
+  @override
+  String get adminPinTitle => 'Admin PIN';
+
+  @override
+  String get adminPinSet => 'Set an admin PIN';
+
+  @override
+  String get adminPinChange => 'Change the admin PIN';
+
+  @override
+  String get adminPinRemove => 'Remove the admin PIN';
+
+  @override
+  String get adminPinHelp =>
+      '6 digits to unlock the console and confirm changes, instead of your password. Five wrong tries turn it off.';
+
+  @override
+  String get adminPinOffHelp =>
+      'Turned off after too many wrong tries. Set a new one.';
+
+  @override
+  String get adminPinSetupBody =>
+      '6 digits for the admin console. Kept on your server, never on this device.';
+
+  @override
+  String get adminPinSaved => 'Admin PIN saved';
+
+  @override
+  String get adminPinRemoved => 'Admin PIN removed';
+
+  @override
+  String get adminPinLabel => 'Admin PIN';
+
+  @override
+  String adminPinWrong(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count tries left',
+      one: '1 try left',
+    );
+    return 'Wrong PIN. $_temp0.';
+  }
+
+  @override
+  String get adminPinTurnedOff =>
+      'Too many wrong PINs: the admin PIN is turned off. Use a passkey or your password, then set a new PIN under Security.';
+
+  @override
+  String get adminDeviceOfferTitle => 'Use Face ID next time?';
+
+  @override
+  String get adminDeviceOfferBody =>
+      'Unlock the admin console and confirm changes with Face ID, a fingerprint or this phone\'s passcode. A key in this phone\'s secure chip proves it\'s you, and it never leaves the phone.';
+
+  @override
+  String get adminDeviceOfferNo => 'Not now';
+
+  @override
+  String get adminDeviceOfferYes => 'Turn on';
+
+  @override
+  String get adminDeviceSetupReason => 'Turn on Face ID for the admin console';
+
+  @override
+  String get adminDeviceOn => 'Face ID is on for the admin console';
+
+  @override
+  String get adminDeviceTitle => 'Face ID and screen lock';
+
+  @override
+  String get adminDeviceTurnOn => 'Use Face ID on this phone';
+
+  @override
+  String get adminDeviceHelp =>
+      'Face ID, a fingerprint or the passcode unlocks the console and confirms changes, with no PIN or password.';
+
+  @override
+  String get adminDeviceThisOne => 'This phone';
+
+  @override
+  String get adminDeviceRemove => 'Remove';
+
+  @override
+  String get adminDeviceRemoved => 'Removed';
 
   @override
   String get adminOverview => 'Overview';
@@ -8319,6 +8410,319 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatAppsRow => 'Telegram, email, SMS, Slack, WhatsApp and more';
 
   @override
+  String get botEmail => 'Email address';
+
+  @override
+  String get botEmailRow => 'Give this bot its own address';
+
+  @override
+  String botEmailClaimTitle(String name) {
+    return 'Give $name an email address';
+  }
+
+  @override
+  String get botEmailClaimHelp =>
+      'People can write to it, and it answers by email. Forward it anything: bills, bookings, newsletters.';
+
+  @override
+  String get botEmailNameHint => 'ada';
+
+  @override
+  String get botEmailNameFixed => 'The name can\'t be changed later.';
+
+  @override
+  String get botEmailNameLabel => 'Name';
+
+  @override
+  String botEmailWillBe(String address) {
+    return 'Your bot\'s address: $address.';
+  }
+
+  @override
+  String get botEmailClaim => 'Create address';
+
+  @override
+  String get botEmailTaken => 'That name is taken. Try one of these:';
+
+  @override
+  String get botEmailClaimed => 'Your bot has an address';
+
+  @override
+  String get botEmailClaimedHelp =>
+      'A welcome mail is on its way to you. Reply to it, or forward anything.';
+
+  @override
+  String get botEmailCopy => 'Copy';
+
+  @override
+  String get botEmailCopied => 'Copied';
+
+  @override
+  String get botEmailContacts => 'Add to contacts';
+
+  @override
+  String botEmailWrite(String name) {
+    return 'Write to $name';
+  }
+
+  @override
+  String get botEmailPaused =>
+      'Paused. It still receives and keeps mail, but answers nothing.';
+
+  @override
+  String get botEmailPause => 'Pause';
+
+  @override
+  String get botEmailResume => 'Resume';
+
+  @override
+  String get botEmailSenders => 'Allowed senders';
+
+  @override
+  String get botEmailSendersHelp =>
+      'Only these people get answers. Strangers\' mail is kept, and starts nothing.';
+
+  @override
+  String get botEmailEditSenders => 'Edit in Chat apps';
+
+  @override
+  String get botEmailMove => 'Move to another bot';
+
+  @override
+  String get botEmailMoveHelp =>
+      'The address and its mail move to the other bot.';
+
+  @override
+  String get botEmailRelease => 'Release address';
+
+  @override
+  String get botEmailReleaseHelp =>
+      'Stops receiving for good. The name is never given out again.';
+
+  @override
+  String botEmailReleaseConfirm(String address) {
+    return 'Release $address? It stops receiving at once, and the name is never given out again.';
+  }
+
+  @override
+  String get botEmailReleaseNow => 'Release';
+
+  @override
+  String get botEmailMoved => 'Moved';
+
+  @override
+  String botEmailNewBotRow(String name) {
+    return 'Give $name an email address';
+  }
+
+  @override
+  String get botEmailInbox => 'Inbox';
+
+  @override
+  String get botEmailInboxRow => 'Kept mail, strangers and files';
+
+  @override
+  String get botEmailEmpty => 'No mail yet';
+
+  @override
+  String get botEmailStrangers => 'Strangers';
+
+  @override
+  String get botEmailAll => 'All mail';
+
+  @override
+  String get botEmailUnconfirmed => 'Couldn\'t confirm this sender';
+
+  @override
+  String get botEmailAllow => 'Allow';
+
+  @override
+  String get botEmailBlock => 'Block';
+
+  @override
+  String get botEmailBlocked => 'Blocked. New mail from here is refused.';
+
+  @override
+  String get botEmailUnblock => 'Unblock';
+
+  @override
+  String get botEmailOpenChat => 'Open chat';
+
+  @override
+  String get botEmailFiles => 'Files';
+
+  @override
+  String get botEmailNewSenders => 'Tell me about new senders';
+
+  @override
+  String get botEmailNewSendersHelp =>
+      'At most once a day. Off unless you turn it on.';
+
+  @override
+  String get botEmailTryTitle => 'Things to try';
+
+  @override
+  String get botEmailTryForward => 'Forward a bill or a booking';
+
+  @override
+  String get botEmailTryForwardHelp =>
+      'Forward anything to the address above. It reads it and answers here.';
+
+  @override
+  String get botEmailTryReceipts => 'Keep my receipts';
+
+  @override
+  String botEmailTryReceiptsHelp(String address) {
+    return 'Makes a routine that files mail sent to $address.';
+  }
+
+  @override
+  String get botEmailTryDigest => 'One digest a week';
+
+  @override
+  String botEmailTryDigestHelp(String address) {
+    return 'Makes a routine that gathers newsletters from $address into a weekly summary.';
+  }
+
+  @override
+  String get botEmailTryCopied => 'Address copied';
+
+  @override
+  String get botEmailTryMade => 'Routine made';
+
+  @override
+  String get botEmailReceiptsName => 'Keep my receipts';
+
+  @override
+  String get botEmailReceiptsInstructions =>
+      'File the receipt from this mail: what it was for, how much, and when. Say nothing unless something looks wrong.';
+
+  @override
+  String get botEmailDigestName => 'Weekly newsletter digest';
+
+  @override
+  String get botEmailDigestInstructions =>
+      'Collect this week\'s newsletters and send one short digest: the headlines worth knowing, nothing more.';
+
+  @override
+  String get botEmailTriggerTag => 'Plus tag';
+
+  @override
+  String get botEmailTriggerTagHelp =>
+      'Only mail to this tag, like shop for ada+shop@. Email addresses only.';
+
+  @override
+  String get botEmailTriggerUnconfirmed => 'Hear unconfirmed senders too';
+
+  @override
+  String get botEmailTriggerAutomatic => 'Hear automatic mail too';
+
+  @override
+  String botEmailStorage(String used, String limit) {
+    return '$used of $limit';
+  }
+
+  @override
+  String botEmailStorageUsed(String used) {
+    return '$used used';
+  }
+
+  @override
+  String get botEmailStorageFull =>
+      'The mailbox is full, so new mail is refused. Delete old mail to make room.';
+
+  @override
+  String get botEmailSelect => 'Select';
+
+  @override
+  String get botEmailSelectDone => 'Done';
+
+  @override
+  String get botEmailDelete => 'Delete';
+
+  @override
+  String botEmailDeleteCount(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: 'Delete $n mails',
+      one: 'Delete 1 mail',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String botEmailDeleteTitle(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: 'Delete $n mails?',
+      one: 'Delete this mail?',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get botEmailDeleteBody =>
+      'Their text and files are gone for good. Copies already in a chat stay there.';
+
+  @override
+  String get botEmailDeleteOlder => 'Delete older mail';
+
+  @override
+  String get botEmailOlder30Days => 'Older than 30 days';
+
+  @override
+  String get botEmailOlder6Months => 'Older than 6 months';
+
+  @override
+  String get botEmailOlderYear => 'Older than a year';
+
+  @override
+  String botEmailDeleteOlderTitle(String age) {
+    return 'Delete all mail $age?';
+  }
+
+  @override
+  String botEmailDeleted(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: 'Deleted $n mails',
+      one: 'Deleted 1 mail',
+      zero: 'Nothing to delete',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String botEmailPerkAddresses(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n bot email addresses',
+      one: '1 bot email address',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get botEmailPerkWritesNew => 'Bots write to new people by email';
+
+  @override
+  String get botEmailPerkRepliesOnly => 'Bots reply to you by email';
+
+  @override
+  String adminMailSentToday(int sent, int ceiling) {
+    return 'Sent today: $sent of $ceiling';
+  }
+
+  @override
+  String adminMailSentTodayNoCeiling(int sent) {
+    return 'Sent today: $sent';
+  }
+
+  @override
   String get chatAppsAdd => 'Connect a chat app';
 
   @override
@@ -11537,6 +11941,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adminLimitTrialHours => 'Trial computer hours';
 
   @override
+  String get adminLimitMailAddresses => 'Bot email addresses';
+
+  @override
+  String get adminLimitMailNewDay => 'Mail to new people, a day';
+
+  @override
+  String get adminLimitMailSentDay => 'Mail sent, a day';
+
+  @override
+  String get adminLimitMailStorage => 'Mailbox size, MB';
+
+  @override
   String get adminAddLimit => 'Add a limit';
 
   @override
@@ -14168,6 +14584,44 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get adminDomains => 'Domains';
+
+  @override
+  String get adminMail => 'Mail';
+
+  @override
+  String adminMailHealth(int sent, int bounced, int complained) {
+    return '$sent sent · $bounced bounced · $complained complained in 30 days';
+  }
+
+  @override
+  String get adminMailAutoPaused => 'Paused automatically';
+
+  @override
+  String get adminMailPause => 'Pause';
+
+  @override
+  String adminMailPauseTitle(String address) {
+    return 'Pause $address?';
+  }
+
+  @override
+  String get adminMailLift => 'Lift';
+
+  @override
+  String adminMailLiftTitle(String address) {
+    return 'Lift the pause on $address?';
+  }
+
+  @override
+  String get adminMailLiftBody =>
+      'This clears the automatic pause. The owner can pause it again themselves.';
+
+  @override
+  String get adminMailReserved => 'Reserved names';
+
+  @override
+  String get adminMailReservedHelp =>
+      'One name per line. Nobody can claim these, on top of the built-in list.';
 
   @override
   String get adminDomainsConnected => 'Connected';
@@ -17969,4 +18423,213 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cardMoreServings => 'More servings';
+
+  @override
+  String get cropTitle => 'Move and Scale';
+
+  @override
+  String get cropDone => 'Done';
+
+  @override
+  String get cropPosition => 'Picture position';
+
+  @override
+  String get cropMoveUp => 'Move up';
+
+  @override
+  String get cropMoveDown => 'Move down';
+
+  @override
+  String get cropMoveLeft => 'Move left';
+
+  @override
+  String get cropMoveRight => 'Move right';
+
+  @override
+  String get cropRotate => 'Rotate';
+
+  @override
+  String get cropMirror => 'Mirror';
+
+  @override
+  String get cropReset => 'Reset';
+
+  @override
+  String get cropZoom => 'Zoom';
+
+  @override
+  String get cropZoomIn => 'Zoom in';
+
+  @override
+  String get cropZoomOut => 'Zoom out';
+
+  @override
+  String get cropSoft => 'Zoomed in close: the picture may look soft';
+
+  @override
+  String get cropAnimatedStill => 'Animated pictures stay still';
+
+  @override
+  String get cropBackground => 'Background';
+
+  @override
+  String get cropBackgroundNone => 'None';
+
+  @override
+  String cropBackgroundBot(String name) {
+    return '$name\'s color';
+  }
+
+  @override
+  String get cropBackgroundWhite => 'White';
+
+  @override
+  String get cropBackgroundBlack => 'Black';
+
+  @override
+  String get cropUnreadable =>
+      'This picture can\'t be opened here. Try a JPEG or PNG.';
+
+  @override
+  String cropTooBig(String size) {
+    return 'This file is $size, over the 40 MB limit.';
+  }
+
+  @override
+  String get botPicture => 'Picture';
+
+  @override
+  String botPictureTitle(String name) {
+    return '$name\'s Picture';
+  }
+
+  @override
+  String botPictureChange(String name) {
+    return 'Change $name\'s picture';
+  }
+
+  @override
+  String get botPicturePaste => 'Paste Picture';
+
+  @override
+  String get botPictureDraw => 'Make One with AI';
+
+  @override
+  String get botPictureDrawHelp => 'Casama draws two to choose from';
+
+  @override
+  String get botPictureRecrop => 'Re-crop';
+
+  @override
+  String get botPictureMascot => 'Use a Mascot Instead';
+
+  @override
+  String get botPictureRemove => 'Remove Picture';
+
+  @override
+  String get botPictureRecent => 'Recent';
+
+  @override
+  String get botPictureUpdated => 'Picture updated';
+
+  @override
+  String get botPictureRemoved => 'Picture removed';
+
+  @override
+  String get botPictureFailed => 'Couldn\'t save the picture';
+
+  @override
+  String botPictureDrop(String name) {
+    return 'Drop to use as $name\'s picture';
+  }
+
+  @override
+  String botPictureUseAs(String name) {
+    return 'Use as $name\'s Picture';
+  }
+
+  @override
+  String get botPictureUseAsBot => 'Use as a Bot\'s Picture';
+
+  @override
+  String get botPictureWhichBot => 'Which bot gets this picture?';
+
+  @override
+  String botDrawTitle(String name) {
+    return 'A Picture for $name';
+  }
+
+  @override
+  String get botDrawIntro =>
+      'Pick a look, add a few words if you like, and Casama draws two pictures to choose from.';
+
+  @override
+  String get botDrawDescribe => 'Describe it (optional)';
+
+  @override
+  String get botDrawHint => 'A friendly owl with reading glasses';
+
+  @override
+  String get botDrawMake => 'Make 2';
+
+  @override
+  String get botDrawMore => 'Make 2 More';
+
+  @override
+  String get botDrawPick => 'Tap one to use it';
+
+  @override
+  String get botDrawCost =>
+      'Each picture uses image credits, like any picture Casama makes.';
+
+  @override
+  String get botDrawWorking => 'Drawing…';
+
+  @override
+  String get botDrawStyleCloud => 'Casama Cloud';
+
+  @override
+  String get botDrawStyleSoft3d => 'Soft 3D';
+
+  @override
+  String get botDrawStyleWatercolor => 'Watercolor';
+
+  @override
+  String get botDrawStyleFlat => 'Flat Icon';
+
+  @override
+  String get botDrawStylePixel => 'Pixel Art';
+
+  @override
+  String get botDrawStyleLine => 'Line Art';
+
+  @override
+  String get botDrawStylePhoto => 'Photo';
+
+  @override
+  String get sharePictureStays =>
+      'Its picture stays in this workspace: the copy gets its earlier mascot, or its initials.';
+
+  @override
+  String savedResetRefills(String amount) {
+    return 'Refills $amount of credits';
+  }
+
+  @override
+  String get savedResetClearsDaily => 'Clears today’s limit';
+
+  @override
+  String get savedResetGivesHours => 'Gives back computer hours';
+
+  @override
+  String savedResetDaysLeft(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days left',
+      one: '1 day left',
+      zero: 'Expires today',
+    );
+    return '$_temp0';
+  }
 }

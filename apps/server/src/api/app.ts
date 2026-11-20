@@ -13,11 +13,7 @@ import { cors } from "hono/cors";
 import { HTTPException } from "hono/http-exception";
 import { registerCasamaLinkRoutes } from "../billing/link.ts";
 import { ee, registerEnterpriseFallback } from "../ee.ts";
-import {
-  adminPathExempt,
-  requireFreshAdminAuthentication,
-  requireSecondStep,
-} from "./admin-security.ts";
+import { requireFreshAdmin } from "./admin-security.ts";
 import { corsOrigins } from "./cors.ts";
 import { ApiError, problem } from "./errors.ts";
 import { httpMetrics, renderMetrics } from "./metrics.ts";
@@ -34,6 +30,7 @@ import { registerAppRoutes } from "./routes/apps.ts";
 import { registerAttentionRoutes } from "./routes/attention.ts";
 import { registerAutonomyRoutes } from "./routes/autonomy.ts";
 import { billingFor, registerBillingRoutes } from "./routes/billing.ts";
+import { registerBotPictureRoutes } from "./routes/bot-pictures.ts";
 import { registerBotSharingRoutes } from "./routes/bot-sharing.ts";
 import { registerBotTemplateRoutes } from "./routes/bot-template.ts";
 import { registerBotRoutes } from "./routes/bots.ts";
@@ -62,6 +59,7 @@ import { registerLinkRoutes } from "./routes/links.ts";
 import { registerLiveRoutes } from "./routes/live.ts";
 import { registerLiveCardRoutes } from "./routes/live-cards.ts";
 import { registerInternalRoutes, registerLocalRoutes } from "./routes/local.ts";
+import { registerMailRoutes } from "./routes/mail.ts";
 import { type InProcessEnv, registerMcpRoutes } from "./routes/mcp.ts";
 import { registerModerationRoutes } from "./routes/moderation.ts";
 import { registerNewsletterRoutes } from "./routes/newsletter.ts";
@@ -106,10 +104,10 @@ import { clientIp } from "./util.ts";
 
 /**
  * Signed provider webhooks: billing (Dodo, RevenueCat), Stripe Issuing, the domain registrar,
- * Resend for the monthly email (D-408).
+ * Resend for the monthly email (D-408), and the hosted mail Worker (BOT-EMAIL-PLAN).
  */
 export const PROVIDER_HOOKS =
-  /^\/hooks\/(?:billing\/(?:dodo|revenuecat)|payments\/[0-9a-f-]{36}|registrar\/[^/]+|newsletter\/resend)\/?$/;
+  /^\/hooks\/(?:billing\/(?:dodo|revenuecat)|payments\/[0-9a-f-]{36}|registrar\/[^/]+|newsletter\/resend|mail(?:\/events)?)\/?$/;
 
 export function createApp(deps: AppDeps) {
   const app = new OpenAPIHono<AppEnv>({
@@ -397,9 +395,7 @@ export function createApp(deps: AppDeps) {
   // Before route validation and idempotent-response replay: expired proof must never mutate.
   app.use("/v1/admin/*", async (c, next) => {
     const claims = c.get("claims");
-    requireFreshAdminAuthentication(c.req.method, c.req.path, claims);
-    if (claims && !adminPathExempt(c.req.method, c.req.path))
-      await requireSecondStep(deps.db, claims, !["GET", "HEAD"].includes(c.req.method));
+    await requireFreshAdmin(deps.db, c.req.method, c.req.path, claims);
     await next();
   });
   app.use("/v1/*", httpMetrics);
@@ -481,6 +477,7 @@ export function createApp(deps: AppDeps) {
   registerReferralRoutes(app, deps);
   registerWaitlistRoutes(app, deps);
   registerBotRoutes(app, deps);
+  registerBotPictureRoutes(app, deps);
   registerReactionRoutes(app, deps);
   registerBrowserRoutes(app, deps);
   registerChatGptRoutes(app, deps);
@@ -523,6 +520,7 @@ export function createApp(deps: AppDeps) {
   registerPasswordManagerRoutes(app, deps);
   registerBotSharingRoutes(app, deps);
   registerChannelRoutes(app, deps);
+  registerMailRoutes(app, deps);
   registerEncryptionRoutes(app, deps);
   registerA2aRoutes(app, deps);
   registerTelephonyRoutes(app, deps);

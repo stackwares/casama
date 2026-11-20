@@ -5,6 +5,7 @@ import {
   ApnsVoipSender,
   ApnsWatchSender,
   ApnsWidgetSender,
+  type AutonomyToolDeps,
   backgroundComplete,
   builtinTools,
   CloudRelayPushSender,
@@ -56,6 +57,7 @@ import {
   registerLinkTools,
   registerLiveTools,
   registerLoginTools,
+  registerMailTools,
   registerPageTools,
   registerPaymentTools,
   registerPhoneCallTools,
@@ -99,6 +101,7 @@ import {
   registerAdminTools,
 } from "../services/admin-bot.ts";
 import { getCloudModels } from "../services/cloud-models.ts";
+import { decisionDeps } from "../services/decisions.ts";
 import { serverPushSender } from "../services/push-sender.ts";
 import { countingSearch, createVendorCounter } from "../services/vendors/count.ts";
 import { searchDomains } from "../sites/buying.ts";
@@ -206,6 +209,12 @@ export interface WorkerOptions {
   publicApiUrl?: string;
   /** Signs chat apps' file links (D-342); the API checks them with the same key. */
   fileLinkKey?: string;
+  /** Hosted bot mail (BOT-EMAIL-PLAN §6.4): the server's sender; unset: none goes out. */
+  hostedMail?: import("@casama/agent").HostedMailSender | null;
+  /** Hosted bot mail: the domain addresses live on (MAIL_DOMAIN). */
+  mailDomain?: string;
+  /** Hosted bot mail: welcome mail is skipped while sending is paused (MAIL_SEND_PAUSED). */
+  mailSendPaused?: boolean;
   /** Phone calls through Twilio (D-141): false leaves the voice.call tool out. Default on. */
   phoneCalls?: boolean;
   /** Audit-log forwarding (D-146): on when the enterprise license includes it. */
@@ -502,9 +511,13 @@ export async function startWorker(opts: WorkerOptions) {
     return row?.key ? row : null;
   };
   let client: DBOSClient | undefined;
+  let botPictures: Parameters<NonNullable<AutonomyToolDeps["exposeBotPictures"]>>[0] | undefined;
   registerAutonomyTools(tools, {
     liveTools: Boolean(opts.liveData),
     db,
+    exposeBotPictures: (api) => {
+      botPictures = api;
+    },
     // Noto Sans CJK for Chinese, Japanese and Korean PDFs (D-351); the image has it at the default.
     cjkFontDir: process.env.CJK_FONT_DIR || undefined,
     fetch: fetchOut,
@@ -623,7 +636,16 @@ export async function startWorker(opts: WorkerOptions) {
     },
   });
   // Check-in scans leave suggestions (D-114).
-  registerSuggestionTools(tools, { db, notifications });
+  // Decision models (D-454) on the server's shared OpenRouter key; every use is off until the owner
+  // sets it in Admin.
+  const decisions = decisionDeps(db, {
+    key: opts.platformOpenRouterKey,
+    billable: Boolean(opts.billing && opts.platformOpenRouterKey),
+    fetch: opts.providerBases?.openrouter ? fetch : fetchOut,
+    base: opts.providerBases?.openrouter,
+    logger: opts.logger,
+  });
+  registerSuggestionTools(tools, { db, notifications, decisions });
   registerWatcherTools(tools, { db });
   registerHighlightTools(tools, { db });
   registerTeachTools(tools, { db });
@@ -640,7 +662,21 @@ export async function startWorker(opts: WorkerOptions) {
     local: opts.local,
     objects: opts.objects,
     links: fileLinks,
+    hostedMail: opts.hostedMail,
   });
+  // Offered only where hosted mail exists; elsewhere the bot never hears of addresses.
+  if (opts.hostedMail && opts.mailDomain)
+    registerMailTools(tools, {
+      db,
+      fetch: fetchOut,
+      mail: {
+        domain: opts.mailDomain,
+        sender: opts.hostedMail,
+        sendPaused: opts.mailSendPaused ?? false,
+      },
+      objects: opts.objects,
+      logger: opts.logger,
+    });
   // iPhone call rings: this server's own Apple key, or Casama Cloud's relay when it is linked
   // (D-296), since only Casama's key can ring the store app.
   const voip =
@@ -801,6 +837,7 @@ export async function startWorker(opts: WorkerOptions) {
   });
   configureWorkflows({
     db,
+    botPictures,
     vendorUsage: opts.vendorUsage,
     slots: new RunSlots(
       opts.runConcurrency ?? 20,
@@ -854,6 +891,7 @@ export async function startWorker(opts: WorkerOptions) {
       logger: opts.logger,
       local: opts.local,
       fileLinks,
+      hostedMail: opts.hostedMail,
       ownUrls: opts.ownUrls,
       lazyToolsThreshold: opts.lazyToolsThreshold,
       instanceAdmin: adminRunCheck(adminBot),
@@ -873,6 +911,7 @@ export async function startWorker(opts: WorkerOptions) {
       billCloudModels: Boolean(opts.billing && opts.platformOpenRouterKey),
       cloudLockedModel: opts.cloudLockedModel,
       cloudModels: opts.billing ? () => getCloudModels(db) : undefined,
+      decisions,
     },
   });
 

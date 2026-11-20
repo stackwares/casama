@@ -28,6 +28,7 @@ import {
   verifyTokenHash,
 } from "./auth.ts";
 import { browserName, FEATURES } from "./browser.ts";
+import { setPictureServer } from "./look.ts";
 import { InputError, normalizeServer, parseSignInLink, serverLabel } from "./servers.ts";
 import {
   type Account,
@@ -73,6 +74,8 @@ export function publicClient(server: string) {
 
 /** A client signed in as [account], refreshing its token as needed. */
 export function clientFor(account: Account) {
+  // Bot pictures come from the server the person is signed in to.
+  setPictureServer(account.server);
   return createCasamaClient({
     apiUrl: account.server,
     fetch: reaching(account.server),

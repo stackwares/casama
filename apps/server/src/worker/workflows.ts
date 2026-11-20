@@ -1,5 +1,6 @@
 import { writeFile } from "node:fs/promises";
 import {
+  type BotPictureDrawRequest,
   backgroundComplete,
   type ChatGptConfig,
   type ComputerService,
@@ -27,6 +28,7 @@ import {
   projectHeartbeat,
   purgeDeletedCreations,
   purgeDeviceData,
+  purgeExpiredMail,
   purgeSeenInbound,
   type RunDeps,
   refreshIntegration,
@@ -36,10 +38,12 @@ import {
   runAgent,
   safeFetch,
   sendDueSuggestions,
+  sweepDecisionLog,
   sweepEncryption,
   sweepLiveTokens,
   sweepWatchCodes,
   syncComposioTriggers,
+  ToolError,
   UPDATED_ERROR_CODE,
   waiveFailedRun,
 } from "@casama/agent";
@@ -95,6 +99,8 @@ let runtime:
       computers?: ComputerService;
       fetch?: typeof fetch;
       voice?: VoiceRuntime;
+      /** Draws bot pictures for the API's "Make one with AI" (docs/BOT-PICTURES-PLAN.md §8). */
+      botPictures?: { draw: (a: BotPictureDrawRequest) => Promise<{ ids: string[] }> };
       vendorUsage?: {
         env: import("../env.ts").Env;
         email: import("../services/email.ts").EmailSender;
@@ -415,7 +421,7 @@ export const routinesTickWorkflow = DBOS.registerWorkflow(
     // Proactive bots (D-247): suggestions that waited for their time ("an hour before the show").
     await DBOS.runStep(
       () =>
-        sendDueSuggestions(rt().db, rt().agent.notifications).catch(
+        sendDueSuggestions(rt().db, rt().agent.notifications, 100, rt().agent.decisions).catch(
           captureStep("due-suggestions", 0),
         ),
       { name: "due-suggestions" },
@@ -571,6 +577,7 @@ export const routinesTickWorkflow = DBOS.registerWorkflow(
           fetch: rt().agent.fetch ?? fetch,
           startRun: async () => {},
           local: rt().agent.local,
+          decisions: rt().agent.decisions,
         }).catch(captureStep("watchers", [] as string[])),
       { name: "watchers" },
     );
@@ -1032,6 +1039,36 @@ export const voiceSessionWorkflow = DBOS.registerWorkflow(
   { name: "voiceSession" },
 );
 
+/**
+ * "Make one with AI" (docs/BOT-PICTURES-PLAN.md §8): draws candidates in the worker, where the
+ * media provider, Casama's safety check and credits live. Errors come back as codes, not throws,
+ * so the API can say what went wrong; a step isn't retried (each try would be paid for again).
+ */
+export const generateBotPicturesWorkflow = DBOS.registerWorkflow(
+  async (a: BotPictureDrawRequest) =>
+    DBOS.runStep(
+      async (): Promise<
+        { ok: true; ids: string[] } | { ok: false; code: string; error: string }
+      > => {
+        const draw = rt().botPictures?.draw;
+        if (!draw)
+          return {
+            ok: false,
+            code: "no_media_provider",
+            error: "Drawing isn't set up on this server",
+          };
+        try {
+          return { ok: true, ...(await draw(a)) };
+        } catch (e) {
+          const code = e instanceof ToolError ? e.code : "media_failed";
+          return { ok: false, code, error: e instanceof Error ? e.message : String(e) };
+        }
+      },
+      { name: "draw", retriesAllowed: false },
+    ),
+  { name: "generateBotPictures" },
+);
+
 /** Phase 0 test workflow: two checkpointed steps. */
 export const pingWorkflow = DBOS.registerWorkflow(
   async (message: string) => {
@@ -1094,6 +1131,21 @@ export const maintenanceWorkflow = DBOS.registerWorkflow(
     await DBOS.runStep(
       () => purgeSeenInbound(rt().db).catch(captureStep("purge-seen-inbound", 0)),
       { name: "purge-seen-inbound" },
+    );
+    // Hosted bot mail: strangers' mail goes 30 days after it arrives, released addresses' 30
+    // days after the release (BOT-EMAIL-PLAN §4.3, Phase 2).
+    await DBOS.runStep(
+      () =>
+        purgeExpiredMail(rt().db, rt().agent.objects).catch(captureStep("purge-expired-mail", 0)),
+      { name: "purge-expired-mail" },
+    );
+    // Decision models (D-454): labels from what really happened, and the 90-day cleanup.
+    await DBOS.runStep(
+      () =>
+        sweepDecisionLog(rt().db)
+          .then((r) => r.labelled + r.purged)
+          .catch(captureStep("decision-log", 0)),
+      { name: "decision-log" },
     );
     await DBOS.runStep(
       () => purgeEndedWorkflows(rt().db).catch(captureStep("purge-workflows", 0)),
@@ -1296,7 +1348,10 @@ export const privacyWorkflow = DBOS.registerWorkflow(
   async (_scheduledAt: Date, _context: unknown) => {
     const { purgeDueAccounts, applyRetention } = await import("../services/privacy.ts");
     await DBOS.runStep(
-      () => purgeDueAccounts(rt().db, rt().computers).catch(captureStep("purge-accounts", 0)),
+      () =>
+        purgeDueAccounts(rt().db, rt().computers, { objects: rt().agent.objects }).catch(
+          captureStep("purge-accounts", 0),
+        ),
       {
         name: "purge-accounts",
       },

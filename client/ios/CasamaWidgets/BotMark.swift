@@ -1,3 +1,4 @@
+import CoreGraphics
 import SwiftUI
 import WidgetKit
 
@@ -7,6 +8,10 @@ import WidgetKit
 // made from assets/mascots/<name>.png); any other bot shows its initials on its gradient, the
 // gradient picked from its name exactly as botPalette does. Keep both lists in step with
 // bot_avatar.dart and mascot.dart. Shared by the iPhone and Mac widget extensions.
+//
+// A bot with a picture of its own (`image:<id>:<colours>`, BotPictureStore.swift) shows that
+// picture from the file the widget (or the app, for Live Activities) saved; until the file is here
+// it shows its initials on the picture's own two colours.
 
 extension Color {
   init(hex: UInt32) {
@@ -49,10 +54,19 @@ struct BotArt {
   let name: String
   /// The mascot's key (`winky`), when the bot has one we ship.
   let mascot: String?
+  /// The id of the bot's own picture (BotPictureStore), when it has one.
+  let pictureId: String?
   let colors: [Color]
 
   init(name: String, avatar: String?) {
     self.name = name
+    if let picture = BotPicture.parse(avatar) {
+      mascot = nil
+      pictureId = picture.id
+      colors = [Color(hex: picture.colors.0), Color(hex: picture.colors.1)]
+      return
+    }
+    pictureId = nil
     var key: String?
     if let avatar, avatar.hasPrefix("mascot:") {
       let k = String(avatar.dropFirst("mascot:".count))
@@ -73,6 +87,9 @@ struct BotArt {
   /// The colour things in the bot's colour use (a timer, a glow).
   var accent: Color { colors[0] }
 
+  /// The bot's picture when it has one and this process has the file.
+  var pictureImage: CGImage? { pictureId.flatMap { BotPictureStore.shared.image($0) } }
+
   /// One or two letters, as `botInitials` makes them.
   var initials: String {
     let parts = name.split(whereSeparator: { $0.isWhitespace })
@@ -90,7 +107,9 @@ struct BotMarkView: View {
   var size: CGFloat = 24
   var body: some View {
     Group {
-      if let mascot = art.mascot {
+      if let picture = art.pictureImage {
+        pictureView(picture)
+      } else if let mascot = art.mascot {
         mascotImage(mascot)
           // The art keeps a margin for the cloud's hops (mascot.dart, _zoom).
           .frame(width: size * 1.14, height: size * 1.14)
@@ -109,6 +128,22 @@ struct BotMarkView: View {
       }
     }
     .accessibilityHidden(true)
+  }
+
+  /// The picture fills the rounded square the initials would. Like the mascot, it loses its colour
+  /// on a tinted Home Screen.
+  @ViewBuilder
+  private func pictureView(_ picture: CGImage) -> some View {
+    let image = Image(decorative: picture, scale: 1).resizable().interpolation(.high)
+    Group {
+      if #available(iOS 18.0, macOS 15.0, *) {
+        image.widgetAccentedRenderingMode(.desaturated).scaledToFill()
+      } else {
+        image.scaledToFill()
+      }
+    }
+    .frame(width: size, height: size)
+    .clipShape(RoundedRectangle(cornerRadius: size * 0.32, style: .continuous))
   }
 
   @ViewBuilder

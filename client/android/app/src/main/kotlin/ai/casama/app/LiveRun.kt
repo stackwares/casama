@@ -155,6 +155,9 @@ object LiveRun {
       wanted[run.runId] = run
     }
     for (run in wanted.values) draw(context, run, labels, stampMs = now, fromServer = false)
+    // A bot's own picture is saved first when it isn't here yet (off the main thread); the
+    // notification is drawn again once it arrives, with the initials on its colours until then.
+    BotPictures.ensureThen(context, BotAvatarValue.ids(wanted.values.map { it.botAvatar })) { redrawWithPictures(context, state) }
     // What's on screen, and what was just posted (notify is asynchronous, so the active list may
     // not have it yet).
     for (runId in shownRuns(context) + recordedRuns(context)) {
@@ -227,7 +230,33 @@ object LiveRun {
     )
     Log.d("casama.live", "push for $runId: ${run.phase}")
     draw(context, run, labels, stampMs = stamp, fromServer = true)
+    // Already on a background thread: fetch a picture we don't have and draw again with it.
+    val picture = BotAvatarValue.picture(run.botAvatar)
+    val server = BotPictures.server(context)
+    if (picture != null && server != null && !BotPictures.has(context, picture.id) &&
+      BotPictures.ensure(context, listOf(picture.id), server) > 0
+    ) {
+      forgetDrawn(context, run)
+      draw(context, run, labels, stampMs = stamp, fromServer = true)
+    }
     refreshWidget(context)
+  }
+
+  /** A picture arrived after the app drew its runs: forget what was drawn (when nothing newer was) and draw again. */
+  private fun redrawWithPictures(context: Context, state: Map<*, *>) {
+    for (raw in state["items"] as? List<*> ?: emptyList<Any>()) {
+      val run = (raw as? Map<*, *>)?.takeIf { it["here"] != true }?.let { runFromItem(it) } ?: continue
+      forgetDrawn(context, run)
+    }
+    apply(context, state)
+  }
+
+  /** Makes the next [draw] of [run] post again even though its state is the same as the last one's. */
+  private fun forgetDrawn(context: Context, run: Run) {
+    val last = record(context, run.runId) ?: return
+    // A newer state drawn since (a push) already has the picture's file to read: leave it be.
+    if (last.optString("key") != run.key()) return
+    prefs(context).edit().putString("run_${run.runId}", last.put("key", "").put("app_key", "").toString()).apply()
   }
 
   // MARK: Drawing

@@ -3,7 +3,7 @@ title: Best open-source AI agents in 2026: nine compared
 h1: Best open-source AI agents in 2026
 card: Best open-source AI agents
 crumb: Best open-source AI agents
-description: Nine open-source AI agents you can run yourself, compared on licence, safety, models, apps and price: OpenClaw, Hermes Agent, nanobot, NanoClaw, Agent Zero and more.
+description: Nine open-source AI agents you can run yourself, compared on licence, safety, models, apps and price: OpenClaw, Hermes Agent, nanobot, NanoClaw and more.
 lead: There are two kinds of open-source AI agent. Frameworks are kits for developers to build agents with. This page is about the other kind, finished agents you install and talk to. The best one for you depends on where you want it to work, your own machine or a computer of its own, and on how much setup you want to do for safety.
 updated: 2026-11-18
 order: 0

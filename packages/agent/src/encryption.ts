@@ -24,6 +24,8 @@ export const SEALED_COLUMNS = [
   { table: "widget_canvases", column: "content", json: true, key: ["id"] },
   // The default invite link's token, kept so the link can be shown again (D-167).
   { table: "invite_links", column: "share_token", json: false, key: ["id"] },
+  // Hosted bot mail text, sealed like chat messages (BOT-EMAIL-PLAN).
+  { table: "mail_messages", column: "content", json: true, key: ["id"] },
 ] as const;
 
 export type EncryptionMode = "off" | "encrypting" | "on" | "decrypting";

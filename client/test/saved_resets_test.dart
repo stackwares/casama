@@ -47,7 +47,10 @@ void main() {
     expect(find.textContaining('Sorry about the outage'), findsOneWidget);
     await tester.tap(find.text('Use Reset'));
     await tester.pumpAndSettle();
-    expect(find.textContaining(r'Refills $4.20'), findsOneWidget);
+    expect(
+      find.textContaining(r'Refills $4.20 of this period'),
+      findsOneWidget,
+    );
     await tester.tap(find.text('Cancel'));
     await tester.pumpAndSettle();
   });
@@ -128,8 +131,86 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('Use Reset'));
       await tester.pumpAndSettle();
-      expect(find.textContaining('Clears today’s limit'), findsOneWidget);
+      expect(
+        find.textContaining('Clears today’s limit so your bots'),
+        findsOneWidget,
+      );
       expect(find.textContaining(r'$0.00'), findsNothing);
     },
   );
+
+  group('layout on every screen size', () {
+    SavedLimitReset soon() => SavedLimitReset(
+      id: '44444444-4444-4444-8444-444444444444',
+      campaignId: null,
+      message: 'A test reset from Casama. Use it any time before it expires.',
+      expiresAt: DateTime.now().add(const Duration(days: 2, hours: 3)),
+      refillUsd: 1,
+      resetDaily: true,
+      resetComputer: true,
+      canUse: true,
+      unavailableReason: null,
+    );
+
+    Future<void> pump(
+      WidgetTester tester,
+      double width, {
+      double textScale = 1,
+    }) async {
+      tester.view.physicalSize = Size(width, 900);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        harness(
+          _ResetBackend([soon()]),
+          MediaQuery(
+            data: MediaQueryData(
+              size: Size(width, 900),
+              textScaler: TextScaler.linear(textScale),
+            ),
+            child: const Scaffold(
+              body: SingleChildScrollView(
+                padding: EdgeInsets.all(16),
+                child: SavedResets(),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('a phone: the button spans the card under the details', (
+      tester,
+    ) async {
+      await pump(tester, 390);
+      final card = tester.getRect(find.byKey(const Key('savedResetCard')));
+      final button = tester.getRect(find.byKey(const Key('useSavedReset')));
+      final title = tester.getRect(find.text('1 reset saved'));
+      expect(button.top, greaterThan(title.bottom));
+      expect(button.width, greaterThan(card.width * 0.8));
+      // What it does and when it ends, in plain words; the end is close, so the time shows.
+      expect(find.text(r'Refills $1.00 of credits'), findsOneWidget);
+      expect(find.text('Clears today’s limit'), findsOneWidget);
+      expect(find.text('Gives back computer hours'), findsOneWidget);
+      expect(find.text('2 days left'), findsOneWidget);
+      expect(find.textContaining('·'), findsOneWidget);
+    });
+
+    testWidgets('a wide window: the button sits beside the title', (
+      tester,
+    ) async {
+      await pump(tester, 1000);
+      final button = tester.getRect(find.byKey(const Key('useSavedReset')));
+      final title = tester.getRect(find.text('1 reset saved'));
+      expect(button.left, greaterThan(title.right));
+      expect((button.center.dy - title.center.dy).abs(), lessThan(24));
+    });
+
+    testWidgets('a small phone with large text still fits', (tester) async {
+      await pump(tester, 320, textScale: 2);
+      expect(tester.takeException(), isNull);
+      expect(find.byKey(const Key('useSavedReset')), findsOneWidget);
+    });
+  });
 }

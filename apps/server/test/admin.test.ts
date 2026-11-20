@@ -83,13 +83,13 @@ describe("owner admin console (Phase 6)", () => {
         json: {},
       });
       expect(await j(write)).toMatchObject({ code: "admin_confirmation_required" });
-      // A fresh passkey is a first step only (Supabase: aal1, user verification preferred, D-450).
+      // A fresh passkey is enough on its own, though Supabase rates it aal1 (D-452).
       const now = Math.floor(Date.now() / 1000);
       const passkey = await h.tokenFor(who, {
         aal: "aal1",
         amr: [{ method: "passkey", timestamp: now }],
       });
-      expect((await h.request("/v1/admin/users", { token: passkey })).status).toBe(403);
+      expect((await h.request("/v1/admin/users", { token: passkey })).status).toBe(200);
       const passkeyAndCode = await h.tokenFor(who, {
         aal: "aal2",
         amr: [

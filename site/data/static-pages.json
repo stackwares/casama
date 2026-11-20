@@ -1,10 +1,10 @@
 {
   "note": "Hand-written pages for sitemap.xml. Change lastmod when the page's content changes.",
   "pages": [
-    { "path": "/", "lastmod": "2026-11-18" },
-    { "path": "/download", "lastmod": "2026-11-18" },
-    { "path": "/privacy", "lastmod": "2026-11-18" },
-    { "path": "/terms", "lastmod": "2026-11-19" },
-    { "path": "/chrome/whats-new", "lastmod": "2026-11-16" }
+    { "path": "/", "lastmod": "2026-11-20" },
+    { "path": "/download", "lastmod": "2026-11-20" },
+    { "path": "/privacy", "lastmod": "2026-11-20" },
+    { "path": "/terms", "lastmod": "2026-11-20" },
+    { "path": "/chrome/whats-new", "lastmod": "2026-11-20" }
   ]
 }

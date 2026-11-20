@@ -104,6 +104,21 @@ class _ShareSheetState extends ConsumerState<_ShareSheet> {
       submitKey: const Key('makeShareLink'),
       onSubmit: _busy ? null : _makeLink,
       children: [
+        // Its own picture stays in this workspace (docs/BOT-PICTURES-PLAN.md §9).
+        if (BotPictureRef.parse(widget.bot.avatarUrl) != null)
+          Row(
+            key: const Key('sharePictureNote'),
+            spacing: AppSpace.xs,
+            children: [
+              Icon(LucideIcons.imageOff, size: 16, color: context.colorScheme.onSurfaceVariant),
+              Expanded(
+                child: Text(
+                  l10n.sharePictureStays,
+                  style: context.textTheme.bodySmall?.copyWith(color: context.colorScheme.onSurfaceVariant),
+                ),
+              ),
+            ],
+          ),
         CheckboxListTile(
           key: const Key('shareMemories'),
           contentPadding: EdgeInsets.zero,

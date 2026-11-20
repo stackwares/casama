@@ -30,6 +30,10 @@ class AdminSecurity {
   /// seconds after one, so the app doesn't ask again within [grace].
   static DateTime? lastVerified;
   static String? lastVerifiedBy;
+
+  /// How the last fresh check was made ('pin', 'passkey', 'password'): changing the PIN takes a
+  /// passkey or password, never the PIN (D-452).
+  static String? lastVerifiedMethod;
   static const grace = Duration(seconds: 45);
 
   static bool recentlyVerified(String? userId) =>
@@ -38,14 +42,26 @@ class AdminSecurity {
       lastVerified != null &&
       DateTime.now().difference(lastVerified!) < grace;
 
-  static void verified(String? userId) {
+  static void verified(String? userId, {String method = 'password'}) {
     lastVerified = DateTime.now();
     lastVerifiedBy = userId;
+    lastVerifiedMethod = method;
   }
 
   static void forgetVerification() {
     lastVerified = null;
     lastVerifiedBy = null;
+    lastVerifiedMethod = null;
+  }
+
+  /// The last passkey or PIN check the server recorded, and on which sign-in session (D-452). It
+  /// outlives the console's lock: it's what the server will still accept, for the Face ID unlock.
+  static DateTime? checkAt;
+  static String? checkSession;
+
+  static void checked(DateTime at) {
+    checkAt = at;
+    checkSession = _claims()?['session_id'] as String?;
   }
 
   /// An emailed code is remembered across a lock (reading the email in another app locks the
@@ -61,23 +77,7 @@ class AdminSecurity {
   /// The signed-in session's access token. Set once by the app's backend.
   static String? Function()? accessToken;
 
-  /// Sign-ins the server counts (apps/server/src/api/admin-security.ts); a refresh never does.
-  static const _interactiveMethods = {
-    'password',
-    'otp',
-    'totp',
-    'oauth',
-    'sso/saml',
-    'magiclink',
-    'passkey',
-  };
-
-  /// The server's read window for the admin console (`ADMIN_READ_WINDOW_SECONDS`).
-  static const serverReadWindow = Duration(minutes: 5);
-
-  /// How long the server will still accept this session's latest real sign-in for admin reads,
-  /// read from the token's signed `amr` (D-450). Null without a token or a real sign-in in it.
-  static Duration? serverWindowLeft({DateTime? now}) {
+  static Map<String, dynamic>? _claims() {
     final token = accessToken?.call();
     if (token == null) return null;
     try {
@@ -86,18 +86,7 @@ class AdminSecurity {
       final claims = jsonDecode(
         utf8.decode(base64Url.decode(base64Url.normalize(parts[1]))),
       );
-      final amr = claims is Map ? claims['amr'] : null;
-      if (amr is! List) return null;
-      int? newest;
-      for (final e in amr) {
-        if (e is! Map || !_interactiveMethods.contains(e['method'])) continue;
-        final t = e['timestamp'];
-        if (t is num && (newest == null || t > newest)) newest = t.toInt();
-      }
-      if (newest == null) return null;
-      final at = DateTime.fromMillisecondsSinceEpoch(newest * 1000);
-      final left = serverReadWindow - (now ?? DateTime.now()).difference(at);
-      return left.isNegative ? Duration.zero : left;
+      return claims is Map<String, dynamic> ? claims : null;
     } catch (_) {
       return null;
     }
@@ -140,9 +129,14 @@ class AdminSecurity {
     }
   }
 
+  /// Admin paths the console uses while locked (D-452): the overview probe, whether a PIN is set,
+  /// and the checks that unlock it.
+  static bool _openWhileLocked(String path, String method) =>
+      (method == 'GET' && (path == '/v1/admin/overview' || path == '/v1/admin/pin')) ||
+      (method == 'POST' && path.startsWith('/v1/admin/checks/'));
+
   static bool protectedPath(String path, {String method = 'GET'}) =>
-      path.startsWith('/v1/admin/') &&
-      (path != '/v1/admin/overview' || method.toUpperCase() != 'GET');
+      path.startsWith('/v1/admin/') && !_openWhileLocked(path, method.toUpperCase());
 }
 
 /// Only freshness rejections are replayed. A timeout or server error can have already

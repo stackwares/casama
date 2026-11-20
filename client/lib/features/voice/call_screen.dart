@@ -24,6 +24,7 @@ import '../../ui/form_sheet.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../ui/bot_avatar.dart';
 import '../../ui/mascot.dart';
 import '../../core/call_audio.dart';
 import '../../core/screen_awake.dart';
@@ -391,6 +392,7 @@ class _CallScreenState extends ConsumerState<CallScreen>
       phase: phase,
       phaseLabel: phaseLabel,
       mascot: Mascot.fromAvatar(bot?.avatarUrl),
+      picture: BotPictureRef.parse(bot?.avatarUrl) == null ? null : (name: name, avatar: bot!.avatarUrl!),
       motion: _motion,
       animate: _animateOrb,
       runs: needsKey || c == null ? const [] : c.runs,
@@ -754,6 +756,7 @@ class _CallStage extends StatelessWidget {
     required this.phase,
     required this.phaseLabel,
     required this.mascot,
+    this.picture,
     required this.motion,
     required this.animate,
     required this.runs,
@@ -765,6 +768,7 @@ class _CallStage extends StatelessWidget {
   final OrbPhase phase;
   final String phaseLabel;
   final Mascot? mascot;
+  final ({String name, String avatar})? picture;
   final OrbMotion motion;
   final bool animate;
   final List<ToolRun> runs;
@@ -791,6 +795,7 @@ class _CallStage extends StatelessWidget {
                 key: Key('callMascot-${phase.name}'),
                 child: CallMascot(
                   mascot: mascot,
+                  picture: picture,
                   motion: motion,
                   size: orb,
                   animate: animate,

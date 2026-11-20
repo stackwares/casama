@@ -17,7 +17,26 @@ import {
   getConnectionSettings,
   setConnectionSettings,
 } from "../../services/connection-settings.ts";
+import {
+  getDecisionSettings,
+  loadDecisionResults,
+  setDecisionSettings,
+} from "../../services/decisions.ts";
+import { mailReservedNames, setMailReservedNames } from "../../services/mail-reserved-names.ts";
 import { CASAMA_VERSION } from "../../version.ts";
+import {
+  ADMIN_PIN_MAX_FAILURES,
+  addDeviceKey,
+  checkPin,
+  deviceChallenge,
+  listDeviceKeys,
+  pinState,
+  recordDeviceCheck,
+  recordPasskeyCheck,
+  removeDeviceKey,
+  requireCheckWithoutPin as requireCheckWithoutPinIn,
+  setPin,
+} from "../admin-security.ts";
 import { ApiError } from "../errors.ts";
 import type { AppDeps, AppEnv } from "../types.ts";
 import { iso } from "../util.ts";
@@ -174,6 +193,29 @@ export function registerAdminRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       image: saved.image,
     });
     return c.json(saved, 200);
+  });
+
+  // Decision models (D-454): settings and results, owner only.
+  app.openapi(routes.adminDecisions, async (c) => {
+    await requireOwner(requireClaims(c.get("claims")));
+    return c.json(await getDecisionSettings(db), 200);
+  });
+
+  app.openapi(routes.setAdminDecisions, async (c) => {
+    await requireOwner(requireClaims(c.get("claims")));
+    const saved = await setDecisionSettings(db, c.req.valid("json"));
+    deps.logger.info("decision settings changed", {
+      model: saved.model,
+      shadow_models: saved.shadow_models,
+      modes: Object.fromEntries(Object.entries(saved.uses).map(([k, v]) => [k, v.mode])),
+    });
+    return c.json(saved, 200);
+  });
+
+  app.openapi(routes.adminDecisionResults, async (c) => {
+    await requireOwner(requireClaims(c.get("claims")));
+    const q = c.req.valid("query");
+    return c.json(await loadDecisionResults(db, q.days ?? 14, q.use), 200);
   });
 
   app.openapi(routes.setAdminConnectionSettings, async (c) => {
@@ -384,6 +426,99 @@ export function registerAdminRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     const [r] = await reportRows(id);
     if (!r) throw new ApiError(404, "creation_not_found", "No reports for that");
     return c.json(reportOut(r), 200);
+  });
+
+  // Hosted bot mail (BOT-EMAIL-PLAN Phase 3): every address with its recent sending health.
+  const mailRows = (id?: string) =>
+    db.execute<{
+      id: string;
+      local_part: string;
+      org_id: string | null;
+      org_name: string | null;
+      bot_id: string | null;
+      bot_name: string | null;
+      status: "active" | "paused" | "retired";
+      auto_paused_at: string | null;
+      sent_30d: number;
+      bounced_30d: number;
+      complained_30d: number;
+      created_at: string;
+    }>(sql`
+      select a.id, a.local_part, a.org_id, o.name as org_name, a.bot_id, b.name as bot_name,
+             a.status, a.auto_paused_at,
+             (select count(*)::int from public.mail_messages m
+              where m.address_id = a.id and m.direction = 'out' and m.created_at > now() - interval '30 days') as sent_30d,
+             (select count(*)::int from public.mail_events e
+              where e.address_id = a.id and e.event = 'bounced' and e.created_at > now() - interval '30 days') as bounced_30d,
+             (select count(*)::int from public.mail_events e
+              where e.address_id = a.id and e.event = 'complained' and e.created_at > now() - interval '30 days') as complained_30d,
+             a.created_at
+      from public.mail_addresses a
+      left join public.organizations o on o.id = a.org_id
+      left join public.bots b on b.id = a.bot_id
+      ${id ? sql`where a.id = ${id}::uuid` : sql``}
+      order by a.created_at desc limit 500`);
+  const mailOut = (domain: string, r: Awaited<ReturnType<typeof mailRows>>[number]) => ({
+    id: r.id,
+    address: `${r.local_part}@${domain}`,
+    org_id: r.org_id,
+    org_name: r.org_name ?? "(deleted)",
+    bot_id: r.bot_id,
+    bot_name: r.bot_name ?? "(deleted)",
+    status: r.status,
+    auto_paused: !!r.auto_paused_at,
+    sent_30d: Number(r.sent_30d),
+    bounced_30d: Number(r.bounced_30d),
+    complained_30d: Number(r.complained_30d),
+    created_at: iso(r.created_at),
+  });
+
+  app.openapi(routes.adminMailAddresses, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    await requireOwner(claims);
+    const domain = deps.hostedMail?.domain ?? env.MAIL_DOMAIN ?? "mail";
+    const [day] = await db.execute<{ n: number }>(sql`
+      select count(*)::int as n from public.mail_messages
+      where direction = 'out' and created_at > now() - interval '1 day'`);
+    return c.json(
+      {
+        items: (await mailRows()).map((r) => mailOut(domain, r)),
+        sent_today: day?.n ?? 0,
+        send_ceiling: deps.hostedMail?.sender.dailyCeiling || null,
+      },
+      200,
+    );
+  });
+
+  app.openapi(routes.setMailAddressStatus, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    await requireOwner(claims);
+    const { id } = c.req.valid("param");
+    const { status } = c.req.valid("json");
+    // Lifting clears the automatic pause; pausing from here is the owner's own.
+    const [row] = await db.execute<{ id: string }>(sql`
+      update public.mail_addresses
+      set status = ${status}, auto_paused_at = ${status === "active" ? sql`null` : sql`auto_paused_at`},
+          updated_at = now()
+      where id = ${id}::uuid and status <> 'retired' returning id`);
+    if (!row) throw new ApiError(404, "address_not_found", "No such address");
+    const domain = deps.hostedMail?.domain ?? env.MAIL_DOMAIN ?? "mail";
+    const [r] = await mailRows(id);
+    if (!r) throw new ApiError(404, "address_not_found", "No such address");
+    return c.json(mailOut(domain, r), 200);
+  });
+
+  app.openapi(routes.adminMailReservedNames, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    await requireOwner(claims);
+    return c.json({ names: await mailReservedNames(db) }, 200);
+  });
+
+  app.openapi(routes.setMailReservedNames, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    await requireOwner(claims);
+    const { names } = c.req.valid("json");
+    return c.json({ names: await setMailReservedNames(db, names) }, 200);
   });
 
   app.openapi(routes.suspendOrg, async (c) => {
@@ -764,5 +899,134 @@ export function registerAdminRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     // This process takes it now; the worker picks it up within a minute.
     setCloudMarkup(m);
     return c.json({ markup: await markup() }, 200);
+  });
+
+  // --- Admin checks (D-452): a passkey or the admin PIN instead of signing in again ------------
+
+  const requireCheckWithoutPin = (claims: JwtClaims) => requireCheckWithoutPinIn(db, claims);
+
+  app.openapi(routes.adminPin, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    await requireOwner(claims);
+    return c.json(await pinState(db, claims.sub), 200);
+  });
+
+  app.openapi(routes.setAdminPin, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    await requireOwner(claims);
+    await requireCheckWithoutPin(claims);
+    await setPin(db, claims.sub, c.req.valid("json").pin);
+    return c.json(await pinState(db, claims.sub), 200);
+  });
+
+  app.openapi(routes.removeAdminPin, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    await requireOwner(claims);
+    await requireCheckWithoutPin(claims);
+    await setPin(db, claims.sub, null);
+    return c.json(await pinState(db, claims.sub), 200);
+  });
+
+  app.openapi(routes.adminPasskeyCheck, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    await requireOwner(claims);
+    let proof: JwtClaims;
+    try {
+      proof = await deps.verifyToken(c.req.valid("json").token);
+    } catch {
+      throw new ApiError(403, "admin_check_failed", "That passkey didn't confirm this account.");
+    }
+    const at = await recordPasskeyCheck(db, claims, proof);
+    return c.json({ verified_at: at.toISOString() }, 200);
+  });
+
+  app.openapi(routes.adminPinCheck, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    await requireOwner(claims);
+    const result = await checkPin(db, claims, c.req.valid("json").pin);
+    if (result.ok) return c.json({ verified_at: result.at.toISOString() }, 200);
+    deps.logger.warn("wrong admin PIN", { user: claims.sub, disabled: result.disabled });
+    if (result.disabled) {
+      const to = typeof claims.email === "string" ? claims.email : null;
+      if (to && deps.email.enabled)
+        void deps.email
+          .send({
+            to,
+            subject: "Your admin PIN was turned off",
+            text:
+              `Someone entered a wrong admin PIN ${ADMIN_PIN_MAX_FAILURES} times in a row on your ` +
+              "Casama server's admin console, so the PIN is turned off. Unlock with a passkey or " +
+              "your password, then set a new PIN in the admin console under Security. If this " +
+              "wasn't you, change your password and sign out everywhere.",
+          })
+          .catch((e: unknown) =>
+            deps.logger.warn("admin PIN email failed", { error: (e as Error).message }),
+          );
+      throw new ApiError(
+        403,
+        "admin_pin_disabled",
+        "Too many wrong PINs: the admin PIN is turned off. Use a passkey or your password.",
+      );
+    }
+    throw new ApiError(
+      403,
+      "admin_pin_wrong",
+      `Wrong PIN. ${result.triesLeft} ${result.triesLeft === 1 ? "try" : "tries"} left.`,
+    );
+  });
+
+  // --- Device keys (D-453): the screen lock as the whole check ---------------------------------
+
+  const deviceList = async (userId: string) => ({
+    items: (await listDeviceKeys(db, userId)).map((k) => ({
+      id: k.id,
+      name: k.name,
+      created_at: iso(k.created_at),
+      last_used_at: k.last_used_at ? iso(k.last_used_at) : null,
+    })),
+  });
+
+  app.openapi(routes.adminDeviceKeys, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    await requireOwner(claims);
+    return c.json(await deviceList(claims.sub), 200);
+  });
+
+  app.openapi(routes.addAdminDeviceKey, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    await requireOwner(claims);
+    await requireCheckWithoutPin(claims);
+    const { name, public_key } = c.req.valid("json");
+    const k = await addDeviceKey(db, claims.sub, name, public_key);
+    return c.json(
+      {
+        id: k.id,
+        name: k.name,
+        created_at: iso(k.created_at),
+        last_used_at: k.last_used_at ? iso(k.last_used_at) : null,
+      },
+      200,
+    );
+  });
+
+  app.openapi(routes.removeAdminDeviceKey, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    await requireOwner(claims);
+    await removeDeviceKey(db, claims.sub, c.req.valid("param").id);
+    return c.json(await deviceList(claims.sub), 200);
+  });
+
+  app.openapi(routes.adminDeviceChallenge, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    await requireOwner(claims);
+    return c.json(await deviceChallenge(db, claims, c.req.valid("json").key_id), 200);
+  });
+
+  app.openapi(routes.adminDeviceCheck, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    await requireOwner(claims);
+    const { challenge_id, signature } = c.req.valid("json");
+    const at = await recordDeviceCheck(db, claims, challenge_id, signature);
+    return c.json({ verified_at: at.toISOString() }, 200);
   });
 }

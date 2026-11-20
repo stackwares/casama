@@ -9,7 +9,20 @@ The server, apps, CLI, SDK and MCP server share one version number.
 
 ## [Unreleased]
 
-- Live data cards (D-453): bots answer weather, forecasts, air quality, sunrise and moon, weather
+- Billing: a saved reset is its own card, with what it does (credits it refills, the limits it
+  clears), days left and its end date; Use Reset sits beside the title on wide windows and spans
+  the card on phones, instead of squeezing the message into a thin column (D-443).
+
+- Bot pictures (D-456): give a bot any picture (camera, photos, files, drag and drop, paste, a
+  picture from a chat or the Library, or one Casama draws), framed in a new cropper with live
+  previews at sidebar size in light and dark, rotate, mirror and backgrounds for logos. Undo,
+  Recent pictures and Re-crop from the uncropped original. The picture shows across the app, on
+  calls, in the extension, widgets, Live Activities and on the watch, and the bot's colors follow
+  it. Bots can change their own picture when someone who manages them asks. Profile photos are
+  now framed by hand in the same cropper. `avatar_url` takes only mascots, the bot's own pictures
+  or nothing; old web links are cleared.
+
+- Live data cards (D-458): bots answer weather, forecasts, air quality, sunrise and moon, weather
   alerts, stock and crypto prices, currency rates, time in other places, public holidays,
   earthquakes, storms, encyclopedia summaries, definitions, books, scores and standings with cards
   of real data from named sources, and one sentence instead of a paragraph from search snippets.

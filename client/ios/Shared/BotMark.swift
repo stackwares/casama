@@ -1,3 +1,4 @@
+import CoreGraphics
 import SwiftUI
 import WidgetKit
 
@@ -5,15 +6,26 @@ import WidgetKit
 //
 // A bot with a mascot shows that mascot (the art is in WatchAssets.xcassets as mascot-<name>, made
 // from client/assets/mascots/<name>.png); any other bot shows its initials on its own gradient,
-// picked from its name exactly as botPalette does (BotPalette in WatchLogic.swift).
+// picked from its name exactly as botPalette does (BotPalette in WatchLogic.swift). A bot with a
+// picture of its own (`image:<id>:<colours>`) shows that picture, read from the file
+// BotPictureStore keeps; until the file is here it shows its initials on the picture's colours.
 
 struct BotArt: Equatable {
   let name: String
   let mascot: String?
+  /// The id of the bot's own picture (BotPictureStore), when it has one.
+  let pictureId: String?
   let colors: [Color]
 
   init(name: String, avatar: String?) {
     self.name = name
+    if let picture = BotPalette.picture(avatar) {
+      mascot = nil
+      pictureId = picture.id
+      colors = [Color(hex: picture.colors.0), Color(hex: picture.colors.1)]
+      return
+    }
+    pictureId = nil
     mascot = BotPalette.mascot(avatar)
     if let key = mascot, let c = BotPalette.mascots[key] {
       colors = [Color(hex: c.0), Color(hex: c.1)]
@@ -24,6 +36,9 @@ struct BotArt: Equatable {
   }
 
   var initials: String { BotPalette.letters(name) }
+
+  /// The bot's picture when it has one and this process has the file.
+  var pictureImage: CGImage? { pictureId.flatMap { BotPictureStore.shared.image($0) } }
 }
 
 /// The bot's mark at [size]. On a tinted watch face the mascot keeps its shape and loses its
@@ -40,6 +55,14 @@ struct BotMarkView: View {
         RoundedRectangle(cornerRadius: size * 0.32, style: .continuous)
           .strokeBorder(Color.white.opacity(0.4), lineWidth: 1)
           .overlay(initialsText.foregroundStyle(Color.white.opacity(0.7)))
+      } else if let picture = art.pictureImage {
+        Image(decorative: picture, scale: 1)
+          .resizable()
+          .interpolation(.high)
+          .widgetAccentedRenderingMode(.desaturated)
+          .scaledToFill()
+          .frame(width: size, height: size)
+          .clipShape(RoundedRectangle(cornerRadius: size * 0.32, style: .continuous))
       } else if let mascot = art.mascot {
         Image("mascot-\(mascot)")
           .resizable()

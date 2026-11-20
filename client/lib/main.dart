@@ -31,6 +31,7 @@ import 'theme/appearance.dart';
 import 'theme/bundled_font_loader.dart';
 import 'theme/fonts.dart';
 import 'l10n/generated/app_localizations.dart';
+import 'ui/bot_avatar.dart';
 import 'ui/brand_splash.dart';
 import 'ui/splash_scene.dart';
 import 'ui/server_unreachable_view.dart';
@@ -69,6 +70,8 @@ Future<(Widget, SupabaseBackend)> bootstrap(AppConfig config, {VoidCallback? onS
   final supabase = Supabase.instance.client;
   final api = await SupabaseBackend.connectApi(config.apiUrl, supabase, config: server);
   final backend = SupabaseBackend(supabase, api, config: server);
+  // Bot pictures are served by this server; avatars everywhere ask it for them.
+  BotAvatar.imageUrl = backend.botImageUrl;
   if (saved != null) unawaited(_refreshServerConfig(config.apiUrl, api, backend, saved, onServerMoved));
   // A Mac that serves a phone stays awake while plugged in, if its owner chose so (D-296).
   unawaited(KeepAwake.restore());

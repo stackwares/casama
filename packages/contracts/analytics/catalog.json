@@ -534,6 +534,58 @@
       "funnels": []
     },
     {
+      "name": "bot_picture_set",
+      "by": ["client"],
+      "description": "A bot got a picture of its own from the app (BOT-PICTURES-PLAN §10).",
+      "properties": {
+        "source": { "type": "string", "values": ["camera", "library", "file", "drop", "paste", "chat", "recent", "generated", "recrop"] },
+        "transparent": { "type": "boolean" },
+        "rotated": { "type": "boolean" },
+        "zoomed": { "type": "boolean" }
+      }
+    },
+    {
+      "name": "bot_picture_crop_cancelled",
+      "by": ["client"],
+      "description": "The picture cropper was closed without using the picture.",
+      "properties": {
+        "source": { "type": "string", "values": ["camera", "library", "file", "drop", "paste", "chat", "recent", "generated", "recrop"] }
+      }
+    },
+    {
+      "name": "bot_picture_removed",
+      "by": ["client"],
+      "description": "A bot stopped using its picture.",
+      "properties": {
+        "to": { "type": "string", "values": ["mascot", "initials"] }
+      }
+    },
+    {
+      "name": "bot_picture_undone",
+      "by": ["client"],
+      "description": "Undo right after changing a bot's picture.",
+      "properties": {}
+    },
+    {
+      "name": "bot_picture_drawn",
+      "by": ["server"],
+      "description": "Casama drew picture candidates for a bot (Make one with AI).",
+      "properties": {
+        "style": { "type": "string", "values": ["cloud", "soft3d", "watercolor", "flat", "pixel", "line", "photo"] },
+        "count": { "type": "number" }
+      }
+    },
+    {
+      "name": "profile_photo_set",
+      "by": ["client"],
+      "description": "A person set their profile photo through the cropper.",
+      "properties": {
+        "source": { "type": "string", "values": ["camera", "library", "file", "drop", "paste"] },
+        "rotated": { "type": "boolean" },
+        "zoomed": { "type": "boolean" }
+      }
+    },
+    {
       "name": "run_refused",
       "by": ["server"],
       "description": "A person's run did not start.",
@@ -876,6 +928,35 @@
       "funnels": []
     },
     {
+      "name": "bot_email_claimed",
+      "by": ["server"],
+      "description": "A bot claimed its hosted email address.",
+      "properties": {
+        "surface": {
+          "type": "string"
+        }
+      },
+      "funnels": ["bot_email_onboarding"]
+    },
+    {
+      "name": "mail_received",
+      "by": ["server"],
+      "description": "A hosted address received a mail.",
+      "properties": {
+        "verdict": {
+          "type": "string"
+        }
+      },
+      "funnels": []
+    },
+    {
+      "name": "mail_sent",
+      "by": ["server"],
+      "description": "A hosted address sent a mail.",
+      "properties": {},
+      "funnels": []
+    },
+    {
       "name": "connection_started",
       "by": ["client"],
       "description": "The connect sheet started.",
@@ -1125,7 +1206,7 @@
         },
         "surface": {
           "type": "string",
-          "values": ["bot", "computer", "run", "call"]
+          "values": ["bot", "computer", "run", "call", "mail"]
         }
       },
       "funnels": ["F6"]

@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap;
-select plan(17);
+select plan(20);
 
 -- Every Cloud plan carries the D-247 check-in limits and the later keys (20270201100301).
 select is(
@@ -24,6 +24,19 @@ select is(
   (select jsonb_object_agg(code, limits -> 'storage_gb') from public.plans where code <> 'selfhost' and interval <> 'week'),
   '{"free": 1, "plus": 10, "plus_yearly": 10, "pro": 50, "pro_yearly": 50, "max": 200, "max_yearly": 200}'::jsonb,
   'storage_gb per plan');
+-- Bot email (D-449, numbers from D-451).
+select is(
+  (select jsonb_object_agg(code, limits -> 'mail_sent_day') from public.plans where code <> 'selfhost' and interval <> 'week'),
+  '{"free": 20, "plus": 50, "plus_yearly": 50, "pro": 150, "pro_yearly": 150, "max": 300, "max_yearly": 300}'::jsonb,
+  'mail_sent_day per plan (D-451)');
+select is(
+  (select jsonb_object_agg(code, limits -> 'mail_storage_mb') from public.plans where code <> 'selfhost' and interval <> 'week'),
+  '{"free": 100, "plus": 500, "plus_yearly": 500, "pro": 1024, "pro_yearly": 1024, "max": 2048, "max_yearly": 2048}'::jsonb,
+  'mail_storage_mb per plan (D-451)');
+select is(
+  (select jsonb_object_agg(code, limits -> 'max_mail_addresses') from public.plans where code <> 'selfhost' and interval <> 'week'),
+  '{"free": 1, "plus": 2, "plus_yearly": 2, "pro": 5, "pro_yearly": 5, "max": 15, "max_yearly": 15}'::jsonb,
+  'max_mail_addresses per plan (D-449)');
 -- The D-249 values the merge must not touch.
 select is((select limits -> 'max_running_computers' from public.plans where code = 'max'), '2'::jsonb,
   'D-249 limits survive the merge');

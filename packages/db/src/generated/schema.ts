@@ -210,6 +210,61 @@ export const memories = pgTable("memories", {
 	check("memories_content_check", sql`((char_length(content) >= 1) AND (char_length(content) <= 8000)) OR ((content ~~ 'enc:v1:%'::text) AND (char_length(content) <= 12000))`),
 ]);
 
+export const bots = pgTable("bots", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	orgId: uuid("org_id").notNull(),
+	createdBy: uuid("created_by"),
+	name: text().notNull(),
+	avatarUrl: text("avatar_url"),
+	personaMd: text("persona_md").default("").notNull(),
+	modelPolicy: jsonb("model_policy").default({}).notNull(),
+	autonomy: botAutonomy().default('ask_risky').notNull(),
+	visibility: botVisibility().default('team').notNull(),
+	defaultComputerId: uuid("default_computer_id"),
+	budget: jsonb().default({"daily_usd":10,"per_run_usd":1}).notNull(),
+	status: text().default('idle').notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	voice: jsonb().default({}).notNull(),
+	folderId: uuid("folder_id"),
+	sortKey: doublePrecision("sort_key").default(0).notNull(),
+	archivedAt: timestamp("archived_at", { withTimezone: true, mode: 'string' }),
+	setupStatus: text("setup_status").default('pending').notNull(),
+	a2APublished: boolean("a2a_published").default(false).notNull(),
+	paymentsMonthlyCapUsd: numeric("payments_monthly_cap_usd", { precision: 12, scale:  2 }),
+	teamFolder: text("team_folder"),
+	priorMascot: text("prior_mascot"),
+}, (table) => [
+	index("bots_org_id_idx").using("btree", table.orgId.asc().nullsLast().op("uuid_ops")),
+	uniqueIndex("bots_team_folder_idx").using("btree", table.orgId.asc().nullsLast().op("text_ops"), table.teamFolder.asc().nullsLast().op("text_ops")).where(sql`(team_folder IS NOT NULL)`),
+	foreignKey({
+			columns: [table.orgId],
+			foreignColumns: [organizations.id],
+			name: "bots_org_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.createdBy],
+			foreignColumns: [users.id],
+			name: "bots_created_by_fkey"
+		}).onDelete("set null"),
+	foreignKey({
+			columns: [table.folderId],
+			foreignColumns: [botFolders.id],
+			name: "bots_folder_id_fkey"
+		}).onDelete("set null"),
+	pgPolicy("bots_update", { as: "permissive", for: "update", to: ["authenticated"], using: sql`can_manage_bot(id)`, withCheck: sql`is_member(org_id)`  }),
+	pgPolicy("bots_insert", { as: "permissive", for: "insert", to: ["authenticated"] }),
+	pgPolicy("bots_delete", { as: "permissive", for: "delete", to: ["authenticated"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
+	pgPolicy("bots_select", { as: "permissive", for: "select", to: ["authenticated"] }),
+	check("bots_name_check", sql`(char_length(name) >= 1) AND (char_length(name) <= 80)`),
+	check("bots_persona_md_check", sql`char_length(persona_md) <= 20000`),
+	check("bots_status_check", sql`status = ANY (ARRAY['idle'::text, 'working'::text, 'waiting'::text, 'disabled'::text])`),
+	check("bots_setup_status_check", sql`setup_status = ANY (ARRAY['pending'::text, 'done'::text, 'skipped'::text])`),
+	check("bots_payments_monthly_cap_usd_check", sql`(payments_monthly_cap_usd IS NULL) OR (payments_monthly_cap_usd >= (0)::numeric)`),
+	check("bots_team_folder_check", sql`team_folder ~ '^[a-z0-9][a-z0-9-]{0,47}$'::text`),
+	check("bots_prior_mascot_check", sql`(prior_mascot IS NULL) OR (prior_mascot ~ '^mascot:[a-z]+$'::text)`),
+]);
+
 export const messages = pgTable("messages", {
 	id: uuid().defaultRandom().primaryKey().notNull(),
 	orgId: uuid("org_id").notNull(),
@@ -413,59 +468,6 @@ export const conversations = pgTable("conversations", {
 	check("conversations_kind_check", sql`kind = ANY (ARRAY['direct'::text, 'group'::text])`),
 	check("conversations_purpose_check", sql`purpose = ANY (ARRAY['chat'::text, 'setup'::text, 'welcome'::text])`),
 	check("conversations_source_url_check", sql`(source_url IS NULL) OR (char_length(source_url) <= 2000)`),
-]);
-
-export const bots = pgTable("bots", {
-	id: uuid().defaultRandom().primaryKey().notNull(),
-	orgId: uuid("org_id").notNull(),
-	createdBy: uuid("created_by"),
-	name: text().notNull(),
-	avatarUrl: text("avatar_url"),
-	personaMd: text("persona_md").default("").notNull(),
-	modelPolicy: jsonb("model_policy").default({}).notNull(),
-	autonomy: botAutonomy().default('ask_risky').notNull(),
-	visibility: botVisibility().default('team').notNull(),
-	defaultComputerId: uuid("default_computer_id"),
-	budget: jsonb().default({"daily_usd":10,"per_run_usd":1}).notNull(),
-	status: text().default('idle').notNull(),
-	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-	voice: jsonb().default({}).notNull(),
-	folderId: uuid("folder_id"),
-	sortKey: doublePrecision("sort_key").default(0).notNull(),
-	archivedAt: timestamp("archived_at", { withTimezone: true, mode: 'string' }),
-	setupStatus: text("setup_status").default('pending').notNull(),
-	a2APublished: boolean("a2a_published").default(false).notNull(),
-	paymentsMonthlyCapUsd: numeric("payments_monthly_cap_usd", { precision: 12, scale:  2 }),
-	teamFolder: text("team_folder"),
-}, (table) => [
-	index("bots_org_id_idx").using("btree", table.orgId.asc().nullsLast().op("uuid_ops")),
-	uniqueIndex("bots_team_folder_idx").using("btree", table.orgId.asc().nullsLast().op("text_ops"), table.teamFolder.asc().nullsLast().op("text_ops")).where(sql`(team_folder IS NOT NULL)`),
-	foreignKey({
-			columns: [table.orgId],
-			foreignColumns: [organizations.id],
-			name: "bots_org_id_fkey"
-		}).onDelete("cascade"),
-	foreignKey({
-			columns: [table.createdBy],
-			foreignColumns: [users.id],
-			name: "bots_created_by_fkey"
-		}).onDelete("set null"),
-	foreignKey({
-			columns: [table.folderId],
-			foreignColumns: [botFolders.id],
-			name: "bots_folder_id_fkey"
-		}).onDelete("set null"),
-	pgPolicy("bots_update", { as: "permissive", for: "update", to: ["authenticated"], using: sql`can_manage_bot(id)`, withCheck: sql`is_member(org_id)`  }),
-	pgPolicy("bots_insert", { as: "permissive", for: "insert", to: ["authenticated"] }),
-	pgPolicy("bots_delete", { as: "permissive", for: "delete", to: ["authenticated"] }),
-	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
-	pgPolicy("bots_select", { as: "permissive", for: "select", to: ["authenticated"] }),
-	check("bots_name_check", sql`(char_length(name) >= 1) AND (char_length(name) <= 80)`),
-	check("bots_persona_md_check", sql`char_length(persona_md) <= 20000`),
-	check("bots_status_check", sql`status = ANY (ARRAY['idle'::text, 'working'::text, 'waiting'::text, 'disabled'::text])`),
-	check("bots_setup_status_check", sql`setup_status = ANY (ARRAY['pending'::text, 'done'::text, 'skipped'::text])`),
-	check("bots_payments_monthly_cap_usd_check", sql`(payments_monthly_cap_usd IS NULL) OR (payments_monthly_cap_usd >= (0)::numeric)`),
-	check("bots_team_folder_check", sql`team_folder ~ '^[a-z0-9][a-z0-9-]{0,47}$'::text`),
 ]);
 
 export const quotas = pgTable("quotas", {
@@ -3073,6 +3075,53 @@ export const outboundCalls = pgTable("outbound_calls", {
 	check("outbound_calls_status_check", sql`status = ANY (ARRAY['queued'::text, 'ringing'::text, 'in_progress'::text, 'completed'::text, 'failed'::text, 'busy'::text, 'no_answer'::text, 'ended_by_user'::text, 'taken_over'::text])`),
 ]);
 
+export const usageLedger = pgTable("usage_ledger", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	orgId: uuid("org_id").notNull(),
+	botId: uuid("bot_id"),
+	runId: uuid("run_id"),
+	kind: text().notNull(),
+	quantity: numeric({ precision: 18, scale:  3 }).notNull(),
+	costUsd: numeric("cost_usd", { precision: 12, scale:  6 }).default('0').notNull(),
+	model: text(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	billable: boolean().notNull(),
+	billedAt: timestamp("billed_at", { withTimezone: true, mode: 'string' }),
+	meta: jsonb().default({}).notNull(),
+	source: text().default('key').notNull(),
+	computerId: uuid("computer_id"),
+	upstreamCostUsd: numeric("upstream_cost_usd", { precision: 12, scale:  6 }),
+}, (table) => [
+	index("usage_ledger_bot_time_idx").using("btree", table.botId.asc().nullsLast().op("uuid_ops"), table.createdAt.asc().nullsLast().op("uuid_ops")),
+	index("usage_ledger_computer_time_idx").using("btree", table.computerId.asc().nullsLast().op("uuid_ops"), table.createdAt.asc().nullsLast().op("uuid_ops")).where(sql`(computer_id IS NOT NULL)`),
+	index("usage_ledger_org_time_idx").using("btree", table.orgId.asc().nullsLast().op("uuid_ops"), table.createdAt.asc().nullsLast().op("timestamptz_ops")),
+	index("usage_ledger_unbilled_idx").using("btree", table.orgId.asc().nullsLast().op("uuid_ops")).where(sql`(billable AND (billed_at IS NULL))`),
+	foreignKey({
+			columns: [table.orgId],
+			foreignColumns: [organizations.id],
+			name: "usage_ledger_org_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.botId],
+			foreignColumns: [bots.id],
+			name: "usage_ledger_bot_id_fkey"
+		}).onDelete("set null"),
+	foreignKey({
+			columns: [table.runId],
+			foreignColumns: [runs.id],
+			name: "usage_ledger_run_id_fkey"
+		}).onDelete("set null"),
+	foreignKey({
+			columns: [table.computerId],
+			foreignColumns: [computers.id],
+			name: "usage_ledger_computer_id_fkey"
+		}).onDelete("set null"),
+	pgPolicy("usage_ledger_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`is_member(org_id)` }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
+	check("usage_ledger_source_check", sql`source = ANY (ARRAY['key'::text, 'chatgpt_plan'::text])`),
+	check("usage_ledger_kind_check", sql`kind = ANY (ARRAY['tokens_in'::text, 'tokens_out'::text, 'computer_seconds'::text, 'stream_seconds'::text, 'tts_chars'::text, 'stt_seconds'::text, 'voice_seconds'::text, 'media_images'::text, 'media_video_seconds'::text, 'search_queries'::text, 'data_calls'::text, 'phone_minutes'::text, 'app_calls'::text, 'emails_sent'::text])`),
+]);
+
 export const orgPayments = pgTable("org_payments", {
 	orgId: uuid("org_id").primaryKey().notNull(),
 	provider: text().default('stripe').notNull(),
@@ -3187,53 +3236,6 @@ export const botLinks = pgTable("bot_links", {
 	check("bot_links_name_check", sql`(char_length(name) >= 1) AND (char_length(name) <= 100)`),
 	check("bot_links_status_check", sql`status = ANY (ARRAY['pending'::text, 'active'::text, 'revoked'::text])`),
 	check("bot_links_remote_url_check", sql`(remote_url IS NULL) OR (remote_url ~ '^https?://'::text)`),
-]);
-
-export const usageLedger = pgTable("usage_ledger", {
-	id: uuid().defaultRandom().primaryKey().notNull(),
-	orgId: uuid("org_id").notNull(),
-	botId: uuid("bot_id"),
-	runId: uuid("run_id"),
-	kind: text().notNull(),
-	quantity: numeric({ precision: 18, scale:  3 }).notNull(),
-	costUsd: numeric("cost_usd", { precision: 12, scale:  6 }).default('0').notNull(),
-	model: text(),
-	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-	billable: boolean().notNull(),
-	billedAt: timestamp("billed_at", { withTimezone: true, mode: 'string' }),
-	meta: jsonb().default({}).notNull(),
-	source: text().default('key').notNull(),
-	computerId: uuid("computer_id"),
-	upstreamCostUsd: numeric("upstream_cost_usd", { precision: 12, scale:  6 }),
-}, (table) => [
-	index("usage_ledger_bot_time_idx").using("btree", table.botId.asc().nullsLast().op("uuid_ops"), table.createdAt.asc().nullsLast().op("uuid_ops")),
-	index("usage_ledger_computer_time_idx").using("btree", table.computerId.asc().nullsLast().op("uuid_ops"), table.createdAt.asc().nullsLast().op("uuid_ops")).where(sql`(computer_id IS NOT NULL)`),
-	index("usage_ledger_org_time_idx").using("btree", table.orgId.asc().nullsLast().op("uuid_ops"), table.createdAt.asc().nullsLast().op("timestamptz_ops")),
-	index("usage_ledger_unbilled_idx").using("btree", table.orgId.asc().nullsLast().op("uuid_ops")).where(sql`(billable AND (billed_at IS NULL))`),
-	foreignKey({
-			columns: [table.orgId],
-			foreignColumns: [organizations.id],
-			name: "usage_ledger_org_id_fkey"
-		}).onDelete("cascade"),
-	foreignKey({
-			columns: [table.botId],
-			foreignColumns: [bots.id],
-			name: "usage_ledger_bot_id_fkey"
-		}).onDelete("set null"),
-	foreignKey({
-			columns: [table.runId],
-			foreignColumns: [runs.id],
-			name: "usage_ledger_run_id_fkey"
-		}).onDelete("set null"),
-	foreignKey({
-			columns: [table.computerId],
-			foreignColumns: [computers.id],
-			name: "usage_ledger_computer_id_fkey"
-		}).onDelete("set null"),
-	pgPolicy("usage_ledger_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`is_member(org_id)` }),
-	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
-	check("usage_ledger_source_check", sql`source = ANY (ARRAY['key'::text, 'chatgpt_plan'::text])`),
-	check("usage_ledger_kind_check", sql`kind = ANY (ARRAY['tokens_in'::text, 'tokens_out'::text, 'computer_seconds'::text, 'stream_seconds'::text, 'tts_chars'::text, 'stt_seconds'::text, 'voice_seconds'::text, 'media_images'::text, 'media_video_seconds'::text, 'search_queries'::text, 'data_calls'::text, 'phone_minutes'::text, 'app_calls'::text])`),
 ]);
 
 export const auditForwarders = pgTable("audit_forwarders", {
@@ -5081,6 +5083,7 @@ export const widgetKeys = pgTable("widget_keys", {
 	pushSandbox: boolean("push_sandbox"),
 	lastUsedAt: timestamp("last_used_at", { withTimezone: true, mode: 'string' }),
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	canvasSeen: jsonb("canvas_seen"),
 }, (table) => [
 	index("widget_keys_push_idx").using("btree", table.pushToken.asc().nullsLast().op("text_ops")).where(sql`(push_token IS NOT NULL)`),
 	index("widget_keys_user_idx").using("btree", table.userId.asc().nullsLast().op("uuid_ops"), table.orgId.asc().nullsLast().op("uuid_ops")),
@@ -5475,6 +5478,448 @@ export const limitResetCampaigns = pgTable("limit_reset_campaigns", {
 	check("limit_reset_campaigns_check", sql`expires_at > starts_at`),
 ]);
 
+export const vendorLimits = pgTable("vendor_limits", {
+	vendor: text().primaryKey().notNull(),
+	label: text().notNull(),
+	kind: text().notNull(),
+	unit: text().notNull(),
+	limitValue: numeric("limit_value"),
+	period: text(),
+	periodStart: timestamp("period_start", { withTimezone: true, mode: 'string' }),
+	expiresAt: timestamp("expires_at", { withTimezone: true, mode: 'string' }),
+	warnAt: numeric("warn_at").default('0.8').notNull(),
+	enabled: boolean().default(true).notNull(),
+	balanceWarnBelow: numeric("balance_warn_below").default('5').notNull(),
+	billingUrl: text("billing_url"),
+	impact: text(),
+}, (table) => [
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"], using: sql`true`, withCheck: sql`true`  }),
+	check("vendor_limits_kind_check", sql`kind = ANY (ARRAY['quota'::text, 'balance'::text, 'renewal'::text])`),
+	check("vendor_limits_limit_value_check", sql`(limit_value IS NULL) OR (limit_value > (0)::numeric)`),
+	check("vendor_limits_period_check", sql`period = ANY (ARRAY['day'::text, 'month'::text, 'billing_period'::text, 'prepaid'::text])`),
+	check("vendor_limits_warn_at_check", sql`(warn_at > (0)::numeric) AND (warn_at <= (1)::numeric)`),
+	check("vendor_limits_balance_warn_below_check", sql`balance_warn_below >= (0)::numeric`),
+]);
+
+export const vendorChecks = pgTable("vendor_checks", {
+	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
+	id: bigint({ mode: "number" }).primaryKey().generatedAlwaysAsIdentity({ name: "vendor_checks_id_seq", startWith: 1, increment: 1, minValue: 1, maxValue: 9223372036854775807, cache: 1 }),
+	vendor: text().notNull(),
+	checkedAt: timestamp("checked_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	used: numeric(),
+	remaining: numeric(),
+	limitValue: numeric("limit_value"),
+	resetsAt: timestamp("resets_at", { withTimezone: true, mode: 'string' }),
+	status: text().notNull(),
+	source: text().notNull(),
+	error: text(),
+}, (table) => [
+	index("vendor_checks_latest_idx").using("btree", table.vendor.asc().nullsLast().op("text_ops"), table.checkedAt.desc().nullsFirst().op("text_ops")),
+	foreignKey({
+			columns: [table.vendor],
+			foreignColumns: [vendorLimits.vendor],
+			name: "vendor_checks_vendor_fkey"
+		}).onDelete("cascade"),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"], using: sql`true`, withCheck: sql`true`  }),
+	check("vendor_checks_status_check", sql`status = ANY (ARRAY['ok'::text, 'low'::text, 'out'::text, 'unknown'::text])`),
+	check("vendor_checks_source_check", sql`source = ANY (ARRAY['api'::text, 'own_count'::text, 'manual'::text])`),
+]);
+
+export const vendorAlerts = pgTable("vendor_alerts", {
+	dedupeKey: text("dedupe_key").primaryKey().notNull(),
+	vendor: text(),
+	subject: text().notNull(),
+	body: text().notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	sentAt: timestamp("sent_at", { withTimezone: true, mode: 'string' }),
+	leaseUntil: timestamp("lease_until", { withTimezone: true, mode: 'string' }),
+}, (table) => [
+	foreignKey({
+			columns: [table.vendor],
+			foreignColumns: [vendorLimits.vendor],
+			name: "vendor_alerts_vendor_fkey"
+		}).onDelete("cascade"),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"], using: sql`true`, withCheck: sql`true`  }),
+]);
+
+export const vendorObservations = pgTable("vendor_observations", {
+	vendor: text().primaryKey().notNull(),
+	observedAt: timestamp("observed_at", { withTimezone: true, mode: 'string' }).notNull(),
+	used: numeric(),
+	remaining: numeric(),
+	limitValue: numeric("limit_value"),
+	resetsAt: timestamp("resets_at", { withTimezone: true, mode: 'string' }),
+}, (table) => [
+	foreignKey({
+			columns: [table.vendor],
+			foreignColumns: [vendorLimits.vendor],
+			name: "vendor_observations_vendor_fkey"
+		}).onDelete("cascade"),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"], using: sql`true`, withCheck: sql`true`  }),
+	check("vendor_observations_used_check", sql`used >= (0)::numeric`),
+	check("vendor_observations_remaining_check", sql`remaining >= (0)::numeric`),
+	check("vendor_observations_limit_value_check", sql`limit_value > (0)::numeric`),
+]);
+
+export const mailAddresses = pgTable("mail_addresses", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	localPart: text("local_part").notNull(),
+	orgId: uuid("org_id"),
+	botId: uuid("bot_id"),
+	channelId: uuid("channel_id"),
+	status: text().default('active').notNull(),
+	createdBy: uuid("created_by"),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	releasedAt: timestamp("released_at", { withTimezone: true, mode: 'string' }),
+	autoPausedAt: timestamp("auto_paused_at", { withTimezone: true, mode: 'string' }),
+}, (table) => [
+	uniqueIndex("mail_addresses_live_bot_idx").using("btree", table.botId.asc().nullsLast().op("uuid_ops")).where(sql`(status = ANY (ARRAY['active'::text, 'paused'::text]))`),
+	index("mail_addresses_org_idx").using("btree", table.orgId.asc().nullsLast().op("uuid_ops")),
+	foreignKey({
+			columns: [table.orgId],
+			foreignColumns: [organizations.id],
+			name: "mail_addresses_org_id_fkey"
+		}).onDelete("set null"),
+	foreignKey({
+			columns: [table.botId],
+			foreignColumns: [bots.id],
+			name: "mail_addresses_bot_id_fkey"
+		}).onDelete("set null"),
+	foreignKey({
+			columns: [table.channelId],
+			foreignColumns: [channels.id],
+			name: "mail_addresses_channel_id_fkey"
+		}).onDelete("set null"),
+	foreignKey({
+			columns: [table.createdBy],
+			foreignColumns: [users.id],
+			name: "mail_addresses_created_by_fkey"
+		}).onDelete("set null"),
+	unique("mail_addresses_local_part_key").on(table.localPart),
+	pgPolicy("mail_addresses_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`((bot_id IS NOT NULL) AND can_manage_bot(bot_id))` }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
+	check("mail_addresses_local_part_check", sql`(local_part ~ '^[a-z0-9][a-z0-9._-]{1,38}[a-z0-9]$'::text) AND (local_part !~~ '%..%'::text)`),
+	check("mail_addresses_status_check", sql`status = ANY (ARRAY['active'::text, 'paused'::text, 'retired'::text])`),
+]);
+
+export const mailSuppressions = pgTable("mail_suppressions", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	addressId: uuid("address_id").notNull(),
+	email: text().notNull(),
+	reason: text().notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("mail_suppressions_address_idx").using("btree", table.addressId.asc().nullsLast().op("uuid_ops")),
+	foreignKey({
+			columns: [table.addressId],
+			foreignColumns: [mailAddresses.id],
+			name: "mail_suppressions_address_id_fkey"
+		}).onDelete("cascade"),
+	unique("mail_suppressions_address_id_email_key").on(table.addressId, table.email),
+	pgPolicy("mail_suppressions_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`(EXISTS ( SELECT 1
+   FROM mail_addresses a
+  WHERE ((a.id = mail_suppressions.address_id) AND (a.bot_id IS NOT NULL) AND can_manage_bot(a.bot_id))))` }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
+	check("mail_suppressions_reason_check", sql`reason = ANY (ARRAY['bounce'::text, 'complaint'::text, 'optout'::text, 'stop'::text])`),
+]);
+
+export const mailEvents = pgTable("mail_events", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	addressId: uuid("address_id").notNull(),
+	orgId: uuid("org_id").notNull(),
+	eventId: text("event_id").notNull(),
+	messageId: text("message_id"),
+	event: text().notNull(),
+	hard: boolean().default(false).notNull(),
+	recipient: text().notNull(),
+	detail: text(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("mail_events_address_idx").using("btree", table.addressId.asc().nullsLast().op("uuid_ops"), table.createdAt.desc().nullsFirst().op("uuid_ops")),
+	foreignKey({
+			columns: [table.addressId],
+			foreignColumns: [mailAddresses.id],
+			name: "mail_events_address_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.orgId],
+			foreignColumns: [organizations.id],
+			name: "mail_events_org_id_fkey"
+		}).onDelete("cascade"),
+	unique("mail_events_address_id_event_id_key").on(table.addressId, table.eventId),
+	pgPolicy("mail_events_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`(EXISTS ( SELECT 1
+   FROM mail_addresses a
+  WHERE ((a.id = mail_events.address_id) AND (a.bot_id IS NOT NULL) AND can_manage_bot(a.bot_id))))` }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
+	check("mail_events_event_check", sql`event = ANY (ARRAY['delivered'::text, 'bounced'::text, 'complained'::text])`),
+]);
+
+export const mailMessages = pgTable("mail_messages", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	addressId: uuid("address_id").notNull(),
+	orgId: uuid("org_id").notNull(),
+	direction: text().notNull(),
+	fromAddr: text("from_addr").notNull(),
+	fromName: text("from_name"),
+	toAddrs: text("to_addrs").array().default([""]).notNull(),
+	toTag: text("to_tag").default("").notNull(),
+	subject: text().default("").notNull(),
+	content: jsonb().default([]).notNull(),
+	files: jsonb().default([]).notNull(),
+	messageId: text("message_id"),
+	providerMessageId: text("provider_message_id"),
+	inReplyTo: text("in_reply_to"),
+	threadKey: text("thread_key"),
+	senderCheck: text("sender_check").default('none').notNull(),
+	verdict: text().notNull(),
+	conversationId: uuid("conversation_id"),
+	size: integer().default(0).notNull(),
+	rawKey: text("raw_key"),
+	toNew: boolean("to_new").default(false).notNull(),
+	expiresAt: timestamp("expires_at", { withTimezone: true, mode: 'string' }),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	rawSize: integer("raw_size").default(0).notNull(),
+	deletedAt: timestamp("deleted_at", { withTimezone: true, mode: 'string' }),
+}, (table) => [
+	index("mail_messages_address_idx").using("btree", table.addressId.asc().nullsLast().op("timestamptz_ops"), table.createdAt.desc().nullsFirst().op("uuid_ops")),
+	uniqueIndex("mail_messages_address_message_idx").using("btree", table.addressId.asc().nullsLast().op("text_ops"), table.direction.asc().nullsLast().op("uuid_ops"), table.messageId.asc().nullsLast().op("uuid_ops")).where(sql`(message_id IS NOT NULL)`),
+	index("mail_messages_conversation_idx").using("btree", table.conversationId.asc().nullsLast().op("uuid_ops")),
+	index("mail_messages_raw_age_idx").using("btree", table.createdAt.asc().nullsLast().op("timestamptz_ops")).where(sql`(raw_key IS NOT NULL)`),
+	index("mail_messages_thread_idx").using("btree", table.addressId.asc().nullsLast().op("text_ops"), table.threadKey.asc().nullsLast().op("timestamptz_ops"), table.createdAt.desc().nullsFirst().op("timestamptz_ops")),
+	foreignKey({
+			columns: [table.orgId],
+			foreignColumns: [organizations.id],
+			name: "mail_messages_org_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.conversationId],
+			foreignColumns: [conversations.id],
+			name: "mail_messages_conversation_id_fkey"
+		}).onDelete("set null"),
+	foreignKey({
+			columns: [table.addressId],
+			foreignColumns: [mailAddresses.id],
+			name: "mail_messages_address_id_fkey"
+		}).onDelete("cascade"),
+	pgPolicy("mail_messages_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`(EXISTS ( SELECT 1
+   FROM mail_addresses a
+  WHERE ((a.id = mail_messages.address_id) AND (a.bot_id IS NOT NULL) AND can_manage_bot(a.bot_id))))` }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
+	check("mail_messages_direction_check", sql`direction = ANY (ARRAY['in'::text, 'out'::text])`),
+	check("mail_messages_sender_check_check", sql`sender_check = ANY (ARRAY['pass'::text, 'fail'::text, 'none'::text])`),
+	check("mail_messages_verdict_check", sql`verdict = ANY (ARRAY['allowed'::text, 'stranger'::text, 'automatic'::text])`),
+]);
+
+export const adminPins = pgTable("admin_pins", {
+	userId: uuid("user_id").primaryKey().notNull(),
+	pinHash: text("pin_hash"),
+	failures: integer().default(0).notNull(),
+	disabledAt: timestamp("disabled_at", { withTimezone: true, mode: 'string' }),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	foreignKey({
+			columns: [table.userId],
+			foreignColumns: [users.id],
+			name: "admin_pins_user_id_fkey"
+		}).onDelete("cascade"),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"], using: sql`true`, withCheck: sql`true`  }),
+]);
+
+export const decisionLog = pgTable("decision_log", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	orgId: uuid("org_id").notNull(),
+	botId: uuid("bot_id"),
+	runId: uuid("run_id"),
+	subjectId: uuid("subject_id"),
+	use: text().notNull(),
+	model: text().notNull(),
+	shadow: boolean().notNull(),
+	answers: jsonb().default({}).notNull(),
+	action: text().default('none').notNull(),
+	error: text(),
+	outcome: jsonb(),
+	inputTokens: integer("input_tokens").default(0).notNull(),
+	costUsd: numeric("cost_usd", { precision: 12, scale:  8 }).default('0').notNull(),
+	latencyMs: integer("latency_ms").default(0).notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("decision_log_run_idx").using("btree", table.runId.asc().nullsLast().op("uuid_ops")).where(sql`(run_id IS NOT NULL)`),
+	index("decision_log_subject_idx").using("btree", table.subjectId.asc().nullsLast().op("uuid_ops")).where(sql`(subject_id IS NOT NULL)`),
+	index("decision_log_use_idx").using("btree", table.use.asc().nullsLast().op("timestamptz_ops"), table.createdAt.desc().nullsFirst().op("text_ops")),
+	foreignKey({
+			columns: [table.orgId],
+			foreignColumns: [organizations.id],
+			name: "decision_log_org_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.botId],
+			foreignColumns: [bots.id],
+			name: "decision_log_bot_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.runId],
+			foreignColumns: [runs.id],
+			name: "decision_log_run_id_fkey"
+		}).onDelete("set null"),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"], using: sql`true`, withCheck: sql`true`  }),
+	check("decision_log_use_check", sql`use = ANY (ARRAY['scan_gate'::text, 'reply_check'::text, 'push_score'::text, 'tool_gate'::text, 'long_run'::text, 'effort'::text, 'watcher_gate'::text])`),
+	check("decision_log_model_check", sql`(char_length(model) >= 1) AND (char_length(model) <= 200)`),
+	check("decision_log_action_check", sql`char_length(action) <= 40`),
+	check("decision_log_error_check", sql`char_length(error) <= 200`),
+	check("decision_log_input_tokens_check", sql`input_tokens >= 0`),
+	check("decision_log_cost_usd_check", sql`cost_usd >= (0)::numeric`),
+	check("decision_log_latency_ms_check", sql`latency_ms >= 0`),
+]);
+
+export const adminDeviceKeys = pgTable("admin_device_keys", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	userId: uuid("user_id").notNull(),
+	name: text().notNull(),
+	publicKey: text("public_key").notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	lastUsedAt: timestamp("last_used_at", { withTimezone: true, mode: 'string' }),
+}, (table) => [
+	index("admin_device_keys_user").using("btree", table.userId.asc().nullsLast().op("uuid_ops")),
+	foreignKey({
+			columns: [table.userId],
+			foreignColumns: [users.id],
+			name: "admin_device_keys_user_id_fkey"
+		}).onDelete("cascade"),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"], using: sql`true`, withCheck: sql`true`  }),
+	check("admin_device_keys_name_check", sql`(length(name) >= 1) AND (length(name) <= 80)`),
+	check("admin_device_keys_public_key_check", sql`(length(public_key) >= 80) AND (length(public_key) <= 400)`),
+]);
+
+export const adminDeviceChallenges = pgTable("admin_device_challenges", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	keyId: uuid("key_id").notNull(),
+	sessionId: uuid("session_id").notNull(),
+	challenge: text().notNull(),
+	expiresAt: timestamp("expires_at", { withTimezone: true, mode: 'string' }).notNull(),
+	usedAt: timestamp("used_at", { withTimezone: true, mode: 'string' }),
+}, (table) => [
+	index("admin_device_challenges_expires").using("btree", table.expiresAt.asc().nullsLast().op("timestamptz_ops")),
+	foreignKey({
+			columns: [table.keyId],
+			foreignColumns: [adminDeviceKeys.id],
+			name: "admin_device_challenges_key_id_fkey"
+		}).onDelete("cascade"),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"], using: sql`true`, withCheck: sql`true`  }),
+]);
+
+export const adminStepUps = pgTable("admin_step_ups", {
+	sessionId: uuid("session_id").primaryKey().notNull(),
+	userId: uuid("user_id").notNull(),
+	verifiedAt: timestamp("verified_at", { withTimezone: true, mode: 'string' }).notNull(),
+	method: text().notNull(),
+	proofSessionId: uuid("proof_session_id"),
+}, (table) => [
+	index("admin_step_ups_verified_at").using("btree", table.verifiedAt.asc().nullsLast().op("timestamptz_ops")),
+	foreignKey({
+			columns: [table.userId],
+			foreignColumns: [users.id],
+			name: "admin_step_ups_user_id_fkey"
+		}).onDelete("cascade"),
+	unique("admin_step_ups_proof_session_id_key").on(table.proofSessionId),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"], using: sql`true`, withCheck: sql`true`  }),
+	check("admin_step_ups_method_check", sql`method = ANY (ARRAY['passkey'::text, 'pin'::text, 'device'::text])`),
+]);
+
+export const botImages = pgTable("bot_images", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	botId: uuid("bot_id").notNull(),
+	orgId: uuid("org_id").notNull(),
+	createdBy: uuid("created_by"),
+	source: text().notNull(),
+	// TODO: failed to parse database type 'bytea'
+	large: text("large").notNull(),
+	// TODO: failed to parse database type 'bytea'
+	small: text("small").notNull(),
+	// TODO: failed to parse database type 'bytea'
+	original: text("original"),
+	originalType: text("original_type"),
+	crop: jsonb(),
+	colors: text().notNull(),
+	candidate: boolean().default(false).notNull(),
+	usedAt: timestamp("used_at", { withTimezone: true, mode: 'string' }),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("bot_images_bot_idx").using("btree", table.botId.asc().nullsLast().op("timestamptz_ops"), table.usedAt.desc().nullsLast().op("timestamptz_ops")),
+	foreignKey({
+			columns: [table.botId],
+			foreignColumns: [bots.id],
+			name: "bot_images_bot_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.orgId],
+			foreignColumns: [organizations.id],
+			name: "bot_images_org_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.createdBy],
+			foreignColumns: [users.id],
+			name: "bot_images_created_by_fkey"
+		}).onDelete("set null"),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"], using: sql`true`, withCheck: sql`true`  }),
+	check("bot_images_source_check", sql`source = ANY (ARRAY['upload'::text, 'chat'::text, 'generated'::text, 'bot'::text])`),
+	check("bot_images_large_check", sql`(octet_length(large) >= 1) AND (octet_length(large) <= 524288)`),
+	check("bot_images_small_check", sql`(octet_length(small) >= 1) AND (octet_length(small) <= 65536)`),
+	check("bot_images_original_check", sql`(original IS NULL) OR ((octet_length(original) >= 1) AND (octet_length(original) <= 3145728))`),
+	check("bot_images_original_type_check", sql`original_type = ANY (ARRAY['image/jpeg'::text, 'image/png'::text, 'image/webp'::text])`),
+	check("bot_images_colors_check", sql`colors ~ '^[0-9a-f]{12}$'::text`),
+]);
+
+export const widgetCanvases = pgTable("widget_canvases", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	orgId: uuid("org_id").notNull(),
+	userId: uuid("user_id").notNull(),
+	botId: uuid("bot_id").notNull(),
+	name: text().default('Main').notNull(),
+	content: jsonb().notNull(),
+	version: integer().default(1).notNull(),
+	status: text().default('waiting').notNull(),
+	hideWhenLocked: boolean("hide_when_locked").default(false).notNull(),
+	until: timestamp({ withTimezone: true, mode: 'string' }),
+	setAt: timestamp("set_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	setByRun: uuid("set_by_run"),
+	writesHour: integer("writes_hour").default(0).notNull(),
+	hourFrom: timestamp("hour_from", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	writesDay: integer("writes_day").default(0).notNull(),
+	dayFrom: timestamp("day_from", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("widget_canvases_bot_idx").using("btree", table.botId.asc().nullsLast().op("uuid_ops")),
+	index("widget_canvases_user_idx").using("btree", table.userId.asc().nullsLast().op("uuid_ops"), table.orgId.asc().nullsLast().op("uuid_ops")),
+	foreignKey({
+			columns: [table.orgId],
+			foreignColumns: [organizations.id],
+			name: "widget_canvases_org_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.userId],
+			foreignColumns: [users.id],
+			name: "widget_canvases_user_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.botId],
+			foreignColumns: [bots.id],
+			name: "widget_canvases_bot_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.setByRun],
+			foreignColumns: [runs.id],
+			name: "widget_canvases_set_by_run_fkey"
+		}).onDelete("set null"),
+	unique("widget_canvases_user_id_bot_id_name_key").on(table.userId, table.botId, table.name),
+	pgPolicy("widget_canvases_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`(user_id = ( SELECT auth.uid() AS uid))` }),
+	pgPolicy("widget_canvases_update", { as: "permissive", for: "update", to: ["authenticated"] }),
+	pgPolicy("widget_canvases_delete", { as: "permissive", for: "delete", to: ["authenticated"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
+	check("widget_canvases_name_check", sql`(char_length(name) >= 1) AND (char_length(name) <= 40)`),
+	check("widget_canvases_status_check", sql`status = ANY (ARRAY['waiting'::text, 'shown'::text, 'paused'::text])`),
+]);
+
 export const agentImportFiles = pgTable("agent_import_files", {
 	importId: uuid("import_id").notNull(),
 	path: text().notNull(),
@@ -5578,6 +6023,22 @@ export const userBlocks = pgTable("user_blocks", {
 	check("user_blocks_check", sql`blocker_id <> blocked_id`),
 ]);
 
+export const vendorCounts = pgTable("vendor_counts", {
+	vendor: text().notNull(),
+	day: date().notNull(),
+	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
+	count: bigint({ mode: "number" }).default(0).notNull(),
+}, (table) => [
+	foreignKey({
+			columns: [table.vendor],
+			foreignColumns: [vendorLimits.vendor],
+			name: "vendor_counts_vendor_fkey"
+		}).onDelete("cascade"),
+	primaryKey({ columns: [table.vendor, table.day], name: "vendor_counts_pkey"}),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"], using: sql`true`, withCheck: sql`true`  }),
+	check("vendor_counts_count_check", sql`count >= 0`),
+]);
+
 export const deviceEventLog = pgTable("device_event_log", {
 	userId: uuid("user_id").notNull(),
 	eventId: text("event_id").notNull(),
@@ -5616,7 +6077,7 @@ export const deviceGrants = pgTable("device_grants", {
 	pgPolicy("device_grants_own", { as: "permissive", for: "select", to: ["authenticated"], using: sql`(user_id = ( SELECT auth.uid() AS uid))` }),
 	pgPolicy("device_grants_delete", { as: "permissive", for: "delete", to: ["authenticated"] }),
 	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
-	check("device_grants_kind_check", sql`kind = ANY (ARRAY['calendar'::text, 'reminders'::text, 'contacts'::text, 'places'::text, 'photos'::text, 'health'::text, 'notifications'::text, 'activity'::text, 'browser_tab'::text, 'browser_history'::text])`),
+	check("device_grants_kind_check", sql`kind = ANY (ARRAY['calendar'::text, 'reminders'::text, 'contacts'::text, 'places'::text, 'photos'::text, 'health'::text, 'notifications'::text, 'activity'::text, 'browser_tab'::text, 'browser_history'::text, 'widgets'::text])`),
 ]);
 
 export const profileSpaces = pgTable("profile_spaces", {
@@ -5693,6 +6154,21 @@ export const liveCallTurns = pgTable("live_call_turns", {
 	primaryKey({ columns: [table.liveCallId, table.turnId], name: "live_call_turns_pkey"}),
 	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"], using: sql`true`, withCheck: sql`true`  }),
 	check("live_call_turns_turn_id_check", sql`(char_length(turn_id) >= 1) AND (char_length(turn_id) <= 100)`),
+]);
+
+export const botImageCounts = pgTable("bot_image_counts", {
+	botId: uuid("bot_id").notNull(),
+	day: date().default(sql`CURRENT_DATE`).notNull(),
+	uploads: integer().default(0).notNull(),
+	drawings: integer().default(0).notNull(),
+}, (table) => [
+	foreignKey({
+			columns: [table.botId],
+			foreignColumns: [bots.id],
+			name: "bot_image_counts_bot_id_fkey"
+		}).onDelete("cascade"),
+	primaryKey({ columns: [table.botId, table.day], name: "bot_image_counts_pkey"}),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"], using: sql`true`, withCheck: sql`true`  }),
 ]);
 
 export const ttsCache = pgTable("tts_cache", {
@@ -6136,6 +6612,28 @@ export const chatStarters = pgTable("chat_starters", {
 	primaryKey({ columns: [table.userId, table.botId], name: "chat_starters_pkey"}),
 	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"], using: sql`true`, withCheck: sql`true`  }),
 	check("chat_starters_source_check", sql`source = ANY (ARRAY['ai'::text, 'rules'::text])`),
+]);
+
+export const widgetCanvasPictures = pgTable("widget_canvas_pictures", {
+	canvasId: uuid("canvas_id").notNull(),
+	hash: text().notNull(),
+	tone: text().notNull(),
+	size: integer().notNull(),
+	blobKey: text("blob_key"),
+	// TODO: failed to parse database type 'bytea'
+	bytes: text("bytes"),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	foreignKey({
+			columns: [table.canvasId],
+			foreignColumns: [widgetCanvases.id],
+			name: "widget_canvas_pictures_canvas_id_fkey"
+		}).onDelete("cascade"),
+	primaryKey({ columns: [table.canvasId, table.hash], name: "widget_canvas_pictures_pkey"}),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"], using: sql`true`, withCheck: sql`true`  }),
+	check("widget_canvas_pictures_hash_check", sql`hash ~ '^[0-9a-f]{16,64}$'::text`),
+	check("widget_canvas_pictures_tone_check", sql`tone = ANY (ARRAY['light'::text, 'dark'::text])`),
+	check("widget_canvas_pictures_check", sql`(blob_key IS NULL) <> (bytes IS NULL)`),
 ]);
 
 export const calendarFires = pgTable("calendar_fires", {

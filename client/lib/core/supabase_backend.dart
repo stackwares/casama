@@ -702,20 +702,22 @@ class SupabaseBackend implements Backend {
   }
 
   @override
-  Future<bool?> signInAgainWithPasskey() async {
-    final me = supabase.auth.currentUser?.id;
-    if (me == null) return false;
+  Future<DateTime?> adminPasskeyCheck() async {
     final verified = await _passkeyCeremony();
     if (verified == null) return null;
-    final access = verified['access_token'];
-    final refresh = verified['refresh_token'];
-    // Another account's passkey: its session goes, this one stays.
-    if (_verifiedUserId(verified) != me || access is! String || refresh is! String || supabase.auth.currentUser?.id != me) {
+    final token = verified['access_token'];
+    try {
+      if (token is! String || _verifiedUserId(verified) != supabase.auth.currentUser?.id) {
+        throw const PasskeyProblem("That passkey is for another account.");
+      }
+      // The API checks the proof and records it on this session; this session stays.
+      final r = await api.admin.adminPasskeyCheck(
+        adminPasskeyCheckRequest: AdminPasskeyCheckRequest(token: token),
+      );
+      return r.data!.verifiedAt;
+    } finally {
       _endExtraSession(verified);
-      return false;
     }
-    await supabase.auth.setSession(refresh, accessToken: access);
-    return supabase.auth.currentUser?.id == me;
   }
 
   @override
@@ -1591,6 +1593,82 @@ class SupabaseBackend implements Backend {
   Future<void> adminUnsuspendDomain(String id) async => api.admin.adminUnsuspendDomain(id: id);
 
   @override
+  Future<List<AdminMailAddress>> adminMailAddresses() async =>
+      (await api.admin.adminMailAddresses()).data!.items.toList();
+
+  @override
+  Future<({int sent, int? ceiling})> adminMailSending() async {
+    final r = (await api.admin.adminMailAddresses()).data!;
+    return (sent: r.sentToday ?? 0, ceiling: r.sendCeiling);
+  }
+
+  @override
+  Future<AdminMailAddress> setMailAddressStatus(String id, String status) async =>
+      (await api.admin.setMailAddressStatus(
+        id: id,
+        setMailAddressStatusRequest: SetMailAddressStatusRequest(
+          status: SetMailAddressStatusRequestStatusEnum.values.byName(status),
+        ),
+      )).data!;
+
+  @override
+  Future<List<String>> adminMailReservedNames() async =>
+      (await api.admin.adminMailReservedNames()).data!.names.toList();
+
+  @override
+  Future<List<String>> setMailReservedNames(List<String> names) async =>
+      (await api.admin.setMailReservedNames(
+        adminMailReservedNames: AdminMailReservedNames(names: names),
+      )).data!.names.toList();
+
+  @override
+  Future<AdminPinState> adminPinState() async => (await api.admin.adminPin()).data!;
+
+  @override
+  Future<AdminPinState> setAdminPin(String pin) async =>
+      (await api.admin.setAdminPin(setAdminPinRequest: SetAdminPinRequest(pin: pin))).data!;
+
+  @override
+  Future<AdminPinState> removeAdminPin() async => (await api.admin.removeAdminPin()).data!;
+
+  @override
+  Future<DateTime> adminPinCheck(String pin) async =>
+      (await api.admin.adminPinCheck(adminPinCheckRequest: AdminPinCheckRequest(pin: pin))).data!.verifiedAt;
+
+  @override
+  Future<List<AdminDeviceKey>> adminDeviceKeys() async =>
+      (await api.admin.adminDeviceKeys()).data!.items.toList();
+
+  @override
+  Future<AdminDeviceKey> addAdminDeviceKey(String name, String publicKey) async =>
+      (await api.admin.addAdminDeviceKey(
+        addAdminDeviceKeyRequest: AddAdminDeviceKeyRequest(name: name, publicKey: publicKey),
+      )).data!;
+
+  @override
+  Future<List<AdminDeviceKey>> removeAdminDeviceKey(String id) async =>
+      (await api.admin.removeAdminDeviceKey(id: id)).data!.items.toList();
+
+  @override
+  Future<({String id, String challenge})?> adminDeviceChallenge(String keyId) async {
+    try {
+      final c = (await api.admin.adminDeviceChallenge(
+        adminDeviceChallengeRequest: AdminDeviceChallengeRequest(keyId: keyId),
+      )).data!;
+      return (id: c.challengeId, challenge: c.challenge);
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) return null;
+      rethrow;
+    }
+  }
+
+  @override
+  Future<DateTime> adminDeviceCheck(String challengeId, String signature) async =>
+      (await api.admin.adminDeviceCheck(
+        adminDeviceCheckRequest: AdminDeviceCheckRequest(challengeId: challengeId, signature: signature),
+      )).data!.verifiedAt;
+
+  @override
   Future<DomainOrder> adminRetryDomainOrder(String id) async =>
       (await api.admin.adminRetryDomainOrder(id: id)).data!;
 
@@ -1872,6 +1950,61 @@ class SupabaseBackend implements Backend {
         })
         .eq('id', botId);
   }
+
+  @override
+  Future<Bot> setBotPicture(
+    String botId,
+    Uint8List square, {
+    Uint8List? original,
+    BotPictureCrop? crop,
+    String source = 'upload',
+  }) async => (await api.bots.setBotPicture(
+    id: botId,
+    setBotPictureRequest: SetBotPictureRequest(
+      data: base64Encode(square),
+      original: original == null ? null : base64Encode(original),
+      crop: original == null ? null : crop,
+      source_: SetBotPictureRequestSource_Enum.values.firstWhere(
+        (s) => s.value == source,
+        orElse: () => SetBotPictureRequestSource_Enum.upload,
+      ),
+    ),
+  )).data!;
+
+  @override
+  Future<Bot> removeBotPicture(String botId) async =>
+      (await api.bots.removeBotPicture(id: botId)).data!;
+
+  @override
+  Future<List<BotPicture>> botPictures(String botId, {bool candidates = false}) async =>
+      (await api.bots.listBotPictures(id: botId, candidates: candidates ? 'true' : null)).data!.items;
+
+  @override
+  Future<Bot> useBotPicture(String botId, String imageId) async =>
+      (await api.bots.useBotPicture(id: botId, imageId: imageId)).data!;
+
+  @override
+  Future<Uint8List> botPictureOriginal(String botId, String imageId) async =>
+      (await api.bots.getBotPictureOriginal(id: botId, imageId: imageId)).data!;
+
+  @override
+  Future<List<BotPicture>> drawBotPictures(
+    String botId, {
+    required BotPictureStyle style,
+    String? description,
+    int count = 2,
+  }) async => (await api.bots.generateBotPictures(
+    id: botId,
+    generateBotPicturesRequest: GenerateBotPicturesRequest(
+      style: style,
+      description: (description?.trim().isEmpty ?? true) ? null : description!.trim(),
+      count: count,
+    ),
+  )).data!.items;
+
+  @override
+  String botImageUrl(String imageId, {bool small = false}) =>
+      '${api.baseUrl.replaceAll(RegExp(r'/+$'), '')}/v1/bot-images/$imageId${small ? '?size=128' : ''}';
 
   @override
   Future<UsageReport> usage(String orgId, {String period = 'day', UsageFilter filter = UsageFilter.none}) async =>
@@ -2972,6 +3105,8 @@ class SupabaseBackend implements Backend {
       conversationId: payload['conversation_id'] as String?,
       runId: payload['run_id'] as String?,
       pushStatus: row['push_status'] as String?,
+      sender: payload['sender'] as String?,
+      channelId: payload['channel_id'] as String?,
     );
   }
 
@@ -3965,6 +4100,101 @@ class SupabaseBackend implements Backend {
   @override
   Future<List<ChannelEvent>> channelEvents(String id) async =>
       (await api.channels.listChannelEvents(id: id)).data!.items;
+
+  @override
+  Future<MailAddress?> mailAddress(String botId) async {
+    try {
+      return (await api.mail.getMailAddress(id: botId)).data!;
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) return null;
+      rethrow;
+    }
+  }
+
+  @override
+  Future<MailAddress> claimMailAddress(String botId, String name, {String surface = 'profile'}) async =>
+      (await api.mail.claimMailAddress(
+        id: botId,
+        claimMailAddressRequest: ClaimMailAddressRequest(
+          name: name,
+          surface: ClaimMailAddressRequestSurfaceEnum.values.byName(surface),
+        ),
+      )).data!;
+
+  @override
+  Future<MailNameAvailability> checkMailName(String botId, String name) async =>
+      (await api.mail.checkMailName(id: botId, name: name)).data!;
+
+  @override
+  Future<MailAddress> updateMailAddress(String botId, {String? status, bool? notifyNewSenders}) async =>
+      (await api.mail.updateMailAddress(
+        id: botId,
+        updateMailAddressRequest: UpdateMailAddressRequest(
+          status: status == null ? null : UpdateMailAddressRequestStatusEnum.values.byName(status),
+          notifyNewSenders: notifyNewSenders,
+        ),
+      )).data!;
+
+  @override
+  Future<MailAddress> moveMailAddress(String botId, String toBotId) async =>
+      (await api.mail.moveMailAddress(
+        id: botId,
+        moveMailAddressRequest: MoveMailAddressRequest(toBotId: toBotId),
+      )).data!;
+
+  @override
+  Future<MailAddress> releaseMailAddress(String botId) async =>
+      (await api.mail.releaseMailAddress(id: botId)).data!;
+
+  @override
+  Future<MailMessageList> mailMessages(
+    String botId, {
+    String? verdict,
+    String? tag,
+    String? sender,
+    String? q,
+    int? limit,
+    String? cursor,
+  }) async =>
+      (await api.mail.listMailMessages(
+        id: botId,
+        verdict: verdict,
+        tag: tag,
+        sender: sender,
+        q: q,
+        limit: limit,
+        cursor: cursor,
+      )).data!;
+
+  @override
+  Future<MailMessageDetail> mailMessage(String botId, String messageId) async =>
+      (await api.mail.getMailMessage(id: botId, messageId: messageId)).data!;
+
+  @override
+  Future<Uint8List> downloadMailFile(String botId, String messageId, int index) async =>
+      (await api.mail.downloadMailFile(id: botId, messageId: messageId, index: '$index')).data!;
+
+  @override
+  Future<MailAddress> blockMailSender(String botId, String sender) async =>
+      (await api.mail.blockMailSender(
+        id: botId,
+        blockMailSenderRequest: BlockMailSenderRequest(sender: sender),
+      )).data!;
+
+  @override
+  Future<MailAddress> unblockMailSender(String botId, String sender) async =>
+      (await api.mail.unblockMailSender(id: botId, sender: sender)).data!;
+
+  @override
+  Future<DeleteMailMessagesResult> deleteMail(String botId, {List<String>? ids, DateTime? before}) async {
+    if (ids != null && ids.length == 1 && before == null) {
+      return (await api.mail.deleteMailMessage(id: botId, messageId: ids.single)).data!;
+    }
+    return (await api.mail.deleteMailMessages(
+      id: botId,
+      deleteMailMessagesRequest: DeleteMailMessagesRequest(ids: ids, before: before?.toUtc()),
+    )).data!;
+  }
 
   @override
   Future<Uint8List> exportWorkspaceFiles(String orgId) async => base64Decode(

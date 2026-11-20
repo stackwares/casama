@@ -1,3 +1,4 @@
+import 'dart:async';
 import '../selfhost/setup_screen.dart';
 import '../notifications/newsletter.dart';
 import 'bot_history_screen.dart';
@@ -35,6 +36,7 @@ import '../../ui/tab_reselect.dart';
 import '../../ui/shell_header.dart';
 import '../../ui/shell_layout.dart';
 import '../settings/me_avatar.dart';
+import 'bot_picture.dart';
 import '../settings/model_keys_screen.dart';
 import 'model_picker.dart';
 import 'template_picker.dart';
@@ -673,6 +675,21 @@ class _CreateBotSheetState extends ConsumerState<CreateBotSheet> {
 
   /// New bots start as a random cloud bot; the picker can change it or go back to initials.
   String? _avatar = Mascot.random().avatarValue;
+
+  /// A picture of its own, cropped and waiting for the bot to exist; [_usePicture] while it's the
+  /// choice (a mascot tapped after keeps it, one tap away).
+  NewBotPicture? _picture;
+  var _usePicture = false;
+
+  Future<void> _pickPicture() async {
+    final picked = await pickNewBotPicture(context, name: _finalName(context), current: _picture);
+    if (picked == null || !mounted) return;
+    HapticsHelper.success();
+    setState(() {
+      _picture = picked;
+      _usePicture = true;
+    });
+  }
   var _busy = false;
 
   /// The key and model sit under Advanced (D-182) because one is picked for you. When the key it
@@ -785,11 +802,13 @@ class _CreateBotSheetState extends ConsumerState<CreateBotSheet> {
                     child: ScaleTransition(scale: Tween(begin: 0.85, end: 1.0).animate(a), child: child),
                   ),
                   child: KeyedSubtree(
-                    key: ValueKey(_avatar),
-                    child: switch (Mascot.fromAvatar(_avatar)) {
-                      final m? => MascotHero([m], size: 60),
-                      null => BlankBotImage(size: 60, animate: ambientMotionOn(context)),
-                    },
+                    key: ValueKey(_usePicture ? _picture : _avatar),
+                    child: _usePicture && _picture != null
+                        ? BotAvatar(name: _finalName(context), preview: _picture!.cropped.png, size: 60)
+                        : switch (Mascot.fromAvatar(_avatar)) {
+                            final m? => MascotHero([m], size: 60),
+                            null => BlankBotImage(size: 60, animate: ambientMotionOn(context)),
+                          },
                   ),
                 ),
                 const SizedBox(width: AppSpace.md),
@@ -851,9 +870,10 @@ class _CreateBotSheetState extends ConsumerState<CreateBotSheet> {
                     AnimatedSwitcher(
                       duration: AppMotion.of(context, AppMotion.fast),
                       child: BotAvatar(
-                        key: ValueKey('${_finalName(context)}|$_avatar'),
+                        key: ValueKey('${_finalName(context)}|$_avatar|$_usePicture'),
                         name: _finalName(context),
                         avatar: _avatar,
+                        preview: _usePicture ? _picture?.cropped.png : null,
                         size: 52,
                       ),
                     ),
@@ -873,11 +893,25 @@ class _CreateBotSheetState extends ConsumerState<CreateBotSheet> {
                 ),
                 const SizedBox(height: AppSpace.sm),
                 MascotPicker(
-                  value: _avatar,
+                  value: _usePicture ? null : _avatar,
                   scrollable: true,
                   initials: botInitials(_finalName(context)),
                   initialsLabel: l10n.botIconInitials,
-                  onChanged: (v) => setState(() => _avatar = v),
+                  onChanged: (v) => setState(() {
+                    _avatar = v;
+                    _usePicture = false;
+                  }),
+                  name: _finalName(context),
+                  pictureLabel: l10n.botPicture,
+                  picturePreview: _picture?.cropped.png,
+                  pictureSelected: _usePicture,
+                  onPicture: () {
+                    if (_picture != null && !_usePicture) {
+                      setState(() => _usePicture = true);
+                    } else {
+                      unawaited(_pickPicture());
+                    }
+                  },
                 ),
               ],
             ),
@@ -920,7 +954,8 @@ class _CreateBotSheetState extends ConsumerState<CreateBotSheet> {
                 : () async {
                     setState(() => _busy = true);
                     final org = ref.read(currentOrgProvider)!;
-                    final bot = await runGuarded(
+                    final picture = _usePicture ? _picture : null;
+                    var bot = await runGuarded(
                       context,
                       () => ref
                           .read(backendProvider)
@@ -933,10 +968,16 @@ class _CreateBotSheetState extends ConsumerState<CreateBotSheet> {
                                 _model,
                             persona: _persona.text.trim(),
                             templateId: _templateId,
+                            // With a picture, the mascot picked is what it goes back to without one.
                             avatarUrl: _avatar,
                           ),
                     );
                     if (!context.mounted) return;
+                    if (bot != null && picture != null) {
+                      // The bot exists either way; a picture that didn't save can be set on its profile.
+                      bot = await runGuarded(context, () => picture.save(ref, bot!.id)) ?? bot;
+                      if (!context.mounted) return;
+                    }
                     setState(() => _busy = false);
                     if (bot != null) {
                       ref.invalidate(botsProvider);

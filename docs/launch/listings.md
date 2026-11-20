@@ -33,7 +33,7 @@ describes Casama agrees with every other. Status as of 2026-11-18.
 
 | List | State |
 |---|---|
-| punkpeye/awesome-mcp-servers (Casama's MCP server) | Pull request open, waiting on the maintainer: https://github.com/punkpeye/awesome-mcp-servers/pull/19871. Both things its bot asked for are done (2026-11-18): the server is claimed and released on Glama (https://glama.ai/mcp/servers/stackwares/casama, release 0.1.0, maintenance rated B) and the Glama score badge is on the entry. Glama's build is set in its admin page, not in the repository: build step `npm install -g @casama/mcp`, command `casama-mcp --docs-only` |
+| punkpeye/awesome-mcp-servers (Casama's MCP server) | Pull request #19871 was closed as a duplicate on 2026-11-19; the open one is https://github.com/punkpeye/awesome-mcp-servers/pull/20098. Both things its bot asked for are done (2026-11-18): the server is claimed and released on Glama (https://glama.ai/mcp/servers/stackwares/casama, release 0.1.0, maintenance rated B) and the Glama score badge is on the entry. Glama's build is set in its admin page, not in the repository: build step `npm install -g @casama/mcp`, command `casama-mcp --docs-only` |
 | e2b-dev/awesome-ai-agents | Pull request open: https://github.com/e2b-dev/awesome-ai-agents/pull/2016. The contributor agreement is signed and its check passes; waiting for a maintainer |
 | kyrolabs/awesome-agents | **Wait.** Its rules close pull requests from "brand new repo without demonstrated traction" automatically. Send after the launch, when the repository has stars and history |
 | awesome-selfhosted/awesome-selfhosted | **Wait until about March 2027.** It wants four months since the first tagged release. Goes to `awesome-selfhosted-data` |

@@ -23,6 +23,25 @@
     history.replaceState(null, '', base + '#/' + route + l.search);
   })();
 
+  // A sign-in link that carries an address (#/sign-in?email=…, from casama.ai's invite page after a
+  // claim): the address is taken out of the page's address before the app and its analytics start,
+  // so it is never part of an event's page URL. The sign-in screen reads it from this tab's session
+  // storage (client/lib/features/auth/sign_in_email_link_web.dart) and types it in.
+  (function () {
+    var hash = window.location.hash;
+    var q = hash.indexOf('?');
+    if (q < 0 || hash.slice(0, q) !== '#/sign-in') return;
+    var params = new URLSearchParams(hash.slice(q + 1));
+    var email = params.get('email');
+    if (email === null) return;
+    params.delete('email');
+    var rest = params.toString();
+    history.replaceState(null, '', window.location.pathname + window.location.search + '#/sign-in' + (rest ? '?' + rest : ''));
+    try {
+      window.sessionStorage.setItem('casama-sign-in-email', email.slice(0, 254));
+    } catch (e) { /* storage off: the screen opens without the address */ }
+  })();
+
   var SHOW_AFTER_MS = 800; // a quicker load never shows the bar
   var SLOW_AFTER_MS = 15000; // still downloading after this long: say the connection is slow
   var QUIET_AFTER_MS = 10000; // no progress for this long: say so

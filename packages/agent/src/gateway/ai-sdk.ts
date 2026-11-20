@@ -321,6 +321,9 @@ export class AiSdkGateway implements ModelGateway {
                 ? { cacheWriteTokens: part.totalUsage.inputTokenDetails.cacheWriteTokens }
                 : {}),
               ...(providerCostUsd !== undefined ? { providerCostUsd } : {}),
+              ...(part.totalUsage.outputTokenDetails?.reasoningTokens
+                ? { reasoningTokens: part.totalUsage.outputTokenDetails.reasoningTokens }
+                : {}),
             },
           };
         }

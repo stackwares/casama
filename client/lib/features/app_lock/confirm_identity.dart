@@ -148,13 +148,16 @@ Future<bool> confirmIdentity(
 }
 
 /// Choose a PIN, then enter it again. The PIN, or null when the person closed the sheet.
-Future<String?> showPinSetup(BuildContext context) => showAdaptiveSheet<String>(
-  context: context,
-  builder: (_) => const _PinSetupSheet(),
-);
+/// [subtitle] replaces the app lock's line (the admin PIN, D-452).
+Future<String?> showPinSetup(BuildContext context, {String? subtitle}) =>
+    showAdaptiveSheet<String>(
+      context: context,
+      builder: (_) => _PinSetupSheet(subtitle: subtitle),
+    );
 
 class _PinSetupSheet extends StatefulWidget {
-  const _PinSetupSheet();
+  const _PinSetupSheet({this.subtitle});
+  final String? subtitle;
 
   @override
   State<_PinSetupSheet> createState() => _PinSetupSheetState();
@@ -205,7 +208,7 @@ class _PinSetupSheetState extends State<_PinSetupSheet> {
     return FormSheet(
       icon: LucideIcons.keyRound,
       title: again ? l10n.appLockPinAgainTitle : l10n.appLockPinSetupTitle,
-      subtitle: l10n.appLockPinSetupBody,
+      subtitle: widget.subtitle ?? l10n.appLockPinSetupBody,
       submitLabel: l10n.appLockPinNext,
       onSubmit: _field.text.length == PinStore.length
           ? () => _entered(_field.text)

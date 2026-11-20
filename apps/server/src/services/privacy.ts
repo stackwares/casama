@@ -254,6 +254,8 @@ export async function purgeDueAccounts(
     forgetNewsletter?: (userId: string) => Promise<boolean>;
     /** Sign in with Apple revocation (D-420); default: from process.env. Tests pass their own. */
     apple?: AppleSignInConfig | null;
+    /** Object storage for hosted mail originals and attachments (BOT-EMAIL-PLAN). */
+    objects?: import("@casama/sandbox").ObjectStore | null;
   } = {},
 ) {
   const apple = opts.apple !== undefined ? opts.apple : appleSignInConfig(process.env);
@@ -287,6 +289,19 @@ export async function purgeDueAccounts(
           .catch((e) => {
             captureError(e, { service: "casama-worker", step: "purge-memories", org_id: org.id });
           });
+      }
+      // Hosted mail originals and attachments live in object storage; delete them before the rows cascade away.
+      if (opts.objects) {
+        const mailObjs = await db.execute<{ raw_key: string | null; files: unknown }>(
+          sql`select raw_key, files from public.mail_messages where org_id = ${org.id}::uuid`,
+        );
+        for (const m of mailObjs) {
+          const files = Array.isArray(m.files) ? m.files : [];
+          const keys = [m.raw_key, ...files.map((f) => (f as { key?: unknown })?.key)].filter(
+            (k): k is string => typeof k === "string" && !!k,
+          );
+          for (const k of keys) await opts.objects.delete(k).catch(() => {});
+        }
       }
       // Cascades through all of the workspace's messages, runs and events.
       await withoutTimeouts(db, (tx) =>

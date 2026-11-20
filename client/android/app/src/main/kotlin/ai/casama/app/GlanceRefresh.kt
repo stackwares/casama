@@ -58,6 +58,7 @@ object GlanceRefresh {
     if (key.isNullOrEmpty()) {
       File(context.filesDir, COVERS_DIR).deleteRecursively()
       File(context.filesDir, CanvasStore.PICTURES_DIR).deleteRecursively()
+      BotPictures.clear(context)
     }
     schedule(context)
   }
@@ -219,6 +220,8 @@ class GlanceWorker(context: Context, params: WorkerParameters) : Worker(context,
     val glance = GlanceRefresh.fetch(applicationContext)
     // The canvases after the glance: a key the glance found refused is gone by now, so this skips.
     val canvases = CanvasRefresh.fetch(applicationContext)
+    // The bots' own pictures last: they come from the data both fetches just stored, and need no key.
+    if (glance != GlanceRefresh.Outcome.SKIPPED || canvases != GlanceRefresh.Outcome.SKIPPED) BotPictures.refresh(applicationContext)
     val failed = glance == GlanceRefresh.Outcome.FAILED || canvases == GlanceRefresh.Outcome.FAILED
     // A one-off from a push retries a couple of times; the periodic job just waits for its next turn.
     return if (failed && runAttemptCount < 2 && GlanceRefresh.TAG_PERIODIC !in tags) Result.retry() else Result.success()

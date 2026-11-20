@@ -319,7 +319,8 @@ describe("gallery", () => {
     const live = await j(await h.request("/v1/app-config"));
     expect(live.min_versions).toEqual({ ios: "0.8.0" });
     expect(live.announcements[0]).toMatchObject({ id: "launch", level: "info" });
-    expect(live.flags).toEqual({ new_home: true });
+    // bot_email is on only where hosted mail is set up (D-449); not in tests.
+    expect(live.flags).toEqual({ new_home: true, bot_email: false });
     const other = await h.user("gallery-other@example.com");
     const denied = await h.request("/v1/admin/app-config", {
       method: "PUT",

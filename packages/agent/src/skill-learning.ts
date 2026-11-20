@@ -22,6 +22,10 @@ export const SIMILAR_DISTANCE = 0.3;
 export const SIMILAR_WORDS = 0.6;
 const CORRECTION =
   /^\s*(no\b|nope\b|not (that|quite|right)|that'?s (not|wrong)|wrong\b|actually\b|instead\b|you (forgot|missed)|it should)/i;
+/** Today's rule for "the person corrected the bot": the first words of their message. */
+export function looksLikeCorrection(text: string) {
+  return CORRECTION.test(text);
+}
 const IGNORED_TOOLS = /^(memory|knowledge|skills|tools|suggestions)\./;
 
 export interface LearnDeps {
@@ -45,6 +49,8 @@ export interface FinishedRun {
   status: "completed" | "failed" | "cancelled";
   error?: string;
   owner: string | null;
+  /** A decision model is sure the person corrected the previous answer (D-454). */
+  corrected?: boolean;
 }
 
 const words = (s: string) =>
@@ -159,7 +165,7 @@ export async function learnFromRun(d: LearnDeps, run: FinishedRun) {
 
   // The person correcting the previous answer, which used a skill. One they liked (a 👍 or ❤️ on
   // it, D-331) isn't corrected by "actually, also…": the skill stays as it is.
-  if (run.conversationId && CORRECTION.test(run.task)) {
+  if (run.conversationId && (CORRECTION.test(run.task) || run.corrected)) {
     const [prev] = await db.execute<{
       run_id: string;
       task: string;

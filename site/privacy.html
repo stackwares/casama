@@ -8,6 +8,20 @@
 <link rel="canonical" href="https://casama.ai/privacy">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' https://challenges.cloudflare.com; connect-src 'self' https://api.casama.ai; frame-src https://challenges.cloudflare.com; img-src 'self' data:; font-src 'self'">
 <link rel="icon" type="image/svg+xml" href="/assets/bots/casama-winky-animated.svg">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Casama">
+<meta property="og:url" content="https://casama.ai/privacy">
+<meta property="og:title" content="Privacy Policy | Casama">
+<meta property="og:description" content="How Casama Cloud and the Casama apps collect, use, share and protect your data, and the rights you have over it.">
+<meta property="og:image" content="https://casama.ai/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Privacy Policy | Casama">
+<meta name="twitter:description" content="How Casama Cloud and the Casama apps collect, use, share and protect your data, and the rights you have over it.">
+<meta name="twitter:image" content="https://casama.ai/og-image.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<script type="application/ld+json">[{"@context":"https://schema.org","@type":"WebPage","name":"Privacy Policy | Casama","url":"https://casama.ai/privacy","inLanguage":"en","isPartOf":{"@type":"WebSite","name":"Casama","url":"https://casama.ai/"},"publisher":{"@type":"Organization","name":"Casama","url":"https://casama.ai/","logo":"https://casama.ai/logo.png"}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Casama","item":"https://casama.ai/"},{"@type":"ListItem","position":2,"name":"Privacy Policy","item":"https://casama.ai/privacy"}]}]</script>
 <link rel="stylesheet" href="/site.css">
 <style>
   main { max-width: 72ch; margin: 0 auto; padding: 56px var(--gutter) 96px; overflow-wrap: break-word; }
@@ -58,7 +72,7 @@
 
   <main>
     <h1>Privacy Policy</h1>
-    <p class="meta">Effective 19 November 2026</p>
+    <p class="meta">Effective 20 November 2026</p>
 
     <div class="summary">
       <ul>
@@ -113,10 +127,11 @@
       <li>Your password, stored only as a secure hash, and your two-step sign-in authenticators if you set them up.</li>
       <li>Your profile: the name bots should call you, pronouns, how you like replies, what you write under <strong>About you</strong>, and facts bots learn about you if <strong>Learn about me from chats</strong> is on.</li>
       <li>Your profile photo, if you add one. If you sign in with Google and have no photo yet, we copy your Google profile photo once and store it with your account. You can replace or remove it at any time, and a removed photo isn't copied again.</li>
+      <li>Your bots' pictures, if you give them one. You crop them on your device; we remove details such as where and with what camera a photo was taken before storing them, keep the last few of each bot and the uncropped copy of the newest two (so you can crop again), and delete them with the bot. They stay in your workspace and aren't included when you share a bot as a template.</li>
     </ul>
 
     <h3>Your content</h3>
-    <p>Everything you and your bots create in Casama: conversations, messages, attachments, memories, skills, routines, pages, tickets, knowledge sources, files on your bots' computers, voice transcripts, and the history of each run (tool calls, outputs and errors).</p>
+    <p>Everything you and your bots create in Casama: conversations, messages, attachments, memories, skills, routines, pages, tickets, knowledge sources, files on your bots' computers, voice transcripts, mail sent to and from your bots' email addresses, and the history of each run (tool calls, outputs and errors).</p>
 
     <h3>Keys, secrets and connections</h3>
     <p>Model keys, app connection tokens and secrets you give your bots. These are kept in an encrypted vault on the server. They are never shown back to you in full, never put into a model's input, and never included in exports.</p>
@@ -178,6 +193,7 @@
           <li><strong>DeepSeek</strong> (through OpenRouter). Its model writes bots' replies and does background work such as summaries and Casama Help answers. It receives the conversation and context described above, to write the reply.</li>
           <li><strong>Google</strong> (through OpenRouter). Its models make images, read replies aloud and make video. They receive your prompt, or the text to read aloud, to produce the result.</li>
           <li><strong>OpenAI</strong> (through OpenRouter). Its models turn your dictation into text and turn memories and search words into numbers for memory search. They receive your audio, or the text of a memory, for that purpose only.</li>
+          <li><strong>TypeSafe, Perplexity and OpenAI decision models</strong> (through OpenRouter). These models don't write anything: they answer short yes-or-no checks, such as whether new mail holds anything worth telling you, whether a bot's reply claims more than it did, or whether an action matches what you asked for. Each check receives the same content a bot's own model receives for that step, under the same settings. We keep only the answers (numbers), never the content.</li>
           <li><strong>Google Gemini Live</strong> (directly, not through OpenRouter). Live voice calls: your app connects to Google with a short-lived key, and your voice and the call's context go to Google to produce the spoken reply.</li>
           <li><strong>Web search: DeepSeek, Parallel and Serper.</strong> When a bot searches the web, only the search words are sent, to one of these providers (the next is tried if one doesn't answer). Pages the bot then opens are fetched by our own servers.</li>
         </ul>
@@ -233,7 +249,7 @@
         <tr><td>Cloudflare</td><td>DNS, content delivery, the secure tunnel to our servers, protection from attacks, and file storage</td><td>Always</td></tr>
         <tr><td>Zoho</td><td>Sending sign-in and account emails, and our email inboxes</td><td>When we email you or you email us</td></tr>
         <tr><td>Resend</td><td>Holding the list for Casama's monthly email and sending it</td><td>Only if you opt in</td></tr>
-        <tr><td>OpenRouter, and through it DeepSeek, Google and OpenAI (Casama Cloud's models), or AI model providers you add a key for</td><td>Generating your bots' replies and actions, images, dictation, read aloud, video and memory search</td><td>When a bot runs or you use those features</td></tr>
+        <tr><td>OpenRouter, and through it DeepSeek, Google, OpenAI, TypeSafe and Perplexity (Casama Cloud's models), or AI model providers you add a key for</td><td>Generating your bots' replies and actions, images, dictation, read aloud, video and memory search, and quick yes-or-no checks on that work</td><td>When a bot runs or you use those features</td></tr>
         <tr><td>Google (Gemini Live) on Casama Cloud, or voice providers you add a key for (such as OpenAI, Google, Deepgram, ElevenLabs, Cartesia, Fish Audio)</td><td>Live calls; read aloud, dictation and video with your own key</td><td>When you use voice. For live calls, your app connects to the provider directly with a short-lived key.</td></tr>
         <tr><td>Parallel, Serper, DeepSeek</td><td>Web search for bots: the search words only</td><td>When a bot searches the web on Casama Cloud</td></tr>
         <tr><td>Data services for live cards: MET Norway, Open-Meteo, GeoNames, the US National Weather Service, Frankfurter, CoinGecko, USGS, GDACS, Wikipedia, Wiktionary, Open Library, Nager.Date, and on servers that turn them on Yahoo Finance, ESPN, Finnhub, aviationstack, 17TRACK or TMDB</td><td>Weather, prices, rates, earthquakes, definitions and the other live cards: only what is looked up (a place rounded to about 1 km, a ticker, a currency, a word or topic; a flight or tracking number only for those lookups), never your name, account or chat</td><td>When a bot shows a live card, or a card on your screen or widget refreshes</td></tr>

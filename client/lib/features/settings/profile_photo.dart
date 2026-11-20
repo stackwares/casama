@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../core/analytics.dart';
 import '../../core/backend.dart';
 import '../../core/haptics.dart';
 import '../../core/local_cache.dart';
@@ -14,6 +15,7 @@ import '../../core/providers.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
 import '../../ui/form_sheet.dart';
+import '../../ui/avatar_cropper.dart';
 import '../../ui/person_avatar.dart';
 import 'about_you_screen.dart';
 
@@ -88,16 +90,31 @@ class _ProfilePhotoEditorState extends ConsumerState<ProfilePhotoEditor> {
               ? ImageSource.camera
               : ImageSource.gallery,
           preferredCameraDevice: CameraDevice.front,
-          // Phones shrink and compress the photo themselves; desktops hand back the file.
-          maxWidth: 512,
-          maxHeight: 512,
-          imageQuality: 85,
+          // Big enough to zoom into in the cropper; phones shrink larger photos themselves.
+          maxWidth: 2048,
+          maxHeight: 2048,
+          imageQuality: 92,
+          requestFullMetadata: false,
         );
         if (x == null || !mounted) return;
+        final source = action == _PhotoAction.camera ? 'camera' : (_hasCamera ? 'library' : 'file');
+        // Framed by hand in the round cropper (docs/BOT-PICTURES-PLAN.md §4), not cut from the middle.
+        final bytes = await x.readAsBytes();
+        if (!mounted) return;
+        final cropped = await showAvatarCropper(
+          context,
+          bytes: bytes,
+          shape: AvatarShape.person,
+          name: widget.label,
+          outputSide: 512,
+        );
+        if (cropped == null || !mounted) return;
         await _run(() async {
-          final photo = await preparePhoto(await x.readAsBytes());
+          final photo = await preparePhoto(cropped.png);
           if (photo == null) throw const PhotoUnreadable();
-          return backend.setProfilePhoto(photo.bytes, photo.type);
+          final saved = await backend.setProfilePhoto(photo.bytes, photo.type);
+          Analytics.log('profile_photo_set', {'source': source, 'rotated': cropped.turned, 'zoomed': cropped.zoomed});
+          return saved;
         });
       case _PhotoAction.google:
         await _run(() => backend.importProfilePhoto(replace: true));

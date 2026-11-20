@@ -41,6 +41,8 @@ enum WatchSync {
       switch try await api.glance(etag: saved?.etag, quick: quick) {
       case .notModified:
         GlanceCache.touchGlance()
+        // A picture may have failed to download last time; the saved glance still names it.
+        if let g = saved?.glance { await botPictures(for: g, api: api) }
         return .unchanged
       case .fresh(let g, let data, let etag):
         if !g.orgId.isEmpty, g.orgId != WatchAccount.orgId {
@@ -55,6 +57,7 @@ enum WatchSync {
           return .unchanged
         }
         GlanceCache.saveGlance(data, etag: etag)
+        await botPictures(for: g, api: api)
         return .fresh
       }
     } catch WatchAPIError.signedOut {
@@ -65,6 +68,27 @@ enum WatchSync {
     } catch {
       return .failed
     }
+  }
+
+  /// Every bot avatar the glance names.
+  static func avatars(_ g: Glance) -> [String?] {
+    g.needs.map(\.botAvatar) + g.bots.map(\.avatar) + g.runs.map(\.botAvatar) + g.next.map(\.botAvatar)
+      + (g.brief.map { [$0.botAvatar] } ?? [])
+  }
+
+  /// Saves the pictures of the bots the glance names that the watch doesn't have yet, from its own
+  /// server (no key needed), and deletes the ones no bot uses. The complications read the same
+  /// files from the group the watch app writes to; chats name bots the glance lists.
+  static func botPictures(for g: Glance, api: WatchAPI) async {
+    let ids = BotPicture.ids(avatars(g))
+    let store = BotPictureStore.shared
+    let missing = ids.filter { !store.has($0) }
+    if !missing.isEmpty {
+      await store.ensure(ids: Array(missing), server: api.base)
+      // Complications have no way to learn a file arrived, so redraw them with the pictures.
+      if missing.contains(where: store.has) { reloadWidgets() }
+    }
+    store.prune(keep: ids)
   }
 
   /// Redraws every complication and Smart Stack card, and lets the Smart Stack re-rank them.
@@ -82,6 +106,7 @@ enum WatchSync {
   static func wipe(removed: Bool) {
     WatchKeyStore.delete()
     GlanceCache.wipe()
+    BotPictureStore.shared.prune(keep: [], now: .distantFuture)
     AskQueueStore.wipe()
     WatchAccount.wipe(removed: removed)
     reloadWidgets()

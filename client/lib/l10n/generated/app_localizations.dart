@@ -3091,13 +3091,13 @@ abstract class AppLocalizations {
   /// What the bot is doing in a tool step, in everyday words (chats, calls, the computer view).
   ///
   /// In en, this message translates to:
-  /// **'{tool, select, memory_search{Searching your memories} memory_write{Saving that to memory} memory{Updating its memory} knowledge_search{Looking through your knowledge} web_search{Searching the web} web{Reading a web page} browser_open{Opening a website} browser_click{Clicking on the page} browser_type{Typing on the page} browser_press{Pressing a key} browser_scroll{Scrolling the page} browser_look{Looking at the page} desktop_click{Clicking on the screen} desktop_type{Typing} desktop_press{Pressing keys} desktop_launch{Opening an app} desktop_look{Looking at the screen} shell{Working on its computer} files_read{Reading a file} files_write{Writing a file} files_list{Looking through files} files_search{Searching files} files_from_chat{Getting a file from the chat} http{Contacting a service} data_search{Looking for data} data_call{Getting data} skills_load{Getting a skill ready} skills_create{Learning a new skill} skills_update{Improving a skill} checkpoint{Saving a restore point} computer_restart{Restarting its computer} takeover{Asking you to take over} delegate{Asking a helper} routines_list{Checking your routines} routines_create{Setting up a routine} routines_update{Updating a routine} routines_delete{Removing a routine} watchers_create{Setting up a watcher} watchers_list{Checking your watchers} watchers_delete{Removing a watcher} tasks_list{Checking your tasks} tasks_create{Adding a task} tasks{Updating your tasks} notify_user{Sending you a note} usage_report{Checking usage} device_read{Reading your device data} device_access{Asking for device access} pages_publish{Publishing a page} pages{Updating a page} media{Making an image} media_video{Making a video} bots_create{Making a new bot} bots_update{Updating a bot} bots_list{Checking your bots} bots_archive{Archiving a bot} channel_send{Sending a message} links_ask{Asking a contact\'s assistant} logins_list{Checking saved logins} replay_run{Repeating saved steps} replay_save{Saving these steps} setup_apply{Suggesting a setup} sidebar_organize{Organizing your sidebar} suggestions_add{Adding a suggestion} teach_save_draft{Saving a draft skill} welcome_name{Picking a name} secrets_request{Asking you for a secret} pages_list{Checking your pages} pages_share{Changing who can see a page} projects_create{Starting a project} projects_status{Checking a project} projects_update{Updating a project} projects{Planning a project} payments{Asking to make a payment} voice_call{Calling a business} voice_call_user{Calling you} tools_load{Getting ready} ui_show{Showing you something} start_task{Starting this in the chat} other{Working on it}}'**
+  /// **'{tool, select, profile_set_picture{Changing its picture} memory_search{Searching your memories} memory_write{Saving that to memory} memory{Updating its memory} knowledge_search{Looking through your knowledge} web_search{Searching the web} web{Reading a web page} browser_open{Opening a website} browser_click{Clicking on the page} browser_type{Typing on the page} browser_press{Pressing a key} browser_scroll{Scrolling the page} browser_look{Looking at the page} desktop_click{Clicking on the screen} desktop_type{Typing} desktop_press{Pressing keys} desktop_launch{Opening an app} desktop_look{Looking at the screen} shell{Working on its computer} files_read{Reading a file} files_write{Writing a file} files_list{Looking through files} files_search{Searching files} files_from_chat{Getting a file from the chat} http{Contacting a service} data_search{Looking for data} data_call{Getting data} skills_load{Getting a skill ready} skills_create{Learning a new skill} skills_update{Improving a skill} checkpoint{Saving a restore point} computer_restart{Restarting its computer} takeover{Asking you to take over} delegate{Asking a helper} routines_list{Checking your routines} routines_create{Setting up a routine} routines_update{Updating a routine} routines_delete{Removing a routine} watchers_create{Setting up a watcher} watchers_list{Checking your watchers} watchers_delete{Removing a watcher} tasks_list{Checking your tasks} tasks_create{Adding a task} tasks{Updating your tasks} notify_user{Sending you a note} usage_report{Checking usage} device_read{Reading your device data} device_access{Asking for device access} pages_publish{Publishing a page} pages{Updating a page} media{Making an image} media_video{Making a video} bots_create{Making a new bot} bots_update{Updating a bot} bots_list{Checking your bots} bots_archive{Archiving a bot} channel_send{Sending a message} links_ask{Asking a contact\'s assistant} logins_list{Checking saved logins} replay_run{Repeating saved steps} replay_save{Saving these steps} setup_apply{Suggesting a setup} sidebar_organize{Organizing your sidebar} suggestions_add{Adding a suggestion} teach_save_draft{Saving a draft skill} welcome_name{Picking a name} secrets_request{Asking you for a secret} pages_list{Checking your pages} pages_share{Changing who can see a page} projects_create{Starting a project} projects_status{Checking a project} projects_update{Updating a project} projects{Planning a project} payments{Asking to make a payment} voice_call{Calling a business} voice_call_user{Calling you} tools_load{Getting ready} ui_show{Showing you something} start_task{Starting this in the chat} other{Working on it}}'**
   String toolDoing(String tool);
 
   /// The same step once it's done.
   ///
   /// In en, this message translates to:
-  /// **'{tool, select, memory_search{Searched your memories} memory_write{Saved to memory} memory{Updated its memory} knowledge_search{Looked through your knowledge} web_search{Searched the web} web{Read a web page} browser_open{Opened a website} browser_click{Clicked on the page} browser_type{Typed on the page} browser_press{Pressed a key} browser_scroll{Scrolled the page} browser_look{Looked at the page} desktop_click{Clicked on the screen} desktop_type{Typed} desktop_press{Pressed keys} desktop_launch{Opened an app} desktop_look{Looked at the screen} shell{Worked on its computer} files_read{Read a file} files_write{Wrote a file} files_list{Looked through files} files_search{Searched files} files_from_chat{Got a file from the chat} http{Contacted a service} data_search{Looked for data} data_call{Got data} skills_load{Used a skill} skills_create{Learned a new skill} skills_update{Improved a skill} checkpoint{Saved a restore point} computer_restart{Restarted its computer} takeover{Asked you to take over} delegate{Asked a helper} routines_list{Checked your routines} routines_create{Set up a routine} routines_update{Updated a routine} routines_delete{Removed a routine} watchers_create{Set up a watcher} watchers_list{Checked your watchers} watchers_delete{Removed a watcher} tasks_list{Checked your tasks} tasks_create{Added a task} tasks{Updated your tasks} notify_user{Sent you a note} usage_report{Checked usage} device_read{Read your device data} device_access{Asked for device access} pages_publish{Published a page} pages{Updated a page} media{Made an image} media_video{Made a video} bots_create{Made a new bot} bots_update{Updated a bot} bots_list{Checked your bots} bots_archive{Archived a bot} channel_send{Sent a message} links_ask{Asked a contact\'s assistant} logins_list{Checked saved logins} replay_run{Repeated saved steps} replay_save{Saved these steps} setup_apply{Suggested a setup} sidebar_organize{Organized your sidebar} suggestions_add{Added a suggestion} teach_save_draft{Saved a draft skill} welcome_name{Picked a name} secrets_request{Asked you for a secret} pages_list{Checked your pages} pages_share{Changed who can see a page} projects_create{Started a project} projects_status{Checked a project} projects_update{Updated a project} projects{Planned a project} payments{Asked to make a payment} voice_call{Called a business} voice_call_user{Called you} tools_load{Got ready} ui_show{Showed you something} start_task{Started in the chat} other{Done}}'**
+  /// **'{tool, select, profile_set_picture{Changed its picture} memory_search{Searched your memories} memory_write{Saved to memory} memory{Updated its memory} knowledge_search{Looked through your knowledge} web_search{Searched the web} web{Read a web page} browser_open{Opened a website} browser_click{Clicked on the page} browser_type{Typed on the page} browser_press{Pressed a key} browser_scroll{Scrolled the page} browser_look{Looked at the page} desktop_click{Clicked on the screen} desktop_type{Typed} desktop_press{Pressed keys} desktop_launch{Opened an app} desktop_look{Looked at the screen} shell{Worked on its computer} files_read{Read a file} files_write{Wrote a file} files_list{Looked through files} files_search{Searched files} files_from_chat{Got a file from the chat} http{Contacted a service} data_search{Looked for data} data_call{Got data} skills_load{Used a skill} skills_create{Learned a new skill} skills_update{Improved a skill} checkpoint{Saved a restore point} computer_restart{Restarted its computer} takeover{Asked you to take over} delegate{Asked a helper} routines_list{Checked your routines} routines_create{Set up a routine} routines_update{Updated a routine} routines_delete{Removed a routine} watchers_create{Set up a watcher} watchers_list{Checked your watchers} watchers_delete{Removed a watcher} tasks_list{Checked your tasks} tasks_create{Added a task} tasks{Updated your tasks} notify_user{Sent you a note} usage_report{Checked usage} device_read{Read your device data} device_access{Asked for device access} pages_publish{Published a page} pages{Updated a page} media{Made an image} media_video{Made a video} bots_create{Made a new bot} bots_update{Updated a bot} bots_list{Checked your bots} bots_archive{Archived a bot} channel_send{Sent a message} links_ask{Asked a contact\'s assistant} logins_list{Checked saved logins} replay_run{Repeated saved steps} replay_save{Saved these steps} setup_apply{Suggested a setup} sidebar_organize{Organized your sidebar} suggestions_add{Added a suggestion} teach_save_draft{Saved a draft skill} welcome_name{Picked a name} secrets_request{Asked you for a secret} pages_list{Checked your pages} pages_share{Changed who can see a page} projects_create{Started a project} projects_status{Checked a project} projects_update{Updated a project} projects{Planned a project} payments{Asked to make a payment} voice_call{Called a business} voice_call_user{Called you} tools_load{Got ready} ui_show{Showed you something} start_task{Started in the chat} other{Done}}'**
   String toolDid(String tool);
 
   /// No description provided for @toolUsingApp.
@@ -3973,13 +3973,13 @@ abstract class AppLocalizations {
   /// No description provided for @adminUnlockDevice.
   ///
   /// In en, this message translates to:
-  /// **'Unlock with Face ID or fingerprint'**
+  /// **'Use Face ID or screen lock'**
   String get adminUnlockDevice;
 
   /// No description provided for @adminDeviceReason.
   ///
   /// In en, this message translates to:
-  /// **'Unlock the admin console'**
+  /// **'Confirm it\'s you for the admin console'**
   String get adminDeviceReason;
 
   /// No description provided for @adminVerifyPasskey.
@@ -3999,6 +3999,156 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Tip: add a passkey in Settings → Passkeys to verify with Face ID or a fingerprint instead of your password.'**
   String get adminPasskeyTip;
+
+  /// No description provided for @adminSecurity.
+  ///
+  /// In en, this message translates to:
+  /// **'Security'**
+  String get adminSecurity;
+
+  /// No description provided for @adminPinTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin PIN'**
+  String get adminPinTitle;
+
+  /// No description provided for @adminPinSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Set an admin PIN'**
+  String get adminPinSet;
+
+  /// No description provided for @adminPinChange.
+  ///
+  /// In en, this message translates to:
+  /// **'Change the admin PIN'**
+  String get adminPinChange;
+
+  /// No description provided for @adminPinRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove the admin PIN'**
+  String get adminPinRemove;
+
+  /// No description provided for @adminPinHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'6 digits to unlock the console and confirm changes, instead of your password. Five wrong tries turn it off.'**
+  String get adminPinHelp;
+
+  /// No description provided for @adminPinOffHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Turned off after too many wrong tries. Set a new one.'**
+  String get adminPinOffHelp;
+
+  /// No description provided for @adminPinSetupBody.
+  ///
+  /// In en, this message translates to:
+  /// **'6 digits for the admin console. Kept on your server, never on this device.'**
+  String get adminPinSetupBody;
+
+  /// No description provided for @adminPinSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin PIN saved'**
+  String get adminPinSaved;
+
+  /// No description provided for @adminPinRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin PIN removed'**
+  String get adminPinRemoved;
+
+  /// No description provided for @adminPinLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin PIN'**
+  String get adminPinLabel;
+
+  /// No description provided for @adminPinWrong.
+  ///
+  /// In en, this message translates to:
+  /// **'Wrong PIN. {count, plural, =1{1 try left} other{{count} tries left}}.'**
+  String adminPinWrong(int count);
+
+  /// No description provided for @adminPinTurnedOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many wrong PINs: the admin PIN is turned off. Use a passkey or your password, then set a new PIN under Security.'**
+  String get adminPinTurnedOff;
+
+  /// No description provided for @adminDeviceOfferTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Use Face ID next time?'**
+  String get adminDeviceOfferTitle;
+
+  /// No description provided for @adminDeviceOfferBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock the admin console and confirm changes with Face ID, a fingerprint or this phone\'s passcode. A key in this phone\'s secure chip proves it\'s you, and it never leaves the phone.'**
+  String get adminDeviceOfferBody;
+
+  /// No description provided for @adminDeviceOfferNo.
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get adminDeviceOfferNo;
+
+  /// No description provided for @adminDeviceOfferYes.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on'**
+  String get adminDeviceOfferYes;
+
+  /// No description provided for @adminDeviceSetupReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on Face ID for the admin console'**
+  String get adminDeviceSetupReason;
+
+  /// No description provided for @adminDeviceOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Face ID is on for the admin console'**
+  String get adminDeviceOn;
+
+  /// No description provided for @adminDeviceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Face ID and screen lock'**
+  String get adminDeviceTitle;
+
+  /// No description provided for @adminDeviceTurnOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Use Face ID on this phone'**
+  String get adminDeviceTurnOn;
+
+  /// No description provided for @adminDeviceHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Face ID, a fingerprint or the passcode unlocks the console and confirms changes, with no PIN or password.'**
+  String get adminDeviceHelp;
+
+  /// No description provided for @adminDeviceThisOne.
+  ///
+  /// In en, this message translates to:
+  /// **'This phone'**
+  String get adminDeviceThisOne;
+
+  /// No description provided for @adminDeviceRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get adminDeviceRemove;
+
+  /// No description provided for @adminDeviceRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed'**
+  String get adminDeviceRemoved;
 
   /// No description provided for @adminOverview.
   ///
@@ -12964,6 +13114,492 @@ abstract class AppLocalizations {
   /// **'Telegram, email, SMS, Slack, WhatsApp and more'**
   String get chatAppsRow;
 
+  /// No description provided for @botEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Email address'**
+  String get botEmail;
+
+  /// No description provided for @botEmailRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Give this bot its own address'**
+  String get botEmailRow;
+
+  /// No description provided for @botEmailClaimTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Give {name} an email address'**
+  String botEmailClaimTitle(String name);
+
+  /// No description provided for @botEmailClaimHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'People can write to it, and it answers by email. Forward it anything: bills, bookings, newsletters.'**
+  String get botEmailClaimHelp;
+
+  /// No description provided for @botEmailNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'ada'**
+  String get botEmailNameHint;
+
+  /// No description provided for @botEmailNameFixed.
+  ///
+  /// In en, this message translates to:
+  /// **'The name can\'t be changed later.'**
+  String get botEmailNameFixed;
+
+  /// No description provided for @botEmailNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get botEmailNameLabel;
+
+  /// No description provided for @botEmailWillBe.
+  ///
+  /// In en, this message translates to:
+  /// **'Your bot\'s address: {address}.'**
+  String botEmailWillBe(String address);
+
+  /// No description provided for @botEmailClaim.
+  ///
+  /// In en, this message translates to:
+  /// **'Create address'**
+  String get botEmailClaim;
+
+  /// No description provided for @botEmailTaken.
+  ///
+  /// In en, this message translates to:
+  /// **'That name is taken. Try one of these:'**
+  String get botEmailTaken;
+
+  /// No description provided for @botEmailClaimed.
+  ///
+  /// In en, this message translates to:
+  /// **'Your bot has an address'**
+  String get botEmailClaimed;
+
+  /// No description provided for @botEmailClaimedHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'A welcome mail is on its way to you. Reply to it, or forward anything.'**
+  String get botEmailClaimedHelp;
+
+  /// No description provided for @botEmailCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get botEmailCopy;
+
+  /// No description provided for @botEmailCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied'**
+  String get botEmailCopied;
+
+  /// No description provided for @botEmailContacts.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to contacts'**
+  String get botEmailContacts;
+
+  /// No description provided for @botEmailWrite.
+  ///
+  /// In en, this message translates to:
+  /// **'Write to {name}'**
+  String botEmailWrite(String name);
+
+  /// No description provided for @botEmailPaused.
+  ///
+  /// In en, this message translates to:
+  /// **'Paused. It still receives and keeps mail, but answers nothing.'**
+  String get botEmailPaused;
+
+  /// No description provided for @botEmailPause.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get botEmailPause;
+
+  /// No description provided for @botEmailResume.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume'**
+  String get botEmailResume;
+
+  /// No description provided for @botEmailSenders.
+  ///
+  /// In en, this message translates to:
+  /// **'Allowed senders'**
+  String get botEmailSenders;
+
+  /// No description provided for @botEmailSendersHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Only these people get answers. Strangers\' mail is kept, and starts nothing.'**
+  String get botEmailSendersHelp;
+
+  /// No description provided for @botEmailEditSenders.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit in Chat apps'**
+  String get botEmailEditSenders;
+
+  /// No description provided for @botEmailMove.
+  ///
+  /// In en, this message translates to:
+  /// **'Move to another bot'**
+  String get botEmailMove;
+
+  /// No description provided for @botEmailMoveHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'The address and its mail move to the other bot.'**
+  String get botEmailMoveHelp;
+
+  /// No description provided for @botEmailRelease.
+  ///
+  /// In en, this message translates to:
+  /// **'Release address'**
+  String get botEmailRelease;
+
+  /// No description provided for @botEmailReleaseHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Stops receiving for good. The name is never given out again.'**
+  String get botEmailReleaseHelp;
+
+  /// No description provided for @botEmailReleaseConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Release {address}? It stops receiving at once, and the name is never given out again.'**
+  String botEmailReleaseConfirm(String address);
+
+  /// No description provided for @botEmailReleaseNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Release'**
+  String get botEmailReleaseNow;
+
+  /// No description provided for @botEmailMoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Moved'**
+  String get botEmailMoved;
+
+  /// No description provided for @botEmailNewBotRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Give {name} an email address'**
+  String botEmailNewBotRow(String name);
+
+  /// No description provided for @botEmailInbox.
+  ///
+  /// In en, this message translates to:
+  /// **'Inbox'**
+  String get botEmailInbox;
+
+  /// No description provided for @botEmailInboxRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Kept mail, strangers and files'**
+  String get botEmailInboxRow;
+
+  /// No description provided for @botEmailEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No mail yet'**
+  String get botEmailEmpty;
+
+  /// No description provided for @botEmailStrangers.
+  ///
+  /// In en, this message translates to:
+  /// **'Strangers'**
+  String get botEmailStrangers;
+
+  /// No description provided for @botEmailAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All mail'**
+  String get botEmailAll;
+
+  /// No description provided for @botEmailUnconfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t confirm this sender'**
+  String get botEmailUnconfirmed;
+
+  /// No description provided for @botEmailAllow.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow'**
+  String get botEmailAllow;
+
+  /// No description provided for @botEmailBlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Block'**
+  String get botEmailBlock;
+
+  /// No description provided for @botEmailBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Blocked. New mail from here is refused.'**
+  String get botEmailBlocked;
+
+  /// No description provided for @botEmailUnblock.
+  ///
+  /// In en, this message translates to:
+  /// **'Unblock'**
+  String get botEmailUnblock;
+
+  /// No description provided for @botEmailOpenChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Open chat'**
+  String get botEmailOpenChat;
+
+  /// No description provided for @botEmailFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Files'**
+  String get botEmailFiles;
+
+  /// No description provided for @botEmailNewSenders.
+  ///
+  /// In en, this message translates to:
+  /// **'Tell me about new senders'**
+  String get botEmailNewSenders;
+
+  /// No description provided for @botEmailNewSendersHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'At most once a day. Off unless you turn it on.'**
+  String get botEmailNewSendersHelp;
+
+  /// No description provided for @botEmailTryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Things to try'**
+  String get botEmailTryTitle;
+
+  /// No description provided for @botEmailTryForward.
+  ///
+  /// In en, this message translates to:
+  /// **'Forward a bill or a booking'**
+  String get botEmailTryForward;
+
+  /// No description provided for @botEmailTryForwardHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Forward anything to the address above. It reads it and answers here.'**
+  String get botEmailTryForwardHelp;
+
+  /// No description provided for @botEmailTryReceipts.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep my receipts'**
+  String get botEmailTryReceipts;
+
+  /// No description provided for @botEmailTryReceiptsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Makes a routine that files mail sent to {address}.'**
+  String botEmailTryReceiptsHelp(String address);
+
+  /// No description provided for @botEmailTryDigest.
+  ///
+  /// In en, this message translates to:
+  /// **'One digest a week'**
+  String get botEmailTryDigest;
+
+  /// No description provided for @botEmailTryDigestHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Makes a routine that gathers newsletters from {address} into a weekly summary.'**
+  String botEmailTryDigestHelp(String address);
+
+  /// No description provided for @botEmailTryCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Address copied'**
+  String get botEmailTryCopied;
+
+  /// No description provided for @botEmailTryMade.
+  ///
+  /// In en, this message translates to:
+  /// **'Routine made'**
+  String get botEmailTryMade;
+
+  /// No description provided for @botEmailReceiptsName.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep my receipts'**
+  String get botEmailReceiptsName;
+
+  /// No description provided for @botEmailReceiptsInstructions.
+  ///
+  /// In en, this message translates to:
+  /// **'File the receipt from this mail: what it was for, how much, and when. Say nothing unless something looks wrong.'**
+  String get botEmailReceiptsInstructions;
+
+  /// No description provided for @botEmailDigestName.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly newsletter digest'**
+  String get botEmailDigestName;
+
+  /// No description provided for @botEmailDigestInstructions.
+  ///
+  /// In en, this message translates to:
+  /// **'Collect this week\'s newsletters and send one short digest: the headlines worth knowing, nothing more.'**
+  String get botEmailDigestInstructions;
+
+  /// No description provided for @botEmailTriggerTag.
+  ///
+  /// In en, this message translates to:
+  /// **'Plus tag'**
+  String get botEmailTriggerTag;
+
+  /// No description provided for @botEmailTriggerTagHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Only mail to this tag, like shop for ada+shop@. Email addresses only.'**
+  String get botEmailTriggerTagHelp;
+
+  /// No description provided for @botEmailTriggerUnconfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'Hear unconfirmed senders too'**
+  String get botEmailTriggerUnconfirmed;
+
+  /// No description provided for @botEmailTriggerAutomatic.
+  ///
+  /// In en, this message translates to:
+  /// **'Hear automatic mail too'**
+  String get botEmailTriggerAutomatic;
+
+  /// No description provided for @botEmailStorage.
+  ///
+  /// In en, this message translates to:
+  /// **'{used} of {limit}'**
+  String botEmailStorage(String used, String limit);
+
+  /// No description provided for @botEmailStorageUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'{used} used'**
+  String botEmailStorageUsed(String used);
+
+  /// No description provided for @botEmailStorageFull.
+  ///
+  /// In en, this message translates to:
+  /// **'The mailbox is full, so new mail is refused. Delete old mail to make room.'**
+  String get botEmailStorageFull;
+
+  /// No description provided for @botEmailSelect.
+  ///
+  /// In en, this message translates to:
+  /// **'Select'**
+  String get botEmailSelect;
+
+  /// No description provided for @botEmailSelectDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get botEmailSelectDone;
+
+  /// No description provided for @botEmailDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get botEmailDelete;
+
+  /// No description provided for @botEmailDeleteCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{n, plural, =1{Delete 1 mail} other{Delete {n} mails}}'**
+  String botEmailDeleteCount(int n);
+
+  /// No description provided for @botEmailDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{n, plural, =1{Delete this mail?} other{Delete {n} mails?}}'**
+  String botEmailDeleteTitle(int n);
+
+  /// No description provided for @botEmailDeleteBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Their text and files are gone for good. Copies already in a chat stay there.'**
+  String get botEmailDeleteBody;
+
+  /// No description provided for @botEmailDeleteOlder.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete older mail'**
+  String get botEmailDeleteOlder;
+
+  /// No description provided for @botEmailOlder30Days.
+  ///
+  /// In en, this message translates to:
+  /// **'Older than 30 days'**
+  String get botEmailOlder30Days;
+
+  /// No description provided for @botEmailOlder6Months.
+  ///
+  /// In en, this message translates to:
+  /// **'Older than 6 months'**
+  String get botEmailOlder6Months;
+
+  /// No description provided for @botEmailOlderYear.
+  ///
+  /// In en, this message translates to:
+  /// **'Older than a year'**
+  String get botEmailOlderYear;
+
+  /// No description provided for @botEmailDeleteOlderTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete all mail {age}?'**
+  String botEmailDeleteOlderTitle(String age);
+
+  /// No description provided for @botEmailDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'{n, plural, =0{Nothing to delete} =1{Deleted 1 mail} other{Deleted {n} mails}}'**
+  String botEmailDeleted(int n);
+
+  /// No description provided for @botEmailPerkAddresses.
+  ///
+  /// In en, this message translates to:
+  /// **'{n, plural, =1{1 bot email address} other{{n} bot email addresses}}'**
+  String botEmailPerkAddresses(int n);
+
+  /// No description provided for @botEmailPerkWritesNew.
+  ///
+  /// In en, this message translates to:
+  /// **'Bots write to new people by email'**
+  String get botEmailPerkWritesNew;
+
+  /// No description provided for @botEmailPerkRepliesOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Bots reply to you by email'**
+  String get botEmailPerkRepliesOnly;
+
+  /// No description provided for @adminMailSentToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent today: {sent} of {ceiling}'**
+  String adminMailSentToday(int sent, int ceiling);
+
+  /// No description provided for @adminMailSentTodayNoCeiling.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent today: {sent}'**
+  String adminMailSentTodayNoCeiling(int sent);
+
   /// No description provided for @chatAppsAdd.
   ///
   /// In en, this message translates to:
@@ -18249,6 +18885,30 @@ abstract class AppLocalizations {
   /// **'Trial computer hours'**
   String get adminLimitTrialHours;
 
+  /// No description provided for @adminLimitMailAddresses.
+  ///
+  /// In en, this message translates to:
+  /// **'Bot email addresses'**
+  String get adminLimitMailAddresses;
+
+  /// No description provided for @adminLimitMailNewDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Mail to new people, a day'**
+  String get adminLimitMailNewDay;
+
+  /// No description provided for @adminLimitMailSentDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Mail sent, a day'**
+  String get adminLimitMailSentDay;
+
+  /// No description provided for @adminLimitMailStorage.
+  ///
+  /// In en, this message translates to:
+  /// **'Mailbox size, MB'**
+  String get adminLimitMailStorage;
+
   /// No description provided for @adminAddLimit.
   ///
   /// In en, this message translates to:
@@ -22616,6 +23276,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Domains'**
   String get adminDomains;
+
+  /// No description provided for @adminMail.
+  ///
+  /// In en, this message translates to:
+  /// **'Mail'**
+  String get adminMail;
+
+  /// No description provided for @adminMailHealth.
+  ///
+  /// In en, this message translates to:
+  /// **'{sent} sent · {bounced} bounced · {complained} complained in 30 days'**
+  String adminMailHealth(int sent, int bounced, int complained);
+
+  /// No description provided for @adminMailAutoPaused.
+  ///
+  /// In en, this message translates to:
+  /// **'Paused automatically'**
+  String get adminMailAutoPaused;
+
+  /// No description provided for @adminMailPause.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get adminMailPause;
+
+  /// No description provided for @adminMailPauseTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause {address}?'**
+  String adminMailPauseTitle(String address);
+
+  /// No description provided for @adminMailLift.
+  ///
+  /// In en, this message translates to:
+  /// **'Lift'**
+  String get adminMailLift;
+
+  /// No description provided for @adminMailLiftTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Lift the pause on {address}?'**
+  String adminMailLiftTitle(String address);
+
+  /// No description provided for @adminMailLiftBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This clears the automatic pause. The owner can pause it again themselves.'**
+  String get adminMailLiftBody;
+
+  /// No description provided for @adminMailReserved.
+  ///
+  /// In en, this message translates to:
+  /// **'Reserved names'**
+  String get adminMailReserved;
+
+  /// No description provided for @adminMailReservedHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'One name per line. Nobody can claim these, on top of the built-in list.'**
+  String get adminMailReservedHelp;
 
   /// No description provided for @adminDomainsConnected.
   ///
@@ -29023,6 +29743,366 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'More servings'**
   String get cardMoreServings;
+
+  /// No description provided for @cropTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Move and Scale'**
+  String get cropTitle;
+
+  /// No description provided for @cropDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get cropDone;
+
+  /// No description provided for @cropPosition.
+  ///
+  /// In en, this message translates to:
+  /// **'Picture position'**
+  String get cropPosition;
+
+  /// No description provided for @cropMoveUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Move up'**
+  String get cropMoveUp;
+
+  /// No description provided for @cropMoveDown.
+  ///
+  /// In en, this message translates to:
+  /// **'Move down'**
+  String get cropMoveDown;
+
+  /// No description provided for @cropMoveLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'Move left'**
+  String get cropMoveLeft;
+
+  /// No description provided for @cropMoveRight.
+  ///
+  /// In en, this message translates to:
+  /// **'Move right'**
+  String get cropMoveRight;
+
+  /// No description provided for @cropRotate.
+  ///
+  /// In en, this message translates to:
+  /// **'Rotate'**
+  String get cropRotate;
+
+  /// No description provided for @cropMirror.
+  ///
+  /// In en, this message translates to:
+  /// **'Mirror'**
+  String get cropMirror;
+
+  /// No description provided for @cropReset.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset'**
+  String get cropReset;
+
+  /// No description provided for @cropZoom.
+  ///
+  /// In en, this message translates to:
+  /// **'Zoom'**
+  String get cropZoom;
+
+  /// No description provided for @cropZoomIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Zoom in'**
+  String get cropZoomIn;
+
+  /// No description provided for @cropZoomOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Zoom out'**
+  String get cropZoomOut;
+
+  /// No description provided for @cropSoft.
+  ///
+  /// In en, this message translates to:
+  /// **'Zoomed in close: the picture may look soft'**
+  String get cropSoft;
+
+  /// No description provided for @cropAnimatedStill.
+  ///
+  /// In en, this message translates to:
+  /// **'Animated pictures stay still'**
+  String get cropAnimatedStill;
+
+  /// No description provided for @cropBackground.
+  ///
+  /// In en, this message translates to:
+  /// **'Background'**
+  String get cropBackground;
+
+  /// No description provided for @cropBackgroundNone.
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get cropBackgroundNone;
+
+  /// No description provided for @cropBackgroundBot.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}\'s color'**
+  String cropBackgroundBot(String name);
+
+  /// No description provided for @cropBackgroundWhite.
+  ///
+  /// In en, this message translates to:
+  /// **'White'**
+  String get cropBackgroundWhite;
+
+  /// No description provided for @cropBackgroundBlack.
+  ///
+  /// In en, this message translates to:
+  /// **'Black'**
+  String get cropBackgroundBlack;
+
+  /// No description provided for @cropUnreadable.
+  ///
+  /// In en, this message translates to:
+  /// **'This picture can\'t be opened here. Try a JPEG or PNG.'**
+  String get cropUnreadable;
+
+  /// No description provided for @cropTooBig.
+  ///
+  /// In en, this message translates to:
+  /// **'This file is {size}, over the 40 MB limit.'**
+  String cropTooBig(String size);
+
+  /// No description provided for @botPicture.
+  ///
+  /// In en, this message translates to:
+  /// **'Picture'**
+  String get botPicture;
+
+  /// No description provided for @botPictureTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}\'s Picture'**
+  String botPictureTitle(String name);
+
+  /// No description provided for @botPictureChange.
+  ///
+  /// In en, this message translates to:
+  /// **'Change {name}\'s picture'**
+  String botPictureChange(String name);
+
+  /// No description provided for @botPicturePaste.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste Picture'**
+  String get botPicturePaste;
+
+  /// No description provided for @botPictureDraw.
+  ///
+  /// In en, this message translates to:
+  /// **'Make One with AI'**
+  String get botPictureDraw;
+
+  /// No description provided for @botPictureDrawHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Casama draws two to choose from'**
+  String get botPictureDrawHelp;
+
+  /// No description provided for @botPictureRecrop.
+  ///
+  /// In en, this message translates to:
+  /// **'Re-crop'**
+  String get botPictureRecrop;
+
+  /// No description provided for @botPictureMascot.
+  ///
+  /// In en, this message translates to:
+  /// **'Use a Mascot Instead'**
+  String get botPictureMascot;
+
+  /// No description provided for @botPictureRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove Picture'**
+  String get botPictureRemove;
+
+  /// No description provided for @botPictureRecent.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent'**
+  String get botPictureRecent;
+
+  /// No description provided for @botPictureUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Picture updated'**
+  String get botPictureUpdated;
+
+  /// No description provided for @botPictureRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Picture removed'**
+  String get botPictureRemoved;
+
+  /// No description provided for @botPictureFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save the picture'**
+  String get botPictureFailed;
+
+  /// No description provided for @botPictureDrop.
+  ///
+  /// In en, this message translates to:
+  /// **'Drop to use as {name}\'s picture'**
+  String botPictureDrop(String name);
+
+  /// No description provided for @botPictureUseAs.
+  ///
+  /// In en, this message translates to:
+  /// **'Use as {name}\'s Picture'**
+  String botPictureUseAs(String name);
+
+  /// No description provided for @botPictureUseAsBot.
+  ///
+  /// In en, this message translates to:
+  /// **'Use as a Bot\'s Picture'**
+  String get botPictureUseAsBot;
+
+  /// No description provided for @botPictureWhichBot.
+  ///
+  /// In en, this message translates to:
+  /// **'Which bot gets this picture?'**
+  String get botPictureWhichBot;
+
+  /// No description provided for @botDrawTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'A Picture for {name}'**
+  String botDrawTitle(String name);
+
+  /// No description provided for @botDrawIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a look, add a few words if you like, and Casama draws two pictures to choose from.'**
+  String get botDrawIntro;
+
+  /// No description provided for @botDrawDescribe.
+  ///
+  /// In en, this message translates to:
+  /// **'Describe it (optional)'**
+  String get botDrawDescribe;
+
+  /// No description provided for @botDrawHint.
+  ///
+  /// In en, this message translates to:
+  /// **'A friendly owl with reading glasses'**
+  String get botDrawHint;
+
+  /// No description provided for @botDrawMake.
+  ///
+  /// In en, this message translates to:
+  /// **'Make 2'**
+  String get botDrawMake;
+
+  /// No description provided for @botDrawMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Make 2 More'**
+  String get botDrawMore;
+
+  /// No description provided for @botDrawPick.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap one to use it'**
+  String get botDrawPick;
+
+  /// No description provided for @botDrawCost.
+  ///
+  /// In en, this message translates to:
+  /// **'Each picture uses image credits, like any picture Casama makes.'**
+  String get botDrawCost;
+
+  /// No description provided for @botDrawWorking.
+  ///
+  /// In en, this message translates to:
+  /// **'Drawing…'**
+  String get botDrawWorking;
+
+  /// No description provided for @botDrawStyleCloud.
+  ///
+  /// In en, this message translates to:
+  /// **'Casama Cloud'**
+  String get botDrawStyleCloud;
+
+  /// No description provided for @botDrawStyleSoft3d.
+  ///
+  /// In en, this message translates to:
+  /// **'Soft 3D'**
+  String get botDrawStyleSoft3d;
+
+  /// No description provided for @botDrawStyleWatercolor.
+  ///
+  /// In en, this message translates to:
+  /// **'Watercolor'**
+  String get botDrawStyleWatercolor;
+
+  /// No description provided for @botDrawStyleFlat.
+  ///
+  /// In en, this message translates to:
+  /// **'Flat Icon'**
+  String get botDrawStyleFlat;
+
+  /// No description provided for @botDrawStylePixel.
+  ///
+  /// In en, this message translates to:
+  /// **'Pixel Art'**
+  String get botDrawStylePixel;
+
+  /// No description provided for @botDrawStyleLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Line Art'**
+  String get botDrawStyleLine;
+
+  /// No description provided for @botDrawStylePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo'**
+  String get botDrawStylePhoto;
+
+  /// No description provided for @sharePictureStays.
+  ///
+  /// In en, this message translates to:
+  /// **'Its picture stays in this workspace: the copy gets its earlier mascot, or its initials.'**
+  String get sharePictureStays;
+
+  /// No description provided for @savedResetRefills.
+  ///
+  /// In en, this message translates to:
+  /// **'Refills {amount} of credits'**
+  String savedResetRefills(String amount);
+
+  /// No description provided for @savedResetClearsDaily.
+  ///
+  /// In en, this message translates to:
+  /// **'Clears today’s limit'**
+  String get savedResetClearsDaily;
+
+  /// No description provided for @savedResetGivesHours.
+  ///
+  /// In en, this message translates to:
+  /// **'Gives back computer hours'**
+  String get savedResetGivesHours;
+
+  /// No description provided for @savedResetDaysLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0 {Expires today} =1 {1 day left} other {{count} days left}}'**
+  String savedResetDaysLeft(int count);
 }
 
 class _AppLocalizationsDelegate

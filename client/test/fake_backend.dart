@@ -541,7 +541,7 @@ class FakeBackend implements Backend {
     id: id,
     orgId: orgId,
     name: name,
-    avatarUrl: null,
+    avatarUrl: id == botId ? botAvatar : null,
     personaMd: '',
     modelPolicy: ModelPolicy(
       primary: ModelChoice(credentialId: 'cred', model: 'fixture'),
@@ -1328,6 +1328,36 @@ class FakeBackend implements Backend {
   Future<void> adminSuspendDomain(String id) async => adminDomainActions.add('suspend:$id');
   @override
   Future<void> adminUnsuspendDomain(String id) async => adminDomainActions.add('unsuspend:$id');
+
+  // Hosted bot mail (BOT-EMAIL-PLAN)
+  var adminMailList = <AdminMailAddress>[];
+  final adminMailActions = <String>[];
+  var adminMailReserved = <String>[];
+  @override
+  Future<List<AdminMailAddress>> adminMailAddresses() async => List.of(adminMailList);
+  var adminMailSent = (sent: 0, ceiling: null as int?);
+  @override
+  Future<({int sent, int? ceiling})> adminMailSending() async => adminMailSent;
+  @override
+  Future<AdminMailAddress> setMailAddressStatus(String id, String status) async {
+    adminMailActions.add('status:$id:$status');
+    final i = adminMailList.indexWhere((a) => a.id == id);
+    adminMailList[i] = AdminMailAddress.fromJson({
+      ...adminMailList[i].toJson(),
+      'status': status,
+      if (status == 'active') 'auto_paused': false,
+    });
+    return adminMailList[i];
+  }
+
+  @override
+  Future<List<String>> adminMailReservedNames() async => List.of(adminMailReserved);
+  @override
+  Future<List<String>> setMailReservedNames(List<String> names) async {
+    adminMailActions.add('reserved:${names.join(',')}');
+    adminMailReserved = List.of(names);
+    return adminMailReserved;
+  }
   @override
   Future<DomainOrder> adminRetryDomainOrder(String id) async {
     adminDomainActions.add('retry:$id');
@@ -2395,6 +2425,104 @@ class FakeBackend implements Backend {
     ),
   ];
 
+  // Bot pictures (docs/BOT-PICTURES-PLAN.md)
+  /// The main bot's avatar_url (`mascot:…`, `image:…` or null).
+  String? botAvatar;
+
+  /// Pictures uploaded, newest last: the cropped bytes, the original and the source.
+  final botPictureUploads = <({Uint8List square, Uint8List? original, BotPictureCrop? crop, String source})>[];
+  final _pictures = <BotPicture>[];
+  String? _priorMascot;
+
+  /// Makes the next picture call fail, for the retry path.
+  Object? botPictureError;
+  var _pictureSeq = 0;
+
+  BotPicture _picture({String source = 'upload', bool original = false, BotPictureCrop? crop}) {
+    _pictureSeq++;
+    final id = '00000000-0000-4000-8000-${_pictureSeq.toString().padLeft(12, '0')}';
+    return BotPicture(
+      id: id,
+      avatarUrl: 'image:$id:7a90ff7de9f4',
+      source_: BotPictureSource_Enum.values.firstWhere((s) => s.value == source),
+      inUse: false,
+      hasOriginal: original,
+      crop: crop,
+      createdAt: DateTime(2026, 1, 1, 0, 0, _pictureSeq),
+    );
+  }
+
+  void _use(BotPicture p) {
+    if (botAvatar?.startsWith('mascot:') ?? false) _priorMascot = botAvatar;
+    botAvatar = p.avatarUrl;
+    _pictures
+      ..removeWhere((x) => x.id == p.id)
+      ..insert(0, p);
+  }
+
+  @override
+  Future<Bot> setBotPicture(
+    String botId,
+    Uint8List square, {
+    Uint8List? original,
+    BotPictureCrop? crop,
+    String source = 'upload',
+  }) async {
+    final err = botPictureError;
+    if (err != null) throw err;
+    botPictureUploads.add((square: square, original: original, crop: crop, source: source));
+    _use(_picture(source: source, original: original != null, crop: crop));
+    return bot();
+  }
+
+  @override
+  Future<Bot> removeBotPicture(String botId) async {
+    botAvatar = _priorMascot;
+    return bot();
+  }
+
+  @override
+  Future<List<BotPicture>> botPictures(String botId, {bool candidates = false}) async => candidates
+      ? const []
+      : [for (final p in _pictures) p.copyWith(inUse: p.avatarUrl == botAvatar)];
+
+  @override
+  Future<Bot> useBotPicture(String botId, String imageId) async {
+    final p = [..._pictures, ..._drawn].firstWhere((x) => x.id == imageId);
+    _drawn.remove(p);
+    _use(p);
+    return bot();
+  }
+
+  /// The original Re-crop gets back.
+  Uint8List? botOriginal;
+  @override
+  Future<Uint8List> botPictureOriginal(String botId, String imageId) async =>
+      botOriginal ?? (throw StateError('no original'));
+
+  final _drawn = <BotPicture>[];
+
+  /// Styles and descriptions asked of [drawBotPictures].
+  final drawRequests = <({BotPictureStyle style, String? description})>[];
+  @override
+  Future<List<BotPicture>> drawBotPictures(
+    String botId, {
+    required BotPictureStyle style,
+    String? description,
+    int count = 2,
+  }) async {
+    final err = botPictureError;
+    if (err != null) throw err;
+    drawRequests.add((style: style, description: description));
+    final made = [for (var i = 0; i < count; i++) _picture(source: 'generated', original: true)];
+    _drawn.addAll(made);
+    return made;
+  }
+
+  @override
+  String botImageUrl(String imageId, {bool small = false}) =>
+      'http://localhost:8787/v1/bot-images/$imageId${small ? '?size=128' : ''}';
+
   /// The last bot update saved: the bot's id and the fields sent.
   ({String botId, String? name, String? persona, String? autonomy})? botUpdate;
   @override
@@ -2405,12 +2533,10 @@ class FakeBackend implements Backend {
     String? autonomy,
     Map<String, Object?>? modelPolicy,
     String? avatarUrl,
-  }) async => botUpdate = (
-    botId: botId,
-    name: name,
-    persona: persona,
-    autonomy: autonomy,
-  );
+  }) async {
+    if (avatarUrl != null) botAvatar = avatarUrl.isEmpty ? null : avatarUrl;
+    botUpdate = (botId: botId, name: name, persona: persona, autonomy: autonomy);
+  }
   @override
   bool wallpapersEnabled = false;
   @override
@@ -3109,6 +3235,139 @@ class FakeBackend implements Backend {
     slackInstallAsks.add(botId);
     return slackInstall;
   }
+  // Hosted bot mail (BOT-EMAIL-PLAN)
+  final mailByBot = <String, MailAddress>{};
+  final mailActions = <String>[];
+  @override
+  Future<MailAddress?> mailAddress(String botId) async => mailByBot[botId];
+  @override
+  Future<MailAddress> claimMailAddress(String botId, String name, {String surface = 'profile'}) async {
+    mailActions.add('claim:$botId:$name:$surface');
+    final claimed = MailAddress(
+      id: 'ma-1',
+      botId: botId,
+      channelId: 'ch-1',
+      localPart: name,
+      address: '$name@mail.test',
+      status: MailAddressStatusEnum.active,
+      blockedSenders: const [],
+      notifyNewSenders: false,
+      storageUsed: 300 * 1024 * 1024,
+      storageLimit: 500 * 1024 * 1024,
+      createdAt: DateTime.utc(2026, 11, 20),
+    );
+    mailByBot[botId] = claimed;
+    return claimed;
+  }
+
+  @override
+  Future<MailNameAvailability> checkMailName(String botId, String name) async {
+    final n = name.trim().toLowerCase();
+    return MailNameAvailability(
+      name: n,
+      available: !mailByBot.values.any((a) => a.localPart == n),
+      issue: null,
+      suggestions: const ['ada2', 'ada3'],
+      domain: 'mail.test',
+    );
+  }
+  @override
+  Future<MailAddress> updateMailAddress(String botId, {String? status, bool? notifyNewSenders}) async {
+    mailActions.add('update:$botId:$status:$notifyNewSenders');
+    final cur = mailByBot[botId]!;
+    final next = MailAddress.fromJson({
+      ...cur.toJson(),
+      'status': ?status,
+      'notify_new_senders': ?notifyNewSenders,
+    });
+    mailByBot[botId] = next;
+    return next;
+  }
+
+  @override
+  Future<MailAddress> moveMailAddress(String botId, String toBotId) async {
+    mailActions.add('move:$botId:$toBotId');
+    final cur = mailByBot.remove(botId)!;
+    final next = MailAddress.fromJson({...cur.toJson(), 'bot_id': toBotId});
+    mailByBot[toBotId] = next;
+    return next;
+  }
+
+  @override
+  Future<MailAddress> releaseMailAddress(String botId) async {
+    mailActions.add('release:$botId');
+    final cur = mailByBot.remove(botId)!;
+    return MailAddress.fromJson({...cur.toJson(), 'status': 'retired'});
+  }
+
+  final mailList = <MailMessage>[];
+  final mailDetails = <String, MailMessageDetail>{};
+  @override
+  Future<MailMessageList> mailMessages(
+    String botId, {
+    String? verdict,
+    String? tag,
+    String? sender,
+    String? q,
+    int? limit,
+    String? cursor,
+  }) async {
+    var items = List.of(mailList);
+    if (verdict != null) items = items.where((m) => m.verdict.value == verdict).toList();
+    if (tag != null) items = items.where((m) => m.toTag == tag).toList();
+    if (sender != null) items = items.where((m) => m.fromAddr.contains(sender)).toList();
+    if (q != null) items = items.where((m) => m.subject.contains(q)).toList();
+    return MailMessageList(items: items, nextCursor: null);
+  }
+
+  @override
+  Future<MailMessageDetail> mailMessage(String botId, String messageId) async =>
+      mailDetails[messageId]!;
+  @override
+  Future<Uint8List> downloadMailFile(String botId, String messageId, int index) async =>
+      Uint8List.fromList(utf8.encode('file-$index-bytes'));
+  @override
+  Future<MailAddress> blockMailSender(String botId, String sender) async {
+    mailActions.add('block:$botId:$sender');
+    final cur = mailByBot[botId]!;
+    final next = MailAddress.fromJson({
+      ...cur.toJson(),
+      'blocked_senders': [...cur.blockedSenders, sender],
+    });
+    mailByBot[botId] = next;
+    return next;
+  }
+
+  @override
+  Future<DeleteMailMessagesResult> deleteMail(String botId, {List<String>? ids, DateTime? before}) async {
+    mailActions.add('delete:$botId:${ids?.join(',') ?? 'before'}');
+    final gone = mailList
+        .where((m) => ids != null ? ids.contains(m.id) : m.createdAt.isBefore(before!))
+        .toList();
+    mailList.removeWhere(gone.contains);
+    final freed = gone.fold<int>(0, (n, m) => n + m.size);
+    final cur = mailByBot[botId];
+    if (cur != null) {
+      mailByBot[botId] = MailAddress.fromJson({
+        ...cur.toJson(),
+        'storage_used': ((cur.storageUsed ?? 0) - freed).clamp(0, 1 << 40),
+      });
+    }
+    return DeleteMailMessagesResult(deleted: gone.length, freed: freed);
+  }
+
+  @override
+  Future<MailAddress> unblockMailSender(String botId, String sender) async {
+    mailActions.add('unblock:$botId:$sender');
+    final cur = mailByBot[botId]!;
+    final next = MailAddress.fromJson({
+      ...cur.toJson(),
+      'blocked_senders': cur.blockedSenders.where((s) => s != sender).toList(),
+    });
+    mailByBot[botId] = next;
+    return next;
+  }
+
   @override
   Future<Channel> createChannel(CreateChannelRequest request) async {
     createdChannel = request;
@@ -5514,15 +5773,92 @@ class FakeBackend implements Backend {
     return answer as bool?;
   }
 
-  /// What signing in again with a passkey answers (the admin console, D-450).
-  Object? passkeyReSignIn = true;
-  var passkeyReSignIns = 0;
+  /// What the admin console's passkey check answers (D-452): true records a check, null is a
+  /// closed sheet, an exception is thrown.
+  Object? adminPasskeyAnswer = true;
+  var adminPasskeyChecks = 0;
   @override
-  Future<bool?> signInAgainWithPasskey() async {
-    passkeyReSignIns++;
-    final answer = passkeyReSignIn;
+  Future<DateTime?> adminPasskeyCheck() async {
+    adminPasskeyChecks++;
+    final answer = adminPasskeyAnswer;
     if (answer is Exception) throw answer;
-    return answer as bool?;
+    if (answer == false) throw StateError('Passkey refused');
+    return answer == null ? null : DateTime.now();
+  }
+
+  /// Device keys (D-453): the server's list, and what a check answers.
+  final adminDeviceKeyList = <AdminDeviceKey>[];
+  var adminDeviceChecks = 0;
+  @override
+  Future<List<AdminDeviceKey>> adminDeviceKeys() async => List.of(adminDeviceKeyList);
+  @override
+  Future<AdminDeviceKey> addAdminDeviceKey(String name, String publicKey) async {
+    final k = AdminDeviceKey(
+      id: 'key-${adminDeviceKeyList.length + 1}',
+      name: name,
+      createdAt: DateTime.now(),
+      lastUsedAt: null,
+    );
+    adminDeviceKeyList.add(k);
+    return k;
+  }
+
+  @override
+  Future<List<AdminDeviceKey>> removeAdminDeviceKey(String id) async {
+    adminDeviceKeyList.removeWhere((k) => k.id == id);
+    return List.of(adminDeviceKeyList);
+  }
+
+  @override
+  Future<({String id, String challenge})?> adminDeviceChallenge(String keyId) async =>
+      adminDeviceKeyList.any((k) => k.id == keyId) ? (id: 'c1', challenge: 'abc') : null;
+
+  @override
+  Future<DateTime> adminDeviceCheck(String challengeId, String signature) async {
+    adminDeviceChecks++;
+    return DateTime.now();
+  }
+
+  /// The admin PIN (D-452): null when none is set.
+  String? adminPin;
+  var adminPinDisabled = false;
+  var adminPinFailures = 0;
+  final adminPinChecks = <String>[];
+  AdminPinState get _pinState => AdminPinState(
+    set_: adminPin != null,
+    disabled: adminPinDisabled,
+    triesLeft: adminPin == null ? 0 : 5 - adminPinFailures,
+  );
+  @override
+  Future<AdminPinState> adminPinState() async => _pinState;
+  @override
+  Future<AdminPinState> setAdminPin(String pin) async {
+    adminPin = pin;
+    adminPinDisabled = false;
+    adminPinFailures = 0;
+    return _pinState;
+  }
+
+  @override
+  Future<AdminPinState> removeAdminPin() async {
+    adminPin = null;
+    return _pinState;
+  }
+
+  @override
+  Future<DateTime> adminPinCheck(String pin) async {
+    adminPinChecks.add(pin);
+    if (adminPin == null) throw StateError('No admin PIN');
+    if (pin == adminPin) {
+      adminPinFailures = 0;
+      return DateTime.now();
+    }
+    if (++adminPinFailures >= 5) {
+      adminPin = null;
+      adminPinDisabled = true;
+      adminPinFailures = 0;
+    }
+    throw StateError('Wrong PIN');
   }
 
   final passkeyList = <PasskeyInfo>[];

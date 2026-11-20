@@ -1,16 +1,21 @@
 import 'dart:async';
 
 import 'package:material_ui/material_ui.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:casama_sdk/casama_sdk.dart' show AdminPinState;
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../core/admin_device_key.dart';
 import '../../core/admin_security.dart';
 import '../../core/backend.dart';
 import '../../core/passkeys.dart';
 import '../../core/providers.dart';
 import '../app_lock/app_lock.dart';
+import '../app_lock/lock_screen.dart' show PinField;
+import '../../core/telemetry.dart';
 import '../../core/widgets.dart';
 import '../../ui/page.dart';
 
@@ -28,6 +33,7 @@ Future<bool> showAdminConfirmation(
   BuildContext context, {
   bool sensitive = true,
   bool Function()? stillValid,
+  bool allowPin = true,
 }) async {
   final accepted = await showDialog<bool>(
     context: context,
@@ -41,6 +47,7 @@ Future<bool> showAdminConfirmation(
         width: 360,
         child: AdminAuthentication(
           sensitive: sensitive,
+          allowPin: allowPin,
           onVerified: () {
             if (stillValid?.call() ?? true) {
               Navigator.of(dialogContext).pop(true);
@@ -57,6 +64,40 @@ Future<bool> showAdminConfirmation(
     ),
   );
   return accepted == true;
+}
+
+/// A name for this phone in Admin → Security.
+String _deviceName(BuildContext context) {
+  final tablet = MediaQuery.sizeOf(context).shortestSide >= 600;
+  final kind = switch (defaultTargetPlatform) {
+    TargetPlatform.iOS => tablet ? 'iPad' : 'iPhone',
+    _ => tablet ? 'Android tablet' : 'Android phone',
+  };
+  final d = DateTime.now();
+  return '$kind · ${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+}
+
+/// Sets this phone up for the screen-lock check (D-453): a check that isn't the PIN (unless one
+/// was just made), then Face ID or the passcode once to make the key. True when it's on.
+Future<bool> enrollAdminDevice(BuildContext context, WidgetRef ref) async {
+  final backend = ref.read(backendProvider);
+  final me = backend.userId;
+  if (!(AdminSecurity.recentlyVerified(me) && AdminSecurity.lastVerifiedMethod != 'pin')) {
+    if (!await showAdminConfirmation(context, allowPin: false)) return false;
+  }
+  if (!context.mounted) return false;
+  final l10n = context.l10n;
+  final name = _deviceName(context);
+  final ok = await runGuarded(
+    context,
+    () => AdminSecurity.duringSystemSheet(
+      () => ref
+          .read(adminDeviceKeysProvider)
+          .enroll(backend, name: name, reason: l10n.adminDeviceSetupReason),
+    ),
+  );
+  if (ok == true && context.mounted) showSuccess(context, l10n.adminDeviceOn);
+  return ok == true;
 }
 
 /// Console authentication is deliberately separate from the ordinary app session.
@@ -108,16 +149,32 @@ class _AdminSecurityGateState extends ConsumerState<AdminSecurityGate>
   }
 
   void _routeChanged() {
-    if (_router?.routeInformationProvider.value.uri.path != _routePath) _lock();
+    final path = _router?.routeInformationProvider.value.uri.path;
+    if (path != _routePath) _lock('route $_routePath -> $path');
   }
 
   void _activity() {
     if (!_unlocked) return;
     _idle?.cancel();
-    _idle = Timer(const Duration(minutes: 5), _lock);
+    _idle = Timer(const Duration(minutes: 5), () => _lock('idle'));
   }
 
-  void _lock() {
+  DateTime? _unlockedAt;
+
+  void _lock([String reason = 'lock now']) {
+    // A lock right after an unlock is the loop Oliver saw (D-453): report why, to find it.
+    final since = _unlockedAt;
+    if (_unlocked && since != null && DateTime.now().difference(since) < const Duration(seconds: 5)) {
+      unawaited(
+        Telemetry.captureException(
+          StateError('Admin console locked right after unlocking: $reason'),
+          StackTrace.current,
+          warning: true,
+          context: {'reason': reason},
+        ),
+      );
+    }
+    _unlockedAt = null;
     _idle?.cancel();
     _generation++;
     AdminSecurity.forgetVerification();
@@ -135,14 +192,60 @@ class _AdminSecurityGateState extends ConsumerState<AdminSecurityGate>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     // A passkey or Face ID sheet can pause the app while it's up; that isn't leaving.
-    if (_leftApp(state) && AdminSecurity.systemSheets == 0) _lock();
+    if (_leftApp(state) && AdminSecurity.systemSheets == 0) _lock('left app ($state)');
   }
 
   void _unlock() {
     _backendIdentity = ref.read(backendProvider);
     _identity = ref.read(backendProvider).userId;
+    _unlockedAt = DateTime.now();
     setState(() => _unlocked = true);
     _activity();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _offerDeviceKey());
+  }
+
+  /// After a passkey or password check on a phone with a screen lock and no key yet: offer Face ID
+  /// for next time (D-453). Not after the PIN, which can't add a device.
+  Future<void> _offerDeviceKey() async {
+    final backend = ref.read(backendProvider);
+    final userId = backend.userId;
+    final keys = ref.read(adminDeviceKeysProvider);
+    final method = AdminSecurity.lastVerifiedMethod;
+    if (userId == null || method == 'pin' || method == 'device' || method == null) return;
+    if (!AdminSecurity.recentlyVerified(userId)) return;
+    if (!await keys.available() ||
+        await keys.keyId(userId) != null ||
+        await keys.declined(userId)) {
+      return;
+    }
+    if (!mounted || !_isUnlocked()) return;
+    final l10n = context.l10n;
+    final yes = await showDialog<bool>(
+      context: context,
+      useRootNavigator: true,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.adminDeviceOfferTitle),
+        content: Text(l10n.adminDeviceOfferBody),
+        actions: [
+          TextButton(
+            key: const Key('adminDeviceOfferNo'),
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(l10n.adminDeviceOfferNo),
+          ),
+          FilledButton(
+            key: const Key('adminDeviceOfferYes'),
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(l10n.adminDeviceOfferYes),
+          ),
+        ],
+      ),
+    );
+    if (!mounted) return;
+    if (yes != true) {
+      if (yes == false) await keys.setDeclined(userId, true);
+      return;
+    }
+    await enrollAdminDevice(context, ref);
   }
 
   /// One dialog at a time: a second change asked for while it's open waits for the same answer
@@ -192,13 +295,13 @@ class _AdminSecurityGateState extends ConsumerState<AdminSecurityGate>
     final backend = ref.watch(backendProvider);
     // A signed-out or changed identity immediately loses its console view.
     ref.listen(backendProvider, (previous, next) {
-      if (!identical(previous, next)) _lock();
+      if (!identical(previous, next)) _lock('account changed');
     });
     ref.listen(signedInProvider, (_, next) {
       if (next.value != true ||
           (_identity != null &&
               _identity != ref.read(backendProvider).userId)) {
-        _lock();
+        _lock('signed out or switched');
       }
     });
     return Listener(
@@ -223,7 +326,6 @@ class _AdminSecurityGateState extends ConsumerState<AdminSecurityGate>
                         key: ValueKey((backend, backend.userId)),
                         generation: generation,
                         showTwoStepTip: true,
-                        allowDevice: true,
                         onVerified: () {
                           if (mounted &&
                               generation == _generation &&
@@ -243,10 +345,11 @@ class _AdminSecurityGateState extends ConsumerState<AdminSecurityGate>
   }
 }
 
-/// A passkey, password or emailed code, then the authenticator code when the account has two-step
-/// sign-in (the server refuses admin work from a session that hasn't passed it). On the lock screen
-/// ([allowDevice]), Face ID, a fingerprint or the device passcode lifts the app's own lock while
-/// the server still accepts the session's last sign-in (D-450).
+/// A passkey, the admin PIN, or a password or emailed code (then the authenticator code when the
+/// account has two-step sign-in; the server refuses admin work from a session that hasn't passed
+/// it). A passkey or PIN is a check the server records on this sign-in session and counts as both
+/// steps (D-452). On a phone set up for it, Face ID, a fingerprint or the device passcode signs a
+/// challenge with a key in the phone's secure chip, and that is the whole check too (D-453).
 class AdminAuthentication extends ConsumerStatefulWidget {
   const AdminAuthentication({
     super.key,
@@ -254,16 +357,20 @@ class AdminAuthentication extends ConsumerStatefulWidget {
     this.sensitive = false,
     this.generation = 0,
     this.showTwoStepTip = false,
-    this.allowDevice = false,
+    this.allowPin = true,
   });
   final int generation;
   final VoidCallback onVerified;
   final bool sensitive;
   final bool showTwoStepTip;
-  final bool allowDevice;
 
-  /// How long the server must still accept the session's sign-in for the device check to unlock.
-  static const deviceMargin = Duration(seconds: 30);
+  /// Off when changing the PIN itself: that takes a passkey or password.
+  final bool allowPin;
+
+  /// The last time a form opened Face ID by itself. A new lock screen within [autoGap] doesn't
+  /// open it again, so nothing can turn into a loop of prompts (D-453).
+  static DateTime? lastAutoDevice;
+  static const autoGap = Duration(seconds: 30);
 
   @override
   ConsumerState<AdminAuthentication> createState() =>
@@ -275,7 +382,20 @@ class _AdminAuthenticationState extends ConsumerState<AdminAuthentication>
   final _password = TextEditingController();
   final _code = TextEditingController();
   final _twoStepCode = TextEditingController();
+  final _pin = TextEditingController();
   bool _busy = false;
+  /// What a wrong PIN left: tries, or the PIN turned off.
+  String? _pinNote;
+  late Future<AdminPinState?> _pinState = _loadPin();
+
+  Future<AdminPinState?> _loadPin() async {
+    if (!widget.allowPin) return null;
+    try {
+      return await _backend.adminPinState();
+    } catch (_) {
+      return null;
+    }
+  }
   late bool _sent = AdminSecurity.codeSentFor(_identity);
   bool _failed = false;
   // A session that signed in but still owes its code (a lock while the authenticator app was
@@ -313,40 +433,30 @@ class _AdminAuthenticationState extends ConsumerState<AdminAuthentication>
         }()
       : Future.value(false);
 
-  late final Future<bool> _deviceReady = _deviceAllowed();
-  bool _devicePrompted = false;
-  bool _deviceGone = false;
+  late final AdminDeviceKeys _keys = ref.read(adminDeviceKeysProvider);
 
-  /// Face ID and the like only lift the app's own lock, so only while the server would still take
-  /// this session for admin reads (and two-step is done); the server never counts them.
-  bool get _serverStillAccepts {
-    final left = AdminSecurity.serverWindowLeft();
-    return left != null &&
-        left >= AdminAuthentication.deviceMargin &&
-        !_backend.twoStepCodeNeeded &&
-        _backend.userId == _identity;
-  }
-
-  Future<bool> _deviceAllowed() async {
-    if (!widget.allowDevice || !_serverStillAccepts) return false;
+  /// This phone has its key for this account (D-453).
+  late final Future<bool> _deviceReady = () async {
     try {
-      return await ref.read(unlockersProvider).deviceAvailable();
+      return await _keys.available() && await _keys.keyId(_identity) != null;
     } catch (_) {
       return false;
     }
-  }
+  }();
+  bool _devicePrompted = false;
+  bool _deviceGone = false;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     AdminSecurity.authFormOpened();
-    // Back in the app with the console locked: the device check opens by itself, once.
+    // The device check opens by itself, once, when the form shows in the foreground.
     _deviceReady.then((ready) {
       if (ready &&
           mounted &&
           WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed) {
-        _unlockWithDevice(auto: true);
+        _verifyWithDevice(auto: true);
       }
     });
   }
@@ -357,10 +467,11 @@ class _AdminAuthenticationState extends ConsumerState<AdminAuthentication>
       _password.clear();
       _code.clear();
       _twoStepCode.clear();
+      _pin.clear();
     }
     if (state == AppLifecycleState.resumed) {
       _deviceReady.then((ready) {
-        if (ready && mounted) _unlockWithDevice(auto: true);
+        if (ready && mounted) _verifyWithDevice(auto: true);
       });
     }
   }
@@ -385,46 +496,64 @@ class _AdminAuthenticationState extends ConsumerState<AdminAuthentication>
     return out;
   }
 
-  Future<void> _unlockWithDevice({bool auto = false}) async {
-    if (auto && _devicePrompted) return;
-    _devicePrompted = true;
-    final generation = widget.generation;
-    if (_busy) return;
-    if (!_serverStillAccepts) {
-      setState(() => _deviceGone = true);
-      return;
-    }
-    setState(() {
-      _busy = true;
-      _failed = false;
-    });
-    final reason = context.l10n.adminDeviceReason;
-    try {
-      final result = await _sheet(
-        () => ref.read(unlockersProvider).device(reason),
-      );
-      if (!mounted || generation != widget.generation) return;
-      // The window may have closed while the sheet was up.
-      if (result == UnlockResult.ok && _serverStillAccepts) {
-        // Not a fresh sign-in: changes still ask (no AdminSecurity.verified).
-        widget.onVerified();
-      } else if (result == UnlockResult.ok) {
-        setState(() => _deviceGone = true);
-      } else if (result == UnlockResult.failed) {
-        setState(() => _failed = true);
+  /// Face ID, a fingerprint or the passcode signs the server's challenge with this phone's key
+  /// (D-453): a check the server records on this session, as both steps.
+  Future<void> _verifyWithDevice({bool auto = false}) async {
+    if (auto) {
+      final last = AdminAuthentication.lastAutoDevice;
+      if (_devicePrompted ||
+          _busy ||
+          (last != null && DateTime.now().difference(last) < AdminAuthentication.autoGap)) {
+        return;
       }
-    } catch (_) {
-      if (mounted) setState(() => _failed = true);
-    } finally {
-      if (mounted) setState(() => _busy = false);
+      AdminAuthentication.lastAutoDevice = DateTime.now();
     }
+    _devicePrompted = true;
+    final reason = context.l10n.adminDeviceReason;
+    await _run((_) async {
+      try {
+        final at = await _sheet(() => _keys.check(_backend, reason: reason));
+        if (at == null) throw const _Closed();
+        AdminSecurity.checked(at);
+      } on DeviceKeyProblem catch (e) {
+        if (e.gone && mounted) setState(() => _deviceGone = true);
+        if (mounted) showMessage(context, e.message);
+        rethrow;
+      }
+    }, verify: true, method: 'device');
   }
 
+  /// A passkey check the server records on this session (D-452): the session stays, and it counts
+  /// as both steps.
   Future<void> _verifyWithPasskey() => _run((_) async {
-    final ok = await _sheet(_backend.signInAgainWithPasskey);
-    if (ok == null) throw const _Closed();
-    if (!ok) throw StateError('Passkey refused');
-  }, verify: true);
+    final at = await _sheet(_backend.adminPasskeyCheck);
+    if (at == null) throw const _Closed();
+    AdminSecurity.checked(at);
+  }, verify: true, method: 'passkey');
+
+  Future<void> _verifyWithPin() async {
+    final pin = _pin.text;
+    if (pin.length != 6) return;
+    var wrong = false;
+    await _run((_) async {
+      try {
+        AdminSecurity.checked(await _backend.adminPinCheck(pin));
+      } catch (_) {
+        wrong = true;
+        rethrow;
+      }
+    }, verify: true, method: 'pin');
+    if (!wrong || !mounted) return;
+    // Show what's left, or that the PIN is off now.
+    final state = await _loadPin();
+    if (!mounted) return;
+    setState(() {
+      _pinState = Future.value(state);
+      _pinNote = state == null || !state.set_
+          ? context.l10n.adminPinTurnedOff
+          : context.l10n.adminPinWrong(state.triesLeft);
+    });
+  }
 
   @override
   void dispose() {
@@ -432,12 +561,13 @@ class _AdminAuthenticationState extends ConsumerState<AdminAuthentication>
     _password.dispose();
     _code.dispose();
     _twoStepCode.dispose();
+    _pin.dispose();
     AdminSecurity.authFormClosed();
     super.dispose();
   }
 
-  void _done() {
-    AdminSecurity.verified(_identity);
+  void _done([String method = 'password']) {
+    AdminSecurity.verified(_identity, method: method);
     AdminSecurity.codeSentTo = null;
     widget.onVerified();
   }
@@ -445,6 +575,7 @@ class _AdminAuthenticationState extends ConsumerState<AdminAuthentication>
   Future<void> _run(
     Future<void> Function(String email) action, {
     bool verify = false,
+    String? method,
   }) async {
     final generation = widget.generation;
     final email = _email;
@@ -461,10 +592,11 @@ class _AdminAuthenticationState extends ConsumerState<AdminAuthentication>
         throw StateError('Account changed');
       }
       if (mounted && verify && generation == widget.generation) {
-        if (_backend.twoStepCodeNeeded) {
+        // A passkey or PIN check is both steps; a password or emailed code still owes the code.
+        if (method == null && _backend.twoStepCodeNeeded) {
           setState(() => _twoStep = true);
         } else {
-          _done();
+          _done(method ?? 'password');
         }
       }
     } on _Closed {
@@ -482,6 +614,7 @@ class _AdminAuthenticationState extends ConsumerState<AdminAuthentication>
         _password.clear();
         _code.clear();
         _twoStepCode.clear();
+        _pin.clear();
         setState(() => _busy = false);
       }
     }
@@ -537,6 +670,18 @@ class _AdminAuthenticationState extends ConsumerState<AdminAuthentication>
             onPressed: _busy ? null : _passTwoStep,
             child: Text(l10n.twoStepVerify),
           ),
+          // A passkey is both steps (D-452).
+          FutureBuilder<bool>(
+            future: _hasPasskey,
+            builder: (context, has) => has.data == true
+                ? TextButton.icon(
+                    key: const Key('adminTwoStepPasskey'),
+                    onPressed: _busy ? null : _verifyWithPasskey,
+                    icon: const Icon(LucideIcons.keyRound),
+                    label: Text(l10n.adminVerifyPasskey),
+                  )
+                : const SizedBox.shrink(),
+          ),
           _status(context),
         ],
       );
@@ -549,12 +694,16 @@ class _AdminAuthenticationState extends ConsumerState<AdminAuthentication>
           widget.sensitive ? l10n.adminConfirmActionHelp : l10n.adminLockedHelp,
         ),
         const SizedBox(height: 16),
-        FutureBuilder<List<bool>>(
-          future: Future.wait([_deviceReady, _hasPasskey]),
+        FutureBuilder<List<Object?>>(
+          future: Future.wait<Object?>([_deviceReady, _hasPasskey, _pinState]),
           builder: (context, snap) {
             final device = snap.data?[0] == true && !_deviceGone;
             final passkey = snap.data?[1] == true;
-            if (!device && !passkey) return const SizedBox.shrink();
+            final pinState = snap.data?[2] as AdminPinState?;
+            final pin = widget.allowPin && pinState?.set_ == true;
+            if (!device && !passkey && !pin && _pinNote == null) {
+              return const SizedBox.shrink();
+            }
             return Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -562,7 +711,7 @@ class _AdminAuthenticationState extends ConsumerState<AdminAuthentication>
                 if (device)
                   FilledButton.icon(
                     key: const Key('adminUnlockDevice'),
-                    onPressed: _busy ? null : _unlockWithDevice,
+                    onPressed: _busy ? null : _verifyWithDevice,
                     icon: const Icon(LucideIcons.fingerprint),
                     label: Text(l10n.adminUnlockDevice),
                   ),
@@ -575,6 +724,29 @@ class _AdminAuthenticationState extends ConsumerState<AdminAuthentication>
                         : _verifyWithPasskey,
                     icon: const Icon(LucideIcons.keyRound),
                     label: Text(l10n.adminVerifyPasskey),
+                  ),
+                if (pin) ...[
+                  if (device || passkey) const SizedBox(height: 16),
+                  Text(l10n.adminPinLabel),
+                  const SizedBox(height: 8),
+                  PinField(
+                    key: const Key('adminPin'),
+                    controller: _pin,
+                    enabled: !_busy,
+                    autofocus: !device && !passkey,
+                    onComplete: (_) => _verifyWithPin(),
+                  ),
+                ],
+                if (_pinNote != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Text(
+                      _pinNote!,
+                      key: const Key('adminPinNote'),
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                    ),
                   ),
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 12),

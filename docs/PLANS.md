@@ -29,7 +29,9 @@ same commit. Shipping details (deploys, app builds) move fast, so check them bef
 
 | Plan | Decisions | What's left |
 |---|---|---|
-| [BOT-WIDGET-PLAN](BOT-WIDGET-PLAN.md) | D-452 | Phases 1–3 written on `feat/bot-widgets`, not built. Phase 0 (iOS and Android builds on real phones, the Apple push key in production), then Live, the free layout and watches |
+| [BOT-EMAIL-NEXT-PLAN](BOT-EMAIL-NEXT-PLAN.md) | D-451 | Live 2026-11-20: server (`9cfc36a2`) and web app build 61; Cloudflare asked for 10,000 a day. Left: store builds; raise `MAIL_SEND_DAILY_MAX` when Cloudflare answers |
+| [BOT-EMAIL-PLAN](BOT-EMAIL-PLAN.md) | D-449 | Live 2026-11-20 (`87f520fd`): bots get `name@casama.app`, sending through Cloudflare Email Sending; 10/10 on mail-tester, Gmail inbox. Left: Outlook placement check |
+| [BOT-WIDGET-PLAN](BOT-WIDGET-PLAN.md) | D-455 | Phases 1–3 written and merged; build 59 (Android internal + Wear, TestFlight, Mac DMG) made 2026-11-20 but nothing run on a device. Left: Phase 0 device checks (the Apple push key in production, server deploy + migration `20270307100001`), then Live, the free layout and watches |
 | [GAPS-PLAN-2026-11](GAPS-PLAN-2026-11.md) | D-301..D-305 | Items 1–5 live. Item 6 (accessibility pass) and item 7 (more languages) not started; v1 is English only |
 | [LAUNCH-VIDEO-PLAN](LAUNCH-VIDEO-PLAN.md) |  | Main cut v2, 30 s cut and 15 s cut made. Launch date and the narration voice are open; every video needs narration |
 | [LIBRARY-PLAN](LIBRARY-PLAN.md) | D-274, D-276, D-281, D-291, D-294, D-295 | Pins, select several, "Recently opened", "what was made for a ticket" |
@@ -41,11 +43,13 @@ same commit. Shipping details (deploys, app builds) move fast, so check them bef
 
 | Plan | Decisions | What's left |
 |---|---|---|
-| [RICH-CARDS-PLAN](RICH-CARDS-PLAN.md) | D-453 | Merged to main 2026-11-20, not deployed: a deploy (migration `20270304100001`), app builds; a licensed stock key for Casama Cloud; Stage B native widgets later |
-| [ADMIN-SECURITY-PLAN](ADMIN-SECURITY-PLAN.md) | D-448, D-450 | Server + docs live 2026-11-20 (d4570460); passkey and Face ID unlock built (D-450, docs deploy pending); app builds with the console lock pending |
+| [RICH-CARDS-PLAN](RICH-CARDS-PLAN.md) | D-458 | Merged to main 2026-11-20, not deployed: a deploy (migration `20270304100001`), app builds; a licensed stock key for Casama Cloud; Stage B native widgets later |
+| [BOT-PICTURES-PLAN](BOT-PICTURES-PLAN.md) | D-456 | App builds; Phase 0 real-device checks (HEIC, 48 MP photo, each platform's decoder), Xcode and Gradle builds of the native widget code; server deploy |
+| [ADMIN-SECURITY-PLAN](ADMIN-SECURITY-PLAN.md) | D-448, D-450, D-452, D-453 | Shipped 2026-11-20 as build 63: server, docs, web app, iPhone (TestFlight), Android and Wear OS (Play internal), Mac direct download (notarized, update feed) and Mac App Store (TestFlight) |
 | [LIMIT-RESETS-PLAN](LIMIT-RESETS-PLAN.md) | D-443 | Server + docs live 2026-11-20 (6d11b195); switched on, test grant on Oliver's space (expires 2026-12-04); app builds with Use Reset pending |
 | [APP-ART-PLAN](APP-ART-PLAN.md) | D-440 | Web app (51), server and gallery live 2026-11-20; store builds and a low-end Android startup check |
 | [ADMIN-BOT-PLAN](ADMIN-BOT-PLAN.md) | D-435 | Push and deploy; then turn it on for admin@casama.ai's bot |
+| [DECISION-MODEL-PLAN](DECISION-MODEL-PLAN.md) | D-454 | Server live 2026-11-20 (04f93f3a); in shadow since then (scan gate, reply check, push scoring, tool-call gate, long-run check; Jev and OpenAI's model). Phase 2 around 2026-11-30: read `GET /v1/admin/decisions/results`, pick thresholds, turn on what passes. No app build needed |
 | [CALL-RECAP-PLAN](CALL-RECAP-PLAN.md) | D-429 | Server live; app builds and a real call check |
 | [CALLS-PLAN](CALLS-PLAN.md) | D-327 | App builds; real-device checks |
 | [CHAT-APP-FILES-PLAN](CHAT-APP-FILES-PLAN.md) | D-341, D-342 | Live; Mac build for iMessage files. Teams file consent and Telegram albums left for later |

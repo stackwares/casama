@@ -7,6 +7,7 @@ import * as apps from "./apps.ts";
 import * as attention from "./attention.ts";
 import * as autonomy from "./autonomy.ts";
 import * as billing from "./billing.ts";
+import * as botPictures from "./bot-pictures.ts";
 import * as botSharing from "./bot-sharing.ts";
 import * as botTemplate from "./bot-template.ts";
 import * as bots from "./bots.ts";
@@ -31,6 +32,7 @@ import * as connect from "./link.ts";
 import * as links from "./links.ts";
 import * as liveCards from "./live-cards.ts";
 import * as local from "./local.ts";
+import * as mail from "./mail.ts";
 import * as mcp from "./mcp.ts";
 import * as moderation from "./moderation.ts";
 import * as packs from "./packs.ts";
@@ -67,6 +69,7 @@ export const routes = {
   ...moderation,
   ...workspaces,
   ...bots,
+  ...botPictures,
   ...reactions,
   ...computers,
   ...creations,
@@ -114,6 +117,7 @@ export const routes = {
   ...watchers,
   ...workspaceFiles,
   ...mcp,
+  ...mail,
   ...referrals,
   ...waitlist,
   ...remoteSettings,
@@ -134,6 +138,7 @@ export {
   attention,
   autonomy,
   billing,
+  botPictures,
   botSharing,
   bots,
   botTemplate,
@@ -153,6 +158,7 @@ export {
   links,
   liveCards,
   local,
+  mail,
   mcp,
   packs,
   pages,
