@@ -4,7 +4,11 @@ import {
   AdminBotSetting,
   AdminCreditPack,
   AdminMailAddress,
+  AdminCheck,
   AdminMailReservedNames,
+  AdminPasskeyCheckRequest,
+  AdminPinCheckRequest,
+  AdminPinState,
   AdminMargin,
   AdminOrg,
   AdminOverview,
@@ -20,6 +24,7 @@ import {
   SavePlanRequest,
   ServerCapacity,
   SetAdminBotRequest,
+  SetAdminPinRequest,
   SetConnectionSettingsRequest,
   SetMailAddressStatusRequest,
   SetOrgLimitsRequest,
@@ -347,4 +352,59 @@ export const setMailReservedNames = createRoute({
   summary: "Replace the instance-added reserved mail names (owner only)",
   request: { body: jsonBody(AdminMailReservedNames) },
   responses: { 200: jsonResponse("Reserved names", AdminMailReservedNames), 401: e401, 403: e403 },
+});
+
+// --- Admin checks (D-452): a passkey or the admin PIN instead of signing in again --------------
+
+export const adminPin = createRoute({
+  operationId: "adminPin",
+  method: "get",
+  path: "/v1/admin/pin",
+  tags: ["admin"],
+  security,
+  summary: "Whether the owner has an admin PIN (owner only)",
+  responses: { 200: jsonResponse("Admin PIN", AdminPinState), 401: e401, 403: e403 },
+});
+
+export const setAdminPin = createRoute({
+  operationId: "setAdminPin",
+  method: "put",
+  path: "/v1/admin/pin",
+  tags: ["admin"],
+  security,
+  summary: "Set or change the admin PIN (owner only; a fresh passkey or sign-in, not the PIN)",
+  request: { body: jsonBody(SetAdminPinRequest) },
+  responses: { 200: jsonResponse("Admin PIN", AdminPinState), ...problemResponses },
+});
+
+export const removeAdminPin = createRoute({
+  operationId: "removeAdminPin",
+  method: "delete",
+  path: "/v1/admin/pin",
+  tags: ["admin"],
+  security,
+  summary: "Remove the admin PIN (owner only; a fresh passkey or sign-in, not the PIN)",
+  responses: { 200: jsonResponse("Admin PIN", AdminPinState), ...problemResponses },
+});
+
+export const adminPasskeyCheck = createRoute({
+  operationId: "adminPasskeyCheck",
+  method: "post",
+  path: "/v1/admin/checks/passkey",
+  tags: ["admin"],
+  security,
+  summary: "Record a passkey check on this sign-in session (owner only)",
+  request: { body: jsonBody(AdminPasskeyCheckRequest) },
+  responses: { 200: jsonResponse("Check recorded", AdminCheck), ...problemResponses },
+});
+
+export const adminPinCheck = createRoute({
+  operationId: "adminPinCheck",
+  method: "post",
+  path: "/v1/admin/checks/pin",
+  tags: ["admin"],
+  security,
+  summary: "Check the admin PIN and record it on this sign-in session (owner only)",
+  request: { body: jsonBody(AdminPinCheckRequest) },
+  responses: { 200: jsonResponse("Check recorded", AdminCheck), ...problemResponses },
 });

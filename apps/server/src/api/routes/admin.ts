@@ -19,6 +19,15 @@ import {
 } from "../../services/connection-settings.ts";
 import { mailReservedNames, setMailReservedNames } from "../../services/mail-reserved-names.ts";
 import { CASAMA_VERSION } from "../../version.ts";
+import {
+  ADMIN_PIN_MAX_FAILURES,
+  checkPin,
+  hasFreshAuthentication,
+  pinState,
+  recordPasskeyCheck,
+  requireSecondStep,
+  setPin,
+} from "../admin-security.ts";
 import { ApiError } from "../errors.ts";
 import type { AppDeps, AppEnv } from "../types.ts";
 import { iso } from "../util.ts";
@@ -848,5 +857,98 @@ export function registerAdminRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     // This process takes it now; the worker picks it up within a minute.
     setCloudMarkup(m);
     return c.json({ markup: await markup() }, 200);
+  });
+
+  // --- Admin checks (D-452): a passkey or the admin PIN instead of signing in again ------------
+
+  /** Setting or removing the PIN: a fresh real sign-in or passkey check, never the PIN itself. */
+  const requireCheckWithoutPin = async (claims: JwtClaims) => {
+    if (hasFreshAuthentication(claims, true)) {
+      await requireSecondStep(db, claims, true);
+      return;
+    }
+    const session = typeof claims.session_id === "string" ? claims.session_id : "";
+    const [row] = await db.execute<{ ok: boolean }>(sql`
+      select exists (
+        select 1 from public.admin_step_ups
+        where session_id::text = ${session} and user_id = ${claims.sub}::uuid and method = 'passkey'
+          and verified_at <= now() and verified_at > now() - interval '60 seconds'
+      ) as ok`);
+    if (!row?.ok)
+      throw new ApiError(
+        403,
+        "admin_pin_needs_sign_in",
+        "Confirm with a passkey or your password to change the admin PIN.",
+      );
+  };
+
+  app.openapi(routes.adminPin, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    await requireOwner(claims);
+    return c.json(await pinState(db, claims.sub), 200);
+  });
+
+  app.openapi(routes.setAdminPin, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    await requireOwner(claims);
+    await requireCheckWithoutPin(claims);
+    await setPin(db, claims.sub, c.req.valid("json").pin);
+    return c.json(await pinState(db, claims.sub), 200);
+  });
+
+  app.openapi(routes.removeAdminPin, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    await requireOwner(claims);
+    await requireCheckWithoutPin(claims);
+    await setPin(db, claims.sub, null);
+    return c.json(await pinState(db, claims.sub), 200);
+  });
+
+  app.openapi(routes.adminPasskeyCheck, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    await requireOwner(claims);
+    let proof: JwtClaims;
+    try {
+      proof = await deps.verifyToken(c.req.valid("json").token);
+    } catch {
+      throw new ApiError(403, "admin_check_failed", "That passkey didn't confirm this account.");
+    }
+    const at = await recordPasskeyCheck(db, claims, proof);
+    return c.json({ verified_at: at.toISOString() }, 200);
+  });
+
+  app.openapi(routes.adminPinCheck, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    await requireOwner(claims);
+    const result = await checkPin(db, claims, c.req.valid("json").pin);
+    if (result.ok) return c.json({ verified_at: result.at.toISOString() }, 200);
+    deps.logger.warn("wrong admin PIN", { user: claims.sub, disabled: result.disabled });
+    if (result.disabled) {
+      const to = typeof claims.email === "string" ? claims.email : null;
+      if (to && deps.email.enabled)
+        void deps.email
+          .send({
+            to,
+            subject: "Your admin PIN was turned off",
+            text:
+              `Someone entered a wrong admin PIN ${ADMIN_PIN_MAX_FAILURES} times in a row on your ` +
+              "Casama server's admin console, so the PIN is turned off. Unlock with a passkey or " +
+              "your password, then set a new PIN in the admin console under Security. If this " +
+              "wasn't you, change your password and sign out everywhere.",
+          })
+          .catch((e: unknown) =>
+            deps.logger.warn("admin PIN email failed", { error: (e as Error).message }),
+          );
+      throw new ApiError(
+        403,
+        "admin_pin_disabled",
+        "Too many wrong PINs: the admin PIN is turned off. Use a passkey or your password.",
+      );
+    }
+    throw new ApiError(
+      403,
+      "admin_pin_wrong",
+      `Wrong PIN. ${result.triesLeft} ${result.triesLeft === 1 ? "try" : "tries"} left.`,
+    );
   });
 }

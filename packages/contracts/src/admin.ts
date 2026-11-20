@@ -116,6 +116,36 @@ export const SetMailAddressStatusRequest = z
   .object({ status: z.enum(["active", "paused"]) })
   .openapi("SetMailAddressStatusRequest");
 
+/** The owner's admin PIN (D-452): whether one is set; the PIN itself never leaves the server. */
+export const AdminPinState = z
+  .object({
+    set: z.boolean(),
+    /** Turned off after too many wrong PINs in a row; set a new one. */
+    disabled: z.boolean(),
+    tries_left: z.number().int(),
+  })
+  .openapi("AdminPinState");
+
+export const SetAdminPinRequest = z
+  .object({ pin: z.string().regex(/^\d{6}$/) })
+  .openapi("SetAdminPinRequest");
+
+export const AdminPasskeyCheckRequest = z
+  .object({
+    /** The access token of the passkey sign-in the app made on the side, as proof. */
+    token: z.string().min(1).max(8192),
+  })
+  .openapi("AdminPasskeyCheckRequest");
+
+export const AdminPinCheckRequest = z
+  .object({ pin: z.string().min(1).max(12) })
+  .openapi("AdminPinCheckRequest");
+
+/** A passkey or PIN check recorded on this sign-in session (D-452). */
+export const AdminCheck = z
+  .object({ verified_at: z.string().datetime({ offset: true }) })
+  .openapi("AdminCheck");
+
 export const AdminMailReservedNames = z
   .object({ names: z.array(z.string()) })
   .openapi("AdminMailReservedNames");

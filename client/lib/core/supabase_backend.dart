@@ -702,20 +702,22 @@ class SupabaseBackend implements Backend {
   }
 
   @override
-  Future<bool?> signInAgainWithPasskey() async {
-    final me = supabase.auth.currentUser?.id;
-    if (me == null) return false;
+  Future<DateTime?> adminPasskeyCheck() async {
     final verified = await _passkeyCeremony();
     if (verified == null) return null;
-    final access = verified['access_token'];
-    final refresh = verified['refresh_token'];
-    // Another account's passkey: its session goes, this one stays.
-    if (_verifiedUserId(verified) != me || access is! String || refresh is! String || supabase.auth.currentUser?.id != me) {
+    final token = verified['access_token'];
+    try {
+      if (token is! String || _verifiedUserId(verified) != supabase.auth.currentUser?.id) {
+        throw const PasskeyProblem("That passkey is for another account.");
+      }
+      // The API checks the proof and records it on this session; this session stays.
+      final r = await api.admin.adminPasskeyCheck(
+        adminPasskeyCheckRequest: AdminPasskeyCheckRequest(token: token),
+      );
+      return r.data!.verifiedAt;
+    } finally {
       _endExtraSession(verified);
-      return false;
     }
-    await supabase.auth.setSession(refresh, accessToken: access);
-    return supabase.auth.currentUser?.id == me;
   }
 
   @override
@@ -1612,6 +1614,20 @@ class SupabaseBackend implements Backend {
       (await api.admin.setMailReservedNames(
         adminMailReservedNames: AdminMailReservedNames(names: names),
       )).data!.names.toList();
+
+  @override
+  Future<AdminPinState> adminPinState() async => (await api.admin.adminPin()).data!;
+
+  @override
+  Future<AdminPinState> setAdminPin(String pin) async =>
+      (await api.admin.setAdminPin(setAdminPinRequest: SetAdminPinRequest(pin: pin))).data!;
+
+  @override
+  Future<AdminPinState> removeAdminPin() async => (await api.admin.removeAdminPin()).data!;
+
+  @override
+  Future<DateTime> adminPinCheck(String pin) async =>
+      (await api.admin.adminPinCheck(adminPinCheckRequest: AdminPinCheckRequest(pin: pin))).data!.verifiedAt;
 
   @override
   Future<DomainOrder> adminRetryDomainOrder(String id) async =>

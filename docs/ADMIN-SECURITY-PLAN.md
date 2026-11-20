@@ -1,6 +1,6 @@
 # Admin console security implementation plan
 
-Status: **live** (server 2026-11-20, d4570460; docs and web app build 60 with passkeys and Face ID, e042df58), D-448 and D-450; store and desktop builds pending. Built and review-fixed the same day. Authorized by Oliver: “build all now! you decide for everything!”
+Status: **live** (server 2026-11-20, d4570460; docs and web app build 60 with passkeys and Face ID, e042df58), D-448 and D-450; passkey-or-PIN checks built, not deployed (D-452); store and desktop builds pending. Built and review-fixed the same day. Authorized by Oliver: “build all now! you decide for everything!”
 
 ## Goal and decisions
 
@@ -56,6 +56,71 @@ code kept as the fallback:
   pauses the app (Android's Credential Manager).
 - [x] Without a passkey, the lock screen suggests adding one in Settings → Passkeys.
 - [x] Tests, docs (self-hosting), decision D-450.
+
+## One check, three ways: passkey, PIN, or password and code (D-452, 2026-11-20)
+
+Status: **built** (2026-11-20), not deployed. Oliver approved: "go and build all"; then "don't
+deploy". Oliver: "passkeys are enough", then "maybe
+just allow the admin set a 4-6 digit pin? either a custom PIN / Password + 2FA / Passkey?", then
+"make it 6 PIN".
+
+### Ways in
+
+The lock screen and every confirmation offer, in this order, whatever the account has set up:
+
+1. **Face ID or fingerprint** (unchanged from D-450): lifts the app's own lock only, while the server's
+   window from the last check is still open.
+2. **Passkey:** one Face ID or fingerprint prompt. It counts as the whole check, also on an account
+   with an authenticator (Oliver's call: "passkeys are enough"). Trade-off accepted: Supabase also
+   accepts a security key that never asks for a PIN, and the server can't tell the difference.
+3. **Admin PIN:** exactly 6 digits, set by the owner.
+4. **Password, plus the authenticator code** when the account has one: always there, the way back
+   when the others fail.
+
+### The check goes to our server, not a new sign-in
+
+Today a passkey replaces the app's session with a new one (and that session still owes its
+authenticator code). Instead, each way records a **fresh admin check** on the current sign-in session:
+
+- New table `public.admin_step_ups` (session id, user id, when, which way). RLS on, no policies: only
+  the API writes it. Rows older than a day are deleted as new ones are written.
+- `POST /v1/admin/checks/passkey`: the app runs the passkey sheet against Supabase's passkey
+  endpoints as now, sends the resulting proof token to the API, and ends that extra session. The API
+  verifies the token's signature, that it's the same account, and that its `passkey` sign-in is under
+  a minute old. The check's time is the passkey's own time, so sending the same proof again gains
+  nothing; a proof is also refused for a second session.
+- `POST /v1/admin/checks/pin`: the API checks the PIN and records the check.
+- Password and code keep working as today (a real sign-in in the token).
+- The API's admin rules (5 minutes for reads, 1 minute for changes) and the database's
+  `decide_approval` rule accept either a real sign-in in the token or a fresh check for this session.
+  A check counts as the second step too. Both endpoints are exempt from the freshness rule they
+  satisfy, and both are owner-only.
+
+### PIN rules
+
+- **6 digits.** No obvious ones: all the same digit (000000), runs (123456, 654321), or repeated
+  pairs or triples (121212, 123123).
+- **Server-side only.** A salted scrypt hash in a new owner-only table (`admin_pins`, RLS on, no
+  policies); nothing on the device. It never signs anyone in: it only confirms on a session that is
+  already signed in to that account.
+- **Setting, changing or removing the PIN** (Admin console → Security) needs a fresh check by passkey or
+  password and code, never by the old PIN.
+- **5 wrong PINs in a row turn it off.** After that, only a passkey or password and code work, then you
+  set a new PIN. Each wrong attempt is logged; the owner gets an email when the PIN is turned off.
+- Tries are counted on the server per account, so a second device or a script doesn't get extra
+  guesses.
+
+### Build list
+
+- [x] Migration: `admin_step_ups`, `admin_pins`, `fresh_admin_sign_in()` accepts a fresh check.
+- [x] API: the two check endpoints, PIN set/change/remove, the admin rules accept checks; contract and
+  `pnpm gen`.
+- [x] App: passkey check without a session swap (removes D-450's `signInAgainWithPasskey`), PIN
+  entry on the lock screen and in confirmations, Admin → Security to set or change the PIN, Face ID
+  window counted from the last check.
+- [x] Tests: server (proof checks, replay, PIN limits, two-step), pgTAP for `decide_approval`, Flutter.
+- [x] Docs (self-hosting), decision D-452, this plan and PLANS.
+- [ ] Ship: server deploy (runs the migration), docs, web app; store builds later. Held: Oliver said not to deploy.
 
 ## Validation commands
 

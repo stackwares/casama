@@ -6708,3 +6708,38 @@ password and code (D-448), and delegated the rest ("build them all now in 1 go!"
   three seconds after the sheet, the console locks.
 - **Tests:** `client/test/admin_quick_unlock_test.dart`; passkey tokens in
   `apps/server/test/admin.test.ts`.
+
+## D-452 Admin console: a passkey or a 6-digit admin PIN is the whole check (2026-11-20)
+
+After D-450 shipped, Oliver found a passkey still asked for the authenticator code, and decided:
+"passkeys are enough", then a custom admin PIN as a third way ("make it 6 PIN"), and approved
+building it.
+
+- **A check on the session, not a new sign-in.** `POST /v1/admin/checks/passkey` takes the token of
+  a passkey sign-in the app made on the side (Supabase's passkey endpoints, as D-450's
+  `confirmWithPasskey`) as proof: signed by the Auth server, the same account, a `passkey` `amr`
+  entry under a minute old, from another sign-in session. The API records it in
+  `public.admin_step_ups` against the caller's `session_id`, timed by the passkey's own timestamp;
+  one proof counts for one session (`proof_session_id` unique). The app ends the extra session at
+  once and keeps its own, which removes D-450's `signInAgainWithPasskey` and its session swap.
+- **Counts as both steps.** The API's admin rules (`requireFreshAdmin`, `requireFreshOwnerAction`)
+  and the database's `fresh_admin_sign_in()` (so `decide_approval`) accept a check on this session
+  within the same windows (reads 5 minutes, changes 1), and treat it, or a fresh `passkey` sign-in
+  in the token, as the second step even with an authenticator. Accepted trade-off: Supabase's
+  passkeys prefer but don't require user verification, so a security key without a PIN passes on
+  possession alone; the server can't tell.
+- **The admin PIN.** Exactly 6 digits; all-same, runs (either way, wrapping) and repeated pairs or
+  triples are refused. A salted scrypt hash (N 2^15, r 8, p 1) in `public.admin_pins` (RLS on, no
+  policies), never on the device. `POST /v1/admin/checks/pin` checks it under a row lock and
+  records a check; wrong tries count per account on the server, and the fifth in a row clears the
+  hash (the PIN is off), logs, and emails the owner. A PIN never signs anyone in: it only confirms
+  a session already signed in to that account. Setting, changing or removing it (`PUT`/`DELETE
+  /v1/admin/pin`, Admin → Security) needs a fresh real sign-in or passkey check, never a PIN check.
+  `GET /v1/admin/pin` and the two check endpoints are exempt from the freshness rule they satisfy;
+  all are owner-only.
+- **The form.** Face ID (D-450, now counted from the last check too), passkey, PIN, then password
+  (and the code after a password). A session that still owes its code starts at the code step with
+  the passkey offered there too. Confirming a PIN change hides the PIN.
+- **Tests:** `apps/server/test/admin-checks.test.ts`, `apps/server/test/admin.test.ts`,
+  `client/test/admin_quick_unlock_test.dart`. Migration `20270303100001_admin_checks.sql`.
+

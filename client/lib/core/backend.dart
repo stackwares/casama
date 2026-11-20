@@ -1422,12 +1422,11 @@ abstract class Backend {
   /// the sheet. Throws `PasskeyProblem` when this device has no passkey to offer.
   Future<bool?> confirmWithPasskey();
 
-  /// Signs in again with one of the person's passkeys, for a fresh sign-in the server can check
-  /// (the admin console, D-450). The new session replaces this one only when the passkey belongs
-  /// to the signed-in account. True when it did; false for another account's or a refused one;
-  /// null when the person closed the sheet. Throws `PasskeyProblem` when this device has no
-  /// passkey to offer.
-  Future<bool?> signInAgainWithPasskey();
+  /// The admin console's passkey check (D-452): one of the person's passkeys, recorded by the
+  /// API on this sign-in session; the session itself stays as it is. When the check was made;
+  /// null when the person closed the sheet. Throws when the passkey wasn't this account's or the
+  /// server refused it, and `PasskeyProblem` when this device has no passkey to offer.
+  Future<DateTime?> adminPasskeyCheck();
 
   // Passkeys on this account
   Future<List<PasskeyInfo>> passkeys();
@@ -1663,6 +1662,12 @@ abstract class Backend {
   Future<AdminMailAddress> setMailAddressStatus(String id, String status);
   Future<List<String>> adminMailReservedNames();
   Future<List<String>> setMailReservedNames(List<String> names);
+  // Admin checks (D-452): the owner's 6-digit admin PIN, kept on the server only
+  Future<AdminPinState> adminPinState();
+  Future<AdminPinState> setAdminPin(String pin);
+  Future<AdminPinState> removeAdminPin();
+  /// Checks the PIN; the API records it on this sign-in session. When; throws when wrong.
+  Future<DateTime> adminPinCheck(String pin);
   Future<void> adminUnsuspendDomain(String id);
   Future<DomainOrder> adminRetryDomainOrder(String id);
   Future<DomainOrder> adminApproveDomainOrder(String id);

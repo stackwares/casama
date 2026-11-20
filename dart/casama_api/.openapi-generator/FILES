@@ -93,6 +93,7 @@ lib/src/model/add_waitlist_entries_request.dart
 lib/src/model/admin_bot_setting.dart
 lib/src/model/admin_browser_guard.dart
 lib/src/model/admin_call_limits.dart
+lib/src/model/admin_check.dart
 lib/src/model/admin_credit_pack.dart
 lib/src/model/admin_domain.dart
 lib/src/model/admin_domain_order.dart
@@ -111,6 +112,9 @@ lib/src/model/admin_model_catalog.dart
 lib/src/model/admin_org.dart
 lib/src/model/admin_org_list.dart
 lib/src/model/admin_overview.dart
+lib/src/model/admin_passkey_check_request.dart
+lib/src/model/admin_pin_check_request.dart
+lib/src/model/admin_pin_state.dart
 lib/src/model/admin_plan.dart
 lib/src/model/admin_price_tables.dart
 lib/src/model/admin_pricing.dart
@@ -769,6 +773,7 @@ lib/src/model/server_capacity_alerts_inner.dart
 lib/src/model/server_capacity_days_inner.dart
 lib/src/model/server_capacity_latest.dart
 lib/src/model/set_admin_bot_request.dart
+lib/src/model/set_admin_pin_request.dart
 lib/src/model/set_analytics_opt_out_request.dart
 lib/src/model/set_bot_a2a_request.dart
 lib/src/model/set_bot_access_request.dart

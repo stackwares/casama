@@ -2521,6 +2521,57 @@ class AppLocalizationsEn extends AppLocalizations {
       'Tip: add a passkey in Settings → Passkeys to verify with Face ID or a fingerprint instead of your password.';
 
   @override
+  String get adminSecurity => 'Security';
+
+  @override
+  String get adminPinTitle => 'Admin PIN';
+
+  @override
+  String get adminPinSet => 'Set an admin PIN';
+
+  @override
+  String get adminPinChange => 'Change the admin PIN';
+
+  @override
+  String get adminPinRemove => 'Remove the admin PIN';
+
+  @override
+  String get adminPinHelp =>
+      '6 digits to unlock the console and confirm changes, instead of your password. Five wrong tries turn it off.';
+
+  @override
+  String get adminPinOffHelp =>
+      'Turned off after too many wrong tries. Set a new one.';
+
+  @override
+  String get adminPinSetupBody =>
+      '6 digits for the admin console. Kept on your server, never on this device.';
+
+  @override
+  String get adminPinSaved => 'Admin PIN saved';
+
+  @override
+  String get adminPinRemoved => 'Admin PIN removed';
+
+  @override
+  String get adminPinLabel => 'Admin PIN';
+
+  @override
+  String adminPinWrong(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count tries left',
+      one: '1 try left',
+    );
+    return 'Wrong PIN. $_temp0.';
+  }
+
+  @override
+  String get adminPinTurnedOff =>
+      'Too many wrong PINs: the admin PIN is turned off. Use a passkey or your password, then set a new PIN under Security.';
+
+  @override
   String get adminOverview => 'Overview';
 
   @override

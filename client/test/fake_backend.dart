@@ -5527,15 +5527,59 @@ class FakeBackend implements Backend {
     return answer as bool?;
   }
 
-  /// What signing in again with a passkey answers (the admin console, D-450).
-  Object? passkeyReSignIn = true;
-  var passkeyReSignIns = 0;
+  /// What the admin console's passkey check answers (D-452): true records a check, null is a
+  /// closed sheet, an exception is thrown.
+  Object? adminPasskeyAnswer = true;
+  var adminPasskeyChecks = 0;
   @override
-  Future<bool?> signInAgainWithPasskey() async {
-    passkeyReSignIns++;
-    final answer = passkeyReSignIn;
+  Future<DateTime?> adminPasskeyCheck() async {
+    adminPasskeyChecks++;
+    final answer = adminPasskeyAnswer;
     if (answer is Exception) throw answer;
-    return answer as bool?;
+    if (answer == false) throw StateError('Passkey refused');
+    return answer == null ? null : DateTime.now();
+  }
+
+  /// The admin PIN (D-452): null when none is set.
+  String? adminPin;
+  var adminPinDisabled = false;
+  var adminPinFailures = 0;
+  final adminPinChecks = <String>[];
+  AdminPinState get _pinState => AdminPinState(
+    set_: adminPin != null,
+    disabled: adminPinDisabled,
+    triesLeft: adminPin == null ? 0 : 5 - adminPinFailures,
+  );
+  @override
+  Future<AdminPinState> adminPinState() async => _pinState;
+  @override
+  Future<AdminPinState> setAdminPin(String pin) async {
+    adminPin = pin;
+    adminPinDisabled = false;
+    adminPinFailures = 0;
+    return _pinState;
+  }
+
+  @override
+  Future<AdminPinState> removeAdminPin() async {
+    adminPin = null;
+    return _pinState;
+  }
+
+  @override
+  Future<DateTime> adminPinCheck(String pin) async {
+    adminPinChecks.add(pin);
+    if (adminPin == null) throw StateError('No admin PIN');
+    if (pin == adminPin) {
+      adminPinFailures = 0;
+      return DateTime.now();
+    }
+    if (++adminPinFailures >= 5) {
+      adminPin = null;
+      adminPinDisabled = true;
+      adminPinFailures = 0;
+    }
+    throw StateError('Wrong PIN');
   }
 
   final passkeyList = <PasskeyInfo>[];

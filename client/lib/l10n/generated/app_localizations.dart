@@ -4000,6 +4000,84 @@ abstract class AppLocalizations {
   /// **'Tip: add a passkey in Settings → Passkeys to verify with Face ID or a fingerprint instead of your password.'**
   String get adminPasskeyTip;
 
+  /// No description provided for @adminSecurity.
+  ///
+  /// In en, this message translates to:
+  /// **'Security'**
+  String get adminSecurity;
+
+  /// No description provided for @adminPinTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin PIN'**
+  String get adminPinTitle;
+
+  /// No description provided for @adminPinSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Set an admin PIN'**
+  String get adminPinSet;
+
+  /// No description provided for @adminPinChange.
+  ///
+  /// In en, this message translates to:
+  /// **'Change the admin PIN'**
+  String get adminPinChange;
+
+  /// No description provided for @adminPinRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove the admin PIN'**
+  String get adminPinRemove;
+
+  /// No description provided for @adminPinHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'6 digits to unlock the console and confirm changes, instead of your password. Five wrong tries turn it off.'**
+  String get adminPinHelp;
+
+  /// No description provided for @adminPinOffHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Turned off after too many wrong tries. Set a new one.'**
+  String get adminPinOffHelp;
+
+  /// No description provided for @adminPinSetupBody.
+  ///
+  /// In en, this message translates to:
+  /// **'6 digits for the admin console. Kept on your server, never on this device.'**
+  String get adminPinSetupBody;
+
+  /// No description provided for @adminPinSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin PIN saved'**
+  String get adminPinSaved;
+
+  /// No description provided for @adminPinRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin PIN removed'**
+  String get adminPinRemoved;
+
+  /// No description provided for @adminPinLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin PIN'**
+  String get adminPinLabel;
+
+  /// No description provided for @adminPinWrong.
+  ///
+  /// In en, this message translates to:
+  /// **'Wrong PIN. {count, plural, =1{1 try left} other{{count} tries left}}.'**
+  String adminPinWrong(int count);
+
+  /// No description provided for @adminPinTurnedOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many wrong PINs: the admin PIN is turned off. Use a passkey or your password, then set a new PIN under Security.'**
+  String get adminPinTurnedOff;
+
   /// No description provided for @adminOverview.
   ///
   /// In en, this message translates to:

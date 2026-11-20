@@ -19,6 +19,7 @@ import 'package:casama_api/src/model/add_waitlist_entries_request.dart';
 import 'package:casama_api/src/model/admin_bot_setting.dart';
 import 'package:casama_api/src/model/admin_browser_guard.dart';
 import 'package:casama_api/src/model/admin_call_limits.dart';
+import 'package:casama_api/src/model/admin_check.dart';
 import 'package:casama_api/src/model/admin_credit_pack.dart';
 import 'package:casama_api/src/model/admin_domain.dart';
 import 'package:casama_api/src/model/admin_domain_order.dart';
@@ -37,6 +38,9 @@ import 'package:casama_api/src/model/admin_model_catalog.dart';
 import 'package:casama_api/src/model/admin_org.dart';
 import 'package:casama_api/src/model/admin_org_list.dart';
 import 'package:casama_api/src/model/admin_overview.dart';
+import 'package:casama_api/src/model/admin_passkey_check_request.dart';
+import 'package:casama_api/src/model/admin_pin_check_request.dart';
+import 'package:casama_api/src/model/admin_pin_state.dart';
 import 'package:casama_api/src/model/admin_plan.dart';
 import 'package:casama_api/src/model/admin_price_tables.dart';
 import 'package:casama_api/src/model/admin_pricing.dart';
@@ -666,6 +670,7 @@ import 'package:casama_api/src/model/server_capacity_alerts_inner.dart';
 import 'package:casama_api/src/model/server_capacity_days_inner.dart';
 import 'package:casama_api/src/model/server_capacity_latest.dart';
 import 'package:casama_api/src/model/set_admin_bot_request.dart';
+import 'package:casama_api/src/model/set_admin_pin_request.dart';
 import 'package:casama_api/src/model/set_analytics_opt_out_request.dart';
 import 'package:casama_api/src/model/set_bot_a2a_request.dart';
 import 'package:casama_api/src/model/set_bot_access_request.dart';
@@ -972,6 +977,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return AdminBrowserGuard.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AdminCallLimits':
           return AdminCallLimits.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'AdminCheck':
+          return AdminCheck.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AdminCreditPack':
           return AdminCreditPack.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AdminDomain':
@@ -1008,6 +1015,12 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return AdminOrgList.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AdminOverview':
           return AdminOverview.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'AdminPasskeyCheckRequest':
+          return AdminPasskeyCheckRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'AdminPinCheckRequest':
+          return AdminPinCheckRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'AdminPinState':
+          return AdminPinState.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AdminPlan':
           return AdminPlan.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AdminPriceTables':
@@ -2353,6 +2366,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return ServerCapacityLatest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SetAdminBotRequest':
           return SetAdminBotRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'SetAdminPinRequest':
+          return SetAdminPinRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SetAnalyticsOptOutRequest':
           return SetAnalyticsOptOutRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SetBotA2aRequest':

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:casama/core/admin_security.dart';
 import 'package:casama/core/backend.dart' show AuthMethods, PasskeyInfo;
 import 'package:casama/features/admin/admin_security_gate.dart';
+import 'package:casama/features/admin/security_tab.dart';
 import 'package:casama/features/app_lock/app_lock.dart' show UnlockResult;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
@@ -17,6 +18,7 @@ String tokenSignedIn(Duration ago, {String method = 'password'}) {
       base64Url.encode(utf8.encode(jsonEncode(o))).replaceAll('=', '');
   final at = DateTime.now().subtract(ago).millisecondsSinceEpoch ~/ 1000;
   return '${part({'alg': 'HS256'})}.${part({
+    'session_id': 'session-1',
     'amr': [
       {'method': method, 'timestamp': at},
     ],
@@ -29,12 +31,11 @@ FakeBackend passkeyBackend() => FakeBackend()
     PasskeyInfo(id: 'p1', name: 'iPhone', createdAt: DateTime(2026)),
   );
 
-class _PasskeyTwoStepBackend extends FakeBackend {
+class _TwoStepAfterPassword extends FakeBackend {
   @override
-  Future<bool?> signInAgainWithPasskey() async {
-    // Supabase rates a passkey sign-in aal1: an account with an authenticator still owes its code.
+  Future<void> signIn(String email, String password) async {
+    await super.signIn(email, password);
     twoStepCodeNeeded = true;
-    return super.signInAgainWithPasskey();
   }
 }
 
@@ -60,6 +61,8 @@ void main() {
     AdminSecurity.codeSentTo = null;
     AdminSecurity.accessToken = null;
     AdminSecurity.systemSheets = 0;
+    AdminSecurity.checkAt = null;
+    AdminSecurity.checkSession = null;
   });
 
   group('server window', () {
@@ -103,7 +106,7 @@ void main() {
       await tester.tap(find.byKey(const Key('adminPasskey')));
       await tester.pumpAndSettle();
       expect(find.text('private data'), findsOneWidget);
-      expect(backend.passkeyReSignIns, 1);
+      expect(backend.adminPasskeyChecks, 1);
       // A real sign-in: the next change doesn't ask again right away.
       expect(AdminSecurity.recentlyVerified(backend.userId), isTrue);
       await tester.pumpWidget(const SizedBox.shrink());
@@ -112,7 +115,7 @@ void main() {
     testWidgets('another account\'s passkey stays locked and says so', (
       tester,
     ) async {
-      final backend = passkeyBackend()..passkeyReSignIn = false;
+      final backend = passkeyBackend()..adminPasskeyAnswer = false;
       await pumpGate(tester, backend);
       await tester.tap(find.byKey(const Key('adminPasskey')));
       await tester.pumpAndSettle();
@@ -123,7 +126,7 @@ void main() {
     });
 
     testWidgets('closing the sheet is not a failure', (tester) async {
-      final backend = passkeyBackend()..passkeyReSignIn = null;
+      final backend = passkeyBackend()..adminPasskeyAnswer = null;
       await pumpGate(tester, backend);
       await tester.tap(find.byKey(const Key('adminPasskey')));
       await tester.pumpAndSettle();
@@ -132,26 +135,30 @@ void main() {
       await tester.pumpWidget(const SizedBox.shrink());
     });
 
-    testWidgets('a two-step account still gives its code after the passkey', (
+    testWidgets('a passkey is enough on a two-step account (D-452)', (
       tester,
     ) async {
-      final backend = _PasskeyTwoStepBackend()
-        ..authMethodsValue = const AuthMethods(passkeys: true)
-        ..passkeyList.add(
-          PasskeyInfo(id: 'p1', name: 'iPhone', createdAt: DateTime(2026)),
-        );
+      final backend = passkeyBackend()..twoStepCodeNeeded = true;
       await pumpGate(tester, backend);
-      await tester.tap(find.byKey(const Key('adminPasskey')));
+      // The session owes its code, so the form starts there, with the passkey as the other way.
+      expect(find.byKey(const Key('adminTwoStepCode')), findsOneWidget);
+      await tester.tap(find.byKey(const Key('adminTwoStepPasskey')));
+      await tester.pumpAndSettle();
+      expect(find.text('private data'), findsOneWidget);
+      expect(AdminSecurity.lastVerifiedMethod, 'passkey');
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+
+    testWidgets('after a password, a two-step account still gives its code', (
+      tester,
+    ) async {
+      final backend = _TwoStepAfterPassword();
+      await pumpGate(tester, backend);
+      await tester.enterText(find.byKey(const Key('adminPassword')), 'pw');
+      await tester.tap(find.byKey(const Key('adminUnlockPassword')));
       await tester.pumpAndSettle();
       expect(find.text('private data'), findsNothing);
       expect(find.byKey(const Key('adminTwoStepCode')), findsOneWidget);
-      await tester.enterText(
-        find.byKey(const Key('adminTwoStepCode')),
-        '123456',
-      );
-      await tester.tap(find.byKey(const Key('adminVerifyTwoStep')));
-      await tester.pumpAndSettle();
-      expect(find.text('private data'), findsOneWidget);
       await tester.pumpWidget(const SizedBox.shrink());
     });
 
@@ -167,7 +174,7 @@ void main() {
       await tester.tap(find.byKey(const Key('adminPasskey')));
       await tester.pumpAndSettle();
       expect(await answer, isTrue);
-      expect(backend.passkeyReSignIns, 2);
+      expect(backend.adminPasskeyChecks, 2);
       await tester.pumpWidget(const SizedBox.shrink());
     });
 
@@ -311,6 +318,126 @@ void main() {
     tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
     await tester.pumpAndSettle();
     expect(find.text('private data'), findsNothing);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  group('admin PIN', () {
+    testWidgets('unlocks with the PIN, as both steps', (tester) async {
+      final backend = FakeBackend()
+        ..adminPin = '482913'
+        ..twoStepCodeNeeded = false;
+      await pumpGate(tester, backend);
+      await tester.enterText(find.byKey(const Key('adminPin')), '482913');
+      await tester.pumpAndSettle();
+      expect(backend.adminPinChecks, ['482913']);
+      expect(find.text('private data'), findsOneWidget);
+      expect(AdminSecurity.lastVerifiedMethod, 'pin');
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+
+    testWidgets(
+      'a wrong PIN says how many tries are left, the fifth turns it off',
+      (tester) async {
+        final backend = FakeBackend()..adminPin = '482913';
+        await pumpGate(tester, backend);
+        await tester.enterText(find.byKey(const Key('adminPin')), '111111');
+        await tester.pumpAndSettle();
+        expect(find.text('private data'), findsNothing);
+        expect(find.text('Wrong PIN. 4 tries left.'), findsOneWidget);
+        for (var i = 0; i < 4; i++) {
+          await tester.enterText(find.byKey(const Key('adminPin')), '111111');
+          await tester.pumpAndSettle();
+        }
+        expect(backend.adminPinDisabled, isTrue);
+        expect(find.byKey(const Key('adminPin')), findsNothing);
+        expect(
+          find.textContaining('the admin PIN is turned off'),
+          findsOneWidget,
+        );
+        // The password still works.
+        expect(find.byKey(const Key('adminPassword')), findsOneWidget);
+        await tester.pumpWidget(const SizedBox.shrink());
+      },
+    );
+
+    testWidgets('no PIN set: no PIN field', (tester) async {
+      await pumpGate(tester, FakeBackend());
+      expect(find.byKey(const Key('adminPin')), findsNothing);
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+
+    testWidgets('confirming a PIN change never offers the PIN', (tester) async {
+      final backend = FakeBackend()..adminPin = '482913';
+      await pumpGate(tester, backend);
+      await tester.enterText(find.byKey(const Key('adminPin')), '482913');
+      await tester.pumpAndSettle();
+      final context = tester.element(find.text('private data'));
+      final answer = showAdminConfirmation(context, allowPin: false);
+      await tester.pumpAndSettle();
+      expect(find.text('Confirm admin action'), findsOneWidget);
+      expect(find.byKey(const Key('adminPin')), findsNothing);
+      await tester.enterText(find.byKey(const Key('adminPassword')), 'pw');
+      await tester.tap(find.byKey(const Key('adminUnlockPassword')));
+      await tester.pumpAndSettle();
+      expect(await answer, isTrue);
+      expect(AdminSecurity.lastVerifiedMethod, 'password');
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+  });
+
+  testWidgets('Face ID counts from the last passkey or PIN check', (
+    tester,
+  ) async {
+    // The sign-in itself is an hour old; the PIN check just now opens the server's window.
+    AdminSecurity.accessToken = () => tokenSignedIn(const Duration(hours: 1));
+    final unlockers = FakeUnlockers(deviceOn: true);
+    final backend = FakeBackend()..adminPin = '482913';
+    await pumpGate(tester, backend, unlockers: unlockers);
+    expect(unlockers.reasons, isEmpty);
+    await tester.enterText(find.byKey(const Key('adminPin')), '482913');
+    await tester.pumpAndSettle();
+    expect(find.text('private data'), findsOneWidget);
+    // Locked again (Lock now, say): Face ID opens by itself and is enough.
+    AdminSecurity.lock!();
+    await tester.pumpAndSettle();
+    expect(unlockers.reasons, hasLength(1));
+    expect(find.text('private data'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('Security sets the PIN after a password check, not the PIN', (
+    tester,
+  ) async {
+    final backend = FakeBackend();
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pumpWidget(
+      harness(
+        backend,
+        const AdminSecurityGate(child: Scaffold(body: AdminSecurityTab())),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('adminPassword')), 'pw');
+    await tester.tap(find.byKey(const Key('adminUnlockPassword')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('adminPinSet')));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('appLockPinNew')), '482913');
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('appLockPinAgain')), '482913');
+    await tester.pumpAndSettle();
+    // Verified by password moments ago: no second ask.
+    expect(backend.adminPin, '482913');
+    expect(find.byKey(const Key('adminPinRemove')), findsOneWidget);
+    // Verified by the PIN: changing it asks for the password.
+    AdminSecurity.verified(backend.userId, method: 'pin');
+    await tester.tap(find.byKey(const Key('adminPinRemove')));
+    await tester.pumpAndSettle();
+    expect(find.text('Confirm admin action'), findsOneWidget);
+    expect(find.byKey(const Key('adminPin')), findsNothing);
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+    expect(backend.adminPin, '482913');
     await tester.pumpWidget(const SizedBox.shrink());
   });
 }

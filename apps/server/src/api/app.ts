@@ -13,11 +13,7 @@ import { cors } from "hono/cors";
 import { HTTPException } from "hono/http-exception";
 import { registerCasamaLinkRoutes } from "../billing/link.ts";
 import { ee, registerEnterpriseFallback } from "../ee.ts";
-import {
-  adminPathExempt,
-  requireFreshAdminAuthentication,
-  requireSecondStep,
-} from "./admin-security.ts";
+import { requireFreshAdmin } from "./admin-security.ts";
 import { corsOrigins } from "./cors.ts";
 import { ApiError, problem } from "./errors.ts";
 import { httpMetrics, renderMetrics } from "./metrics.ts";
@@ -396,9 +392,7 @@ export function createApp(deps: AppDeps) {
   // Before route validation and idempotent-response replay: expired proof must never mutate.
   app.use("/v1/admin/*", async (c, next) => {
     const claims = c.get("claims");
-    requireFreshAdminAuthentication(c.req.method, c.req.path, claims);
-    if (claims && !adminPathExempt(c.req.method, c.req.path))
-      await requireSecondStep(deps.db, claims, !["GET", "HEAD"].includes(c.req.method));
+    await requireFreshAdmin(deps.db, c.req.method, c.req.path, claims);
     await next();
   });
   app.use("/v1/*", httpMetrics);

@@ -109,6 +109,9 @@ Class | Method | HTTP request | Description
 [*AdminApi*](doc/AdminApi.md) | [**adminModelCatalog**](doc/AdminApi.md#adminmodelcatalog) | **GET** /v1/admin/model-catalog | The model catalog: saved values and the ones in code (owner only; D-373)
 [*AdminApi*](doc/AdminApi.md) | [**adminOrgs**](doc/AdminApi.md#adminorgs) | **GET** /v1/admin/orgs | Workspaces with their limits and spend
 [*AdminApi*](doc/AdminApi.md) | [**adminOverview**](doc/AdminApi.md#adminoverview) | **GET** /v1/admin/overview | Instance totals (owner only)
+[*AdminApi*](doc/AdminApi.md) | [**adminPasskeyCheck**](doc/AdminApi.md#adminpasskeycheck) | **POST** /v1/admin/checks/passkey | Record a passkey check on this sign-in session (owner only)
+[*AdminApi*](doc/AdminApi.md) | [**adminPin**](doc/AdminApi.md#adminpin) | **GET** /v1/admin/pin | Whether the owner has an admin PIN (owner only)
+[*AdminApi*](doc/AdminApi.md) | [**adminPinCheck**](doc/AdminApi.md#adminpincheck) | **POST** /v1/admin/checks/pin | Check the admin PIN and record it on this sign-in session (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**adminPriceTables**](doc/AdminApi.md#adminpricetables) | **GET** /v1/admin/price-tables | Cost tables and domain sale settings (owner only; D-373)
 [*AdminApi*](doc/AdminApi.md) | [**adminPricing**](doc/AdminApi.md#adminpricing) | **GET** /v1/admin/pricing | Plans, credit packs and the usage markup (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**adminRemoteAccess**](doc/AdminApi.md#adminremoteaccess) | **GET** /v1/admin/remote-access | This server&#39;s public address through Casama Link, and whether it works (owner only)
@@ -133,6 +136,7 @@ Class | Method | HTTP request | Description
 [*AdminApi*](doc/AdminApi.md) | [**listContentReports**](doc/AdminApi.md#listcontentreports) | **GET** /v1/admin/content-reports | Reports from inside the app, open first (instance owners)
 [*AdminApi*](doc/AdminApi.md) | [**listReportedCreations**](doc/AdminApi.md#listreportedcreations) | **GET** /v1/admin/reports | Public links people reported, most reported first (owner only; D-281)
 [*AdminApi*](doc/AdminApi.md) | [**listSupportTickets**](doc/AdminApi.md#listsupporttickets) | **GET** /v1/admin/support-tickets | Messages sent to support from the app, newest first (instance owners)
+[*AdminApi*](doc/AdminApi.md) | [**removeAdminPin**](doc/AdminApi.md#removeadminpin) | **DELETE** /v1/admin/pin | Remove the admin PIN (owner only; a fresh passkey or sign-in, not the PIN)
 [*AdminApi*](doc/AdminApi.md) | [**reviewContentReport**](doc/AdminApi.md#reviewcontentreport) | **POST** /v1/admin/content-reports/{id} | Close a report: acted on (optionally suspending the workspace) or dismissed
 [*AdminApi*](doc/AdminApi.md) | [**saveBrowserGuard**](doc/AdminApi.md#savebrowserguard) | **PUT** /v1/admin/browser-guard | Replace the added sites; the built-in lists can&#39;t be shortened (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**saveCallLimits**](doc/AdminApi.md#savecalllimits) | **PUT** /v1/admin/call-limits | Replace the saved call limits; refused when a value is unknown or out of range
@@ -143,6 +147,7 @@ Class | Method | HTTP request | Description
 [*AdminApi*](doc/AdminApi.md) | [**setAdminBot**](doc/AdminApi.md#setadminbot) | **PUT** /v1/admin/admin-bot | Turn the admin bot on or off, or choose its bot (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**setAdminCloudModels**](doc/AdminApi.md#setadmincloudmodels) | **PUT** /v1/admin/models | Change the models Casama Cloud runs (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**setAdminConnectionSettings**](doc/AdminApi.md#setadminconnectionsettings) | **PUT** /v1/admin/connections | Choose how apps without their own sign-in connect (owner only)
+[*AdminApi*](doc/AdminApi.md) | [**setAdminPin**](doc/AdminApi.md#setadminpin) | **PUT** /v1/admin/pin | Set or change the admin PIN (owner only; a fresh passkey or sign-in, not the PIN)
 [*AdminApi*](doc/AdminApi.md) | [**setAdminVendor**](doc/AdminApi.md#setadminvendor) | **PUT** /v1/admin/vendors/{vendor} | 
 [*AdminApi*](doc/AdminApi.md) | [**setBillingSettings**](doc/AdminApi.md#setbillingsettings) | **PATCH** /v1/admin/billing-settings | Change the markup on usage paid with Casama&#39;s keys
 [*AdminApi*](doc/AdminApi.md) | [**setMailAddressStatus**](doc/AdminApi.md#setmailaddressstatus) | **PATCH** /v1/admin/mail/addresses/{id} | Pause an address, or lift a pause including an automatic one (owner only)
@@ -652,6 +657,7 @@ Class | Method | HTTP request | Description
  - [AdminBotSetting](doc/AdminBotSetting.md)
  - [AdminBrowserGuard](doc/AdminBrowserGuard.md)
  - [AdminCallLimits](doc/AdminCallLimits.md)
+ - [AdminCheck](doc/AdminCheck.md)
  - [AdminCreditPack](doc/AdminCreditPack.md)
  - [AdminDomain](doc/AdminDomain.md)
  - [AdminDomainOrder](doc/AdminDomainOrder.md)
@@ -670,6 +676,9 @@ Class | Method | HTTP request | Description
  - [AdminOrg](doc/AdminOrg.md)
  - [AdminOrgList](doc/AdminOrgList.md)
  - [AdminOverview](doc/AdminOverview.md)
+ - [AdminPasskeyCheckRequest](doc/AdminPasskeyCheckRequest.md)
+ - [AdminPinCheckRequest](doc/AdminPinCheckRequest.md)
+ - [AdminPinState](doc/AdminPinState.md)
  - [AdminPlan](doc/AdminPlan.md)
  - [AdminPriceTables](doc/AdminPriceTables.md)
  - [AdminPricing](doc/AdminPricing.md)
@@ -1328,6 +1337,7 @@ Class | Method | HTTP request | Description
  - [ServerCapacityDaysInner](doc/ServerCapacityDaysInner.md)
  - [ServerCapacityLatest](doc/ServerCapacityLatest.md)
  - [SetAdminBotRequest](doc/SetAdminBotRequest.md)
+ - [SetAdminPinRequest](doc/SetAdminPinRequest.md)
  - [SetAnalyticsOptOutRequest](doc/SetAnalyticsOptOutRequest.md)
  - [SetBotA2aRequest](doc/SetBotA2aRequest.md)
  - [SetBotAccessRequest](doc/SetBotAccessRequest.md)
