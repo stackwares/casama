@@ -5,6 +5,7 @@
 import type { ComputerService } from "@casama/agent";
 import { memoryBackendConfig, storeFromConfig } from "@casama/agent";
 import {
+  contentKeys,
   type Database,
   type JwtClaims,
   liftTimeouts,
@@ -121,6 +122,12 @@ export async function exportUserData(db: Database, claims: JwtClaims) {
       device_grants: await q(
         sql`select bot_id, kind, created_at from public.device_grants where user_id = ${claims.sub}::uuid`,
       ),
+      // What bots keep on the person's Canvas widgets (docs/BOT-WIDGET-PLAN.md), opened.
+      widget_canvases: (
+        await q(
+          sql`select id, org_id, bot_id, name, content, version, status, hide_when_locked, until, set_at, created_at from public.widget_canvases where user_id = ${claims.sub}::uuid`,
+        )
+      ).map((r) => ({ ...r, content: contentKeys.open(r.content) })),
       notifications: await q(
         sql`select * from public.notifications where user_id = ${claims.sub}::uuid`,
       ),
@@ -219,6 +226,8 @@ export async function requestAccountDeletion(db: Database, userId: string, grace
     await tx.execute(sql`delete from public.devices where user_id = ${userId}::uuid`);
     // Shared device data goes right away too (D-149); the rest goes with the account.
     await tx.execute(sql`delete from public.device_sources where user_id = ${userId}::uuid`);
+    // And what bots showed on their widgets.
+    await tx.execute(sql`delete from public.widget_canvases where user_id = ${userId}::uuid`);
   });
   // End every session (Supabase Auth tables; absent in the test shim, so outside the transaction).
   await db.execute(sql`delete from auth.sessions where user_id = ${userId}::uuid`).catch(() => {});

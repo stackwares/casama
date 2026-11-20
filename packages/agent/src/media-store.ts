@@ -63,7 +63,8 @@ export async function deleteQueuedBlobs(db: Database, store: ObjectStore, batch 
         (select count(*) from public.chat_media where blob_key = ${r.key}) +
         (select count(*) from public.creations where ${r.key} in (blob_key, preview_key, cover_key)) +
         (select count(*) from public.creation_versions where blob_key = ${r.key}) +
-        (select count(*) from public.page_assets where blob_key = ${r.key}))::int as n`);
+        (select count(*) from public.page_assets where blob_key = ${r.key}) +
+        (select count(*) from public.widget_canvas_pictures where blob_key = ${r.key}))::int as n`);
     if (!used?.n) await store.delete(r.key).catch(() => {});
     await db.execute(sql`delete from public.deleted_blobs where key = ${r.key}`);
   }

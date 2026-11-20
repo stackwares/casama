@@ -39,6 +39,8 @@ const GROUP_PURPOSE: Record<string, string> = {
   library: "find and change things you made before",
   device:
     "the person's own phone or computer: calendar, contacts, health (sleep, steps, heart rate), places, reminders; read them or ask for access",
+  widget:
+    "put a verse, quote, countdown, streak, list or picture on the person's home screen and Lock Screen widgets, changing daily by itself",
   projects:
     "keep work that takes several files or sessions (a game, an app, a site) together: start one and what you make is filed under it",
 };

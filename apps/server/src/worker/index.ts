@@ -64,6 +64,7 @@ import {
   registerTeachTools,
   registerToolsLoad,
   registerWatcherTools,
+  registerWidgetTools,
   SearchCache,
   StripeIssuingProvider,
   searchProviderFor,
@@ -702,6 +703,13 @@ export async function startWorker(opts: WorkerOptions) {
     });
   // Device connections (D-149): the person's own phone and computer data, per-bot grants.
   registerDeviceTools(tools, { db, waitMs: opts.deviceWaitMs });
+  // Bot widgets (docs/BOT-WIDGET-PLAN.md): a bot keeps a canvas on the person's Canvas widget.
+  registerWidgetTools(tools, {
+    db,
+    objects: opts.objects,
+    fetch: fetchOut,
+    changed: (userId) => glancePusher?.changed(userId, { urgent: true }),
+  });
   // Desktop context (D-152): file search on the person's own computer.
   registerDesktopContextTools(tools, { db });
   // Paid data (D-138): the workspace's own Treg key, else Casama's resale key when it's on.

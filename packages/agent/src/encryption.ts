@@ -20,6 +20,8 @@ export const SEALED_COLUMNS = [
   { table: "page_versions", column: "html", json: false, key: ["page_id", "version"] },
   { table: "page_versions", column: "data", json: true, key: ["page_id", "version"] },
   { table: "knowledge_chunks", column: "text", json: false, key: ["id"] },
+  // What a bot keeps on a person's Canvas widget (docs/BOT-WIDGET-PLAN.md §7).
+  { table: "widget_canvases", column: "content", json: true, key: ["id"] },
   // The default invite link's token, kept so the link can be shown again (D-167).
   { table: "invite_links", column: "share_token", json: false, key: ["id"] },
 ] as const;

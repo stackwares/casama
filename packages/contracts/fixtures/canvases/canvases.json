@@ -1,0 +1,711 @@
+{
+  "version": "0bkP5NOEWoHcxjYEuGaTR6",
+  "made_at": "2027-03-10T09:00:00.000Z",
+  "private": false,
+  "items": [
+    {
+      "id": "aaaaaaaa-0000-4000-8000-000000000001",
+      "org_id": "11111111-1111-4111-8111-111111111111",
+      "name": "Daily verse",
+      "bot_id": "33333333-3333-4333-8333-333333333333",
+      "bot": "Verse",
+      "bot_avatar": "mascot:winky",
+      "status": "shown",
+      "hide_when_locked": false,
+      "version": 3,
+      "set_at": "2027-03-10T08:00:00.000Z",
+      "until": null,
+      "link": "/bots/33333333-3333-4333-8333-333333333333/chat?c=44444444-4444-4444-8444-444444444444",
+      "rotation": {
+        "count": 3,
+        "showing": 0,
+        "left": 2,
+        "every": "every day at 06:00, in order, starting again at the end"
+      },
+      "entries": [
+        {
+          "at": null,
+          "template": "text",
+          "title": null,
+          "text": "Be still, and know that I am God.",
+          "footer": "Ps 46:10",
+          "target": null,
+          "count": null,
+          "value": null,
+          "of": null,
+          "unit": null,
+          "items": [],
+          "picture": null,
+          "short": "Be still, and know that I am God. · Ps 46:10",
+          "tiny": "Be still, and know that…",
+          "look": {
+            "background": {
+              "kind": "picture",
+              "color": null,
+              "from": null,
+              "to": null,
+              "picture": "painting-night_sky"
+            },
+            "font": "serif",
+            "align": "center",
+            "icon": "📖",
+            "accent": null,
+            "ink": "light"
+          }
+        },
+        {
+          "at": "2027-03-10T22:00:00.000Z",
+          "template": "text",
+          "title": null,
+          "text": "Rejoice always, pray continually, give thanks in all circumstances.",
+          "footer": "1 Thess 5:16-18",
+          "target": null,
+          "count": null,
+          "value": null,
+          "of": null,
+          "unit": null,
+          "items": [],
+          "picture": null,
+          "short": "Rejoice always, pray continually, give thanks in all… · 1 Thess 5:16-18",
+          "tiny": "Rejoice always, pray…",
+          "look": {
+            "background": {
+              "kind": "picture",
+              "color": null,
+              "from": null,
+              "to": null,
+              "picture": "painting-night_sky"
+            },
+            "font": "serif",
+            "align": "center",
+            "icon": "📖",
+            "accent": null,
+            "ink": "light"
+          }
+        },
+        {
+          "at": "2027-03-11T22:00:00.000Z",
+          "template": "text",
+          "title": null,
+          "text": "The Lord is my shepherd; I shall not want.",
+          "footer": "Ps 23:1",
+          "target": null,
+          "count": null,
+          "value": null,
+          "of": null,
+          "unit": null,
+          "items": [],
+          "picture": null,
+          "short": "The Lord is my shepherd; I shall not want. · Ps 23:1",
+          "tiny": "The Lord is my…",
+          "look": {
+            "background": {
+              "kind": "picture",
+              "color": null,
+              "from": null,
+              "to": null,
+              "picture": "painting-night_sky"
+            },
+            "font": "serif",
+            "align": "center",
+            "icon": "📖",
+            "accent": null,
+            "ink": "light"
+          }
+        },
+        {
+          "at": "2027-03-12T22:00:00.000Z",
+          "template": "text",
+          "title": null,
+          "text": "Be still, and know that I am God.",
+          "footer": "Ps 46:10",
+          "target": null,
+          "count": null,
+          "value": null,
+          "of": null,
+          "unit": null,
+          "items": [],
+          "picture": null,
+          "short": "Be still, and know that I am God. · Ps 46:10",
+          "tiny": "Be still, and know that…",
+          "look": {
+            "background": {
+              "kind": "picture",
+              "color": null,
+              "from": null,
+              "to": null,
+              "picture": "painting-night_sky"
+            },
+            "font": "serif",
+            "align": "center",
+            "icon": "📖",
+            "accent": null,
+            "ink": "light"
+          }
+        },
+        {
+          "at": "2027-03-13T22:00:00.000Z",
+          "template": "text",
+          "title": null,
+          "text": "Rejoice always, pray continually, give thanks in all circumstances.",
+          "footer": "1 Thess 5:16-18",
+          "target": null,
+          "count": null,
+          "value": null,
+          "of": null,
+          "unit": null,
+          "items": [],
+          "picture": null,
+          "short": "Rejoice always, pray continually, give thanks in all… · 1 Thess 5:16-18",
+          "tiny": "Rejoice always, pray…",
+          "look": {
+            "background": {
+              "kind": "picture",
+              "color": null,
+              "from": null,
+              "to": null,
+              "picture": "painting-night_sky"
+            },
+            "font": "serif",
+            "align": "center",
+            "icon": "📖",
+            "accent": null,
+            "ink": "light"
+          }
+        },
+        {
+          "at": "2027-03-14T22:00:00.000Z",
+          "template": "text",
+          "title": null,
+          "text": "The Lord is my shepherd; I shall not want.",
+          "footer": "Ps 23:1",
+          "target": null,
+          "count": null,
+          "value": null,
+          "of": null,
+          "unit": null,
+          "items": [],
+          "picture": null,
+          "short": "The Lord is my shepherd; I shall not want. · Ps 23:1",
+          "tiny": "The Lord is my…",
+          "look": {
+            "background": {
+              "kind": "picture",
+              "color": null,
+              "from": null,
+              "to": null,
+              "picture": "painting-night_sky"
+            },
+            "font": "serif",
+            "align": "center",
+            "icon": "📖",
+            "accent": null,
+            "ink": "light"
+          }
+        },
+        {
+          "at": "2027-03-15T22:00:00.000Z",
+          "template": "text",
+          "title": null,
+          "text": "Be still, and know that I am God.",
+          "footer": "Ps 46:10",
+          "target": null,
+          "count": null,
+          "value": null,
+          "of": null,
+          "unit": null,
+          "items": [],
+          "picture": null,
+          "short": "Be still, and know that I am God. · Ps 46:10",
+          "tiny": "Be still, and know that…",
+          "look": {
+            "background": {
+              "kind": "picture",
+              "color": null,
+              "from": null,
+              "to": null,
+              "picture": "painting-night_sky"
+            },
+            "font": "serif",
+            "align": "center",
+            "icon": "📖",
+            "accent": null,
+            "ink": "light"
+          }
+        },
+        {
+          "at": "2027-03-16T22:00:00.000Z",
+          "template": "text",
+          "title": null,
+          "text": "Rejoice always, pray continually, give thanks in all circumstances.",
+          "footer": "1 Thess 5:16-18",
+          "target": null,
+          "count": null,
+          "value": null,
+          "of": null,
+          "unit": null,
+          "items": [],
+          "picture": null,
+          "short": "Rejoice always, pray continually, give thanks in all… · 1 Thess 5:16-18",
+          "tiny": "Rejoice always, pray…",
+          "look": {
+            "background": {
+              "kind": "picture",
+              "color": null,
+              "from": null,
+              "to": null,
+              "picture": "painting-night_sky"
+            },
+            "font": "serif",
+            "align": "center",
+            "icon": "📖",
+            "accent": null,
+            "ink": "light"
+          }
+        },
+        {
+          "at": "2027-03-17T22:00:00.000Z",
+          "template": "text",
+          "title": null,
+          "text": "The Lord is my shepherd; I shall not want.",
+          "footer": "Ps 23:1",
+          "target": null,
+          "count": null,
+          "value": null,
+          "of": null,
+          "unit": null,
+          "items": [],
+          "picture": null,
+          "short": "The Lord is my shepherd; I shall not want. · Ps 23:1",
+          "tiny": "The Lord is my…",
+          "look": {
+            "background": {
+              "kind": "picture",
+              "color": null,
+              "from": null,
+              "to": null,
+              "picture": "painting-night_sky"
+            },
+            "font": "serif",
+            "align": "center",
+            "icon": "📖",
+            "accent": null,
+            "ink": "light"
+          }
+        },
+        {
+          "at": "2027-03-18T22:00:00.000Z",
+          "template": "text",
+          "title": null,
+          "text": "Be still, and know that I am God.",
+          "footer": "Ps 46:10",
+          "target": null,
+          "count": null,
+          "value": null,
+          "of": null,
+          "unit": null,
+          "items": [],
+          "picture": null,
+          "short": "Be still, and know that I am God. · Ps 46:10",
+          "tiny": "Be still, and know that…",
+          "look": {
+            "background": {
+              "kind": "picture",
+              "color": null,
+              "from": null,
+              "to": null,
+              "picture": "painting-night_sky"
+            },
+            "font": "serif",
+            "align": "center",
+            "icon": "📖",
+            "accent": null,
+            "ink": "light"
+          }
+        },
+        {
+          "at": "2027-03-19T22:00:00.000Z",
+          "template": "text",
+          "title": null,
+          "text": "Rejoice always, pray continually, give thanks in all circumstances.",
+          "footer": "1 Thess 5:16-18",
+          "target": null,
+          "count": null,
+          "value": null,
+          "of": null,
+          "unit": null,
+          "items": [],
+          "picture": null,
+          "short": "Rejoice always, pray continually, give thanks in all… · 1 Thess 5:16-18",
+          "tiny": "Rejoice always, pray…",
+          "look": {
+            "background": {
+              "kind": "picture",
+              "color": null,
+              "from": null,
+              "to": null,
+              "picture": "painting-night_sky"
+            },
+            "font": "serif",
+            "align": "center",
+            "icon": "📖",
+            "accent": null,
+            "ink": "light"
+          }
+        },
+        {
+          "at": "2027-03-20T22:00:00.000Z",
+          "template": "text",
+          "title": null,
+          "text": "The Lord is my shepherd; I shall not want.",
+          "footer": "Ps 23:1",
+          "target": null,
+          "count": null,
+          "value": null,
+          "of": null,
+          "unit": null,
+          "items": [],
+          "picture": null,
+          "short": "The Lord is my shepherd; I shall not want. · Ps 23:1",
+          "tiny": "The Lord is my…",
+          "look": {
+            "background": {
+              "kind": "picture",
+              "color": null,
+              "from": null,
+              "to": null,
+              "picture": "painting-night_sky"
+            },
+            "font": "serif",
+            "align": "center",
+            "icon": "📖",
+            "accent": null,
+            "ink": "light"
+          }
+        },
+        {
+          "at": "2027-03-21T22:00:00.000Z",
+          "template": "text",
+          "title": null,
+          "text": "Be still, and know that I am God.",
+          "footer": "Ps 46:10",
+          "target": null,
+          "count": null,
+          "value": null,
+          "of": null,
+          "unit": null,
+          "items": [],
+          "picture": null,
+          "short": "Be still, and know that I am God. · Ps 46:10",
+          "tiny": "Be still, and know that…",
+          "look": {
+            "background": {
+              "kind": "picture",
+              "color": null,
+              "from": null,
+              "to": null,
+              "picture": "painting-night_sky"
+            },
+            "font": "serif",
+            "align": "center",
+            "icon": "📖",
+            "accent": null,
+            "ink": "light"
+          }
+        },
+        {
+          "at": "2027-03-22T22:00:00.000Z",
+          "template": "text",
+          "title": null,
+          "text": "Rejoice always, pray continually, give thanks in all circumstances.",
+          "footer": "1 Thess 5:16-18",
+          "target": null,
+          "count": null,
+          "value": null,
+          "of": null,
+          "unit": null,
+          "items": [],
+          "picture": null,
+          "short": "Rejoice always, pray continually, give thanks in all… · 1 Thess 5:16-18",
+          "tiny": "Rejoice always, pray…",
+          "look": {
+            "background": {
+              "kind": "picture",
+              "color": null,
+              "from": null,
+              "to": null,
+              "picture": "painting-night_sky"
+            },
+            "font": "serif",
+            "align": "center",
+            "icon": "📖",
+            "accent": null,
+            "ink": "light"
+          }
+        }
+      ]
+    },
+    {
+      "id": "aaaaaaaa-0000-4000-8000-000000000002",
+      "org_id": "11111111-1111-4111-8111-111111111111",
+      "name": "Trip",
+      "bot_id": "33333333-3333-4333-8333-333333333333",
+      "bot": "Verse",
+      "bot_avatar": "mascot:winky",
+      "status": "shown",
+      "hide_when_locked": false,
+      "version": 3,
+      "set_at": "2027-03-10T08:00:00.000Z",
+      "until": "2027-04-02T01:00:00.000Z",
+      "link": "/bots/33333333-3333-4333-8333-333333333333/chat?c=44444444-4444-4444-8444-444444444444",
+      "rotation": null,
+      "entries": [
+        {
+          "at": null,
+          "template": "countdown",
+          "title": "Tokyo",
+          "text": null,
+          "footer": "Flight PR 428",
+          "target": "2027-04-01T01:00:00.000Z",
+          "count": "down",
+          "value": null,
+          "of": null,
+          "unit": null,
+          "items": [],
+          "picture": null,
+          "short": "Tokyo · Flight PR 428",
+          "tiny": "Tokyo",
+          "look": {
+            "background": {
+              "kind": "gradient",
+              "color": null,
+              "from": "#0b3a53",
+              "to": "#1f7a8c",
+              "picture": null
+            },
+            "font": "plain",
+            "align": "start",
+            "icon": "✈️",
+            "accent": null,
+            "ink": "light"
+          }
+        }
+      ]
+    },
+    {
+      "id": "aaaaaaaa-0000-4000-8000-000000000003",
+      "org_id": "11111111-1111-4111-8111-111111111111",
+      "name": "Streak",
+      "bot_id": "33333333-3333-4333-8333-333333333333",
+      "bot": "Verse",
+      "bot_avatar": "mascot:winky",
+      "status": "shown",
+      "hide_when_locked": true,
+      "version": 3,
+      "set_at": "2027-03-10T08:00:00.000Z",
+      "until": null,
+      "link": "/bots/33333333-3333-4333-8333-333333333333/chat?c=44444444-4444-4444-8444-444444444444",
+      "rotation": null,
+      "entries": [
+        {
+          "at": null,
+          "template": "number",
+          "title": "Reading streak",
+          "text": null,
+          "footer": "Keep going",
+          "target": null,
+          "count": null,
+          "value": 12,
+          "of": 30,
+          "unit": "days",
+          "items": [],
+          "picture": null,
+          "short": "12/30 days Reading streak",
+          "tiny": "12/30 days Reading…",
+          "look": {
+            "background": {
+              "kind": "color",
+              "color": "#fff59d",
+              "from": null,
+              "to": null,
+              "picture": null
+            },
+            "font": "rounded",
+            "align": "start",
+            "icon": "🔥",
+            "accent": "#e65100",
+            "ink": "dark"
+          }
+        }
+      ]
+    },
+    {
+      "id": "aaaaaaaa-0000-4000-8000-000000000004",
+      "org_id": "11111111-1111-4111-8111-111111111111",
+      "name": "Today",
+      "bot_id": "33333333-3333-4333-8333-333333333333",
+      "bot": "Verse",
+      "bot_avatar": "mascot:winky",
+      "status": "shown",
+      "hide_when_locked": false,
+      "version": 3,
+      "set_at": "2027-03-10T08:00:00.000Z",
+      "until": null,
+      "link": "/bots/33333333-3333-4333-8333-333333333333/chat?c=44444444-4444-4444-8444-444444444444",
+      "rotation": null,
+      "entries": [
+        {
+          "at": null,
+          "template": "list",
+          "title": "Today",
+          "text": null,
+          "footer": null,
+          "target": null,
+          "count": null,
+          "value": null,
+          "of": null,
+          "unit": null,
+          "items": [
+            {
+              "text": "Call the bank",
+              "done": false
+            },
+            {
+              "text": "Gym",
+              "done": true
+            },
+            {
+              "text": "Buy flowers",
+              "done": false
+            },
+            {
+              "text": "Draft the talk",
+              "done": false
+            }
+          ],
+          "picture": null,
+          "short": "Call the bank, Buy flowers, Draft the talk",
+          "tiny": "Call the bank, Buy…",
+          "look": {
+            "background": {
+              "kind": "auto",
+              "color": null,
+              "from": null,
+              "to": null,
+              "picture": null
+            },
+            "font": "plain",
+            "align": "start",
+            "icon": "checklist",
+            "accent": null,
+            "ink": "auto"
+          }
+        },
+        {
+          "at": "2027-03-10T16:00:00.000Z",
+          "template": "list",
+          "title": "Tomorrow",
+          "text": null,
+          "footer": null,
+          "target": null,
+          "count": null,
+          "value": null,
+          "of": null,
+          "unit": null,
+          "items": [
+            {
+              "text": "Dentist 10:00",
+              "done": false
+            },
+            {
+              "text": "Pick up Ana",
+              "done": false
+            }
+          ],
+          "picture": null,
+          "short": "Dentist 10:00, Pick up Ana",
+          "tiny": "Dentist 10:00, Pick up…",
+          "look": {
+            "background": {
+              "kind": "auto",
+              "color": null,
+              "from": null,
+              "to": null,
+              "picture": null
+            },
+            "font": "plain",
+            "align": "start",
+            "icon": "checklist",
+            "accent": null,
+            "ink": "auto"
+          }
+        }
+      ]
+    },
+    {
+      "id": "aaaaaaaa-0000-4000-8000-000000000005",
+      "org_id": "11111111-1111-4111-8111-111111111111",
+      "name": "Postcard",
+      "bot_id": "33333333-3333-4333-8333-333333333333",
+      "bot": "Verse",
+      "bot_avatar": "mascot:winky",
+      "status": "shown",
+      "hide_when_locked": false,
+      "version": 3,
+      "set_at": "2027-03-10T08:00:00.000Z",
+      "until": null,
+      "link": "/bots/33333333-3333-4333-8333-333333333333/chat?c=44444444-4444-4444-8444-444444444444",
+      "rotation": null,
+      "entries": [
+        {
+          "at": null,
+          "template": "picture",
+          "title": null,
+          "text": "Kyoto, last spring",
+          "footer": "From Ana",
+          "target": null,
+          "count": null,
+          "value": null,
+          "of": null,
+          "unit": null,
+          "items": [],
+          "picture": "0123456789abcdef0123456789abcdef",
+          "short": "Kyoto, last spring · From Ana",
+          "tiny": "Kyoto, last spring",
+          "look": {
+            "background": {
+              "kind": "auto",
+              "color": null,
+              "from": null,
+              "to": null,
+              "picture": null
+            },
+            "font": "mono",
+            "align": "start",
+            "icon": null,
+            "accent": null,
+            "ink": "light"
+          }
+        }
+      ]
+    }
+  ],
+  "grants": [
+    {
+      "bot_id": "33333333-3333-4333-8333-333333333333",
+      "bot": "Verse",
+      "created_at": "2027-03-01T00:00:00.000Z"
+    }
+  ],
+  "placed": [
+    {
+      "platform": "ios",
+      "label": "Oliver's iPhone",
+      "sizes": [
+        "home_small",
+        "lock_rect"
+      ],
+      "seen_at": "2027-03-10T08:59:00.000Z"
+    }
+  ]
+}
