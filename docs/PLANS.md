@@ -20,6 +20,7 @@ same commit. Shipping details (deploys, app builds) move fast, so check them bef
 |---|---|---|
 | [ADS-ATTRIBUTION-PLAN](ADS-ATTRIBUTION-PLAN.md) | 2026-11-20 | §15 decisions; then a Meta business portfolio, ad account and app (Oliver) |
 | [BOT-WIDGET-PLAN](BOT-WIDGET-PLAN.md) | 2026-11-20 | §13 decisions, then Oliver's go-ahead to build. Phase 0 needs an iOS and an Android build on real phones and the Apple push key in production |
+| [DECISION-MODEL-PLAN](DECISION-MODEL-PLAN.md) | 2026-11-20 | §12 decisions and Oliver's go-ahead. Phase 0 needs three decision models added to the OpenRouter guardrail |
 | [RETENTION-MESSAGING-PLAN](RETENTION-MESSAGING-PLAN.md) | 2026-11-20 | §14 decisions; then 1.0 release and Apple's access |
 | [SES-MIGRATION-PLAN](SES-MIGRATION-PLAN.md) | 2026-11-20 | §14 decisions; then an AWS account (Oliver) and AWS's sending review in Phase 0 |
 | [SIRI-AI-PLAN](SIRI-AI-PLAN.md) | 2026-11-20 | §13 decisions; then a debug build on the iPhone for Phase 0 |
