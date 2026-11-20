@@ -222,7 +222,7 @@ checks for updates.
 
 The instance owner can let one of their own bots help run the server from a chat: look up
 accounts and the waitlist, let people in, ban and unban accounts, suspend or unsuspend
-workspaces, and manage [saved resets](./saved-resets.md). The bot only ever proposes; **every change waits for the owner's approval in the app**,
+workspaces, manage [saved resets](./saved-resets.md), and give free plans. The bot only ever proposes; **every change waits for the owner's approval in the app**,
 whatever the bot's autonomy, Full access or action rules say.
 
 It works only when all of these are true:
@@ -251,6 +251,10 @@ and their limits, creating a campaign (always with a total budget), editing, sch
 resuming, cancelling or deleting one, giving one workspace a reset, and taking a reset back or
 undoing one. They follow the same rules as Admin → Resets, and the saved-reset log names the
 owner who approved.
+
+For free plans (Casama Cloud) the bot can, without asking, list the switch, running free plans and
+gift codes. Giving a plan, making one longer, ending one and making a gift code each show an
+approval card first. A new gift code appears once, in the result inside the owner's own chat.
 
 ## Limit who can sign up
 

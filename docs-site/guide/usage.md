@@ -306,6 +306,23 @@ button at the top (or pull down) to see a new reward.
 A friend who signed up without your link can still enter your code under **Got a Friend's
 Code?**, within a week of signing up. Self-hosted servers don't show invites.
 
+### Free plans from Casama
+
+Casama sometimes gives a workspace a paid plan for free, for a set number of months: by email, or
+with a gift code (`G-XXXXX-XXXXX`, or a casama.ai/g/ link). **Settings → Billing** then says **Free
+from Casama** and the date it ends. The plan works like a paid one, with its limits and its monthly
+credits; there's nothing to manage or cancel. A free plan goes on a workspace you own: by email, the
+oldest one; with a code, the one you pick.
+
+- **Redeem a code** in the web app or the desktop app downloaded from casama.ai: **Settings →
+  Billing → Have a Gift Code?**, or open the link. The App Store and Google Play apps don't take
+  codes, but the plan shows there once it's redeemed. A person can redeem one gift code, ever.
+- **In the last week** you get one reminder, by push and email, and **Keep Pro** (or the plan's
+  name) on the billing screen to start paying before it ends. Before that week the same plan
+  can't be bought; another plan can.
+- **When it ends** the workspace goes back to Free. Credits already given stay. Buying any plan
+  during a free one replaces it.
+
 ## Self-hosting: no paywall
 
 Billing is off on a self-hosted server unless you turn it on. **Settings → Billing** is hidden,

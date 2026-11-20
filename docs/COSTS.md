@@ -305,6 +305,31 @@ developer.apple.com/app-store/small-business-program · Google Play
 support.google.com/googleplay/android-developer/answer/112622 · reCAPTCHA
 docs.cloud.google.com/recaptcha/docs/compare-tiers · casama.ai renewal cfdomainpricing.com (unofficial).
 
+## Comps (free plans for friends)
+
+Comps (`docs/COMP-PLANS-PLAN.md`, D-461) give a workspace a paid plan free for 1 to 12 months, by an
+instance owner's grant or a gift code. No new vendor or paid dependency: a comp costs what its
+included credits and computer hours are spent on, at the rates above. Worst case per comp a month,
+everything used: **Plus about $4.10, Pro about $13.20, Max about $32.70**. With the cap of 50 running
+at once (Admin setting `comp_max_active`), the ceiling is about **$660 a month** if all are Pro and
+about $1,635 if all are Max (Max only by direct grant). Codes are Plus and Pro only by default.
+
+Grants land in `credit_ledger` as `monthly:<YYYY-MM>:<plan>:comp`; usage stays in `usage_ledger`.
+What comps actually cost, per month:
+
+```sql
+select date_trunc('month', u.created_at) as month, count(distinct c.org_id) as workspaces,
+       round(sum(coalesce(u.upstream_cost_usd, 0)), 2) as upstream_usd
+from public.comps c
+join public.usage_ledger u on u.org_id = c.org_id
+  and u.created_at >= c.starts_at and u.created_at < coalesce(c.ended_at, c.ends_at)
+group by 1 order by 1 desc;
+```
+
+Comps are left out of revenue: they never go through a store or Dodo and fire no purchase events.
+Count them on their own with `subscriptions.source = 'comp'`; Admin → Pricing's workspace count per
+plan includes them.
+
 ## Saved resets
 
 Saved resets refill included credits without a purchase. Campaign previews show the maximum

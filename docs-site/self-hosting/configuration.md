@@ -578,6 +578,11 @@ worker, so there's no paywall and no usage limit, and none of the payment settin
 whose `auto` follows billing keep their self-hosted behaviour: `ABUSE_CONTROLS`,
 `HEALTH_REQUIRES_ENCRYPTION` and `REFERRALS` stay off, and `CHATGPT_SIGN_IN` stays on.
 
+Free plans and gift codes (`scripts/comps.sh`, the `/v1/admin/comps` routes) are part of billing
+too: they're off until the instance owner switches them on, and a server without billing has
+nothing to give. `COMP_LINK_BASE` (default `https://casama.ai/g`) is where a new gift code's link
+points.
+
 Computer time is recorded at what it costs whoever runs it: E2B and Daytona at their published
 prices, Docker at a share of the server. Change the prices with `COMPUTER_RATES`, as JSON by
 provider (`docker`, `e2b`, `daytona`, `local`, `casama-cloud`), in USD per vCPU-hour and per

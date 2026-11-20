@@ -19,7 +19,6 @@ same commit. Shipping details (deploys, app builds) move fast, so check them bef
 | Plan | Written | Waiting on |
 |---|---|---|
 | [ADS-ATTRIBUTION-PLAN](ADS-ATTRIBUTION-PLAN.md) | 2026-11-20 | §15 decisions; then a Meta business portfolio, ad account and app (Oliver) |
-| [COMP-PLANS-PLAN](COMP-PLANS-PLAN.md) | 2026-11-21 | Approved; build grants, gift codes, and admin bot tools using §12 defaults. |
 | [COMPUTER-PLACES-PLAN](COMPUTER-PLACES-PLAN.md) | 2026-11-21 | §12 decisions and Oliver's go-ahead. A bot keeps its own computer and may also use yours in the same chat |
 | [DECISION-MODEL-PLAN](DECISION-MODEL-PLAN.md) | 2026-11-20 | §12 decisions and Oliver's go-ahead. Phase 0 needs three decision models added to the OpenRouter guardrail |
 | [MEETING-BOT-PLAN](MEETING-BOT-PLAN.md) | 2026-11-21 | §14 decisions. The engine (Recall.ai or our own) is left open on purpose; Phase 0 tries both and needs a Recall trial key and test calls on Meet, Teams and Zoom (§17) |
@@ -46,6 +45,7 @@ same commit. Shipping details (deploys, app builds) move fast, so check them bef
 
 | Plan | Decisions | What's left |
 |---|---|---|
+| [COMP-PLANS-PLAN](COMP-PLANS-PLAN.md) | D-461 | Built 2026-11-21: grants, gift codes (casama.ai/g), admin bot tools, `scripts/comps.sh`. Left: server deploy (migrations `20270311100001`/`…02`), web deploy for /g, app builds; then `scripts/comps.sh on` with Oliver's yes |
 | [REVIEW-PROMPT-PLAN](REVIEW-PROMPT-PLAN.md) | D-460 | Built 2026-11-21: first-reply ask, looser Android/iOS rules, Rate Casama row in Help. Left: app builds; Phase 4 checks (Play internal track, iOS debug run) |
 | [WORKSPACE-PICTURES-PLAN](WORKSPACE-PICTURES-PLAN.md) | §6 defaults | Built 2026-11-21: migration `20270310100001_workspace_images.sql`, `/v1/orgs/{id}/image*` + `/v1/workspace-images/{id}`, worker AI drawing, `SpaceAvatar` + `workspace_picture.dart`. Left: server deploy + app builds |
 | [RICH-CARDS-PLAN](RICH-CARDS-PLAN.md) | D-458 | Merged to main 2026-11-20, not deployed: a deploy (migration `20270309100001`), app builds; a licensed stock key for Casama Cloud; Stage B native widgets later |

@@ -9,6 +9,12 @@ The server, apps, CLI, SDK and MCP server share one version number.
 
 ## [Unreleased]
 
+- Free plans (D-461): Casama Cloud can give a workspace Plus, Pro or Max free for up to 12 months,
+  by email or with a gift code (`G-XXXXX-XXXXX`, or a casama.ai/g/ link). Billing shows **Free from
+  Casama** and the end date, with **Keep Pro** in the last week and one reminder. Codes are redeemed
+  in the web app and direct desktop builds (**Have a Gift Code?**), never in the store apps.
+  Instance owners use `scripts/comps.sh`, the `/v1/admin/comps` routes or the admin bot.
+
 - Ratings (D-460): the store's rating prompt also asks after a new person's first finished reply
   (Android on, iPhone and Mac off until switched on), and asks sooner on Android: replies 3, 10,
   then every 20th, after 2 days of use. Help has a Rate Casama row that opens the store page.
