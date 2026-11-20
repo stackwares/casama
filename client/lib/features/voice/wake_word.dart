@@ -6,6 +6,7 @@ import 'dart:typed_data';
 import 'package:archive/archive.dart';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
@@ -198,6 +199,8 @@ class SherpaWakeWordEngine implements WakeWordEngine {
         keywordsBuf: keywords,
         // sherpa-onnx expects the UTF-8 byte length; `▁` is 3 bytes in UTF-8.
         keywordsBufSize: utf8.encode(keywords).length,
+        keywordsScore: 1.5,
+        keywordsThreshold: 0.20,
       ),
     );
     _stream = _spotter!.createStream();
@@ -267,7 +270,17 @@ class WakeWordController extends Notifier<WakeWordSettings> {
     }
 
     calls.addListener(follow);
+    // Android has no foreground wake-word service (D-144), so pause on background and resume cleanly.
+    final lifecycle = !kIsWeb && defaultTargetPlatform == TargetPlatform.android
+        ? AppLifecycleListener(
+            onPause: () => unawaited(_stopListening()),
+            onResume: () {
+              if (stateOrNull?.enabled ?? false) unawaited(_startListening());
+            },
+          )
+        : null;
     ref.onDispose(() {
+      lifecycle?.dispose();
       calls.removeListener(follow);
       unawaited(_sub?.cancel());
       unawaited(_engine.stop());
@@ -321,6 +334,19 @@ class WakeWordController extends Notifier<WakeWordSettings> {
       if (rethrowError) rethrow;
       debugPrint('wake word: $e');
     }
+  }
+
+  /// Pauses normal listening and starts a one-off stream to test [phrase] in Settings.
+  Future<Stream<void>> startTest(String phrase, {void Function(double)? onProgress}) async {
+    await _stopListening();
+    await _engine.prepare(onProgress: onProgress);
+    return _engine.listen(phrase);
+  }
+
+  /// Stops a phrase test and resumes normal listening if enabled.
+  Future<void> stopTest() async {
+    await _stopListening();
+    if (stateOrNull?.enabled ?? false) await _startListening();
   }
 
   Future<void> _stopListening() async {

@@ -79,6 +79,32 @@ void main() {
     WakeWordController.testing = false;
   });
 
+  testWidgets('testing a phrase in the sheet listens and shows Heard! without opening a call', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    WakeWordController.testing = true;
+    addTearDown(() => WakeWordController.testing = false);
+    await setSize(tester, const Size(900, 1200));
+    final engine = FakeWakeEngine();
+    final router = GoRouter(initialLocation: '/wake', routes: [
+      GoRoute(path: '/', builder: (_, _) => const Scaffold(body: Text('home')), routes: [GoRoute(path: 'wake', builder: (_, _) => const Scaffold(body: WakeWordSheet()))]),
+      GoRoute(path: '/bots/:id/call', builder: (_, s) => Text('call ${s.pathParameters['id']}')),
+    ]);
+    await tester.pumpWidget(ProviderScope(
+      overrides: [backendProvider.overrideWithValue(FakeBackend()), wakeWordEngineProvider.overrideWithValue(engine), routerProvider.overrideWithValue(router)],
+      child: MaterialApp.router(routerConfig: router, localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
+    ));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('testWakeWord')));
+    await tester.pumpAndSettle();
+    expect(find.text('Listening… say your phrase'), findsOneWidget);
+    expect(engine.phrase, 'hey casama');
+
+    engine.heard.add(null);
+    await tester.pumpAndSettle();
+    expect(find.text('Heard!'), findsOneWidget);
+    expect(find.text('call $botId'), findsNothing);
+  });
+
   test('save rolls back and surfaces errors when listening fails to start', () async {
     SharedPreferences.setMockInitialValues({});
     WakeWordController.testing = true;

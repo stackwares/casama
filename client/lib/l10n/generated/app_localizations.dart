@@ -14548,6 +14548,30 @@ abstract class AppLocalizations {
   /// **'Downloading the on-device model…'**
   String get wakeWordDownloading;
 
+  /// No description provided for @wakeWordTest.
+  ///
+  /// In en, this message translates to:
+  /// **'Test phrase'**
+  String get wakeWordTest;
+
+  /// No description provided for @wakeWordTesting.
+  ///
+  /// In en, this message translates to:
+  /// **'Listening… say your phrase'**
+  String get wakeWordTesting;
+
+  /// No description provided for @wakeWordHeard.
+  ///
+  /// In en, this message translates to:
+  /// **'Heard!'**
+  String get wakeWordHeard;
+
+  /// No description provided for @wakeWordStopTest.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop'**
+  String get wakeWordStopTest;
+
   /// No description provided for @wakeWordPrivacy.
   ///
   /// In en, this message translates to:

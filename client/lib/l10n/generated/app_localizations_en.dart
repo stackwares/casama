@@ -9259,6 +9259,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get wakeWordDownloading => 'Downloading the on-device model…';
 
   @override
+  String get wakeWordTest => 'Test phrase';
+
+  @override
+  String get wakeWordTesting => 'Listening… say your phrase';
+
+  @override
+  String get wakeWordHeard => 'Heard!';
+
+  @override
+  String get wakeWordStopTest => 'Stop';
+
+  @override
   String get wakeWordPrivacy =>
       'Listening happens on this device with an open-source model (about 18 MB, downloaded once). Nothing is sent anywhere until the call starts.';
 

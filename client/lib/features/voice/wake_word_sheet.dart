@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:casama_sdk/casama_sdk.dart';
@@ -6,6 +8,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
 import '../../core/haptics.dart';
+import '../../theme/app_colors.dart';
 import '../../ui/form_sheet.dart';
 import 'wake_word.dart';
 
@@ -22,11 +25,70 @@ class _WakeWordSheetState extends ConsumerState<WakeWordSheet> {
   late String? _bot = ref.read(wakeWordProvider).botId;
   double? _progress;
   var _busy = false;
+  StreamSubscription<void>? _testSub;
+  var _testing = false;
+  var _heard = false;
+  late final _controller = ref.read(wakeWordProvider.notifier);
 
   @override
   void dispose() {
+    unawaited(_testSub?.cancel());
+    if (_testing) unawaited(_controller.stopTest());
     _phrase.dispose();
     super.dispose();
+  }
+
+  Future<void> _startTest() async {
+    await _stopTest();
+    if (!mounted) return;
+    setState(() {
+      _testing = true;
+      _heard = false;
+    });
+    final phrase = _phrase.text.trim().toLowerCase();
+    final stream = await runGuarded(
+      context,
+      () => _controller.startTest(
+        phrase,
+        onProgress: (p) => mounted ? setState(() => _progress = p) : null,
+      ),
+    );
+    if (!mounted) {
+      unawaited(_controller.stopTest());
+      return;
+    }
+    if (stream == null) {
+      setState(() => _testing = false);
+      return;
+    }
+    _testSub = stream.listen(
+      (_) {
+        if (!mounted) return;
+        HapticsHelper.medium();
+        setState(() {
+          _heard = true;
+          _testing = false;
+        });
+        unawaited(_stopTest(keepHeard: true));
+      },
+      onError: (Object e) {
+        if (!mounted) return;
+        setState(() => _testing = false);
+        unawaited(_controller.stopTest());
+      },
+    );
+  }
+
+  Future<void> _stopTest({bool keepHeard = false}) async {
+    await _testSub?.cancel();
+    _testSub = null;
+    if (_testing || keepHeard) await _controller.stopTest();
+    if (mounted) {
+      setState(() {
+        _testing = false;
+        if (!keepHeard) _heard = false;
+      });
+    }
   }
 
   @override
@@ -66,8 +128,39 @@ class _WakeWordSheetState extends ConsumerState<WakeWordSheet> {
         TextField(
           key: const Key('wakePhrase'),
           controller: _phrase,
-          onChanged: (_) => setState(() {}),
+          onChanged: (_) => setState(() => _heard = false),
           decoration: InputDecoration(labelText: l10n.wakeWordPhrase, helperText: l10n.wakeWordPhraseHelp),
+        ),
+        Row(
+          children: [
+            if (_testing)
+              OutlinedButton.icon(
+                key: const Key('stopWakeTest'),
+                onPressed: () => unawaited(_stopTest()),
+                icon: const Icon(LucideIcons.square, size: 16),
+                label: Text(l10n.wakeWordStopTest),
+              )
+            else
+              OutlinedButton.icon(
+                key: const Key('testWakeWord'),
+                onPressed: _busy || _phrase.text.trim().split(RegExp(r'\s+')).length < 2 ? null : () => unawaited(_startTest()),
+                icon: const Icon(LucideIcons.mic, size: 16),
+                label: Text(l10n.wakeWordTest),
+              ),
+            const SizedBox(width: 12),
+            if (_testing)
+              Expanded(child: Text(l10n.wakeWordTesting, style: context.textTheme.bodySmall))
+            else if (_heard)
+              Expanded(
+                child: Row(
+                  children: [
+                    Icon(LucideIcons.check, size: 16, color: context.colorScheme.primary),
+                    const SizedBox(width: 6),
+                    Text(l10n.wakeWordHeard, style: context.textTheme.bodySmall?.copyWith(color: context.colorScheme.primary)),
+                  ],
+                ),
+              ),
+          ],
         ),
         DropdownButtonFormField<String>(
           isExpanded: true,
