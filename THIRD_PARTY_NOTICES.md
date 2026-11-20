@@ -95,6 +95,7 @@ Update this file in the same pull request that adds or removes a dependency.
 | stupid_simple_sheet, motor, scroll_drag_detector                      | client                             | MIT                           |
 | phone_numbers_parser                                                  | client (phone number formatting)   | MIT                           |
 | passkeys (Corbado; web bundle with @github/webauthn-json vendored)    | client (passkey sign-in)           | MIT                           |
+| biometric_signature                                                   | client (admin screen-lock check)   | MIT                           |
 
 ## Other software
 

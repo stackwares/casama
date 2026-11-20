@@ -1,9 +1,15 @@
 import { createRoute, z } from "@hono/zod-openapi";
 import {
   AbuseEvent,
+  AddAdminDeviceKeyRequest,
   AdminBotSetting,
   AdminCheck,
   AdminCreditPack,
+  AdminDeviceChallenge,
+  AdminDeviceChallengeRequest,
+  AdminDeviceCheckRequest,
+  AdminDeviceKey,
+  AdminDeviceKeyList,
   AdminMailAddress,
   AdminMailReservedNames,
   AdminMargin,
@@ -461,5 +467,61 @@ export const adminPinCheck = createRoute({
   security,
   summary: "Check the admin PIN and record it on this sign-in session (owner only)",
   request: { body: jsonBody(AdminPinCheckRequest) },
+  responses: { 200: jsonResponse("Check recorded", AdminCheck), ...problemResponses },
+});
+
+// --- Device keys (D-453): the screen lock as the whole check -----------------------------------
+
+export const adminDeviceKeys = createRoute({
+  operationId: "adminDeviceKeys",
+  method: "get",
+  path: "/v1/admin/devices",
+  tags: ["admin"],
+  security,
+  summary: "Devices that confirm the owner with the screen lock (owner only)",
+  responses: { 200: jsonResponse("Devices", AdminDeviceKeyList), 401: e401, 403: e403 },
+});
+
+export const addAdminDeviceKey = createRoute({
+  operationId: "addAdminDeviceKey",
+  method: "post",
+  path: "/v1/admin/devices",
+  tags: ["admin"],
+  security,
+  summary: "Add this device's key (owner only; a fresh passkey, Face ID or sign-in, not the PIN)",
+  request: { body: jsonBody(AddAdminDeviceKeyRequest) },
+  responses: { 200: jsonResponse("Device", AdminDeviceKey), ...problemResponses },
+});
+
+export const removeAdminDeviceKey = createRoute({
+  operationId: "removeAdminDeviceKey",
+  method: "delete",
+  path: "/v1/admin/devices/{id}",
+  tags: ["admin"],
+  security,
+  summary: "Remove a device's key (owner only)",
+  request: { params: z.object({ id: Uuid }) },
+  responses: { 200: jsonResponse("Devices", AdminDeviceKeyList), ...problemResponses },
+});
+
+export const adminDeviceChallenge = createRoute({
+  operationId: "adminDeviceChallenge",
+  method: "post",
+  path: "/v1/admin/checks/device/challenge",
+  tags: ["admin"],
+  security,
+  summary: "A one-time challenge for this device's key (owner only)",
+  request: { body: jsonBody(AdminDeviceChallengeRequest) },
+  responses: { 200: jsonResponse("Challenge", AdminDeviceChallenge), ...problemResponses },
+});
+
+export const adminDeviceCheck = createRoute({
+  operationId: "adminDeviceCheck",
+  method: "post",
+  path: "/v1/admin/checks/device",
+  tags: ["admin"],
+  security,
+  summary: "Check the device's signature and record it on this sign-in session (owner only)",
+  request: { body: jsonBody(AdminDeviceCheckRequest) },
   responses: { 200: jsonResponse("Check recorded", AdminCheck), ...problemResponses },
 });

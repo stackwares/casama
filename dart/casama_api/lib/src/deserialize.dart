@@ -12,6 +12,7 @@ import 'package:casama_api/src/model/action_admin_workspace_limit_reset_request.
 import 'package:casama_api/src/model/action_rule.dart';
 import 'package:casama_api/src/model/action_rule_list.dart';
 import 'package:casama_api/src/model/action_rule_target.dart';
+import 'package:casama_api/src/model/add_admin_device_key_request.dart';
 import 'package:casama_api/src/model/add_teach_step_request.dart';
 import 'package:casama_api/src/model/add_user_facts_request.dart';
 import 'package:casama_api/src/model/add_user_facts_request_items_inner.dart';
@@ -21,6 +22,11 @@ import 'package:casama_api/src/model/admin_browser_guard.dart';
 import 'package:casama_api/src/model/admin_call_limits.dart';
 import 'package:casama_api/src/model/admin_check.dart';
 import 'package:casama_api/src/model/admin_credit_pack.dart';
+import 'package:casama_api/src/model/admin_device_challenge.dart';
+import 'package:casama_api/src/model/admin_device_challenge_request.dart';
+import 'package:casama_api/src/model/admin_device_check_request.dart';
+import 'package:casama_api/src/model/admin_device_key.dart';
+import 'package:casama_api/src/model/admin_device_key_list.dart';
 import 'package:casama_api/src/model/admin_domain.dart';
 import 'package:casama_api/src/model/admin_domain_order.dart';
 import 'package:casama_api/src/model/admin_domains.dart';
@@ -992,6 +998,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return ActionRuleList.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ActionRuleTarget':
           return ActionRuleTarget.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'AddAdminDeviceKeyRequest':
+          return AddAdminDeviceKeyRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AddTeachStepRequest':
           return AddTeachStepRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AddUserFactsRequest':
@@ -1010,6 +1018,16 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return AdminCheck.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AdminCreditPack':
           return AdminCreditPack.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'AdminDeviceChallenge':
+          return AdminDeviceChallenge.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'AdminDeviceChallengeRequest':
+          return AdminDeviceChallengeRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'AdminDeviceCheckRequest':
+          return AdminDeviceCheckRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'AdminDeviceKey':
+          return AdminDeviceKey.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'AdminDeviceKeyList':
+          return AdminDeviceKeyList.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AdminDomain':
           return AdminDomain.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AdminDomainOrder':

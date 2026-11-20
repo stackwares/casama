@@ -77,22 +77,6 @@ class AdminSecurity {
   /// The signed-in session's access token. Set once by the app's backend.
   static String? Function()? accessToken;
 
-  /// Sign-ins the server counts (apps/server/src/api/admin-security.ts); a refresh never does.
-  static const _interactiveMethods = {
-    'password',
-    'otp',
-    'totp',
-    'oauth',
-    'sso/saml',
-    'magiclink',
-    'passkey',
-  };
-
-  /// The server's read window for the admin console (`ADMIN_READ_WINDOW_SECONDS`).
-  static const serverReadWindow = Duration(minutes: 5);
-
-  /// How long the server will still accept this session's latest real sign-in for admin reads,
-  /// read from the token's signed `amr` (D-450). Null without a token or a real sign-in in it.
   static Map<String, dynamic>? _claims() {
     final token = accessToken?.call();
     if (token == null) return null;
@@ -103,42 +87,6 @@ class AdminSecurity {
         utf8.decode(base64Url.decode(base64Url.normalize(parts[1]))),
       );
       return claims is Map<String, dynamic> ? claims : null;
-    } catch (_) {
-      return null;
-    }
-  }
-
-  /// How long the server will still accept this session's last passkey or PIN check for admin
-  /// reads (D-452). Null without one on this session.
-  static Duration? checkWindowLeft({DateTime? now}) {
-    final at = checkAt;
-    final session = _claims()?['session_id'];
-    if (at == null || session == null || session != checkSession) return null;
-    final left = serverReadWindow - (now ?? DateTime.now()).difference(at);
-    return left.isNegative ? Duration.zero : left;
-  }
-
-  static Duration? serverWindowLeft({DateTime? now}) {
-    final token = accessToken?.call();
-    if (token == null) return null;
-    try {
-      final parts = token.split('.');
-      if (parts.length != 3) return null;
-      final claims = jsonDecode(
-        utf8.decode(base64Url.decode(base64Url.normalize(parts[1]))),
-      );
-      final amr = claims is Map ? claims['amr'] : null;
-      if (amr is! List) return null;
-      int? newest;
-      for (final e in amr) {
-        if (e is! Map || !_interactiveMethods.contains(e['method'])) continue;
-        final t = e['timestamp'];
-        if (t is num && (newest == null || t > newest)) newest = t.toInt();
-      }
-      if (newest == null) return null;
-      final at = DateTime.fromMillisecondsSinceEpoch(newest * 1000);
-      final left = serverReadWindow - (now ?? DateTime.now()).difference(at);
-      return left.isNegative ? Duration.zero : left;
     } catch (_) {
       return null;
     }

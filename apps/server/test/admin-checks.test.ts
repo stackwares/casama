@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { createSign, generateKeyPairSync, randomUUID } from "node:crypto";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { pinProblem } from "../src/api/admin-security.ts";
 import { type Harness, j, startHarness } from "./helpers.ts";
@@ -190,5 +190,91 @@ describe("admin checks: passkey and PIN", () => {
     };
     expect(await fresh(s.session)).toBe(true);
     expect(await fresh(randomUUID())).toBe(false);
+  });
+
+  describe("device keys: the screen lock as the whole check (D-453)", () => {
+    const device = () => {
+      const { publicKey, privateKey } = generateKeyPairSync("ec", { namedCurve: "prime256v1" });
+      return {
+        spki: publicKey.export({ format: "der", type: "spki" }).toString("base64"),
+        sign: (challenge: string) => {
+          const s = createSign("SHA256");
+          s.update(`casama-admin-check:${challenge}`);
+          return s.sign(privateKey).toString("base64");
+        },
+      };
+    };
+    const add = (token: string, spki: string, name = "iPhone") =>
+      h.request("/v1/admin/devices", { method: "POST", token, json: { name, public_key: spki } });
+    const challenge = (token: string, key_id: string) =>
+      h.request("/v1/admin/checks/device/challenge", { method: "POST", token, json: { key_id } });
+    const check = (token: string, challenge_id: string, signature: string) =>
+      h.request("/v1/admin/checks/device", {
+        method: "POST",
+        token,
+        json: { challenge_id, signature },
+      });
+
+    it("a signed challenge opens the console on that session, as both steps", async () => {
+      const d = device();
+      const key = await j(await add(owner.token, d.spki));
+      expect(key).toMatchObject({ id: expect.any(String), name: "iPhone", last_used_at: null });
+      const [factor] = await h.tdb.admin<{ id: string }[]>`
+        insert into auth.mfa_factors (id, user_id, friendly_name, factor_type, status, created_at, updated_at)
+        values (gen_random_uuid(), ${owner.id}::uuid, 'dev', 'totp', 'verified', now(), now())
+        returning id`;
+      try {
+        const s = await staleSession();
+        expect((await users(s.token)).status).toBe(403);
+        const c = await j(await challenge(s.token, key.id));
+        expect((await check(s.token, c.challenge_id, d.sign(c.challenge))).status).toBe(200);
+        expect((await users(s.token)).status).toBe(200);
+        // The check also lets the owner add another device (not the PIN's power).
+        expect((await add(s.token, device().spki, "iPad")).status).toBe(200);
+        // A challenge works once.
+        expect((await check(s.token, c.challenge_id, d.sign(c.challenge))).status).toBe(403);
+      } finally {
+        await h.tdb.admin`delete from auth.mfa_factors where id = ${factor!.id}::uuid`;
+      }
+    });
+
+    it("refuses another key's signature, another session's challenge and a bad key", async () => {
+      const d = device();
+      const key = await j(await add(owner.token, d.spki));
+      const s = await staleSession();
+      const c = await j(await challenge(s.token, key.id));
+      expect((await check(s.token, c.challenge_id, device().sign(c.challenge))).status).toBe(403);
+      const c2 = await j(await challenge(s.token, key.id));
+      const other = await staleSession();
+      expect((await check(other.token, c2.challenge_id, d.sign(c2.challenge))).status).toBe(403);
+      expect((await users(s.token)).status).toBe(403);
+      expect((await users(other.token)).status).toBe(403);
+      // Not a P-256 key; adding needs a fresh check; another account's key isn't found.
+      expect((await add(owner.token, Buffer.alloc(91, 1).toString("base64"))).status).toBe(400);
+      expect((await add(s.token, device().spki)).status).toBe(403);
+      const m = await staleSession(member);
+      expect((await challenge(m.token, key.id)).status).toBe(403);
+    });
+
+    it("a PIN check can't add a device; removing one ends its challenges", async () => {
+      await h.request("/v1/admin/pin", {
+        method: "PUT",
+        token: owner.token,
+        json: { pin: "482913" },
+      });
+      const s = await staleSession();
+      expect((await pinCheck(s.token, "482913")).status).toBe(200);
+      expect(await j(await add(s.token, device().spki))).toMatchObject({
+        code: "admin_pin_needs_sign_in",
+      });
+      const d = device();
+      const key = await j(await add(owner.token, d.spki));
+      const list = await j(
+        await h.request(`/v1/admin/devices/${key.id}`, { method: "DELETE", token: owner.token }),
+      );
+      expect(list.items.map((k: { id: string }) => k.id)).not.toContain(key.id);
+      expect((await challenge(s.token, key.id)).status).toBe(404);
+      await h.request("/v1/admin/pin", { method: "DELETE", token: owner.token });
+    });
   });
 });

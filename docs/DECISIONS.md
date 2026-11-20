@@ -6781,6 +6781,39 @@ building it.
 - **Tests:** `apps/server/test/admin-checks.test.ts`, `apps/server/test/admin.test.ts`,
   `client/test/admin_quick_unlock_test.dart`. Migration `20270303100001_admin_checks.sql`.
 
+## D-453 Admin console: the screen lock is the whole check (2026-11-20)
+
+Oliver: "The passkey alone is enough, or a pin is enough, or Face ID or fingerprint or screen lock
+is enough. Actually a screen lock is totally enough", then "go and do everything now except Mac
+builds".
+
+- **A key in the phone's secure chip.** The server can't trust a local Face ID yes, so the app makes
+  an EC P-256 key with `biometric_signature` (Secure Enclave on iPhone and iPad, Keystore on
+  Android), usable only after Face ID, a fingerprint or the device passcode (device credentials
+  allowed; adding a face or finger keeps the key). Its public half (SPKI, DER) goes to
+  `POST /v1/admin/devices` and `public.admin_device_keys` (RLS on, no policies; up to 10 per owner).
+- **The check.** `POST /v1/admin/checks/device/challenge` gives a 32-byte challenge for one key and
+  the caller's sign-in session, good for two minutes and once; the phone signs
+  `casama-admin-check:<challenge>` (ECDSA SHA-256) after the screen lock, and
+  `POST /v1/admin/checks/device` checks it with the stored key and records an `admin_step_ups` row
+  (method `device`) for that session: the same full check, both steps, as a passkey or PIN
+  (D-452), in the API and in `decide_approval`.
+- **Adding a phone** takes a check that isn't the PIN (a real sign-in, a passkey, or another phone's
+  key), like changing the PIN. After a passkey or password unlock, the app offers it once per phone
+  ("Not now" is remembered); **Admin → Security** lists devices, turns this phone on and removes
+  any. A key the server no longer has, or one the phone lost, is forgotten here and the button
+  hides.
+- **Replaces D-450's local Face ID unlock**, which the server couldn't check and which only worked
+  briefly after a sign-in. Phones only for now: the Mac needs a signed build with keychain access
+  for the Secure Enclave, and the web has no such key.
+- **The loop Oliver recorded** (Face ID passed, the lock screen came back and asked again) wasn't
+  reproduced in tests. Face ID now opens by itself at most once every 30 seconds across new lock
+  screens, so nothing can repeat it, and a lock within five seconds of an unlock reports its reason
+  (route change, leaving the app, account change, idle) to error tracking as a warning.
+- **Tests:** `apps/server/test/admin-checks.test.ts` (real P-256 keys: signatures, replay, other
+  sessions, PIN can't add a phone), `client/test/admin_quick_unlock_test.dart`. Migration
+  `20270306100001_admin_device_keys.sql`.
+
 ## D-454 Decision models next to Casama's own rules, shadow first (2026-11-20)
 
 Oliver asked how a decision model (Jev, OpenAI's Decisions) could lower costs or improve anything,

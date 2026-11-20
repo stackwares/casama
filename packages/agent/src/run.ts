@@ -77,7 +77,14 @@ import {
   type ModelPolicy,
   PLATFORM_OPENROUTER_CREDENTIAL_ID,
 } from "./credentials.ts";
-import { type Decision, decide, labelDecisions, markDecision, yes } from "./decide.ts";
+import {
+  type Decision,
+  decide,
+  labelDecisions,
+  markDecision,
+  shadowSettled,
+  yes,
+} from "./decide.ts";
 import {
   EFFORT_QUESTIONS,
   effortState,
@@ -2036,7 +2043,7 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
     if (rd && rd.mode !== "off") {
       const task = info.current?.text ?? "";
       const checked = replyChecked as { checker_flagged: boolean } | null;
-      const settled = rd.settled;
+      const settled = shadowSettled(info.runId, "reply_check");
       await step("decide-reply-outcome", async () => {
         const label = () =>
           labelDecisions(
@@ -2051,8 +2058,7 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
           );
         // Shadow calls still in flight: the label goes on once they're written, without the run
         // waiting for them (best effort; a lost label only leaves that row out of the results).
-        if (settled) void settled.then(label, label);
-        else await label();
+        void settled.then(label, label);
       });
     }
     if (info.trigger === "watcher")

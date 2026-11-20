@@ -86,6 +86,7 @@ lib/src/model/action_admin_workspace_limit_reset_request.dart
 lib/src/model/action_rule.dart
 lib/src/model/action_rule_list.dart
 lib/src/model/action_rule_target.dart
+lib/src/model/add_admin_device_key_request.dart
 lib/src/model/add_teach_step_request.dart
 lib/src/model/add_user_facts_request.dart
 lib/src/model/add_user_facts_request_items_inner.dart
@@ -95,6 +96,11 @@ lib/src/model/admin_browser_guard.dart
 lib/src/model/admin_call_limits.dart
 lib/src/model/admin_check.dart
 lib/src/model/admin_credit_pack.dart
+lib/src/model/admin_device_challenge.dart
+lib/src/model/admin_device_challenge_request.dart
+lib/src/model/admin_device_check_request.dart
+lib/src/model/admin_device_key.dart
+lib/src/model/admin_device_key_list.dart
 lib/src/model/admin_domain.dart
 lib/src/model/admin_domain_order.dart
 lib/src/model/admin_domains.dart

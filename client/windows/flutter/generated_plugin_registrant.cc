@@ -8,6 +8,7 @@
 
 #include <app_links/app_links_plugin_c_api.h>
 #include <auto_updater_windows/auto_updater_windows_plugin_c_api.h>
+#include <biometric_signature/biometric_signature_plugin.h>
 #include <desktop_drop/desktop_drop_plugin.h>
 #include <emoji_picker_flutter/emoji_picker_flutter_plugin_c_api.h>
 #include <file_selector_windows/file_selector_windows.h>
@@ -31,6 +32,8 @@ void RegisterPlugins(flutter::PluginRegistry* registry) {
       registry->GetRegistrarForPlugin("AppLinksPluginCApi"));
   AutoUpdaterWindowsPluginCApiRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("AutoUpdaterWindowsPluginCApi"));
+  BiometricSignaturePluginRegisterWithRegistrar(
+      registry->GetRegistrarForPlugin("BiometricSignaturePlugin"));
   DesktopDropPluginRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("DesktopDropPlugin"));
   EmojiPickerFlutterPluginCApiRegisterWithRegistrar(

@@ -217,25 +217,28 @@ password or an emailed one-time code (emailed codes require SMTP); an account wi
 sign-in also enters its authenticator code. The rest of the app stays signed in. Admin changes
 ask you to confirm with a fresh sign-in, at most once every 45 seconds.
 
-There are three ways to unlock the console and confirm a change, besides your password:
+Besides your password, there are three ways to unlock the console and confirm a change:
 
+- **Face ID or screen lock** in the iPhone and Android apps. After you unlock with a passkey or
+  your password, the app offers to set it up (or use **Admin → Security**). The phone makes a key
+  in its secure chip that only works after Face ID, a fingerprint or the phone's passcode; it
+  signs a one-time challenge from your server, which checks it with the key's public half. The
+  private key never leaves the phone. Devices are listed, and can be removed, under
+  **Admin → Security**.
 - **Verify with a passkey** where the app can use your passkeys (the web, and the iPhone and
   Android apps on servers whose passkeys are for `casama.ai`): one Face ID, fingerprint or device
   passcode prompt.
 - **An admin PIN** of 6 digits, set under **Admin → Security**. It is kept on your server as a
   salted hash, never on the device, and only confirms a device that is already signed in. Obvious
   PINs (000000, 123456, 121212 and the like) are refused. Five wrong PINs in a row turn it off and
-  email you; set a new one afterwards. Setting, changing or removing the PIN takes a passkey or
-  your password, never the PIN.
-- **Your password**, then the authenticator code when the account has two-step sign-in.
+  email you; set a new one afterwards. Setting, changing or removing the PIN, or adding a phone,
+  takes Face ID on a phone that's already set up, a passkey or your password, never the PIN.
 
-A passkey or the PIN counts as both steps, also on an account with an authenticator. The server
-records the check on the session you are signed in with (`POST /v1/admin/checks/passkey` and
-`/v1/admin/checks/pin`), and it counts like a fresh sign-in for that session only. On a phone or
-computer with Face ID, a fingerprint reader or Windows Hello, coming back to a locked console also
-offers **Unlock with Face ID or fingerprint** while your last check or sign-in is less than about
-four and a half minutes old. That only lifts the app's own lock: the server can't check it, so
-changes still ask for a passkey, the PIN or your password.
+Each of these counts as both steps, also on an account with an authenticator. The server records
+the check on the session you are signed in with (`POST /v1/admin/checks/device`,
+`/v1/admin/checks/passkey` and `/v1/admin/checks/pin`), and it counts like a fresh sign-in for that
+session only. Your password is the fallback, followed by the authenticator code when the account
+has two-step sign-in.
 
 The API independently requires a sign-in from the last five minutes for admin reads and the
 last minute for changes, and the two-step code when the account has an authenticator. Token

@@ -5634,6 +5634,39 @@ class FakeBackend implements Backend {
     return answer == null ? null : DateTime.now();
   }
 
+  /// Device keys (D-453): the server's list, and what a check answers.
+  final adminDeviceKeyList = <AdminDeviceKey>[];
+  var adminDeviceChecks = 0;
+  @override
+  Future<List<AdminDeviceKey>> adminDeviceKeys() async => List.of(adminDeviceKeyList);
+  @override
+  Future<AdminDeviceKey> addAdminDeviceKey(String name, String publicKey) async {
+    final k = AdminDeviceKey(
+      id: 'key-${adminDeviceKeyList.length + 1}',
+      name: name,
+      createdAt: DateTime.now(),
+      lastUsedAt: null,
+    );
+    adminDeviceKeyList.add(k);
+    return k;
+  }
+
+  @override
+  Future<List<AdminDeviceKey>> removeAdminDeviceKey(String id) async {
+    adminDeviceKeyList.removeWhere((k) => k.id == id);
+    return List.of(adminDeviceKeyList);
+  }
+
+  @override
+  Future<({String id, String challenge})?> adminDeviceChallenge(String keyId) async =>
+      adminDeviceKeyList.any((k) => k.id == keyId) ? (id: 'c1', challenge: 'abc') : null;
+
+  @override
+  Future<DateTime> adminDeviceCheck(String challengeId, String signature) async {
+    adminDeviceChecks++;
+    return DateTime.now();
+  }
+
   /// The admin PIN (D-452): null when none is set.
   String? adminPin;
   var adminPinDisabled = false;

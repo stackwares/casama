@@ -1,6 +1,6 @@
 # Admin console security implementation plan
 
-Status: **live** (server, docs and web app build 62, 2026-11-20), D-448, D-450 and D-452; store and desktop builds pending. Built and review-fixed the same day. Authorized by Oliver: “build all now! you decide for everything!”
+Status: **live** (server, docs and web app build 62, 2026-11-20), D-448, D-450 and D-452; screen-lock check (D-453) shipping; Mac builds pending. Built and review-fixed the same day. Authorized by Oliver: “build all now! you decide for everything!”
 
 ## Goal and decisions
 
@@ -121,6 +121,23 @@ authenticator code). Instead, each way records a **fresh admin check** on the cu
 - [x] Tests: server (proof checks, replay, PIN limits, two-step), pgTAP for `decide_approval`, Flutter.
 - [x] Docs (self-hosting), decision D-452, this plan and PLANS.
 - [x] Ship: server (migration applied), docs and web app build 62 live 2026-11-20; store builds later.
+
+## The screen lock is the whole check (D-453, 2026-11-20)
+
+Status: **built**; shipping with this change. Oliver: "a screen lock is totally enough", then "go and
+do everything now except Mac builds".
+
+- [x] A P-256 key in the phone's secure chip (`biometric_signature`), unlocked by Face ID, a
+  fingerprint or the passcode, signs a one-time server challenge; the server checks it with the
+  stored public key and records a full check on the session.
+- [x] Migration `20270306100001_admin_device_keys.sql`; API: devices list/add/remove, challenge, check.
+- [x] App: Face ID first on the lock screen and in confirmations, opening by itself (at most once every
+  30 seconds); offer after a passkey or password unlock; Admin → Security lists and removes devices.
+  Replaces D-450's local-only unlock.
+- [x] The recorded loop: no repeat prompts; a lock right after an unlock is reported with its reason.
+- [x] Tests, docs, D-453.
+- [ ] Ship: server, docs, web app; iPhone and Android (with Wear OS) builds. Mac builds left out on
+  Oliver's word.
 
 ## Validation commands
 
