@@ -3,9 +3,12 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../theme/app_colors.dart';
 import '../theme/app_tokens.dart';
+import 'glass.dart';
 import 'pressable_scale.dart';
 
-/// Neutral card with a hairline border; the base surface for every section.
+/// Frosted card with a hairline border; the base surface for every section. Without [color] it
+/// is [frostedDecoration]: the sidebars' glass look with no live blur, so long lists of cards
+/// scroll as cheaply as opaque ones.
 class AppCard extends StatelessWidget {
   const AppCard({
     super.key,
@@ -34,7 +37,9 @@ class AppCard extends StatelessWidget {
       borderRadius: BorderRadius.circular(radius),
       side: BorderSide(color: borderColor ?? context.appColors.hairline, width: borderWidth),
     );
-    final content = Padding(padding: padding, child: child);
+    final pad = Padding(padding: padding, child: child);
+    // Ink rather than a DecoratedBox so the InkWell's ripple still draws over the tint.
+    final content = color != null ? pad : Ink(decoration: frostedDecoration(context), child: pad);
     return Padding(
       padding: margin,
       child: PressableScale(
@@ -43,7 +48,7 @@ class AppCard extends StatelessWidget {
         child: Semantics(
           button: onTap != null,
           child: Card(
-            color: color ?? context.colorScheme.surfaceContainerLow,
+            color: color ?? Colors.transparent,
             shape: shape,
             clipBehavior: Clip.antiAlias,
             child: onTap == null ? content : InkWell(onTap: onTap, customBorder: shape, child: content),
@@ -54,7 +59,8 @@ class AppCard extends StatelessWidget {
   }
 }
 
-/// Rows inside one rounded card with inset hairline dividers (settings, lists of a few items).
+/// Rows inside one rounded frosted card with inset hairline dividers (settings, lists of a few
+/// items).
 class GroupedCard extends StatelessWidget {
   const GroupedCard({super.key, required this.children, this.dividerIndent = 60, this.margin = EdgeInsets.zero});
 
@@ -67,13 +73,17 @@ class GroupedCard extends StatelessWidget {
     final rows = children.where((w) => w is! SizedBox || w.child != null).toList();
     return Card(
       margin: margin,
+      color: Colors.transparent,
       clipBehavior: Clip.antiAlias,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          for (var i = 0; i < rows.length; i++) ...[if (i > 0) Divider(indent: dividerIndent), rows[i]],
-        ],
+      child: DecoratedBox(
+        decoration: frostedDecoration(context),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (var i = 0; i < rows.length; i++) ...[if (i > 0) Divider(indent: dividerIndent), rows[i]],
+          ],
+        ),
       ),
     );
   }

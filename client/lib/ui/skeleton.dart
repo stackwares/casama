@@ -3,6 +3,7 @@ import 'package:material_ui/material_ui.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_tokens.dart';
+import 'glass.dart';
 import 'motion.dart';
 import 'page.dart';
 
@@ -588,16 +589,20 @@ class SkeletonGroupedCard extends StatelessWidget {
             ),
         ];
     return Card(
+      color: Colors.transparent,
       clipBehavior: Clip.antiAlias,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          for (var i = 0; i < items.length; i++) ...[
-            if (i > 0) Divider(indent: dividerIndent),
-            items[i],
+      child: DecoratedBox(
+        decoration: frostedDecoration(context),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (var i = 0; i < items.length; i++) ...[
+              if (i > 0) Divider(indent: dividerIndent),
+              items[i],
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
@@ -624,13 +629,16 @@ class SkeletonCard extends StatelessWidget {
     return SizedBox(
       height: height,
       child: Card(
-        color: context.colorScheme.surfaceContainerLow,
+        color: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(radius),
           side: BorderSide(color: context.appColors.hairline),
         ),
         clipBehavior: Clip.antiAlias,
-        child: Padding(padding: padding, child: child ?? const SizedBox.shrink()),
+        child: DecoratedBox(
+          decoration: frostedDecoration(context),
+          child: Padding(padding: padding, child: child ?? const SizedBox.shrink()),
+        ),
       ),
     );
   }
