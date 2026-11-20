@@ -20,7 +20,11 @@ describe("admin checks: passkey and PIN", () => {
     };
   };
   const passkeyProof = (who = owner, at = nowS(), session = randomUUID()) =>
-    h.tokenFor(who, { session_id: session, aal: "aal1", amr: [{ method: "passkey", timestamp: at }] });
+    h.tokenFor(who, {
+      session_id: session,
+      aal: "aal1",
+      amr: [{ method: "passkey", timestamp: at }],
+    });
   const users = (token: string) => h.request("/v1/admin/users", { token });
   const pinCheck = (token: string, pin: string) =>
     h.request("/v1/admin/checks/pin", { method: "POST", token, json: { pin } });
@@ -33,7 +37,16 @@ describe("admin checks: passkey and PIN", () => {
   afterAll(async () => h?.stop());
 
   it("refuses obvious PINs", () => {
-    for (const pin of ["000000", "123456", "654321", "901234", "121212", "123123", "12345", "abcdef"])
+    for (const pin of [
+      "000000",
+      "123456",
+      "654321",
+      "901234",
+      "121212",
+      "123123",
+      "12345",
+      "abcdef",
+    ])
       expect(pinProblem(pin), pin).not.toBeNull();
     for (const pin of ["482913", "730316", "112358"]) expect(pinProblem(pin), pin).toBeNull();
   });
@@ -81,8 +94,11 @@ describe("admin checks: passkey and PIN", () => {
     const s = await staleSession();
     const check = (token: string, on = s.token) =>
       h.request("/v1/admin/checks/passkey", { method: "POST", token: on, json: { token } });
-    const codes = async (r: Response) => [(r.status), (await j(r)).code];
-    expect(await codes(await check(await passkeyProof(member)))).toEqual([403, "admin_check_failed"]);
+    const codes = async (r: Response) => [r.status, (await j(r)).code];
+    expect(await codes(await check(await passkeyProof(member)))).toEqual([
+      403,
+      "admin_check_failed",
+    ]);
     expect(await codes(await check(await passkeyProof(owner, nowS() - 120)))).toEqual([
       403,
       "admin_check_failed",
@@ -90,7 +106,10 @@ describe("admin checks: passkey and PIN", () => {
     // A password sign-in isn't a passkey check.
     const password = await h.tokenFor(owner, { session_id: randomUUID() });
     expect(await codes(await check(password))).toEqual([403, "admin_check_failed"]);
-    expect(await codes(await check(`${await passkeyProof()}x`))).toEqual([403, "admin_check_failed"]);
+    expect(await codes(await check(`${await passkeyProof()}x`))).toEqual([
+      403,
+      "admin_check_failed",
+    ]);
     expect((await users(s.token)).status).toBe(403);
     // One proof counts for one session.
     const proof = await passkeyProof();
@@ -125,7 +144,9 @@ describe("admin checks: passkey and PIN", () => {
     expect((await pinCheck(s.token, "482913")).status).toBe(200);
     expect((await users(s.token)).status).toBe(200);
     // The PIN can't change the PIN.
-    expect(await j(await put(s.token, "730316"))).toMatchObject({ code: "admin_pin_needs_sign_in" });
+    expect(await j(await put(s.token, "730316"))).toMatchObject({
+      code: "admin_pin_needs_sign_in",
+    });
 
     const t = await staleSession();
     for (let left = 4; left >= 1; left--) {
@@ -136,7 +157,9 @@ describe("admin checks: passkey and PIN", () => {
     expect((await pinCheck(t.token, "482913")).status).toBe(200);
     const u = await staleSession();
     for (let i = 0; i < 4; i++) await pinCheck(u.token, "111111");
-    expect(await j(await pinCheck(u.token, "111111"))).toMatchObject({ code: "admin_pin_disabled" });
+    expect(await j(await pinCheck(u.token, "111111"))).toMatchObject({
+      code: "admin_pin_disabled",
+    });
     expect(await j(await h.request("/v1/admin/pin", { token: u.token }))).toEqual({
       set: false,
       disabled: true,

@@ -1,7 +1,7 @@
+import { randomBytes, scrypt as scryptCb, timingSafeEqual } from "node:crypto";
+import { promisify } from "node:util";
 import type { Database, JwtClaims } from "@casama/db";
 import { sql } from "drizzle-orm";
-import { scrypt as scryptCb, randomBytes, timingSafeEqual } from "node:crypto";
-import { promisify } from "node:util";
 import { ApiError } from "./errors.ts";
 
 export const ADMIN_READ_WINDOW_SECONDS = 300;
@@ -176,7 +176,9 @@ async function recordCheck(
   if (!session)
     throw new ApiError(403, "admin_check_failed", "This sign-in can't take an admin check.");
   const at = new Date(Math.floor(verifiedAtSeconds) * 1000);
-  await db.execute(sql`delete from public.admin_step_ups where verified_at < now() - interval '1 day'`);
+  await db.execute(
+    sql`delete from public.admin_step_ups where verified_at < now() - interval '1 day'`,
+  );
   try {
     await db.execute(sql`
       insert into public.admin_step_ups (session_id, user_id, verified_at, method, proof_session_id)
@@ -265,7 +267,11 @@ export interface PinState {
 }
 
 export async function pinState(db: Database, userId: string): Promise<PinState> {
-  const [row] = await db.execute<{ pin_hash: string | null; failures: number; disabled_at: string | null }>(
+  const [row] = await db.execute<{
+    pin_hash: string | null;
+    failures: number;
+    disabled_at: string | null;
+  }>(
     sql`select pin_hash, failures, disabled_at from public.admin_pins where user_id = ${userId}::uuid`,
   );
   return {
@@ -305,7 +311,9 @@ export async function checkPin(
       select pin_hash, failures from public.admin_pins where user_id = ${claims.sub}::uuid for update`);
     if (!row?.pin_hash) throw new ApiError(409, "admin_pin_not_set", "No admin PIN is set.");
     if (/^\d{6}$/.test(pin) && (await pinMatches(pin, row.pin_hash))) {
-      await tx.execute(sql`update public.admin_pins set failures = 0 where user_id = ${claims.sub}::uuid`);
+      await tx.execute(
+        sql`update public.admin_pins set failures = 0 where user_id = ${claims.sub}::uuid`,
+      );
       return { ok: true as const };
     }
     const failures = row.failures + 1;
@@ -316,7 +324,11 @@ export async function checkPin(
              pin_hash = ${disabled ? null : row.pin_hash},
              disabled_at = ${disabled ? sql`now()` : sql`disabled_at`}
        where user_id = ${claims.sub}::uuid`);
-    return { ok: false as const, disabled, triesLeft: disabled ? 0 : ADMIN_PIN_MAX_FAILURES - failures };
+    return {
+      ok: false as const,
+      disabled,
+      triesLeft: disabled ? 0 : ADMIN_PIN_MAX_FAILURES - failures,
+    };
   });
   if (!result.ok) return result;
   return { ok: true, at: await recordCheck(db, claims, "pin", Date.now() / 1000, null) };

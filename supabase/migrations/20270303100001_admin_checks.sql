@@ -75,3 +75,8 @@ as $$
 $$;
 
 revoke all on function public.fresh_admin_sign_in() from public, anon, authenticated;
+
+-- The worker role gets the same policy on every table with RLS (D-016, D-095); it never needs
+-- these, but the rule is uniform.
+select public.allow_worker('public.admin_step_ups');
+select public.allow_worker('public.admin_pins');

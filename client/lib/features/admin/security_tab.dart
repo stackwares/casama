@@ -44,8 +44,9 @@ class AdminSecurityTab extends ConsumerWidget {
       () => ref.read(backendProvider).setAdminPin(pin),
     );
     ref.invalidate(adminPinProvider);
-    if (saved != null && context.mounted)
+    if (saved != null && context.mounted) {
       showMessage(context, l10n.adminPinSaved);
+    }
   }
 
   Future<void> _remove(BuildContext context, WidgetRef ref) async {
@@ -56,8 +57,9 @@ class AdminSecurityTab extends ConsumerWidget {
       () => ref.read(backendProvider).removeAdminPin(),
     );
     ref.invalidate(adminPinProvider);
-    if (removed != null && context.mounted)
+    if (removed != null && context.mounted) {
       showMessage(context, l10n.adminPinRemoved);
+    }
   }
 
   @override
