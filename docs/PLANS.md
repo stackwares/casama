@@ -42,7 +42,7 @@ same commit. Shipping details (deploys, app builds) move fast, so check them bef
 
 | Plan | Decisions | What's left |
 |---|---|---|
-| [ADMIN-SECURITY-PLAN](ADMIN-SECURITY-PLAN.md) | D-448, D-450, D-452, D-453 | Server, docs and web app (build 62) live with passkey and PIN checks; screen-lock check (D-453) built, shipping with iPhone and Android builds; Mac builds pending |
+| [ADMIN-SECURITY-PLAN](ADMIN-SECURITY-PLAN.md) | D-448, D-450, D-452, D-453 | Live 2026-11-20: server, docs, web app 63; iPhone 63 on TestFlight, Android 63 and Wear OS on Play internal, with the screen-lock, passkey and PIN checks. Left: Mac builds |
 | [LIMIT-RESETS-PLAN](LIMIT-RESETS-PLAN.md) | D-443 | Server + docs live 2026-11-20 (6d11b195); switched on, test grant on Oliver's space (expires 2026-12-04); app builds with Use Reset pending |
 | [APP-ART-PLAN](APP-ART-PLAN.md) | D-440 | Web app (51), server and gallery live 2026-11-20; store builds and a low-end Android startup check |
 | [ADMIN-BOT-PLAN](ADMIN-BOT-PLAN.md) | D-435 | Push and deploy; then turn it on for admin@casama.ai's bot |

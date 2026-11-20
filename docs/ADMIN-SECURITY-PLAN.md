@@ -1,6 +1,6 @@
 # Admin console security implementation plan
 
-Status: **live** (server, docs and web app build 62, 2026-11-20), D-448, D-450 and D-452; screen-lock check (D-453) shipping; Mac builds pending. Built and review-fixed the same day. Authorized by Oliver: “build all now! you decide for everything!”
+Status: **live** (2026-11-20): server, docs, web app 63, iPhone 63 (TestFlight), Android 63 and Wear OS (Play internal); D-448, D-450, D-452, D-453. Mac builds pending. Built and review-fixed the same day. Authorized by Oliver: “build all now! you decide for everything!”
 
 ## Goal and decisions
 
@@ -124,7 +124,7 @@ authenticator code). Instead, each way records a **fresh admin check** on the cu
 
 ## The screen lock is the whole check (D-453, 2026-11-20)
 
-Status: **built**; shipping with this change. Oliver: "a screen lock is totally enough", then "go and
+Status: **live** (2026-11-20, build 63; Mac left out). Oliver: "a screen lock is totally enough", then "go and
 do everything now except Mac builds".
 
 - [x] A P-256 key in the phone's secure chip (`biometric_signature`), unlocked by Face ID, a
@@ -136,8 +136,8 @@ do everything now except Mac builds".
   Replaces D-450's local-only unlock.
 - [x] The recorded loop: no repeat prompts; a lock right after an unlock is reported with its reason.
 - [x] Tests, docs, D-453.
-- [ ] Ship: server, docs, web app; iPhone and Android (with Wear OS) builds. Mac builds left out on
-  Oliver's word.
+- [x] Ship: server, docs, web app 63; iPhone 63 on TestFlight; Android 63 and Wear OS on Play internal.
+- [ ] Mac builds (direct download and Mac App Store): left out on Oliver's word.
 
 ## Validation commands
 
