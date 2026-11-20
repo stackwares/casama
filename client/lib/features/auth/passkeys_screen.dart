@@ -76,6 +76,7 @@ class _PasskeysScreenState extends ConsumerState<PasskeysScreen> {
       title: l10n.passkeys,
       children: [
         FormNote(l10n.passkeysHelp, icon: LucideIcons.keyRound),
+        const SizedBox(height: AppSpace.md),
         AsyncView(
           value: items,
           onRetry: () => ref.invalidate(passkeysProvider),
