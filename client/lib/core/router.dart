@@ -708,7 +708,10 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/groups/:id',
             pageBuilder: _page(
               (_, s) =>
-                  GroupChatScreen(conversationId: s.pathParameters['id']!),
+                  GroupChatScreen(
+                    conversationId: s.pathParameters['id']!,
+                    draft: s.uri.queryParameters['draft'],
+                  ),
             ),
           ),
           GoRoute(

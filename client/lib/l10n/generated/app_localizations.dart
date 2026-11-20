@@ -646,6 +646,12 @@ abstract class AppLocalizations {
   /// **'Connect'**
   String get mentionSectionConnect;
 
+  /// No description provided for @mentionSectionStartGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Start a group chat'**
+  String get mentionSectionStartGroup;
+
   /// No description provided for @mentionBadgeBot.
   ///
   /// In en, this message translates to:

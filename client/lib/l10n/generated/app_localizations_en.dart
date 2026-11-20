@@ -319,6 +319,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mentionSectionConnect => 'Connect';
 
   @override
+  String get mentionSectionStartGroup => 'Start a group chat';
+
+  @override
   String get mentionBadgeBot => 'Bot';
 
   @override

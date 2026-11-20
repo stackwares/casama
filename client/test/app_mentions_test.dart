@@ -89,6 +89,52 @@ void main() {
     expect(find.byKey(const Key('mention-connect-cloudflare')), findsNothing);
   });
 
+  testWidgets('a direct chat lists your other bots; picking one starts a group chat with both, once', (
+    tester,
+  ) async {
+    final backend = FakeBackend();
+    backend.extraBots.add(backend.bot(id: 'bot-b', name: 'Bea'));
+    final input = TextEditingController();
+    addTearDown(input.dispose);
+    final mentions = MentionController(input);
+    addTearDown(mentions.dispose);
+    await tester.pumpWidget(
+      harness(
+        backend,
+        Scaffold(
+          body: Column(
+            children: [
+              MentionPicker(botIds: const [botId], group: false, controller: mentions),
+              TextField(controller: input),
+            ],
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    input.text = 'ask @be';
+    await tester.pumpAndSettle();
+    final list = find.byKey(const Key('mentionPicker'));
+    expect(find.descendant(of: list, matching: find.text('Start a group chat')), findsOneWidget);
+    // The chat's own bot is never offered, and a direct chat has no @everyone.
+    expect(find.byKey(const Key('mention-group-$botId')), findsNothing);
+    expect(find.byKey(const Key('mention-everyone')), findsNothing);
+    await tester.tap(find.byKey(const Key('mention-group-bot-b')));
+    await tester.pumpAndSettle();
+    expect(backend.groups.map((g) => g.botIds), [
+      [botId, 'bot-b'],
+    ]);
+    // The draft left with the group chat.
+    expect(input.text, isEmpty);
+
+    // Naming the same bot again opens that group chat; it doesn't make a second one.
+    input.text = '@Bea';
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('mention-group-bot-b')));
+    await tester.pumpAndSettle();
+    expect(backend.groups, hasLength(1));
+  });
+
   testWidgets('a list that is already long gets no popular apps added', (tester) async {
     final backend = FakeBackend();
     for (var n = 1; n <= 6; n++) {
