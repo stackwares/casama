@@ -30,6 +30,7 @@ export * from "./limit-resets.ts";
 export * from "./link.ts";
 export * from "./links.ts";
 export * from "./local.ts";
+export * from "./mail.ts";
 export * from "./mcp.ts";
 export * from "./moderation.ts";
 export * from "./openapi.ts";

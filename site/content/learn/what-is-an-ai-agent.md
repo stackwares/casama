@@ -1,7 +1,7 @@
 ---
 title: What is an AI agent? A plain explanation with examples
 h1: What is an AI agent?
-description: An AI agent is software that uses an AI model to carry out a task step by step with tools, instead of only answering. Examples, limits and how it differs from a chatbot.
+description: An AI agent is software that uses an AI model to do a task step by step with tools, not just answer. Examples, limits and how it differs from a chatbot.
 lead: An AI agent is software that uses an AI model to carry out a task for you, step by step, using tools such as a browser, files and your apps. A chatbot tells you how to do something. An agent does it and reports back.
 updated: 2026-11-18
 order: 1

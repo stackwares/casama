@@ -3,6 +3,8 @@ import {
   AbuseEvent,
   AdminBotSetting,
   AdminCreditPack,
+  AdminMailAddress,
+  AdminMailReservedNames,
   AdminMargin,
   AdminOrg,
   AdminOverview,
@@ -19,6 +21,7 @@ import {
   ServerCapacity,
   SetAdminBotRequest,
   SetConnectionSettingsRequest,
+  SetMailAddressStatusRequest,
   SetOrgLimitsRequest,
   SuspendOrgRequest,
   UpdateNotice,
@@ -293,4 +296,55 @@ export const checkAdminVendor = createRoute({
   security,
   request: { params: z.object({ vendor: z.string().min(1).max(80) }) },
   responses: { 200: jsonResponse("Latest vendor reading", AdminVendor), ...problemResponses },
+});
+
+export const adminMailAddresses = createRoute({
+  operationId: "adminMailAddresses",
+  method: "get",
+  path: "/v1/admin/mail",
+  tags: ["admin"],
+  security,
+  summary: "Hosted bot addresses with recent sending health (owner only)",
+  responses: {
+    200: jsonResponse("Mail addresses", z.object({ items: z.array(AdminMailAddress) })),
+    401: e401,
+    403: e403,
+  },
+});
+
+export const setMailAddressStatus = createRoute({
+  operationId: "setMailAddressStatus",
+  method: "patch",
+  path: "/v1/admin/mail/addresses/{id}",
+  tags: ["admin"],
+  security,
+  summary: "Pause an address, or lift a pause including an automatic one (owner only)",
+  request: { params: z.object({ id: Uuid }), body: jsonBody(SetMailAddressStatusRequest) },
+  responses: {
+    200: jsonResponse("Mail address", AdminMailAddress),
+    401: e401,
+    403: e403,
+    404: e404,
+  },
+});
+
+export const adminMailReservedNames = createRoute({
+  operationId: "adminMailReservedNames",
+  method: "get",
+  path: "/v1/admin/mail-reserved-names",
+  tags: ["admin"],
+  security,
+  summary: "Instance-added reserved mail names (owner only)",
+  responses: { 200: jsonResponse("Reserved names", AdminMailReservedNames), 401: e401, 403: e403 },
+});
+
+export const setMailReservedNames = createRoute({
+  operationId: "setMailReservedNames",
+  method: "put",
+  path: "/v1/admin/mail-reserved-names",
+  tags: ["admin"],
+  security,
+  summary: "Replace the instance-added reserved mail names (owner only)",
+  request: { body: jsonBody(AdminMailReservedNames) },
+  responses: { 200: jsonResponse("Reserved names", AdminMailReservedNames), 401: e401, 403: e403 },
 });

@@ -902,7 +902,10 @@ sign-up reaches the hook in `user_metadata` (so Phase 2's code-at-sign-up works 
   Open Casama (and the copied link) is `app.casama.ai/#/sign-in?email=<the claimed address>`:
   the sign-in screen opens the ways in with the address typed in and sends nothing until the
   person presses (`SignInScreen.initialEmail`, `client/test/sign_in_email_link_test.dart`; from
-  app build 57). The address rides after the `#`, so no server sees it.
+  app build 57). The address rides after the `#`, so Casama's servers never get it, and from
+  build 58 `client/web/boot.js` takes it out of the page's address before the app starts and
+  hands it over in the tab's session storage: in build 57 it stayed in the address, and
+  PostHog's page URL on each event carried it (found on the live check, 2026-11-20).
 
 ### Where the build differs from the plan above
 

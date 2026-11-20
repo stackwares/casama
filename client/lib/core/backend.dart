@@ -900,7 +900,13 @@ class NotificationView {
     this.conversationId,
     this.runId,
     this.pushStatus,
+    this.sender,
+    this.channelId,
   });
+
+  /// Hosted mail: sender address and channel id for one-tap Allow on `mail_unknown_sender`.
+  final String? sender;
+  final String? channelId;
 
   /// The conversation a reply is in (D-325).
   final String? conversationId;
@@ -1652,6 +1658,11 @@ abstract class Backend {
   /// Admin → Domains (SITES-AND-DOMAINS-PLAN §7.16): counts, the registrar balance, orders and domains.
   Future<AdminDomains> adminDomains();
   Future<void> adminSuspendDomain(String id);
+  // Hosted bot mail (BOT-EMAIL-PLAN)
+  Future<List<AdminMailAddress>> adminMailAddresses();
+  Future<AdminMailAddress> setMailAddressStatus(String id, String status);
+  Future<List<String>> adminMailReservedNames();
+  Future<List<String>> setMailReservedNames(List<String> names);
   Future<void> adminUnsuspendDomain(String id);
   Future<DomainOrder> adminRetryDomainOrder(String id);
   Future<DomainOrder> adminApproveDomainOrder(String id);
@@ -2197,6 +2208,26 @@ abstract class Backend {
   });
   Future<void> deleteChannel(String id);
   Future<List<ChannelEvent>> channelEvents(String id);
+  // Hosted bot mail (BOT-EMAIL-PLAN)
+  Future<MailAddress?> mailAddress(String botId);
+  Future<MailAddress> claimMailAddress(String botId, String name, {String surface = 'profile'});
+  Future<MailNameAvailability> checkMailName(String botId, String name);
+  Future<MailAddress> updateMailAddress(String botId, {String? status, bool? notifyNewSenders});
+  Future<MailAddress> moveMailAddress(String botId, String toBotId);
+  Future<MailAddress> releaseMailAddress(String botId);
+  Future<MailMessageList> mailMessages(
+    String botId, {
+    String? verdict,
+    String? tag,
+    String? sender,
+    String? q,
+    int? limit,
+    String? cursor,
+  });
+  Future<MailMessageDetail> mailMessage(String botId, String messageId);
+  Future<Uint8List> downloadMailFile(String botId, String messageId, int index);
+  Future<MailAddress> blockMailSender(String botId, String sender);
+  Future<MailAddress> unblockMailSender(String botId, String sender);
 
   /// Slack's sign-in address for adding Casama's Slack app to a Slack workspace for [botId]
   /// (D-277), or null when this server has no Slack app (409).

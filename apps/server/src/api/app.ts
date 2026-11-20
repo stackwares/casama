@@ -60,6 +60,7 @@ import { registerConnectAppRoutes } from "./routes/link.ts";
 import { registerLinkRoutes } from "./routes/links.ts";
 import { registerLiveRoutes } from "./routes/live.ts";
 import { registerInternalRoutes, registerLocalRoutes } from "./routes/local.ts";
+import { registerMailRoutes } from "./routes/mail.ts";
 import { type InProcessEnv, registerMcpRoutes } from "./routes/mcp.ts";
 import { registerModerationRoutes } from "./routes/moderation.ts";
 import { registerNewsletterRoutes } from "./routes/newsletter.ts";
@@ -104,10 +105,10 @@ import { clientIp } from "./util.ts";
 
 /**
  * Signed provider webhooks: billing (Dodo, RevenueCat), Stripe Issuing, the domain registrar,
- * Resend for the monthly email (D-408).
+ * Resend for the monthly email (D-408), and the hosted mail Worker (BOT-EMAIL-PLAN).
  */
 export const PROVIDER_HOOKS =
-  /^\/hooks\/(?:billing\/(?:dodo|revenuecat)|payments\/[0-9a-f-]{36}|registrar\/[^/]+|newsletter\/resend)\/?$/;
+  /^\/hooks\/(?:billing\/(?:dodo|revenuecat)|payments\/[0-9a-f-]{36}|registrar\/[^/]+|newsletter\/resend|mail(?:\/events)?)\/?$/;
 
 export function createApp(deps: AppDeps) {
   const app = new OpenAPIHono<AppEnv>({
@@ -521,6 +522,7 @@ export function createApp(deps: AppDeps) {
   registerPasswordManagerRoutes(app, deps);
   registerBotSharingRoutes(app, deps);
   registerChannelRoutes(app, deps);
+  registerMailRoutes(app, deps);
   registerEncryptionRoutes(app, deps);
   registerA2aRoutes(app, deps);
   registerTelephonyRoutes(app, deps);

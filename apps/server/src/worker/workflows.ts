@@ -27,6 +27,7 @@ import {
   projectHeartbeat,
   purgeDeletedCreations,
   purgeDeviceData,
+  purgeExpiredMail,
   purgeSeenInbound,
   type RunDeps,
   refreshIntegration,
@@ -1095,6 +1096,13 @@ export const maintenanceWorkflow = DBOS.registerWorkflow(
       () => purgeSeenInbound(rt().db).catch(captureStep("purge-seen-inbound", 0)),
       { name: "purge-seen-inbound" },
     );
+    // Hosted bot mail: strangers' mail goes 30 days after it arrives, released addresses' 30
+    // days after the release (BOT-EMAIL-PLAN §4.3, Phase 2).
+    await DBOS.runStep(
+      () =>
+        purgeExpiredMail(rt().db, rt().agent.objects).catch(captureStep("purge-expired-mail", 0)),
+      { name: "purge-expired-mail" },
+    );
     await DBOS.runStep(
       () => purgeEndedWorkflows(rt().db).catch(captureStep("purge-workflows", 0)),
       {
@@ -1296,7 +1304,10 @@ export const privacyWorkflow = DBOS.registerWorkflow(
   async (_scheduledAt: Date, _context: unknown) => {
     const { purgeDueAccounts, applyRetention } = await import("../services/privacy.ts");
     await DBOS.runStep(
-      () => purgeDueAccounts(rt().db, rt().computers).catch(captureStep("purge-accounts", 0)),
+      () =>
+        purgeDueAccounts(rt().db, rt().computers, { objects: rt().agent.objects }).catch(
+          captureStep("purge-accounts", 0),
+        ),
       {
         name: "purge-accounts",
       },

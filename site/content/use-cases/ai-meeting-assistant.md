@@ -3,7 +3,7 @@ title: AI meeting assistant for prep, notes and follow-ups
 h1: An AI meeting assistant for the work before and after the call
 card: Meetings
 crumb: Meetings
-description: A Casama bot briefs you before each meeting, files the notes afterwards and drafts the follow-ups. It doesn't join or record your calls, and it asks before sending.
+description: A Casama bot briefs you before each meeting, files the notes afterwards and drafts the follow-ups. It doesn't join or record calls, and it asks before sending.
 lead: The meeting itself is the short part. The prep before it and the follow-up after it are where things get dropped. A Casama bot does both from your calendar and the notes your meeting app already takes. It doesn't join your calls.
 updated: 2026-11-18
 order: 14

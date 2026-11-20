@@ -851,6 +851,10 @@
         },
         {
           "type": "skill",
+          "id": "email-signups"
+        },
+        {
+          "type": "skill",
           "id": "fact-check"
         },
         {

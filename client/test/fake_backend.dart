@@ -1202,6 +1202,33 @@ class FakeBackend implements Backend {
   Future<void> adminSuspendDomain(String id) async => adminDomainActions.add('suspend:$id');
   @override
   Future<void> adminUnsuspendDomain(String id) async => adminDomainActions.add('unsuspend:$id');
+
+  // Hosted bot mail (BOT-EMAIL-PLAN)
+  var adminMailList = <AdminMailAddress>[];
+  final adminMailActions = <String>[];
+  var adminMailReserved = <String>[];
+  @override
+  Future<List<AdminMailAddress>> adminMailAddresses() async => List.of(adminMailList);
+  @override
+  Future<AdminMailAddress> setMailAddressStatus(String id, String status) async {
+    adminMailActions.add('status:$id:$status');
+    final i = adminMailList.indexWhere((a) => a.id == id);
+    adminMailList[i] = AdminMailAddress.fromJson({
+      ...adminMailList[i].toJson(),
+      'status': status,
+      if (status == 'active') 'auto_paused': false,
+    });
+    return adminMailList[i];
+  }
+
+  @override
+  Future<List<String>> adminMailReservedNames() async => List.of(adminMailReserved);
+  @override
+  Future<List<String>> setMailReservedNames(List<String> names) async {
+    adminMailActions.add('reserved:${names.join(',')}');
+    adminMailReserved = List.of(names);
+    return adminMailReserved;
+  }
   @override
   Future<DomainOrder> adminRetryDomainOrder(String id) async {
     adminDomainActions.add('retry:$id');
@@ -2983,6 +3010,118 @@ class FakeBackend implements Backend {
     slackInstallAsks.add(botId);
     return slackInstall;
   }
+  // Hosted bot mail (BOT-EMAIL-PLAN)
+  final mailByBot = <String, MailAddress>{};
+  final mailActions = <String>[];
+  @override
+  Future<MailAddress?> mailAddress(String botId) async => mailByBot[botId];
+  @override
+  Future<MailAddress> claimMailAddress(String botId, String name, {String surface = 'profile'}) async {
+    mailActions.add('claim:$botId:$name:$surface');
+    final claimed = MailAddress(
+      id: 'ma-1',
+      botId: botId,
+      channelId: 'ch-1',
+      localPart: name,
+      address: '$name@mail.test',
+      status: MailAddressStatusEnum.active,
+      blockedSenders: const [],
+      notifyNewSenders: false,
+      createdAt: DateTime.utc(2026, 11, 20),
+    );
+    mailByBot[botId] = claimed;
+    return claimed;
+  }
+
+  @override
+  Future<MailNameAvailability> checkMailName(String botId, String name) async {
+    final n = name.trim().toLowerCase();
+    return MailNameAvailability(
+      name: n,
+      available: !mailByBot.values.any((a) => a.localPart == n),
+      issue: null,
+      suggestions: const ['ada2', 'ada3'],
+    );
+  }
+  @override
+  Future<MailAddress> updateMailAddress(String botId, {String? status, bool? notifyNewSenders}) async {
+    mailActions.add('update:$botId:$status:$notifyNewSenders');
+    final cur = mailByBot[botId]!;
+    final next = MailAddress.fromJson({
+      ...cur.toJson(),
+      'status': ?status,
+      'notify_new_senders': ?notifyNewSenders,
+    });
+    mailByBot[botId] = next;
+    return next;
+  }
+
+  @override
+  Future<MailAddress> moveMailAddress(String botId, String toBotId) async {
+    mailActions.add('move:$botId:$toBotId');
+    final cur = mailByBot.remove(botId)!;
+    final next = MailAddress.fromJson({...cur.toJson(), 'bot_id': toBotId});
+    mailByBot[toBotId] = next;
+    return next;
+  }
+
+  @override
+  Future<MailAddress> releaseMailAddress(String botId) async {
+    mailActions.add('release:$botId');
+    final cur = mailByBot.remove(botId)!;
+    return MailAddress.fromJson({...cur.toJson(), 'status': 'retired'});
+  }
+
+  final mailList = <MailMessage>[];
+  final mailDetails = <String, MailMessageDetail>{};
+  @override
+  Future<MailMessageList> mailMessages(
+    String botId, {
+    String? verdict,
+    String? tag,
+    String? sender,
+    String? q,
+    int? limit,
+    String? cursor,
+  }) async {
+    var items = List.of(mailList);
+    if (verdict != null) items = items.where((m) => m.verdict.value == verdict).toList();
+    if (tag != null) items = items.where((m) => m.toTag == tag).toList();
+    if (sender != null) items = items.where((m) => m.fromAddr.contains(sender)).toList();
+    if (q != null) items = items.where((m) => m.subject.contains(q)).toList();
+    return MailMessageList(items: items, nextCursor: null);
+  }
+
+  @override
+  Future<MailMessageDetail> mailMessage(String botId, String messageId) async =>
+      mailDetails[messageId]!;
+  @override
+  Future<Uint8List> downloadMailFile(String botId, String messageId, int index) async =>
+      Uint8List.fromList(utf8.encode('file-$index-bytes'));
+  @override
+  Future<MailAddress> blockMailSender(String botId, String sender) async {
+    mailActions.add('block:$botId:$sender');
+    final cur = mailByBot[botId]!;
+    final next = MailAddress.fromJson({
+      ...cur.toJson(),
+      'blocked_senders': [...cur.blockedSenders, sender],
+    });
+    mailByBot[botId] = next;
+    return next;
+  }
+
+  @override
+  Future<MailAddress> unblockMailSender(String botId, String sender) async {
+    mailActions.add('unblock:$botId:$sender');
+    final cur = mailByBot[botId]!;
+    final next = MailAddress.fromJson({
+      ...cur.toJson(),
+      'blocked_senders': cur.blockedSenders.where((s) => s != sender).toList(),
+    });
+    mailByBot[botId] = next;
+    return next;
+  }
+
   @override
   Future<Channel> createChannel(CreateChannelRequest request) async {
     createdChannel = request;

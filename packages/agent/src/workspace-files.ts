@@ -196,7 +196,12 @@ async function checkTriggerConfig(
     return { error: `${key}.${issue?.path.join(".") || "?"}: ${issue?.message ?? "invalid"}` };
   }
   const c = parsed.data as Record<string, unknown>;
-  if (kind === "message" && !Object.values(c).some((v) => v !== undefined))
+  if (
+    kind === "message" &&
+    !["channel_id", "channel_kind", "sender", "subject_match", "text_match", "to_tag"].some(
+      (k) => c[k] !== undefined,
+    )
+  )
     return {
       error: "a message routine needs at least one filter (channel_kind, sender, subject_match…)",
     };

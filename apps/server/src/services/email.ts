@@ -1,3 +1,5 @@
+import { isUndeliverableAddress as undeliverable } from "@casama/domain";
+
 export interface EmailMessage {
   to: string;
   subject: string;
@@ -15,13 +17,7 @@ export interface EmailMessage {
  * .localhost top-level names. Sending to them only bounces, and hard bounces count against
  * the sender (ZeptoMail flagged 22 such bounces from test sign-ups in November 2026).
  */
-export function isUndeliverableAddress(address: string): boolean {
-  const domain = (address.split("@")[1] ?? "").trim().toLowerCase().replace(/\.$/, "");
-  if (!domain) return true;
-  if (["example.com", "example.net", "example.org", "localhost"].includes(domain)) return true;
-  if (/\.(example|test|invalid|localhost)$/.test(domain)) return true;
-  return /(^|\.)example\.(com|net|org)$/.test(domain);
-}
+export const isUndeliverableAddress = undeliverable;
 
 /** Outbound transactional email. */
 export interface EmailSender {

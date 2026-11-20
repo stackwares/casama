@@ -8286,6 +8286,206 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatAppsRow => 'Telegram, email, SMS, Slack, WhatsApp and more';
 
   @override
+  String get botEmail => 'Email address';
+
+  @override
+  String get botEmailRow => 'Give this bot its own address';
+
+  @override
+  String botEmailClaimTitle(String name) {
+    return 'Give $name an email address';
+  }
+
+  @override
+  String get botEmailClaimHelp =>
+      'People can write to it, and it answers by email. Forward it anything: bills, bookings, newsletters.';
+
+  @override
+  String get botEmailNameHint => 'ada';
+
+  @override
+  String get botEmailNameFixed => 'The name can\'t be changed later.';
+
+  @override
+  String get botEmailClaim => 'Create address';
+
+  @override
+  String get botEmailTaken => 'That name is taken. Try one of these:';
+
+  @override
+  String get botEmailClaimed => 'Your bot has an address';
+
+  @override
+  String get botEmailClaimedHelp =>
+      'A welcome mail is on its way to you. Reply to it, or forward anything.';
+
+  @override
+  String get botEmailCopy => 'Copy';
+
+  @override
+  String get botEmailCopied => 'Copied';
+
+  @override
+  String get botEmailContacts => 'Add to contacts';
+
+  @override
+  String botEmailWrite(String name) {
+    return 'Write to $name';
+  }
+
+  @override
+  String get botEmailPaused =>
+      'Paused. It still receives and keeps mail, but answers nothing.';
+
+  @override
+  String get botEmailPause => 'Pause';
+
+  @override
+  String get botEmailResume => 'Resume';
+
+  @override
+  String get botEmailSenders => 'Allowed senders';
+
+  @override
+  String get botEmailSendersHelp =>
+      'Only these people get answers. Strangers\' mail is kept, and starts nothing.';
+
+  @override
+  String get botEmailEditSenders => 'Edit in Chat apps';
+
+  @override
+  String get botEmailMove => 'Move to another bot';
+
+  @override
+  String get botEmailMoveHelp =>
+      'The address and its mail move to the other bot.';
+
+  @override
+  String get botEmailRelease => 'Release address';
+
+  @override
+  String get botEmailReleaseHelp =>
+      'Stops receiving for good. The name is never given out again.';
+
+  @override
+  String botEmailReleaseConfirm(String address) {
+    return 'Release $address? It stops receiving at once, and the name is never given out again.';
+  }
+
+  @override
+  String get botEmailReleaseNow => 'Release';
+
+  @override
+  String get botEmailMoved => 'Moved';
+
+  @override
+  String botEmailNewBotRow(String name) {
+    return 'Give $name an email address';
+  }
+
+  @override
+  String get botEmailInbox => 'Inbox';
+
+  @override
+  String get botEmailInboxRow => 'Kept mail, strangers and files';
+
+  @override
+  String get botEmailEmpty => 'No mail yet';
+
+  @override
+  String get botEmailStrangers => 'Strangers';
+
+  @override
+  String get botEmailAll => 'All mail';
+
+  @override
+  String get botEmailUnconfirmed => 'Couldn\'t confirm this sender';
+
+  @override
+  String get botEmailAllow => 'Allow';
+
+  @override
+  String get botEmailBlock => 'Block';
+
+  @override
+  String get botEmailBlocked => 'Blocked. New mail from here is refused.';
+
+  @override
+  String get botEmailUnblock => 'Unblock';
+
+  @override
+  String get botEmailOpenChat => 'Open chat';
+
+  @override
+  String get botEmailFiles => 'Files';
+
+  @override
+  String get botEmailNewSenders => 'Tell me about new senders';
+
+  @override
+  String get botEmailNewSendersHelp =>
+      'At most once a day. Off unless you turn it on.';
+
+  @override
+  String get botEmailTryTitle => 'Things to try';
+
+  @override
+  String get botEmailTryForward => 'Forward a bill or a booking';
+
+  @override
+  String get botEmailTryForwardHelp =>
+      'Forward anything to the address above. It reads it and answers here.';
+
+  @override
+  String get botEmailTryReceipts => 'Keep my receipts';
+
+  @override
+  String botEmailTryReceiptsHelp(String address) {
+    return 'Makes a routine that files mail sent to $address.';
+  }
+
+  @override
+  String get botEmailTryDigest => 'One digest a week';
+
+  @override
+  String botEmailTryDigestHelp(String address) {
+    return 'Makes a routine that gathers newsletters from $address into a weekly summary.';
+  }
+
+  @override
+  String get botEmailTryCopied => 'Address copied';
+
+  @override
+  String get botEmailTryMade => 'Routine made';
+
+  @override
+  String get botEmailReceiptsName => 'Keep my receipts';
+
+  @override
+  String get botEmailReceiptsInstructions =>
+      'File the receipt from this mail: what it was for, how much, and when. Say nothing unless something looks wrong.';
+
+  @override
+  String get botEmailDigestName => 'Weekly newsletter digest';
+
+  @override
+  String get botEmailDigestInstructions =>
+      'Collect this week\'s newsletters and send one short digest: the headlines worth knowing, nothing more.';
+
+  @override
+  String get botEmailTriggerTag => 'Plus tag';
+
+  @override
+  String get botEmailTriggerTagHelp =>
+      'Only mail to this tag, like shop for ada+shop@. Email addresses only.';
+
+  @override
+  String get botEmailTriggerUnconfirmed => 'Hear unconfirmed senders too';
+
+  @override
+  String get botEmailTriggerAutomatic => 'Hear automatic mail too';
+
+  @override
   String get chatAppsAdd => 'Connect a chat app';
 
   @override
@@ -11504,6 +11704,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adminLimitTrialHours => 'Trial computer hours';
 
   @override
+  String get adminLimitMailAddresses => 'Bot email addresses';
+
+  @override
+  String get adminLimitMailNewDay => 'Mail to new people, a day';
+
+  @override
+  String get adminLimitMailSentDay => 'Mail sent, a day';
+
+  @override
+  String get adminLimitMailStorage => 'Mailbox size, MB';
+
+  @override
   String get adminAddLimit => 'Add a limit';
 
   @override
@@ -14135,6 +14347,44 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get adminDomains => 'Domains';
+
+  @override
+  String get adminMail => 'Mail';
+
+  @override
+  String adminMailHealth(int sent, int bounced, int complained) {
+    return '$sent sent · $bounced bounced · $complained complained in 30 days';
+  }
+
+  @override
+  String get adminMailAutoPaused => 'Paused automatically';
+
+  @override
+  String get adminMailPause => 'Pause';
+
+  @override
+  String adminMailPauseTitle(String address) {
+    return 'Pause $address?';
+  }
+
+  @override
+  String get adminMailLift => 'Lift';
+
+  @override
+  String adminMailLiftTitle(String address) {
+    return 'Lift the pause on $address?';
+  }
+
+  @override
+  String get adminMailLiftBody =>
+      'This clears the automatic pause. The owner can pause it again themselves.';
+
+  @override
+  String get adminMailReserved => 'Reserved names';
+
+  @override
+  String get adminMailReservedHelp =>
+      'One name per line. Nobody can claim these, on top of the built-in list.';
 
   @override
   String get adminDomainsConnected => 'Connected';

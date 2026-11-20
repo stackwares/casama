@@ -119,6 +119,10 @@ itself, and the server's abandoned-call sweep handles dropped apps.
 | Casama Cloud workspaces per person | Up to 5 owned workspaces | Creating another workspace is blocked | No (fixed) | [Usage](/guide/usage#plans) |
 | Invite-a-friend rewards | Up to 20 rewarded friends ($2 credits each); code entry within 7 days of signup | Extra invites don't pay credit rewards | No (fixed) | [Usage](/guide/usage#invite-friends) |
 | Self-hosted workspace quotas | Unlimited unless set | Blocks new bots or runs past monthly spend (`quota_exceeded`) | Admin console → **Workspaces** → **Edit quotas** | [Usage](/guide/usage#workspace-quotas) |
+| Bot email addresses | Free 1, Plus 2, Pro 5, Max 15 per workspace | Claiming another is blocked | Upgrade, or release one (3 releases a year) | [A bot's email address](/guide/bot-email) |
+| Bot mail sent | Free 20, Plus 100, Pro 300, Max 1,000 a day; to new people none on Free, then 10, 30, 100 | Sending stops for the day | No (fixed) | [A bot's email address](/guide/bot-email#writing-to-new-people) |
+| Bot mailbox size | Free 100 MB, Plus 1 GB, Pro 5 GB, Max 20 GB per address | New mail is refused with "mailbox full" | Upgrade | [A bot's email address](/guide/bot-email#limits) |
+| Stranger mail kept | 30 days | Deleted automatically | No (fixed) | [A bot's email address](/guide/bot-email) |
 
 ### Casama Cloud plan caps
 

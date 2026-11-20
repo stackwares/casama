@@ -121,6 +121,7 @@ class CasamaClient {
   FilesApi get files => api.getFilesApi();
   KnowledgeApi get knowledge => api.getKnowledgeApi();
   ChannelsApi get channels => api.getChannelsApi();
+  MailApi get mail => api.getMailApi();
   EncryptionApi get encryption => api.getEncryptionApi();
   A2aApi get a2a => api.getA2aApi();
   TelephonyApi get telephony => api.getTelephonyApi();

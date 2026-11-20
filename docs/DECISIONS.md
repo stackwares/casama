@@ -6633,6 +6633,50 @@ and two changes asked for at once share one dialog. This is a console/session sa
 replacement for OS locking. It does not revoke an already issued JWT on a local lock: the server
 windows bound its remaining admin validity.
 
+## D-449 Hosted email address for every bot (2026-11-20)
+
+- **One address per bot on Casama Cloud's mail domain** (`name@<MAIL_DOMAIN>`), backed by
+  `public.mail_addresses`, `public.mail_messages`, `public.mail_suppressions`, and
+  `public.mail_events` (`supabase/migrations/20270301100001_bot_email.sql`). Claimed names are
+  never reissued: releasing, archiving a bot, or deleting its bot/workspace retires the row as a
+  tombstone and sets a 30-day expiry on its kept mail. Removing a hosted email channel directly
+  from Chat apps is blocked; owners pause or release from the bot's Email screen.
+- **Inbound:** Cloudflare Email Routing catch-all Worker (`infra/mail/mail.js`) posts raw MIME
+  bytes (`message/rfc822`) signed by SHA-256 digest to `POST /hooks/mail` (under `PROVIDER_HOOKS`
+  rate budget, with upfront body size limits before signature verification). Permanent rejections
+  are limited to unknown/blocked addresses, mailbox full, oversized (>25 MiB), and unparseable
+  MIME; auth/clock drift, rate limits, and unconfigured servers throw so senders retry. Sender
+  checks strip RFC 822 comments before splitting RFC 8601 `Authentication-Results` clauses,
+  require DMARC `header.from` alignment, and reject multiple `From` addresses.
+- **Outbound & abuse controls:** `sendHostedMail` enforces single-address validation,
+  undeliverable-domain blocking, suppression checks, `Auto-Submitted` headers, a per-thread
+  hourly reply guard (resetting for allowed human replies up to a hard ceiling), and atomic
+  workspace/address daily caps (serialized with a per-org advisory lock) across every send path
+  (`mail.send`, `replyToChannel`, `channel.send`, welcome mail). Missing plan limits fail closed
+  on Casama Cloud. Claims and releases serialize per workspace. Releasing always works; what's capped
+  is claiming: addresses claimed in the last 365 days can't exceed the plan's address limit plus 3,
+  so archiving or releasing can't be used to cycle through names. New claims are blocked while an
+  automatic abuse pause is unresolved. Mail to anyone off `allowed_senders` and `mail.claim` always ask even under Full
+  access. External thread replies (someone off the allowed list answering mail the bot sent)
+  never run with the owner's full access, every non-`selfOnly` tool asks, and the run is built
+  without the person's private context (about-you facts, memories), so an injected question can't
+  be answered from it. Outbound mail keeps a real `Message-ID` (Casama's own where the sender takes one, else the
+  sender's) next to the sender's id, so reply threading and bounce counting work on either sender.
+- **Privacy & encryption:** `mail_messages.content` is included in `SEALED_COLUMNS` for
+  encryption-at-rest and data key rotation (D-238); account/workspace deletion purges stored
+  `.eml` and attachment objects before cascading rows.
+- **Domain (2026-11-20):** `casama.app`, used bare (`ada@casama.app`); its web traffic only
+  redirects to `casama.ai`. Not `mail.casama.app`: Cloudflare's catch-all routing rule works on
+  a zone's apex only, and a subdomain's literal rules stop at 200.
+- **Message-ID (Phase 0, 2026-11-20):** Cloudflare Email Sending refuses a send carrying a custom
+  `Message-ID`, and sets its own, which its delivery events carry. Senders declare
+  `customMessageId`; on Cloudflare the returned id is kept, on Resend Casama's own goes out.
+- **Reserved names (2026-11-20):** the instance owner may claim reserved names, so Admin's list
+  holds names for them; names held in Admin block only the exact name. Brands are split: distinctive
+  ones also block as a part of a name, everyday-word ones only whole.
+- **Plan:** `docs/BOT-EMAIL-PLAN.md`. Live 2026-11-20: deployed with `MAIL_DOMAIN=casama.app`,
+  Cloudflare set up (routing, Worker, sending on Workers Paid, delivery events).
+
 ## D-450 Admin console: passkeys and Face ID instead of typing (2026-11-20)
 
 Oliver asked for passkeys, then Face ID or a fingerprint on mobile, instead of re-entering the

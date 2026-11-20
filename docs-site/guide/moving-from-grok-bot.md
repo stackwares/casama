@@ -112,6 +112,14 @@ Grok Bot can learn a workflow from one recording. Casama can too, on a bot with 
 
 You can also save the steps as a replay that runs without the model. See [Teach by showing](/guide/teach).
 
+## A Bot's email address becomes a bot's email address
+
+Grok Bot gives each account one address shared by all its Bots. Casama gives each bot its own:
+open the bot, then **Bot profile** → **Email address**, and pick a name. Mail from you is a chat
+message the bot answers; mail from strangers is kept but starts nothing. Plus addresses
+(`ada+shop@`) give each job a lane, and routines can watch them. See
+[A bot's email address](/guide/bot-email).
+
 ## What's different
 
 - **Models.** On Casama Cloud, Casama chooses the model. On a self-hosted server you choose it, per bot.

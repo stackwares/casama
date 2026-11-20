@@ -433,17 +433,18 @@ class _ChannelDetailState extends ConsumerState<_ChannelDetail> {
                       ],
                     ),
             ),
-        TextButton.icon(
-          key: const Key('deleteChannel'),
-          style: TextButton.styleFrom(foregroundColor: Theme.of(context).colorScheme.error),
-          icon: const Icon(LucideIcons.trash2, size: 18),
-          label: Text(l10n.chatAppsRemove),
-          onPressed: () async {
-            await runGuarded(context, () => backend.deleteChannel(c.id));
-            ref.invalidate(channelsProvider(widget.botId));
-            if (context.mounted) Navigator.pop(context);
-          },
-        ),
+        if (c.config['hosted'] != true)
+          TextButton.icon(
+            key: const Key('deleteChannel'),
+            style: TextButton.styleFrom(foregroundColor: Theme.of(context).colorScheme.error),
+            icon: const Icon(LucideIcons.trash2, size: 18),
+            label: Text(l10n.chatAppsRemove),
+            onPressed: () async {
+              await runGuarded(context, () => backend.deleteChannel(c.id));
+              ref.invalidate(channelsProvider(widget.botId));
+              if (context.mounted) Navigator.pop(context);
+            },
+          ),
       ],
     );
   }

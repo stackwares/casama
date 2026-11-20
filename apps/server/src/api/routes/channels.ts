@@ -207,6 +207,14 @@ export function registerChannelRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     const claims = claimsOf(c);
     const { id } = c.req.valid("param");
     await channel(claims, id);
+    const [hosted] = await db.execute<{ id: string }>(sql`
+      select id from public.channels where id = ${id}::uuid and kind = 'email' and config ->> 'hosted' = 'true'`);
+    if (hosted)
+      throw new ApiError(
+        400,
+        "validation_failed",
+        "Hosted email addresses can't be removed here. Pause or release the address from the bot's Email screen.",
+      );
     await db.execute(sql`
       with gone as (delete from public.channels where id = ${id}::uuid returning vault_secret_id)
       delete from vault.secrets where id in (select vault_secret_id from gone)`);

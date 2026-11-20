@@ -3,7 +3,7 @@ title: Manus alternatives in 2026: eight compared, with sources
 h1: The best Manus alternatives in 2026
 card: Manus alternatives
 crumb: Manus alternatives
-description: Eight Manus alternatives compared on price, model choice and approvals: Claude Cowork, ChatGPT Dots, Grok Bot, Meta Muse, Hark Pro, Lindy, Agent Zero and Casama.
+description: Eight Manus alternatives compared on price, model choice and approvals: Claude Cowork, ChatGPT Dots, Grok Bot, Meta Muse, Hark Pro, Lindy, Agent Zero, Casama.
 lead: People look past Manus for three reasons. They want a price that doesn't depend on how a task turns out, they want to choose the model or run it themselves, or they want the agent to ask before risky steps. Claude Cowork and ChatGPT Dots suit people who already pay for those assistants. Meta Muse and Hark Pro have free plans. Agent Zero and Casama are open source.
 updated: 2026-11-18
 order: 3

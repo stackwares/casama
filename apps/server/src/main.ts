@@ -65,6 +65,7 @@ import {
   smtpEmail,
   withBackupEmail,
 } from "./services/email.ts";
+import { hostedMailFromEnv, workerMailSender } from "./services/hosted-mail.ts";
 import { OutsideRelay } from "./services/outside-relay.ts";
 import { chromiumPdf, remotePdf } from "./services/pdf.ts";
 import { serverPushSender } from "./services/push-sender.ts";
@@ -279,6 +280,8 @@ if (env.MODE === "api") {
     // Outbound calls to addresses people type (password managers, Infisical, invites, memory
     // backends) can't reach private networks unless allowed (audit 2026-11: SSRF).
     apps: { fetch: createSafeFetch({ exemptCidrs: allowCidrs }) },
+    // Hosted bot mail (BOT-EMAIL-PLAN §9); unset without a mail domain and a sender key.
+    hostedMail: hostedMailFromEnv(env),
   };
   // Casama Cloud (D-094): free workspaces start computers only with a verified owner email.
   if (deps.computers) deps.computers.requireVerifiedEmail = abuseControlsOn(env);
@@ -398,6 +401,10 @@ if (env.MODE === "api") {
     sitesZone: env.CASAMA_SITES_ZONE,
     publicApiUrl: env.PUBLIC_API_URL,
     fileLinkKey: internalToken(env),
+    // Hosted bot mail (BOT-EMAIL-PLAN §6.4); a refusing stub while sending is paused.
+    hostedMail: workerMailSender(hostedMailFromEnv(env)),
+    mailDomain: env.MAIL_DOMAIN,
+    mailSendPaused: env.MAIL_SEND_PAUSED,
     phoneCalls: env.PHONE_CALLS,
     geminiLiveModel: env.GEMINI_LIVE_MODEL,
     voiceContext: voiceContext(env),

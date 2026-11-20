@@ -836,6 +836,35 @@
       "funnels": []
     },
     {
+      "name": "bot_email_claimed",
+      "by": ["server"],
+      "description": "A bot claimed its hosted email address.",
+      "properties": {
+        "surface": {
+          "type": "string"
+        }
+      },
+      "funnels": ["bot_email_onboarding"]
+    },
+    {
+      "name": "mail_received",
+      "by": ["server"],
+      "description": "A hosted address received a mail.",
+      "properties": {
+        "verdict": {
+          "type": "string"
+        }
+      },
+      "funnels": []
+    },
+    {
+      "name": "mail_sent",
+      "by": ["server"],
+      "description": "A hosted address sent a mail.",
+      "properties": {},
+      "funnels": []
+    },
+    {
       "name": "connection_started",
       "by": ["client"],
       "description": "The connect sheet started.",

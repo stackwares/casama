@@ -23,6 +23,10 @@ const BY_KIND: Record<string, PushGroup> = {
   routine_result: "routines",
   bot_message: "routines",
   suggestion: "suggestions",
+  mail_unknown_sender: "needs_you",
+  mail_new_sender: "routines",
+  mail_mailbox_full: "account",
+  mail_auto_paused: "account",
 };
 
 export function pushGroup(kind: string): PushGroup {

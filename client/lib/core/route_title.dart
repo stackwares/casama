@@ -121,6 +121,7 @@ String tabTitleFor(String? fullPath, AppLocalizations l10n, {String? botName}) {
     '/bots/:botId/replays' => l10n.replays,
     '/bots/:botId/knowledge' => l10n.knowledge,
     '/bots/:botId/chat-apps' => l10n.chatApps,
+    '/bots/:botId/email' => l10n.botEmailInbox,
     '/bots/:botId/links' => l10n.links,
     '/bots/:botId/plugins' => l10n.plugins,
     '/bots/:botId/watchers' => l10n.watchers,

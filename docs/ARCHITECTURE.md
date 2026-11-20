@@ -472,3 +472,23 @@ Known gaps carried forward: live provider calls are wired but mostly exercised w
   workflow (`registerOrder` hands it to `renewOrder`). DNS records are read and written live
   through the registrar; only the ids Casama manages are stored.
 
+## Hosted bot mail (BOT-EMAIL-PLAN)
+
+- One address per bot on Casama Cloud's mail domain (`MAIL_DOMAIN`), claimed from the bot's
+  profile or with the `mail.claim` tool. A `channels` row of kind `email` with `config.hosted`
+  plus a `mail_addresses` row; the name is never reissued (releasing or deleting leaves a
+  tombstone that keeps `local_part` reserved).
+- Inbound: sender → MX (Cloudflare Email Routing, catch-all) → the mail Worker (`infra/mail/`,
+  deployed by `scripts/deploy-mail-worker.sh`) → `POST /hooks/mail`, signed with `MAIL_HOOK_SECRET`
+  (HMAC over timestamp and body). The API parses the MIME (`postal-mime`), checks the sender
+  against Cloudflare's prepended `Authentication-Results`, stores the original in object storage
+  and a `mail_messages` row, and hands an `InboundMessage` to the channels `handleInbound`.
+- Unconfirmed mail claiming an allowed address is treated as a stranger; automatic mail
+  (bounces, out-of-office, lists) is never answered; at most 10 replies an hour go out in one
+  thread without a person's message in between.
+- Outbound: `HostedMailSender` (`channels/hosted-mail.ts`) with Cloudflare Email Sending first
+  and Resend behind the same interface (`MAIL_SENDER`). Replies to allowed senders go out as
+  today; `mail.send` (Phase 3) writes to new people behind an always-ask approval.
+- Without `MAIL_DOMAIN` and a sender key the hosted pieces stay off and the bring-your-own email
+  chat app is unchanged (it gained the sender check from Resend's received-email API).
+

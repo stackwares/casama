@@ -29,6 +29,7 @@ import * as limitResets from "./limit-resets.ts";
 import * as connect from "./link.ts";
 import * as links from "./links.ts";
 import * as local from "./local.ts";
+import * as mail from "./mail.ts";
 import * as mcp from "./mcp.ts";
 import * as moderation from "./moderation.ts";
 import * as packs from "./packs.ts";
@@ -112,6 +113,7 @@ export const routes = {
   ...watchers,
   ...workspaceFiles,
   ...mcp,
+  ...mail,
   ...referrals,
   ...waitlist,
   ...remoteSettings,
@@ -147,6 +149,7 @@ export {
   knowledge,
   links,
   local,
+  mail,
   mcp,
   packs,
   pages,

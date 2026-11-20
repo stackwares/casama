@@ -24,6 +24,7 @@ import '../../ui/page.dart';
 import 'app_settings_card.dart';
 import 'capacity_card.dart';
 import 'domains_tab.dart';
+import 'mail_tab.dart';
 import 'margin_card.dart';
 import 'pricing_tab.dart';
 import 'remote_settings_cards.dart';
@@ -60,7 +61,7 @@ class _UnlockedAdminScreen extends ConsumerWidget {
   /// The tab to open on (`?tab=domains` from a notification), or the overview.
   final String? tab;
 
-  static const _tabs = ['overview', 'users', 'workspaces', 'services', 'pricing', 'reports', 'domains', 'support', 'abuse', 'waitlist', 'vendors', 'resets'];
+  static const _tabs = ['overview', 'users', 'workspaces', 'services', 'pricing', 'reports', 'domains', 'support', 'abuse', 'waitlist', 'vendors', 'resets', 'mail'];
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -101,13 +102,14 @@ class _UnlockedAdminScreen extends ConsumerWidget {
                   Tab(height: 40, text: l10n.adminWaitlist),
                   Tab(height: 40, text: l10n.adminVendors),
                   if (billingEnabled) Tab(height: 40, text: l10n.adminResets),
+                  Tab(height: 40, text: l10n.adminMail),
                 ],
               )),
             ),
           ),
         ),
         body: TabBarView(
-          children: [_Overview(), _Users(), _Orgs(), _Services(), PricingTab(), ReportsTab(), AdminDomainsTab(), SupportTicketsTab(), _Abuse(), AdminWaitlistTab(), const VendorsTab(), if (billingEnabled) const ResetsTab()],
+          children: [_Overview(), _Users(), _Orgs(), _Services(), PricingTab(), ReportsTab(), AdminDomainsTab(), SupportTicketsTab(), _Abuse(), AdminWaitlistTab(), const VendorsTab(), if (billingEnabled) const ResetsTab(), const AdminMailTab()],
         ),
       ),
     );

@@ -1,0 +1,26 @@
+{
+  // Hosted bot mail's door (BOT-EMAIL-PLAN §5.1): Email Routing's catch-all rule on the mail
+  // domain (casama.app) sends every mail to this Worker, which posts it to the API's /hooks/mail.
+  // The rule lives in Email Routing, not in this file.
+  // Secrets (wrangler secret put): MAIL_HOOK_SECRET, the secret shared with the API.
+  "name": "casama-mail",
+  "compatibility_date": "2026-11-01",
+  "main": "mail.js",
+  "workers_dev": false,
+  "vars": {
+    "CASAMA_API_URL": "https://api.casama.ai"
+  },
+  // Delivery events (BOT-EMAIL-PLAN §6.5): the Email Sending event subscription on casama.app
+  // ("casama-app-sending": delivered, bounced, complained) drops one message per event on this
+  // queue. Events the API can't take after 5 tries go to the dead-letter queue.
+  "queues": {
+    "consumers": [
+      {
+        "queue": "casama-mail-events",
+        "max_batch_size": 10,
+        "max_retries": 5,
+        "dead_letter_queue": "casama-mail-events-dlq"
+      }
+    ]
+  }
+}

@@ -19,6 +19,12 @@ abstract class _$MessageTriggerConfigCWProxy {
 
   MessageTriggerConfig textMatch(String? textMatch);
 
+  MessageTriggerConfig toTag(String? toTag);
+
+  MessageTriggerConfig allowUnconfirmed(bool? allowUnconfirmed);
+
+  MessageTriggerConfig includeAutomatic(bool? includeAutomatic);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `MessageTriggerConfig(...).copyWith.fieldName(value)`.
@@ -33,6 +39,9 @@ abstract class _$MessageTriggerConfigCWProxy {
     String? sender,
     String? subjectMatch,
     String? textMatch,
+    String? toTag,
+    bool? allowUnconfirmed,
+    bool? includeAutomatic,
   });
 }
 
@@ -64,6 +73,17 @@ class _$MessageTriggerConfigCWProxyImpl
   MessageTriggerConfig textMatch(String? textMatch) =>
       call(textMatch: textMatch);
 
+  @override
+  MessageTriggerConfig toTag(String? toTag) => call(toTag: toTag);
+
+  @override
+  MessageTriggerConfig allowUnconfirmed(bool? allowUnconfirmed) =>
+      call(allowUnconfirmed: allowUnconfirmed);
+
+  @override
+  MessageTriggerConfig includeAutomatic(bool? includeAutomatic) =>
+      call(includeAutomatic: includeAutomatic);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `MessageTriggerConfig(...).copyWith.fieldName(value)`.
@@ -79,6 +99,9 @@ class _$MessageTriggerConfigCWProxyImpl
     Object? sender = const $CopyWithPlaceholder(),
     Object? subjectMatch = const $CopyWithPlaceholder(),
     Object? textMatch = const $CopyWithPlaceholder(),
+    Object? toTag = const $CopyWithPlaceholder(),
+    Object? allowUnconfirmed = const $CopyWithPlaceholder(),
+    Object? includeAutomatic = const $CopyWithPlaceholder(),
   }) {
     return MessageTriggerConfig(
       channelId: channelId == const $CopyWithPlaceholder()
@@ -101,6 +124,18 @@ class _$MessageTriggerConfigCWProxyImpl
           ? _value.textMatch
           // ignore: cast_nullable_to_non_nullable
           : textMatch as String?,
+      toTag: toTag == const $CopyWithPlaceholder()
+          ? _value.toTag
+          // ignore: cast_nullable_to_non_nullable
+          : toTag as String?,
+      allowUnconfirmed: allowUnconfirmed == const $CopyWithPlaceholder()
+          ? _value.allowUnconfirmed
+          // ignore: cast_nullable_to_non_nullable
+          : allowUnconfirmed as bool?,
+      includeAutomatic: includeAutomatic == const $CopyWithPlaceholder()
+          ? _value.includeAutomatic
+          // ignore: cast_nullable_to_non_nullable
+          : includeAutomatic as bool?,
     );
   }
 }
@@ -135,6 +170,9 @@ MessageTriggerConfig _$MessageTriggerConfigFromJson(
       sender: $checkedConvert('sender', (v) => v as String?),
       subjectMatch: $checkedConvert('subject_match', (v) => v as String?),
       textMatch: $checkedConvert('text_match', (v) => v as String?),
+      toTag: $checkedConvert('to_tag', (v) => v as String?),
+      allowUnconfirmed: $checkedConvert('allow_unconfirmed', (v) => v as bool?),
+      includeAutomatic: $checkedConvert('include_automatic', (v) => v as bool?),
     );
     return val;
   },
@@ -143,6 +181,9 @@ MessageTriggerConfig _$MessageTriggerConfigFromJson(
     'channelKind': 'channel_kind',
     'subjectMatch': 'subject_match',
     'textMatch': 'text_match',
+    'toTag': 'to_tag',
+    'allowUnconfirmed': 'allow_unconfirmed',
+    'includeAutomatic': 'include_automatic',
   },
 );
 
@@ -155,6 +196,9 @@ Map<String, dynamic> _$MessageTriggerConfigToJson(
   'sender': ?instance.sender,
   'subject_match': ?instance.subjectMatch,
   'text_match': ?instance.textMatch,
+  'to_tag': ?instance.toTag,
+  'allow_unconfirmed': ?instance.allowUnconfirmed,
+  'include_automatic': ?instance.includeAutomatic,
 };
 
 const _$MessageTriggerConfigChannelKindEnumEnumMap = {

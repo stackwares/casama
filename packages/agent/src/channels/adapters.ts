@@ -11,6 +11,13 @@ import {
   timingSafeEqual,
   verify as verifySignature,
 } from "node:crypto";
+import {
+  apiAuthResults,
+  type MailHeader,
+  type SenderCheck,
+  senderCheckFrom,
+  senderCheckFromResend,
+} from "@casama/domain";
 import { fileLinkLine, type InFile, MAX_FILE_IN, type OutFile, sizeText } from "./files.ts";
 import {
   escapeHtml,
@@ -66,6 +73,20 @@ export interface InboundMessage {
   ref?: string;
   /** Photos, files and voice notes that came with it, downloaded after the sender check (D-342). */
   files?: InFile[];
+  /**
+   * Whether the sender's domain confirmed the From line (email). Hosted mail must pass to be
+   * treated as its sender; self-hosted mail is accepted anyway and marked when it doesn't.
+   */
+  senderCheck?: "pass" | "fail" | "none";
+  /** Hosted mail: the plus tag it arrived on (`ada+shop@`), empty when there is none. */
+  toTag?: string;
+  /** A bounce, out-of-office reply or mailing list: kept, never answered. */
+  automatic?: boolean;
+  /**
+   * Hosted mail: a reply in a thread the bot wrote to first. Reaches the bot as a chat message
+   * for that thread without joining the allowed list (BOT-EMAIL-PLAN §6.1).
+   */
+  threadReply?: boolean;
 }
 
 /** Someone reacting to a message in a chat app (D-331 Phase 3). */
@@ -576,8 +597,11 @@ const addr = (v: unknown) => {
   const s = Array.isArray(v) ? String(v[0] ?? "") : String(v ?? "");
   return (/<([^>]+)>/.exec(s)?.[1] ?? s).trim().toLowerCase();
 };
-const baseSubject = (s: string) => s.replace(/^\s*((re|fwd?|aw|sv)\s*:\s*)+/i, "").trim();
-const htmlText = (html: string) =>
+export const baseSubject = (s: string) => s.replace(/^\s*((re|fwd?|aw|sv)\s*:\s*)+/i, "").trim();
+/** A reply's subject: kept when it already answers, else Re:-prefixed (email). */
+export const replySubject = (subject: string) =>
+  subject && /^re:/i.test(subject) ? subject : `Re: ${subject || "your message"}`;
+export const htmlText = (html: string) =>
   html
     .replace(/<(script|style)[\s\S]*?<\/\1>/gi, " ")
     .replace(/<br\s*\/?>|<\/p>|<\/div>/gi, "\n")
@@ -588,10 +612,36 @@ const htmlText = (html: string) =>
     .replace(/&gt;/g, ">")
     .replace(/[ \t]+/g, " ")
     .trim();
+/**
+ * Headers from a webhook or receiving-API body, in array ([{name, value}]) or object
+ * ({Name: value}) form. Resend's docs don't promise them; absent headers mean no sender check.
+ */
+function mailHeadersOf(value: unknown): MailHeader[] {
+  if (Array.isArray(value))
+    return value.flatMap((h) => {
+      const r = h as Record<string, unknown>;
+      const key = String(r.name ?? r.key ?? "");
+      return key ? [{ key, value: String(r.value ?? "") }] : [];
+    });
+  if (value && typeof value === "object")
+    return Object.entries(value as Record<string, unknown>).map(([key, v]) => ({
+      key,
+      value: String(v ?? ""),
+    }));
+  return [];
+}
+
 const email: ChannelAdapter = {
   kind: "email",
   fileFits: (_mime, size) => size <= 25 * MB,
-  async downloadFile(_cfg, _s, where, f) {
+  async downloadFile(cfg, _s, where, f) {
+    // Hosted mail's hook already holds the bytes and passes them along; nothing to fetch.
+    if (cfg.hosted === true && typeof where.hostedBytes === "string")
+      return {
+        bytes: Uint8Array.from(Buffer.from(where.hostedBytes, "base64")),
+        ...(typeof where.mime === "string" ? { mime: where.mime } : {}),
+        ...(typeof where.name === "string" ? { name: where.name } : {}),
+      };
     return bytesOf(await f(String(where.url)), "Resend");
   },
   // One email: the reply, with its files attached (Resend takes 40 MB after base64).
@@ -636,12 +686,26 @@ const email: ChannelAdapter = {
       const api = `${base(cfg, "https://api.resend.com")}/emails/receiving/${encodeURIComponent(m.fetchId)}`;
       const auth = { headers: { authorization: `Bearer ${s.api_key}` } };
       let text = m.text;
+      let senderCheck: SenderCheck | undefined;
       if (!text) {
         const res = await f(api, auth).catch(() => null);
         const body = res?.ok
           ? ((await res.json().catch(() => ({}))) as Record<string, unknown>)
           : {};
         text = String(body.text ?? "").trim() || htmlText(String(body.html ?? ""));
+        // Resend's receiving API reports the results its own servers computed, which the sender
+        // can't forge. (Its webhook carries no headers at all, so anything there is parsed only
+        // on the off chance it appears.)
+        const authentication = body.authentication as
+          | { spf?: unknown; dkim?: unknown; dmarc?: unknown }
+          | null
+          | undefined;
+        if (authentication && typeof authentication === "object") {
+          senderCheck = senderCheckFromResend(authentication);
+        } else {
+          const headers = mailHeadersOf(body.headers);
+          if (headers.length) senderCheck = senderCheckFrom(apiAuthResults(headers));
+        }
       }
       // Attachments come from their own list, each with a download address good for an hour (D-342).
       const res = await f(`${api}/attachments`, auth).catch(() => null);
@@ -658,7 +722,12 @@ const email: ChannelAdapter = {
         }));
       if (!text && !files.length) continue;
       const { fetchId: _f, ...rest } = m;
-      out.push({ ...rest, text, ...(files.length ? { files } : {}) });
+      out.push({
+        ...rest,
+        text,
+        ...(files.length ? { files } : {}),
+        ...(senderCheck ? { senderCheck } : {}),
+      });
     }
     return out;
   },
@@ -681,6 +750,7 @@ const email: ChannelAdapter = {
     const headers = (d.headers ?? {}) as Record<string, unknown>;
     const messageId =
       String(d.message_id ?? headers["message-id"] ?? headers["Message-ID"] ?? "") || undefined;
+    const rawHeaders = mailHeadersOf(d.headers);
     return [
       {
         messageId: messageId ?? fetchId,
@@ -689,9 +759,12 @@ const email: ChannelAdapter = {
         sender: from,
         subject,
         text,
+        ...(rawHeaders.length
+          ? { senderCheck: senderCheckFrom(apiAuthResults(rawHeaders)) }
+          : { senderCheck: "none" as const }),
         reply: {
           to: from,
-          subject: subject && /^re:/i.test(subject) ? subject : `Re: ${subject || "your message"}`,
+          subject: replySubject(subject),
           in_reply_to: messageId,
         },
       },
@@ -2197,11 +2270,21 @@ export const ADAPTERS: Record<ChannelKind, ChannelAdapter> = {
 };
 
 /** Whether a sender may talk to the bot (exact match, case-insensitive; "*@domain" for email). */
+const SINGLE_EMAIL_RE = /^[^\s,;<>@]+@[^\s,;<>@]+$/;
+
 export function senderAllowed(allowed: string[], sender: string) {
-  const s = sender.toLowerCase();
+  const s = sender.trim().toLowerCase();
+  if (!s) return false;
   return allowed.some((a) => {
     const x = a.trim().toLowerCase();
-    return x === s || (x.startsWith("*@") && s.endsWith(x.slice(1)));
+    if (!x) return false;
+    if (x === s) return true;
+    // Domain wildcard (`*@example.com`) only matches a single bare address, never a
+    // comma/semicolon-separated list like `evil@x.com, boss@example.com`.
+    if (x.startsWith("*@")) {
+      return SINGLE_EMAIL_RE.test(s) && s.slice(s.indexOf("@")) === x.slice(1);
+    }
+    return false;
   });
 }
 

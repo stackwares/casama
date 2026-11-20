@@ -103,6 +103,8 @@ Class | Method | HTTP request | Description
 [*AdminApi*](doc/AdminApi.md) | [**adminEmailCopy**](doc/AdminApi.md#adminemailcopy) | **GET** /v1/admin/email-copy | The words of the welcome emails and gallery digest, and the defaults (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**adminInviteCampaigns**](doc/AdminApi.md#admininvitecampaigns) | **GET** /v1/admin/invite-campaigns | Campaign invite codes (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**adminLinkServers**](doc/AdminApi.md#adminlinkservers) | **GET** /v1/admin/link/servers | Every linked server on this cloud (owner only)
+[*AdminApi*](doc/AdminApi.md) | [**adminMailAddresses**](doc/AdminApi.md#adminmailaddresses) | **GET** /v1/admin/mail | Hosted bot addresses with recent sending health (owner only)
+[*AdminApi*](doc/AdminApi.md) | [**adminMailReservedNames**](doc/AdminApi.md#adminmailreservednames) | **GET** /v1/admin/mail-reserved-names | Instance-added reserved mail names (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**adminMargin**](doc/AdminApi.md#adminmargin) | **GET** /v1/admin/margin | Usage charged against what it cost the server (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**adminModelCatalog**](doc/AdminApi.md#adminmodelcatalog) | **GET** /v1/admin/model-catalog | The model catalog: saved values and the ones in code (owner only; D-373)
 [*AdminApi*](doc/AdminApi.md) | [**adminOrgs**](doc/AdminApi.md#adminorgs) | **GET** /v1/admin/orgs | Workspaces with their limits and spend
@@ -143,6 +145,8 @@ Class | Method | HTTP request | Description
 [*AdminApi*](doc/AdminApi.md) | [**setAdminConnectionSettings**](doc/AdminApi.md#setadminconnectionsettings) | **PUT** /v1/admin/connections | Choose how apps without their own sign-in connect (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**setAdminVendor**](doc/AdminApi.md#setadminvendor) | **PUT** /v1/admin/vendors/{vendor} | 
 [*AdminApi*](doc/AdminApi.md) | [**setBillingSettings**](doc/AdminApi.md#setbillingsettings) | **PATCH** /v1/admin/billing-settings | Change the markup on usage paid with Casama&#39;s keys
+[*AdminApi*](doc/AdminApi.md) | [**setMailAddressStatus**](doc/AdminApi.md#setmailaddressstatus) | **PATCH** /v1/admin/mail/addresses/{id} | Pause an address, or lift a pause including an automatic one (owner only)
+[*AdminApi*](doc/AdminApi.md) | [**setMailReservedNames**](doc/AdminApi.md#setmailreservednames) | **PUT** /v1/admin/mail-reserved-names | Replace the instance-added reserved mail names (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**setOrgLimits**](doc/AdminApi.md#setorglimits) | **PATCH** /v1/admin/orgs/{id}/limits | Set a workspace&#39;s quotas
 [*AdminApi*](doc/AdminApi.md) | [**setRemoteAccessSettings**](doc/AdminApi.md#setremoteaccesssettings) | **PUT** /v1/admin/remote-access/settings | Casama Link settings on this server: private notifications (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**setSupportTicketStatus**](doc/AdminApi.md#setsupportticketstatus) | **POST** /v1/admin/support-tickets/{reference} | Mark a support message closed or open again
@@ -401,6 +405,17 @@ Class | Method | HTTP request | Description
 [*LocalComputerApi*](doc/LocalComputerApi.md) | [**setOwnCodingAgents**](doc/LocalComputerApi.md#setowncodingagents) | **PUT** /v1/local-devices/{id}/coding-agents | Replace your own coding agents on this computer (D-371); only the device&#39;s owner can, admins included
 [*LocalComputerApi*](doc/LocalComputerApi.md) | [**testOwnCodingAgent**](doc/LocalComputerApi.md#testowncodingagent) | **POST** /v1/local-devices/{id}/coding-agents/test | Run an agent on this computer with a tiny task (\&quot;Reply with just the word pong\&quot;) and return what it printed
 [*LocalComputerApi*](doc/LocalComputerApi.md) | [**updateLocalDevice**](doc/LocalComputerApi.md#updatelocaldevice) | **PATCH** /v1/local-devices/{id} | Change capabilities, shared folders, allowed bots or turn the device off
+[*MailApi*](doc/MailApi.md) | [**blockMailSender**](doc/MailApi.md#blockmailsender) | **POST** /v1/bots/{id}/email/block | Refuse a sender&#39;s mail at the door
+[*MailApi*](doc/MailApi.md) | [**checkMailName**](doc/MailApi.md#checkmailname) | **GET** /v1/bots/{id}/email/availability | Whether a mail name is free, with alternatives
+[*MailApi*](doc/MailApi.md) | [**claimMailAddress**](doc/MailApi.md#claimmailaddress) | **POST** /v1/bots/{id}/email | Claim a hosted email address for a bot
+[*MailApi*](doc/MailApi.md) | [**downloadMailFile**](doc/MailApi.md#downloadmailfile) | **GET** /v1/bots/{id}/email/messages/{messageId}/files/{index} | A kept mail&#39;s attachment
+[*MailApi*](doc/MailApi.md) | [**getMailAddress**](doc/MailApi.md#getmailaddress) | **GET** /v1/bots/{id}/email | A bot&#39;s hosted email address
+[*MailApi*](doc/MailApi.md) | [**getMailMessage**](doc/MailApi.md#getmailmessage) | **GET** /v1/bots/{id}/email/messages/{messageId} | One kept mail with its whole text
+[*MailApi*](doc/MailApi.md) | [**listMailMessages**](doc/MailApi.md#listmailmessages) | **GET** /v1/bots/{id}/email/messages | A bot&#39;s kept mail, newest first
+[*MailApi*](doc/MailApi.md) | [**moveMailAddress**](doc/MailApi.md#movemailaddress) | **POST** /v1/bots/{id}/email/move | Move a hosted email address to another bot in the workspace
+[*MailApi*](doc/MailApi.md) | [**releaseMailAddress**](doc/MailApi.md#releasemailaddress) | **DELETE** /v1/bots/{id}/email | Release a hosted email address for good (its name is never reissued)
+[*MailApi*](doc/MailApi.md) | [**unblockMailSender**](doc/MailApi.md#unblockmailsender) | **DELETE** /v1/bots/{id}/email/block | Let a blocked sender&#39;s mail through again
+[*MailApi*](doc/MailApi.md) | [**updateMailAddress**](doc/MailApi.md#updatemailaddress) | **PATCH** /v1/bots/{id}/email | Pause or resume a bot&#39;s hosted email address
 [*McpApi*](doc/McpApi.md) | [**createMcpKey**](doc/McpApi.md#createmcpkey) | **POST** /v1/orgs/{id}/mcp-keys | A workspace API key for the hosted MCP endpoint (admins); it acts as you in this workspace
 [*McpApi*](doc/McpApi.md) | [**decideMcpAuthRequest**](doc/McpApi.md#decidemcpauthrequest) | **POST** /v1/oauth/requests/{id}/consent | Allow or refuse an AI app&#39;s access to one workspace; returns where to send the browser
 [*McpApi*](doc/McpApi.md) | [**getMcpAuthRequest**](doc/McpApi.md#getmcpauthrequest) | **GET** /v1/oauth/requests/{id} | An AI app asking to connect, for the consent screen
@@ -644,6 +659,9 @@ Class | Method | HTTP request | Description
  - [AdminDomainsCounts](doc/AdminDomainsCounts.md)
  - [AdminLinkServer](doc/AdminLinkServer.md)
  - [AdminLinkServerList](doc/AdminLinkServerList.md)
+ - [AdminMailAddress](doc/AdminMailAddress.md)
+ - [AdminMailAddresses200Response](doc/AdminMailAddresses200Response.md)
+ - [AdminMailReservedNames](doc/AdminMailReservedNames.md)
  - [AdminMargin](doc/AdminMargin.md)
  - [AdminMarginByDayInner](doc/AdminMarginByDayInner.md)
  - [AdminMarginByKindInner](doc/AdminMarginByKindInner.md)
@@ -694,6 +712,7 @@ Class | Method | HTTP request | Description
  - [BillingSummaryDaily](doc/BillingSummaryDaily.md)
  - [BillingUsage](doc/BillingUsage.md)
  - [BillingUsageItem](doc/BillingUsageItem.md)
+ - [BlockMailSenderRequest](doc/BlockMailSenderRequest.md)
  - [BlockRequest](doc/BlockRequest.md)
  - [BlockedPerson](doc/BlockedPerson.md)
  - [BlockedPersonList](doc/BlockedPersonList.md)
@@ -745,6 +764,7 @@ Class | Method | HTTP request | Description
  - [CheckpointCreatedEvent](doc/CheckpointCreatedEvent.md)
  - [CheckpointCreatedEventPayload](doc/CheckpointCreatedEventPayload.md)
  - [CheckpointList](doc/CheckpointList.md)
+ - [ClaimMailAddressRequest](doc/ClaimMailAddressRequest.md)
  - [CleanStorageResult](doc/CleanStorageResult.md)
  - [CloudModels](doc/CloudModels.md)
  - [CodingAgentInfo](doc/CodingAgentInfo.md)
@@ -1057,6 +1077,12 @@ Class | Method | HTTP request | Description
  - [LocalMcpServerInfo](doc/LocalMcpServerInfo.md)
  - [LocalMcpSignInNeededEvent](doc/LocalMcpSignInNeededEvent.md)
  - [LocalMcpSignInNeededEventPayload](doc/LocalMcpSignInNeededEventPayload.md)
+ - [MailAddress](doc/MailAddress.md)
+ - [MailFile](doc/MailFile.md)
+ - [MailMessage](doc/MailMessage.md)
+ - [MailMessageDetail](doc/MailMessageDetail.md)
+ - [MailMessageList](doc/MailMessageList.md)
+ - [MailNameAvailability](doc/MailNameAvailability.md)
  - [MarkTeachSecretRequest](doc/MarkTeachSecretRequest.md)
  - [McpAuthRequestInfo](doc/McpAuthRequestInfo.md)
  - [McpConsentRequest](doc/McpConsentRequest.md)
@@ -1091,6 +1117,7 @@ Class | Method | HTTP request | Description
  - [ModelOption](doc/ModelOption.md)
  - [ModelOptionList](doc/ModelOptionList.md)
  - [ModelPolicy](doc/ModelPolicy.md)
+ - [MoveMailAddressRequest](doc/MoveMailAddressRequest.md)
  - [NewsletterStatus](doc/NewsletterStatus.md)
  - [NoticeEvent](doc/NoticeEvent.md)
  - [NoticeEventPayload](doc/NoticeEventPayload.md)
@@ -1311,6 +1338,7 @@ Class | Method | HTTP request | Description
  - [SetGitSyncRequest](doc/SetGitSyncRequest.md)
  - [SetJoinDomainRequest](doc/SetJoinDomainRequest.md)
  - [SetLocalMcpServersRequest](doc/SetLocalMcpServersRequest.md)
+ - [SetMailAddressStatusRequest](doc/SetMailAddressStatusRequest.md)
  - [SetMemoryBackendRequest](doc/SetMemoryBackendRequest.md)
  - [SetNewsletterRequest](doc/SetNewsletterRequest.md)
  - [SetOrgLimitsRequest](doc/SetOrgLimitsRequest.md)
@@ -1448,6 +1476,7 @@ Class | Method | HTTP request | Description
  - [UpdateIntegrationRequest](doc/UpdateIntegrationRequest.md)
  - [UpdateInviteCampaignRequest](doc/UpdateInviteCampaignRequest.md)
  - [UpdateLocalDeviceRequest](doc/UpdateLocalDeviceRequest.md)
+ - [UpdateMailAddressRequest](doc/UpdateMailAddressRequest.md)
  - [UpdateMemoryRequest](doc/UpdateMemoryRequest.md)
  - [UpdateNotice](doc/UpdateNotice.md)
  - [UpdateOrgSettingsRequest](doc/UpdateOrgSettingsRequest.md)

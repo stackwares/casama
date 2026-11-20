@@ -50,6 +50,7 @@ import {
   registerLibraryTools,
   registerLinkTools,
   registerLoginTools,
+  registerMailTools,
   registerPageTools,
   registerPaymentTools,
   registerPhoneCallTools,
@@ -199,6 +200,12 @@ export interface WorkerOptions {
   publicApiUrl?: string;
   /** Signs chat apps' file links (D-342); the API checks them with the same key. */
   fileLinkKey?: string;
+  /** Hosted bot mail (BOT-EMAIL-PLAN §6.4): the server's sender; unset: none goes out. */
+  hostedMail?: import("@casama/agent").HostedMailSender | null;
+  /** Hosted bot mail: the domain addresses live on (MAIL_DOMAIN). */
+  mailDomain?: string;
+  /** Hosted bot mail: welcome mail is skipped while sending is paused (MAIL_SEND_PAUSED). */
+  mailSendPaused?: boolean;
   /** Phone calls through Twilio (D-141): false leaves the voice.call tool out. Default on. */
   phoneCalls?: boolean;
   /** Audit-log forwarding (D-146): on when the enterprise license includes it. */
@@ -630,7 +637,21 @@ export async function startWorker(opts: WorkerOptions) {
     local: opts.local,
     objects: opts.objects,
     links: fileLinks,
+    hostedMail: opts.hostedMail,
   });
+  // Offered only where hosted mail exists; elsewhere the bot never hears of addresses.
+  if (opts.hostedMail && opts.mailDomain)
+    registerMailTools(tools, {
+      db,
+      fetch: fetchOut,
+      mail: {
+        domain: opts.mailDomain,
+        sender: opts.hostedMail,
+        sendPaused: opts.mailSendPaused ?? false,
+      },
+      objects: opts.objects,
+      logger: opts.logger,
+    });
   // iPhone call rings: this server's own Apple key, or Casama Cloud's relay when it is linked
   // (D-296), since only Casama's key can ring the store app.
   const voip =
@@ -832,6 +853,7 @@ export async function startWorker(opts: WorkerOptions) {
       logger: opts.logger,
       local: opts.local,
       fileLinks,
+      hostedMail: opts.hostedMail,
       ownUrls: opts.ownUrls,
       lazyToolsThreshold: opts.lazyToolsThreshold,
       instanceAdmin: adminRunCheck(adminBot),

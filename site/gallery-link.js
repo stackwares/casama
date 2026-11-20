@@ -624,7 +624,26 @@ async function countVisit(request, env, ctx) {
  * and no IP address is sent. Skipped when GA_API_SECRET isn't set (local runs, self-hosted copies).
  */
 const GA_MEASUREMENT_ID = "G-4GVRF0K324";
-export function gaPayload({ page, host, utm, source, country, mobile, rand = Math.random, ids, site = "", event, eventParams }) {
+/**
+ * Where a page view came from, as GA4's source / medium / campaign (docs/GA4-PLAN.md §Attribution). Measurement Protocol
+ * hits don't get GA4's own session attribution from page_location or page_referrer, so without this
+ * every session showed "(not set)". Google's documented fix is a `campaign_details` event, which
+ * GA4 applies to the events after it. Search engines are organic, everything else from outside is
+ * a referral (AI assistants included), no referrer is direct. A hop between our own sites returns
+ * null so the session keeps the source it started with.
+ */
+const SEARCH_SOURCES = { google: "google", bing: "bing" };
+export function trafficSource(source, host, utm) {
+  if (source === "casama") return null;
+  if (source === "direct") return { source: "(direct)", medium: "(none)", campaign: "(direct)" };
+  const from = String(utm || host || "").toLowerCase().replace(/^www\./, "").slice(0, 100);
+  if (SEARCH_SOURCES[source] || source === "search") {
+    const name = SEARCH_SOURCES[source] ?? (from.match(/(duckduckgo|brave|yandex|ecosia|startpage|yahoo)/)?.[1] || from);
+    return { source: name, medium: "organic", campaign: "(organic)" };
+  }
+  return { source: from || source, medium: "referral", campaign: "(referral)" };
+}
+export function gaPayload({ page, host, utm, source, country, mobile, rand = Math.random, ids, site = "", event, eventParams, now = Date.now() }) {
   const id = () => String(Math.floor(rand() * 2147483647));
   let params;
   if (event) {
@@ -641,6 +660,13 @@ export function gaPayload({ page, host, utm, source, country, mobile, rand = Mat
     if (host) params.page_referrer = `https://${host}/`;
   }
   const payload = { client_id: ids?.clientId ?? `${id()}.${id()}`, events: [{ name: event || "page_view", params }] };
+  const traffic = event ? null : trafficSource(source, host, utm);
+  if (traffic) {
+    // campaign_details applies to events at or after its own time, so it goes 1 ms before the page view.
+    const micros = Math.floor(now) * 1000;
+    payload.events[0].timestamp_micros = micros;
+    payload.events.push({ name: "campaign_details", timestamp_micros: micros - 1000, params: { ...traffic, session_id: params.session_id, engagement_time_msec: 1 } });
+  }
   if (country && /^[A-Z]{2}$/.test(country)) payload.user_location = { country_id: country };
   payload.device = { category: mobile ? "mobile" : "desktop" };
   return payload;

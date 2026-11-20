@@ -317,6 +317,7 @@ class PushRegistrar {
     if (link.contains('/call') || link.startsWith('/calls')) return 'call';
     if (link.contains('/runs/')) return 'run';
     if (link.startsWith('/inbox')) return 'checkin';
+    if (link.contains('/chat-apps')) return 'mail';
     if (link.contains('/chat') && link.contains('c=')) return 'reply';
     if (link.contains('/chat')) return 'mention';
     return 'other';

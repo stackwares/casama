@@ -17,6 +17,7 @@ import {
   getConnectionSettings,
   setConnectionSettings,
 } from "../../services/connection-settings.ts";
+import { mailReservedNames, setMailReservedNames } from "../../services/mail-reserved-names.ts";
 import { CASAMA_VERSION } from "../../version.ts";
 import { ApiError } from "../errors.ts";
 import type { AppDeps, AppEnv } from "../types.ts";
@@ -384,6 +385,89 @@ export function registerAdminRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     const [r] = await reportRows(id);
     if (!r) throw new ApiError(404, "creation_not_found", "No reports for that");
     return c.json(reportOut(r), 200);
+  });
+
+  // Hosted bot mail (BOT-EMAIL-PLAN Phase 3): every address with its recent sending health.
+  const mailRows = (id?: string) =>
+    db.execute<{
+      id: string;
+      local_part: string;
+      org_id: string | null;
+      org_name: string | null;
+      bot_id: string | null;
+      bot_name: string | null;
+      status: "active" | "paused" | "retired";
+      auto_paused_at: string | null;
+      sent_30d: number;
+      bounced_30d: number;
+      complained_30d: number;
+      created_at: string;
+    }>(sql`
+      select a.id, a.local_part, a.org_id, o.name as org_name, a.bot_id, b.name as bot_name,
+             a.status, a.auto_paused_at,
+             (select count(*)::int from public.mail_messages m
+              where m.address_id = a.id and m.direction = 'out' and m.created_at > now() - interval '30 days') as sent_30d,
+             (select count(*)::int from public.mail_events e
+              where e.address_id = a.id and e.event = 'bounced' and e.created_at > now() - interval '30 days') as bounced_30d,
+             (select count(*)::int from public.mail_events e
+              where e.address_id = a.id and e.event = 'complained' and e.created_at > now() - interval '30 days') as complained_30d,
+             a.created_at
+      from public.mail_addresses a
+      left join public.organizations o on o.id = a.org_id
+      left join public.bots b on b.id = a.bot_id
+      ${id ? sql`where a.id = ${id}::uuid` : sql``}
+      order by a.created_at desc limit 500`);
+  const mailOut = (domain: string, r: Awaited<ReturnType<typeof mailRows>>[number]) => ({
+    id: r.id,
+    address: `${r.local_part}@${domain}`,
+    org_id: r.org_id,
+    org_name: r.org_name ?? "(deleted)",
+    bot_id: r.bot_id,
+    bot_name: r.bot_name ?? "(deleted)",
+    status: r.status,
+    auto_paused: !!r.auto_paused_at,
+    sent_30d: Number(r.sent_30d),
+    bounced_30d: Number(r.bounced_30d),
+    complained_30d: Number(r.complained_30d),
+    created_at: iso(r.created_at),
+  });
+
+  app.openapi(routes.adminMailAddresses, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    await requireOwner(claims);
+    const domain = deps.hostedMail?.domain ?? env.MAIL_DOMAIN ?? "mail";
+    return c.json({ items: (await mailRows()).map((r) => mailOut(domain, r)) }, 200);
+  });
+
+  app.openapi(routes.setMailAddressStatus, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    await requireOwner(claims);
+    const { id } = c.req.valid("param");
+    const { status } = c.req.valid("json");
+    // Lifting clears the automatic pause; pausing from here is the owner's own.
+    const [row] = await db.execute<{ id: string }>(sql`
+      update public.mail_addresses
+      set status = ${status}, auto_paused_at = ${status === "active" ? sql`null` : sql`auto_paused_at`},
+          updated_at = now()
+      where id = ${id}::uuid and status <> 'retired' returning id`);
+    if (!row) throw new ApiError(404, "address_not_found", "No such address");
+    const domain = deps.hostedMail?.domain ?? env.MAIL_DOMAIN ?? "mail";
+    const [r] = await mailRows(id);
+    if (!r) throw new ApiError(404, "address_not_found", "No such address");
+    return c.json(mailOut(domain, r), 200);
+  });
+
+  app.openapi(routes.adminMailReservedNames, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    await requireOwner(claims);
+    return c.json({ names: await mailReservedNames(db) }, 200);
+  });
+
+  app.openapi(routes.setMailReservedNames, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    await requireOwner(claims);
+    const { names } = c.req.valid("json");
+    return c.json({ names: await setMailReservedNames(db, names) }, 200);
   });
 
   app.openapi(routes.suspendOrg, async (c) => {

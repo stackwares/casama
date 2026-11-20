@@ -22,6 +22,7 @@ import {
 } from "@casama/domain";
 import type { OpenAPIHono } from "@hono/zod-openapi";
 import { and, desc, eq, sql } from "drizzle-orm";
+import { isAdminTool, isListedOwner, ownerEmails } from "../../services/admin-bot.ts";
 import { type GalleryExtras, galleryRecord, starterBots } from "../../services/gallery.ts";
 import { enforceGalleryPolicy } from "../../services/gallery-install.ts";
 import {
@@ -30,7 +31,6 @@ import {
   withStats,
 } from "../../services/gallery-usage.ts";
 import { refuseWatchDecision, watchSurface } from "./watch.ts";
-import { isAdminTool, isListedOwner, ownerEmails } from "../../services/admin-bot.ts";
 
 /** The gallery v2 fields a starter bot's template carries (D-315). */
 function pickTemplateExtras(t: GalleryExtras & { stats?: object }) {
@@ -334,7 +334,12 @@ export function registerAutonomyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
         throw new ApiError(403, "admin_approval_in_app", "Admin actions are approved in the app");
       if (always_allow && decision === "approved")
         throw new ApiError(400, "validation_failed", "Admin actions can't be always allowed");
-      if (!(await isListedOwner({ db, ownerEmails: ownerEmails(deps.env.INSTANCE_ADMIN_EMAILS) }, claims.sub)))
+      if (
+        !(await isListedOwner(
+          { db, ownerEmails: ownerEmails(deps.env.INSTANCE_ADMIN_EMAILS) },
+          claims.sub,
+        ))
+      )
         throw new ApiError(403, "not_instance_owner", "Only the instance owner can approve this");
       // An unlocked phone left on a table must not approve bans or suspensions: approving takes a
       // fresh sign-in, as in the admin console. Declining always works.
@@ -917,11 +922,18 @@ export function registerAutonomyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
     let triggerJson: Record<string, unknown> = { type: trigger };
     if (trigger === "message") {
       const m = body.message ?? {};
-      if (!m.channel_id && !m.channel_kind && !m.sender && !m.subject_match && !m.text_match)
+      if (
+        !m.channel_id &&
+        !m.channel_kind &&
+        !m.sender &&
+        !m.subject_match &&
+        !m.text_match &&
+        !m.to_tag
+      )
         throw new ApiError(
           400,
           "validation_failed",
-          "A message routine needs at least one filter (chat app, sender, subject or words)",
+          "A message routine needs at least one filter (chat app, sender, subject, words or tag)",
         );
       triggerJson = { type: trigger, ...m };
     }

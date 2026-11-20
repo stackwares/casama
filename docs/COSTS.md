@@ -103,6 +103,8 @@ computer rates win over `COMPUTER_RATES`.
 | **Home and Lock Screen widgets** (D-405) | $0: WidgetKit pushes and Firebase data messages are free. The server builds one small glance (8 short reads) per widget refresh, answered with 304 when nothing changed; widget keys are held to 120 requests an hour. Refresh pushes go at once only for Needs you changes, otherwise at most one per person every 5 minutes | Not metered; self-hosted widget pushes count toward the relay's 2,000 an hour per key | ✅ |
 | **Apple Watch and Wear OS** (D-410) | $0 new: no new paid service. Apple and Firebase pushes are free. **Watch dictation and read-aloud are charged exactly as from the phone** (the dictation and voice lines above). The server adds a key lookup per call and small reads; watch keys are held to 60 requests a minute. No model call is added: quick replies are a fixed list | Dictation as `stt_seconds`, read-aloud as on the phone; the rest not metered. Self-hosted watch pushes count toward the relay's 2,000 an hour per key | ✅ |
 | **Sign-in and other email** | ZeptoMail: $0.00025 per email | Not metered | ✅ Negligible per user |
+| **Bot mail: receiving** (BOT-EMAIL-PLAN) | $0, unlimited, on Cloudflare Email Routing | Not metered | ✅ Spam costs nothing |
+| **Bot mail: sending** (BOT-EMAIL-PLAN) | Workers Paid $5 / month (3,000 included), then **$0.35 per 1,000**; hard bounces count | `emails_sent`, with its real cost, not billable. 1,000 addresses sending 5 a day ≈ $56 / month | ✅ Covered by plan prices |
 | **File storage** (the Library, D-274, D-276) | Cloudflare R2 $0.015 per GB-month (no egress fee); on the production VPS today, its own disk (D-199) | Counted per workspace (`organizations.storage_bytes`: pages, generated media, kept files, chat attachments, knowledge uploads (D-334)); capped by plan `storage_gb`: Free 1, Plus 10, Pro 50, Max 200 GB. A full Max workspace costs about $3 a month on R2. Older versions of a kept file (up to 5) aren't counted | ✅ Capped; at the cap nothing new is kept and nothing is deleted |
 | **Custom hostnames for connected and bought domains** (Cloudflare for SaaS, D-329) | **100 free, then $0.10 per hostname a month** (a domain with `www` and the bare name is 2) | Casama pays, covered by plan prices and domain prices. Counted hourly by the domains upkeep; owners get a notice at 80 and 95 of the included 100 | ✅ At most $2.40 a year per domain |
 | **Domains bought through Casama** (Name.com reseller, D-329) | Wholesale, read live from the registrar (.com about $11.2–12.5 a year) | The person pays: price = round up to .99 of (cost × `domain_markup` 1.25 + `domain_fee_usd` $1.50), both in `billing_settings`. Every order stores `cost_usd` and `price_usd` | ✅ .com at $12.03 cost sells at $16.99; about $1.06 left worst case |
@@ -284,7 +286,8 @@ xAI docs.x.ai/docs/models · OpenRouter openrouter.ai/pricing · Twilio
 twilio.com/en-us/voice/pricing/us, twilio.com/en-us/sms/pricing/us, twilio.com/en-us/stun-turn/pricing ·
 Brave brave.com/search/api · Tavily tavily.com/pricing · Exa exa.ai/pricing ·
 Supabase supabase.com/pricing · Cloudflare developers.cloudflare.com/r2/pricing,
-developers.cloudflare.com/workers/platform/pricing, developers.cloudflare.com/realtime/turn ·
+developers.cloudflare.com/workers/platform/pricing, developers.cloudflare.com/realtime/turn,
+developers.cloudflare.com/email-service/platform/pricing (bot mail, checked 2026-11-20) ·
 Composio composio.dev/pricing/platform and the Casama org's billing page · Resend resend.com/pricing ·
 Zoho zoho.com/mail/zohomail-pricing.html · ZeptoMail zoho.com/zeptomail/pricing.html · Sentry sentry.io/pricing · PostHog posthog.com/pricing ·
 Langfuse langfuse.com/pricing · Dodo Payments dodopayments.com/pricing · Apple

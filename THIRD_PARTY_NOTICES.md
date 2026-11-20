@@ -19,6 +19,7 @@ Update this file in the same pull request that adds or removes a dependency.
 | pdfmake (bundles the Roboto font)       | @casama/agent (runtime)                               | MIT; Roboto Apache-2.0 |
 | docx                                    | @casama/agent (runtime)                               | MIT               |
 | marked                                  | @casama/agent (runtime)                               | MIT               |
+| postal-mime                           | @casama/agent (runtime)                               | MIT-0             |
 | superjson                               | @casama/server (runtime)                              | MIT               |
 | @hono/node-server                       | @casama/server (runtime)                              | MIT               |
 | @hono/zod-openapi                       | @casama/contracts (runtime), @casama/server (runtime) | MIT               |
