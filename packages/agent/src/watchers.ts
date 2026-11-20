@@ -11,6 +11,8 @@ import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { actingUserOf } from "./acting.ts";
 import { track } from "./analytics.ts";
+import { type DecisionDeps, decide, markDecision, yes } from "./decide.ts";
+import { WATCHER_QUESTIONS, watcherState } from "./decision-uses.ts";
 import { createAdapter, loadIntegration } from "./integrations.ts";
 import { loadSecrets } from "./secrets.ts";
 import { ToolError, type ToolRegistry } from "./tools/registry.ts";
@@ -85,6 +87,8 @@ export interface WatcherDeps {
   /** Reads a page in the bot's browser (signed-in pages); only when its computer is awake. */
   browserText?: (botId: string, url: string) => Promise<string | null>;
   local?: { apiUrl: string; internalToken: string };
+  /** Decision models (D-454): the watcher gate. */
+  decisions?: DecisionDeps;
 }
 
 /** The current value a watcher compares, or null when it can't be read this time. */
@@ -253,7 +257,35 @@ export async function checkWatchers(d: WatcherDeps, now = new Date(), limit = 50
         status = case when ${timeUp} then 'done' else status end
       where id = ${w.id}::uuid`);
     if (timeUp || changed) {
-      const runId = await fire(d, w, timeUp ? "" : describeChange(w.last_value, value));
+      const change = timeUp ? "" : describeChange(w.last_value, value);
+      // The watcher gate (D-454): a change the decision model is sure doesn't meet the condition
+      // starts no run. A time watcher and one with no condition always fire.
+      let gated = false;
+      if (changed && w.condition_md && d.decisions) {
+        const gate = await decide(d.db, d.decisions, {
+          use: "watcher_gate",
+          orgId: w.org_id,
+          botId: w.bot_id,
+          runId: null,
+          subjectId: w.id,
+          state: watcherState(w.condition_md, change),
+          questions: WATCHER_QUESTIONS,
+        });
+        const p = yes(gate.answers, "matches");
+        const skip = gate.mode === "on" && p != null && p <= gate.t.skip_below;
+        if (gate.mode === "on") await markDecision(d.db, gate.logId, skip ? "skipped" : "ran");
+        if (skip) continue;
+        gated = gate.mode !== "off";
+      }
+      const runId = await fire(d, w, change);
+      // The run is the label: whether the bot told the person (labelled when it ends).
+      if (gated)
+        await d.db
+          .execute(sql`
+            update public.decision_log set run_id = ${runId}::uuid
+            where use = 'watcher_gate' and subject_id = ${w.id}::uuid and run_id is null
+              and created_at > now() - interval '10 minutes'`)
+          .catch(() => {});
       await d.startRun(runId).catch(() => {});
       started.push(runId);
     }

@@ -37,6 +37,7 @@ import {
   runAgent,
   safeFetch,
   sendDueSuggestions,
+  sweepDecisionLog,
   sweepEncryption,
   sweepLiveTokens,
   sweepWatchCodes,
@@ -416,7 +417,7 @@ export const routinesTickWorkflow = DBOS.registerWorkflow(
     // Proactive bots (D-247): suggestions that waited for their time ("an hour before the show").
     await DBOS.runStep(
       () =>
-        sendDueSuggestions(rt().db, rt().agent.notifications).catch(
+        sendDueSuggestions(rt().db, rt().agent.notifications, 100, rt().agent.decisions).catch(
           captureStep("due-suggestions", 0),
         ),
       { name: "due-suggestions" },
@@ -572,6 +573,7 @@ export const routinesTickWorkflow = DBOS.registerWorkflow(
           fetch: rt().agent.fetch ?? fetch,
           startRun: async () => {},
           local: rt().agent.local,
+          decisions: rt().agent.decisions,
         }).catch(captureStep("watchers", [] as string[])),
       { name: "watchers" },
     );
@@ -1102,6 +1104,14 @@ export const maintenanceWorkflow = DBOS.registerWorkflow(
       () =>
         purgeExpiredMail(rt().db, rt().agent.objects).catch(captureStep("purge-expired-mail", 0)),
       { name: "purge-expired-mail" },
+    );
+    // Decision models (D-454): labels from what really happened, and the 90-day cleanup.
+    await DBOS.runStep(
+      () =>
+        sweepDecisionLog(rt().db)
+          .then((r) => r.labelled + r.purged)
+          .catch(captureStep("decision-log", 0)),
+      { name: "decision-log" },
     );
     await DBOS.runStep(
       () => purgeEndedWorkflows(rt().db).catch(captureStep("purge-workflows", 0)),

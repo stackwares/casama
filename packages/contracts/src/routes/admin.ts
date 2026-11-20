@@ -19,6 +19,8 @@ import {
   BillingSettings,
   CloudModels,
   ConnectionSettings,
+  DecisionResults,
+  DecisionSettings,
   ReportedCreation,
   SaveCreditPackRequest,
   SavePlanRequest,
@@ -117,6 +119,50 @@ export const setAdminCloudModels = createRoute({
   summary: "Change the models Casama Cloud runs (owner only)",
   request: { body: jsonBody(CloudModels) },
   responses: { 200: jsonResponse("Updated", CloudModels), 401: e401, 403: e403 },
+});
+
+export const adminDecisions = get(
+  "adminDecisions",
+  "/v1/admin/decisions",
+  "Decision model settings (owner only)",
+  DecisionSettings,
+);
+
+export const setAdminDecisions = createRoute({
+  operationId: "setAdminDecisions",
+  method: "put",
+  path: "/v1/admin/decisions",
+  tags: ["admin"],
+  security,
+  summary: "Change decision model settings (owner only)",
+  request: { body: jsonBody(DecisionSettings) },
+  responses: { 200: jsonResponse("Updated", DecisionSettings), 401: e401, 403: e403 },
+});
+
+export const adminDecisionResults = createRoute({
+  operationId: "adminDecisionResults",
+  method: "get",
+  path: "/v1/admin/decisions/results",
+  tags: ["admin"],
+  security,
+  summary: "Shadow and live decision results against what really happened (owner only)",
+  request: {
+    query: z.object({
+      days: z.coerce.number().int().min(1).max(90).optional(),
+      use: z
+        .enum([
+          "scan_gate",
+          "reply_check",
+          "push_score",
+          "tool_gate",
+          "long_run",
+          "effort",
+          "watcher_gate",
+        ])
+        .optional(),
+    }),
+  },
+  responses: { 200: jsonResponse("Results", DecisionResults), 401: e401, 403: e403 },
 });
 
 export const setAdminConnectionSettings = createRoute({

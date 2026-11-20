@@ -15,6 +15,7 @@ export * from "./context.ts";
 export * from "./creations.ts";
 export * from "./credentials.ts";
 export * from "./data.ts";
+export * from "./decide.ts";
 export * from "./desktop-context.ts";
 export * from "./device-data.ts";
 export * from "./disk-limit.ts";
@@ -24,6 +25,7 @@ export * from "./events.ts";
 export * from "./gallery.ts";
 export * from "./gateway/ai-sdk.ts";
 export * from "./gateway/chatgpt.ts";
+export * from "./gateway/decisions.ts";
 export * from "./gateway/fallback.ts";
 export * from "./gateway/live-prices.ts";
 export {

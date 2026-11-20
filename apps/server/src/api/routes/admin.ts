@@ -18,6 +18,11 @@ import {
   setConnectionSettings,
 } from "../../services/connection-settings.ts";
 import { mailReservedNames, setMailReservedNames } from "../../services/mail-reserved-names.ts";
+import {
+  getDecisionSettings,
+  loadDecisionResults,
+  setDecisionSettings,
+} from "../../services/decisions.ts";
 import { CASAMA_VERSION } from "../../version.ts";
 import {
   ADMIN_PIN_MAX_FAILURES,
@@ -184,6 +189,29 @@ export function registerAdminRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       image: saved.image,
     });
     return c.json(saved, 200);
+  });
+
+  // Decision models (D-454): settings and results, owner only.
+  app.openapi(routes.adminDecisions, async (c) => {
+    await requireOwner(requireClaims(c.get("claims")));
+    return c.json(await getDecisionSettings(db), 200);
+  });
+
+  app.openapi(routes.setAdminDecisions, async (c) => {
+    await requireOwner(requireClaims(c.get("claims")));
+    const saved = await setDecisionSettings(db, c.req.valid("json"));
+    deps.logger.info("decision settings changed", {
+      model: saved.model,
+      shadow_models: saved.shadow_models,
+      modes: Object.fromEntries(Object.entries(saved.uses).map(([k, v]) => [k, v.mode])),
+    });
+    return c.json(saved, 200);
+  });
+
+  app.openapi(routes.adminDecisionResults, async (c) => {
+    await requireOwner(requireClaims(c.get("claims")));
+    const q = c.req.valid("query");
+    return c.json(await loadDecisionResults(db, q.days ?? 14, q.use), 200);
   });
 
   app.openapi(routes.setAdminConnectionSettings, async (c) => {

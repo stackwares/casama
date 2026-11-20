@@ -220,6 +220,18 @@ import 'package:casama_api/src/model/credential_test_result.dart';
 import 'package:casama_api/src/model/credit_entry.dart';
 import 'package:casama_api/src/model/credit_pack.dart';
 import 'package:casama_api/src/model/decide_join_request.dart';
+import 'package:casama_api/src/model/decision_results.dart';
+import 'package:casama_api/src/model/decision_settings.dart';
+import 'package:casama_api/src/model/decision_settings_uses.dart';
+import 'package:casama_api/src/model/decision_settings_uses_effort.dart';
+import 'package:casama_api/src/model/decision_settings_uses_long_run.dart';
+import 'package:casama_api/src/model/decision_settings_uses_push_score.dart';
+import 'package:casama_api/src/model/decision_settings_uses_reply_check.dart';
+import 'package:casama_api/src/model/decision_settings_uses_scan_gate.dart';
+import 'package:casama_api/src/model/decision_settings_uses_tool_gate.dart';
+import 'package:casama_api/src/model/decision_settings_uses_watcher_gate.dart';
+import 'package:casama_api/src/model/decision_signal_result.dart';
+import 'package:casama_api/src/model/decision_signal_result_thresholds_inner.dart';
 import 'package:casama_api/src/model/delete_account_request.dart';
 import 'package:casama_api/src/model/delete_mail_messages_request.dart';
 import 'package:casama_api/src/model/delete_mail_messages_result.dart';
@@ -1399,6 +1411,30 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return CreditPack.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DecideJoinRequest':
           return DecideJoinRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'DecisionResults':
+          return DecisionResults.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'DecisionSettings':
+          return DecisionSettings.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'DecisionSettingsUses':
+          return DecisionSettingsUses.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'DecisionSettingsUsesEffort':
+          return DecisionSettingsUsesEffort.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'DecisionSettingsUsesLongRun':
+          return DecisionSettingsUsesLongRun.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'DecisionSettingsUsesPushScore':
+          return DecisionSettingsUsesPushScore.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'DecisionSettingsUsesReplyCheck':
+          return DecisionSettingsUsesReplyCheck.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'DecisionSettingsUsesScanGate':
+          return DecisionSettingsUsesScanGate.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'DecisionSettingsUsesToolGate':
+          return DecisionSettingsUsesToolGate.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'DecisionSettingsUsesWatcherGate':
+          return DecisionSettingsUsesWatcherGate.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'DecisionSignalResult':
+          return DecisionSignalResult.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'DecisionSignalResultThresholdsInner':
+          return DecisionSignalResultThresholdsInner.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeleteAccountRequest':
           return DeleteAccountRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeleteMailMessagesRequest':

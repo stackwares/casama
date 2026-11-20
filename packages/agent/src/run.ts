@@ -77,6 +77,20 @@ import {
   type ModelPolicy,
   PLATFORM_OPENROUTER_CREDENTIAL_ID,
 } from "./credentials.ts";
+import { type Decision, decide, labelDecisions, markDecision, yes } from "./decide.ts";
+import {
+  EFFORT_QUESTIONS,
+  effortState,
+  LONG_RUN_QUESTIONS,
+  longRunState,
+  REPLY_CHECK_QUESTIONS,
+  replyCheckState,
+  SCAN_GATE_QUESTIONS,
+  scanGateSkipsInRow,
+  scanGateState,
+  TOOL_GATE_QUESTIONS,
+  toolGateState,
+} from "./decision-uses.ts";
 import { diskGbOf, withDiskLimit } from "./disk-limit.ts";
 import type { Embedder } from "./embeddings.ts";
 import { DeltaCoalescer, EventBus } from "./events.ts";
@@ -123,7 +137,7 @@ import {
   SecretRequestArgs,
   secretRequestState,
 } from "./secret-requests.ts";
-import { learnFromRun } from "./skill-learning.ts";
+import { learnFromRun, looksLikeCorrection } from "./skill-learning.ts";
 import { setupGuide } from "./tools/setup.ts";
 import { WATCHER_NO_MATCH } from "./watcher-match.ts";
 import { watcherAskedIn } from "./watchers.ts";
@@ -298,6 +312,11 @@ export interface RunDeps {
   instanceAdmin?: (runId: string) => Promise<boolean>;
   /** Sends hosted bot mail (the worker builds it from the server's settings); unset: none goes out. */
   hostedMail?: HostedMailSender | null;
+  /**
+   * Decision models (D-454): quick yes/no checks next to today's rules. Unset, or a use that is
+   * off or in shadow: behaviour is exactly today's.
+   */
+  decisions?: import("./decide.ts").DecisionDeps;
 }
 
 const pollUntil = async (_name: string, done: () => Promise<boolean>, timeoutMs: number) => {
@@ -608,6 +627,8 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
       .then((rows) => rows[0]?.plan ?? null));
   // A ChatGPT plan serves only its owner; one that can't be used is skipped when allowed.
   const skipped = new Set<string>();
+  // The effort picker (D-454) found this message simple: model steps think at low effort.
+  let quickEffort = false;
   const chainFor = async (choices: Array<{ credential_id: string; model: string } | undefined>) => {
     const out: ResolvedModel[] = [];
     let firstError: ModelCallError | undefined;
@@ -634,9 +655,14 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
         // Check-ins think briefly (D-247): at the default effort the reasoning used up the output
         // budget before the first suggestion; low effort gave better scans at half the cost.
         const checkin = info.routine?.kind === "brief" || info.routine?.kind === "scan";
-        out.push(
-          checkin && resolved.reasoningEffort ? { ...resolved, reasoningEffort: "low" } : resolved,
-        );
+        // A simple chat message the decision model is sure about thinks briefly too (D-454). Only
+        // ever lowers: a model set to none or low keeps it.
+        const lower =
+          (checkin || quickEffort) &&
+          resolved.reasoningEffort &&
+          resolved.reasoningEffort !== "none" &&
+          resolved.reasoningEffort !== "low";
+        out.push(lower ? { ...resolved, reasoningEffort: "low" } : resolved);
       } catch (err) {
         if (!(err instanceof ModelCallError) || !err.code?.startsWith("chatgpt_")) throw err;
         firstError ??= err;
@@ -1190,6 +1216,47 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
       available.filter((t) => scanRun && t.name === "suggestions.add"),
     );
     let lastStepTaken = false;
+    // Decision models (D-454): the reply check's answers, kept for the memory pass and corrections.
+    let replyDecision: Decision<"reply_check"> | null = null;
+    let longRunWarned = false;
+    // When the long-run check asks, read once so every replay of this run takes the same steps.
+    const longRunPlan =
+      deps.decisions && info.conversationId && info.current && !checkinRun
+        ? await step("decide-long-run-plan", async () => {
+            const lr = (await deps.decisions?.settings().catch(() => null))?.uses.long_run;
+            return lr && lr.mode !== "off" ? { first_step: lr.first_step, every: lr.every } : null;
+          })
+        : null;
+    // The effort picker: a simple message in a chat someone is waiting on thinks briefly.
+    if (
+      deps.decisions &&
+      INTERACTIVE_TRIGGERS.has(info.trigger) &&
+      info.current?.text &&
+      !checkinRun
+    ) {
+      const latest = info.current.text;
+      const picked = await step("decide-effort", () =>
+        decide(db, deps.decisions, {
+          use: "effort",
+          orgId: info.orgId,
+          botId: info.botId,
+          runId: info.runId,
+          state: effortState(info.history, latest),
+          questions: EFFORT_QUESTIONS,
+          wait: false,
+        }),
+      );
+      const a = picked.answers.effort;
+      if (
+        picked.mode === "on" &&
+        a?.type === "choice" &&
+        a.choice === "quick" &&
+        (a.p.quick ?? 0) >= picked.t.quick_above
+      ) {
+        quickEffort = true;
+        await step("decide-effort-mark", () => markDecision(db, picked.logId, "lowered"));
+      }
+    }
 
     for (let i = 0; ; i++) {
       const waited = waitedMs;
@@ -1253,6 +1320,35 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
       // A few steps before the limit, a heads-up: a bot polishing and re-testing used all 40 steps
       // and stopped with nothing delivered (a game written but never published). Now it's told to
       // hand over what it has while it still can.
+      // The long-run check (D-454): a run going round in circles hears the same note early.
+      if (longRunPlan && info.current && !longRunWarned) {
+        const due =
+          i >= longRunPlan.first_step && (i - longRunPlan.first_step) % longRunPlan.every === 0;
+        if (due && i < limits.maxSteps - STEPS_WARNING) {
+          const request = info.current.text;
+          const seen = [...turn];
+          const lr = await step(`decide-long-run-${i}`, () =>
+            decide(db, deps.decisions, {
+              use: "long_run",
+              orgId: info.orgId,
+              botId: info.botId,
+              runId: info.runId,
+              state: longRunState(request, seen),
+              questions: LONG_RUN_QUESTIONS,
+              wait: false,
+            }),
+          );
+          const p = yes(lr.answers, "repeating");
+          if (lr.mode === "on" && p != null && p >= lr.t.repeating_above) {
+            longRunWarned = true;
+            await step(`decide-long-run-mark-${i}`, () => markDecision(db, lr.logId, "warned"));
+            turn.push({
+              role: "user",
+              content: `[Casama: you seem to be repeating the same steps. Stop and deliver now: publish or save what you have, then reply with what works and what doesn't. Don't mention this note.]`,
+            });
+          }
+        }
+      }
       if (info.conversationId && i === limits.maxSteps - STEPS_WARNING) {
         turn.push({
           role: "user",
@@ -1301,6 +1397,40 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
               messageId: await step("scan-quiet-id", async () => randomUUID()),
             };
             break;
+          }
+          // The scan gate (D-454): reads that changed but hold nothing worth telling end the scan
+          // the same way, when the decision model is sure on every question. Never more than a few
+          // in a row for one bot, and the brief still reads everything.
+          if (deps.decisions) {
+            const note = info.current?.text ?? "";
+            const gate = await step("decide-scan-gate", () =>
+              decide(db, deps.decisions, {
+                use: "scan_gate",
+                orgId: info.orgId,
+                botId: info.botId,
+                runId: info.runId,
+                state: scanGateState(note, reads),
+                questions: SCAN_GATE_QUESTIONS,
+              }),
+            );
+            const ps = Object.keys(SCAN_GATE_QUESTIONS).map((q) => yes(gate.answers, q));
+            const quiet =
+              gate.mode === "on" &&
+              ps.every((p) => p != null && p <= gate.t.skip_below) &&
+              (await step("decide-scan-gate-row", () =>
+                scanGateSkipsInRow(db, info.botId, gate.t.max_skips_in_row, gate.logId),
+              )) < gate.t.max_skips_in_row;
+            if (gate.mode === "on")
+              await step("decide-scan-gate-mark", () =>
+                markDecision(db, gate.logId, quiet ? "skipped" : "ran"),
+              );
+            if (quiet) {
+              final = {
+                text: NOTHING_NEW,
+                messageId: await step("scan-gate-id", async () => randomUUID()),
+              };
+              break;
+            }
           }
         }
       }
@@ -1439,21 +1569,57 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
         }
         // A long task gets one look from the background model before it counts as done (D-269):
         // a reply claiming work its steps don't show goes back once to be fixed or said plainly.
+        // With decision models (D-454) every run with a tool step is asked too, and a confident
+        // flag on a short run sends it to the same check.
         const stepsTaken = turn.filter((m) => m.role === "tool").length;
-        if (
+        const checkable =
           !verified &&
-          stepsTaken >= VERIFY_AFTER_STEPS &&
           info.conversationId &&
           !info.group &&
           !isCheckinKind(info.routine?.kind) &&
-          info.current
-        ) {
+          info.current;
+        let flagged = false;
+        if (checkable && deps.decisions && stepsTaken >= 1 && !replyDecision && info.current) {
+          const draft = out;
+          const task = info.current.text;
+          const previous =
+            [...info.history].reverse().find((m) => m.role === "assistant" && m.content)?.content ??
+            null;
+          const seen = [...turn];
+          replyDecision = await step(`decide-reply-${i}`, () =>
+            decide(db, deps.decisions, {
+              use: "reply_check",
+              orgId: info.orgId,
+              botId: info.botId,
+              runId: info.runId,
+              state: replyCheckState(previous, task, seen, draft.text),
+              questions: REPLY_CHECK_QUESTIONS,
+            }),
+          );
+          const rd = replyDecision;
+          flagged =
+            rd.mode === "on" &&
+            ["overclaims", "unfinished"].some((q) => (yes(rd.answers, q) ?? 0) >= rd.t.flag_above);
+          if (rd.mode === "on")
+            await step(`decide-reply-mark-${i}`, () =>
+              markDecision(db, rd.logId, flagged ? "flagged" : "passed"),
+            );
+        }
+        if (checkable && (stepsTaken >= VERIFY_AFTER_STEPS || flagged) && info.current) {
           verified = true;
           const draft = out;
           const task = info.current.text;
           const issue = await step(`verify-${i}`, () =>
             verifyReply(deps, info, task, turn, draft.text, chainFor, bus).catch(() => null),
           );
+          if (replyDecision && replyDecision.mode !== "off")
+            await step(`decide-reply-label-${i}`, () =>
+              labelDecisions(
+                db,
+                { runId: info.runId, use: "reply_check" },
+                { checked: true, checker_flagged: issue != null },
+              ),
+            );
           if (issue) {
             await step(`verify-retract-${i}`, () =>
               bus().then((b) =>
@@ -1847,8 +2013,12 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
     // A scan that found nothing has nothing worth remembering: no memory pass (it ran after every
     // scan, also the quiet ones).
     const nothingNew = scanRun && finalMessage.text.trim() === NOTHING_NEW;
-    await step("memory", async () =>
-      nothingNew || externalReply
+    // The reply check's worth_remembering (D-454): a confident no skips the memory call.
+    const rd = replyDecision as Decision<"reply_check"> | null;
+    const memoryP = rd?.mode === "on" ? yes(rd.answers, "worth_remembering") : null;
+    const skipMemory = memoryP != null && memoryP <= (rd?.t.memory_skip_below ?? 0);
+    const remembered = await step("memory", async () =>
+      nothingNew || externalReply || skipMemory
         ? 0
         : extractStep(
             deps,
@@ -1864,6 +2034,30 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
             return 0;
           }),
     );
+    // Labels for the decision log (D-454): what the memory pass found, and what today's
+    // correction rule says, next to what the decision model said.
+    if (rd && rd.mode !== "off") {
+      const task = info.current?.text ?? "";
+      await step("decide-reply-outcome", () =>
+        labelDecisions(
+          db,
+          { runId: info.runId, use: "reply_check" },
+          {
+            memories: remembered,
+            memory_skipped: skipMemory,
+            regex_correction: looksLikeCorrection(task),
+          },
+        ),
+      );
+    }
+    if (info.trigger === "watcher")
+      await step("decide-watcher-outcome", () =>
+        labelDecisions(
+          db,
+          { runId: info.runId, use: "watcher_gate" },
+          { told: finalMessage.text.trim() !== WATCHER_NO_MATCH },
+        ),
+      );
     await completeRun(finalMessage.messageId, [...arrived]);
     // Chat apps (D-134): a reply in a thread from Telegram, email, … goes back there.
     await step("channel-reply", async () => {
@@ -1917,8 +2111,11 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
         log?.warn("welcome step failed", { run_id: runId, error: (err as Error).message });
       }),
     );
+    const corrected =
+      rd?.mode === "on" &&
+      (yes(rd.answers, "corrects_previous") ?? 0) >= (rd?.t.correction_above ?? 1);
     await step("learn", () =>
-      learnStep(deps, info, "completed", undefined, chainFor, bus).catch((err) => {
+      learnStep(deps, info, "completed", undefined, chainFor, bus, corrected).catch((err) => {
         log?.warn("skill learning failed", { run_id: runId, error: (err as Error).message });
         return null;
       }),
@@ -2745,6 +2942,8 @@ function usageCost(
   const upstreamOut = upstream == null ? null : upstream - upstream * share;
   const source = plan ? "chatgpt_plan" : "key";
   const meta: Record<string, unknown> = billable ? { key: "server", provider_cost_usd: raw } : {};
+  // How much of the output was thinking (decision-model plan, Phase 0): the effort picker's case.
+  if (usage.reasoningTokens) meta.reasoning_tokens = usage.reasoningTokens;
   return {
     raw,
     total,
@@ -4194,6 +4393,8 @@ async function learnStep(
     c: Array<{ credential_id: string; model: string } | undefined>,
   ) => Promise<ResolvedModel[]>,
   busFn: () => Promise<EventBus>,
+  /** The decision model is sure the person corrected the previous answer (D-454). */
+  corrected = false,
 ) {
   if (!info.current?.text || info.group) return null;
   // Check-ins repeat by design: their runs are never a task to save as a skill (D-312).
@@ -4241,6 +4442,7 @@ async function learnStep(
       status,
       error,
       owner: info.createdBy ?? info.botOwner,
+      corrected,
     },
   );
   return r?.id ?? null;
@@ -4524,7 +4726,41 @@ async function approvalGate(
       schedulesWork: def.schedulesWork === true,
       fullAccess,
     });
-  if (!needed) return { approvalId: null };
+  if (!needed) {
+    // The tool-call gate (D-454): an outgoing or changing call that doesn't ask today is checked
+    // against what the person asked for. A confident "they didn't ask for this" (a mail or page
+    // telling the bot to forward something) turns it into an ask. It only ever adds an ask, and
+    // Full access, where the person chose no asks, is left alone.
+    const sendsOut = def.sendsOutFor?.(args as never) ?? def.sendsOut === true;
+    const changes = !def.readOnly && !def.selfOnly && (sendsOut || risk !== "low");
+    if (
+      deps.decisions &&
+      changes &&
+      !fullAccess &&
+      !grant &&
+      info.current?.text &&
+      !isCheckinKind(info.routine?.kind)
+    ) {
+      const gate = await decide(deps.db, deps.decisions, {
+        use: "tool_gate",
+        orgId: info.orgId,
+        botId: info.botId,
+        runId: info.runId,
+        state: toolGateState(info.current.text, call.name, argsRedacted),
+        questions: TOOL_GATE_QUESTIONS,
+        wait: false,
+      });
+      const p = yes(gate.answers, "asked_for");
+      if (gate.mode === "on" && p != null && p <= gate.t.ask_below) {
+        await markDecision(deps.db, gate.logId, "asked");
+        return requestApproval(deps, info, call, def, args, argsRedacted, risk, bus, redactor, {
+          toChannel: true,
+        });
+      }
+      if (gate.mode === "on") await markDecision(deps.db, gate.logId, "ran");
+    }
+    return { approvalId: null };
+  }
   // The person tapped Send on this bot's draft, or Add on its event (D-335, D-337): a call doing
   // exactly that is already approved, once per card. Their rules and always-ask tools still ask.
   const draft = info.current?.confirmed;

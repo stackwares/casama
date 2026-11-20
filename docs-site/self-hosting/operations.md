@@ -419,6 +419,33 @@ With **Settings > Show usage on replies** on, an instance owner's reply breakdow
 server's cost and the margin for that reply, on each line too. Nobody else gets these numbers: the
 API leaves them out, and members can't read the cost column of the usage table.
 
+### Decision models
+
+A decision model doesn't write; it answers short yes-or-no checks in well under a second, and
+Casama can ask one next to its own rules (D-454). Every use is **off** until you set it, and
+nothing changes for anyone while it is off or in shadow. It needs the server's shared OpenRouter
+key (`CLOUD_MODEL_UPSTREAM_KEY`); without one it stays off.
+
+| Use | What it does when on |
+|---|---|
+| `scan_gate` | Ends a check-in scan without the model when the new mail, calendar and board items clearly hold nothing worth telling (at most 3 in a row per bot) |
+| `reply_check` | Sends a short run's reply to the existing "does it claim more than it did" check when it looks like it does; skips the memory pass when there's clearly nothing to remember; counts a clear "that's wrong" as a correction for skill learning |
+| `push_score` | Holds a normal suggestion the person is unlikely to want now for the next brief. Urgent ones are never held |
+| `tool_gate` | Turns an outgoing action that doesn't match what the person asked for into an approval ask. It only ever adds an ask, and leaves Full access alone |
+| `long_run` | Tells a run that keeps repeating itself to deliver what it has, early |
+| `effort` | Lets a simple chat message think at low effort |
+| `watcher_gate` | Starts no run for a watcher change that clearly doesn't meet its condition |
+
+Each use is `off`, `shadow` (the shadow models are asked and their answers logged next to what
+really happened, and nothing acts on them) or `on` (the chosen model's confident answers act). Set
+them with `GET` and `PUT /v1/admin/decisions` (owner only); `GET /v1/admin/decisions/results?days=14`
+shows, per model and per threshold from 0.05 to 0.95, how many it would have acted on and how many
+of those were wrong. The log keeps answers as numbers, never the content, for 90 days.
+
+Add each model you use to any allowlist on your OpenRouter key first. Shadow calls are recorded at
+no cost to workspaces; calls of a use that is on are charged like other background calls when
+`BILLING_ENABLED` is set.
+
 ### Remote app settings
 
 Under Settings → admin console → **App settings**, the instance owner can change every installed

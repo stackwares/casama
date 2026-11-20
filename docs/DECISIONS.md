@@ -6781,3 +6781,47 @@ building it.
 - **Tests:** `apps/server/test/admin-checks.test.ts`, `apps/server/test/admin.test.ts`,
   `client/test/admin_quick_unlock_test.dart`. Migration `20270303100001_admin_checks.sql`.
 
+## D-454 Decision models next to Casama's own rules, shadow first (2026-11-20)
+
+Oliver asked how a decision model (Jev, OpenAI's Decisions) could lower costs or improve anything,
+had the plan written (`docs/DECISION-MODEL-PLAN.md`), then said "decide all for me! go and build
+all this in 1 go". Production numbers (plan §2) showed it is about break-even on cost; the case is
+quality and safety.
+
+- **Decided (plan §12, all defaults):** shadow first for every use; compare Jev 1.14, GPT-6 Luna
+  Decisions and Perplexity Decider Flash v1.2; Casama pays for shadow calls, a use that is on is
+  charged like other background calls; the scan gate may miss at most 2% of scans that made a
+  suggestion and none whose suggestion was accepted; the tool-call gate only ever adds an ask;
+  push scoring works under the 5-a-day rule; self-hosted servers are off by default; model ids are
+  pinned versions.
+- **One function, one adapter.** `decide()` (`packages/agent/src/decide.ts`) asks a question set in
+  the use's mode: `off` calls nothing, `shadow` asks every shadow model side by side, logs them and
+  returns no answers, `on` asks the chosen model. A timeout (1.5 s), an error or a refusal is "no
+  answer", and no answer is always today's behaviour. `gateway/decisions.ts` is the only code that
+  knows OpenRouter's alpha route (`POST /api/alpha/decisions`, `data_collection: deny`).
+- **Settings live in `instance_settings` "decisions"**, not in `CloudModelAssignment` as the plan
+  first said: self-hosted servers don't read the cloud model assignment, and a new field there
+  would have needed an app build for the Cloud models screen. Owner API: `GET`/`PUT
+  /v1/admin/decisions`, `GET /v1/admin/decisions/results`. Everything starts off.
+- **All seven uses are built behind their modes** (scan gate, reply check with memory and
+  correction signals, push scoring, tool-call gate, long-run check, effort picker, watcher gate),
+  so turning one on is a setting, not a deploy. The plan's order still decides what is switched
+  to shadow and on, and when.
+- **The tool-call gate leaves Full access (D-394) and allow rules alone:** the person chose no asks
+  there. It checks outgoing or changing calls that wouldn't ask today, in chats with a request.
+- **The log keeps numbers, never content.** `decision_log` (service role only, 90 days, goes with
+  the workspace) holds question names, probabilities, the action and the label. Labels come from
+  the product: the run itself (the checker's verdict, memories saved, the correction rule, whether
+  a watcher told the person) and an hourly sweep (suggestions made and accepted, push answers, how
+  runs ended).
+- **Money:** each call is a `tokens_in` ledger row with `meta.purpose = "decide:<use>"`. Shadow
+  rows are `billable` false at `cost_usd` 0, so no workspace budget moves, with Casama's cost in
+  `upstream_cost_usd`.
+- **Also:** chat steps record the reasoning tokens OpenRouter returns in the ledger's `meta`
+  (plan Phase 0, for the effort picker's case), and `scripts/check-model-updates.mts` checks the
+  shadow candidates against newer decision models.
+- **Still needs a yes, not done here:** adding the shadow models to the OpenRouter guardrail
+  "Casama privacy" (D-364), the live Phase 0 calls, the privacy page deploy (`site/privacy.html`
+  names TypeSafe and Perplexity now), and the server deploy.
+- **Tests:** `packages/agent/test/decisions.test.ts`, `packages/domain/test/decision-settings.test.ts`,
+  `apps/server/test/decisions.test.ts`, `supabase/tests/decision_log_rls.test.sql`.

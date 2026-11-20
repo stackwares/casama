@@ -1,8 +1,28 @@
 # Decision models: plan
 
-Status: **not started** (written 2026-11-20). Waiting on the decisions in §12 and Oliver's go-ahead.
-No code yet. Phase 0 needs three models added to the OpenRouter guardrail, which is a change to the
-production key and needs its own yes.
+Status: **built** (2026-11-20, D-454), on branch `feat/decision-models`, every use off. Oliver said
+"decide all for me! go and build all this in 1 go": the §12 defaults are the decisions. Left, each
+needing its own yes: adding the three shadow models to the OpenRouter guardrail and the live
+Phase 0 calls (§11), the privacy page deploy, and the server deploy. Then switch uses to shadow,
+and Phase 2 reads the results.
+
+**What was built, and where it differs from the text below:**
+
+- `decide()` in `packages/agent/src/decide.ts`, the adapter in `packages/agent/src/gateway/decisions.ts`,
+  the questions and inputs in `packages/agent/src/decision-uses.ts`.
+- **Settings** are `instance_settings` "decisions" (`packages/domain/src/decision-settings.ts`):
+  `model`, `shadow_models`, `timeout_ms`, and per use a mode and thresholds. Not a field on
+  `CloudModelAssignment` (§5.3): self-hosted servers don't read that, and it would have needed an
+  app build. Owner API: `GET`/`PUT /v1/admin/decisions`, `GET /v1/admin/decisions/results`.
+- **All seven uses** are wired behind their modes (U1–U7), not only Phase 1's four, so a later phase
+  is a setting change. The rollout order below still applies.
+- **The tool-call gate leaves Full access and allow rules alone** (§6.4 didn't say).
+- **Shadow ledger rows** are `billable` false at `cost_usd` 0 with Casama's cost in
+  `upstream_cost_usd`, so no workspace budget moves.
+- **Labels:** the run labels reply checks and watcher runs itself; an hourly sweep labels scans,
+  pushes and how runs ended. The results endpoint gives, per model and threshold 0.05–0.95, what
+  would have been acted on and how often that was wrong (§7.4).
+- Phase 0 step 5 is done: chat steps record `reasoning_tokens` in the ledger's `meta`.
 
 Oliver asked on 2026-11-20 how a decision model such as Jev or OpenAI's Decisions API could lower
 our costs, improve anything, or just be useful, then said "go and write the full plan now".
