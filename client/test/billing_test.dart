@@ -1184,4 +1184,17 @@ void main() {
     // Each chat's charge stays in Usage.
     expect(find.descendant(of: find.byKey(const Key('creditHistory')), matching: find.text('Usage')), findsNothing);
   });
+
+  testWidgets('on large screens, the CTA stays close to the cards and the composition is centered', (tester) async {
+    await setSize(tester, const Size(1440, 1000));
+    final backend = FakeBackend()
+      ..billingEnabled = true
+      ..catalogPlans = pricingPlans();
+    await pumpPaywall(tester, backend);
+    final cardsBottom = tester.getBottomLeft(find.byKey(const Key('paywallTier-plus'))).dy;
+    final buyTop = tester.getTopLeft(find.byKey(const Key('paywallBuy'))).dy;
+    final buyBottom = tester.getBottomLeft(find.byKey(const Key('paywallBuy'))).dy;
+    expect(buyTop - cardsBottom, lessThan(80));
+    expect(buyBottom, lessThan(920));
+  });
 }

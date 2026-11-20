@@ -556,212 +556,17 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
             const Positioned.fill(child: _Backdrop()),
             SafeArea(
               bottom: false,
-              child: Column(
-                children: [
-                  _TopBar(
-                    onClose: _close,
-                    // Anyone can restore: it only re-links purchases the store already has.
-                    onRestore: storeChannel ? _restore : null,
-                  ),
-                  Expanded(
-                    child: LayoutBuilder(
-                      builder: (context, box) {
-                        // Wide windows lay the tiers side by side; everything else stays narrow.
-                        final wide = box.maxWidth >= 760 && tiers.length > 1;
-                        // Short screens (a phone in landscape, a small window) skip the parade.
-                        final parade = box.maxHeight >= 560;
-                        Widget narrow(Widget child) => Center(
-                          child: ConstrainedBox(
-                            constraints: const BoxConstraints(maxWidth: 520),
-                            child: child,
-                          ),
-                        );
-                        final cards = [
-                          for (final t in tiers)
-                            if (cardPrice(t) case final price?)
-                              _TierCard(
-                                key: Key('paywallTier-${t.code}'),
-                                tierCode: t.code,
-                                name: t.name,
-                                tagline: switch (t.code) {
-                                  'plus' => l10n.paywallTaglinePlus,
-                                  'pro' => l10n.paywallTaglinePro,
-                                  'max' => l10n.paywallTaglineMax,
-                                  _ => null,
-                                },
-                                facts: _facts(l10n, price.plan.limits, email: remoteFlag(ref, 'bot_email')),
-                                price: price,
-                                selected: t.code == tier?.code,
-                                current: currentTier == t.code && paidVia != null,
-                                popular: popular.contains(t.code),
-                                trial: trialDaysOf(t)?.let(l10n.trialDaysFree),
-                                vertical: wide,
-                                onTap: () {
-                                  HapticsHelper.selection();
-                                  setState(() => _tier = t.code);
-                                  final picked = t.planFor(period);
-                                  if (picked != null) {
-                                    Analytics.log('paywall_plan_select', {
-                                      'plan': picked.code,
-                                      'interval': picked.interval.value,
-                                    });
-                                  }
-                                },
-                              ),
-                        ];
-                        return ListView(
-                          padding: const EdgeInsets.fromLTRB(
-                            AppSpace.lg,
-                            0,
-                            AppSpace.lg,
-                            AppSpace.lg,
-                          ),
-                          children: [
-                            if (parade) ...[
-                              const _MascotParade(),
-                              const SizedBox(height: AppSpace.xs),
-                            ],
-                            if (widget.reason case final reason?
-                                when reason.isNotEmpty) ...[
-                              Center(child: _ReasonPill(reason)),
-                              const SizedBox(height: AppSpace.sm),
-                            ],
-                            narrow(
-                              Text(
-                                l10n.paywallTitleFor(tier?.name ?? 'Pro'),
-                                textAlign: TextAlign.center,
-                                style: context.textTheme.headlineSmall?.copyWith(
-                                  fontWeight: FontWeight.w900,
-                                  letterSpacing: -0.6,
-                                  height: 1.1,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: AppSpace.xs),
-                            narrow(
-                              Text(
-                                l10n.paywallSubtitle,
-                                textAlign: TextAlign.center,
-                                style: context.textTheme.bodyMedium?.copyWith(
-                                  color: scheme.onSurfaceVariant,
-                                  height: 1.4,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: AppSpace.lg),
-                            if (empty != null)
-                              narrow(
-                                _EmptyPlans(
-                                  kind: empty,
-                                  store: source,
-                                  onRetry: () {
-                                    ref.invalidate(planCatalogProvider);
-                                    ref.invalidate(storeProductsProvider);
-                                  },
-                                ),
-                              )
-                            else if (hasBothPeriods) ...[
-                              Center(
-                                child: _PeriodToggle(
-                                  periods: periods,
-                                  period: period,
-                                  saveBadge: bestSave >= 1 ? l10n.paywallSaveUpTo(bestSave) : null,
-                                  onChanged: (v) {
-                                    HapticsHelper.selection();
-                                    setState(() => _pickedPeriod = v);
-                                    final picked = tier?.planFor(v);
-                                    if (picked != null) {
-                                      Analytics.log('paywall_plan_select', {
-                                        'plan': picked.code,
-                                        'interval': picked.interval.value,
-                                      });
-                                    }
-                                  },
-                                ),
-                              ),
-                              const SizedBox(height: AppSpace.md),
-                            ],
-                            if (empty != null)
-                              const SizedBox.shrink()
-                            else if (wide)
-                              Center(
-                                child: ConstrainedBox(
-                                  constraints: const BoxConstraints(maxWidth: 980),
-                                  child: IntrinsicHeight(
-                                    child: Row(
-                                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                                      children: [
-                                        for (final (i, c) in cards.indexed) ...[
-                                          if (i > 0) const SizedBox(width: AppSpace.sm),
-                                          Expanded(child: c),
-                                        ],
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              )
-                            else
-                              narrow(
-                                Semantics(
-                                  container: true,
-                                  label: l10n.plans,
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                                    children: [
-                                      for (final (i, c) in cards.indexed) ...[
-                                        if (i > 0) const SizedBox(height: AppSpace.sm),
-                                        c,
-                                      ],
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            // Side-by-side cards already list every number, so only phones get the
-                            // what-changes list.
-                            if (selected != null && !wide && empty == null) ...[
-                              const SizedBox(height: AppSpace.lg),
-                              narrow(
-                                Padding(
-                                  padding: const EdgeInsets.only(left: AppSpace.xs, bottom: AppSpace.xs),
-                                  child: Text(
-                                    l10n.paywallWhatYouGet(tier!.name),
-                                    style: context.textTheme.titleSmall?.copyWith(
-                                      fontWeight: FontWeight.w800,
-                                      color: scheme.onSurfaceVariant,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              narrow(_Perks(pro: selected.limits, current: current)),
-                            ],
-                            if (!isAdmin) ...[
-                              const SizedBox(height: AppSpace.md),
-                              narrow(
-                                FormNote(
-                                  l10n.paywallAskAdmin,
-                                  icon: LucideIcons.shieldCheck,
-                                ),
-                              ),
-                            ],
-                            if (note != null) ...[
-                              const SizedBox(height: AppSpace.md),
-                              narrow(
-                                FormNote(
-                                  note,
-                                  key: const Key('paywallChannelNote'),
-                                  icon: LucideIcons.info,
-                                ),
-                              ),
-                            ],
-                          ],
-                        );
-                      },
-                    ),
-                  ),
-                  _BuyBar(
+              child: LayoutBuilder(
+                builder: (context, viewport) {
+                  // Wide windows lay the tiers side by side; tall ones keep the CTA with the cards
+                  // and center the whole composition instead of leaving a void above a pinned bar.
+                  final wide = viewport.maxWidth >= 760 && tiers.length > 1;
+                  final inlineBuy = wide && viewport.maxHeight >= 660;
+                  final buyBar = _BuyBar(
                     label: isAdmin || isCurrent ? buyLabel : l10n.close,
                     onBuy: isCurrent ? null : (isAdmin ? buy : _close),
                     busy: _busy,
+                    inline: inlineBuy,
                     onWeb: webToo ? () => _web(selected) : null,
                     terms: PurchaseTerms(
                       price: selected == null || isCurrent ? null : priceFor(selected),
@@ -771,8 +576,237 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
                       priceHasPeriod: termsStore == null,
                       trialDays: termsStore == null ? selectedTrial : storeTrial,
                     ),
-                  ),
-                ],
+                  );
+                  return Column(
+                    children: [
+                      _TopBar(
+                        onClose: _close,
+                        // Anyone can restore: it only re-links purchases the store already has.
+                        onRestore: storeChannel ? _restore : null,
+                      ),
+                      Expanded(
+                        child: LayoutBuilder(
+                          builder: (context, box) {
+                            // Short screens (a phone in landscape, a small window) skip the parade.
+                            final parade = box.maxHeight >= 560;
+                            Widget narrow(Widget child) => Center(
+                              child: ConstrainedBox(
+                                constraints: const BoxConstraints(maxWidth: 520),
+                                child: child,
+                              ),
+                            );
+                            final cards = [
+                              for (final t in tiers)
+                                if (cardPrice(t) case final price?)
+                                  _TierCard(
+                                    key: Key('paywallTier-${t.code}'),
+                                    tierCode: t.code,
+                                    name: t.name,
+                                    tagline: switch (t.code) {
+                                      'plus' => l10n.paywallTaglinePlus,
+                                      'pro' => l10n.paywallTaglinePro,
+                                      'max' => l10n.paywallTaglineMax,
+                                      _ => null,
+                                    },
+                                    facts: _facts(l10n, price.plan.limits, email: remoteFlag(ref, 'bot_email')),
+                                    price: price,
+                                    selected: t.code == tier?.code,
+                                    current: currentTier == t.code && paidVia != null,
+                                    popular: popular.contains(t.code),
+                                    trial: trialDaysOf(t)?.let(l10n.trialDaysFree),
+                                    vertical: wide,
+                                    onTap: () {
+                                      HapticsHelper.selection();
+                                      setState(() => _tier = t.code);
+                                      final picked = t.planFor(period);
+                                      if (picked != null) {
+                                        Analytics.log('paywall_plan_select', {
+                                          'plan': picked.code,
+                                          'interval': picked.interval.value,
+                                        });
+                                      }
+                                    },
+                                  ),
+                            ];
+                            final children = <Widget>[
+                              if (parade) ...[
+                                const _MascotParade(),
+                                const SizedBox(height: AppSpace.xs),
+                              ],
+                              if (widget.reason case final reason?
+                                  when reason.isNotEmpty) ...[
+                                Center(child: _ReasonPill(reason)),
+                                const SizedBox(height: AppSpace.sm),
+                              ],
+                              narrow(
+                                Text(
+                                  l10n.paywallTitleFor(tier?.name ?? 'Pro'),
+                                  textAlign: TextAlign.center,
+                                  style: context.textTheme.headlineSmall?.copyWith(
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: -0.6,
+                                    height: 1.1,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: AppSpace.xs),
+                              narrow(
+                                Text(
+                                  l10n.paywallSubtitle,
+                                  textAlign: TextAlign.center,
+                                  style: context.textTheme.bodyMedium?.copyWith(
+                                    color: scheme.onSurfaceVariant,
+                                    height: 1.4,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: AppSpace.lg),
+                              if (empty != null)
+                                narrow(
+                                  _EmptyPlans(
+                                    kind: empty,
+                                    store: source,
+                                    onRetry: () {
+                                      ref.invalidate(planCatalogProvider);
+                                      ref.invalidate(storeProductsProvider);
+                                    },
+                                  ),
+                                )
+                              else if (hasBothPeriods) ...[
+                                Center(
+                                  child: _PeriodToggle(
+                                    periods: periods,
+                                    period: period,
+                                    saveBadge: bestSave >= 1 ? l10n.paywallSaveUpTo(bestSave) : null,
+                                    onChanged: (v) {
+                                      HapticsHelper.selection();
+                                      setState(() => _pickedPeriod = v);
+                                      final picked = tier?.planFor(v);
+                                      if (picked != null) {
+                                        Analytics.log('paywall_plan_select', {
+                                          'plan': picked.code,
+                                          'interval': picked.interval.value,
+                                        });
+                                      }
+                                    },
+                                  ),
+                                ),
+                                const SizedBox(height: AppSpace.md),
+                              ],
+                              if (empty != null)
+                                const SizedBox.shrink()
+                              else if (wide)
+                                Center(
+                                  child: ConstrainedBox(
+                                    constraints: const BoxConstraints(maxWidth: 980),
+                                    child: IntrinsicHeight(
+                                      child: Row(
+                                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                                        children: [
+                                          for (final (i, c) in cards.indexed) ...[
+                                            if (i > 0) const SizedBox(width: AppSpace.sm),
+                                            Expanded(child: c),
+                                          ],
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                )
+                              else
+                                narrow(
+                                  Semantics(
+                                    container: true,
+                                    label: l10n.plans,
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                                      children: [
+                                        for (final (i, c) in cards.indexed) ...[
+                                          if (i > 0) const SizedBox(height: AppSpace.sm),
+                                          c,
+                                        ],
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              // Side-by-side cards already list every number, so only phones get the
+                              // what-changes list.
+                              if (selected != null && !wide && empty == null) ...[
+                                const SizedBox(height: AppSpace.lg),
+                                narrow(
+                                  Padding(
+                                    padding: const EdgeInsets.only(left: AppSpace.xs, bottom: AppSpace.xs),
+                                    child: Text(
+                                      l10n.paywallWhatYouGet(tier!.name),
+                                      style: context.textTheme.titleSmall?.copyWith(
+                                        fontWeight: FontWeight.w800,
+                                        color: scheme.onSurfaceVariant,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                narrow(_Perks(pro: selected.limits, current: current)),
+                              ],
+                              if (!isAdmin) ...[
+                                const SizedBox(height: AppSpace.md),
+                                narrow(
+                                  FormNote(
+                                    l10n.paywallAskAdmin,
+                                    icon: LucideIcons.shieldCheck,
+                                  ),
+                                ),
+                              ],
+                              if (note != null) ...[
+                                const SizedBox(height: AppSpace.md),
+                                narrow(
+                                  FormNote(
+                                    note,
+                                    key: const Key('paywallChannelNote'),
+                                    icon: LucideIcons.info,
+                                  ),
+                                ),
+                              ],
+                              if (inlineBuy) ...[
+                                const SizedBox(height: AppSpace.lg),
+                                buyBar,
+                              ],
+                            ];
+                            if (inlineBuy) {
+                              return SingleChildScrollView(
+                                padding: const EdgeInsets.fromLTRB(
+                                  AppSpace.lg,
+                                  0,
+                                  AppSpace.lg,
+                                  AppSpace.lg,
+                                ),
+                                child: ConstrainedBox(
+                                  constraints: BoxConstraints(
+                                    minHeight: math.max(0, box.maxHeight - AppSpace.lg),
+                                  ),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                                    children: children,
+                                  ),
+                                ),
+                              );
+                            }
+                            return ListView(
+                              padding: const EdgeInsets.fromLTRB(
+                                AppSpace.lg,
+                                0,
+                                AppSpace.lg,
+                                AppSpace.lg,
+                              ),
+                              children: children,
+                            );
+                          },
+                        ),
+                      ),
+                      if (!inlineBuy) buyBar,
+                    ],
+                  );
+                },
               ),
             ),
           ],
@@ -791,22 +825,29 @@ class _Backdrop extends StatelessWidget {
     final scheme = context.colorScheme;
     final a = context.isDark ? 0.30 : 0.20;
     return IgnorePointer(
-      child: Stack(
-        children: [
-          Positioned(
-            top: -160,
-            left: -120,
-            child: _Glow(color: scheme.primary.withValues(alpha: a), size: 460),
+      child: Align(
+        alignment: Alignment.topCenter,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 640),
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Positioned(
+                top: -160,
+                left: -120,
+                child: _Glow(color: scheme.primary.withValues(alpha: a), size: 460),
+              ),
+              Positioned(
+                top: -100,
+                right: -140,
+                child: _Glow(
+                  color: scheme.tertiary.withValues(alpha: a),
+                  size: 420,
+                ),
+              ),
+            ],
           ),
-          Positioned(
-            top: -100,
-            right: -140,
-            child: _Glow(
-              color: scheme.tertiary.withValues(alpha: a),
-              size: 420,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -1605,7 +1646,7 @@ class _TierCard extends StatelessWidget {
   }
 }
 
-/// The one button, pinned to the bottom, with the fine print under it.
+/// The one button, pinned to the bottom on compact screens or inline below the cards on large ones.
 class _BuyBar extends StatelessWidget {
   const _BuyBar({
     required this.label,
@@ -1613,6 +1654,7 @@ class _BuyBar extends StatelessWidget {
     required this.busy,
     required this.terms,
     this.onWeb,
+    this.inline = false,
   });
   final String label;
   final VoidCallback? onBuy;
@@ -1621,11 +1663,61 @@ class _BuyBar extends StatelessWidget {
   /// Price, renewal and cancellation terms, with the Terms and Privacy links.
   final Widget terms;
   final VoidCallback? onWeb;
+  final bool inline;
 
   @override
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
     final bottom = MediaQuery.paddingOf(context).bottom;
+    final content = Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 520),
+        child: Padding(
+          padding: inline
+              ? EdgeInsets.only(bottom: math.max(bottom, AppSpace.sm))
+              : EdgeInsets.fromLTRB(
+                  AppSpace.lg,
+                  AppSpace.lg,
+                  AppSpace.lg,
+                  math.max(bottom, AppSpace.md),
+                ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              GlowButton(
+                key: const Key('paywallBuy'),
+                style: FilledButton.styleFrom(
+                  minimumSize: const Size.fromHeight(56),
+                  textStyle: context.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                onPressed: busy ? null : onBuy,
+                child: busy
+                    ? SizedBox.square(
+                        dimension: 22,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.5,
+                          color: scheme.onPrimary,
+                        ),
+                      )
+                    : Text(label),
+              ),
+              if (onWeb != null)
+                TextButton(
+                  key: const Key('paywallWeb'),
+                  onPressed: onWeb,
+                  child: Text(context.l10n.subscribeOnWeb),
+                ),
+              const SizedBox(height: AppSpace.xs),
+              terms,
+            ],
+          ),
+        ),
+      ),
+    );
+    if (inline) return content;
     return DecoratedBox(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -1639,52 +1731,7 @@ class _BuyBar extends StatelessWidget {
           stops: const [0, 0.25, 1],
         ),
       ),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 520),
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(
-              AppSpace.lg,
-              AppSpace.lg,
-              AppSpace.lg,
-              math.max(bottom, AppSpace.md),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                GlowButton(
-                  key: const Key('paywallBuy'),
-                  style: FilledButton.styleFrom(
-                    minimumSize: const Size.fromHeight(56),
-                    textStyle: context.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  onPressed: busy ? null : onBuy,
-                  child: busy
-                      ? SizedBox.square(
-                          dimension: 22,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2.5,
-                            color: scheme.onPrimary,
-                          ),
-                        )
-                      : Text(label),
-                ),
-                if (onWeb != null)
-                  TextButton(
-                    key: const Key('paywallWeb'),
-                    onPressed: onWeb,
-                    child: Text(context.l10n.subscribeOnWeb),
-                  ),
-                const SizedBox(height: AppSpace.xs),
-                terms,
-              ],
-            ),
-          ),
-        ),
-      ),
+      child: content,
     );
   }
 }
