@@ -10,9 +10,15 @@
 #
 #   NOTES_FILE    release notes (Markdown); default: a one-line note
 #   DRAFT=1       create a draft instead (nothing is offered until it's published on GitHub)
+#
+# The installers are also attached to a release on the source repo ($CASAMA_SOURCE_REPO, default
+# stackwares/casama, public since D-406) so the project's Releases page shows the apps next to the
+# CLI. The feeds still live on the releases repo; the source-repo release is never "latest", so CLI
+# releases keep that slot there. Set CASAMA_SOURCE_REPO= (empty) to skip it.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 repo="${CASAMA_RELEASES_REPO:-stackwares/casama-releases}"
+source_repo="${CASAMA_SOURCE_REPO-stackwares/casama}"
 version=$(grep '^version:' client/pubspec.yaml | awk '{print $2}' | cut -d+ -f1)
 tag="v$version"
 gh repo view "$repo" --json visibility -q .visibility 2>/dev/null | grep -qx PUBLIC ||
@@ -42,3 +48,18 @@ for feed in appcast-macos.xml appcast-windows.xml; do
     -f content="$(base64 < "dist/$feed" | tr -d '\n')" ${sha:+-f sha="$sha"} > /dev/null
   echo "Updated $feed"
 done
+# Mirror the installers (not the feeds) onto the source repo's Releases page. A failure here leaves the
+# feeds above as they are, so it only warns.
+if [[ -n "$source_repo" && "$source_repo" != "$repo" ]]; then
+  installers=()
+  for f in "${files[@]}"; do [[ "$f" == *appcast-* ]] || installers+=("$f"); done
+  if gh release view "$tag" --repo "$source_repo" > /dev/null 2>&1; then
+    echo "$source_repo already has $tag; left alone."
+  else
+    # Tag the commit that was built when it's on the remote, else the default branch.
+    target=()
+    [[ -n "$(git branch -r --contains HEAD 2>/dev/null)" ]] && target=(--target "$(git rev-parse HEAD)")
+    gh release create "$tag" --repo "$source_repo" --title "Casama $version" --latest=false ${target[@]+"${target[@]}"} "${notes[@]}" "${installers[@]}" ||
+      echo "Warning: could not publish $tag to $source_repo; the update feeds are fine." >&2
+  fi
+fi
