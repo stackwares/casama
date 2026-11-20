@@ -59,7 +59,7 @@ All leads below are **not applied**. Confirm eligibility and existing listings b
 | Opportunity | Route and qualification |
 | --- | --- |
 | [Show HN](https://news.ycombinator.com/showhn.html) | Maker posts a working, nontrivial project people can try and stays available to discuss it. Avoid signup barriers and solicitation of votes. |
-| [OpenAlternative](https://openalternative.co/submit) | **Not submitted: ineligible as of 2026-11-21.** Its form requires 250+ stars for repositories less than six months old; Casama had 0 stars and was created November 18, 2026. Recheck before applying. |
+| [OpenAlternative](https://openalternative.co/submit) | **Attempted 2026-11-21; form rejected before submission** because the repository has fewer than 50 stars. The published guidelines also require 250+ stars for repositories less than six months old. Casama had 0 stars and was created November 18, 2026. Recheck before applying. |
 | [AlternativeTo](https://alternativeto.net/faq/#add-a-new-application) | Submit a released app as a relevant alternative. Verified email required; free review backlog can be very long; paid priority does not guarantee approval. |
 | [Peerlist Launchpad](https://peerlist.io/launchpad) | Weekly developer/product launch; check [rules](https://help.peerlist.io/individual/launchpad/guidelines-faqs) and timing before scheduling. |
 | [Awesome LLM Agent Frameworks](https://github.com/kaushikb11/awesome-llm-agents) | Suggest a project through the repository's contribution instructions; verify that Casama fits its scope. |
