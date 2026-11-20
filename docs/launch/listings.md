@@ -120,3 +120,4 @@ Reviewer account: `review@casama.ai` (Vaultwarden "Casama · store review accoun
 | ChatGPT apps | Ready except screenshots. Needs OpenAI organization verification (Oliver). |
 | Gemini CLI extensions | Extension built and validated (`packaging/gemini-cli/`, `scripts/sync-gemini-extension.sh`). Needs the public repo `stackwares/casama-gemini` with the `gemini-cli-extension` topic. |
 | Microsoft, Mistral, xAI | Later (partner programs). |
+| Composio | Toolkit request posted 2026-11-20 as "Casama" (support@casama.ai): https://request.composio.dev/boards/tool-requests/posts/casama-ai-bots-with-their-own-computers-hosted-mcp-rest-api-oauth-2-1. Composio builds toolkits themselves; votes move requests up. Text in `packaging/connectors/composio-request.md`. |
