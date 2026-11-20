@@ -27,6 +27,7 @@ type Row = ProjectRow & {
   status_reason: string | null;
   created_at: Date | string;
   can_steer?: boolean;
+  cover?: string | null;
 };
 /** What the Library holds for a project, as the person asking sees it. */
 type Shelf = { count: number; latest: ReturnType<typeof creationOut> | null };
@@ -65,6 +66,7 @@ async function out(db: Database, p: Row, shelf?: Shelf) {
     ...(shelf?.latest ? { latest_creation: shelf.latest } : {}),
     autonomous: p.autonomous,
     personal: p.personal,
+    cover: p.cover ?? null,
     folder: `${await workHome(db, p.lead_bot_id)}/${projectFolder(p.slug)}`,
     id: p.id,
     org_id: p.org_id,
@@ -92,7 +94,7 @@ export function registerProjectRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
   const { db } = deps;
   const COLUMNS = sql`p.id, p.org_id, p.slug, p.title, p.goal_md, p.done_criteria_md, p.status, p.plan_status, p.lead_bot_id,
     p.owner_user_id, p.conversation_id, p.budget_usd, p.deadline_at, p.plan_md, p.sessions, p.status_reason,
-    p.status_reason as last_session_kind, p.created_at, p.autonomous, p.personal`;
+    p.status_reason as last_session_kind, p.created_at, p.autonomous, p.personal, p.cover`;
   const STEER = (
     userId: string,
   ) => sql`(p.owner_user_id = ${userId}::uuid or public.has_role(p.org_id, 'admin')
@@ -228,6 +230,10 @@ export function registerProjectRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       // One that grew out of a chat follows the chat; one made here is the workspace's.
       personal: !!body.conversation_id,
     });
+    if (body.cover)
+      await db.execute(
+        sql`update public.projects set cover = ${body.cover} where id = ${p.id}::uuid`,
+      );
     if (autonomous) await startProjectRun(db, p, "plan", planningMessage(p), startRun);
     else if (body.conversation_id) await adoptChat(db, p, body.conversation_id);
     else {
@@ -348,6 +354,7 @@ export function registerProjectRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
         goal_md = coalesce(${body.goal_md ?? null}, goal_md),
         done_criteria_md = coalesce(${body.done_criteria_md ?? null}, done_criteria_md),
         autonomous = ${autonomous},
+        cover = case when ${body.cover !== undefined} then ${body.cover ?? null}::text else cover end,
         updated_at = now()
       where id = ${id}::uuid`);
     if (plans) {

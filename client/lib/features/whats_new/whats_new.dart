@@ -117,6 +117,7 @@ Future<void> showWhatsNew(BuildContext context, {required String version, requir
     builder: (c) => FormSheet(
       key: const Key('whatsNewSheet'),
       icon: LucideIcons.sparkles,
+      art: 'whatsnew',
       title: l10n.whatsNewTitle(version),
       submitLabel: l10n.whatsNewGotIt,
       submitKey: const Key('whatsNewDone'),

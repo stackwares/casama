@@ -68,6 +68,8 @@ class Project {
 
      this.latestCreation,
 
+     this.cover,
+
      this.canSteer,
   });
 
@@ -351,6 +353,19 @@ class Project {
 
 
 
+      /// A painted cover the project picked (an app art name such as sailboat); null for none
+  @JsonKey(
+    
+    name: r'cover',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final String? cover;
+
+
+
       /// Whether you may change it: its owner, an admin or the lead bot's managers
   @JsonKey(
     
@@ -391,6 +406,7 @@ class Project {
       other.folder == folder &&
       other.creationsCount == creationsCount &&
       other.latestCreation == latestCreation &&
+      other.cover == cover &&
       other.canSteer == canSteer;
 
     @override
@@ -418,6 +434,7 @@ class Project {
         folder.hashCode +
         creationsCount.hashCode +
         latestCreation.hashCode +
+        (cover == null ? 0 : cover.hashCode) +
         canSteer.hashCode;
 
   factory Project.fromJson(Map<String, dynamic> json) => _$ProjectFromJson(json);

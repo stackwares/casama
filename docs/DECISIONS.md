@@ -6382,3 +6382,26 @@ Oliver: "let's make google analytics live everywhere, the app and all our websit
 - **Store forms:** App Store App Privacy adds Device ID → Analytics (Product Interaction and User ID
   were already declared) and was published again. Play Data safety adds Analytics to App
   interactions and Device or other IDs, and was sent for review.
+
+## D-440 Painted pictures across the app, and a painted splash (2026-11-20)
+
+Asked by Oliver after the starter set picker's covers: carry that look to the rest of the app, plus a
+painted background on the splash and welcome screens. Plan and full list: `docs/APP-ART-PLAN.md`.
+
+- **One family, one widget:** every picture is a gpt-6-luna painting in the round-9 style
+  (`visuals/round-10/`), drawn through `client/lib/ui/painted_cover.dart`, which falls back to a drawn
+  gradient tile with an icon whenever a picture is missing or fails.
+- **Where:** pickers and choices (persona categories, skill categories, Library starters, Tasks' two ways
+  in, paywall plans, project covers), sheet heroes (waitlist, invite code, what's new, invite friends) and
+  empty or first-use screens that had only an icon (Computers, Use this computer). Mascot screens keep
+  their mascots.
+- **Gallery covers:** an item may ship `cover.webp`; it stays out of the hash and reaches the app as an
+  absolute `cover` URL on its own catalog, so new covers need no app build.
+- **Project covers:** `projects.cover` holds the name of one of 8 painted covers, or null.
+- **Splash and welcome:** one "coming home" scene, day and night, an allowed exception to the plain
+  background rule. Kept cheap: WebP decoded at screen size, no blur, fades in when ready, never blocks
+  startup, evicted after the welcome screen. Native launch screens stay plain. The web loading page shows a
+  26–36 KB copy loaded after first paint, and Flutter reuses it.
+- **Motion:** the scene zooms very slowly (1.05 over 16 s, back and forth; web and Flutter share one
+  clock), a new preview cover settles in, and waitlist sheet heroes float gently. All of it stops under
+  Reduce Motion and when a screen isn't ticking, and nothing moves in scrolling lists.

@@ -17,6 +17,7 @@ import '../../ui/bottom_padding.dart';
 import '../../ui/adaptive_modal.dart';
 import '../../ui/brand_sign_in_buttons.dart';
 import '../../ui/form_sheet.dart';
+import '../../ui/splash_scene.dart';
 import 'floating_mascots.dart';
 import 'invite_gate.dart';
 import 'welcome_tagline.dart';
@@ -54,10 +55,15 @@ class SignInScreen extends ConsumerWidget {
     final scheme = context.colorScheme;
     final statusBar = MediaQuery.paddingOf(context).top;
     // The app's own background (painted once behind every page in app.dart) shows through, so
-    // this screen looks like the rest of the app and nothing shifts when signing in.
+    // this screen looks like the rest of the app and nothing shifts when signing in. The painted
+    // scene from the splash sits behind it, so the splash flows into this screen (APP-ART-PLAN).
     return Scaffold(
       backgroundColor: Colors.transparent,
-      body: FloatingMascots(
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          SplashScene(brightness: Theme.of(context).brightness, background: Colors.transparent),
+          FloatingMascots(
           child: ProgressiveFade(child: SafeArea(
             top: false,
             bottom: false,
@@ -174,6 +180,8 @@ class SignInScreen extends ConsumerWidget {
               ),
             ),
           )),
+      ),
+        ],
       ),
     );
   }

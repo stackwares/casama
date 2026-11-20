@@ -38,6 +38,7 @@ same commit. Shipping details (deploys, app builds) move fast, so check them bef
 
 | Plan | Decisions | What's left |
 |---|---|---|
+| [APP-ART-PLAN](APP-ART-PLAN.md) | D-440 | Web app live 2026-11-20; server deploy (gallery covers, project cover column), gallery re-sync + deploy-web, store builds, startup measurement |
 | [ADMIN-BOT-PLAN](ADMIN-BOT-PLAN.md) | D-435 | Push and deploy; then turn it on for admin@casama.ai's bot |
 | [CALL-RECAP-PLAN](CALL-RECAP-PLAN.md) | D-429 | Server live; app builds and a real call check |
 | [CALLS-PLAN](CALLS-PLAN.md) | D-327 | App builds; real-device checks |

@@ -1014,11 +1014,13 @@ class FakeBackend implements Backend {
     double? budgetUsd,
     bool autonomous = false,
     String? conversationId,
+    String? cover,
   }) async {
     projectActions.add(
-      autonomous
-          ? 'create:$title:$budgetUsd'
-          : 'create-light:$title${conversationId == null ? '' : ':$conversationId'}',
+      (autonomous
+              ? 'create:$title:$budgetUsd'
+              : 'create-light:$title${conversationId == null ? '' : ':$conversationId'}') +
+          (cover == null ? '' : ':cover=$cover'),
     );
     return Project.fromJson(projectDetail.toJson());
   }
@@ -1038,6 +1040,9 @@ class FakeBackend implements Backend {
         ? 'status:$status'
         : 'autonomous:$autonomous${goal == null ? '' : ':$goal'}',
   );
+  @override
+  Future<void> setProjectCover(String projectId, String? cover) async =>
+      projectActions.add('cover:$cover');
   @override
   Future<void> approveProjectPlan(String projectId) async =>
       projectActions.add('approve');

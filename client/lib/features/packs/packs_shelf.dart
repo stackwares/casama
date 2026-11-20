@@ -8,6 +8,8 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
 import '../../ui/app_card.dart';
 import '../../ui/edge_fade.dart';
+import '../../ui/painted_cover.dart';
+import '../gallery/gallery_cards.dart' show setCoverAsset;
 import '../skills/skill_visuals.dart';
 import 'pack_logic.dart';
 import 'pack_parts.dart';
@@ -114,7 +116,12 @@ class PackCard extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SkillIconTile(icon: packIcon(p.icon), color: scheme.primary),
+                if (p.kind == GalleryPackKindEnum.set_ && setCoverAsset(p.id) != null)
+                  ExcludeSemantics(
+                    child: PaintedCover(size: 44, seed: p.id, asset: setCoverAsset(p.id), icon: packIcon(p.icon)),
+                  )
+                else
+                  SkillIconTile(icon: packIcon(p.icon), color: scheme.primary),
                 const SizedBox(width: AppSpace.sm),
                 Expanded(
                   child: Column(

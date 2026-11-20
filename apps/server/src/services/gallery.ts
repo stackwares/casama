@@ -69,6 +69,8 @@ export interface GalleryRecord {
   files: string[];
   /** The extra catalog it came from (D-315); its id is then `source:id`. */
   source?: string;
+  /** Absolute URL of its painted cover picture (cover.webp), when it has one. */
+  cover?: string;
   min_server?: string;
   [extra: string]: unknown;
 }
@@ -336,6 +338,21 @@ async function readIndex(
   return index;
 }
 
+const COVER_PATH = /^(sets|bots|routines|skills|plugins)\/[a-z0-9][a-z0-9-]{0,62}\/cover\.webp$/;
+
+/**
+ * A record with its painted cover (cover.webp) as an absolute URL on its own catalog's address,
+ * the way an app's logo becomes `logoUrl`. Anything but a plain cover path is dropped, so a
+ * catalog can never hand the app an arbitrary URL.
+ */
+function withCover(src: GallerySource, i: RawItem): RawItem {
+  if (!("cover" in i)) return i;
+  const { cover, ...rest } = i;
+  return typeof cover === "string" && COVER_PATH.test(cover)
+    ? { ...rest, cover: join(src.base, cover) }
+    : rest;
+}
+
 /** The raw records of one file from every source, namespaced, without items too new for this server. */
 async function recordsOf(
   env: Env,
@@ -350,7 +367,7 @@ async function recordsOf(
     const src = sources[n] as GallerySource;
     for (const raw of (index?.items ?? []) as unknown[]) {
       if (typeof raw !== "object" || raw === null) continue;
-      const i = raw as RawItem;
+      const i = withCover(src, raw as RawItem);
       if (tooNewForServer(i)) continue;
       if (src.name) {
         if (typeof i.id !== "string" || !ITEM_ID.test(i.id)) continue;
@@ -542,6 +559,8 @@ export interface GalleryExtras {
   source?: string;
   version?: number;
   tags?: string[];
+  /** Absolute URL of the item's painted cover picture (cover.webp), when it has one. */
+  cover?: string;
   /** Raw placeholder fields of a routine or bot with install questions (D-315). */
   template?: Record<string, unknown>;
 }
@@ -565,6 +584,7 @@ const EXTRA_KEYS = [
   "version",
   "tags",
   "template",
+  "cover",
 ] as const;
 
 export function extrasOf(i: Record<string, unknown>): GalleryExtras {
@@ -819,6 +839,8 @@ export interface GallerySetRecord {
   items: { type: string; id: string }[];
   source?: string;
   added?: string;
+  /** Absolute URL of the set's painted cover picture (cover.webp), when it has one. */
+  cover?: string;
 }
 
 /** Starter sets (sets.json); an extra catalog's set points at its own items. */
@@ -848,6 +870,7 @@ export async function gallerySets(
       items: refs,
       ...(i.source ? { source: String(i.source) } : {}),
       ...(typeof i.added === "string" ? { added: i.added } : {}),
+      ...(typeof i.cover === "string" ? { cover: i.cover } : {}),
     });
   }
   return out;

@@ -9,6 +9,7 @@ import 'package:casama/features/library/creation_detail.dart';
 import 'package:casama/features/library/library_screen.dart';
 import 'package:casama/features/projects/projects_screen.dart';
 import 'package:casama/l10n/generated/app_localizations.dart';
+import 'package:casama/ui/painted_cover.dart';
 import 'package:casama_sdk/casama_sdk.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -33,6 +34,7 @@ Project _project(
   ProjectStatus status = ProjectStatus.active,
   int count = 0,
   Creation? latest,
+  String? cover,
 }) => Project(
   id: id,
   orgId: orgId,
@@ -56,12 +58,14 @@ Project _project(
   creationsCount: count,
   latestCreation: latest,
   canSteer: true,
+  cover: cover,
 );
 
 /// A project worked on together: no goal, no budget, nothing to approve.
 ProjectDetail _light({
   ProjectStatus status = ProjectStatus.active,
   String plan = '',
+  String? cover,
 }) => ProjectDetail(
   id: 'p1',
   orgId: orgId,
@@ -86,6 +90,7 @@ ProjectDetail _light({
   folder: 'workspace/projects/space-dodger',
   creationsCount: 1,
   canSteer: true,
+  cover: cover,
   milestones: const [],
   runs: const [],
 );
@@ -238,6 +243,67 @@ void main() {
       expect(find.byKey(const Key('projectShelf')), findsNothing);
     },
   );
+
+  testWidgets('a project picks a painted cover, shown in the list, on the shelf and on its page', (
+    tester,
+  ) async {
+    await setSize(tester, const Size(900, 1600));
+    final backend = FakeBackend()
+      ..projectList = [
+        _project('p1', 'Space Dodger', cover: 'mountain'),
+        _project('p2', 'Old site'),
+      ]
+      ..projectDetail = _light(cover: 'mountain');
+    await tester.pumpWidget(_app(backend, '/projects'));
+    await tester.pumpAndSettle();
+    // The painted cover stands in for the glyph; one without a cover keeps it.
+    expect(
+      find.descendant(of: find.byKey(const Key('project-p1')), matching: find.byType(PaintedCover)),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: find.byKey(const Key('project-p2')), matching: find.byType(PaintedCover)),
+      findsNothing,
+    );
+
+    // Picked when the project is made.
+    await tester.tap(find.byKey(const Key('newProject')));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('projectTitle')), 'Zine');
+    await tester.tap(find.byKey(const Key('projectCover-seedling')));
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('createProject')));
+    await tester.pumpAndSettle();
+    expect(backend.projectActions, ['create-light:Zine:cover=seedling']);
+    backend.projectActions.clear();
+
+    // On its page: a wide banner, and the cover can be changed or dropped.
+    await tester.pumpWidget(_app(backend, '/projects/p1'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('projectCoverBanner')), findsOneWidget);
+    await tester.ensureVisible(find.byKey(const Key('projectCover-map')));
+    await tester.tap(find.byKey(const Key('projectCover-map')));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(const Key('projectCover-none')));
+    await tester.tap(find.byKey(const Key('projectCover-none')));
+    await tester.pumpAndSettle();
+    expect(backend.projectActions, ['cover:map', 'cover:null']);
+
+    // No cover, no banner.
+    backend.projectDetail = _light();
+    await tester.pumpWidget(_app(backend, '/projects/p1'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('projectCoverBanner')), findsNothing);
+
+    // The Library's shelf shows it too.
+    backend.creationList = [];
+    await tester.pumpWidget(_app(backend, '/library'));
+    await tester.pumpAndSettle();
+    expect(
+      find.descendant(of: find.byKey(const Key('projectTile-p1')), matching: find.byType(PaintedArt)),
+      findsOneWidget,
+    );
+  });
 
   testWidgets('a workspace with no projects has no shelf', (tester) async {
     await setSize(tester, const Size(430, 932));

@@ -5608,6 +5608,12 @@ abstract class AppLocalizations {
   /// **'Each bot works on a computer: the team computer everyone shares, or a private one. Files stay on it between chats.'**
   String get computersHelp;
 
+  /// No description provided for @computersEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No computers yet'**
+  String get computersEmptyTitle;
+
   /// No description provided for @thisDevice.
   ///
   /// In en, this message translates to:
@@ -10401,6 +10407,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Reopen'**
   String get projectReopen;
+
+  /// No description provided for @projectCover.
+  ///
+  /// In en, this message translates to:
+  /// **'Cover'**
+  String get projectCover;
+
+  /// No description provided for @projectCoverNone.
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get projectCoverNone;
+
+  /// No description provided for @projectCoverName.
+  ///
+  /// In en, this message translates to:
+  /// **'{name, select, sailboat{Sailboat} mountain{Mountain} seedling{Seedling} compass{Compass} lantern{Lantern} telescope{Telescope} map{Map} chess{Chess} other{{name}}}'**
+  String projectCoverName(String name);
 
   /// No description provided for @projectThings.
   ///

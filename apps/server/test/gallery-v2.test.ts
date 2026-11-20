@@ -11,7 +11,12 @@ import { fileURLToPath } from "node:url";
 import { generateGalleryKeyPair, sha256Hex, signGalleryManifest } from "@casama/domain";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { sendAccountEmails } from "../src/services/account-emails.ts";
-import { galleryIndex, resetGalleryCache } from "../src/services/gallery.ts";
+import {
+  galleryIndex,
+  galleryRoutines,
+  gallerySets,
+  resetGalleryCache,
+} from "../src/services/gallery.ts";
 import {
   checkGalleryHealth,
   parseGalleryRewards,
@@ -202,6 +207,15 @@ describe("gallery v2", () => {
     expect(
       setList.items.find((s: { id: string }) => s.id === "founder-kit").items.length,
     ).toBeGreaterThan(1);
+    // Painted covers reach the app as absolute URLs on the catalog's own address.
+    const cover = `${site.url}/sets/founder-kit/cover.webp`;
+    expect(setList.items.find((s: { id: string }) => s.id === "founder-kit").cover).toBe(cover);
+    expect(
+      all.items.find(
+        (i: { type: string; id: string }) => i.type === "set" && i.id === "founder-kit",
+      ).cover,
+    ).toBe(cover);
+    expect((await fetch(cover)).headers.get("content-length")).not.toBe("0");
     const authors = await j(await h.request("/v1/gallery/authors", { token: owner.token }));
     expect(authors.items.length).toBeGreaterThan(0);
     // Routine ideas carry install questions; starter bots theirs.
@@ -915,6 +929,70 @@ describe("gallery v2 catalogs", () => {
       ["one", null],
       ["team:one", "team"],
     ]);
+    resetGalleryCache();
+  });
+
+  it("turns a cover path into an absolute URL on its own catalog and drops anything else", async () => {
+    const skill = (id: string, cover?: unknown) =>
+      look(id, { type: "skill", category: "work", ...(cover === undefined ? {} : { cover }) });
+    const set = (id: string, cover?: unknown) => ({
+      id,
+      type: "set",
+      name: id,
+      author: { name: "A" },
+      featured: false,
+      retired: false,
+      document: { description: "d", icon: "package", items: [{ type: "skill", id: "good" }] },
+      ...(cover === undefined ? {} : { cover }),
+    });
+    const routine = (id: string, cover: unknown) => ({
+      id,
+      type: "routine",
+      name: id,
+      author: { name: "A" },
+      featured: false,
+      retired: false,
+      document: {
+        description: "Plans the day.",
+        category: "life",
+        icon: "sun",
+        instructions_md: "Plan my day from my calendar and tasks.",
+        schedule_cron: "0 8 * * *",
+      },
+      cover,
+    });
+    const files = {
+      "g.example.org/index.json": index([
+        skill("good", "skills/good/cover.webp"),
+        skill("absolute", "https://evil.example.com/x.webp"),
+        skill("dots", "skills/../../secrets/cover.webp"),
+        skill("name", "skills/name/logo.webp"),
+        skill("kind", "themes/kind/cover.webp"),
+        skill("number", 7),
+        skill("none"),
+      ]),
+      "g.example.org/sets.json": index([set("kit", "sets/kit/cover.webp")]),
+      "g.example.org/routines.json": index([routine("plan", "routines/plan/cover.webp")]),
+      "team.example.org/index.json": index([skill("good", "skills/good/cover.webp")]),
+      "team.example.org/sets.json": index([set("kit", "sets/kit/cover.webp")]),
+    };
+    resetGalleryCache();
+    const e = env({ GALLERY_SOURCES: "team=https://team.example.org" });
+    const got = await galleryIndex(e, serve(files));
+    const coverOf = (id: string) => got.items.find((i) => i.id === id)?.cover;
+    expect(coverOf("good")).toBe("https://g.example.org/skills/good/cover.webp");
+    expect(coverOf("team:good")).toBe("https://team.example.org/skills/good/cover.webp");
+    for (const id of ["absolute", "dots", "name", "kind", "number", "none"]) {
+      expect(got.items.find((i) => i.id === id)).toBeDefined();
+      expect(coverOf(id)).toBeUndefined();
+    }
+    const sets = await gallerySets(e, serve(files));
+    expect(sets.map((s) => [s.id, s.cover])).toEqual([
+      ["kit", "https://g.example.org/sets/kit/cover.webp"],
+      ["team:kit", "https://team.example.org/sets/kit/cover.webp"],
+    ]);
+    const routines = await galleryRoutines(e, serve(files));
+    expect(routines[0]?.cover).toBe("https://g.example.org/routines/plan/cover.webp");
     resetGalleryCache();
   });
 });

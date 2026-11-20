@@ -9,7 +9,9 @@ import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
 import '../../ui/motion.dart';
+import '../../ui/painted_cover.dart';
 import '../library/creation_tile.dart';
+import 'project_cover.dart';
 import 'projects_screen.dart';
 
 /// Whether a project plans for approval and works by itself (D-113). Servers from before light
@@ -53,7 +55,7 @@ class ProjectTile extends StatelessWidget {
                   borderRadius: BorderRadius.circular(AppRadius.icon),
                   child: SizedBox.square(
                     dimension: 44,
-                    child: _MiniCover(creation: p.latestCreation),
+                    child: _MiniCover(creation: p.latestCreation, cover: p.cover, seed: p.id),
                   ),
                 ),
                 const SizedBox(width: AppSpace.sm),
@@ -96,16 +98,27 @@ class ProjectTile extends StatelessWidget {
   }
 }
 
-/// A project's small cover: the picture of the newest thing made for it, else that thing's glyph,
-/// else a folder. (The Library's drawn covers carry a title, which doesn't fit this small.)
+/// A project's small cover: the painted cover it picked, else the picture of the newest thing made
+/// for it, else that thing's glyph, else a folder. (The Library's drawn covers carry a title, which
+/// doesn't fit this small.)
 class _MiniCover extends ConsumerWidget {
-  const _MiniCover({required this.creation});
+  const _MiniCover({required this.creation, required this.cover, required this.seed});
   final Creation? creation;
+  final String? cover;
+  final String seed;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final scheme = context.colorScheme;
     final c = creation;
+    if (cover != null) {
+      // Filled by the tile's own rounded square, so no radius of its own.
+      return PaintedArt(
+        seed: seed,
+        asset: projectCoverAsset(cover),
+        icon: c == null ? LucideIcons.folderKanban : creationIcon(c.kind, label: c.label),
+      );
+    }
     final glyph = ColoredBox(
       color: scheme.surfaceContainerHighest,
       child: Center(

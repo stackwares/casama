@@ -25,6 +25,16 @@ Each item is a folder named by its id (lowercase letters, digits and dashes):
 The documents for each kind (`theme.json`, `app.json`, `bot.json` and the rest) are described in the
 catalog's [README](https://github.com/stackwares/casama-gallery#readme).
 
+### Cover pictures
+
+Skills, starter bots, routine ideas, plugins and starter sets can carry an optional painted cover,
+`cover.webp`, next to `item.json`. It has to be a real WebP image, square, 256 to 1024 px on a side and at
+most 80 KB. The cover is presentation only: it stays out of the item's `files`, `sha256` and `size`, so
+adding or changing one never changes the item's hash or shows as an update. When it's there, the index
+record gets `cover` (for example `"sets/founder-kit/cover.webp"`, relative to the catalog root), and the
+server hands the app an absolute URL on the catalog's own address. The app shows it on gallery cards and in
+its pickers.
+
 ## item.json
 
 ```json

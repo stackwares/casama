@@ -33,6 +33,10 @@ sets/<id>/item.json
 sets/<id>/set.json
 ```
 
+Skills, bots, routines, plugins and sets can also have a painted cover, `<id>/cover.webp` (optional): a
+square WebP, 256 to 1024 px, at most 80 KB. It isn't part of the item's files or hash, so adding one never
+shows as an update. The index record names it as `cover`.
+
 `item.json` names the author and the license. Looks use CC0-1.0 or CC-BY-4.0. Skills use MIT or Apache-2.0.
 Color schemes give a seed, a background and a text color for light and dark. Text on the background has to
 pass WCAG AA. Fonts have to be ones the app already ships. Photos from Unsplash's API stay in photo search

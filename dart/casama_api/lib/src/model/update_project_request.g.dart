@@ -23,6 +23,8 @@ abstract class _$UpdateProjectRequestCWProxy {
 
   UpdateProjectRequest autonomous(bool? autonomous);
 
+  UpdateProjectRequest cover(String? cover);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `UpdateProjectRequest(...).copyWith.fieldName(value)`.
@@ -40,6 +42,7 @@ abstract class _$UpdateProjectRequestCWProxy {
     String? goalMd,
     String? doneCriteriaMd,
     bool? autonomous,
+    String? cover,
   });
 }
 
@@ -79,6 +82,9 @@ class _$UpdateProjectRequestCWProxyImpl
   UpdateProjectRequest autonomous(bool? autonomous) =>
       call(autonomous: autonomous);
 
+  @override
+  UpdateProjectRequest cover(String? cover) => call(cover: cover);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `UpdateProjectRequest(...).copyWith.fieldName(value)`.
@@ -97,6 +103,7 @@ class _$UpdateProjectRequestCWProxyImpl
     Object? goalMd = const $CopyWithPlaceholder(),
     Object? doneCriteriaMd = const $CopyWithPlaceholder(),
     Object? autonomous = const $CopyWithPlaceholder(),
+    Object? cover = const $CopyWithPlaceholder(),
   }) {
     return UpdateProjectRequest(
       title: title == const $CopyWithPlaceholder()
@@ -131,6 +138,10 @@ class _$UpdateProjectRequestCWProxyImpl
           ? _value.autonomous
           // ignore: cast_nullable_to_non_nullable
           : autonomous as bool?,
+      cover: cover == const $CopyWithPlaceholder()
+          ? _value.cover
+          // ignore: cast_nullable_to_non_nullable
+          : cover as String?,
     );
   }
 }
@@ -168,6 +179,7 @@ UpdateProjectRequest _$UpdateProjectRequestFromJson(
       goalMd: $checkedConvert('goal_md', (v) => v as String?),
       doneCriteriaMd: $checkedConvert('done_criteria_md', (v) => v as String?),
       autonomous: $checkedConvert('autonomous', (v) => v as bool?),
+      cover: $checkedConvert('cover', (v) => v as String?),
     );
     return val;
   },
@@ -191,6 +203,7 @@ Map<String, dynamic> _$UpdateProjectRequestToJson(
   'goal_md': ?instance.goalMd,
   'done_criteria_md': ?instance.doneCriteriaMd,
   'autonomous': ?instance.autonomous,
+  'cover': ?instance.cover,
 };
 
 const _$UpdateProjectRequestStatusEnumEnumMap = {

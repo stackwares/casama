@@ -71,6 +71,8 @@ abstract class _$GalleryItemCWProxy {
 
   GalleryItem stats(GalleryStats? stats);
 
+  GalleryItem cover(String? cover);
+
   GalleryItem template(Map<String, Object?>? template);
 
   /// Creates a new instance with the provided field values.
@@ -114,6 +116,7 @@ abstract class _$GalleryItemCWProxy {
     GalleryItemTested? tested,
     String? source_,
     GalleryStats? stats,
+    String? cover,
     Map<String, Object?>? template,
   });
 }
@@ -226,6 +229,9 @@ class _$GalleryItemCWProxyImpl implements _$GalleryItemCWProxy {
   GalleryItem stats(GalleryStats? stats) => call(stats: stats);
 
   @override
+  GalleryItem cover(String? cover) => call(cover: cover);
+
+  @override
   GalleryItem template(Map<String, Object?>? template) =>
       call(template: template);
 
@@ -271,6 +277,7 @@ class _$GalleryItemCWProxyImpl implements _$GalleryItemCWProxy {
     Object? tested = const $CopyWithPlaceholder(),
     Object? source_ = const $CopyWithPlaceholder(),
     Object? stats = const $CopyWithPlaceholder(),
+    Object? cover = const $CopyWithPlaceholder(),
     Object? template = const $CopyWithPlaceholder(),
   }) {
     return GalleryItem(
@@ -402,6 +409,10 @@ class _$GalleryItemCWProxyImpl implements _$GalleryItemCWProxy {
           ? _value.stats
           // ignore: cast_nullable_to_non_nullable
           : stats as GalleryStats?,
+      cover: cover == const $CopyWithPlaceholder()
+          ? _value.cover
+          // ignore: cast_nullable_to_non_nullable
+          : cover as String?,
       template: template == const $CopyWithPlaceholder()
           ? _value.template
           // ignore: cast_nullable_to_non_nullable
@@ -533,6 +544,7 @@ GalleryItem _$GalleryItemFromJson(Map<String, dynamic> json) => $checkedCreate(
         (v) =>
             v == null ? null : GalleryStats.fromJson(v as Map<String, dynamic>),
       ),
+      cover: $checkedConvert('cover', (v) => v as String?),
       template: $checkedConvert('template', (v) => v as Map<String, dynamic>?),
     );
     return val;
@@ -580,6 +592,7 @@ Map<String, dynamic> _$GalleryItemToJson(GalleryItem instance) =>
       'tested': ?instance.tested?.toJson(),
       'source': ?instance.source_,
       'stats': ?instance.stats?.toJson(),
+      'cover': ?instance.cover,
       'template': ?instance.template,
     };
 

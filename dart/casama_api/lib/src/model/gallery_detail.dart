@@ -94,6 +94,8 @@ class GalleryDetail {
 
      this.stats,
 
+     this.cover,
+
      this.template,
 
     required  this.skillMd,
@@ -489,6 +491,19 @@ class GalleryDetail {
 
 
 
+      /// Absolute URL of the item's painted cover picture (cover.webp), when it has one
+  @JsonKey(
+    
+    name: r'cover',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final String? cover;
+
+
+
       /// Routines and bots with install questions: the raw fields with {{key}} placeholders (document has the defaults filled)
   @JsonKey(
     
@@ -550,6 +565,7 @@ class GalleryDetail {
       other.tested == tested &&
       other.source_ == source_ &&
       other.stats == stats &&
+      other.cover == cover &&
       other.template == template &&
       other.skillMd == skillMd;
 
@@ -587,6 +603,7 @@ class GalleryDetail {
         tested.hashCode +
         source_.hashCode +
         stats.hashCode +
+        cover.hashCode +
         template.hashCode +
         (skillMd == null ? 0 : skillMd.hashCode);
 

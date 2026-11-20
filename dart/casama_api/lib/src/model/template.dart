@@ -76,6 +76,8 @@ class Template {
      this.version,
 
      this.stats,
+
+     this.cover,
   });
 
   @JsonKey(
@@ -381,6 +383,19 @@ class Template {
 
 
 
+      /// Absolute URL of the item's painted cover picture (cover.webp), when it has one
+  @JsonKey(
+    
+    name: r'cover',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final String? cover;
+
+
+
 
 
     @override
@@ -409,7 +424,8 @@ class Template {
       other.season == season &&
       other.source_ == source_ &&
       other.version == version &&
-      other.stats == stats;
+      other.stats == stats &&
+      other.cover == cover;
 
     @override
     int get hashCode =>
@@ -437,7 +453,8 @@ class Template {
         season.hashCode +
         source_.hashCode +
         version.hashCode +
-        stats.hashCode;
+        stats.hashCode +
+        cover.hashCode;
 
   factory Template.fromJson(Map<String, dynamic> json) => _$TemplateFromJson(json);
 

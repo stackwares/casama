@@ -15,6 +15,7 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
 import '../../ui/app_card.dart';
 import '../../ui/page.dart';
+import '../../ui/painted_cover.dart';
 import '../../ui/shell_header.dart';
 import '../auth/invite_gate.dart' show openHaveInvite;
 import '../workspaces/join_flow.dart' show JoinCard, JoinCardSkeleton;
@@ -208,8 +209,8 @@ class _InviteFriendsScreenState extends ConsumerState<InviteFriendsScreen> {
         padding: const EdgeInsets.all(AppSpace.lg),
         child: Column(
           children: [
-            Icon(LucideIcons.gift, size: 44, color: scheme.primary),
-            const SizedBox(height: AppSpace.sm),
+            const PaintedHero(name: 'invite', size: 104, icon: LucideIcons.gift),
+            const SizedBox(height: AppSpace.md),
             Text(
               same
                   ? l10n.inviteFriendsHeadlineBoth(reward)
@@ -571,11 +572,7 @@ class _InviteLinkScreenState extends ConsumerState<InviteLinkScreen> {
       ),
       data: (p) => JoinCard(
         key: const Key('referralPreview'),
-        leading: Icon(
-          LucideIcons.gift,
-          size: 56,
-          color: context.colorScheme.primary,
-        ),
+        leading: const PaintedHero(name: 'wait-gift', size: 96, icon: LucideIcons.gift),
         eyebrow: p.inviterName.isUsable
             ? l10n.referralInvitedBy(p.inviterName!)
             : l10n.referralInvitedByFriend,

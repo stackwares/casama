@@ -15,8 +15,10 @@ import '../../ui/app_card.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/glow_button.dart';
 import '../../ui/page.dart';
+import '../../ui/painted_cover.dart';
 import '../chat/widgets/chat_markdown.dart';
 import '../library/creation_tile.dart';
+import 'project_cover.dart';
 import 'project_tile.dart';
 
 /// Projects (D-113, D-295): the home for one piece of work, with its chat, plan, to-dos, files and
@@ -84,6 +86,15 @@ class ProjectsScreen extends ConsumerWidget {
                           key: Key('project-${p.id}'),
                           // One that works by itself has a goal to hit; the rest are folders of work.
                           icon: projectIsAutonomous(p) ? LucideIcons.target : LucideIcons.folderKanban,
+                          leading: p.cover == null
+                              ? null
+                              : PaintedCover(
+                                  size: 32,
+                                  radius: AppRadius.icon,
+                                  seed: p.id,
+                                  asset: projectCoverAsset(p.cover),
+                                  icon: projectIsAutonomous(p) ? LucideIcons.target : LucideIcons.folderKanban,
+                                ),
                           title: p.title,
                           subtitle: [
                             projectStatusLabel(context, p.status),
@@ -120,6 +131,7 @@ class _NewProjectState extends ConsumerState<_NewProject> {
   final _done = TextEditingController();
   final _budget = TextEditingController();
   String? _lead;
+  String? _cover;
   // Off: a project you work on together in its chat. On: the bot plans it for approval (D-113).
   var _alone = false;
   var _busy = false;
@@ -164,6 +176,7 @@ class _NewProjectState extends ConsumerState<_NewProject> {
                       leadBotId: _lead!,
                       budgetUsd: _alone ? double.tryParse(_budget.text.trim()) : null,
                       autonomous: _alone,
+                      cover: _cover,
                     ),
               );
               if (!context.mounted) return;
@@ -196,6 +209,15 @@ class _NewProjectState extends ConsumerState<_NewProject> {
           items: [for (final b in bots) DropdownMenuItem(value: b.id, child: Text(b.name))],
           onChanged: hapticOnChanged((v) => setState(() => _lead = v), haptic: HapticsHelper.selection),
         ),
+        _CoverRow(
+          value: _cover,
+          seed: 'new-project',
+          icon: _alone ? LucideIcons.target : LucideIcons.folderKanban,
+          onChanged: (v) {
+            HapticsHelper.selection();
+            setState(() => _cover = v);
+          },
+        ),
         FormSwitch(
           key: const Key('projectAlone'),
           icon: LucideIcons.sparkles,
@@ -219,6 +241,25 @@ class _NewProjectState extends ConsumerState<_NewProject> {
       ],
     );
   }
+}
+
+/// The new-project sheet's Cover row: a label over the covers to pick from.
+class _CoverRow extends StatelessWidget {
+  const _CoverRow({required this.value, required this.seed, required this.icon, required this.onChanged});
+  final String? value;
+  final String seed;
+  final IconData icon;
+  final ValueChanged<String?> onChanged;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(context.l10n.projectCover, style: context.textTheme.labelLarge?.copyWith(color: context.colorScheme.onSurfaceVariant)),
+      const SizedBox(height: AppSpace.xs),
+      ProjectCoverPicker(value: value, seed: seed, icon: icon, onChanged: onChanged),
+    ],
+  );
 }
 
 /// Switching "work on it by itself" on for a project: its goal, what done looks like and a budget,
@@ -350,6 +391,8 @@ class ProjectScreen extends ConsumerWidget {
             ),
           ],
           children: [
+            if (p.cover case final String cover)
+              ProjectCoverBanner(cover: cover, seed: p.id, icon: autonomous ? LucideIcons.target : LucideIcons.folderKanban),
             if (p.statusReason != null) FormNote(p.statusReason!, icon: LucideIcons.info),
             if (autonomous && p.planStatus == ProjectDetailPlanStatusEnum.proposed)
               Padding(
@@ -507,6 +550,18 @@ class ProjectScreen extends ConsumerWidget {
                   ),
               ],
             ),
+            if (canSteer) ...[
+              SectionHeader(title: l10n.projectCover),
+              ProjectCoverPicker(
+                value: p.cover,
+                seed: p.id,
+                icon: autonomous ? LucideIcons.target : LucideIcons.folderKanban,
+                onChanged: (v) {
+                  HapticsHelper.selection();
+                  _act(context, ref, () => backend.setProjectCover(projectId, v));
+                },
+              ),
+            ],
             if (p.runs.isNotEmpty) ...[
               SectionHeader(title: l10n.projectTimeline),
               GroupedCard(

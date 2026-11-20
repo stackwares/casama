@@ -3642,6 +3642,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Each bot works on a computer: the team computer everyone shares, or a private one. Files stay on it between chats.';
 
   @override
+  String get computersEmptyTitle => 'No computers yet';
+
+  @override
   String get thisDevice => 'This device';
 
   @override
@@ -6492,6 +6495,28 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get projectReopen => 'Reopen';
+
+  @override
+  String get projectCover => 'Cover';
+
+  @override
+  String get projectCoverNone => 'None';
+
+  @override
+  String projectCoverName(String name) {
+    String _temp0 = intl.Intl.selectLogic(name, {
+      'sailboat': 'Sailboat',
+      'mountain': 'Mountain',
+      'seedling': 'Seedling',
+      'compass': 'Compass',
+      'lantern': 'Lantern',
+      'telescope': 'Telescope',
+      'map': 'Map',
+      'chess': 'Chess',
+      'other': '$name',
+    });
+    return '$_temp0';
+  }
 
   @override
   String projectThings(int count) {

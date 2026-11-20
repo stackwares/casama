@@ -68,6 +68,7 @@
           }
         ]
       },
+      "cover": "sets/founder-kit/cover.webp",
       "files": [
         "sets/founder-kit/item.json",
         "sets/founder-kit/set.json"
@@ -139,6 +140,7 @@
           }
         ]
       },
+      "cover": "sets/job-search-kit/cover.webp",
       "files": [
         "sets/job-search-kit/item.json",
         "sets/job-search-kit/set.json"
@@ -196,6 +198,7 @@
           }
         ]
       },
+      "cover": "sets/meetings-handled/cover.webp",
       "files": [
         "sets/meetings-handled/item.json",
         "sets/meetings-handled/set.json"
@@ -267,6 +270,7 @@
           }
         ]
       },
+      "cover": "sets/money-in-order/cover.webp",
       "files": [
         "sets/money-in-order/item.json",
         "sets/money-in-order/set.json"
@@ -342,6 +346,7 @@
           }
         ]
       },
+      "cover": "sets/small-business-kit/cover.webp",
       "files": [
         "sets/small-business-kit/item.json",
         "sets/small-business-kit/set.json"
@@ -397,6 +402,7 @@
           }
         ]
       },
+      "cover": "sets/stay-on-top-of-email/cover.webp",
       "files": [
         "sets/stay-on-top-of-email/item.json",
         "sets/stay-on-top-of-email/set.json"
@@ -461,6 +467,7 @@
           }
         ]
       },
+      "cover": "sets/student-kit/cover.webp",
       "files": [
         "sets/student-kit/item.json",
         "sets/student-kit/set.json"
@@ -532,6 +539,7 @@
           }
         ]
       },
+      "cover": "sets/writer-kit/cover.webp",
       "files": [
         "sets/writer-kit/item.json",
         "sets/writer-kit/set.json"

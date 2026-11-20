@@ -9657,6 +9657,10 @@
           },
           "stats": {
             "$ref": "#/components/schemas/GalleryStats"
+          },
+          "cover": {
+            "type": "string",
+            "description": "Absolute URL of the item's painted cover picture (cover.webp), when it has one"
           }
         },
         "required": [
@@ -14607,6 +14611,14 @@
           "latest_creation": {
             "$ref": "#/components/schemas/Creation"
           },
+          "cover": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^[a-z][a-z0-9-]{0,39}$",
+            "description": "A painted cover the project picked (an app art name such as sailboat); null for none"
+          },
           "can_steer": {
             "type": "boolean",
             "description": "Whether you may change it: its owner, an admin or the lead bot's managers"
@@ -14692,6 +14704,14 @@
             "type": "string",
             "format": "uuid",
             "description": "With autonomous false: make this topic of yours the project's chat, and file what was made in it under the project. Without it the project gets a new topic"
+          },
+          "cover": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^[a-z][a-z0-9-]{0,39}$",
+            "description": "A painted cover the project picked (an app art name such as sailboat); null for none"
           }
         },
         "required": [
@@ -14865,6 +14885,14 @@
           "autonomous": {
             "type": "boolean",
             "description": "true: the lead bot drafts a plan for you to approve, then works by itself (needs a goal). false: back to working on it together; nothing more starts by itself"
+          },
+          "cover": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^[a-z][a-z0-9-]{0,39}$",
+            "description": "A painted cover the project picked (an app art name such as sailboat); null for none"
           }
         }
       },
@@ -16841,6 +16869,10 @@
           "stats": {
             "$ref": "#/components/schemas/GalleryStats"
           },
+          "cover": {
+            "type": "string",
+            "description": "Absolute URL of the item's painted cover picture (cover.webp), when it has one"
+          },
           "template": {
             "type": "object",
             "additionalProperties": {},
@@ -17388,6 +17420,10 @@
           },
           "added": {
             "type": "string"
+          },
+          "cover": {
+            "type": "string",
+            "description": "Absolute URL of the set's painted cover picture (cover.webp), when it has one"
           }
         },
         "required": [
@@ -18008,6 +18044,10 @@
           "stats": {
             "$ref": "#/components/schemas/GalleryStats"
           },
+          "cover": {
+            "type": "string",
+            "description": "Absolute URL of the item's painted cover picture (cover.webp), when it has one"
+          },
           "template": {
             "type": "object",
             "additionalProperties": {},
@@ -18185,6 +18225,10 @@
           },
           "stats": {
             "$ref": "#/components/schemas/GalleryStats"
+          },
+          "cover": {
+            "type": "string",
+            "description": "Absolute URL of the item's painted cover picture (cover.webp), when it has one"
           },
           "template": {
             "type": "object",

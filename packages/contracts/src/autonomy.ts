@@ -15,6 +15,7 @@ const templateGalleryExtras = {
   source: galleryExtras.source,
   version: z.number().int().optional(),
   stats: galleryExtras.stats,
+  cover: galleryExtras.cover,
 };
 
 const ts = z.iso.datetime({ offset: true });

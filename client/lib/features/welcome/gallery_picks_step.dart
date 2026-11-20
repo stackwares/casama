@@ -1,4 +1,3 @@
-import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -17,9 +16,10 @@ import '../../theme/app_tokens.dart';
 import '../../ui/bottom_padding.dart';
 import '../../ui/edge_fade.dart';
 import '../../ui/lucide_names.dart';
-import '../../ui/mascot.dart';
+import '../../ui/painted_cover.dart';
 import '../../ui/progressive_fade.dart';
-import '../gallery/gallery_cards.dart' show GalleryItemIcon, galleryKindName;
+import '../gallery/gallery_cards.dart'
+    show GalleryItemIcon, galleryCoverAsset, galleryKindName;
 import '../gallery/gallery_data.dart' show galleryCatalogProvider;
 import '../gallery/gallery_install.dart' show applyGallerySetLooks;
 import '../settings/about_you_screen.dart';
@@ -195,22 +195,6 @@ int _fit(GalleryItem s, Set<String> words) {
 /// The starter set that best fits what the person told About you; see [starterPick].
 GalleryItem pickStarterSet(List<GalleryItem> sets, AboutYouView? about) =>
     starterPick(sets, about).set;
-
-/// Painted covers for the gallery's own starter sets (visuals/round-9), in `assets/sets/<id>.webp`.
-/// Any other set gets a tile in a bot's colors with its own icon, so new sets need no app build.
-const _covers = {
-  'founder-kit',
-  'job-search-kit',
-  'meetings-handled',
-  'money-in-order',
-  'small-business-kit',
-  'stay-on-top-of-email',
-  'student-kit',
-  'writer-kit',
-};
-
-String? _coverAsset(GalleryItem set) =>
-    _covers.contains(set.id) ? 'assets/sets/${set.id}.webp' : null;
 
 /// Kinds in the order a set's contents list them; looks (themes, schemes, wallpapers) count as one.
 const _kindOrder = ['bot', 'skill', 'routine', 'app', 'plugin', 'look'];
@@ -1128,7 +1112,8 @@ class _PreviewBody extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _PreviewBanner(set: set),
+            // The panel cross-fades old to new (above); the new cover settles in from 1.04.
+            CoverSettleIn(child: _PreviewBanner(set: set)),
             Padding(
               padding: const EdgeInsets.fromLTRB(
                 AppSpace.xl + 4,
@@ -1228,7 +1213,7 @@ class _PreviewBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final asset = _coverAsset(set);
+    final asset = galleryCoverAsset(set);
     final panel = context.colorScheme.surfaceContainerLow;
     return SizedBox(
       height: 216,
@@ -1236,22 +1221,18 @@ class _PreviewBanner extends StatelessWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            if (asset != null)
-              ImageFiltered(
-                imageFilter: ui.ImageFilter.blur(sigmaX: 36, sigmaY: 36),
-                child: Transform.scale(
-                  scale: 1.4,
-                  child: Image.asset(
-                    asset,
-                    fit: BoxFit.cover,
-                    cacheWidth: 96,
-                    excludeFromSemantics: true,
-                    errorBuilder: (_, _, _) => _CoverTile(set: set, size: 216),
-                  ),
+            ImageFiltered(
+              imageFilter: ui.ImageFilter.blur(sigmaX: 36, sigmaY: 36),
+              child: Transform.scale(
+                scale: 1.4,
+                child: PaintedArt(
+                  seed: set.id,
+                  asset: asset,
+                  url: set.cover,
+                  decodeWidth: 96,
                 ),
-              )
-            else
-              _CoverTile(set: set, size: 216, showIcon: false),
+              ),
+            ),
             // A light veil keeps the wash soft, and its foot eases into the panel.
             DecoratedBox(
               decoration: BoxDecoration(
@@ -1384,8 +1365,8 @@ class _CoverFan extends StatelessWidget {
   }
 }
 
-/// A set's cover, cropped to a rounded square: its painted art, or a tile in a bot's colors with
-/// its icon when it has none.
+/// A set's cover, cropped to a rounded square: its painted art (bundled, or the gallery's
+/// `cover.webp`), or a tile in a bot's colors with its icon when it has none.
 class _SetCover extends StatelessWidget {
   const _SetCover({required this.set, required this.size, this.radius});
   final GalleryItem set;
@@ -1393,76 +1374,12 @@ class _SetCover extends StatelessWidget {
   final double? radius;
 
   @override
-  Widget build(BuildContext context) {
-    final asset = _coverAsset(set);
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(radius ?? size * 0.26),
-      child: SizedBox.square(
-        dimension: size,
-        child: asset == null
-            ? _CoverTile(set: set, size: size)
-            : ColoredBox(
-                color: context.colorScheme.surfaceContainerHighest,
-                child: Image.asset(
-                  asset,
-                  fit: BoxFit.cover,
-                  cacheWidth: math.max(
-                    96,
-                    (size * MediaQuery.devicePixelRatioOf(context)).round(),
-                  ),
-                  filterQuality: FilterQuality.medium,
-                  excludeFromSemantics: true,
-                  frameBuilder: (context, child, frame, sync) => sync
-                      ? child
-                      : AnimatedOpacity(
-                          opacity: frame == null ? 0 : 1,
-                          duration: AppMotion.of(context, AppMotion.fast),
-                          child: child,
-                        ),
-                  errorBuilder: (_, _, _) => _CoverTile(set: set, size: size),
-                ),
-              ),
-      ),
-    );
-  }
-}
-
-/// The cover for a set without painted art: a gradient in one bot's colors (the same bot for the
-/// same set every time) with the set's icon.
-class _CoverTile extends StatelessWidget {
-  const _CoverTile({
-    required this.set,
-    required this.size,
-    this.showIcon = true,
-  });
-  final GalleryItem set;
-  final double size;
-  final bool showIcon;
-
-  @override
-  Widget build(BuildContext context) {
-    final seed = set.id.codeUnits.fold<int>(
-      0,
-      (a, c) => (a * 31 + c) & 0x7fffffff,
-    );
-    final colors = Mascot.values[seed % Mascot.values.length].colors;
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: colors,
-        ),
-      ),
-      child: showIcon
-          ? Center(
-              child: Icon(
-                lucideByName(set.icon) ?? LucideIcons.package,
-                size: size * 0.42,
-                color: Colors.white,
-              ),
-            )
-          : const SizedBox.expand(),
-    );
-  }
+  Widget build(BuildContext context) => PaintedCover(
+    size: size,
+    radius: radius,
+    seed: set.id,
+    asset: galleryCoverAsset(set),
+    url: set.cover,
+    icon: lucideByName(set.icon) ?? LucideIcons.package,
+  );
 }

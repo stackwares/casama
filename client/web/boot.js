@@ -435,6 +435,28 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wire);
   else wire();
 
+  // ---- The painted scene behind the launch screen ----------------------------------------------
+  // After the first paint, at low priority, so the bar and the mascot always come first. The
+  // Flutter splash and welcome screen draw the same file, so it's already cached when they need it.
+  function loadScene() {
+    var splash = $('splash');
+    if (!splash || state.finished) return;
+    var dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    var url = 'splash/scene-' + (dark ? 'night' : 'day') + '-wide.webp';
+    var img = new Image();
+    try { img.fetchPriority = 'low'; } catch (_) {}
+    img.decoding = 'async';
+    img.onload = function () {
+      if (state.finished) return;
+      splash.style.setProperty('--boot-scene', 'url("' + url + '")');
+      // Start the zoom at the point it would be at since the page began, like Flutter's will.
+      splash.style.setProperty('--boot-scene-delay', -Math.round(performance.now()) + 'ms');
+      splash.classList.add('has-scene');
+    };
+    img.src = url;
+  }
+  requestAnimationFrame(function () { requestAnimationFrame(function () { setTimeout(loadScene, 0); }); });
+
   // ---- For flutter_bootstrap.js ----------------------------------------------------------------
 
   window.casamaBoot = {

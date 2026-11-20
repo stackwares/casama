@@ -16,6 +16,7 @@ import '../../ui/app_menu.dart';
 import '../../ui/bot_avatar.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/page.dart';
+import '../../ui/painted_cover.dart';
 import '../../ui/shell_header.dart';
 import '../companion/companion_controller.dart';
 import 'computer_details.dart';
@@ -68,7 +69,25 @@ class _ComputersScreenState extends ConsumerState<ComputersScreen> {
         value: ref.watch(computersProvider),
         onRetry: () => ref.invalidate(computersProvider),
         loading: const _ComputersSkeleton(),
-        data: (items) => RefreshIndicator(
+        data: (items) => items.isEmpty
+            ? Center(
+                key: const Key('computersEmpty'),
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(AppSpace.lg),
+                  child: EmptyState(
+                    illustration: const PaintedHero(name: 'computer-empty', size: 132, icon: LucideIcons.monitor),
+                    title: l10n.computersEmptyTitle,
+                    message: l10n.computersHelp,
+                    action: FilledButton.icon(
+                      key: const Key('computersEmptyCreate'),
+                      onPressed: _create,
+                      icon: const Icon(LucideIcons.plus, size: 18),
+                      label: Text(l10n.newComputer),
+                    ),
+                  ),
+                ),
+              )
+            : RefreshIndicator(
           onRefresh: () async {
             HapticsHelper.medium();
             ref.invalidate(computersProvider);

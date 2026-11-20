@@ -20,6 +20,7 @@ import '../../ui/app_card.dart';
 import '../../ui/edge_fade.dart';
 import '../../ui/glow_button.dart';
 import '../../ui/page.dart';
+import '../../ui/painted_cover.dart';
 import '../../ui/reveal_when_selected.dart';
 import '../../ui/segmented.dart';
 import '../../ui/shell_header.dart';
@@ -1602,10 +1603,26 @@ class _GalleryDetailState extends ConsumerState<_GalleryDetail> {
             ),
             const SizedBox(height: AppSpace.lg),
           ],
+          // A painted cover leads the page large; the small icon then steps aside.
+          if (!isLook && galleryHasCover(item)) ...[
+            ClipRRect(
+              key: const Key('galleryCoverHero'),
+              borderRadius: BorderRadius.circular(AppRadius.tile),
+              child: AspectRatio(
+                aspectRatio: 16 / 9,
+                child: PaintedArt(
+                  seed: item.id,
+                  asset: galleryCoverAsset(item),
+                  url: item.cover,
+                ),
+              ),
+            ),
+            const SizedBox(height: AppSpace.lg),
+          ],
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (!isLook) ...[
+              if (!isLook && !galleryHasCover(item)) ...[
                 GalleryItemIcon(item: item, size: 56),
                 const SizedBox(width: AppSpace.md),
               ],

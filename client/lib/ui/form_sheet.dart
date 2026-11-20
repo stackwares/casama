@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'painted_cover.dart';
 
 import '../core/haptics.dart';
 import '../theme/app_colors.dart';
@@ -21,6 +22,7 @@ class FormSheet extends StatelessWidget {
     required this.onSubmit,
     this.subtitle,
     this.icon,
+    this.art,
     this.iconColor,
     this.submitIcon,
     this.submitKey,
@@ -35,6 +37,10 @@ class FormSheet extends StatelessWidget {
   final String title;
   final String? subtitle;
   final IconData? icon;
+
+  /// A painted picture ([paintedArt] name) shown large over the title in place of the icon tile;
+  /// [icon] is then drawn only if the picture is missing.
+  final String? art;
   final Color? iconColor;
   final List<Widget> children;
   final String submitLabel;
@@ -103,10 +109,16 @@ class FormSheet extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               mainAxisSize: MainAxisSize.min,
               children: [
+                if (art != null) ...[
+                  Center(
+                    child: PaintedHero(name: art!, size: compact ? 96 : 112, icon: icon ?? LucideIcons.sparkles, float: true),
+                  ),
+                  const SizedBox(height: AppSpace.md),
+                ],
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    if (icon != null) ...[
+                    if (icon != null && art == null) ...[
                       Container(
                         width: 44,
                         height: 44,

@@ -94,6 +94,10 @@ There are three ways:
   the work clearly takes several files. In a topic, the topic becomes the project's chat. In
   General, only what the bot makes in that reply is filed under the project.
 
+To give a project a painted **Cover**, pick one in **New project** or under **Cover** on the
+project screen (**None** removes it). It shows in the project list, on its Library card and at the
+top of the project screen.
+
 ### Find a project
 
 - **Library** has a **Projects** row at the top, one card per project. Tap a card to open the

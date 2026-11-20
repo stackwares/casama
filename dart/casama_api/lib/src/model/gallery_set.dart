@@ -39,6 +39,8 @@ class GallerySet {
      this.source_,
 
      this.added,
+
+     this.cover,
   });
 
   @JsonKey(
@@ -149,6 +151,19 @@ class GallerySet {
 
 
 
+      /// Absolute URL of the set's painted cover picture (cover.webp), when it has one
+  @JsonKey(
+    
+    name: r'cover',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final String? cover;
+
+
+
 
 
     @override
@@ -161,7 +176,8 @@ class GallerySet {
       other.featured == featured &&
       other.items == items &&
       other.source_ == source_ &&
-      other.added == added;
+      other.added == added &&
+      other.cover == cover;
 
     @override
     int get hashCode =>
@@ -173,7 +189,8 @@ class GallerySet {
         featured.hashCode +
         items.hashCode +
         source_.hashCode +
-        added.hashCode;
+        added.hashCode +
+        cover.hashCode;
 
   factory GallerySet.fromJson(Map<String, dynamic> json) => _$GallerySetFromJson(json);
 

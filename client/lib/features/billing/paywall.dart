@@ -22,6 +22,7 @@ import '../../ui/effects.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/glow_button.dart';
 import '../../ui/mascot.dart';
+import '../../ui/painted_cover.dart';
 import 'billing_screen.dart';
 import 'purchase_terms.dart';
 
@@ -1464,6 +1465,19 @@ class _TierCard extends StatelessWidget {
       ],
     );
 
+    // A small painted object per plan (visuals/round-10): a star, a gem, a crown.
+    final artAsset = paintedAsset('plan-${price.plan.code}');
+    Widget? art(double size) => artAsset == null
+        ? null
+        : ExcludeSemantics(
+            child: PaintedCover(
+              key: Key('paywallPlanArt-${price.plan.code}'),
+              size: size,
+              seed: 'plan-${price.plan.code}',
+              asset: artAsset,
+            ),
+          );
+
     final taglineText = tagline == null
         ? null
         : Text(tagline!, style: context.textTheme.bodySmall?.copyWith(color: muted, height: 1.3));
@@ -1476,7 +1490,7 @@ class _TierCard extends StatelessWidget {
         ? Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(children: [radio, const SizedBox(width: AppSpace.sm), Expanded(child: heading)]),
+              Row(children: [radio, const SizedBox(width: AppSpace.sm), Expanded(child: heading), ?art(48)]),
               if (taglineText != null) ...[const SizedBox(height: AppSpace.xs), taglineText],
               const SizedBox(height: AppSpace.md),
               priceBlock,
@@ -1506,6 +1520,7 @@ class _TierCard extends StatelessWidget {
             children: [
               Padding(padding: const EdgeInsets.only(top: 2), child: radio),
               const SizedBox(width: AppSpace.sm),
+              if (art(40) case final a?) ...[a, const SizedBox(width: AppSpace.sm)],
               Expanded(
                 child: LayoutBuilder(
                   builder: (context, box) {

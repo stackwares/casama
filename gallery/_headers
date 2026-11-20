@@ -10,3 +10,14 @@
   Cache-Control: public, max-age=600
 /badge.svg
   Cache-Control: public, max-age=86400
+# Painted covers (cover.webp) keep a fixed name, so a changed one shows up within a day.
+/sets/:id/cover.webp
+  Cache-Control: public, max-age=86400
+/bots/:id/cover.webp
+  Cache-Control: public, max-age=86400
+/routines/:id/cover.webp
+  Cache-Control: public, max-age=86400
+/skills/:id/cover.webp
+  Cache-Control: public, max-age=86400
+/plugins/:id/cover.webp
+  Cache-Control: public, max-age=86400
