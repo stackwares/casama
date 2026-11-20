@@ -146,7 +146,11 @@ export function createCasamaMcpServer(
 
   server.registerTool(
     "list_workspaces",
-    { title: "List workspaces", description: "Casama workspaces you belong to, with your role." },
+    {
+      title: "List workspaces",
+      description: "Casama workspaces you belong to, with your role.",
+      annotations: { readOnlyHint: true, openWorldHint: false },
+    },
     async () =>
       json((await orgs()).map((o) => ({ id: o.id, name: o.name, slug: o.slug, role: o.role }))),
   );
@@ -158,6 +162,7 @@ export function createCasamaMcpServer(
       description:
         "Bots in a workspace (default: your first workspace), with their current status.",
       inputSchema: { workspace: z.string().optional().describe("Workspace slug, name or id") },
+      annotations: { readOnlyHint: true, openWorldHint: false },
     },
     async ({ workspace }) =>
       json((await bots(workspace)).map((b) => ({ id: b.id, name: b.name, status: b.status }))),
@@ -174,6 +179,13 @@ export function createCasamaMcpServer(
         message: z.string().min(1).max(20_000),
         conversation_id: z.string().uuid().optional(),
         workspace: z.string().optional(),
+      },
+      // The bot can act with its own computer and connected apps; risky steps still wait for approval.
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: true,
+        idempotentHint: false,
+        openWorldHint: true,
       },
     },
     async ({ bot, message, conversation_id, workspace }) => {
@@ -245,6 +257,12 @@ export function createCasamaMcpServer(
         remove: z.boolean().optional().describe("Take your reaction back instead"),
         workspace: z.string().optional(),
       },
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
     },
     async ({ bot, conversation_id, emoji, message_id, remove, workspace }) => {
       const b = await resolveBot(bot, workspace);
@@ -280,6 +298,7 @@ export function createCasamaMcpServer(
       title: "Get a run",
       description: "A run's status, cost and its recent events (tool calls, outputs, errors).",
       inputSchema: { run_id: z.string().uuid() },
+      annotations: { readOnlyHint: true, openWorldHint: false },
     },
     async ({ run_id }) => {
       const run = await api.call<{ bot_id: string }>(`/v1/runs/${encodeURIComponent(run_id)}`);
@@ -303,6 +322,7 @@ export function createCasamaMcpServer(
       title: "List approvals",
       description: "Actions waiting for a person's approval in a workspace.",
       inputSchema: { workspace: z.string().optional() },
+      annotations: { readOnlyHint: true, openWorldHint: false },
     },
     async ({ workspace }) => {
       const o = await resolveOrg(workspace);
@@ -322,7 +342,13 @@ export function createCasamaMcpServer(
         approval_id: z.string().uuid(),
         decision: z.enum(["approve", "deny"]),
       },
-      annotations: { destructiveHint: true },
+      // Approving lets the bot carry out the waiting step, which may act outside Casama.
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: true,
+        idempotentHint: false,
+        openWorldHint: true,
+      },
     },
     async ({ approval_id, decision }) => {
       if (opts.canDecideApprovals && !(await opts.canDecideApprovals()))
@@ -366,6 +392,7 @@ export function createCasamaMcpServer(
       description:
         "Pages published on the web at their own address in a workspace, with their hosts and states.",
       inputSchema: { workspace: z.string().optional() },
+      annotations: { readOnlyHint: true, openWorldHint: false },
     },
     async ({ workspace }) => {
       const o = await resolveOrg(workspace);
@@ -380,6 +407,7 @@ export function createCasamaMcpServer(
       description:
         "Connected and bought domains in a workspace: the site each shows and its state (live, waiting_dns, waiting_cert, paused, needs_attention).",
       inputSchema: { workspace: z.string().optional() },
+      annotations: { readOnlyHint: true, openWorldHint: false },
     },
     async ({ workspace }) => json(await domainsOf(workspace)),
   );
@@ -394,6 +422,7 @@ export function createCasamaMcpServer(
         domain: z.string().describe("Domain id or name"),
         workspace: z.string().optional(),
       },
+      annotations: { readOnlyHint: true, openWorldHint: false },
     },
     async ({ domain, workspace }) => {
       const d = await ownDomain(domain, workspace);
@@ -408,6 +437,13 @@ export function createCasamaMcpServer(
       description:
         "Check a domain's DNS and certificate now instead of waiting for the next check (admins; at most once every 10 seconds).",
       inputSchema: { domain: z.string(), workspace: z.string().optional() },
+      // Looks up public DNS and may update the domain's state; changes nothing the person set.
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true,
+      },
     },
     async ({ domain, workspace }) => {
       const d = await ownDomain(domain, workspace);
@@ -426,7 +462,12 @@ export function createCasamaMcpServer(
         page_id: z.string().uuid().optional().describe("A published site's page id"),
         workspace: z.string().optional(),
       },
-      annotations: { destructiveHint: false, idempotentHint: true },
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true,
+      },
     },
     async ({ name, page_id, workspace }) => {
       const o = await resolveOrg(workspace);
@@ -445,7 +486,7 @@ export function createCasamaMcpServer(
       description:
         "Domain names for a few words or a name, with availability, the first year's price and the renewal price (before tax). Only a person can buy one, in the Casama app.",
       inputSchema: { query: z.string().min(1).max(100), workspace: z.string().optional() },
-      annotations: { readOnlyHint: true },
+      annotations: { readOnlyHint: true, openWorldHint: true },
     },
     async ({ query, workspace }) => {
       const o = await resolveOrg(workspace);
@@ -466,7 +507,7 @@ export function createCasamaMcpServer(
       description:
         "Packs installed in a workspace: plugins that brought bots, skills, routines, apps and looks.",
       inputSchema: { workspace: z.string().optional() },
-      annotations: { readOnlyHint: true },
+      annotations: { readOnlyHint: true, openWorldHint: false },
     },
     async ({ workspace }) => {
       const o = await resolveOrg(workspace);
@@ -485,7 +526,7 @@ export function createCasamaMcpServer(
         gallery_id: z.string().optional().describe("A pack from the plugin directory"),
         workspace: z.string().optional(),
       },
-      annotations: { readOnlyHint: true },
+      annotations: { readOnlyHint: true, openWorldHint: true },
     },
     async ({ url, gallery_id, workspace }) => {
       const o = await resolveOrg(workspace);
@@ -517,7 +558,12 @@ export function createCasamaMcpServer(
           .describe("Items to leave out"),
         workspace: z.string().optional(),
       },
-      annotations: { destructiveHint: false },
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: true,
+      },
     },
     async ({ url, commit, gallery_id, inputs, skip, workspace }) => {
       const o = await resolveOrg(workspace);

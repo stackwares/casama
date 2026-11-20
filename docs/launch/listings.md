@@ -108,3 +108,15 @@ TensorBlock metadata correction submitted as https://github.com/TensorBlock/awes
 | Docker MCP Catalog | **Not done.** PR route to docker/mcp-registry; local servers need a Dockerfile, which packages/mcp doesn't have. Possible later. |
 | Smithery | **Not available.** Accounts, CLI and proxy shut down 2026-10-31; it stays only as a public registry. |
 | modelcontextprotocol/servers | **No route.** It takes issues, not PRs, and retired its third-party list in favour of the registry. |
+
+## AI-app connector directories (hosted `/mcp`), 2026-11-20
+
+Listing copy, logos, tool table, data answers and reviewer steps: `packaging/connectors/README.md`.
+Reviewer account: `review@casama.ai` (Vaultwarden "Casama · store review account (review@casama.ai)").
+
+| Directory | Status |
+| --- | --- |
+| Claude Connectors Directory | Ready except screenshots. Blocker: Casama Cloud is invite-only, so people who find it there hit the waitlist. Oliver submits (Anthropic form). |
+| ChatGPT apps | Ready except screenshots. Needs OpenAI organization verification (Oliver). |
+| Gemini CLI extensions | Extension built and validated (`packaging/gemini-cli/`, `scripts/sync-gemini-extension.sh`). Needs the public repo `stackwares/casama-gemini` with the `gemini-cli-extension` topic. |
+| Microsoft, Mistral, xAI | Later (partner programs). |

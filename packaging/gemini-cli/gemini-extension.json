@@ -1,0 +1,15 @@
+{
+  "name": "casama",
+  "version": "0.1.0",
+  "description": "Give Casama AI bots tasks from Gemini CLI: each bot has its own computer, memory and tools, and risky steps wait for your approval. Also searches Casama's docs and API reference.",
+  "mcpServers": {
+    "casama": {
+      "httpUrl": "https://api.casama.ai/mcp",
+      "timeout": 660000
+    },
+    "casama-docs": {
+      "httpUrl": "https://api.casama.ai/mcp/docs"
+    }
+  },
+  "contextFileName": "GEMINI.md"
+}

@@ -1,7 +1,7 @@
 # Connect AI apps to Casama (MCP)
 
-Casama is an MCP server, so AI apps such as Claude Code, Cursor and other MCP clients can list your
-bots, give them tasks and read the results. Use it when you work in another AI app and want a
+Casama is an MCP server, so AI apps such as Claude, ChatGPT, Gemini CLI, Cursor and other MCP
+clients can list your bots, give them tasks and read the results. Use it when you work in another AI app and want a
 Casama bot, with its own computer, memory and tools, to do part of the job.
 
 There are two ways to connect:
@@ -29,6 +29,30 @@ This page is about AI apps using Casama. To let your bots use other MCP servers 
 It's your API's address followed by `/mcp`, for example `https://api.example.com/mcp`. Self-hosters
 can set the advertised address with `PUBLIC_API_URL`; otherwise Casama uses the address the request
 came in on.
+
+## Add Casama to your AI app
+
+On Casama Cloud the address is `https://api.casama.ai/mcp`. On your own server, use
+[your address](#find-your-address). Every app below signs in with OAuth: you pick the workspace and
+tap **Allow** in Casama, as in [Hosted with OAuth](#hosted-with-oauth-recommended).
+
+| App | Where to add it |
+| --- | --- |
+| Claude (claude.ai and the desktop app) | **Settings → Connectors → Add custom connector**. Give it a name (Casama) and the address, then **Connect**. |
+| ChatGPT | Turn on developer mode under **Settings → Apps → Advanced settings**, then create an app with the address and OAuth sign-in. |
+| Gemini CLI | `gemini extensions install https://github.com/stackwares/casama-gemini`, or `gemini mcp add --transport http casama https://api.casama.ai/mcp`. Then `/mcp auth casama`. |
+| Claude Code | `claude mcp add --transport http casama https://api.casama.ai/mcp`, then `/mcp` to sign in. |
+| VS Code (Copilot) | `code --add-mcp '{"name":"casama","type":"http","url":"https://api.casama.ai/mcp"}'` |
+| Cursor | Add the address under `mcpServers` in `~/.cursor/mcp.json` as `"url"`. |
+
+Menu names change as these apps update; look for "connectors", "apps" or "MCP servers". Apps
+that can't sign in with OAuth can use an [API key](#hosted-with-an-api-key).
+
+Try it with a request such as:
+
+- "List my Casama bots."
+- "Ask my research bot to compare three CRMs for a five-person bakery and give me a table."
+- "Do any of my Casama bots have steps waiting for my approval?"
 
 ## Hosted with OAuth (recommended)
 
@@ -119,20 +143,27 @@ With the CLI session, the server refreshes your sign-in as needed. See [CLI](/de
 
 ## Tools
 
-| Tool | What it does |
-| --- | --- |
-| `list_workspaces` | Workspaces you belong to, with your role |
-| `list_bots` | Bots in a workspace, with their status. Takes an optional workspace slug, name or id. |
-| `ask_bot` | Sends a message to a bot (by name or id) and waits for the run to finish, fail or need approval. Returns the reply, the tools used, the cost, and the conversation and run ids. Pass `conversation_id` to continue a thread. |
-| `get_run` | A run's status and cost, and its recent events: tool calls, outputs and errors |
-| `react_to_message` | Reacts to a message with one emoji, or takes your reaction back (`remove`). Without `message_id` it reacts to the bot's latest reply in the conversation. A 👍 or 👎 tells the bot whether the reply worked. |
-| `list_approvals` | Actions waiting for approval in a workspace |
-| `decide_approval` | Approves or denies a pending action. The bot continues, or skips the step, right away. |
-| `list_sites` | Pages published on the web at their own address, with their hosts and states |
-| `list_domains`, `get_domain` | Connected and bought domains: the site each shows, its state, the DNS records to add with what DNS shows now |
-| `check_domain` | Checks a domain's DNS and certificate now (admins) |
-| `connect_domain` | Connects a domain the workspace owns, optionally to a published site; answers the records to add (admins) |
-| `search_domains` | Names with availability and prices. Only a person can buy one, in the app. |
+**Reads** means the tool only reads. **Changes** means it can change something in Casama, and
+**Acts** means it can lead to actions outside Casama. Each tool tells the AI app which it is, so
+apps can ask you before calling one that changes or acts.
+
+| Tool | Kind | What it does |
+| --- | --- | --- |
+| `list_workspaces` | Reads | Workspaces you belong to, with your role |
+| `list_bots` | Reads | Bots in a workspace, with their status. Takes an optional workspace slug, name or id. |
+| `ask_bot` | Acts | Sends a message to a bot (by name or id) and waits for the run to finish, fail or need approval. Returns the reply, the tools used, the cost, and the conversation and run ids. Pass `conversation_id` to continue a thread. The bot may use its computer and connected apps; risky steps wait for approval. |
+| `get_run` | Reads | A run's status and cost, and its recent events: tool calls, outputs and errors |
+| `react_to_message` | Changes | Reacts to a message with one emoji, or takes your reaction back (`remove`). Without `message_id` it reacts to the bot's latest reply in the conversation. A 👍 or 👎 tells the bot whether the reply worked. |
+| `list_approvals` | Reads | Actions waiting for approval in a workspace |
+| `decide_approval` | Acts | Approves or denies a pending action. The bot continues, or skips the step, right away. |
+| `list_sites` | Reads | Pages published on the web at their own address, with their hosts and states |
+| `list_domains`, `get_domain` | Reads | Connected and bought domains: the site each shows, its state, the DNS records to add with what DNS shows now |
+| `check_domain` | Changes | Checks a domain's DNS and certificate now (admins) |
+| `connect_domain` | Changes | Connects a domain the workspace owns, optionally to a published site; answers the records to add (admins) |
+| `search_domains` | Reads | Names with availability and prices. Only a person can buy one, in the app. |
+| `list_packs` | Reads | Packs installed in the workspace |
+| `preview_pack` | Reads | What a pack from GitHub or the plugin directory would add, and the commit to install |
+| `install_pack` | Changes | Installs a pack at the previewed commit. Secrets are added in the app, never over MCP. |
 
 Both servers also have the [docs tools](#docs-tools-for-building-on-casama), and the local one
 has `check_plugin` and `gallery_search`.
@@ -182,6 +213,20 @@ Apps** and turns on **Allow Approvals from AI Apps**.
 
 Either way, a high-risk step still stops and waits for a decision. See
 [Autonomy, approvals and action rules](/guide/autonomy).
+
+## What a connected app can see
+
+A connected app acts as you, in one workspace, and only through the [tools](#tools) above. It
+goes through the same rules as the Casama app, so it reaches only what you can reach there. No
+tool reads your connections' secrets, buys anything or changes billing, and `decide_approval` is
+refused unless an owner or admin [allows it](#allow-approvals-from-ai-apps). What the app does
+with what it reads is covered by that app's own privacy policy. See
+[Privacy and security](/guide/privacy) and [casama.ai/privacy](https://casama.ai/privacy).
+
+To disconnect an app, remove Casama in that app, which throws away its sign-in. An API key stops
+working as soon as it's revoked in **Connect AI Apps**, and leaving the workspace cuts off every
+connection you made to it. Questions:
+[support@casama.ai](mailto:support@casama.ai).
 
 ## Limits
 
