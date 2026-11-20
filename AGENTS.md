@@ -274,3 +274,14 @@ session once ran for 19 hours with nobody using it, holding memory, CPU, a port 
   is the self-host build: it talks to localhost and the deploy script refuses it. Show
   `scripts/deploy-app-web.sh --dry-run`, then after a yes `scripts/deploy-app-web.sh --yes`. Never a
   bare `wrangler deploy` in `client/`: the script puts files of 25 MiB or more in R2 first.
+- **Android to Google Play: the Wear OS app goes with it.** Whenever you make a new Android build to
+  upload to Play, on any track (internal, closed, open, production), also build the Wear OS app from
+  the same commit and version (`scripts/package-wear.sh`, a release bundle) and upload it to the
+  matching Wear OS track in the same release. Never ship a phone build to Play without its watch
+  build. Both builds and the upload each still need the user's yes, as above.
+- **Mac builds ship both ways.** Whenever you make a new Mac build to release, ship both versions from
+  the same commit and version: the direct download (notarized DMG from `scripts/package-macos.sh`,
+  published as a GitHub release with `scripts/publish-desktop-release.sh`) and the sandboxed Mac App
+  Store build (`scripts/package-macos-appstore.sh`, uploaded to TestFlight or App Store Connect).
+  Never release one without the other. Each build and each upload still needs the user's yes, as
+  above.
