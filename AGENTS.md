@@ -50,6 +50,9 @@ Run from the repository root unless a line says otherwise. The full list is in
   `docs/ANALYTICS-PLAN.md`) and stop for the user's answers. A "yes" to an idea is not a go-ahead to
   code; code starts when the user approves the plan or says to build it. A small, clearly scoped fix
   needs no plan.
+- **Track every plan in `docs/PLANS.md`.** Add its row when you write the plan, and update the row and
+  the plan's own status line in the same commit whenever its status changes (approved, built, shipped,
+  dropped).
 - **No WebViews in the app.** Every screen is native Flutter. Plugin UI is data plus A2UI screens drawn
   with the app's own component catalog; grow that catalog instead of embedding web content. Opening a
   link in the system browser or in-app browser tab is fine.
