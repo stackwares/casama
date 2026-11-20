@@ -2,7 +2,7 @@ name: casama
 description: "Casama: persistent AI teammates."
 publish_to: none
 # The build number (+N) is shared by every platform and only goes up: raise it for each release.
-version: 0.1.0+57
+version: 0.1.0+59
 
 environment:
   sdk: ^3.13.0
