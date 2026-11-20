@@ -1,5 +1,6 @@
 import { z } from "@hono/zod-openapi";
 import { Uuid } from "./common.ts";
+import { BillingComp } from "./comps.ts";
 import { SavedLimitReset } from "./limit-resets.ts";
 
 const ts = z.iso.datetime({ offset: true });
@@ -105,6 +106,10 @@ export const BillingSummary = z
         description:
           "This month's hosted computer hours against the plan's. Past them only computers stop; chat keeps running on credits (D-442). Null when no limit applies",
       }),
+    comp: BillingComp.nullable().optional().openapi({
+      description:
+        "A plan given free by Casama, while it runs (docs/COMP-PLANS-PLAN.md). `source` then says default, for older apps",
+    }),
     subscriptions: z.array(Subscription),
     providers: z.array(Source),
   })

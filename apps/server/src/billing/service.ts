@@ -11,6 +11,7 @@ import { deterministicUuid, getProductAnalytics } from "@casama/observability";
 import { sql } from "drizzle-orm";
 import { type AccountEmailKind, queueAccountEmail } from "../services/account-emails.ts";
 import { PAID_CHANGES, subscriptionChange } from "./analytics.ts";
+import { Comps } from "./comps.ts";
 import { LimitResets } from "./limit-resets.ts";
 import {
   BillingError,
@@ -54,6 +55,9 @@ export interface BillingServiceOptions {
 const month = (d = new Date()) => d.toISOString().slice(0, 7);
 /** A Postgres array literal for ids and enum-like strings (no quotes or commas inside). */
 const arr = (xs: readonly string[]) => `{${xs.join(",")}}`;
+
+/** A comp's last days, when its plan can be bought to keep it (docs/COMP-PLANS-PLAN.md). */
+export const COMP_KEEP_WINDOW_MS = 7 * 86_400_000;
 
 /**
  * Domain payments (D-329) arrive on the same Dodo webhook. They're offered here first; each method
@@ -270,7 +274,7 @@ export class BillingService {
       const start = periodStart(end, plan.interval);
       const [g] = await this.db.execute<{ granted: string }>(sql`
         select coalesce(sum(delta), 0)::text as granted from public.credit_ledger
-        where org_id = ${orgId}::uuid and delta > 0 and ((reason = 'grant' and reference like 'monthly:%' and reference not like '%:free') or reason = 'reset')
+        where org_id = ${orgId}::uuid and delta > 0 and ((reason = 'grant' and reference like 'monthly:%' and reference not like '%:free' and reference not like '%:comp') or reason = 'reset')
           and created_at >= ${start.toISOString()}::timestamptz`);
       const granted = Number(g?.granted ?? 0);
       if (granted > 0)
@@ -655,6 +659,9 @@ export class BillingService {
     // (D-246). A zero grant still marks the month as done, so settlement doesn't retry it.
     // A trial gets its own, smaller grant; paying tops the month up to the plan's amount (D-249).
     const trial = best?.status === "trialing" && plan.limits.trial_credits_usd != null;
+    // A comp (docs/COMP-PLANS-PLAN.md) is granted under its own reference, so its credits never
+    // count toward a paid plan's month: a friend who starts paying gets the plan's full amount.
+    const comp = best?.source === "comp";
     // A store trial after the person's trial was used: the plan, but no second trial grant.
     const monthly = Number(
       (trial
@@ -673,26 +680,29 @@ export class BillingService {
         sql`select public.grant_month(${best?.id ?? null}::uuid) as m`,
       );
       const label = gm?.m ?? month();
-      const ref = `monthly:${label}:${planCode}${trial ? ":trial" : ""}`;
+      const ref = `monthly:${label}:${planCode}${trial ? ":trial" : comp ? ":comp" : ""}`;
       const [done] = await this.db.execute<{
         granted: string;
         this_plan: boolean;
         paid_before: boolean;
       }>(sql`
-        select coalesce(sum(delta), 0)::text as granted, bool_or(reference = ${ref}) as this_plan,
-          coalesce(bool_or(delta > 0 and reference not like '%:free' and reference not like '%:trial'), false) as paid_before
+        select coalesce(sum(delta) filter (where (reference like '%:comp') = ${comp}), 0)::text as granted,
+          bool_or(reference = ${ref}) as this_plan,
+          coalesce(bool_or(delta > 0 and reference not like '%:free' and reference not like '%:trial' and reference not like '%:comp'), false) as paid_before
         from public.credit_ledger
         where org_id = ${orgId}::uuid and reason = 'grant' and reference like ${`monthly:${label}:%`}`);
       if (!done?.this_plan) {
         let amount = Math.max(0, grantAmount - Number(done?.granted ?? 0));
         let note = trial
           ? `${plan.name} trial credits`
-          : `${plan.name} ${plan.interval === "week" ? "weekly" : "monthly"} credits`;
+          : comp
+            ? `${plan.name} credits (free from Casama)`
+            : `${plan.name} ${plan.interval === "week" ? "weekly" : "monthly"} credits`;
         // Moving up from one paid plan to another mid-period is charged pro rata, so the extra
         // credits are too: the share of the period left. Before, upgrading the day before renewal
         // paid a day's difference for the whole month's extra credits, and downgrading back kept
         // them (billing audit 2026-11-17). Starting to pay (from Free or a trial) tops up in full.
-        if (amount > 0 && done?.paid_before && best?.current_period_end && !trial) {
+        if (amount > 0 && done?.paid_before && best?.current_period_end && !trial && !comp) {
           const days = plan.interval === "year" ? 365 : plan.interval === "week" ? 7 : 30;
           const left = (new Date(best.current_period_end).getTime() - Date.now()) / 86_400_000;
           const share = Math.min(1, Math.max(0, left / days));
@@ -732,7 +742,19 @@ export class BillingService {
       extra_seats: number;
     }>(sql`
       select id, source, plan_code, status, current_period_end, cancel_at_period_end, extra_seats
-      from public.subscriptions where org_id = ${orgId}::uuid order by updated_at desc limit 20`);
+      from public.subscriptions where org_id = ${orgId}::uuid and source <> 'comp'
+      order by updated_at desc limit 20`);
+    const [comp] = await this.db.execute<{
+      plan_code: string;
+      ends_at: Date;
+      from_code: boolean;
+    }>(sql`
+      select plan_code, ends_at, code_id is not null as from_code from public.comps
+      where org_id = ${orgId}::uuid and ended_at is null and ends_at > now()
+      order by ends_at desc limit 1`);
+    // Apps released before comps parse `source` as a closed enum: a comp is reported as the
+    // default source with an end date, so they show "Ends on <date>" and nothing to manage.
+    const comped = ent?.source === "comp";
     const active = subs.find(
       (s) =>
         ENTITLED.includes(s.status as never) &&
@@ -753,8 +775,18 @@ export class BillingService {
       ) as Record<string, number>,
       unlimited: !this.enabled || ent?.limits?.unlimited === true,
       valid_until: ent?.valid_until ? new Date(ent.valid_until).toISOString() : null,
-      source: (ent?.source ?? "default") as "default" | BillingSource,
-      cancel_at_period_end: active?.cancel_at_period_end ?? false,
+      source: (comped ? "default" : (ent?.source ?? "default")) as "default" | BillingSource,
+      cancel_at_period_end: comped ? true : (active?.cancel_at_period_end ?? false),
+      comp: comp
+        ? {
+            plan_code: comp.plan_code,
+            ends_at: new Date(comp.ends_at).toISOString(),
+            from: comp.from_code ? ("code" as const) : ("grant" as const),
+            keep_from: new Date(
+              new Date(comp.ends_at).getTime() - COMP_KEEP_WINDOW_MS,
+            ).toISOString(),
+          }
+        : null,
       extra_seats: active?.extra_seats ?? 0,
       trial_available: this.enabled ? await this.trialAvailable(orgId) : false,
       credits_usd: this.enabled ? await this.balance(orgId) : 0,
@@ -836,7 +868,7 @@ export class BillingService {
       status: SubscriptionStatus;
     }>(sql`
       select external_id, source, plan_code, extra_seats, status from public.subscriptions
-      where org_id = ${orgId}::uuid and status = any(${arr(ENTITLED)}::text[])
+      where org_id = ${orgId}::uuid and status = any(${arr(ENTITLED)}::text[]) and source <> 'comp'
         and (current_period_end is null or current_period_end > now())
       order by updated_at desc limit 1`);
     return s ?? null;
@@ -864,6 +896,20 @@ export class BillingService {
       productId = plan.dodo_product_id;
       // One subscription per workspace (D-248): a web subscriber changes plans in place, and a
       // store subscriber changes plans in that store.
+      // A free plan from Casama (comp) can be kept by paying for it only near its end; any other
+      // plan can be bought at once, and a paid plan at least as high ends the comp.
+      const [comp] = await this.db.execute<{ plan_code: string; ends_at: Date }>(sql`
+        select plan_code, ends_at from public.comps
+        where org_id = ${orgId}::uuid and ended_at is null and ends_at > now()`);
+      if (
+        comp?.plan_code === what.planCode &&
+        new Date(comp.ends_at).getTime() - Date.now() > COMP_KEEP_WINDOW_MS
+      )
+        throw new BillingError(
+          "comped",
+          `This workspace already has ${plan.name} free until ${new Date(comp.ends_at).toISOString().slice(0, 10)}.`,
+          409,
+        );
       const current = await this.activeSubscription(orgId);
       if (current) {
         if (current.plan_code === what.planCode)
@@ -949,7 +995,7 @@ export class BillingService {
         select 1 from public.subscriptions s
         join public.organizations o on o.id = s.org_id
         join public.organizations me on me.id = ${orgId}::uuid
-        where o.created_by = me.created_by
+        where o.created_by = me.created_by and s.source <> 'comp'
       ) and not coalesce((
         select public.trial_used(o.created_by) from public.organizations o
         where o.id = ${orgId}::uuid), false) as ok`);
@@ -984,6 +1030,12 @@ export class BillingService {
     const plan = (await this.plans()).find((p) => p.code === cur.plan_code);
     if (!plan || typeof plan.limits.extra_seat_usd !== "number")
       throw new BillingError("paid_plan_required", "Extra people come with Pro or Max", 402);
+    if ((cur.source as string) === "comp")
+      throw new BillingError(
+        "comp_no_seats",
+        "Extra people come with a paid plan. This workspace has its plan free from Casama.",
+        409,
+      );
     if (cur.source !== "dodo")
       throw new BillingError(
         "subscribed_in_store",
@@ -1118,6 +1170,12 @@ export class BillingService {
       }
       return byOrg;
     });
+    // Free plans for friends: end the ones that ran out or were replaced, remind, count conversions.
+    await new Comps(this.db, this)
+      .tick()
+      .catch((err) =>
+        this.opts.logger?.warn("comp sweep failed", { error: (err as Error).message }),
+      );
     const due = await this.db.execute<{ org_id: string }>(sql`
       select e.org_id from public.entitlements e join public.plans p on p.code = e.plan_code
       where (e.valid_until is not null and e.valid_until < now())
@@ -1125,7 +1183,8 @@ export class BillingService {
          or ((p.limits->>'monthly_credits_usd')::numeric > 0 and not exists (
               select 1 from public.credit_ledger c where c.org_id = e.org_id and c.reason = 'grant'
                 and c.reference in ('monthly:' || public.grant_month(e.subscription_id) || ':' || e.plan_code,
-                                    'monthly:' || public.grant_month(e.subscription_id) || ':' || e.plan_code || ':trial')))
+                                    'monthly:' || public.grant_month(e.subscription_id) || ':' || e.plan_code || ':trial',
+                                    'monthly:' || public.grant_month(e.subscription_id) || ':' || e.plan_code || ':comp')))
       -- Lapsed subscriptions first, so they lose paid limits even when many workspaces are due.
       order by (e.valid_until is not null and e.valid_until < now()) desc, e.valid_until nulls last
       limit 500`);

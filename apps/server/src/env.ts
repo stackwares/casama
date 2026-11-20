@@ -176,6 +176,8 @@ export const EnvSchema = z.object({
   REFERRAL_REDEEM_DAYS: z.coerce.number().int().min(0).max(90).default(7),
   /** Where invite links point; the code is appended (casama.ai/i/<code>, served by site/). */
   REFERRAL_LINK_BASE: z.url().default("https://casama.ai/i"),
+  /** Where gift-code links point (docs/COMP-PLANS-PLAN.md): casama.ai/g/<code>. */
+  COMP_LINK_BASE: z.url().default("https://casama.ai/g"),
   /**
    * The waitlist and invite gate (docs/WAITLIST-PLAN.md). auto: there when billing is on (Casama
    * Cloud), and even then sign-up stays open until an owner turns the gate on in Admin. A

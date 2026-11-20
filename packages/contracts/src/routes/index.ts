@@ -17,6 +17,7 @@ import * as channels from "./channels.ts";
 import * as chatExport from "./chat-export.ts";
 import * as chatMedia from "./chat-media.ts";
 import * as checkins from "./checkins.ts";
+import * as comps from "./comps.ts";
 import * as computers from "./computers.ts";
 import * as creations from "./creations.ts";
 import * as deviceData from "./device-data.ts";
@@ -84,6 +85,7 @@ export const routes = {
   ...admin,
   ...billing,
   ...limitResets,
+  ...comps,
   ...connect,
   ...privacy,
   ...appearance,

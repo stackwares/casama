@@ -27,6 +27,8 @@ import { type BrandedEmail, renderEmailHtml, renderEmailText } from "./email-lay
 export type AccountEmailKind =
   | "trial_started"
   | "trial_ending"
+  // A free plan from Casama ends in a week (docs/COMP-PLANS-PLAN.md).
+  | "comp_ending"
   | "plan_started"
   | "payment_failed"
   | "cancel_scheduled"
@@ -268,6 +270,21 @@ function baseContent(
             hi,
             `Your ${plan} trial ends on ${day(d.until)}. If you do nothing, it continues as a paid plan and you keep everything you've set up.`,
             `If you'd rather not continue, cancel before then. ${manageWhere(d.source)}`,
+          ],
+          button: { label: "Open Billing", url: billing },
+        },
+      };
+    case "comp_ending":
+      return {
+        subject: `Your free ${plan} ends on ${day(d.until)}`,
+        email: {
+          mascot: "thinker",
+          preheader: `Keep ${plan} by choosing it before then.`,
+          title: `Your free ${plan} ends soon`,
+          intro: [
+            hi,
+            `The ${plan} plan we gave you ends on ${day(d.until)}. After that your workspace moves to Free, and everything you've made stays.`,
+            `To keep ${plan}, choose it in Billing before then. Nothing is charged until you do.`,
           ],
           button: { label: "Open Billing", url: billing },
         },

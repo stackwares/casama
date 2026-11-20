@@ -17,6 +17,7 @@ export * from "./canvas.ts";
 export * from "./channels.ts";
 export * from "./checkins.ts";
 export * from "./common.ts";
+export * from "./comps.ts";
 export * from "./computers.ts";
 export * from "./creations.ts";
 export * from "./device-data.ts";

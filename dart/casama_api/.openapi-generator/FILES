@@ -20,6 +20,7 @@ lib/src/api/casama_link_api.dart
 lib/src/api/channels_api.dart
 lib/src/api/chat_api.dart
 lib/src/api/checkins_api.dart
+lib/src/api/comps_api.dart
 lib/src/api/computers_api.dart
 lib/src/api/creations_api.dart
 lib/src/api/credentials_api.dart
@@ -160,6 +161,7 @@ lib/src/model/autonomy.dart
 lib/src/model/billing_settings.dart
 lib/src/model/billing_source.dart
 lib/src/model/billing_summary.dart
+lib/src/model/billing_summary_comp.dart
 lib/src/model/billing_summary_computer_hours.dart
 lib/src/model/billing_summary_daily.dart
 lib/src/model/billing_usage.dart
@@ -243,6 +245,10 @@ lib/src/model/cloud_models.dart
 lib/src/model/coding_agent_info.dart
 lib/src/model/coding_agent_list.dart
 lib/src/model/coding_agent_test_result.dart
+lib/src/model/comp.dart
+lib/src/model/comp_code.dart
+lib/src/model/comp_code_preview.dart
+lib/src/model/comp_settings.dart
 lib/src/model/computer.dart
 lib/src/model/computer_bot_list.dart
 lib/src/model/computer_bot_use.dart
@@ -282,6 +288,7 @@ lib/src/model/create_bot_request.dart
 lib/src/model/create_bot_share_request.dart
 lib/src/model/create_channel_request.dart
 lib/src/model/create_checkpoint_request.dart
+lib/src/model/create_comp_code_request.dart
 lib/src/model/create_computer_request.dart
 lib/src/model/create_conversation_request.dart
 lib/src/model/create_credential_request.dart
@@ -312,6 +319,7 @@ lib/src/model/create_secret_request.dart
 lib/src/model/create_task_comment_request.dart
 lib/src/model/create_task_request.dart
 lib/src/model/created_bot_link.dart
+lib/src/model/created_comp_code.dart
 lib/src/model/created_invite_link.dart
 lib/src/model/created_link_key.dart
 lib/src/model/created_local_device.dart
@@ -490,6 +498,7 @@ lib/src/model/glance_starter.dart
 lib/src/model/glance_task.dart
 lib/src/model/glance_tasks.dart
 lib/src/model/glance_tasks_counts.dart
+lib/src/model/grant_comp_request.dart
 lib/src/model/group_chat_list.dart
 lib/src/model/health.dart
 lib/src/model/highlight.dart
@@ -725,10 +734,12 @@ lib/src/model/publish_site_request.dart
 lib/src/model/purchase_request.dart
 lib/src/model/reaction_summary.dart
 lib/src/model/reasoning_effort.dart
+lib/src/model/redeem_comp_request.dart
 lib/src/model/redeem_invite_request.dart
 lib/src/model/redeem_referral_request.dart
 lib/src/model/redeem_saved_limit_reset200_response.dart
 lib/src/model/redeem_sign_in_code_request.dart
+lib/src/model/redeemed_comp.dart
 lib/src/model/redeemed_sign_in_code.dart
 lib/src/model/redirect_url.dart
 lib/src/model/referral.dart
@@ -969,6 +980,8 @@ lib/src/model/ui_shown_event_payload.dart
 lib/src/model/update_about_you_request.dart
 lib/src/model/update_card_prefs.dart
 lib/src/model/update_channel_request.dart
+lib/src/model/update_comp_code_request.dart
+lib/src/model/update_comp_request.dart
 lib/src/model/update_computer_request.dart
 lib/src/model/update_conversation_request.dart
 lib/src/model/update_creation_request.dart

@@ -42,6 +42,7 @@ import { registerChatExportRoutes } from "./routes/chat-export.ts";
 import { registerChatMediaRoutes } from "./routes/chat-media.ts";
 import { registerChatGptRoutes } from "./routes/chatgpt.ts";
 import { registerCheckinRoutes } from "./routes/checkins.ts";
+import { registerCompRoutes } from "./routes/comps.ts";
 import { registerComputerRoutes, sandboxApiError } from "./routes/computers.ts";
 import { registerCreationRoutes } from "./routes/creations.ts";
 import { registerDeviceDataRoutes } from "./routes/device-data.ts";
@@ -477,6 +478,7 @@ export function createApp(deps: AppDeps) {
   registerWorkspacePictureRoutes(app, deps);
   registerJoiningRoutes(app, deps);
   registerReferralRoutes(app, deps);
+  registerCompRoutes(app, deps);
   registerWaitlistRoutes(app, deps);
   registerBotRoutes(app, deps);
   registerBotPictureRoutes(app, deps);

@@ -386,6 +386,48 @@
       "ga4_twin": { "name": "share", "params": ["method"], "set": { "content_type": "referral" } }
     },
     {
+      "name": "comp_granted",
+      "by": ["server"],
+      "description": "An instance owner gave someone a paid plan free for some months (COMP-PLANS-PLAN).",
+      "properties": {
+        "plan": { "type": "string" },
+        "months": { "type": "number" },
+        "from": { "type": "string", "values": ["grant"] }
+      },
+      "funnels": []
+    },
+    {
+      "name": "comp_redeemed",
+      "by": ["server"],
+      "description": "A workspace owner redeemed a gift code for a free plan (COMP-PLANS-PLAN).",
+      "properties": {
+        "plan": { "type": "string" },
+        "months": { "type": "number" }
+      },
+      "funnels": []
+    },
+    {
+      "name": "comp_ended",
+      "by": ["server"],
+      "description": "A free plan ended: its time ran out, the owner ended it, or a paid plan at least as high took over (COMP-PLANS-PLAN).",
+      "properties": {
+        "plan": { "type": "string" },
+        "months": { "type": "number" },
+        "reason": { "type": "string", "values": ["expired", "revoked", "replaced_by_purchase"] }
+      },
+      "funnels": []
+    },
+    {
+      "name": "comp_converted",
+      "by": ["server"],
+      "description": "A workspace that had a free plan started paying, during it or within 30 days of its end (COMP-PLANS-PLAN).",
+      "properties": {
+        "plan": { "type": "string" },
+        "paid_plan": { "type": "string" }
+      },
+      "funnels": []
+    },
+    {
       "name": "join_completed",
       "by": ["client"],
       "description": "The join screen finished.",
