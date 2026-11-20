@@ -67,6 +67,37 @@ void main() {
     expect(tester.widget<Text>(find.text('@Bea')).style?.color, const Color(0xFF111111));
   });
 
+  testWidgets('the composer shows a mention that will count bold and highlighted as it is typed', (
+    tester,
+  ) async {
+    final input = MentionTextEditingController(text: 'ask @Bea and @Bean, mail x@Bea.com')
+      ..pattern = mentionPattern(['Bea']);
+    addTearDown(input.dispose);
+    await tester.pumpWidget(
+      MaterialApp(home: Scaffold(body: TextField(controller: input))),
+    );
+    final context = tester.element(find.byType(TextField));
+    final span = input.buildTextSpan(context: context, withComposing: false);
+    final bold = [
+      for (final c in span.children!.cast<TextSpan>())
+        if (c.style?.fontWeight == FontWeight.w700) c.text,
+    ];
+    // Only the whole name counts: not a longer word, not an email address.
+    expect(bold, ['@Bea']);
+    expect(span.toPlainText(), input.text);
+
+    // A keyboard's word in progress keeps its underline inside the mention.
+    input.value = input.value.copyWith(composing: const TextRange(start: 4, end: 8));
+    final composing = input.buildTextSpan(context: context, withComposing: true);
+    final mentionPart = composing.children!.cast<TextSpan>().firstWhere((c) => c.text == '@Bea');
+    expect(mentionPart.style?.decoration, TextDecoration.underline);
+    expect(mentionPart.style?.fontWeight, FontWeight.w700);
+
+    // No names to highlight: a plain field.
+    input.pattern = null;
+    expect(input.buildTextSpan(context: context, withComposing: false).children, isNull);
+  });
+
   testWidgets('outside a group chat, nothing changes', (tester) async {
     await tester.pumpWidget(
       harness(backend, const Scaffold(body: UserBubble(text: 'hey @Bea'))),

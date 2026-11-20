@@ -186,6 +186,58 @@ RegExp mentionPattern(Iterable<String> names, {bool includeEveryone = true}) {
   );
 }
 
+/// The composer's text controller: a mention that will count when sent (a bot in this group, an app
+/// the bot has) shows bold on a soft highlight as it's typed, like the pill it becomes. Only styles
+/// change, never the characters, so the cursor and selection behave as in a plain field.
+class MentionTextEditingController extends TextEditingController {
+  MentionTextEditingController({super.text});
+
+  /// The mentions to highlight; null highlights none. The chat sets it as its bots and apps load.
+  RegExp? pattern;
+
+  @override
+  TextSpan buildTextSpan({
+    required BuildContext context,
+    TextStyle? style,
+    required bool withComposing,
+  }) {
+    final p = pattern;
+    final matches = p == null || text.isEmpty ? const <RegExpMatch>[] : p.allMatches(text).toList();
+    if (matches.isEmpty) {
+      return super.buildTextSpan(context: context, style: style, withComposing: withComposing);
+    }
+    final scheme = context.colorScheme;
+    final mention = TextStyle(
+      fontWeight: FontWeight.w700,
+      color: scheme.primary,
+      backgroundColor: scheme.primary.withValues(alpha: 0.13),
+    );
+    // A keyboard's word in progress keeps its underline, even inside a mention.
+    final composing = withComposing && value.isComposingRangeValid ? value.composing : null;
+    final cuts = <int>{
+      0,
+      text.length,
+      for (final m in matches) ...[m.start, m.end],
+      if (composing != null) ...[composing.start, composing.end],
+    }.toList()
+      ..sort();
+    final children = <InlineSpan>[];
+    for (var i = 0; i + 1 < cuts.length; i++) {
+      final start = cuts[i];
+      final end = cuts[i + 1];
+      if (start >= end) continue;
+      final inMention = matches.any((m) => m.start <= start && end <= m.end);
+      final inComposing = composing != null && composing.start <= start && end <= composing.end;
+      var s = inMention ? mention : null;
+      if (inComposing) {
+        s = (s ?? const TextStyle()).merge(const TextStyle(decoration: TextDecoration.underline));
+      }
+      children.add(TextSpan(text: text.substring(start, end), style: s));
+    }
+    return TextSpan(style: style, children: children);
+  }
+}
+
 /// [text] with each mention as a pill, for a plain-text message.
 List<InlineSpan> mentionSpans(
   MentionScope scope,

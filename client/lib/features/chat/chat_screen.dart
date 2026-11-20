@@ -236,7 +236,8 @@ class ChatScreen extends ConsumerStatefulWidget {
 class _ChatScreenState extends ConsumerState<ChatScreen> {
   late final ChatFocusReporter _chatFocus;
   String? _focusedConversation;
-  final _input = TextEditingController();
+  // Highlights the @mentions that will count as they're typed (D-434).
+  final _input = MentionTextEditingController();
 
   /// What the person was typing stays on the device per chat, so leaving and coming back (or a
   /// restart) keeps it. Bound to [_draftConversation] once the chat has opened.
@@ -1188,7 +1189,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       hubApps: hubApps,
       catalog: catalog,
     );
-    return MentionScope(
+    final scope = MentionScope(
       bots: bots,
       apps: built.connected,
       knownIntegrationIds: integrationsAsync.hasValue ? {for (final i in integrations) i.id} : null,
@@ -1196,6 +1197,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       onOpenApp: (id) => context.pushOnce('/settings/integrations/$id'),
       child: thread,
     );
+    // The composer highlights the same names the sent message will show as pills.
+    _input.pattern = bots.isEmpty && built.connected.isEmpty ? null : scope.pattern;
+    return scope;
   }
 
   /// True when [botId] has at least one connected app (direct or via a hub), so the direct-chat
