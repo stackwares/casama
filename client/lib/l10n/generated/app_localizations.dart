@@ -26636,10 +26636,76 @@ abstract class AppLocalizations {
   /// **'Use Reset'**
   String get savedResetUse;
 
+  /// No description provided for @savedResetConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Use this reset?'**
+  String get savedResetConfirmTitle;
+
+  /// No description provided for @savedResetConfirmDaily.
+  ///
+  /// In en, this message translates to:
+  /// **'Clears today’s limit so your bots can work again today. This can’t be undone.'**
+  String get savedResetConfirmDaily;
+
+  /// No description provided for @savedResetConfirmComputer.
+  ///
+  /// In en, this message translates to:
+  /// **'Gives back this month’s computer hours. This can’t be undone.'**
+  String get savedResetConfirmComputer;
+
+  /// No description provided for @savedResetOwnerRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Only a workspace owner can use it.'**
+  String get savedResetOwnerRequired;
+
+  /// No description provided for @savedResetPaused.
+  ///
+  /// In en, this message translates to:
+  /// **'Paused for now. Check back later.'**
+  String get savedResetPaused;
+
+  /// No description provided for @savedResetPeriodLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'You’ve used this period’s reset. You can use this one next period.'**
+  String get savedResetPeriodLimit;
+
+  /// No description provided for @savedResetNothingToRefill.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing to refill yet. Keep it for when you run low.'**
+  String get savedResetNothingToRefill;
+
+  /// No description provided for @savedResetNoBillingPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'Available once your plan finishes setting up.'**
+  String get savedResetNoBillingPeriod;
+
+  /// No description provided for @savedResetUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Not available right now.'**
+  String get savedResetUnavailable;
+
+  /// No description provided for @savedResetDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset used: {amount} added'**
+  String savedResetDone(String amount);
+
+  /// No description provided for @savedResetDoneNoCredits.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset used'**
+  String get savedResetDoneNoCredits;
+
   /// No description provided for @savedResetConfirm.
   ///
   /// In en, this message translates to:
-  /// **'Refills \${amount} of this period’s included credits. This cannot be undone.'**
+  /// **'Refills \${amount} of this period’s included credits. This can’t be undone.'**
   String savedResetConfirm(String amount);
 
   /// No description provided for @adminResets.

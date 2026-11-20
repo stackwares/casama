@@ -14,6 +14,7 @@
 import {
   cloudCallReserveUsd,
   costOf,
+  dailyResetAt,
   type OpenRouterRouting,
   withOpenRouterRouting,
 } from "@casama/agent";
@@ -163,7 +164,9 @@ export function registerCasamaLinkRoutes(app: Hono, opts: LinkOptions) {
         (select coalesce(sum(cost_usd), 0) from public.usage_ledger
           where org_id = ${orgId}::uuid and billable and meta->>'source' = 'casama_link'
             and kind in ('tokens_in', 'tokens_out')
-            and created_at >= date_trunc('day', now() at time zone 'utc') at time zone 'utc')::text as today`);
+            -- A saved reset that cleared today's limit (D-443) starts the count again.
+            and created_at >= greatest(date_trunc('day', now() at time zone 'utc') at time zone 'utc',
+              coalesce(${dailyResetAt(sql`${orgId}::uuid`)}, '-infinity'::timestamptz)))::text as today`);
     const cap = cloudModelDailyCap(r?.plan_code ?? undefined, r?.limits?.cloud_daily_usd);
     return cap != null && Number(r?.today ?? 0) >= cap;
   };

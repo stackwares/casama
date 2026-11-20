@@ -13,6 +13,7 @@ import { track } from "./analytics.ts";
 import { deviceDataOfRun } from "./attention.ts";
 import { wrapUntrusted } from "./context.ts";
 import { mainConversation, postFromBot } from "./general.ts";
+import { dailyResetAt } from "./limit-resets.ts";
 import type { NotificationService } from "./notifications.ts";
 import {
   BRIEF_OPENING,
@@ -552,11 +553,13 @@ export async function checkinCapReached(db: Database, botId: string) {
                    and p.timezone in (select name from pg_timezone_names)), 'UTC') as tz
       from public.bot_checkins bc where bc.bot_id = ${botId}::uuid),
     today as (
-      select r.bot_id, r.cost_usd from public.runs r join public.routines rt on rt.id = r.routine_id
+      select r.bot_id, r.cost_usd, r.created_at from public.runs r join public.routines rt on rt.id = r.routine_id
       where r.org_id = (select org_id from c) and rt.kind in ('brief', 'scan')
         and r.created_at >= (date_trunc('day', now() at time zone coalesce((select tz from c), 'UTC')) at time zone coalesce((select tz from c), 'UTC')))
     select coalesce(sum(cost_usd) filter (where bot_id = ${botId}::uuid), 0) as spent,
-           coalesce(sum(cost_usd), 0) as org_spent,
+           -- A saved reset that cleared today's limit (D-443) starts the workspace's count again.
+           coalesce(sum(cost_usd) filter (where created_at >= coalesce(
+             ${dailyResetAt(sql`(select org_id from c)`)}, '-infinity'::timestamptz)), 0) as org_spent,
            (select cap from c) as cap, (select org_id from c) as org_id
     from today`);
   if (r?.cap !== null && r?.cap !== undefined && Number(r.spent) >= Number(r.cap)) return true;

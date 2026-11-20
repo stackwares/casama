@@ -5430,7 +5430,25 @@
     }
   },
   "savedResetUse": "Use Reset",
-  "savedResetConfirm": "Refills ${amount} of this period’s included credits. This cannot be undone.",
+  "savedResetConfirmTitle": "Use this reset?",
+  "savedResetConfirmDaily": "Clears today’s limit so your bots can work again today. This can’t be undone.",
+  "savedResetConfirmComputer": "Gives back this month’s computer hours. This can’t be undone.",
+  "savedResetOwnerRequired": "Only a workspace owner can use it.",
+  "savedResetPaused": "Paused for now. Check back later.",
+  "savedResetPeriodLimit": "You’ve used this period’s reset. You can use this one next period.",
+  "savedResetNothingToRefill": "Nothing to refill yet. Keep it for when you run low.",
+  "savedResetNoBillingPeriod": "Available once your plan finishes setting up.",
+  "savedResetUnavailable": "Not available right now.",
+  "savedResetDone": "Reset used: {amount} added",
+  "@savedResetDone": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "savedResetDoneNoCredits": "Reset used",
+  "savedResetConfirm": "Refills ${amount} of this period’s included credits. This can’t be undone.",
   "@savedResetConfirm": {
     "placeholders": {
       "amount": {

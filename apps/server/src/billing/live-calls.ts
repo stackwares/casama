@@ -309,10 +309,12 @@ export async function callHeadroom(
     select
       (select coalesce(sum(cost_usd), 0) from public.usage_ledger
         where org_id = ${call.orgId}::uuid and billable and billed_at is null)::text as unbilled,
-      (select coalesce(sum(cost_usd), 0) from public.usage_ledger
+      greatest(0, (select coalesce(sum(cost_usd), 0) from public.usage_ledger
         where org_id = ${call.orgId}::uuid and billable
           and kind <> all('{computer_seconds,stream_seconds}'::text[])
-          and created_at >= date_trunc('day', now() at time zone 'utc') at time zone 'utc')::text as cloud_today,
+          and created_at >= date_trunc('day', now() at time zone 'utc') at time zone 'utc')
+        -- A saved reset that cleared today's limit (D-443) counts from where it left off.
+        - public.limit_reset_offset(${call.orgId}::uuid, 'daily'))::text as cloud_today,
       (select coalesce(sum(cost_usd), 0) from public.usage_ledger
         where org_id = ${call.orgId}::uuid
           and created_at >= date_trunc('month', now() at time zone 'utc') at time zone 'utc')::text as org_period,

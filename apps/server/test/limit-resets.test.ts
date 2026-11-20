@@ -1,8 +1,11 @@
+import { dailyResetAt } from "@casama/agent";
 import { LimitResetCampaignInput } from "@casama/contracts";
 import { createDb, type DbHandle } from "@casama/db";
 import { createAuthUser, startTestDatabase, type TestDatabase } from "@casama/db/testing";
+import { sql } from "drizzle-orm";
 import { afterAll, beforeAll, expect, it } from "vitest";
 import { LimitResets } from "../src/billing/limit-resets.ts";
+import { callHeadroom } from "../src/billing/live-calls.ts";
 
 let t: TestDatabase;
 let h: DbHandle;
@@ -20,6 +23,37 @@ beforeAll(async () => {
   await t.admin`insert into public.memberships(org_id,user_id,role) values (${org},${owner},'owner')`;
   await t.admin`insert into public.entitlements(org_id,plan_code,limits) select ${org},code,limits from public.plans where code='free'`;
 }, 120000);
+/** The period's included credits arrived and were spent, so a reset has something to refill. */
+async function grantSpent(id: string, amount = 1, spend = amount) {
+  await t.admin`select public.credit_apply(${id},${amount},'grant','monthly:' || public.grant_month(null) || ':free',null)`;
+  await t.admin`select public.credit_apply(${id},${-spend},'usage',${`spend-${id}-${spend}`},null)`;
+}
+/** A free workspace with one owner and its plan, as settlement leaves it. */
+async function freeWorkspace(slug: string) {
+  const user = await createAuthUser(t.admin, `${slug}@example.com`);
+  const [o] =
+    await t.admin`insert into public.organizations(name,slug,created_by,plan) values (${slug},${slug},${user.id},'free') returning id`;
+  await t.admin`insert into public.memberships(org_id,user_id,role) values (${o!.id},${user.id},'owner')`;
+  await t.admin`insert into public.entitlements(org_id,plan_code,limits) select ${o!.id},code,limits from public.plans where code='free'`;
+  return { id: o!.id as string, owner: user.id };
+}
+/** A live campaign for [ids], handed out. */
+async function handOut(ids: string[], extra: Record<string, unknown> = {}) {
+  const c = await service.create(
+    owner,
+    LimitResetCampaignInput.parse({
+      name: "Test",
+      message: "Saved",
+      audience: { workspace_ids: ids },
+      starts_at: new Date(Date.now() - 1000).toISOString(),
+      expires_at: new Date(Date.now() + 86400000).toISOString(),
+      ...extra,
+    }),
+  );
+  await service.action(owner, c.id, "schedule");
+  await service.tick();
+  return c;
+}
 afterAll(async () => {
   await h?.close();
   await t?.stop();
@@ -45,6 +79,7 @@ it("launches once, refills included credits once under concurrent redemption, an
   const [count] =
     await t.admin`select count(*)::int as n from public.limit_resets where org_id=${org}`;
   expect(count!.n).toBe(1);
+  await grantSpent(org);
   await t.admin`select public.credit_apply(${org},10,'purchase','test-purchase',null)`;
   const results = await Promise.allSettled([
     service.redeem(org, owner),
@@ -191,6 +226,7 @@ it("enforces a shared campaign budget across concurrent workspaces", async () =>
       await t.admin`insert into public.organizations(name,slug,created_by,plan) values ('Budget',${`reset-budget-${i}`},${user.id},'free') returning id`;
     await t.admin`insert into public.memberships(org_id,user_id,role) values (${o!.id},${user.id},'owner')`;
     await t.admin`insert into public.entitlements(org_id,plan_code,limits) select ${o!.id},code,limits from public.plans where code='free'`;
+    await grantSpent(o!.id);
     workspaces.push({ id: o!.id, owner: user.id });
   }
   const c = await service.create(
@@ -212,4 +248,79 @@ it("enforces a shared campaign budget across concurrent workspaces", async () =>
   const [spent] =
     await t.admin`select refilled_usd from public.limit_reset_campaigns where id=${c.id}`;
   expect(Number(spent!.refilled_usd)).toBe(0.5);
+});
+it("refills no more than the period granted: a second free workspace gets nothing", async () => {
+  const w = await freeWorkspace("reset-second-free");
+  // Settlement records a $0 grant for a person's second free workspace (D-246).
+  await t.admin`select public.credit_apply(${w.id},0,'grant','monthly:' || public.grant_month(null) || ':free',null)`;
+  await handOut([w.id]);
+  const [saved] = await service.saved(w.id, true);
+  expect(saved!.refill_usd).toBe(0);
+  expect(saved!.unavailable_reason).toBe("nothing_to_refill");
+  await expect(service.redeem(w.id, w.owner)).rejects.toThrow("nothing to refill");
+});
+it("a trial refills to its own smaller grant, not the plan's amount", async () => {
+  const w = await freeWorkspace("reset-partial-grant");
+  await grantSpent(w.id, 0.4);
+  await handOut([w.id]);
+  expect((await service.redeem(w.id, w.owner)).refilled_usd).toBe(0.4);
+});
+it("the billing summary's resets never fail: none held, or no billing period", async () => {
+  const empty = await freeWorkspace("reset-none-held");
+  expect(await service.saved(empty.id, true)).toEqual([]);
+  const w = await freeWorkspace("reset-no-period");
+  await handOut([w.id]);
+  await t.admin`delete from public.entitlements where org_id=${w.id}`;
+  const [saved] = await service.saved(w.id, true);
+  expect(saved!.can_use).toBe(false);
+  expect(saved!.unavailable_reason).toBe("no_billing_period");
+});
+it("on a negative balance, counts only what became spendable", async () => {
+  const w = await freeWorkspace("reset-negative");
+  await grantSpent(w.id, 1, 1.3);
+  const c = await handOut([w.id]);
+  const used = await service.redeem(w.id, w.owner);
+  expect(used.refilled_usd).toBeCloseTo(0.7, 6);
+  const [row] =
+    await t.admin`select r.refilled_usd as reset, c.refilled_usd as campaign from public.limit_resets r join public.limit_reset_campaigns c on c.id=r.campaign_id where c.id=${c.id}`;
+  expect(Number(row!.reset)).toBeCloseTo(0.7, 6);
+  expect(Number(row!.campaign)).toBeCloseTo(0.7, 6);
+});
+it("hands nothing out while switched off, and launches once switched back on", async () => {
+  const w = await freeWorkspace("reset-switched-off");
+  const settings = { per_period: 10, max_held: 3, notify_owners: true };
+  await service.setSettings(owner, { enabled: false, ...settings });
+  const c = await handOut([w.id]);
+  const given = async () =>
+    (
+      await t.admin`select count(*)::int as n from public.limit_resets where campaign_id=${c.id}`
+    )[0]!.n;
+  expect(await given()).toBe(0);
+  expect((await service.campaigns()).find((x) => x.id === c.id)!.state).toBe("scheduled");
+  await service.setSettings(owner, { enabled: true, ...settings });
+  await service.tick();
+  expect(await given()).toBe(1);
+});
+it("voice calls, Link and check-ins see today's limit cleared by a reset", async () => {
+  const w = await freeWorkspace("reset-daily-everywhere");
+  await grantSpent(w.id);
+  // Free's daily limit is $0.25; $0.30 spent today is over it.
+  await t.admin`insert into public.usage_ledger(org_id,kind,quantity,cost_usd,billable,billed_at) values (${w.id},'tokens_in',100,0.3,true,now())`;
+  const call = {
+    id: crypto.randomUUID(),
+    orgId: w.id,
+    botId: crypto.randomUUID(),
+    startedAt: new Date().toISOString(),
+  };
+  const before = await callHeadroom(h.db, call, 100, null);
+  expect(before.reason).toBe("daily_cap");
+  expect(before.left).toBeLessThan(0);
+  const at = sql`select ${dailyResetAt(sql`${w.id}::uuid`)} as at`;
+  expect((await h.db.execute<{ at: Date | null }>(at))[0]!.at).toBeNull();
+  await handOut([w.id]);
+  await service.redeem(w.id, w.owner);
+  const after = await callHeadroom(h.db, call, 100, null);
+  expect(after.left).toBeGreaterThan(0.2);
+  // Link and check-ins count only their own spend, from the moment the limit was cleared.
+  expect((await h.db.execute<{ at: Date | null }>(at))[0]!.at).not.toBeNull();
 });

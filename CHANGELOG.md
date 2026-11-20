@@ -12,6 +12,9 @@ The server, apps, CLI, SDK and MCP server share one version number.
 - Saved resets: instance owners can schedule and budget included-credit refills, pause or cancel
   campaigns, and take back unused resets or unspent refill credit. Workspace owners can use saved
   resets in Billing and Usage. The feature defaults to off and records an append-only audit trail.
+  A cleared daily limit applies to voice calls, Casama Link and check-ins as well as chat; a reset
+  never refills past what the period granted; nothing is handed out while the feature is off; and
+  the app says why a reset can't be used.
 
 
 - `@mention` connected apps in chat (D-434): type `@` in any direct or group chat to mention a

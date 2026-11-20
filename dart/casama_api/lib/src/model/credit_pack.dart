@@ -3,7 +3,6 @@
 //
 
 // ignore_for_file: unused_element
-import 'package:casama_api/src/model/saved_limit_reset.dart';
 import 'package:copy_with_extension/copy_with_extension.dart';
 import 'package:json_annotation/json_annotation.dart';
 
@@ -24,8 +23,6 @@ class CreditPack {
     required  this.code,
 
     required  this.name,
-
-     this.resets,
 
     required  this.creditsUsd,
 
@@ -57,18 +54,6 @@ class CreditPack {
 
 
   final String name;
-
-
-
-  @JsonKey(
-    
-    name: r'resets',
-    required: false,
-    includeIfNull: false,
-  )
-
-
-  final List<SavedLimitReset>? resets;
 
 
 
@@ -126,7 +111,6 @@ class CreditPack {
     bool operator ==(Object other) => identical(this, other) || other is CreditPack &&
       other.code == code &&
       other.name == name &&
-      other.resets == resets &&
       other.creditsUsd == creditsUsd &&
       other.web == web &&
       other.priceLabel == priceLabel &&
@@ -136,7 +120,6 @@ class CreditPack {
     int get hashCode =>
         code.hashCode +
         name.hashCode +
-        resets.hashCode +
         creditsUsd.hashCode +
         web.hashCode +
         (priceLabel == null ? 0 : priceLabel.hashCode) +

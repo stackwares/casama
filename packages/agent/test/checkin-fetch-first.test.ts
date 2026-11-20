@@ -417,6 +417,15 @@ describe("check-ins and the day's limit", () => {
     expect(await checkinCapReached(h.db, bot.botId)).toBe(false);
     await scan(bot, undefined, 0.02);
     expect(await checkinCapReached(h.db, bot.botId)).toBe(true);
+    // A saved reset that clears today's limit (D-443) starts the workspace's count again.
+    const [campaign] = await tdb.admin<{ id: string }[]>`
+      insert into public.limit_reset_campaigns (name, message, audience, starts_at, expires_at, created_by, state)
+      values ('Share', 'Saved', '{}', now() - interval '1 hour', now() + interval '1 day', gen_random_uuid(), 'live')
+      returning id`;
+    await tdb.admin`
+      insert into public.limit_resets (org_id, campaign_id, used_at, used_by, daily_offset_usd)
+      values (${shareOrg}, ${campaign!.id}, clock_timestamp(), gen_random_uuid(), 0.11)`;
+    expect(await checkinCapReached(h.db, bot.botId)).toBe(false);
     await tdb.admin`delete from public.entitlements where org_id = ${shareOrg}`;
     // Without a plan limit (self-hosted) only the bot's own cap counts.
     expect(await checkinCapReached(h.db, bot.botId)).toBe(false);

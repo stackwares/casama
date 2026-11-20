@@ -6471,3 +6471,19 @@ Daily and computer meter resets use offsets against immutable usage records. Aud
 intersect and the recipients are frozen at launch; workspaces over the held limit are skipped.
 Notifications use the existing deferred push queue and quiet hours. Every administrative change
 and redemption is recorded in a log whose updates, deletes and truncations are rejected.
+
+**Audit fixes (2026-11-20, before the first deploy; Oliver: "Go and fix everything"):**
+- A cleared daily limit holds everywhere. Voice calls subtract the reset's offset like run admission;
+  Casama Link and check-ins count only part of the day's spend, so they count from the moment the
+  limit was cleared (`dailyResetAt`, `packages/agent/src/limit-resets.ts`).
+- The refill target is the smaller of the plan's amount and what the period really granted, so a
+  person's second free workspace ($0 grant, D-246) gets nothing and a trial refills to its own grant.
+- The billing summary never fails because of resets: workspaces holding none skip the period query,
+  one without a billing period shows `no_billing_period`, and the route ignores any error there.
+- What a refill records (the workspace, the campaign total and its budget) is the credit lot that
+  `credit_apply` really created; on a negative balance part of the refill pays the debt.
+- While switched off, due campaigns stay scheduled and hand nothing out until switched on, and a
+  one-off reset answers 409.
+- `CreditPack` lost a stray `resets` field. The app says why a reset can't be used, shows "Clears
+  today's limit" instead of "$0.00" when no credits refill, confirms in the app's own sheet and
+  shows what was added.

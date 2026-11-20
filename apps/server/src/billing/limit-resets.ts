@@ -248,6 +248,8 @@ export class LimitResets {
           continue;
         }
         if (c.state !== "scheduled" || new Date(c.starts_at).getTime() > Date.now()) continue;
+        // Switched off: nothing reaches anyone. A due hand-out launches once it's switched back on.
+        if (!settings.enabled) continue;
         const audience = await this.audience(c, tx);
         await tx.execute(sql`with issued as (
           insert into public.limit_resets(org_id,campaign_id)
@@ -276,7 +278,10 @@ export class LimitResets {
     }>(sql`
       with e as (select e.*,p.interval from public.entitlements e join public.plans p on p.code=e.plan_code where e.org_id=${org}::uuid order by e.created_at desc limit 1),
       period as (select *,public.grant_month(subscription_id) as key from e)
-      select (coalesce((limits->>'monthly_credits_usd')::numeric,0)/case when interval='week' then 4 else 1 end)::text as amount,key,
+      select least(coalesce((limits->>'monthly_credits_usd')::numeric,0)/case when interval='week' then 4 else 1 end,
+        -- What this period really granted: a trial's smaller grant, a pro-rata top-up, or $0 for a
+        -- person's second free workspace (D-246). A reset never refills past it.
+        (select coalesce(sum(delta),0) from public.credit_ledger where org_id=${org}::uuid and reason='grant' and delta>0 and reference like 'monthly:'||period.key||':%'))::text as amount,key,
       case when interval='week' and length(key)=10 then coalesce(valid_until,key::date+interval '7 days') when interval='month' and valid_until is not null then valid_until when interval='year' and valid_until is not null then (select min(valid_until-interval '1 year'+make_interval(months=>n)) from generate_series(1,12) n where valid_until-interval '1 year'+make_interval(months=>n)>now()) else least(coalesce(valid_until,(key||'-01')::date+interval '1 month'),(key||'-01')::date+interval '1 month') end as end,
       (select coalesce(sum(remaining),0)::text from public.credit_lots where org_id=${org}::uuid and (expires_at is null or expires_at>now()) and ((reason='grant' and reference like 'monthly:'||period.key||':%') or (reason='reset' and reference in (select id::text from public.limit_resets where org_id=${org}::uuid and period_key=period.key)))) as remaining,
       (select coalesce(sum(cost_usd),0)::text from public.usage_ledger where org_id=${org}::uuid and billable and kind not in ('computer_seconds','stream_seconds') and created_at>=date_trunc('day',now() at time zone 'utc') at time zone 'utc') as daily,
@@ -289,10 +294,6 @@ export class LimitResets {
     if (!this.billingEnabled) return [];
     const settings = await this.settings();
     if (!settings.enabled) return [];
-    const period = await this.context(this.db, org);
-    const [uses] = await this.db.execute<{ n: string }>(
-      sql`select count(*)::text as n from public.limit_resets where org_id=${org}::uuid and period_key=${period.key} and used_at is not null`,
-    );
     const rows = await this.db.execute<{
       id: string;
       campaign_id: string;
@@ -308,7 +309,29 @@ export class LimitResets {
     }>(
       sql`select r.id,r.campaign_id,c.message,c.expires_at,c.refill_percent,c.reset_daily,c.reset_computer,c.max_per_use_usd,c.state,c.budget_usd,c.refilled_usd from public.limit_resets r join public.limit_reset_campaigns c on c.id=r.campaign_id where r.org_id=${org}::uuid and r.used_at is null and r.revoked_at is null and c.expires_at>now() and c.state in ('live','paused') order by c.expires_at,r.id`,
     );
+    // Most workspaces hold none: skip the period query, which reads the whole day's usage.
+    if (!rows.length) return [];
+    // A workspace without a billing period (no entitlement yet) shows its resets as unusable
+    // instead of failing the billing summary they're part of.
+    const period = await this.context(this.db, org).catch(() => null);
+    const [uses] = period
+      ? await this.db.execute<{ n: string }>(
+          sql`select count(*)::text as n from public.limit_resets where org_id=${org}::uuid and period_key=${period.key} and used_at is not null`,
+        )
+      : [];
     return rows.map((r) => {
+      if (!period)
+        return {
+          id: r.id,
+          campaign_id: r.campaign_id,
+          message: r.message,
+          expires_at: iso(r.expires_at),
+          refill_usd: 0,
+          reset_daily: r.reset_daily,
+          reset_computer: r.reset_computer,
+          can_use: false,
+          unavailable_reason: "no_billing_period",
+        };
       const refill = Math.max(
         0,
         Math.min(
@@ -413,25 +436,33 @@ export class LimitResets {
         fail("Refresh billing before using this reset");
       if (r.budget_usd !== null && Number(r.refilled_usd) + amount > Number(r.budget_usd))
         fail("This reset is not available right now");
-      await tx.execute(
-        sql`select public.credit_apply(${org}::uuid,${amount},'reset',${r.id},'Saved reset')`,
-      );
+      if (amount > 0)
+        await tx.execute(
+          sql`select public.credit_apply(${org}::uuid,${amount},'reset',${r.id},'Saved reset')`,
+        );
       await tx.execute(
         sql`update public.credit_lots set expires_at=${iso(period.end)}::timestamptz where org_id=${org}::uuid and reason='reset' and reference=${r.id}`,
       );
+      // On a negative balance only the part above zero becomes credit; the rest pays the debt.
+      // The workspace, the campaign total and its budget count what became spendable.
+      const [lot] = await tx.execute<{ n: string }>(
+        sql`select coalesce(sum(amount),0)::text as n from public.credit_lots where org_id=${org}::uuid and reason='reset' and reference=${r.id}`,
+      );
+      const refilled = Number(lot?.n ?? 0);
       await tx.execute(
-        sql`update public.limit_resets set used_at=now(),used_by=${actor}::uuid,period_key=${period.key},period_end=${iso(period.end)}::timestamptz,refilled_usd=${amount},
+        sql`update public.limit_resets set used_at=now(),used_by=${actor}::uuid,period_key=${period.key},period_end=${iso(period.end)}::timestamptz,refilled_usd=${refilled},
       daily_offset_usd=case when ${r.reset_daily} then (select coalesce(sum(cost_usd),0) from public.usage_ledger where org_id=${org}::uuid and billable and kind not in ('computer_seconds','stream_seconds') and created_at>=date_trunc('day',now() at time zone 'utc') at time zone 'utc') else 0 end,
       computer_offset_seconds=case when ${r.reset_computer} then (select coalesce(sum(quantity),0) from public.usage_ledger where org_id=${org}::uuid and kind='computer_seconds' and created_at>=date_trunc('month',now() at time zone 'utc') at time zone 'utc') else 0 end where id=${r.id}::uuid`,
       );
       await tx.execute(
-        sql`update public.limit_reset_campaigns set refilled_usd=refilled_usd+${amount} where id=${r.campaign_id}::uuid`,
+        sql`update public.limit_reset_campaigns set refilled_usd=refilled_usd+${refilled} where id=${r.campaign_id}::uuid`,
       );
       await event(tx, actor, "used", r.campaign_id, org, r.id, null, {
-        refilled_usd: amount,
+        refilled_usd: refilled,
+        ...(refilled !== amount ? { offered_usd: amount } : {}),
         period_key: period.key,
       });
-      return { reset_id: r.id, refilled_usd: amount };
+      return { reset_id: r.id, refilled_usd: refilled };
     });
   }
   async resetAction(actor: string, id: string, action: "revoke" | "undo") {

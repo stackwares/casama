@@ -94,10 +94,13 @@ export function registerLimitResetRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps
   app.openapi(routes.giveAdminWorkspaceLimitReset, async (c) => {
     const u = claims(c.get("claims"));
     await admin(u);
+    // While switched off nothing is handed out, so a one-off would silently never arrive.
+    if (!(await service.settings()).enabled)
+      throw new ApiError(409, "reset_unavailable", "Turn saved resets on before giving one");
     const campaign = await billingCall(() =>
       service.create(u.sub, c.req.valid("json"), c.req.valid("param").id),
     );
-    await service.action(u.sub, campaign.id, "schedule");
+    await billingCall(() => service.action(u.sub, campaign.id, "schedule"));
     await service.tick();
     return c.json((await service.campaigns()).find((v) => v.id === campaign.id)!, 200);
   });
