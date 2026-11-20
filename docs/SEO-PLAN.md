@@ -814,6 +814,15 @@ Not done:
 | The MCP server answering `/server-card` itself | The card is served from casama.ai for now; the server route needs a server deploy |
 | The four posts under Oliver's name | Live; they still need his read |
 
+## First full check (2026-11-20)
+
+Written up in `reports/seo/2026-11-20.md`. Google had 85 of 97 casama.ai addresses indexed; Bing showed
+no data yet; the AI answers named Casama in 0 of 115 answers (run of 2026-11-18). Fixed the same day:
+the deleted Wikidata item left `sameAs`, a 512 px logo and the missing icons, `llms-full.txt`, "Keep
+reading" links on every written page, docs titles and descriptions, unique gallery descriptions. What
+no edit fixes: 0 GitHub stars and no referring domains (the launch), and a Wikidata item (wait for
+independent coverage).
+
 ## Appendix A: tracked keywords (first set)
 
 - **Name**: casama, casama ai, casama app
