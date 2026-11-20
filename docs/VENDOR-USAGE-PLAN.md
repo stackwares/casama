@@ -1,7 +1,7 @@
 # Vendor usage and balances in Admin, with alerts: plan
 
-Status: **not started** (written 2026-11-20). Waiting on Oliver's answers in §10, then a go-ahead
-to build. No code yet.
+Status: **not started** (written 2026-11-20). Decisions made (§10, Oliver: "Choose the best email
+for alerts. Decide all for me"); waiting on the go-ahead to build. No code yet.
 
 Oliver (2026-11-20): "Does our admin console show our usages for all our services we use like
 maptiler, resend, zeptomail, google maps, etc? So we can also monitor which one is almost gone or
@@ -187,17 +187,18 @@ Full suites through `scripts/heavy.sh` once at the end.
   (map tiles, mail backup). That's a separate decision per vendor.
 - Tracking per-customer vendor costs; that's the Margin card's job.
 
-## 10. Decisions for Oliver
+## 10. Decisions (made 2026-11-20; Oliver: "Decide all for me")
 
-1. **Who gets the emails:** every `INSTANCE_ADMIN_EMAILS` address (today admin@casama.ai), or a
-   separate list such as `ops@` or your own address? *Recommend:* a new `VENDOR_ALERT_EMAILS`,
-   defaulting to the admins.
-2. **Thresholds:** warn at 80% and again at 100% for everything? *Recommend:* yes, editable per
-   vendor in Admin.
-3. **Weekly summary email:** on or off? *Recommend:* on, Mondays.
-4. **Parallel:** its balance API needs an account OAuth token. Try that, or just count our own
-   searches? *Recommend:* own count; revisit if it drifts.
-5. **Renewal reminders** for fixed bills (VPS, Apple, Play, domains): include them in this tab?
-   *Recommend:* yes, 14 days ahead.
-6. **Push to your phone** as well as email for `out`? *Recommend:* yes for `out` and `unknown`,
-   email only for `low`.
+1. **Alert address: `alerts@casama.ai`**, a new alias on the hello@casama.ai mailbox (the inbox that
+   is read every day, with the `zmail` CLI), with a Zoho filter that labels it "Alerts" so alerts
+   don't drown in support mail. Set as `VENDOR_ALERT_EMAILS` in the VPS env; when unset, alerts go
+   to `INSTANCE_ADMIN_EMAILS`. Not admin@casama.ai: that's a sign-in account for the console, not
+   an inbox anyone watches. No personal address goes in the repo (it's public).
+2. **Thresholds:** warn at 80%, alert again at 100% or "out", for every vendor; editable per vendor.
+3. **Weekly summary email: on**, Mondays 9:00 Asia/Manila, to the same address.
+4. **Parallel:** our own count of searches; no account OAuth token on the server.
+5. **Renewal reminders: yes**, in the same tab, 14 days and 3 days before each fixed bill.
+6. **Channels:** `low` → email + in-app notice. `out` and `unknown` → email + in-app notice + push
+   to the admins' phones, repeated once a day while they last. Back to `ok` → one email.
+
+Phase 5 adds the `alerts@casama.ai` alias and filter with the `zmail` CLI.

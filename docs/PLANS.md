@@ -23,7 +23,7 @@ same commit. Shipping details (deploys, app builds) move fast, so check them bef
 | [RETENTION-MESSAGING-PLAN](RETENTION-MESSAGING-PLAN.md) | 2026-11-20 | §14 decisions; then 1.0 release and Apple's access |
 | [SIRI-AI-PLAN](SIRI-AI-PLAN.md) | 2026-11-20 | §13 decisions; then a debug build on the iPhone for Phase 0 |
 | [USAGE-LIMITS-PLAN](USAGE-LIMITS-PLAN.md) | 2026-11-20 | Oliver's go-ahead to build; the decisions are made (§2) |
-| [VENDOR-USAGE-PLAN](VENDOR-USAGE-PLAN.md) | 2026-11-20 | §10 decisions; then the go-ahead to build, and a yes for the VPS env change in Phase 5 |
+| [VENDOR-USAGE-PLAN](VENDOR-USAGE-PLAN.md) | 2026-11-20 | Go-ahead to build (decisions made, §10); a yes for the VPS env change in Phase 5 |
 | [WEEKLY-PLAN-PLAN](WEEKLY-PLAN-PLAN.md) | 2026-11-20 | Oliver's answers (draft) |
 
 ## In progress
