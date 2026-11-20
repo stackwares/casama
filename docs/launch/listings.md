@@ -117,7 +117,14 @@ Reviewer account: `review@casama.ai` (Vaultwarden "Casama · store review accoun
 | Directory | Status |
 | --- | --- |
 | Claude Connectors Directory | Ready except screenshots. Blocker: Casama Cloud is invite-only, so people who find it there hit the waitlist. Oliver submits (Anthropic form). |
-| ChatGPT apps | Ready except screenshots. Needs OpenAI organization verification (Oliver). |
+| ChatGPT apps | Ready except screenshots. OpenAI organization set up 2026-11-20 (see "ChatGPT app: where it stands" below); waiting on Oliver's organization verification. |
 | Gemini CLI extensions | Extension built and validated (`packaging/gemini-cli/`, `scripts/sync-gemini-extension.sh`). Needs the public repo `stackwares/casama-gemini` with the `gemini-cli-extension` topic. |
 | Microsoft, Mistral, xAI | Later (partner programs). |
 | Composio | Toolkit request posted 2026-11-20 as "Casama" (support@casama.ai): https://request.composio.dev/boards/tool-requests/posts/casama-ai-bots-with-their-own-computers-hosted-mcp-rest-api-oauth-2-1. Composio builds toolkits themselves; votes move requests up. Text in `packaging/connectors/composio-request.md`. |
+
+### ChatGPT app: where it stands (2026-11-20)
+
+- **OpenAI account:** `hello@casama.ai` (Vaultwarden "Casama · OpenAI Platform (organization owner, hello@casama.ai)"), two-step sign-in (authenticator and passkey), phone verified, payment method on file, no credits bought.
+- **Organization:** Casama (`org-I5u0qqgMv31nEy6dxLwrqeUH`), project Casama (`proj_UEAhT8H7UWfo4gRI5nHx3qhh`). `nemoryoliver@gmail.com` is a second owner (invite accepted).
+- **Next (Oliver):** platform.openai.com → Settings → Organization → General → Verifications → **Individual** (ID and selfie; works on a phone browser, not the ChatGPT app) or Business. One ID verifies one organization per 90 days, so do it with Casama selected.
+- **Then:** production deploy (`scripts/deploy-prod.sh`, Oliver's yes) so reviewers get the tool annotations and Connected AI Apps; screenshots inside ChatGPT with `review@casama.ai`; submit with the copy in `packaging/connectors/README.md`.
