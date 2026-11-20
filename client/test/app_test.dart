@@ -12,6 +12,8 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:casama/app.dart';
 import 'package:casama/core/backend.dart';
 import 'package:casama/core/providers.dart';
+import 'package:casama/core/push.dart' show pushProvider;
+import 'package:casama/features/settings/name_step.dart' show nameStepNeededProvider;
 import 'package:casama/features/auth/floating_mascots.dart';
 import 'package:casama/features/auth/sign_in_screen.dart';
 import 'package:casama/ui/mascot.dart';
@@ -761,6 +763,30 @@ void main() {
     final a = tester.getTopLeft(find.textContaining('First answer')).dy;
     expect(q, lessThan(a));
   });
+
+  testWidgets(
+    'recreating pushProvider does not leave _FirstRunSteps holding a disposed ValueNotifier',
+    (tester) async {
+      await setSize(tester, const Size(500, 900));
+      final backend = FakeBackend();
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [backendProvider.overrideWithValue(backend)],
+          child: const CasamaApp(),
+        ),
+      );
+      await tester.pump();
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(CasamaApp)),
+      );
+      container.invalidate(pushProvider);
+      await tester.pump();
+      expect(tester.takeException(), isNull);
+      container.invalidate(nameStepNeededProvider);
+      await tester.pump();
+      expect(tester.takeException(), isNull);
+    },
+  );
 }
 
 class _NoWelcome extends FakeBackend {

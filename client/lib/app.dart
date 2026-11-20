@@ -159,7 +159,7 @@ class CasamaApp extends ConsumerWidget {
               child: RemoteConfigGate(
                 // A minimised call floats over every screen (D-327).
                 child: CallBubbleOverlay(
-                  child: _FirstRunSteps(push: ref.read(pushProvider), child: child ?? const SizedBox.shrink()),
+                  child: _FirstRunSteps(child: child ?? const SizedBox.shrink()),
                 ),
               ),
             ),
@@ -179,8 +179,7 @@ class CasamaApp extends ConsumerWidget {
 /// [nameStepNeededProvider]), then "Picks for you" on first run (see [galleryPicksNeededProvider]),
 /// then "Turn on notifications" (see [PushRegistrar.needsAsk]).
 class _FirstRunSteps extends ConsumerWidget {
-  const _FirstRunSteps({required this.push, required this.child});
-  final PushRegistrar push;
+  const _FirstRunSteps({required this.child});
   final Widget child;
 
   /// A step covers the whole app. On a folding phone the step itself keeps clear of the side
@@ -191,6 +190,7 @@ class _FirstRunSteps extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final push = ref.watch(pushProvider);
     // Sign-in finishes first: the two-step code and a new password come before these pages.
     final signInDone = ref.watch(signInFinishedProvider);
     // Consent to send chats to AI providers (D-421) comes before everything, the guided setup too.
