@@ -792,6 +792,76 @@ class FakeBackend implements Backend {
   Future<void> registerWidgetPushToken(String widgetKey, String token, {required String kind, bool? sandbox}) async =>
       widgetPushTokens.add((widgetKey, token, kind));
 
+  // Bot widgets (docs/BOT-WIDGET-PLAN.md)
+  /// What [canvases] answers; its `version` is the ETag.
+  CanvasList canvasList = CanvasList(version: 'c0', madeAt: DateTime.utc(2027, 3, 10), private: false, items: const [], grants: const [], placed: const []);
+
+  /// Each canvases call's If-None-Match, in order.
+  final canvasCalls = <String?>[];
+
+  /// What was asked, in order: `update:<id>:<status>:<hide>`, `clear:<id>`, `grant:<bot>:<allowed>`,
+  /// `picture:<id>:<hash>`.
+  final canvasActions = <String>[];
+
+  /// Fails the canvas changes while set.
+  Object? canvasError;
+
+  @override
+  Future<CanvasList?> canvases(String orgId, {String? ifNoneMatch}) async {
+    canvasCalls.add(ifNoneMatch);
+    if (ifNoneMatch != null && ifNoneMatch == canvasList.version) return null;
+    return canvasList;
+  }
+
+  @override
+  String canvasPictureUrl(String canvasId, String hash) => 'http://localhost:8787/v1/canvases/$canvasId/pictures/$hash';
+
+  @override
+  Future<Uint8List?> canvasPicture(String canvasId, String hash) async {
+    canvasActions.add('picture:$canvasId:$hash');
+    return Uint8List.fromList([0xff, 0xd8, 0xff]);
+  }
+
+  @override
+  Future<Canvas> updateCanvas(String id, {CanvasUpdateStatusEnum? status, bool? hideWhenLocked}) async {
+    final error = canvasError;
+    if (error != null) throw error;
+    canvasActions.add('update:$id:${status?.value}:$hideWhenLocked');
+    final c = canvasList.items.firstWhere((c) => c.id == id);
+    final changed = c.copyWith(
+      status: status == null ? c.status : CanvasStatusEnum.values.byName(status.value),
+      hideWhenLocked: hideWhenLocked ?? c.hideWhenLocked,
+    );
+    canvasList = canvasList.copyWith(version: '${canvasList.version}+', items: [for (final x in canvasList.items) x.id == id ? changed : x]);
+    return changed;
+  }
+
+  @override
+  Future<void> clearCanvas(String id) async {
+    final error = canvasError;
+    if (error != null) throw error;
+    canvasActions.add('clear:$id');
+    canvasList = canvasList.copyWith(version: '${canvasList.version}+', items: [for (final x in canvasList.items) if (x.id != id) x]);
+  }
+
+  @override
+  Future<CanvasGrantSaved> setCanvasGrant(String botId, bool allowed) async {
+    final error = canvasError;
+    if (error != null) throw error;
+    canvasActions.add('grant:$botId:$allowed');
+    final mine = [for (final c in canvasList.items) if (c.botId == botId) c];
+    canvasList = canvasList.copyWith(
+      version: '${canvasList.version}+',
+      items: allowed
+          ? [for (final c in canvasList.items) c.botId == botId && c.status == CanvasStatusEnum.waiting ? c.copyWith(status: CanvasStatusEnum.shown) : c]
+          : [for (final c in canvasList.items) if (c.botId != botId) c],
+      grants: allowed
+          ? [...canvasList.grants.where((g) => g.botId != botId), CanvasGrant(botId: botId, bot: mine.firstOrNull?.bot ?? '', createdAt: DateTime.utc(2027, 3, 10))]
+          : [for (final g in canvasList.grants) if (g.botId != botId) g],
+    );
+    return CanvasGrantSaved(allowed: allowed, shown: allowed ? mine.length : 0, cleared: allowed ? 0 : mine.length);
+  }
+
   // Watches (D-410)
   /// The signed-in watches [listWatchKeys] answers (all workspaces; filtered by org).
   List<WatchKeyView> watchKeys = [];

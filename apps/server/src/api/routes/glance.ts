@@ -27,6 +27,9 @@ const WIDGET_ROUTES: Array<[string, RegExp]> = [
   ["GET", /^\/v1\/glance\/?$/],
   ["PUT", /^\/v1\/widget-keys\/current\/push-token\/?$/],
   ["GET", /^\/v1\/creations\/[0-9a-f-]{36}\/cover\/?$/i],
+  // Bot widgets (docs/BOT-WIDGET-PLAN.md §9.2): the Canvas widget's content and pictures.
+  ["GET", /^\/v1\/canvases\/?$/],
+  ["GET", /^\/v1\/canvases\/[0-9a-f-]{36}\/pictures\/[a-z0-9_-]{2,80}\/?$/i],
 ];
 
 export const newWidgetKey = () => `cwk_${randomBytes(32).toString("base64url")}`;

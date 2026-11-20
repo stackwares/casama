@@ -2485,6 +2485,28 @@ abstract class Backend {
   /// token (`fcm`) or a WidgetKit push token (`apns_widgets`). Sent with the widget key itself.
   Future<void> registerWidgetPushToken(String widgetKey, String token, {required String kind, bool? sandbox});
 
+  // Bot widgets (docs/BOT-WIDGET-PLAN.md)
+  /// What bots keep on the person's Canvas widgets in [orgId], with the bots allowed to write and
+  /// where a Canvas widget is placed. With [ifNoneMatch] (the last list's `version`) an unchanged
+  /// list answers null. A server from before bot widgets answers an empty list.
+  Future<CanvasList?> canvases(String orgId, {String? ifNoneMatch});
+
+  /// Where a canvas's picture or built-in painting is served (needs [authHeaders]).
+  String canvasPictureUrl(String canvasId, String hash);
+
+  /// A canvas's picture as JPEG bytes (for the Mac's widgets); null when it is gone.
+  Future<Uint8List?> canvasPicture(String canvasId, String hash);
+
+  /// Pauses a canvas or shows it again ([status] `shown` or `paused`), or hides it on a locked phone.
+  Future<Canvas> updateCanvas(String id, {CanvasUpdateStatusEnum? status, bool? hideWhenLocked});
+
+  /// Clears a canvas (also **Not now** on a bot's first preview). One already gone is fine.
+  Future<void> clearCanvas(String id);
+
+  /// Lets [botId] show things on the person's widgets (**Show on my widgets**: what it left
+  /// waiting shows), or stops it (what it showed is cleared).
+  Future<CanvasGrantSaved> setCanvasGrant(String botId, bool allowed);
+
   // Watches (D-410)
   /// The person's signed-in watches in [orgId], most recently used first. Empty when the server
   /// has no watch keys yet.

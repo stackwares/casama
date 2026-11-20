@@ -572,6 +572,46 @@
       "funnels": []
     },
     {
+      "name": "canvas_set",
+      "by": ["server"],
+      "description": "A bot set a canvas on a person's Canvas widget (docs/BOT-WIDGET-PLAN.md): its template, whether it has a picture, how many entries or rotation items, and whether it came from a chat or a routine. Never its words.",
+      "properties": {
+        "template": {
+          "type": "string",
+          "values": ["text", "countdown", "number", "list", "picture"]
+        },
+        "has_picture": {
+          "type": "boolean"
+        },
+        "entries": {
+          "type": "number"
+        },
+        "rotation": {
+          "type": "boolean"
+        },
+        "trigger": {
+          "type": "string",
+          "values": ["chat", "routine", "other"]
+        },
+        "first": {
+          "type": "boolean"
+        }
+      },
+      "funnels": []
+    },
+    {
+      "name": "canvas_allowed",
+      "by": ["client"],
+      "description": "The person answered a bot's first canvas preview: Show on my widgets or Not now.",
+      "properties": {
+        "choice": {
+          "type": "string",
+          "values": ["allow", "not_now"]
+        }
+      },
+      "funnels": []
+    },
+    {
       "name": "action_rule_created",
       "by": ["server"],
       "description": "An action rule was created.",
@@ -1544,12 +1584,18 @@
     {
       "name": "widgets_placed",
       "by": ["client"],
-      "description": "Widgets this device has placed, once a day per device (D-405): how many, and whether any is on the Lock Screen.",
+      "description": "Widgets this device has placed, once a day per device (D-405): how many, and whether any is on the Lock Screen; how many are Canvas widgets and whether one is on the Lock Screen (bot widgets).",
       "properties": {
         "count": {
           "type": "number"
         },
         "lock_screen": {
+          "type": "boolean"
+        },
+        "canvas": {
+          "type": "number"
+        },
+        "canvas_lock_screen": {
           "type": "boolean"
         }
       },

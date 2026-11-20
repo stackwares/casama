@@ -214,12 +214,19 @@
             </intent-filter>
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/credits_widget_info" />
         </receiver>
+        <!-- Canvas (docs/BOT-WIDGET-PLAN.md §10.2): what bots put on it, from /v1/canvases. -->
+        <receiver android:name=".CanvasWidget" android:exported="true" android:label="@string/widget_canvas">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/canvas_widget_info" />
+        </receiver>
         <!-- Today's list below Android 12, where a collection's items come from a service. -->
         <service
             android:name=".TodayWidgetService"
             android:exported="false"
             android:permission="android.permission.BIND_REMOTEVIEWS" />
-        <!-- The widget picker for Ask, Bot and Routines (a bot, or routines): native, no Flutter. -->
+        <!-- The widget picker for Ask, Bot, Routines and Canvas (a bot, routines, or a canvas): native, no Flutter. -->
         <activity
             android:name=".WidgetConfigActivity"
             android:exported="true"

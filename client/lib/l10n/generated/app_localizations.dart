@@ -24843,6 +24843,282 @@ abstract class AppLocalizations {
   /// **'Run routines from your Home screen with the Routines widget.'**
   String get widgetNudgeRoutines;
 
+  /// Name of the widget bots put things on (bot widgets).
+  ///
+  /// In en, this message translates to:
+  /// **'Canvas'**
+  String get widgetNameCanvas;
+
+  /// Canvas widget description in Settings -> Widgets.
+  ///
+  /// In en, this message translates to:
+  /// **'Shows what your bots put there, like a daily verse or a countdown'**
+  String get widgetDescCanvas;
+
+  /// The Canvas widget with nothing on it.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask a bot to put something here'**
+  String get canvasEmpty;
+
+  /// Example under the empty Canvas widget.
+  ///
+  /// In en, this message translates to:
+  /// **'Try: put a daily verse on my Lock Screen'**
+  String get canvasTry;
+
+  /// Canvas widget setting: show the canvas set most recently.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic'**
+  String get canvasAutomatic;
+
+  /// Widget countdown: time until the target (in 12 days).
+  ///
+  /// In en, this message translates to:
+  /// **'in {time}'**
+  String canvasIn(String time);
+
+  /// Widget countdown counting up: time since the moment (3 days since).
+  ///
+  /// In en, this message translates to:
+  /// **'{time} since'**
+  String canvasSince(String time);
+
+  /// Widget countdown at its target.
+  ///
+  /// In en, this message translates to:
+  /// **'Now'**
+  String get canvasNow;
+
+  /// Widget list: how many items are not done yet.
+  ///
+  /// In en, this message translates to:
+  /// **'{n} left'**
+  String canvasLeft(String n);
+
+  /// Small word under the number of items left on a round Lock Screen widget.
+  ///
+  /// In en, this message translates to:
+  /// **'left'**
+  String get canvasLeftUnit;
+
+  /// Unit after the number of days on a countdown canvas (12 days).
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{day} other{days}}'**
+  String canvasDaysUnit(int count);
+
+  /// Small header on the chat card that previews a bot's canvas.
+  ///
+  /// In en, this message translates to:
+  /// **'Widgets'**
+  String get canvasCardLabel;
+
+  /// Title of the preview card the first time a bot sets a canvas.
+  ///
+  /// In en, this message translates to:
+  /// **'{bot} wants to show this on your widgets'**
+  String canvasPreviewAsk(String bot);
+
+  /// Help on the first preview card.
+  ///
+  /// In en, this message translates to:
+  /// **'Once you say yes, {bot} can change it without asking. You can stop it any time in Settings, Widgets.'**
+  String canvasPreviewAskHelp(String bot);
+
+  /// Title of the preview card once the canvas is showing.
+  ///
+  /// In en, this message translates to:
+  /// **'{bot} put this on your widgets'**
+  String canvasPreviewSet(String bot);
+
+  /// Button: let this bot show things on the person's widgets.
+  ///
+  /// In en, this message translates to:
+  /// **'Show on my widgets'**
+  String get canvasShow;
+
+  /// Outcome line once the canvas shows.
+  ///
+  /// In en, this message translates to:
+  /// **'Showing on your widgets'**
+  String get canvasShowing;
+
+  /// Outcome line after Not now.
+  ///
+  /// In en, this message translates to:
+  /// **'Not shown. {bot} can ask again another day.'**
+  String canvasNotShown(String bot);
+
+  /// The canvas this card previewed was cleared.
+  ///
+  /// In en, this message translates to:
+  /// **'No longer on your widgets'**
+  String get canvasGone;
+
+  /// Preview card: no Canvas widget is placed yet.
+  ///
+  /// In en, this message translates to:
+  /// **'Add the Canvas widget to see it.'**
+  String get canvasNotPlaced;
+
+  /// iPhone steps to add the Canvas widget.
+  ///
+  /// In en, this message translates to:
+  /// **'Touch and hold the Home Screen or Lock Screen, tap Edit, then Add Widget, and pick Casama, then Canvas.'**
+  String get canvasHowToIos;
+
+  /// Mac steps to add the Canvas widget.
+  ///
+  /// In en, this message translates to:
+  /// **'Right-click the desktop, choose Edit Widgets, and pick Casama, then Canvas.'**
+  String get canvasHowToMac;
+
+  /// Where there are no widgets (web, Windows, Linux): how to see a canvas.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Casama\'s Canvas widget on your phone or Mac to see it there.'**
+  String get canvasHowToElsewhere;
+
+  /// Outcome line after Add to Home screen on Android.
+  ///
+  /// In en, this message translates to:
+  /// **'Canvas widget added'**
+  String get canvasAdded;
+
+  /// Label over the Lock Screen line in the preview.
+  ///
+  /// In en, this message translates to:
+  /// **'On the Lock Screen'**
+  String get canvasLockScreen;
+
+  /// Settings -> Widgets section listing what bots put on the widgets.
+  ///
+  /// In en, this message translates to:
+  /// **'From your bots'**
+  String get widgetsFromBots;
+
+  /// Settings -> Widgets: no bot has put anything on the widgets.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing yet. Ask a bot something like \"Put a daily verse on my Lock Screen\".'**
+  String get widgetsFromBotsEmpty;
+
+  /// When the bot last set the canvas (time is relative, like 2 hours ago).
+  ///
+  /// In en, this message translates to:
+  /// **'Set {time}'**
+  String canvasSetAt(String time);
+
+  /// Where a Canvas widget is placed (device names).
+  ///
+  /// In en, this message translates to:
+  /// **'Showing on {devices}'**
+  String canvasOnDevices(String devices);
+
+  /// Settings: the canvas shows nowhere because no Canvas widget is placed.
+  ///
+  /// In en, this message translates to:
+  /// **'No Canvas widget placed yet'**
+  String get canvasNoWidget;
+
+  /// A canvas the person paused.
+  ///
+  /// In en, this message translates to:
+  /// **'Paused'**
+  String get canvasPausedLine;
+
+  /// A canvas whose bot isn't allowed yet.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for your yes'**
+  String get canvasWaitingLine;
+
+  /// Switch: show only the canvas's name while the phone is locked.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide on a locked phone'**
+  String get canvasHideLocked;
+
+  /// Button: stop showing this canvas for now.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get canvasPause;
+
+  /// Button: show a paused canvas again.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume'**
+  String get canvasResume;
+
+  /// Button: take this canvas off the widgets.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get canvasClear;
+
+  /// Confirm title before clearing a canvas.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear {name}?'**
+  String canvasClearTitle(String name);
+
+  /// Confirm message before clearing a canvas.
+  ///
+  /// In en, this message translates to:
+  /// **'It comes off your widgets. {bot} can put something there again.'**
+  String canvasClearMessage(String bot);
+
+  /// Settings -> Widgets: the bots allowed to show things.
+  ///
+  /// In en, this message translates to:
+  /// **'Bots on your widgets'**
+  String get canvasAllowedBots;
+
+  /// Switch for one bot's permission to write on the widgets.
+  ///
+  /// In en, this message translates to:
+  /// **'May show things on your widgets'**
+  String get canvasMayShow;
+
+  /// Confirm title before turning a bot's permission off.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop {bot}?'**
+  String canvasStopTitle(String bot);
+
+  /// Confirm message before turning a bot's permission off.
+  ///
+  /// In en, this message translates to:
+  /// **'What {bot} shows on your widgets is cleared, and it has to ask again.'**
+  String canvasStopMessage(String bot);
+
+  /// Confirm button: turn the bot's permission off.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop'**
+  String get canvasStop;
+
+  /// A device with a Canvas widget, when it has no name.
+  ///
+  /// In en, this message translates to:
+  /// **'iPhone'**
+  String get canvasDeviceIos;
+
+  /// A device with a Canvas widget, when it has no name.
+  ///
+  /// In en, this message translates to:
+  /// **'Android phone'**
+  String get canvasDeviceAndroid;
+
+  /// A device with a Canvas widget, when it has no name.
+  ///
+  /// In en, this message translates to:
+  /// **'Mac'**
+  String get canvasDeviceMac;
+
   /// Button on the one-time widget hint: opens Settings -> Widgets.
   ///
   /// In en, this message translates to:

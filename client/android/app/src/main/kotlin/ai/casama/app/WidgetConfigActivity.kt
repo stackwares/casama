@@ -1,5 +1,6 @@
 package ai.casama.app
 
+import ai.casama.app.canvas.CanvasLogic
 import android.app.Activity
 import android.appwidget.AppWidgetManager
 import android.content.Intent
@@ -17,9 +18,10 @@ import android.widget.TextView
 
 /**
  * The widget picker (D-405 §6.4, "Choosing"): a small native dialog, no Flutter, shown when Ask,
- * Bot or Routines is placed and again from the widget's long-press menu (reconfigurable). It reads
- * the bots and routines from the glance. A bot for Ask and Bot; for Routines, automatic or up to
- * four chosen ones. The widgets are configuration_optional, so placing one never waits on this.
+ * Bot, Routines or Canvas is placed and again from the widget's long-press menu (reconfigurable). It
+ * reads the bots and routines from the glance, and the canvases from [CanvasStore]. A bot for Ask
+ * and Bot; for Routines, automatic or up to four chosen ones; for Canvas, automatic or one canvas.
+ * The widgets are configuration_optional, so placing one never waits on this.
  */
 class WidgetConfigActivity : Activity() {
   private var widgetId = AppWidgetManager.INVALID_APPWIDGET_ID
@@ -35,6 +37,8 @@ class WidgetConfigActivity : Activity() {
     val provider = AppWidgetManager.getInstance(this).getAppWidgetInfo(widgetId)?.provider?.className
     val glance = GlanceStore.load(this).glance
     when {
+      // Canvas reads its own list, so it can be chosen before any bot shows in the glance.
+      provider == CanvasWidget::class.java.name -> showCanvases()
       glance == null || glance.bots.isEmpty() -> showNothing()
       provider == RoutinesWidget::class.java.name -> showRoutines(glance)
       else -> showBots(glance)
@@ -168,12 +172,39 @@ class WidgetConfigActivity : Activity() {
     (list.parent.parent as LinearLayout).addView(doneButton)
   }
 
+  /**
+   * Canvas (docs/BOT-WIDGET-PLAN.md §11.3): Automatic (the canvas a bot set most recently) or one
+   * by name, shown as "name · bot". Signed out, only Automatic.
+   */
+  private fun showCanvases() {
+    val chosen = WidgetConfig.canvas(this, widgetId)
+    val list = if (GlanceStore.signedIn(this)) CanvasStore.load(this) else null
+    val items = list?.items?.filter { CanvasLogic.live(it, System.currentTimeMillis()) } ?: emptyList()
+    val rows = frame(getString(R.string.widget_config_canvas_title), if (items.isEmpty()) getString(R.string.widget_config_canvas_none) else null)
+    // A chosen canvas that is gone draws "no canvas yet"; Automatic is ticked only when chosen.
+    row(rows, getString(R.string.widget_config_automatic), getString(R.string.widget_config_canvas_automatic_hint), null, tick(chosen == null)) {
+      WidgetConfig.setCanvas(this, widgetId, null)
+      done()
+    }
+    for (c in items) {
+      row(rows, listOf(c.name, c.bot).filter { it.isNotEmpty() }.joinToString(" · "), null, c.bot to c.botAvatar, tick(c.id == chosen)) {
+        WidgetConfig.setCanvas(this, widgetId, c.id)
+        done()
+      }
+    }
+  }
+
   /** Redraws the widget with the choice and hands it back to the launcher. */
   private fun done() {
     val manager = AppWidgetManager.getInstance(this)
     val name = manager.getAppWidgetInfo(widgetId)?.provider?.className?.substringAfterLast('.')
     WidgetKit.provider(name)?.let { cls ->
       runCatching { cls.getDeclaredConstructor().newInstance().draw(this, manager, widgetId, GlanceStore.load(this)) }
+    }
+    if (name == CanvasWidget::class.java.simpleName) {
+      // Another canvas may need its pictures, and switches at other times.
+      CanvasRefresh.scheduleTick(this)
+      if (CanvasRefresh.picturesMissing(this)) GlanceRefresh.now(this)
     }
     setResult(RESULT_OK, Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId))
     finish()

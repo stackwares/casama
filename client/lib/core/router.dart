@@ -84,6 +84,7 @@ import '../features/workspaces/onboarding_screen.dart';
 import '../features/auth/account_screen.dart';
 import '../features/auth/passkeys_screen.dart';
 import '../features/app_lock/app_lock_screen.dart';
+import '../features/widgets/canvas_sync.dart' show canvasLocation;
 import '../features/widgets/widgets_screen.dart';
 import '../features/watch/watch_screen.dart';
 import '../features/auth/two_step_screen.dart';
@@ -728,6 +729,11 @@ final routerProvider = Provider<GoRouter>((ref) {
             pageBuilder: _page(
               (_, s) => RunRoutineScreen(reference: s.pathParameters['ref']!),
             ),
+          ),
+          // A bot's canvas (bot widgets): its bot's chat, or Settings → Widgets when it is gone.
+          GoRoute(
+            path: '/canvases/:id',
+            redirect: (_, s) => canvasLocation(ref.read(backendProvider), ref.read(currentOrgIdProvider), s.pathParameters['id']!),
           ),
           GoRoute(
             path: '/approvals/:id',

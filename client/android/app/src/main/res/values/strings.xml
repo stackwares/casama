@@ -21,6 +21,8 @@
     <string name="widget_tasks_description">Track where your task board stands</string>
     <string name="widget_credits">Credits</string>
     <string name="widget_credits_description">Check how much you have used</string>
+    <string name="widget_canvas">Canvas</string>
+    <string name="widget_canvas_description">Show what your bots put here, from a verse to a countdown</string>
 
     <string name="tile_ask">Ask Casama</string>
 
@@ -32,4 +34,7 @@
     <string name="widget_config_done">Done</string>
     <string name="widget_config_signed_out_title">Nothing to choose yet</string>
     <string name="widget_config_signed_out">Open Casama and sign in, then choose here.</string>
+    <string name="widget_config_canvas_title">Choose a canvas</string>
+    <string name="widget_config_canvas_automatic_hint">The one a bot set most recently</string>
+    <string name="widget_config_canvas_none">No canvases yet. Ask a bot to put something here.</string>
 </resources>

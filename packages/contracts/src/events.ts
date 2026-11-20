@@ -1,4 +1,5 @@
 import { z } from "@hono/zod-openapi";
+import { Canvas } from "./canvas.ts";
 import { Uuid } from "./common.ts";
 
 /**
@@ -162,6 +163,18 @@ export const runEventPayloads = {
   "ui.shown": z.object({
     surface_id: z.string(),
     messages: z.array(z.record(z.string(), z.unknown())),
+  }),
+  /**
+   * Bot widgets (docs/BOT-WIDGET-PLAN.md §8.5): a bot set a canvas; the chat shows it drawn as
+   * the widget will draw it. waiting: the person hasn't let this bot write yet (Show on my
+   * widgets / Not now). not_placed: shown, but no Canvas widget is placed (how to add one).
+   * Older apps skip it, as they skip every type they don't know.
+   */
+  "canvas.preview": z.object({
+    canvas_id: id,
+    bot_id: id,
+    state: z.enum(["waiting", "shown", "not_placed"]),
+    canvas: Canvas,
   }),
 } as const;
 

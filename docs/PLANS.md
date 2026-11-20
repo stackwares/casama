@@ -19,7 +19,6 @@ same commit. Shipping details (deploys, app builds) move fast, so check them bef
 | Plan | Written | Waiting on |
 |---|---|---|
 | [ADS-ATTRIBUTION-PLAN](ADS-ATTRIBUTION-PLAN.md) | 2026-11-20 | §15 decisions; then a Meta business portfolio, ad account and app (Oliver) |
-| [BOT-WIDGET-PLAN](BOT-WIDGET-PLAN.md) | 2026-11-20 | §13 decisions, then Oliver's go-ahead to build. Phase 0 needs an iOS and an Android build on real phones and the Apple push key in production |
 | [DECISION-MODEL-PLAN](DECISION-MODEL-PLAN.md) | 2026-11-20 | §12 decisions and Oliver's go-ahead. Phase 0 needs three decision models added to the OpenRouter guardrail |
 | [RETENTION-MESSAGING-PLAN](RETENTION-MESSAGING-PLAN.md) | 2026-11-20 | §14 decisions; then 1.0 release and Apple's access |
 | [SES-MIGRATION-PLAN](SES-MIGRATION-PLAN.md) | 2026-11-20 | §14 decisions; then an AWS account (Oliver) and AWS's sending review in Phase 0 |
@@ -30,6 +29,7 @@ same commit. Shipping details (deploys, app builds) move fast, so check them bef
 
 | Plan | Decisions | What's left |
 |---|---|---|
+| [BOT-WIDGET-PLAN](BOT-WIDGET-PLAN.md) | D-452 | Phases 1–3 written on `feat/bot-widgets`, not built. Phase 0 (iOS and Android builds on real phones, the Apple push key in production), then Live, the free layout and watches |
 | [GAPS-PLAN-2026-11](GAPS-PLAN-2026-11.md) | D-301..D-305 | Items 1–5 live. Item 6 (accessibility pass) and item 7 (more languages) not started; v1 is English only |
 | [LAUNCH-VIDEO-PLAN](LAUNCH-VIDEO-PLAN.md) |  | Main cut v2, 30 s cut and 15 s cut made. Launch date and the narration voice are open; every video needs narration |
 | [LIBRARY-PLAN](LIBRARY-PLAN.md) | D-274, D-276, D-281, D-291, D-294, D-295 | Pins, select several, "Recently opened", "what was made for a ticket" |

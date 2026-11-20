@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The Canvas widget at its smallest (2×1, any template): the icon and the entry's short form on
+     one or two lines; a countdown shows its title and the time left (days, or a ticking timer). -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@android:id/background"
+    style="@style/WidgetCanvasRoot"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <ImageView
+        android:id="@+id/w_fill"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:importantForAccessibility="no"
+        android:scaleType="fitXY"
+        android:src="@drawable/widget_canvas_fill"
+        android:visibility="gone" />
+    <ImageView
+        android:id="@+id/w_art"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:importantForAccessibility="no"
+        android:scaleType="centerCrop"
+        android:visibility="gone" />
+    <LinearLayout
+        android:id="@+id/w_content"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp">
+        <TextView
+            android:id="@+id/w_icon"
+            style="@style/WidgetText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:textSize="16sp"
+            android:visibility="gone" />
+        <TextView
+            android:id="@+id/w_text"
+            style="@style/WidgetText.Strong"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:maxLines="2" />
+        <TextView
+            android:id="@+id/w_days"
+            style="@style/WidgetText.Title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:fontFeatureSettings="tnum"
+            android:visibility="gone" />
+        <Chronometer
+            android:id="@+id/w_chrono"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:fontFamily="sans-serif-medium"
+            android:fontFeatureSettings="tnum"
+            android:includeFontPadding="false"
+            android:maxLines="1"
+            android:textColor="@color/widget_fg"
+            android:textSize="15sp"
+            android:visibility="gone" />
+    </LinearLayout>
+</FrameLayout>

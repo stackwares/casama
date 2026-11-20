@@ -189,7 +189,8 @@ While the lock is on:
 - Allow and Deny on a phone's Lock Screen and in notifications still need Face ID, your passcode
   or the screen lock, as before.
 - [Widgets](./widgets) show only counts, bot names and times, and their buttons open Casama,
-  unless you turn on **Show details in widgets** in Settings → Widgets.
+  unless you turn on **Show details in widgets** in Settings → Widgets. A **Canvas** widget shows
+  only each canvas's name and bot.
 - Your [watch](./apple-watch) shows counts and bot names only, not what bots wrote, until you turn
   on **Show details on the watch** in Settings → Watch. A watch has a key of its own that can answer
   low and medium risk requests and nothing above them; remove it in Settings → Watch.
