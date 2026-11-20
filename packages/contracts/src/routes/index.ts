@@ -7,6 +7,7 @@ import * as apps from "./apps.ts";
 import * as attention from "./attention.ts";
 import * as autonomy from "./autonomy.ts";
 import * as billing from "./billing.ts";
+import * as botPictures from "./bot-pictures.ts";
 import * as botSharing from "./bot-sharing.ts";
 import * as botTemplate from "./bot-template.ts";
 import * as bots from "./bots.ts";
@@ -67,6 +68,7 @@ export const routes = {
   ...moderation,
   ...workspaces,
   ...bots,
+  ...botPictures,
   ...reactions,
   ...computers,
   ...creations,
@@ -134,6 +136,7 @@ export {
   attention,
   autonomy,
   billing,
+  botPictures,
   botSharing,
   bots,
   botTemplate,

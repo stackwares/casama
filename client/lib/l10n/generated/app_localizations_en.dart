@@ -1784,6 +1784,7 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String toolDoing(String tool) {
     String _temp0 = intl.Intl.selectLogic(tool, {
+      'profile_set_picture': 'Changing its picture',
       'memory_search': 'Searching your memories',
       'memory_write': 'Saving that to memory',
       'memory': 'Updating its memory',
@@ -1870,6 +1871,7 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String toolDid(String tool) {
     String _temp0 = intl.Intl.selectLogic(tool, {
+      'profile_set_picture': 'Changed its picture',
       'memory_search': 'Searched your memories',
       'memory_write': 'Saved to memory',
       'memory': 'Updated its memory',
@@ -17495,4 +17497,190 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get vendorInvalidSettings =>
       'Enter a positive limit, a warning between 0 and 1, and valid dates.';
+
+  @override
+  String get cropTitle => 'Move and Scale';
+
+  @override
+  String get cropDone => 'Done';
+
+  @override
+  String get cropPosition => 'Picture position';
+
+  @override
+  String get cropMoveUp => 'Move up';
+
+  @override
+  String get cropMoveDown => 'Move down';
+
+  @override
+  String get cropMoveLeft => 'Move left';
+
+  @override
+  String get cropMoveRight => 'Move right';
+
+  @override
+  String get cropRotate => 'Rotate';
+
+  @override
+  String get cropMirror => 'Mirror';
+
+  @override
+  String get cropReset => 'Reset';
+
+  @override
+  String get cropZoom => 'Zoom';
+
+  @override
+  String get cropZoomIn => 'Zoom in';
+
+  @override
+  String get cropZoomOut => 'Zoom out';
+
+  @override
+  String get cropSoft => 'Zoomed in close: the picture may look soft';
+
+  @override
+  String get cropAnimatedStill => 'Animated pictures stay still';
+
+  @override
+  String get cropBackground => 'Background';
+
+  @override
+  String get cropBackgroundNone => 'None';
+
+  @override
+  String cropBackgroundBot(String name) {
+    return '$name\'s color';
+  }
+
+  @override
+  String get cropBackgroundWhite => 'White';
+
+  @override
+  String get cropBackgroundBlack => 'Black';
+
+  @override
+  String get cropUnreadable =>
+      'This picture can\'t be opened here. Try a JPEG or PNG.';
+
+  @override
+  String cropTooBig(String size) {
+    return 'This file is $size, over the 40 MB limit.';
+  }
+
+  @override
+  String get botPicture => 'Picture';
+
+  @override
+  String botPictureTitle(String name) {
+    return '$name\'s Picture';
+  }
+
+  @override
+  String botPictureChange(String name) {
+    return 'Change $name\'s picture';
+  }
+
+  @override
+  String get botPicturePaste => 'Paste Picture';
+
+  @override
+  String get botPictureDraw => 'Make One with AI';
+
+  @override
+  String get botPictureDrawHelp => 'Casama draws two to choose from';
+
+  @override
+  String get botPictureRecrop => 'Re-crop';
+
+  @override
+  String get botPictureMascot => 'Use a Mascot Instead';
+
+  @override
+  String get botPictureRemove => 'Remove Picture';
+
+  @override
+  String get botPictureRecent => 'Recent';
+
+  @override
+  String get botPictureUpdated => 'Picture updated';
+
+  @override
+  String get botPictureRemoved => 'Picture removed';
+
+  @override
+  String get botPictureFailed => 'Couldn\'t save the picture';
+
+  @override
+  String botPictureDrop(String name) {
+    return 'Drop to use as $name\'s picture';
+  }
+
+  @override
+  String botPictureUseAs(String name) {
+    return 'Use as $name\'s Picture';
+  }
+
+  @override
+  String get botPictureUseAsBot => 'Use as a Bot\'s Picture';
+
+  @override
+  String get botPictureWhichBot => 'Which bot gets this picture?';
+
+  @override
+  String botDrawTitle(String name) {
+    return 'A Picture for $name';
+  }
+
+  @override
+  String get botDrawIntro =>
+      'Pick a look, add a few words if you like, and Casama draws two pictures to choose from.';
+
+  @override
+  String get botDrawDescribe => 'Describe it (optional)';
+
+  @override
+  String get botDrawHint => 'A friendly owl with reading glasses';
+
+  @override
+  String get botDrawMake => 'Make 2';
+
+  @override
+  String get botDrawMore => 'Make 2 More';
+
+  @override
+  String get botDrawPick => 'Tap one to use it';
+
+  @override
+  String get botDrawCost =>
+      'Each picture uses image credits, like any picture Casama makes.';
+
+  @override
+  String get botDrawWorking => 'Drawing…';
+
+  @override
+  String get botDrawStyleCloud => 'Casama Cloud';
+
+  @override
+  String get botDrawStyleSoft3d => 'Soft 3D';
+
+  @override
+  String get botDrawStyleWatercolor => 'Watercolor';
+
+  @override
+  String get botDrawStyleFlat => 'Flat Icon';
+
+  @override
+  String get botDrawStylePixel => 'Pixel Art';
+
+  @override
+  String get botDrawStyleLine => 'Line Art';
+
+  @override
+  String get botDrawStylePhoto => 'Photo';
+
+  @override
+  String get sharePictureStays =>
+      'Its picture stays in this workspace: the copy gets its earlier mascot, or its initials.';
 }

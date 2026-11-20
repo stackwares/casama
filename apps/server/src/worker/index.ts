@@ -5,6 +5,7 @@ import {
   ApnsVoipSender,
   ApnsWatchSender,
   ApnsWidgetSender,
+  type AutonomyToolDeps,
   backgroundComplete,
   builtinTools,
   CloudRelayPushSender,
@@ -502,8 +503,12 @@ export async function startWorker(opts: WorkerOptions) {
     return row?.key ? row : null;
   };
   let client: DBOSClient | undefined;
+  let botPictures: Parameters<NonNullable<AutonomyToolDeps["exposeBotPictures"]>>[0] | undefined;
   registerAutonomyTools(tools, {
     db,
+    exposeBotPictures: (api) => {
+      botPictures = api;
+    },
     // Noto Sans CJK for Chinese, Japanese and Korean PDFs (D-351); the image has it at the default.
     cjkFontDir: process.env.CJK_FONT_DIR || undefined,
     fetch: fetchOut,
@@ -818,6 +823,7 @@ export async function startWorker(opts: WorkerOptions) {
   });
   configureWorkflows({
     db,
+    botPictures,
     vendorUsage: opts.vendorUsage,
     slots: new RunSlots(
       opts.runConcurrency ?? 20,

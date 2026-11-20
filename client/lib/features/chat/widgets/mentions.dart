@@ -351,7 +351,7 @@ class MentionChip extends StatelessWidget {
         ? (isRemovedApp
               ? scheme.onSurfaceVariant
               : brandColor(app!.color, scheme.primary))
-        : (bot == null ? scheme.primary : botPalette(bot!.name).first);
+        : (bot == null ? scheme.primary : botColors(bot!.name, bot!.avatarUrl).first);
     // The text around it decides, not the theme: your own bubble is light even in dark mode, and
     // onSurface there drew a white name on a white bubble.
     final ink = base.color ?? scheme.onSurface;

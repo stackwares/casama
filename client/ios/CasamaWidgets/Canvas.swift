@@ -519,6 +519,8 @@ enum CanvasFetch {
     // Where only a Canvas widget is placed, it registers the refresh push token itself.
     await GlanceFetch.sendPushToken()
     #endif
+    // The bots' own pictures the canvases show (the Mac app writes the list, the widget fetches).
+    await GlanceFetch.botPictures(for: GlanceSnapshot.load())
     return snap
   }
 

@@ -79,6 +79,7 @@ class CreateBotRequest {
 
 
 
+      /// A mascot (`mascot:<name>`); a picture of its own is set afterwards with setBotPicture
   @JsonKey(
     
     name: r'avatar_url',

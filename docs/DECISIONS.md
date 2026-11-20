@@ -6879,3 +6879,69 @@ quality and safety.
 - **Analytics:** `canvas_set` (server), `canvas_allowed`, Canvas counts in `widgets_placed`, `feature_used` value `canvas_set`. No words.
 - **Not verified, because nothing was built:** every look, Lock Screen redaction of `privacySensitive`, Android launchers and the lock screen page, Xcode and Gradle linking, pushes on devices. Swift type-checked for iOS 18 and macOS 14 and tested against the sample canvases (`scripts/test-canvas-swift.sh`); Kotlin compiled against android-36 and tested (`scripts/test-canvas-kotlin.sh`); XML with `xmllint`. The migration isn't applied to the shared local database. Not built: the stale "as of 9:41" line, an Android 15 generated preview, Mac placements reported to the server. Left for Oliver: Phase 0 on real devices, builds, a deploy.
 - **Tests:** `packages/domain/test/canvas.test.ts`, `apps/server/test/canvas.test.ts`, `packages/contracts/test/canvas-fixtures.test.ts`, `supabase/tests/widget_canvases_rls.test.sql`, `client/test/canvas_test.dart`, `client/test/canvas_settings_test.dart`, and the two scripts above.
+
+## D-456 Bots get pictures of their own, framed in one cropper for every avatar (2026-11-20)
+
+- **Decision** (Oliver, 2026-11-20: "support custom images for our bots", with cropping before
+  upload; he took every default in docs/BOT-PICTURES-PLAN.md §14): a bot can use any picture next
+  to the mascots and initials, and every avatar in the app (bots and profile photos) is framed by
+  hand in one cropper.
+- **Storage:** `public.bot_images` in Postgres like profile photos (D-202): 512 and 128 px WebP made
+  by sharp, which drops EXIF, GPS and camera details; the uncropped original (≤ 2,048 px, ≤ 3 MB, no
+  metadata) and the crop for Re-crop, kept for the newest two; five recent per bot plus the one in
+  use. Served at `/v1/bot-images/{id}` without a token, cached `immutable`; `?size=128`,
+  `?format=png` for native widgets. 20 uploads and 20 drawings a day per bot
+  (`bot_image_counts`; counting rows didn't work because pruning removes them).
+- **The value:** `bots.avatar_url = image:<id>:<rrggbb><rrggbb>`, the two colours taken from the
+  picture (most common colourful colour, then the most vivid other hue, nudged to luminance
+  0.14–0.30 so they read on light and dark; grey pictures use the name's gradient). 55 characters,
+  so glance, watch, Live Activity and notification payloads keep their shape and older apps show
+  initials. One test-vector file (`packages/domain/test/fixtures/bot-avatar-vectors.json`) for the
+  TypeScript, Dart, Swift, Kotlin and extension parsers.
+- **Rules in the database:** the app writes `avatar_url` through PostgREST, so a trigger refuses
+  anything but null, a shipped mascot, or one of this bot's own pictures with its real colours.
+  Existing web links were cleared: any editor could point teammates' browsers (the extension
+  loaded https values) at a tracking pixel. Leaving a mascot for a picture stores it in
+  `bots.prior_mascot`: Remove Picture goes back to it, and templates, packs and the A2A card carry
+  it instead of the picture (pictures never leave the workspace; the share sheet says so).
+- **API:** `PUT/DELETE /v1/bots/{id}/image`, `GET /v1/bots/{id}/images` (Recent, or drawn
+  candidates), `POST …/images/{image_id}/use` (Recent and Undo), `GET …/images/{image_id}/original`
+  (Re-crop), `POST …/images/generate`.
+- **Drawing:** "Make One with AI" asks the worker (`generateBotPictures` workflow, no retries, as
+  each try is paid) to draw 1–2 candidates through the same provider, D-419 safety check, credit
+  check and usage rows as `media.image.generate` (`meta.purpose = "bot_picture"`). Seven looks;
+  "Casama Cloud" draws new cloud mascots. Candidates don't change the bot; unused ones go after a
+  day. The bot's own `profile.set_picture` tool (from a chat picture, a drawing, or `undo`) only
+  works for someone who manages it; its Undo is "undo" in chat rather than a chip in the reply.
+- **The cropper** (`client/lib/ui/avatar_cropper.dart`): a still frame in the final shape (the bot
+  squircle at 0.32 × side, or a circle) over a picture that moves and scales under it, always
+  covering it and rubber-banding past an edge; pinch, drag, scroll, double-tap, slider, rotate,
+  mirror, Reset; previews at 56, 40 and 24 px with sidebar rows on light and dark; portraits start
+  high; see-through pictures may sit smaller with None, the bot's colour, white or black behind;
+  keys (arrows, +/−, R, M, 0, Return, Esc), one screen-reader element with zoom and move actions,
+  reduced motion. Phones get a full-screen black page, larger windows a dialog. Output is a 768 px
+  PNG (512 for profile photos). It's ours rather than `pro_image_editor`'s crop screen (still used
+  for chat photos), which has no squircle, works by corner handles and can't host the previews.
+- **Ways in:** the bot profile's big avatar (camera badge, drop target, Cmd/Ctrl+V when focused),
+  the Picture tile first in the icon picker (also on New Bot, saved right after the bot is made),
+  "Use as … Picture" on any picture in the file preview (chat pictures and the Library). The new
+  picture shows from memory at once, with a ring while it uploads, then 10 s of Undo; a failed
+  upload offers Try again with the same crop. Desktop gets the same choices as a dialog rather
+  than an anchored menu.
+- **Everywhere it shows:** `BotAvatar` (every Flutter screen, the companion), the call screen (the
+  picture breathes and a ring in its colours swells with the voice; same mute, failure and
+  reduced-motion rules as the mascot), the extension, and natively: iOS/macOS widgets, Live
+  Activities and the watch read a 128 px PNG the widget refresh, the app and the watch fetch into
+  their shared containers (`client/ios/Shared/BotPictureStore.swift`); Android widgets and the
+  live-run and call notifications the same from the app's files (`BotPictures.kt`).
+- **Not done:** the plan's Phase 0 checks on real devices (HEIC, a 48 MP photo on a low-end
+  Android, each platform's decoder) need app builds; the server's sharp can't read HEIC, so a HEIC
+  picked on a desktop keeps no original for Re-crop (the cropped picture is fine: it's encoded on
+  the device). Bot pictures on push notifications, face-aware first framing and workspace icons
+  stay for later (§13).
+- **Tests:** `apps/server/test/bot-images.test.ts`, `supabase/tests/bot_images.test.sql`,
+  `packages/agent/test/bot-pictures.test.ts`, `packages/domain/test/bot-avatar.test.ts`,
+  `apps/extension/test/look.test.ts`, `client/test/avatar_cropper_test.dart`,
+  `client/test/bot_picture_test.dart`, the watch Swift checks (`scripts/test-watch-swift.sh`) and
+  `scripts/test-bot-avatar-kotlin.sh`.
+

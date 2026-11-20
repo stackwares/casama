@@ -104,6 +104,9 @@ import 'package:casama_api/src/model/bot_list.dart';
 import 'package:casama_api/src/model/bot_model_privacy.dart';
 import 'package:casama_api/src/model/bot_page.dart';
 import 'package:casama_api/src/model/bot_page_detail.dart';
+import 'package:casama_api/src/model/bot_picture.dart';
+import 'package:casama_api/src/model/bot_picture_crop.dart';
+import 'package:casama_api/src/model/bot_picture_list.dart';
 import 'package:casama_api/src/model/bot_secret_request.dart';
 import 'package:casama_api/src/model/bot_secret_request_list.dart';
 import 'package:casama_api/src/model/bot_share_link.dart';
@@ -375,6 +378,7 @@ import 'package:casama_api/src/model/gallery_submission.dart';
 import 'package:casama_api/src/model/gallery_submission_list.dart';
 import 'package:casama_api/src/model/gallery_update_request.dart';
 import 'package:casama_api/src/model/gallery_update_result.dart';
+import 'package:casama_api/src/model/generate_bot_pictures_request.dart';
 import 'package:casama_api/src/model/git_hub_skill_preview.dart';
 import 'package:casama_api/src/model/git_hub_skill_preview_request.dart';
 import 'package:casama_api/src/model/git_sync_status.dart';
@@ -709,6 +713,7 @@ import 'package:casama_api/src/model/set_analytics_opt_out_request.dart';
 import 'package:casama_api/src/model/set_bot_a2a_request.dart';
 import 'package:casama_api/src/model/set_bot_access_request.dart';
 import 'package:casama_api/src/model/set_bot_access_request_entries_inner.dart';
+import 'package:casama_api/src/model/set_bot_picture_request.dart';
 import 'package:casama_api/src/model/set_canvas_grant.dart';
 import 'package:casama_api/src/model/set_connection_settings_request.dart';
 import 'package:casama_api/src/model/set_device_grant_request.dart';
@@ -1188,6 +1193,15 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return BotPage.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'BotPageDetail':
           return BotPageDetail.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'BotPicture':
+          return BotPicture.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'BotPictureCrop':
+          return BotPictureCrop.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'BotPictureList':
+          return BotPictureList.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'BotPictureStyle':
+          
+          
         case 'BotSecretRequest':
           return BotSecretRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'BotSecretRequestList':
@@ -1760,6 +1774,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
         case 'GalleryWorkspaceKind':
           
           
+        case 'GenerateBotPicturesRequest':
+          return GenerateBotPicturesRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'GitHubSkillPreview':
           return GitHubSkillPreview.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'GitHubSkillPreviewRequest':
@@ -2479,6 +2495,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return SetBotAccessRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SetBotAccessRequestEntriesInner':
           return SetBotAccessRequestEntriesInner.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'SetBotPictureRequest':
+          return SetBotPictureRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SetCanvasGrant':
           return SetCanvasGrant.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SetConnectionSettingsRequest':

@@ -493,3 +493,20 @@ Known gaps carried forward: live provider calls are wired but mostly exercised w
 - Without `MAIL_DOMAIN` and a sender key the hosted pieces stay off and the bring-your-own email
   chat app is unchanged (it gained the sender check from Resend's received-email API).
 
+## Bot pictures (D-456)
+
+- `public.bot_images` holds each picture as 512 and 128 px WebP (metadata stripped by sharp in
+  `packages/agent/src/bot-pictures.ts`), the uncropped original for Re-crop and the crop. API only
+  (no user policies); `/v1/bot-images/{id}` serves it without a token, cached for good
+  (`?format=png` for native widgets). Triggers keep five recent per bot plus the one in use.
+- `bots.avatar_url` is `null`, `mascot:<name>` or `image:<id>:<rrggbb><rrggbb>`; a trigger
+  (`check_bot_avatar`) refuses anything else, including another bot's picture or made-up colors,
+  and remembers the earlier mascot in `bots.prior_mascot` (templates and packs carry that).
+  Parsers on every surface share `packages/domain/test/fixtures/bot-avatar-vectors.json`.
+- Drawing ("Make one with AI") runs in the worker (`generateBotPictures` workflow) through the same
+  media provider, safety check and credits as `media.image.generate`; the bot's own
+  `profile.set_picture` tool uses the same code.
+- App: `client/lib/ui/avatar_cropper.dart` (the cropper, for bots and people),
+  `client/lib/features/bots/bot_picture.dart` (sheet, upload with Undo and Try again, drawing,
+  drop and paste), `BotAvatar` draws pictures. Native widgets, Live Activities and the watch fetch
+  the 128 px PNG into their shared container themselves (`BotPictureStore.swift`, `BotPictures.kt`).

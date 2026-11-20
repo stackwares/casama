@@ -93,6 +93,7 @@ const _known = {
   'pages',
   'media',
   'media_video',
+  'profile_set_picture',
   'bots_create',
   'bots_update',
   'bots_list',
@@ -183,6 +184,7 @@ String? toolWordsId(String tool) {
   'files_from_chat' => (LucideIcons.download, ToolTone.files),
   'pages_publish' || 'pages' => (LucideIcons.panelsTopLeft, ToolTone.files),
   'media' => (LucideIcons.sparkles, ToolTone.files),
+  'profile_set_picture' => (LucideIcons.imagePlus, ToolTone.files),
   'media_video' => (LucideIcons.film, ToolTone.files),
   'pages_list' || 'pages_share' => (LucideIcons.panelsTopLeft, ToolTone.files),
   'bots_create' ||

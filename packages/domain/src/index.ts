@@ -8,6 +8,7 @@ export * from "./app-config.ts";
 export * from "./app-mentions.ts";
 export * from "./approvals.ts";
 export * from "./apps.ts";
+export * from "./bot-avatar.ts";
 export * from "./browser-guard.ts";
 export * from "./browser-mcp.ts";
 export * from "./budget.ts";

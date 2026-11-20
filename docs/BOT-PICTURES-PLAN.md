@@ -1,10 +1,11 @@
 # Bot pictures: your own picture for a bot, cropped the way you want it
 
-Status: **not started**. Written 2026-11-20, waiting on Oliver's answers to §14 and his go-ahead.
-No code yet.
+Status: **built** (D-456), 2026-11-20. Oliver took every §14 default and asked for all phases at
+once. What shipped and where it differs is in D-456 and "Status of the build" at the end; the
+plan below stays as written. Waiting on: Phase 0's real-device checks and the app builds.
 
 Builds on D-202 (profile photos in Postgres, served by the API), D-201/D-085 (the design system and
-`client/lib/ui`), D-405/D-324/D-410/D-452 (widgets, Live Activities, the watch, bot widgets), D-185
+`client/lib/ui`), D-405/D-324/D-410/D-455 (widgets, Live Activities, the watch, bot widgets), D-185
 and D-419 (image generation and its safety check). It doesn't repeat them.
 
 Line numbers and file names are from 2026-11-20. Re-find each hook before editing.
@@ -519,3 +520,20 @@ Recommended answers first. Say "defaults" to take them all.
 | 11 | Move profile photos to the new cropper in Phase 1? | **Yes**: same work, fixes the forced centre crop |
 | 12 | Face-aware first framing now? | **Later**; the portrait heuristic covers most cases |
 | 13 | Should "Make one with AI" also offer the cloud mascot style in any colour, i.e. unlimited new mascots? | **Yes**, as the first style: it's on-brand and the most likely to look good small |
+
+---
+
+## Status of the build (2026-11-20)
+
+All of Phases 1–3 are written and tested (D-456). Differences from the plan:
+
+- **Phase 0** wasn't run: the decode checks, the 48 MP test on a low-end Android and the prototype
+  on a phone need app builds. The cropper is tested in widget tests on generated pictures instead.
+- **Rate limits** live in `bot_image_counts`, not a count of `bot_images` rows (pruning deletes them).
+- **The bot's Undo** is `profile.set_picture` with `undo: true` ("undo" in chat), not a chip.
+- **Desktop** shows the picture choices in the adaptive dialog, not a menu anchored to the avatar.
+- **Style chips** show an icon each, not a drawn sample.
+- **HEIC originals** can't be read by the server's sharp, so they keep no Re-crop original.
+- Native code (widgets, Live Activities, watch, Android) passes its Swift and Kotlin unit checks;
+  it hasn't been built in Xcode or Gradle yet.
+

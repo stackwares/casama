@@ -541,7 +541,7 @@ class FakeBackend implements Backend {
     id: id,
     orgId: orgId,
     name: name,
-    avatarUrl: null,
+    avatarUrl: id == botId ? botAvatar : null,
     personaMd: '',
     modelPolicy: ModelPolicy(
       primary: ModelChoice(credentialId: 'cred', model: 'fixture'),
@@ -2369,6 +2369,104 @@ class FakeBackend implements Backend {
     ),
   ];
 
+  // Bot pictures (docs/BOT-PICTURES-PLAN.md)
+  /// The main bot's avatar_url (`mascot:…`, `image:…` or null).
+  String? botAvatar;
+
+  /// Pictures uploaded, newest last: the cropped bytes, the original and the source.
+  final botPictureUploads = <({Uint8List square, Uint8List? original, BotPictureCrop? crop, String source})>[];
+  final _pictures = <BotPicture>[];
+  String? _priorMascot;
+
+  /// Makes the next picture call fail, for the retry path.
+  Object? botPictureError;
+  var _pictureSeq = 0;
+
+  BotPicture _picture({String source = 'upload', bool original = false, BotPictureCrop? crop}) {
+    _pictureSeq++;
+    final id = '00000000-0000-4000-8000-${_pictureSeq.toString().padLeft(12, '0')}';
+    return BotPicture(
+      id: id,
+      avatarUrl: 'image:$id:7a90ff7de9f4',
+      source_: BotPictureSource_Enum.values.firstWhere((s) => s.value == source),
+      inUse: false,
+      hasOriginal: original,
+      crop: crop,
+      createdAt: DateTime(2026, 1, 1, 0, 0, _pictureSeq),
+    );
+  }
+
+  void _use(BotPicture p) {
+    if (botAvatar?.startsWith('mascot:') ?? false) _priorMascot = botAvatar;
+    botAvatar = p.avatarUrl;
+    _pictures
+      ..removeWhere((x) => x.id == p.id)
+      ..insert(0, p);
+  }
+
+  @override
+  Future<Bot> setBotPicture(
+    String botId,
+    Uint8List square, {
+    Uint8List? original,
+    BotPictureCrop? crop,
+    String source = 'upload',
+  }) async {
+    final err = botPictureError;
+    if (err != null) throw err;
+    botPictureUploads.add((square: square, original: original, crop: crop, source: source));
+    _use(_picture(source: source, original: original != null, crop: crop));
+    return bot();
+  }
+
+  @override
+  Future<Bot> removeBotPicture(String botId) async {
+    botAvatar = _priorMascot;
+    return bot();
+  }
+
+  @override
+  Future<List<BotPicture>> botPictures(String botId, {bool candidates = false}) async => candidates
+      ? const []
+      : [for (final p in _pictures) p.copyWith(inUse: p.avatarUrl == botAvatar)];
+
+  @override
+  Future<Bot> useBotPicture(String botId, String imageId) async {
+    final p = [..._pictures, ..._drawn].firstWhere((x) => x.id == imageId);
+    _drawn.remove(p);
+    _use(p);
+    return bot();
+  }
+
+  /// The original Re-crop gets back.
+  Uint8List? botOriginal;
+  @override
+  Future<Uint8List> botPictureOriginal(String botId, String imageId) async =>
+      botOriginal ?? (throw StateError('no original'));
+
+  final _drawn = <BotPicture>[];
+
+  /// Styles and descriptions asked of [drawBotPictures].
+  final drawRequests = <({BotPictureStyle style, String? description})>[];
+  @override
+  Future<List<BotPicture>> drawBotPictures(
+    String botId, {
+    required BotPictureStyle style,
+    String? description,
+    int count = 2,
+  }) async {
+    final err = botPictureError;
+    if (err != null) throw err;
+    drawRequests.add((style: style, description: description));
+    final made = [for (var i = 0; i < count; i++) _picture(source: 'generated', original: true)];
+    _drawn.addAll(made);
+    return made;
+  }
+
+  @override
+  String botImageUrl(String imageId, {bool small = false}) =>
+      'http://localhost:8787/v1/bot-images/$imageId${small ? '?size=128' : ''}';
+
   /// The last bot update saved: the bot's id and the fields sent.
   ({String botId, String? name, String? persona, String? autonomy})? botUpdate;
   @override
@@ -2379,12 +2477,10 @@ class FakeBackend implements Backend {
     String? autonomy,
     Map<String, Object?>? modelPolicy,
     String? avatarUrl,
-  }) async => botUpdate = (
-    botId: botId,
-    name: name,
-    persona: persona,
-    autonomy: autonomy,
-  );
+  }) async {
+    if (avatarUrl != null) botAvatar = avatarUrl.isEmpty ? null : avatarUrl;
+    botUpdate = (botId: botId, name: name, persona: persona, autonomy: autonomy);
+  }
   @override
   bool wallpapersEnabled = false;
   @override

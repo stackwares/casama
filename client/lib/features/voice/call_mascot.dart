@@ -1,6 +1,9 @@
+import 'dart:math' as math;
+
 import 'package:material_ui/material_ui.dart';
 import 'package:lottie/lottie.dart';
 
+import '../../ui/bot_avatar.dart';
 import '../../ui/mascot.dart';
 import 'call_motion.dart';
 
@@ -14,6 +17,7 @@ class CallMascot extends StatefulWidget {
   const CallMascot({
     super.key,
     required this.mascot,
+    this.picture,
     required this.motion,
     required this.size,
     this.animate = true,
@@ -21,6 +25,9 @@ class CallMascot extends StatefulWidget {
 
   /// The bot's mascot, or null for the default cloud.
   final Mascot? mascot;
+
+  /// The bot's own picture (its name and `avatar_url`), shown in place of a mascot.
+  final ({String name, String avatar})? picture;
   final OrbMotion motion;
   final double size;
   final bool animate;
@@ -107,10 +114,50 @@ class _CallMascotState extends State<CallMascot>
     0, 0, 0, 1, 0,
   ]);
 
+  /// A bot's own picture on a call (docs/BOT-PICTURES-PLAN.md §5.4): its rounded square,
+  /// breathing while it listens, with a ring in its colours that swells with its voice.
+  Widget _picture(({String name, String avatar}) p, double size) {
+    final colors = botColors(p.name, p.avatar);
+    final side = size * 0.62;
+    return AnimatedBuilder(
+      animation: widget.motion,
+      builder: (context, _) {
+        final m = widget.motion;
+        final breathe = widget.animate ? 1 + 0.018 * math.sin(m.time * 2.2) : 1.0;
+        final voice = widget.animate && m.phase == OrbPhase.speaking ? m.output.clamp(0.0, 1.0) : 0.0;
+        final ring = side * (1.1 + 0.16 * voice);
+        return Stack(
+          alignment: Alignment.center,
+          children: [
+            Container(
+              width: ring,
+              height: ring,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(BotAvatar.radiusFor(ring)),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [for (final c in colors) c.withValues(alpha: 0.18 + 0.32 * voice)],
+                ),
+              ),
+            ),
+            Transform.scale(
+              scale: breathe,
+              child: BotAvatar(name: p.name, avatar: p.avatar, size: side),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final size = widget.size;
-    Widget art = widget.animate
+    final picture = widget.picture;
+    Widget art = picture != null
+        ? _picture(picture, size)
+        : widget.animate
         ? Lottie.asset(
             _asset,
             key: ValueKey(_asset),

@@ -3091,13 +3091,13 @@ abstract class AppLocalizations {
   /// What the bot is doing in a tool step, in everyday words (chats, calls, the computer view).
   ///
   /// In en, this message translates to:
-  /// **'{tool, select, memory_search{Searching your memories} memory_write{Saving that to memory} memory{Updating its memory} knowledge_search{Looking through your knowledge} web_search{Searching the web} web{Reading a web page} browser_open{Opening a website} browser_click{Clicking on the page} browser_type{Typing on the page} browser_press{Pressing a key} browser_scroll{Scrolling the page} browser_look{Looking at the page} desktop_click{Clicking on the screen} desktop_type{Typing} desktop_press{Pressing keys} desktop_launch{Opening an app} desktop_look{Looking at the screen} shell{Working on its computer} files_read{Reading a file} files_write{Writing a file} files_list{Looking through files} files_search{Searching files} files_from_chat{Getting a file from the chat} http{Contacting a service} data_search{Looking for data} data_call{Getting data} skills_load{Getting a skill ready} skills_create{Learning a new skill} skills_update{Improving a skill} checkpoint{Saving a restore point} computer_restart{Restarting its computer} takeover{Asking you to take over} delegate{Asking a helper} routines_list{Checking your routines} routines_create{Setting up a routine} routines_update{Updating a routine} routines_delete{Removing a routine} watchers_create{Setting up a watcher} watchers_list{Checking your watchers} watchers_delete{Removing a watcher} tasks_list{Checking your tasks} tasks_create{Adding a task} tasks{Updating your tasks} notify_user{Sending you a note} usage_report{Checking usage} device_read{Reading your device data} device_access{Asking for device access} pages_publish{Publishing a page} pages{Updating a page} media{Making an image} media_video{Making a video} bots_create{Making a new bot} bots_update{Updating a bot} bots_list{Checking your bots} bots_archive{Archiving a bot} channel_send{Sending a message} links_ask{Asking a contact\'s assistant} logins_list{Checking saved logins} replay_run{Repeating saved steps} replay_save{Saving these steps} setup_apply{Suggesting a setup} sidebar_organize{Organizing your sidebar} suggestions_add{Adding a suggestion} teach_save_draft{Saving a draft skill} welcome_name{Picking a name} secrets_request{Asking you for a secret} pages_list{Checking your pages} pages_share{Changing who can see a page} projects_create{Starting a project} projects_status{Checking a project} projects_update{Updating a project} projects{Planning a project} payments{Asking to make a payment} voice_call{Calling a business} voice_call_user{Calling you} tools_load{Getting ready} ui_show{Showing you something} start_task{Starting this in the chat} other{Working on it}}'**
+  /// **'{tool, select, profile_set_picture{Changing its picture} memory_search{Searching your memories} memory_write{Saving that to memory} memory{Updating its memory} knowledge_search{Looking through your knowledge} web_search{Searching the web} web{Reading a web page} browser_open{Opening a website} browser_click{Clicking on the page} browser_type{Typing on the page} browser_press{Pressing a key} browser_scroll{Scrolling the page} browser_look{Looking at the page} desktop_click{Clicking on the screen} desktop_type{Typing} desktop_press{Pressing keys} desktop_launch{Opening an app} desktop_look{Looking at the screen} shell{Working on its computer} files_read{Reading a file} files_write{Writing a file} files_list{Looking through files} files_search{Searching files} files_from_chat{Getting a file from the chat} http{Contacting a service} data_search{Looking for data} data_call{Getting data} skills_load{Getting a skill ready} skills_create{Learning a new skill} skills_update{Improving a skill} checkpoint{Saving a restore point} computer_restart{Restarting its computer} takeover{Asking you to take over} delegate{Asking a helper} routines_list{Checking your routines} routines_create{Setting up a routine} routines_update{Updating a routine} routines_delete{Removing a routine} watchers_create{Setting up a watcher} watchers_list{Checking your watchers} watchers_delete{Removing a watcher} tasks_list{Checking your tasks} tasks_create{Adding a task} tasks{Updating your tasks} notify_user{Sending you a note} usage_report{Checking usage} device_read{Reading your device data} device_access{Asking for device access} pages_publish{Publishing a page} pages{Updating a page} media{Making an image} media_video{Making a video} bots_create{Making a new bot} bots_update{Updating a bot} bots_list{Checking your bots} bots_archive{Archiving a bot} channel_send{Sending a message} links_ask{Asking a contact\'s assistant} logins_list{Checking saved logins} replay_run{Repeating saved steps} replay_save{Saving these steps} setup_apply{Suggesting a setup} sidebar_organize{Organizing your sidebar} suggestions_add{Adding a suggestion} teach_save_draft{Saving a draft skill} welcome_name{Picking a name} secrets_request{Asking you for a secret} pages_list{Checking your pages} pages_share{Changing who can see a page} projects_create{Starting a project} projects_status{Checking a project} projects_update{Updating a project} projects{Planning a project} payments{Asking to make a payment} voice_call{Calling a business} voice_call_user{Calling you} tools_load{Getting ready} ui_show{Showing you something} start_task{Starting this in the chat} other{Working on it}}'**
   String toolDoing(String tool);
 
   /// The same step once it's done.
   ///
   /// In en, this message translates to:
-  /// **'{tool, select, memory_search{Searched your memories} memory_write{Saved to memory} memory{Updated its memory} knowledge_search{Looked through your knowledge} web_search{Searched the web} web{Read a web page} browser_open{Opened a website} browser_click{Clicked on the page} browser_type{Typed on the page} browser_press{Pressed a key} browser_scroll{Scrolled the page} browser_look{Looked at the page} desktop_click{Clicked on the screen} desktop_type{Typed} desktop_press{Pressed keys} desktop_launch{Opened an app} desktop_look{Looked at the screen} shell{Worked on its computer} files_read{Read a file} files_write{Wrote a file} files_list{Looked through files} files_search{Searched files} files_from_chat{Got a file from the chat} http{Contacted a service} data_search{Looked for data} data_call{Got data} skills_load{Used a skill} skills_create{Learned a new skill} skills_update{Improved a skill} checkpoint{Saved a restore point} computer_restart{Restarted its computer} takeover{Asked you to take over} delegate{Asked a helper} routines_list{Checked your routines} routines_create{Set up a routine} routines_update{Updated a routine} routines_delete{Removed a routine} watchers_create{Set up a watcher} watchers_list{Checked your watchers} watchers_delete{Removed a watcher} tasks_list{Checked your tasks} tasks_create{Added a task} tasks{Updated your tasks} notify_user{Sent you a note} usage_report{Checked usage} device_read{Read your device data} device_access{Asked for device access} pages_publish{Published a page} pages{Updated a page} media{Made an image} media_video{Made a video} bots_create{Made a new bot} bots_update{Updated a bot} bots_list{Checked your bots} bots_archive{Archived a bot} channel_send{Sent a message} links_ask{Asked a contact\'s assistant} logins_list{Checked saved logins} replay_run{Repeated saved steps} replay_save{Saved these steps} setup_apply{Suggested a setup} sidebar_organize{Organized your sidebar} suggestions_add{Added a suggestion} teach_save_draft{Saved a draft skill} welcome_name{Picked a name} secrets_request{Asked you for a secret} pages_list{Checked your pages} pages_share{Changed who can see a page} projects_create{Started a project} projects_status{Checked a project} projects_update{Updated a project} projects{Planned a project} payments{Asked to make a payment} voice_call{Called a business} voice_call_user{Called you} tools_load{Got ready} ui_show{Showed you something} start_task{Started in the chat} other{Done}}'**
+  /// **'{tool, select, profile_set_picture{Changed its picture} memory_search{Searched your memories} memory_write{Saved to memory} memory{Updated its memory} knowledge_search{Looked through your knowledge} web_search{Searched the web} web{Read a web page} browser_open{Opened a website} browser_click{Clicked on the page} browser_type{Typed on the page} browser_press{Pressed a key} browser_scroll{Scrolled the page} browser_look{Looked at the page} desktop_click{Clicked on the screen} desktop_type{Typed} desktop_press{Pressed keys} desktop_launch{Opened an app} desktop_look{Looked at the screen} shell{Worked on its computer} files_read{Read a file} files_write{Wrote a file} files_list{Looked through files} files_search{Searched files} files_from_chat{Got a file from the chat} http{Contacted a service} data_search{Looked for data} data_call{Got data} skills_load{Used a skill} skills_create{Learned a new skill} skills_update{Improved a skill} checkpoint{Saved a restore point} computer_restart{Restarted its computer} takeover{Asked you to take over} delegate{Asked a helper} routines_list{Checked your routines} routines_create{Set up a routine} routines_update{Updated a routine} routines_delete{Removed a routine} watchers_create{Set up a watcher} watchers_list{Checked your watchers} watchers_delete{Removed a watcher} tasks_list{Checked your tasks} tasks_create{Added a task} tasks{Updated your tasks} notify_user{Sent you a note} usage_report{Checked usage} device_read{Read your device data} device_access{Asked for device access} pages_publish{Published a page} pages{Updated a page} media{Made an image} media_video{Made a video} bots_create{Made a new bot} bots_update{Updated a bot} bots_list{Checked your bots} bots_archive{Archived a bot} channel_send{Sent a message} links_ask{Asked a contact\'s assistant} logins_list{Checked saved logins} replay_run{Repeated saved steps} replay_save{Saved these steps} setup_apply{Suggested a setup} sidebar_organize{Organized your sidebar} suggestions_add{Added a suggestion} teach_save_draft{Saved a draft skill} welcome_name{Picked a name} secrets_request{Asked you for a secret} pages_list{Checked your pages} pages_share{Changed who can see a page} projects_create{Started a project} projects_status{Checked a project} projects_update{Updated a project} projects{Planned a project} payments{Asked to make a payment} voice_call{Called a business} voice_call_user{Called you} tools_load{Got ready} ui_show{Showed you something} start_task{Started in the chat} other{Done}}'**
   String toolDid(String tool);
 
   /// No description provided for @toolUsingApp.
@@ -28153,6 +28153,342 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Enter a positive limit, a warning between 0 and 1, and valid dates.'**
   String get vendorInvalidSettings;
+
+  /// No description provided for @cropTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Move and Scale'**
+  String get cropTitle;
+
+  /// No description provided for @cropDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get cropDone;
+
+  /// No description provided for @cropPosition.
+  ///
+  /// In en, this message translates to:
+  /// **'Picture position'**
+  String get cropPosition;
+
+  /// No description provided for @cropMoveUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Move up'**
+  String get cropMoveUp;
+
+  /// No description provided for @cropMoveDown.
+  ///
+  /// In en, this message translates to:
+  /// **'Move down'**
+  String get cropMoveDown;
+
+  /// No description provided for @cropMoveLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'Move left'**
+  String get cropMoveLeft;
+
+  /// No description provided for @cropMoveRight.
+  ///
+  /// In en, this message translates to:
+  /// **'Move right'**
+  String get cropMoveRight;
+
+  /// No description provided for @cropRotate.
+  ///
+  /// In en, this message translates to:
+  /// **'Rotate'**
+  String get cropRotate;
+
+  /// No description provided for @cropMirror.
+  ///
+  /// In en, this message translates to:
+  /// **'Mirror'**
+  String get cropMirror;
+
+  /// No description provided for @cropReset.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset'**
+  String get cropReset;
+
+  /// No description provided for @cropZoom.
+  ///
+  /// In en, this message translates to:
+  /// **'Zoom'**
+  String get cropZoom;
+
+  /// No description provided for @cropZoomIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Zoom in'**
+  String get cropZoomIn;
+
+  /// No description provided for @cropZoomOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Zoom out'**
+  String get cropZoomOut;
+
+  /// No description provided for @cropSoft.
+  ///
+  /// In en, this message translates to:
+  /// **'Zoomed in close: the picture may look soft'**
+  String get cropSoft;
+
+  /// No description provided for @cropAnimatedStill.
+  ///
+  /// In en, this message translates to:
+  /// **'Animated pictures stay still'**
+  String get cropAnimatedStill;
+
+  /// No description provided for @cropBackground.
+  ///
+  /// In en, this message translates to:
+  /// **'Background'**
+  String get cropBackground;
+
+  /// No description provided for @cropBackgroundNone.
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get cropBackgroundNone;
+
+  /// No description provided for @cropBackgroundBot.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}\'s color'**
+  String cropBackgroundBot(String name);
+
+  /// No description provided for @cropBackgroundWhite.
+  ///
+  /// In en, this message translates to:
+  /// **'White'**
+  String get cropBackgroundWhite;
+
+  /// No description provided for @cropBackgroundBlack.
+  ///
+  /// In en, this message translates to:
+  /// **'Black'**
+  String get cropBackgroundBlack;
+
+  /// No description provided for @cropUnreadable.
+  ///
+  /// In en, this message translates to:
+  /// **'This picture can\'t be opened here. Try a JPEG or PNG.'**
+  String get cropUnreadable;
+
+  /// No description provided for @cropTooBig.
+  ///
+  /// In en, this message translates to:
+  /// **'This file is {size}, over the 40 MB limit.'**
+  String cropTooBig(String size);
+
+  /// No description provided for @botPicture.
+  ///
+  /// In en, this message translates to:
+  /// **'Picture'**
+  String get botPicture;
+
+  /// No description provided for @botPictureTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}\'s Picture'**
+  String botPictureTitle(String name);
+
+  /// No description provided for @botPictureChange.
+  ///
+  /// In en, this message translates to:
+  /// **'Change {name}\'s picture'**
+  String botPictureChange(String name);
+
+  /// No description provided for @botPicturePaste.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste Picture'**
+  String get botPicturePaste;
+
+  /// No description provided for @botPictureDraw.
+  ///
+  /// In en, this message translates to:
+  /// **'Make One with AI'**
+  String get botPictureDraw;
+
+  /// No description provided for @botPictureDrawHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Casama draws two to choose from'**
+  String get botPictureDrawHelp;
+
+  /// No description provided for @botPictureRecrop.
+  ///
+  /// In en, this message translates to:
+  /// **'Re-crop'**
+  String get botPictureRecrop;
+
+  /// No description provided for @botPictureMascot.
+  ///
+  /// In en, this message translates to:
+  /// **'Use a Mascot Instead'**
+  String get botPictureMascot;
+
+  /// No description provided for @botPictureRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove Picture'**
+  String get botPictureRemove;
+
+  /// No description provided for @botPictureRecent.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent'**
+  String get botPictureRecent;
+
+  /// No description provided for @botPictureUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Picture updated'**
+  String get botPictureUpdated;
+
+  /// No description provided for @botPictureRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Picture removed'**
+  String get botPictureRemoved;
+
+  /// No description provided for @botPictureFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save the picture'**
+  String get botPictureFailed;
+
+  /// No description provided for @botPictureDrop.
+  ///
+  /// In en, this message translates to:
+  /// **'Drop to use as {name}\'s picture'**
+  String botPictureDrop(String name);
+
+  /// No description provided for @botPictureUseAs.
+  ///
+  /// In en, this message translates to:
+  /// **'Use as {name}\'s Picture'**
+  String botPictureUseAs(String name);
+
+  /// No description provided for @botPictureUseAsBot.
+  ///
+  /// In en, this message translates to:
+  /// **'Use as a Bot\'s Picture'**
+  String get botPictureUseAsBot;
+
+  /// No description provided for @botPictureWhichBot.
+  ///
+  /// In en, this message translates to:
+  /// **'Which bot gets this picture?'**
+  String get botPictureWhichBot;
+
+  /// No description provided for @botDrawTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'A Picture for {name}'**
+  String botDrawTitle(String name);
+
+  /// No description provided for @botDrawIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a look, add a few words if you like, and Casama draws two pictures to choose from.'**
+  String get botDrawIntro;
+
+  /// No description provided for @botDrawDescribe.
+  ///
+  /// In en, this message translates to:
+  /// **'Describe it (optional)'**
+  String get botDrawDescribe;
+
+  /// No description provided for @botDrawHint.
+  ///
+  /// In en, this message translates to:
+  /// **'A friendly owl with reading glasses'**
+  String get botDrawHint;
+
+  /// No description provided for @botDrawMake.
+  ///
+  /// In en, this message translates to:
+  /// **'Make 2'**
+  String get botDrawMake;
+
+  /// No description provided for @botDrawMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Make 2 More'**
+  String get botDrawMore;
+
+  /// No description provided for @botDrawPick.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap one to use it'**
+  String get botDrawPick;
+
+  /// No description provided for @botDrawCost.
+  ///
+  /// In en, this message translates to:
+  /// **'Each picture uses image credits, like any picture Casama makes.'**
+  String get botDrawCost;
+
+  /// No description provided for @botDrawWorking.
+  ///
+  /// In en, this message translates to:
+  /// **'Drawing…'**
+  String get botDrawWorking;
+
+  /// No description provided for @botDrawStyleCloud.
+  ///
+  /// In en, this message translates to:
+  /// **'Casama Cloud'**
+  String get botDrawStyleCloud;
+
+  /// No description provided for @botDrawStyleSoft3d.
+  ///
+  /// In en, this message translates to:
+  /// **'Soft 3D'**
+  String get botDrawStyleSoft3d;
+
+  /// No description provided for @botDrawStyleWatercolor.
+  ///
+  /// In en, this message translates to:
+  /// **'Watercolor'**
+  String get botDrawStyleWatercolor;
+
+  /// No description provided for @botDrawStyleFlat.
+  ///
+  /// In en, this message translates to:
+  /// **'Flat Icon'**
+  String get botDrawStyleFlat;
+
+  /// No description provided for @botDrawStylePixel.
+  ///
+  /// In en, this message translates to:
+  /// **'Pixel Art'**
+  String get botDrawStylePixel;
+
+  /// No description provided for @botDrawStyleLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Line Art'**
+  String get botDrawStyleLine;
+
+  /// No description provided for @botDrawStylePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo'**
+  String get botDrawStylePhoto;
+
+  /// No description provided for @sharePictureStays.
+  ///
+  /// In en, this message translates to:
+  /// **'Its picture stays in this workspace: the copy gets its earlier mascot, or its initials.'**
+  String get sharePictureStays;
 }
 
 class _AppLocalizationsDelegate

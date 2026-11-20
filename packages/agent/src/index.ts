@@ -5,6 +5,7 @@ export * from "./analytics.ts";
 export * from "./apns.ts";
 export * from "./app-mentions.ts";
 export * from "./attention.ts";
+export * from "./bot-pictures.ts";
 export * from "./calendar-triggers.ts";
 export * from "./canvas.ts";
 export * from "./canvas-pictures.ts";

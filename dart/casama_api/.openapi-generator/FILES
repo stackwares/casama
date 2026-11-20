@@ -180,6 +180,10 @@ lib/src/model/bot_list.dart
 lib/src/model/bot_model_privacy.dart
 lib/src/model/bot_page.dart
 lib/src/model/bot_page_detail.dart
+lib/src/model/bot_picture.dart
+lib/src/model/bot_picture_crop.dart
+lib/src/model/bot_picture_list.dart
+lib/src/model/bot_picture_style.dart
 lib/src/model/bot_secret_request.dart
 lib/src/model/bot_secret_request_list.dart
 lib/src/model/bot_share_link.dart
@@ -461,6 +465,7 @@ lib/src/model/gallery_submission_list.dart
 lib/src/model/gallery_update_request.dart
 lib/src/model/gallery_update_result.dart
 lib/src/model/gallery_workspace_kind.dart
+lib/src/model/generate_bot_pictures_request.dart
 lib/src/model/git_hub_skill_preview.dart
 lib/src/model/git_hub_skill_preview_request.dart
 lib/src/model/git_sync_status.dart
@@ -812,6 +817,7 @@ lib/src/model/set_analytics_opt_out_request.dart
 lib/src/model/set_bot_a2a_request.dart
 lib/src/model/set_bot_access_request.dart
 lib/src/model/set_bot_access_request_entries_inner.dart
+lib/src/model/set_bot_picture_request.dart
 lib/src/model/set_canvas_grant.dart
 lib/src/model/set_connection_settings_request.dart
 lib/src/model/set_device_grant_request.dart

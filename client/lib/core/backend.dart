@@ -1603,6 +1603,40 @@ abstract class Backend {
   });
   Future<UsageReport> usage(String orgId, {String period, UsageFilter filter});
 
+  // Bot pictures (docs/BOT-PICTURES-PLAN.md)
+  /// Gives a bot a picture of its own: [square] is the cropped picture, [original] the picture
+  /// before cropping (kept for Re-crop) and [crop] where the frame sat on it.
+  Future<Bot> setBotPicture(
+    String botId,
+    Uint8List square, {
+    Uint8List? original,
+    BotPictureCrop? crop,
+    String source = 'upload',
+  });
+
+  /// Back to the mascot the bot had before its picture, or its initials.
+  Future<Bot> removeBotPicture(String botId);
+
+  /// The bot's recent pictures (the one in use first), or the drawn ones not used yet.
+  Future<List<BotPicture>> botPictures(String botId, {bool candidates = false});
+
+  /// Switches to one of [botPictures] (also Undo).
+  Future<Bot> useBotPicture(String botId, String imageId);
+
+  /// The picture before it was cropped, for Re-crop.
+  Future<Uint8List> botPictureOriginal(String botId, String imageId);
+
+  /// Draws one or two candidates with AI; they don't change the bot until one is used.
+  Future<List<BotPicture>> drawBotPictures(
+    String botId, {
+    required BotPictureStyle style,
+    String? description,
+    int count = 2,
+  });
+
+  /// Where a bot picture is served: 128 px for small avatars, 512 px for big ones.
+  String botImageUrl(String imageId, {bool small = false});
+
   /// Workspace search (D-103), including files on awake computers. [kinds] scopes it (D-235):
   /// message, chat, memory, skill, routine, ticket or file; files only when `file` is listed.
   Future<SearchResponse> search(String orgId, String query, {List<String>? kinds});

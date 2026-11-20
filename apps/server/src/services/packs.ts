@@ -31,6 +31,7 @@ import {
   packSlug,
   packSnapshot,
   packTitle,
+  portableBotAvatar,
 } from "@casama/domain";
 import { sql } from "drizzle-orm";
 import type { z } from "zod";
@@ -1366,8 +1367,9 @@ export function packService(deps: AppDeps) {
           persona_md: string;
           autonomy: "ask_always" | "ask_risky" | "autonomous";
           avatar_url: string | null;
+          prior_mascot: string | null;
         }>(sql`
-          select id, name, persona_md, autonomy::text as autonomy, avatar_url from public.bots
+          select id, name, persona_md, autonomy::text as autonomy, avatar_url, prior_mascot from public.bots
           where id = ${botId}::uuid and org_id = ${orgId}::uuid and archived_at is null`),
       );
       if (!b) throw new ApiError(404, "bot_not_found", "Bot not found");
@@ -1391,7 +1393,8 @@ export function packService(deps: AppDeps) {
         persona: b.persona_md,
         starters: [],
         autonomy: b.autonomy,
-        mascot: b.avatar_url,
+        // Pictures stay in the workspace: a pack carries the mascot the bot had before one.
+        mascot: portableBotAvatar(b.avatar_url, b.prior_mascot),
         skills: await skillsFor(sql`bot_id = ${b.id}::uuid`),
         routines: routines.map((x) => ({
           name: x.name,

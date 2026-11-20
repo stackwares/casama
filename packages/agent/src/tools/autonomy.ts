@@ -13,6 +13,7 @@ import {
 import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { actingUserOf, personForRun } from "../acting.ts";
+import { makeBotPicture, makeOriginal, pictureAvatar } from "../bot-pictures.ts";
 import { wrapUntrusted } from "../context.ts";
 import { checkStorage, StorageFullError, titleFromText } from "../creations.ts";
 import { imageRefs, makeDocument } from "../document-make.ts";
@@ -86,6 +87,63 @@ export interface AutonomyToolDeps {
   runChild?: (runId: string) => Promise<{ status: string }>;
   /** Starts a run without waiting (a bot assigning a ticket to another bot). Late-bound. */
   startRun?: (runId: string) => Promise<void>;
+  /** Hands out the bot picture drawer, for the API's "Make one with AI" (through the worker). */
+  exposeBotPictures?: (api: {
+    draw: (a: BotPictureDrawRequest) => Promise<{ ids: string[] }>;
+  }) => void;
+}
+
+/** The looks "Make one with AI" offers (docs/BOT-PICTURES-PLAN.md §8). */
+export const BOT_PICTURE_STYLES = [
+  "cloud",
+  "soft3d",
+  "watercolor",
+  "flat",
+  "pixel",
+  "line",
+  "photo",
+] as const;
+export type BotPictureStyle = (typeof BOT_PICTURE_STYLES)[number];
+
+export interface BotPictureDrawRequest {
+  orgId: string;
+  botId: string;
+  userId: string | null;
+  runId?: string | null;
+  style: BotPictureStyle;
+  description?: string;
+  count?: number;
+}
+
+const STYLE_WORDS: Record<BotPictureStyle, string> = {
+  cloud:
+    "a cute cloud mascot character: a soft, puffy, rounded cloud body with a little tail, a simple friendly face (small dot eyes, a gentle smile, rosy cheeks), smooth soft gradient shading, glossy highlights, like a premium app mascot",
+  soft3d:
+    "a soft 3D render, smooth clay-like materials, gentle studio lighting, pastel colours, rounded friendly shapes",
+  watercolor:
+    "a delicate watercolour painting with soft bleeding edges, light paper texture and a warm palette",
+  flat: "a flat vector icon with bold simple shapes, two or three harmonious colours, no gradients, clean edges",
+  pixel: "crisp pixel art in a 32 by 32 pixel style with a limited palette and clear outlines",
+  line: "minimal line art: one confident continuous line in a dark colour on a light plain background",
+  photo: "a photorealistic portrait with natural light and a shallow depth of field",
+};
+
+/** The prompt for a bot's picture: the look, what it shows, and what makes a good small avatar. */
+export function botPicturePrompt(
+  style: BotPictureStyle,
+  botName: string,
+  description: string | undefined,
+  persona: string,
+): string {
+  const what = description?.trim()
+    ? description.trim()
+    : `something that fits an assistant called "${botName.slice(0, 80)}"${persona.trim() ? `, whose job is: ${persona.trim().replace(/\s+/g, " ").slice(0, 300)}` : ""}`;
+  return [
+    `A square profile picture (avatar) for an AI assistant, in the style of ${STYLE_WORDS[style]}.`,
+    `It shows ${what}.`,
+    "One subject, centred, filling about two thirds of the frame with even space around it, facing the viewer, on a plain soft background that contrasts with it.",
+    "Bold, simple and recognisable even when shown very small. No text, letters, numbers, logos or watermarks.",
+  ].join(" ");
 }
 
 interface RunRow {
@@ -1436,6 +1494,196 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
         content: `${where}${shown ? `\nThe person already sees it in the chat under your reply: don't link it or name the file. To use it again (animate it, convert it), pass media:${shown}.` : ""}${path ? `\nSaved to ~/workspace/${path}` : img.url || shown ? "" : " (no computer to save it to)"}${note}`,
         preview: path ?? "image generated",
         artifactPath: path,
+      };
+    },
+  });
+
+  // --- bot pictures (docs/BOT-PICTURES-PLAN.md §8) ----------------------------------------
+
+  /** Whether [userId] may change the bot: its creator, or a workspace admin for a team bot. */
+  async function canManageBot(botId: string, userId: string | null | undefined) {
+    if (!userId) return false;
+    const [r] = await db.execute<{ ok: boolean }>(sql`
+      select (b.created_by = ${userId}::uuid
+              or (b.visibility = 'team' and exists (
+                select 1 from public.memberships m
+                where m.org_id = b.org_id and m.user_id = ${userId}::uuid and m.role in ('owner', 'admin')))) as ok
+      from public.bots b where b.id = ${botId}::uuid`);
+    return !!r?.ok;
+  }
+
+  /** Stores a picture for a bot; with `use`, the bot switches to it. Returns its id and value. */
+  async function storeBotPicture(a: {
+    orgId: string;
+    botId: string;
+    userId: string | null;
+    bytes: Uint8Array;
+    botName: string;
+    source: "generated" | "bot";
+    candidate: boolean;
+  }) {
+    const pic = await makeBotPicture(a.bytes, { botName: a.botName }).catch((e) => {
+      throw new ToolError("invalid_arguments", e instanceof Error ? e.message : String(e));
+    });
+    const original = await makeOriginal(a.bytes).catch(() => null);
+    const [row] = await db.execute<{ id: string }>(sql`
+      insert into public.bot_images (bot_id, org_id, created_by, source, large, small, original, original_type, colors, candidate)
+      values (${a.botId}::uuid, ${a.orgId}::uuid, ${a.userId}::uuid, ${a.source}, ${pic.large}, ${pic.small},
+              ${original?.bytes ?? null}, ${original?.type ?? null}, ${pic.colors}, ${a.candidate})
+      returning id`);
+    if (!row) throw new ToolError("media_failed", "The picture couldn't be saved.");
+    return { id: row.id, avatar: pictureAvatar(row.id, pic.colors) };
+  }
+
+  /**
+   * Draws picture candidates for a bot ("Make one with AI" in the app, and the bot's own tool).
+   * Casama's safety check first, then credits, then the drawing; each picture is charged like any
+   * other image and recorded with `purpose: bot_picture`. Candidates don't change the bot.
+   */
+  async function drawBotPictures(a: BotPictureDrawRequest): Promise<{ ids: string[] }> {
+    const provider = await deps.mediaFor?.(a.orgId);
+    if (!provider || provider.supports?.("image") === false)
+      throw new ToolError(
+        "no_media_provider",
+        "Drawing pictures needs an OpenRouter key. Add one in Model keys.",
+      );
+    const [bot] = await db.execute<{ name: string; persona_md: string }>(sql`
+      select name, persona_md from public.bots where id = ${a.botId}::uuid and org_id = ${a.orgId}::uuid`);
+    if (!bot) throw new ToolError("bot_not_found", "Bot not found");
+    const prompt = botPicturePrompt(a.style, bot.name, a.description, bot.persona_md);
+    const ctx = {
+      runId: a.runId ?? null,
+      botId: a.botId,
+      orgId: a.orgId,
+      actingUserId: a.userId,
+    } as unknown as ToolContext;
+    await mediaSafety(ctx, { kind: "image", prompt });
+    const count = Math.max(1, Math.min(2, a.count ?? 2));
+    const payer = provider.paidBy?.("image") ?? null;
+    if (payer) await needCredits(db, a.orgId, mediaCharge(payer, mediaPrices().image * count));
+    const drawn = await Promise.all(
+      Array.from({ length: count }, () =>
+        provider
+          .generateImage({ prompt, size: "square" })
+          .then(async ([img]) => {
+            if (!img) return null;
+            await recordMedia(
+              db,
+              ctx,
+              "media_images",
+              1,
+              img.costUsd ?? mediaPrices().image,
+              img.model ?? provider.id,
+              payer,
+              {
+                purpose: "bot_picture",
+              },
+            );
+            return mediaBytes(img);
+          })
+          .catch(recordFailed(ctx, "media_images", payer))
+          .catch((e) => (count > 1 ? null : Promise.reject(e))),
+      ),
+    );
+    const ids: string[] = [];
+    for (const bytes of drawn) {
+      if (!bytes) continue;
+      const p = await storeBotPicture({
+        orgId: a.orgId,
+        botId: a.botId,
+        userId: a.userId,
+        bytes,
+        botName: bot.name,
+        source: "generated",
+        candidate: true,
+      }).catch(() => null);
+      if (p) ids.push(p.id);
+    }
+    if (ids.length === 0)
+      throw new ToolError("media_failed", "No picture came back. Try again in a moment.");
+    return { ids };
+  }
+  deps.exposeBotPictures?.({ draw: drawBotPictures });
+
+  registry.register({
+    name: "profile.set_picture",
+    description:
+      "Change your own picture (your avatar in Casama). Use it when the person asks: from a picture in the conversation (image: its media: id or a path on your computer), or draw a new one (draw: what it shows, with a style). undo: true goes back to the picture you had before. Only someone who manages you can ask for this. After changing it, tell the person in a few words; they can say 'undo' or pick an earlier one under your picture.",
+    risk: "low",
+    schema: z.object({
+      image: z.string().min(1).max(1000).optional(),
+      draw: z.string().min(1).max(400).optional(),
+      style: z.enum(BOT_PICTURE_STYLES).optional(),
+      undo: z.boolean().optional(),
+    }),
+    async execute(args, ctx) {
+      if (!(await canManageBot(ctx.botId, ctx.actingUserId)))
+        throw new ToolError(
+          "forbidden",
+          "Only someone who manages you can change your picture. Say so plainly.",
+        );
+      const given = [args.image, args.draw, args.undo ? "undo" : undefined].filter(Boolean).length;
+      if (given !== 1)
+        throw new ToolError("invalid_arguments", "Pass exactly one of image, draw or undo.");
+      const [bot] = await db.execute<{ name: string; avatar_url: string | null }>(sql`
+        select name, avatar_url from public.bots where id = ${ctx.botId}::uuid`);
+      if (!bot) throw new ToolError("bot_not_found", "Bot not found");
+      if (args.undo) {
+        const [prev] = await db.execute<{ id: string; colors: string }>(sql`
+          select id, colors from public.bot_images
+          where bot_id = ${ctx.botId}::uuid and not candidate and used_at is not null
+            and ${bot.avatar_url ?? ""} not like '%' || id::text || '%'
+          order by used_at desc limit 1`);
+        if (!prev) throw new ToolError("not_found", "There's no earlier picture to go back to.");
+        await db.execute(
+          sql`update public.bots set avatar_url = ${pictureAvatar(prev.id, prev.colors)} where id = ${ctx.botId}::uuid`,
+        );
+        await ctx.emit("bot.picture", { bot_id: ctx.botId, image_id: prev.id });
+        return { content: "Back to your previous picture.", preview: "picture restored" };
+      }
+      let id: string;
+      let avatar: string;
+      if (args.draw) {
+        const { ids } = await drawBotPictures({
+          orgId: ctx.orgId,
+          botId: ctx.botId,
+          userId: ctx.actingUserId ?? null,
+          runId: ctx.runId,
+          style: args.style ?? "cloud",
+          description: args.draw,
+          count: 1,
+        });
+        const [row] = await db.execute<{ colors: string }>(
+          sql`select colors from public.bot_images where id = ${ids[0]}::uuid`,
+        );
+        id = ids[0]!;
+        avatar = pictureAvatar(id, row!.colors);
+        await db.execute(sql`update public.bot_images set source = 'bot' where id = ${id}::uuid`);
+      } else {
+        const f = await loadFile(ctx, args.image!);
+        if (!f.contentType.startsWith("image/"))
+          throw new ToolError(
+            "invalid_arguments",
+            `${args.image} is ${f.contentType}, not a picture.`,
+          );
+        ({ id, avatar } = await storeBotPicture({
+          orgId: ctx.orgId,
+          botId: ctx.botId,
+          userId: ctx.actingUserId ?? null,
+          bytes: f.data,
+          botName: bot.name,
+          source: "bot",
+          candidate: false,
+        }));
+      }
+      await db.execute(
+        sql`update public.bots set avatar_url = ${avatar} where id = ${ctx.botId}::uuid`,
+      );
+      await ctx.emit("bot.picture", { bot_id: ctx.botId, image_id: id });
+      return {
+        content:
+          "Your picture is changed; the person sees it now. If they don't like it, profile.set_picture with undo: true goes back.",
+        preview: "picture changed",
       };
     },
   });

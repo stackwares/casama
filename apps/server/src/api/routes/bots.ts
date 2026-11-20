@@ -54,7 +54,7 @@ function requireClaims(claims: JwtClaims | undefined): JwtClaims {
 }
 
 type BotRow = typeof bots.$inferSelect;
-const botOut = (b: BotRow) => ({
+export const botOut = (b: BotRow) => ({
   id: b.id,
   org_id: b.orgId,
   name: b.name,

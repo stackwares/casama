@@ -20,6 +20,7 @@ import '../../ui/adaptive_modal.dart';
 import '../chat/media/media_kind.dart';
 import '../chat/media/preview_body.dart';
 import '../../ui/glow_button.dart';
+import '../bots/bot_picture.dart';
 
 /// Turns a file reference a bot wrote into a path for the files API (relative to the computer's
 /// workspace, `~/` for the rest of home, or absolute). Returns null for web links and anything
@@ -225,6 +226,12 @@ Future<void> showComputerFile(BuildContext context, {required String computerId,
 
 bool get _desktop => !kIsWeb && (Platform.isMacOS || Platform.isWindows || Platform.isLinux);
 
+/// "Use as Ada's Picture" with one bot, else "Use as a Bot's Picture".
+String _botPictureLabel(BuildContext context, WidgetRef ref) {
+  final bots = ref.watch(botsProvider).value ?? const [];
+  return bots.length == 1 ? context.l10n.botPictureUseAs(bots.first.name) : context.l10n.botPictureUseAsBot;
+}
+
 class FilePreview extends ConsumerWidget {
   const FilePreview({super.key, required this.computerId, required this.path, this.name});
 
@@ -337,6 +344,20 @@ class FilePreview extends ConsumerWidget {
                     icon: const Icon(LucideIcons.share, size: 18),
                     label: Text(l10n.shareFile),
                   ),
+                ),
+              // A picture can become a bot's picture (docs/BOT-PICTURES-PLAN.md §2).
+              if (mimeFor(name).startsWith('image/') && (ref.watch(botsProvider).value?.isNotEmpty ?? false))
+                OutlinedButton.icon(
+                  key: const Key('fileUseAsBotPicture'),
+                  onPressed: bytes == null
+                      ? null
+                      : () {
+                          // The cropper opens over this sheet, which stays for whatever comes next.
+                          final bots = ref.read(botsProvider).value ?? const [];
+                          useAsBotPicture(context, ref, bytes, botId: bots.length == 1 ? bots.first.id : null);
+                        },
+                  icon: const Icon(LucideIcons.imagePlus, size: 18),
+                  label: Text(_botPictureLabel(context, ref)),
                 ),
             ],
           ),

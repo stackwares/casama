@@ -116,6 +116,12 @@ struct LossyArray<Element: Decodable>: Decodable {
 }
 
 struct Glance: Decodable, Equatable {
+  /// Every bot avatar value the glance names, for fetching the bots' own pictures.
+  var avatars: [String] {
+    needs.map(\.botAvatar) + bots.map(\.avatar) + next.map(\.botAvatar) + lately.map(\.botAvatar)
+      + (brief.map { [$0.botAvatar] } ?? [])
+  }
+
   struct Need: Decodable, Equatable, Identifiable {
     /// approval, takeover or suggestion.
     let kind: String

@@ -35,6 +35,12 @@ enum GlanceFetch {
   /// What a widget should draw now: the stored glance, refreshed from the server first when this
   /// device holds a widget key. Never throws and never takes much longer than [timeout].
   static func refresh() async -> GlanceSnapshot {
+    let snap = await refreshGlance()
+    await botPictures(for: snap)
+    return snap
+  }
+
+  private static func refreshGlance() async -> GlanceSnapshot {
     var snap = GlanceSnapshot.load()
     guard snap.signedIn, let current = snap.glance, let key = WidgetKey.read(), let base = server() else { return snap }
     if let fresh = await fetch(base: base, key: key, current: current) {
@@ -43,6 +49,27 @@ enum GlanceFetch {
     snap.glance?.checkedAt = GlanceStore.checkedAt()
     await sendPushToken(base: base, key: key)
     return snap
+  }
+
+  // MARK: Bots' own pictures (docs/BOT-PICTURES-PLAN.md §5.4)
+
+  /// Every bot avatar the widgets draw: the glance's, the Canvas list's and the old single bot's.
+  static func avatars(_ snap: GlanceSnapshot) -> [String?] {
+    (snap.glance?.avatars ?? []) + (CanvasStore.load()?.items.map(\.botAvatar) ?? []) + [snap.legacy?.avatar]
+  }
+
+  /// Saves the pictures of the bots the widgets draw that aren't on disk yet (they need no key),
+  /// and deletes the ones no bot uses any more. Signed out, the lot goes. The Canvas and the
+  /// glance widgets share the folder, so the keep list is both of theirs together.
+  static func botPictures(for snap: GlanceSnapshot) async {
+    let store = BotPictureStore.shared
+    guard snap.signedIn else {
+      store.prune(keep: [], now: .distantFuture)
+      return
+    }
+    let ids = BotPicture.ids(avatars(snap))
+    if let base = server() { await store.ensure(ids: Array(ids), server: base) }
+    store.prune(keep: ids)
   }
 
   /// GET /v1/glance. Answers the new glance, the current one when the server says it hasn't

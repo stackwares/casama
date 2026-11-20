@@ -27,6 +27,7 @@
 		E4C11A0D2F00000000000025 /* GlanceFetch.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4C11A0D2F00000000000004 /* GlanceFetch.swift */; };
 		E4C11A0D2F00000000000026 /* GlanceTimeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4C11A0D2F00000000000005 /* GlanceTimeline.swift */; };
 		E4C11A0D2F00000000000027 /* BotMark.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4C11A0D2F00000000000006 /* BotMark.swift */; };
+		E5B11A0D2F00000000000002 /* BotPictureStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5B11A0D2F00000000000001 /* BotPictureStore.swift */; };
 		E4C11A0D2F00000000000028 /* WidgetPush.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4C11A0D2F00000000000007 /* WidgetPush.swift */; };
 		E4C11A0D2F00000000000029 /* Style.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4C11A0D2F00000000000008 /* Style.swift */; };
 		E4C11A0D2F0000000000002A /* HomeViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4C11A0D2F00000000000009 /* HomeViews.swift */; };
@@ -108,6 +109,7 @@
 		E4C11A0D2F00000000000003 /* GlanceIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlanceIntents.swift; sourceTree = "<group>"; };
 		E4C11A0D2F00000000000004 /* GlanceFetch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlanceFetch.swift; sourceTree = "<group>"; };
 		E4C11A0D2F00000000000005 /* GlanceTimeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlanceTimeline.swift; sourceTree = "<group>"; };
+		E5B11A0D2F00000000000001 /* BotPictureStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BotPictureStore.swift; path = ../ios/Shared/BotPictureStore.swift; sourceTree = SOURCE_ROOT; };
 		E4C11A0D2F00000000000006 /* BotMark.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BotMark.swift; sourceTree = "<group>"; };
 		E4C11A0D2F00000000000007 /* WidgetPush.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetPush.swift; sourceTree = "<group>"; };
 		E4C11A0D2F00000000000008 /* Style.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Style.swift; sourceTree = "<group>"; };
@@ -205,6 +207,7 @@
 				E4C11A0D2F00000000000004 /* GlanceFetch.swift */,
 				E4C11A0D2F00000000000005 /* GlanceTimeline.swift */,
 				E4C11A0D2F00000000000006 /* BotMark.swift */,
+				E5B11A0D2F00000000000001 /* BotPictureStore.swift */,
 				E4C11A0D2F00000000000007 /* WidgetPush.swift */,
 				E4C11A0D2F00000000000031 /* Canvas.swift */,
 				E4C11A0D2F00000000000032 /* CanvasIntents.swift */,
@@ -598,6 +601,7 @@
 				E4C11A0D2F00000000000025 /* GlanceFetch.swift in Sources */,
 				E4C11A0D2F00000000000026 /* GlanceTimeline.swift in Sources */,
 				E4C11A0D2F00000000000027 /* BotMark.swift in Sources */,
+				E5B11A0D2F00000000000002 /* BotPictureStore.swift in Sources */,
 				E4C11A0D2F00000000000028 /* WidgetPush.swift in Sources */,
 				E4C11A0D2F00000000000029 /* Style.swift in Sources */,
 				E4C11A0D2F0000000000002A /* HomeViews.swift in Sources */,

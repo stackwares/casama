@@ -382,6 +382,13 @@ enum BotPalette {
     return mascots[key] != nil ? key : nil
   }
 
+  /// `image:<uuid>:<rrggbb><rrggbb>` → the picture's id and its two colours, else nil. The colours
+  /// stand in for the name palette wherever the bot's colours are used (BotPicture.parse has the
+  /// strict rules, shared with the other apps through bot-avatar-vectors.json).
+  static func picture(_ avatar: String?) -> (id: String, colors: (UInt32, UInt32))? {
+    BotPicture.parse(avatar)
+  }
+
   /// botPalette: (h * 31 + code unit) & 0x7fffffff over the lower-cased name's UTF-16.
   static func index(_ name: String) -> Int {
     var h = 0

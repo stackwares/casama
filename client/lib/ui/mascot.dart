@@ -1,9 +1,12 @@
 import 'dart:math';
+import 'dart:typed_data';
 
-import 'package:material_ui/material_ui.dart';
 import 'package:lottie/lottie.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'ambient_motion.dart';
+import 'bot_avatar.dart';
 import 'edge_fade.dart';
 import 'reveal_when_selected.dart';
 
@@ -212,7 +215,8 @@ Widget _mascotArt(
   );
 }
 
-/// Picks a bot's icon: its initials or one of the mascots. [value] is the bot's `avatar_url`.
+/// Picks a bot's icon: its own picture, its initials or one of the mascots. [value] is the bot's
+/// `avatar_url`.
 class MascotPicker extends StatelessWidget {
   const MascotPicker({
     super.key,
@@ -221,10 +225,33 @@ class MascotPicker extends StatelessWidget {
     required this.initials,
     this.initialsLabel = 'Initials',
     this.scrollable = false,
+    this.onPicture,
+    this.pictureLabel = 'Picture',
+    this.picture,
+    this.picturePreview,
+    this.pictureSelected,
+    this.name = '',
   });
 
   final String? value;
   final ValueChanged<String?> onChanged;
+
+  /// Opens the picture choices (take, choose, draw, re-crop, remove). Unset: no Picture tile.
+  final VoidCallback? onPicture;
+  final String pictureLabel;
+
+  /// The bot's saved picture (`image:<id>:<colours>`), shown on the Picture tile even while a
+  /// mascot is picked, so it's one tap to go back to it.
+  final String? picture;
+
+  /// A picture cropped but not saved yet (a bot being made).
+  final Uint8List? picturePreview;
+
+  /// Whether the picture is the choice; defaults to [value] naming a picture.
+  final bool? pictureSelected;
+
+  /// The bot's name, for the picture tile's placeholder.
+  final String name;
 
   /// Shown on the initials choice.
   final String initials;
@@ -236,10 +263,48 @@ class MascotPicker extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final selected = Mascot.fromAvatar(value);
+    final onPicture = this.onPicture;
+    final shownPicture = BotPictureRef.parse(value) != null ? value : picture;
+    final hasPicture = picturePreview != null || shownPicture != null;
+    final pictureOn = onPicture != null && (pictureSelected ?? BotPictureRef.parse(value) != null);
     final choices = [
+        if (onPicture != null)
+          _Choice(
+            key: const Key('mascotPicker-picture'),
+            label: pictureLabel,
+            selected: pictureOn,
+            // A picture that isn't the choice right now: the first tap picks it again; the next
+            // opens its choices. No picture yet: straight to the choices.
+            onTap: hasPicture && !pictureOn && picturePreview == null && shownPicture != null
+                ? () => onChanged(shownPicture)
+                : onPicture,
+            child: hasPicture
+                ? Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      BotAvatar(name: name, avatar: shownPicture, preview: picturePreview, size: 40),
+                      if (pictureOn)
+                        PositionedDirectional(
+                          end: -6,
+                          bottom: -6,
+                          child: Container(
+                            width: 20,
+                            height: 20,
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.primary,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Theme.of(context).colorScheme.primaryContainer, width: 2),
+                            ),
+                            child: Icon(LucideIcons.pencil, size: 10, color: Theme.of(context).colorScheme.onPrimary),
+                          ),
+                        ),
+                    ],
+                  )
+                : Icon(LucideIcons.imagePlus, size: 22, color: Theme.of(context).colorScheme.onSurfaceVariant),
+          ),
         _Choice(
           label: initialsLabel,
-          selected: selected == null,
+          selected: selected == null && !pictureOn,
           onTap: () => onChanged(null),
           child: Text(
             initials,
@@ -267,11 +332,11 @@ class MascotPicker extends StatelessWidget {
         child: ListView(
           scrollDirection: Axis.horizontal,
           children: [
-            for (final (i, c) in choices.indexed)
+            for (final c in choices)
               Padding(
                 padding: const EdgeInsetsDirectional.only(end: 8),
                 child: RevealWhenSelected(
-                  selected: i == 0 ? selected == null : Mascot.values[i - 1] == selected,
+                  selected: c.selected,
                   child: Center(child: c),
                 ),
               ),
@@ -284,6 +349,7 @@ class MascotPicker extends StatelessWidget {
 
 class _Choice extends StatelessWidget {
   const _Choice({
+    super.key,
     required this.label,
     required this.selected,
     required this.onTap,

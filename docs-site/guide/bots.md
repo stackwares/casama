@@ -8,7 +8,7 @@ coder, and give each the model and limits that fit the work.
 
 | Part | What it is |
 | --- | --- |
-| Name and icon | A cloud mascot or initials, shown in the sidebar and on every reply. |
+| Name and picture | A picture of its own, a cloud mascot or initials, shown in the sidebar, on every reply, on calls, in widgets and on the watch. |
 | Instructions | Standing instructions (its system prompt): its role, how it works, its style and limits. |
 | Model | A model key from your workspace plus a model id. A bot can also have fallback models and a cheaper model for internal steps. On Casama Cloud, Casama chooses the model and you don't need a key. |
 | Autonomy | How often it asks before acting. See [Autonomy and approvals](/guide/autonomy). |
@@ -27,8 +27,8 @@ the add-key form in place.
    [Personas and starter bots](#personas-and-starter-bots)). Leave it on **Blank** to start from
    scratch. The card under the picks shows the persona and holds its **Instructions**; edit them
    as you like.
-3. Under **Name and icon**, enter a **Bot name** and pick a cloud mascot or **Initials**. If you
-   leave the name empty, the bot is named Chief.
+3. Under **Name and icon**, enter a **Bot name** and pick **Picture** (one of your own), a cloud
+   mascot or **Initials**. If you leave the name empty, the bot is named Chief.
 4. Self-hosted only: the model key and model Casama picked for you are under **Advanced**. Change
    them there if you like.
 5. Select **Create**. The bot's chat opens, ready for your first message.
@@ -265,6 +265,47 @@ actions**. A bot set to **Act on its own** applies it without asking.
 Open a bot's chat and tap its name, or select **More** (the **…** button), then **Bot profile**.
 Change the name, icon, instructions, model (self-hosted only) or autonomy, then select **Save
 Changes**.
+
+### Give your bot a picture
+
+A bot can use any picture: a photo, your team's logo, a character you drew, or one Casama draws
+for it.
+
+1. On the bot's profile, tap its big picture at the top (it has a camera badge), or tap
+   **Picture**, the first choice under **Icon**.
+2. Choose **Take a Photo** (phones), **Choose a Photo**, **Paste Picture** (when one is on the
+   clipboard) or **Make One with AI**.
+3. Move and scale the picture under the frame. Drag to move it; pinch, scroll or use the slider to
+   zoom; double-tap to zoom in on a spot. **Rotate** and **Mirror** are in the toolbar, and
+   **Reset** puts it back. The small previews show how it looks in the sidebar, in light and dark,
+   while you move it.
+4. Select **Done**. The new picture shows at once; **Undo** in the message puts the old one back.
+
+More ways in:
+
+- **Drag a picture** from your desktop onto the bot's picture (Mac, Windows, Linux, the web app and
+  iPad).
+- **Paste**: tap the bot's picture, then press Cmd+V (Ctrl+V on Windows and Linux).
+- **From a chat or the Library**: open a picture and select **Use as Ada's Picture** (or **Use as a
+  Bot's Picture** to pick the bot).
+- **Ask the bot**: "use this picture as your picture" with a picture in the chat, or "draw yourself
+  a new picture". It can only do this for someone who manages it, and "undo" goes back.
+
+The sheet also lists the bot's **Recent** pictures (one tap switches back), **Re-crop** (opens the
+picture as it was before cropping, where you left the frame), and **Remove Picture**, which goes back
+to the mascot it had before, or its initials.
+
+Pictures with see-through parts, like logos, can sit smaller inside the frame. Under
+**Background**, pick **None** (no tile, like a mascot), the bot's own color, **White** or **Black**.
+
+**Make One with AI** offers looks such as **Casama Cloud** (a new cloud mascot), **Soft 3D**,
+**Watercolor**, **Flat Icon**, **Pixel Art**, **Line Art** and **Photo**. Describe what it shows, or
+leave it empty and Casama works it out from the bot's name and instructions. Each tap draws two;
+each costs the same image credits as any picture Casama makes, after the same safety check.
+
+The bot's colors (in chat, on calls, in widgets) come from its picture. A bot's picture stays in
+its workspace: a template, pack or A2A card of the bot uses the mascot it had before instead. Up
+to 20 new pictures a day per bot.
 
 Tiles at the top open the bot's **Computer**, **Memory**, **Routines**, **Apps** (which workspace
 integrations it may use) and **Library** (everything it made; see [Library](/guide/library)).

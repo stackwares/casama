@@ -187,15 +187,22 @@ Class | Method | HTTP request | Description
 [*BotsApi*](doc/BotsApi.md) | [**createBot**](doc/BotsApi.md#createbot) | **POST** /v1/bots | 
 [*BotsApi*](doc/BotsApi.md) | [**createBotShare**](doc/BotsApi.md#createbotshare) | **POST** /v1/bots/{id}/share | Make a share link for a bot template (a snapshot; anyone signed in with the link can import it)
 [*BotsApi*](doc/BotsApi.md) | [**exportBot**](doc/BotsApi.md#exportbot) | **GET** /v1/bots/{id}/export | A bot as a shareable template file (no secrets; memories only when asked)
+[*BotsApi*](doc/BotsApi.md) | [**generateBotPictures**](doc/BotsApi.md#generatebotpictures) | **POST** /v1/bots/{id}/images/generate | Draw pictures for a bot with AI
 [*BotsApi*](doc/BotsApi.md) | [**getBotAccess**](doc/BotsApi.md#getbotaccess) | **GET** /v1/bots/{id}/access | Who can chat with, edit or administer this bot
+[*BotsApi*](doc/BotsApi.md) | [**getBotImage**](doc/BotsApi.md#getbotimage) | **GET** /v1/bot-images/{id} | A bot&#39;s picture (no token; cached for good)
+[*BotsApi*](doc/BotsApi.md) | [**getBotPictureOriginal**](doc/BotsApi.md#getbotpictureoriginal) | **GET** /v1/bots/{id}/images/{image_id}/original | The picture before it was cropped, for Re-crop
 [*BotsApi*](doc/BotsApi.md) | [**getBotShare**](doc/BotsApi.md#getbotshare) | **GET** /v1/bot-shares/{token} | Read a shared bot template, to preview before importing
 [*BotsApi*](doc/BotsApi.md) | [**getBotStarters**](doc/BotsApi.md#getbotstarters) | **GET** /v1/bots/{id}/starters | Starter requests for an empty chat with this bot, written for you
 [*BotsApi*](doc/BotsApi.md) | [**importBot**](doc/BotsApi.md#importbot) | **POST** /v1/bots/import | Create a bot from a template file
+[*BotsApi*](doc/BotsApi.md) | [**listBotPictures**](doc/BotsApi.md#listbotpictures) | **GET** /v1/bots/{id}/images | A bot&#39;s recent pictures, the one in use first, then by when they were last used
 [*BotsApi*](doc/BotsApi.md) | [**listBots**](doc/BotsApi.md#listbots) | **GET** /v1/bots | 
 [*BotsApi*](doc/BotsApi.md) | [**listTemplates**](doc/BotsApi.md#listtemplates) | **GET** /v1/templates | 
+[*BotsApi*](doc/BotsApi.md) | [**removeBotPicture**](doc/BotsApi.md#removebotpicture) | **DELETE** /v1/bots/{id}/image | Stop using a picture: back to the mascot it had before, or its initials
 [*BotsApi*](doc/BotsApi.md) | [**setBotAccess**](doc/BotsApi.md#setbotaccess) | **PUT** /v1/bots/{id}/access | Replace the bot&#39;s visibility and access list
+[*BotsApi*](doc/BotsApi.md) | [**setBotPicture**](doc/BotsApi.md#setbotpicture) | **PUT** /v1/bots/{id}/image | Give a bot a picture of its own
 [*BotsApi*](doc/BotsApi.md) | [**startBotSetup**](doc/BotsApi.md#startbotsetup) | **POST** /v1/bots/{id}/setup | Start (or rerun) the bot&#39;s setup interview in a new conversation
 [*BotsApi*](doc/BotsApi.md) | [**startWelcome**](doc/BotsApi.md#startwelcome) | **POST** /v1/welcome | A new person&#39;s personal workspace, bot and welcome chat; the same chat again if it exists
+[*BotsApi*](doc/BotsApi.md) | [**useBotPicture**](doc/BotsApi.md#usebotpicture) | **POST** /v1/bots/{id}/images/{image_id}/use | Switch to one of the bot&#39;s recent or drawn pictures (also how Undo works)
 [*BrowserApi*](doc/BrowserApi.md) | [**createHighlight**](doc/BrowserApi.md#createhighlight) | **POST** /v1/me/highlights | 
 [*BrowserApi*](doc/BrowserApi.md) | [**createPageCommand**](doc/BrowserApi.md#createpagecommand) | **POST** /v1/me/page-commands | 
 [*BrowserApi*](doc/BrowserApi.md) | [**deleteHighlight**](doc/BrowserApi.md#deletehighlight) | **DELETE** /v1/me/highlights/{id} | 
@@ -759,6 +766,10 @@ Class | Method | HTTP request | Description
  - [BotModelPrivacy](doc/BotModelPrivacy.md)
  - [BotPage](doc/BotPage.md)
  - [BotPageDetail](doc/BotPageDetail.md)
+ - [BotPicture](doc/BotPicture.md)
+ - [BotPictureCrop](doc/BotPictureCrop.md)
+ - [BotPictureList](doc/BotPictureList.md)
+ - [BotPictureStyle](doc/BotPictureStyle.md)
  - [BotSecretRequest](doc/BotSecretRequest.md)
  - [BotSecretRequestList](doc/BotSecretRequestList.md)
  - [BotShareLink](doc/BotShareLink.md)
@@ -1040,6 +1051,7 @@ Class | Method | HTTP request | Description
  - [GalleryUpdateRequest](doc/GalleryUpdateRequest.md)
  - [GalleryUpdateResult](doc/GalleryUpdateResult.md)
  - [GalleryWorkspaceKind](doc/GalleryWorkspaceKind.md)
+ - [GenerateBotPicturesRequest](doc/GenerateBotPicturesRequest.md)
  - [GitHubSkillPreview](doc/GitHubSkillPreview.md)
  - [GitHubSkillPreviewRequest](doc/GitHubSkillPreviewRequest.md)
  - [GitSyncStatus](doc/GitSyncStatus.md)
@@ -1391,6 +1403,7 @@ Class | Method | HTTP request | Description
  - [SetBotA2aRequest](doc/SetBotA2aRequest.md)
  - [SetBotAccessRequest](doc/SetBotAccessRequest.md)
  - [SetBotAccessRequestEntriesInner](doc/SetBotAccessRequestEntriesInner.md)
+ - [SetBotPictureRequest](doc/SetBotPictureRequest.md)
  - [SetCanvasGrant](doc/SetCanvasGrant.md)
  - [SetConnectionSettingsRequest](doc/SetConnectionSettingsRequest.md)
  - [SetDeviceGrantRequest](doc/SetDeviceGrantRequest.md)

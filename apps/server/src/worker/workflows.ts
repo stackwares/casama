@@ -1,5 +1,6 @@
 import { writeFile } from "node:fs/promises";
 import {
+  type BotPictureDrawRequest,
   backgroundComplete,
   type ChatGptConfig,
   type ComputerService,
@@ -42,6 +43,7 @@ import {
   sweepLiveTokens,
   sweepWatchCodes,
   syncComposioTriggers,
+  ToolError,
   UPDATED_ERROR_CODE,
   waiveFailedRun,
 } from "@casama/agent";
@@ -97,6 +99,8 @@ let runtime:
       computers?: ComputerService;
       fetch?: typeof fetch;
       voice?: VoiceRuntime;
+      /** Draws bot pictures for the API's "Make one with AI" (docs/BOT-PICTURES-PLAN.md §8). */
+      botPictures?: { draw: (a: BotPictureDrawRequest) => Promise<{ ids: string[] }> };
       vendorUsage?: {
         env: import("../env.ts").Env;
         email: import("../services/email.ts").EmailSender;
@@ -1033,6 +1037,36 @@ export const voiceSessionWorkflow = DBOS.registerWorkflow(
       { name: "session" },
     ),
   { name: "voiceSession" },
+);
+
+/**
+ * "Make one with AI" (docs/BOT-PICTURES-PLAN.md §8): draws candidates in the worker, where the
+ * media provider, Casama's safety check and credits live. Errors come back as codes, not throws,
+ * so the API can say what went wrong; a step isn't retried (each try would be paid for again).
+ */
+export const generateBotPicturesWorkflow = DBOS.registerWorkflow(
+  async (a: BotPictureDrawRequest) =>
+    DBOS.runStep(
+      async (): Promise<
+        { ok: true; ids: string[] } | { ok: false; code: string; error: string }
+      > => {
+        const draw = rt().botPictures?.draw;
+        if (!draw)
+          return {
+            ok: false,
+            code: "no_media_provider",
+            error: "Drawing isn't set up on this server",
+          };
+        try {
+          return { ok: true, ...(await draw(a)) };
+        } catch (e) {
+          const code = e instanceof ToolError ? e.code : "media_failed";
+          return { ok: false, code, error: e instanceof Error ? e.message : String(e) };
+        }
+      },
+      { name: "draw", retriesAllowed: false },
+    ),
+  { name: "generateBotPictures" },
 );
 
 /** Phase 0 test workflow: two checkpointed steps. */

@@ -1952,6 +1952,61 @@ class SupabaseBackend implements Backend {
   }
 
   @override
+  Future<Bot> setBotPicture(
+    String botId,
+    Uint8List square, {
+    Uint8List? original,
+    BotPictureCrop? crop,
+    String source = 'upload',
+  }) async => (await api.bots.setBotPicture(
+    id: botId,
+    setBotPictureRequest: SetBotPictureRequest(
+      data: base64Encode(square),
+      original: original == null ? null : base64Encode(original),
+      crop: original == null ? null : crop,
+      source_: SetBotPictureRequestSource_Enum.values.firstWhere(
+        (s) => s.value == source,
+        orElse: () => SetBotPictureRequestSource_Enum.upload,
+      ),
+    ),
+  )).data!;
+
+  @override
+  Future<Bot> removeBotPicture(String botId) async =>
+      (await api.bots.removeBotPicture(id: botId)).data!;
+
+  @override
+  Future<List<BotPicture>> botPictures(String botId, {bool candidates = false}) async =>
+      (await api.bots.listBotPictures(id: botId, candidates: candidates ? 'true' : null)).data!.items;
+
+  @override
+  Future<Bot> useBotPicture(String botId, String imageId) async =>
+      (await api.bots.useBotPicture(id: botId, imageId: imageId)).data!;
+
+  @override
+  Future<Uint8List> botPictureOriginal(String botId, String imageId) async =>
+      (await api.bots.getBotPictureOriginal(id: botId, imageId: imageId)).data!;
+
+  @override
+  Future<List<BotPicture>> drawBotPictures(
+    String botId, {
+    required BotPictureStyle style,
+    String? description,
+    int count = 2,
+  }) async => (await api.bots.generateBotPictures(
+    id: botId,
+    generateBotPicturesRequest: GenerateBotPicturesRequest(
+      style: style,
+      description: (description?.trim().isEmpty ?? true) ? null : description!.trim(),
+      count: count,
+    ),
+  )).data!.items;
+
+  @override
+  String botImageUrl(String imageId, {bool small = false}) =>
+      '${api.baseUrl.replaceAll(RegExp(r'/+$'), '')}/v1/bot-images/$imageId${small ? '?size=128' : ''}';
+
+  @override
   Future<UsageReport> usage(String orgId, {String period = 'day', UsageFilter filter = UsageFilter.none}) async =>
       (await api.usage.getUsage(orgId: orgId, period: period, botId: filter.botId, model: filter.model, source_: filter.source, userId: filter.userId)).data!;
 

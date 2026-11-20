@@ -9,6 +9,15 @@ The server, apps, CLI, SDK and MCP server share one version number.
 
 ## [Unreleased]
 
+- Bot pictures (D-456): give a bot any picture (camera, photos, files, drag and drop, paste, a
+  picture from a chat or the Library, or one Casama draws), framed in a new cropper with live
+  previews at sidebar size in light and dark, rotate, mirror and backgrounds for logos. Undo,
+  Recent pictures and Re-crop from the uncropped original. The picture shows across the app, on
+  calls, in the extension, widgets, Live Activities and on the watch, and the bot's colors follow
+  it. Bots can change their own picture when someone who manages them asks. Profile photos are
+  now framed by hand in the same cropper. `avatar_url` takes only mascots, the bot's own pictures
+  or nothing; old web links are cleared.
+
 - Map cards (D-444): tiles now come from Google first, then MapTiler, HERE (when configured) and
   OpenStreetMap, moving on when a source fails or reaches its free limit. Google's logo and data
   credit show on its maps. Google usage is capped below its free tier, so it can't bill.

@@ -72,6 +72,14 @@ There's no screen for making someone else an owner yet, so ask for help first if
 should stay.
 :::
 
+## Pictures
+
+Profile photos and bots' pictures are cropped on your device. The server removes their metadata
+(the camera, the place a photo was taken) before storing them, and serves them only by an address
+that changes with every new picture and is given only to people who can see the profile or the
+bot. A bot keeps its last five pictures and the uncropped copies of its newest two (for
+**Re-crop**); they're deleted with the bot. See [Give your bot a picture](/guide/bots#give-your-bot-a-picture).
+
 ## Run history retention
 
 Every run keeps a timeline of events: tool calls, outputs and errors. Workspace owners and admins

@@ -1,0 +1,29 @@
+{
+  "notes": "Shared by every parser of bots.avatar_url (docs/BOT-PICTURES-PLAN.md §5.1): packages/domain, client/lib/ui/bot_avatar.dart, client/ios/Shared/WatchLogic.swift, BotArt.kt, apps/extension. kind is initials, mascot or image.",
+  "vectors": [
+    { "value": null, "kind": "initials" },
+    { "value": "", "kind": "initials" },
+    { "value": "mascot:winky", "kind": "mascot", "mascot": "winky" },
+    { "value": "mascot:wow", "kind": "mascot", "mascot": "wow" },
+    { "value": "mascot:nobody", "kind": "initials" },
+    { "value": "mascot:Winky", "kind": "initials" },
+    { "value": "https://example.com/a.png", "kind": "initials" },
+    {
+      "value": "image:6f1c2e9a-3b4d-4c5e-8f70-1a2b3c4d5e6f:7a90ff7de9f4",
+      "kind": "image",
+      "id": "6f1c2e9a-3b4d-4c5e-8f70-1a2b3c4d5e6f",
+      "colors": ["#7a90ff", "#7de9f4"]
+    },
+    {
+      "value": "image:00000000-0000-0000-0000-000000000000:000000ffffff",
+      "kind": "image",
+      "id": "00000000-0000-0000-0000-000000000000",
+      "colors": ["#000000", "#ffffff"]
+    },
+    { "value": "image:6f1c2e9a-3b4d-4c5e-8f70-1a2b3c4d5e6f:7A90FF7DE9F4", "kind": "initials" },
+    { "value": "image:6f1c2e9a-3b4d-4c5e-8f70-1a2b3c4d5e6f:7a90ff", "kind": "initials" },
+    { "value": "image:6f1c2e9a-3b4d-4c5e-8f70-1a2b3c4d5e6f", "kind": "initials" },
+    { "value": "image:not-a-uuid:7a90ff7de9f4", "kind": "initials" },
+    { "value": " image:6f1c2e9a-3b4d-4c5e-8f70-1a2b3c4d5e6f:7a90ff7de9f4", "kind": "initials" }
+  ]
+}

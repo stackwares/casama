@@ -62,6 +62,24 @@ export const ANALYTICS_CLIENT_EVENTS: Record<string, string[]> = {
     "status",
     "via"
   ],
+  "bot_picture_set": [
+    "source",
+    "transparent",
+    "rotated",
+    "zoomed"
+  ],
+  "bot_picture_crop_cancelled": [
+    "source"
+  ],
+  "bot_picture_removed": [
+    "to"
+  ],
+  "bot_picture_undone": [],
+  "profile_photo_set": [
+    "source",
+    "rotated",
+    "zoomed"
+  ],
   "canvas_allowed": [
     "choice"
   ],

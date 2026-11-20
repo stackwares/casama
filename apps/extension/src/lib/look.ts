@@ -53,15 +53,44 @@ export function botInitials(name: string): string {
   return parts.length === 1 ? first(parts[0]!) : first(parts[0]!) + first(parts[1]!);
 }
 
-/** A bot's mark: its mascot (no tile), its own https picture, or its initials on its gradient. */
+/**
+ * A bot's own picture (`image:<id>:<rrggbb><rrggbb>`, docs/BOT-PICTURES-PLAN.md §5.1, the same rules
+ * as packages/domain/src/bot-avatar.ts), or null.
+ */
+export function pictureFromAvatar(
+  avatarUrl: string | null | undefined,
+): { id: string; colors: [string, string] } | null {
+  const m =
+    /^image:([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}):([0-9a-f]{6})([0-9a-f]{6})$/.exec(
+      avatarUrl ?? "",
+    );
+  return m ? { id: m[1]!, colors: [`#${m[2]}`, `#${m[3]}`] } : null;
+}
+
+/** The signed-in server, where bot pictures are served; set when a client is made for it. */
+let pictureServer: string | null = null;
+export function setPictureServer(server: string | null) {
+  pictureServer = server ? server.replace(/\/+$/, "") : null;
+}
+
+/**
+ * A bot's mark: its own picture (rounded square), its mascot (no tile), or its initials on its
+ * gradient. Web links are never loaded: a bot's avatar can't point a browser at someone's server.
+ */
 export function botAvatar(name: string, avatarUrl: string | null | undefined, size = 36) {
   const style = `width:${size}px;height:${size}px`;
   const mascot = mascotFromAvatar(avatarUrl);
   if (mascot)
     return h("img", { className: "bot-avatar mascot", src: mascotSrc(mascot), alt: "", style });
-  if (avatarUrl && /^https:\/\//.test(avatarUrl))
-    return h("img", { className: "bot-avatar photo", src: avatarUrl, alt: "", style });
-  const [a, b] = botPalette(name || "?");
+  const picture = pictureFromAvatar(avatarUrl);
+  if (picture && pictureServer)
+    return h("img", {
+      className: "bot-avatar photo",
+      src: `${pictureServer}/v1/bot-images/${picture.id}${size <= 64 ? "?size=128" : ""}`,
+      alt: "",
+      style: `${style};border-radius:${Math.round(size * 0.32)}px;object-fit:cover;background:linear-gradient(135deg,${picture.colors[0]},${picture.colors[1]})`,
+    });
+  const [a, b] = picture?.colors ?? botPalette(name || "?");
   const initials = botInitials(name || "?");
   return h(
     "span",

@@ -1169,6 +1169,115 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/bots/{id}/images/generate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Draw pictures for a bot with AI
+         * @description Draws one or two candidates (normal image credits each, after Casama's safety check). They don't change the bot until one is used; unused ones are deleted after a day.
+         */
+        post: operations["generateBotPictures"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/bot-images/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** A bot's picture (no token; cached for good) */
+        get: operations["getBotImage"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/bots/{id}/images/{image_id}/original": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The picture before it was cropped, for Re-crop */
+        get: operations["getBotPictureOriginal"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/bots/{id}/images": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** A bot's recent pictures, the one in use first, then by when they were last used */
+        get: operations["listBotPictures"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/bots/{id}/image": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Give a bot a picture of its own
+         * @description Send the cropped square; the server makes the sizes the apps show, drops the picture's metadata (camera, place) and takes the bot's colours from it. Twenty a day per bot.
+         */
+        put: operations["setBotPicture"];
+        post?: never;
+        /** Stop using a picture: back to the mascot it had before, or its initials */
+        delete: operations["removeBotPicture"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/bots/{id}/images/{image_id}/use": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Switch to one of the bot's recent or drawn pictures (also how Undo works) */
+        post: operations["useBotPicture"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/conversations/{id}/messages/{message_id}/reactions": {
         parameters: {
             query?: never;
@@ -9323,7 +9432,7 @@ export interface components {
             org_id: string;
             name: string;
             persona_md?: string;
-            /** Format: uri */
+            /** @description A mascot (`mascot:<name>`); a picture of its own is set afterwards with setBotPicture */
             avatar_url?: string;
             model_policy?: components["schemas"]["ModelPolicy"];
             autonomy?: components["schemas"]["Autonomy"];
@@ -9691,6 +9800,58 @@ export interface components {
         UpdateMemoryRequest: {
             content?: string;
             pinned?: boolean;
+        };
+        BotPictureList: {
+            items: components["schemas"]["BotPicture"][];
+        };
+        BotPicture: {
+            /** Format: uuid */
+            id: string;
+            /** @description The bots.avatar_url value that uses it */
+            avatar_url: string;
+            /** @enum {string} */
+            source: "upload" | "chat" | "generated" | "bot";
+            in_use: boolean;
+            has_original: boolean;
+            crop?: components["schemas"]["BotPictureCrop"];
+            /** Format: date-time */
+            created_at: string;
+        };
+        BotPictureCrop: {
+            /** @description Centre of the frame on the original, 0–1 across */
+            x: number;
+            /** @description Centre of the frame on the original, 0–1 down */
+            y: number;
+            /** @description Frame side as a share of the original's shorter side */
+            scale: number;
+            /** @description Quarter turns clockwise */
+            rotation: number;
+            mirror: boolean;
+            /**
+             * @description What fills see-through parts
+             * @enum {string}
+             */
+            background: "none" | "bot" | "white" | "black";
+        };
+        GenerateBotPicturesRequest: {
+            style: components["schemas"]["BotPictureStyle"];
+            /** @description What to draw; empty: Casama works it out from the bot's name and instructions */
+            description?: string;
+            count?: number;
+        };
+        /** @enum {string} */
+        BotPictureStyle: "cloud" | "soft3d" | "watercolor" | "flat" | "pixel" | "line" | "photo";
+        SetBotPictureRequest: {
+            /** @description The cropped square (PNG, JPEG or WebP), base64 */
+            data: string;
+            /** @description The picture before cropping, for Re-crop, base64 */
+            original?: string;
+            crop?: components["schemas"]["BotPictureCrop"];
+            /**
+             * @description upload (camera, files, paste, drop) or chat (a picture from a conversation)
+             * @enum {string}
+             */
+            source?: "upload" | "chat";
         };
         MessageReactionList: {
             /** Format: uuid */
@@ -19995,6 +20156,397 @@ export interface operations {
                 };
                 content: {
                     "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    generateBotPictures: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GenerateBotPicturesRequest"];
+            };
+        };
+        responses: {
+            /** @description Candidates */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BotPictureList"];
+                };
+            };
+            /** @description Validation failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not enough credits */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Rate limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    getBotImage: {
+        parameters: {
+            query?: {
+                /** @description Pixels; default 512 */
+                size?: "128" | "512";
+                /** @description Default webp; png for widgets */
+                format?: "webp" | "png";
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Picture */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/webp": string;
+                    "image/png": string;
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    getBotPictureOriginal: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                image_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Picture */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/jpeg": string;
+                    "image/png": string;
+                    "image/webp": string;
+                };
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    listBotPictures: {
+        parameters: {
+            query?: {
+                /** @description true: the drawn pictures nobody has used yet instead */
+                candidates?: "true" | "false";
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Pictures */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BotPictureList"];
+                };
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    setBotPicture: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetBotPictureRequest"];
+            };
+        };
+        responses: {
+            /** @description The bot */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Bot"];
+                };
+            };
+            /** @description Validation failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Rate limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    removeBotPicture: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The bot */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Bot"];
+                };
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    useBotPicture: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                image_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The bot */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Bot"];
                 };
             };
             /** @description Not authenticated */

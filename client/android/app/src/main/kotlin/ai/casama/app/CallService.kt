@@ -50,6 +50,8 @@ object CallBridge {
                         channel = call.argument<String>("channel") ?: "Calls",
                     ),
                 )
+                // A picture of its own is fetched in the background; the card is drawn again with it.
+                BotPictures.ensureThen(context, BotAvatarValue.ids(listOf(CallService.state?.avatar))) { CallService.refresh(context) }
                 try {
                     ContextCompat.startForegroundService(
                         context,
@@ -97,7 +99,7 @@ class CallService : Service() {
 
     class State(
         val bot: String,
-        /** The bot's icon as it stores it (`mascot:<name>`); null draws its initials. */
+        /** The bot's icon as it stores it (`mascot:<name>` or `image:<id>:<colours>`); null draws its initials. */
         val avatar: String? = null,
         val labels: Labels,
         var since: Long = 0,

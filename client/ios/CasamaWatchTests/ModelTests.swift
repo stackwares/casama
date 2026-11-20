@@ -27,6 +27,9 @@ struct ModelTests {
   static func main() {
     let dir = CommandLine.arguments.dropFirst().first ?? "packages/contracts/fixtures/watch"
     fixtures(URL(fileURLWithPath: dir))
+    let vectors = CommandLine.arguments.dropFirst(2).first ?? "packages/domain/test/fixtures/bot-avatar-vectors.json"
+    botAvatars(URL(fileURLWithPath: vectors))
+    botPictureFiles()
     key()
     codes()
     times()
@@ -373,5 +376,65 @@ struct ModelTests {
     check(!GlanceAge.isStale(savedAt: now.addingTimeInterval(-10 * 60), now: now), "ten minutes old is still now")
     check(GlanceAge.isStale(savedAt: now.addingTimeInterval(-31 * 60), now: now), "half an hour old is dated")
     check(GlanceAge.isStale(savedAt: nil, now: now), "never saved is dated")
+  }
+
+  // MARK: Bot pictures (docs/BOT-PICTURES-PLAN.md §5)
+
+  /// Every shared vector of `bots.avatar_url` (the same file the TypeScript, Dart and Kotlin parsers
+  /// read), through BotPalette and BotPicture.
+  static func botAvatars(_ file: URL) {
+    guard let data = try? Data(contentsOf: file),
+          let root = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any],
+          let vectors = root["vectors"] as? [[String: Any]], !vectors.isEmpty else {
+      check(false, "no bot avatar vectors in \(file.path)")
+      return
+    }
+    func hex(_ s: String) -> UInt32 { UInt32(s.dropFirst(), radix: 16) ?? 0 }
+    for v in vectors {
+      let value = v["value"] as? String
+      let kind = v["kind"] as? String ?? ""
+      let picture = BotPalette.picture(value)
+      let mascot = BotPalette.mascot(value)
+      switch kind {
+      case "image":
+        let id = v["id"] as? String ?? ""
+        let colors = v["colors"] as? [String] ?? []
+        eq(picture?.id, id, "\(value ?? "nil") is the picture \(id)")
+        eq(picture?.colors.0, colors.first.map(hex), "\(value ?? "nil") first colour")
+        eq(picture?.colors.1, colors.last.map(hex), "\(value ?? "nil") second colour")
+        check(mascot == nil, "\(value ?? "nil") is no mascot")
+      case "mascot":
+        eq(mascot, v["mascot"] as? String, "\(value ?? "nil") is that mascot")
+        check(picture == nil, "\(value ?? "nil") is no picture")
+      default:
+        check(picture == nil && mascot == nil, "\(value ?? "nil") reads as initials")
+      }
+    }
+    check(BotPicture.ids([vectors[7]["value"] as? String, nil, "mascot:winky"]) == [vectors[7]["id"] as? String ?? ""],
+          "ids are the pictures' ids only")
+    // A trailing newline is not part of a picture value, whatever a regex's `$` would say.
+    check(BotPalette.picture("image:6f1c2e9a-3b4d-4c5e-8f70-1a2b3c4d5e6f:7a90ff7de9f4\n") == nil, "no trailing newline")
+  }
+
+  /// The store's files: ids become file names only when they are uuids, PNGs are told by their
+  /// signature, and a prune keeps what is listed and what is new.
+  static func botPictureFiles() {
+    let dir = FileManager.default.temporaryDirectory.appendingPathComponent("bot-pictures-\(UUID().uuidString)")
+    defer { try? FileManager.default.removeItem(at: dir) }
+    let store = BotPictureStore(directory: dir)
+    let kept = "6f1c2e9a-3b4d-4c5e-8f70-1a2b3c4d5e6f"
+    let old = "00000000-0000-0000-0000-000000000000"
+    let fresh = "11111111-1111-1111-1111-111111111111"
+    check(store.file("../etc/passwd") == nil && store.file(kept.uppercased()) == nil, "only a uuid names a file")
+    check(store.image(kept) == nil && !store.has(kept), "nothing there before it is saved")
+    check(BotPictureStore.isPNG(Data([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0])), "a PNG signature")
+    check(!BotPictureStore.isPNG(Data("<html>".utf8)), "not a page")
+    for id in [kept, old, fresh] { try? Data([0x89, 0x50]).write(to: store.file(id)!) }
+    try? FileManager.default.setAttributes([.modificationDate: Date(timeIntervalSinceNow: -2 * 86400)], ofItemAtPath: store.file(old)!.path)
+    try? FileManager.default.setAttributes([.modificationDate: Date(timeIntervalSinceNow: -2 * 86400)], ofItemAtPath: store.file(kept)!.path)
+    store.prune(keep: [kept])
+    check(store.has(kept), "a listed picture stays")
+    check(!store.has(old), "an unused old picture goes")
+    check(store.has(fresh), "an unused new one waits out the grace period")
   }
 }

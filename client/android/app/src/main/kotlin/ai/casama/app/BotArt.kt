@@ -3,8 +3,10 @@ package ai.casama.app
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.BitmapShader
 import android.graphics.Canvas
 import android.graphics.LinearGradient
+import android.graphics.Matrix
 import android.graphics.Paint
 import android.graphics.Rect
 import android.graphics.RectF
@@ -18,6 +20,10 @@ import android.util.LruCache
  * picked one (res/drawable-nodpi/mascot_<name>.png, from assets/mascots), otherwise its initials
  * on a rounded square in its gradient, picked from its name as botPalette does. Keep both lists in
  * step with bot_avatar.dart and mascot.dart.
+ *
+ * A bot with a picture of its own (`image:<id>:<colours>`, [BotAvatarValue], [BotPictures]) shows
+ * that picture in the same rounded square; until its file is here it shows its initials on the
+ * picture's two colours.
  */
 object BotArt {
   /** The mascots (mascot.dart, `Mascot`) and their own two colours. */
@@ -66,8 +72,9 @@ object BotArt {
   fun mascot(avatar: String?): String? =
     avatar?.takeIf { it.startsWith("mascot:") }?.removePrefix("mascot:")?.takeIf { it in mascots }
 
-  /** The bot's two colours: its mascot's, or its initials gradient. */
+  /** The bot's two colours: its picture's, its mascot's, or its initials gradient. */
   fun colors(name: String, avatar: String?): Pair<Int, Int> {
+    BotAvatarValue.picture(avatar)?.let { return it.top to it.bottom }
     mascot(avatar)?.let { return mascots.getValue(it) }
     // botPalette: (h * 31 + code unit) & 0x7fffffff over the lower-cased name's UTF-16.
     var h = 0L
@@ -91,13 +98,36 @@ object BotArt {
 
   /** The mark at [px] square, transparent around a mascot. */
   fun bitmap(context: Context, name: String, avatar: String?, px: Int): Bitmap {
-    val key = "${mascot(avatar) ?: "i:$name"}@$px"
+    val picture = BotAvatarValue.picture(avatar)
+    val pictureFile = picture?.let { BotPictures.file(context, it.id) }?.takeIf { it.exists() }
+    // A picture's file arriving changes the key, so a mark drawn before it came is drawn again.
+    val key = when {
+      picture != null && pictureFile != null -> "p:${picture.id}@$px"
+      picture != null -> "i:$name:${picture.id}@$px"
+      else -> "${mascot(avatar) ?: "i:$name"}@$px"
+    }
     cache.get(key)?.let { return it }
     val out = Bitmap.createBitmap(px, px, Bitmap.Config.ARGB_8888)
     val canvas = Canvas(out)
     val mascot = mascot(avatar)
+    val own = picture?.let { BotPictures.bitmap(context, it.id) }
     val art = mascot?.let { drawables[it] }?.let { BitmapFactory.decodeResource(context.resources, it) }
-    if (art != null) {
+    if (own != null) {
+      // Centre-cropped to the square the initials would fill, with the same rounded corners.
+      val size = px.toFloat()
+      val scale = maxOf(size / own.width, size / own.height)
+      val shader = BitmapShader(own, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP).apply {
+        setLocalMatrix(
+          Matrix().apply {
+            setScale(scale, scale)
+            postTranslate((size - own.width * scale) / 2, (size - own.height * scale) / 2)
+          },
+        )
+      }
+      val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG).apply { this.shader = shader }
+      canvas.drawRoundRect(RectF(0f, 0f, size, size), size * 0.32f, size * 0.32f, paint)
+      own.recycle()
+    } else if (art != null) {
       // The art keeps a margin for the cloud's hops (mascot.dart, _zoom): draw it a little larger.
       val grow = (px * 0.07f).toInt()
       canvas.drawBitmap(
@@ -107,7 +137,8 @@ object BotArt {
         Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG),
       )
     } else {
-      val (top, bottom) = colors(name, null)
+      // A picture that isn't here yet keeps to its own colours; any other bot to its name's.
+      val (top, bottom) = colors(name, avatar.takeIf { picture != null })
       val size = px.toFloat()
       val fill = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         shader = LinearGradient(0f, 0f, size, size, top, bottom, Shader.TileMode.CLAMP)

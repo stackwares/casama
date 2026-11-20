@@ -28,6 +28,7 @@ import '../settings/model_keys_screen.dart';
 import '../settings/settings_screen.dart' show VoiceSettingsDialog;
 import 'a2a_sheet.dart';
 import 'bot_email.dart';
+import 'bot_picture.dart';
 import 'bot_template.dart';
 import 'bots_screen.dart' show botStatusLabel;
 import 'model_picker.dart';
@@ -53,6 +54,19 @@ class _BotProfileScreenState extends ConsumerState<BotProfileScreen> {
   String? _model;
   String? _avatar;
   var _avatarLoaded = false;
+  final _mascotPicker = GlobalKey();
+
+  /// A picture saved straight away (they upload, there's no Save for them): the screen's own
+  /// choice follows, so Save doesn't put the old icon back.
+  void _pictureChanged(String? avatar) {
+    if (mounted) setState(() => _avatar = avatar);
+  }
+
+  /// "Use a Mascot Instead": the mascots, in view.
+  void _showMascots() {
+    final c = _mascotPicker.currentContext;
+    if (c != null) Scrollable.ensureVisible(c, duration: AppMotion.of(context, AppMotion.duration), curve: AppMotion.curve, alignment: 0.3);
+  }
   var _busy = false;
 
   @override
@@ -205,10 +219,13 @@ class _BotProfileScreenState extends ConsumerState<BotProfileScreen> {
       children: [
         // Who it is.
         _BotHero(
+          bot: bot,
           name: name,
           avatar: _avatar,
           status: bot.status,
           model: model,
+          onAvatar: _pictureChanged,
+          onMascot: _showMascots,
         ),
         _BotTiles(
           tiles: [
@@ -270,10 +287,16 @@ class _BotProfileScreenState extends ConsumerState<BotProfileScreen> {
                 children: [
                   Text(l10n.botIcon, style: label),
                   MascotPicker(
+                    key: _mascotPicker,
                     value: _avatar,
                     initials: botInitials(name),
                     initialsLabel: l10n.botIconInitials,
                     onChanged: (v) => setState(() => _avatar = v),
+                    name: name,
+                    pictureLabel: l10n.botPicture,
+                    picture: BotPictureRef.parse(bot.avatarUrl) != null ? bot.avatarUrl : null,
+                    picturePreview: botPicturePreviewOf(ref, bot),
+                    onPicture: () => openBotPictureSheet(context, ref, bot, onAvatar: _pictureChanged, onMascot: _showMascots),
                   ),
                 ],
               ),
@@ -776,21 +799,27 @@ class _BotProfileScreenState extends ConsumerState<BotProfileScreen> {
 /// it's up to, with its model beside it when the model is the user's choice.
 class _BotHero extends StatelessWidget {
   const _BotHero({
+    required this.bot,
     required this.name,
     required this.avatar,
     required this.status,
     required this.model,
+    this.onAvatar,
+    this.onMascot,
   });
+  final Bot bot;
   final String name;
   final String? avatar;
   final BotStatusEnum status;
   final String model;
+  final ValueChanged<String?>? onAvatar;
+  final VoidCallback? onMascot;
 
   @override
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
     final colors = context.appColors;
-    final glow = botPalette(name).first;
+    final glow = botColors(name, avatar).first;
     final dot = switch (status) {
       BotStatusEnum.working => colors.working,
       BotStatusEnum.waiting => colors.waiting,
@@ -856,11 +885,13 @@ class _BotHero extends StatelessWidget {
                     ),
                   ),
                 ),
-                BotAvatar(
-                  name: name,
+                EditableBotAvatar(
+                  bot: bot,
                   avatar: avatar,
                   size: 112,
                   ringColor: Theme.of(context).scaffoldBackgroundColor,
+                  onAvatar: onAvatar,
+                  onMascot: onMascot,
                 ),
               ],
             ),

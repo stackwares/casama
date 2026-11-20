@@ -5255,7 +5255,8 @@
           },
           "avatar_url": {
             "type": "string",
-            "format": "uri"
+            "pattern": "^mascot:(winky|sleepy|starry|lovey|cool|thinker|giggly|shy|focused|wow)$",
+            "description": "A mascot (`mascot:<name>`); a picture of its own is set afterwards with setBotPicture"
           },
           "model_policy": {
             "$ref": "#/components/schemas/ModelPolicy"
@@ -6512,6 +6513,175 @@
             "type": "boolean"
           }
         }
+      },
+      "BotPictureList": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BotPicture"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "BotPicture": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "avatar_url": {
+            "type": "string",
+            "description": "The bots.avatar_url value that uses it"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "upload",
+              "chat",
+              "generated",
+              "bot"
+            ]
+          },
+          "in_use": {
+            "type": "boolean"
+          },
+          "has_original": {
+            "type": "boolean"
+          },
+          "crop": {
+            "$ref": "#/components/schemas/BotPictureCrop"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "avatar_url",
+          "source",
+          "in_use",
+          "has_original",
+          "created_at"
+        ]
+      },
+      "BotPictureCrop": {
+        "type": "object",
+        "properties": {
+          "x": {
+            "type": "number",
+            "minimum": -10,
+            "maximum": 10,
+            "description": "Centre of the frame on the original, 0–1 across"
+          },
+          "y": {
+            "type": "number",
+            "minimum": -10,
+            "maximum": 10,
+            "description": "Centre of the frame on the original, 0–1 down"
+          },
+          "scale": {
+            "type": "number",
+            "minimum": 0.01,
+            "maximum": 100,
+            "description": "Frame side as a share of the original's shorter side"
+          },
+          "rotation": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 3,
+            "description": "Quarter turns clockwise"
+          },
+          "mirror": {
+            "type": "boolean"
+          },
+          "background": {
+            "type": "string",
+            "enum": [
+              "none",
+              "bot",
+              "white",
+              "black"
+            ],
+            "description": "What fills see-through parts"
+          }
+        },
+        "required": [
+          "x",
+          "y",
+          "scale",
+          "rotation",
+          "mirror",
+          "background"
+        ]
+      },
+      "GenerateBotPicturesRequest": {
+        "type": "object",
+        "properties": {
+          "style": {
+            "$ref": "#/components/schemas/BotPictureStyle"
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 400,
+            "description": "What to draw; empty: Casama works it out from the bot's name and instructions"
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2
+          }
+        },
+        "required": [
+          "style"
+        ]
+      },
+      "BotPictureStyle": {
+        "type": "string",
+        "enum": [
+          "cloud",
+          "soft3d",
+          "watercolor",
+          "flat",
+          "pixel",
+          "line",
+          "photo"
+        ]
+      },
+      "SetBotPictureRequest": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "string",
+            "maxLength": 5600000,
+            "description": "The cropped square (PNG, JPEG or WebP), base64"
+          },
+          "original": {
+            "type": "string",
+            "maxLength": 5600000,
+            "description": "The picture before cropping, for Re-crop, base64"
+          },
+          "crop": {
+            "$ref": "#/components/schemas/BotPictureCrop"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "upload",
+              "chat"
+            ],
+            "description": "upload (camera, files, paste, drop) or chat (a picture from a conversation)"
+          }
+        },
+        "required": [
+          "data"
+        ]
       },
       "MessageReactionList": {
         "type": "object",
@@ -35639,6 +35809,600 @@
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/bots/{id}/images/generate": {
+      "post": {
+        "operationId": "generateBotPictures",
+        "tags": [
+          "bots"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Draw pictures for a bot with AI",
+        "description": "Draws one or two candidates (normal image credits each, after Casama's safety check). They don't change the bot until one is used; unused ones are deleted after a day.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateBotPicturesRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Candidates",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotPictureList"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Not enough credits",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/bot-images/{id}": {
+      "get": {
+        "operationId": "getBotImage",
+        "tags": [
+          "bots"
+        ],
+        "summary": "A bot's picture (no token; cached for good)",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "128",
+                "512"
+              ],
+              "description": "Pixels; default 512"
+            },
+            "required": false,
+            "description": "Pixels; default 512",
+            "name": "size",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "webp",
+                "png"
+              ],
+              "description": "Default webp; png for widgets"
+            },
+            "required": false,
+            "description": "Default webp; png for widgets",
+            "name": "format",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Picture",
+            "content": {
+              "image/webp": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/png": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/bots/{id}/images/{image_id}/original": {
+      "get": {
+        "operationId": "getBotPictureOriginal",
+        "tags": [
+          "bots"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "The picture before it was cropped, for Re-crop",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "image_id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Picture",
+            "content": {
+              "image/jpeg": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/png": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/webp": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/bots/{id}/images": {
+      "get": {
+        "operationId": "listBotPictures",
+        "tags": [
+          "bots"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "A bot's recent pictures, the one in use first, then by when they were last used",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ],
+              "description": "true: the drawn pictures nobody has used yet instead"
+            },
+            "required": false,
+            "description": "true: the drawn pictures nobody has used yet instead",
+            "name": "candidates",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Pictures",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotPictureList"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/bots/{id}/image": {
+      "delete": {
+        "operationId": "removeBotPicture",
+        "tags": [
+          "bots"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Stop using a picture: back to the mascot it had before, or its initials",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The bot",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bot"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "operationId": "setBotPicture",
+        "tags": [
+          "bots"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Give a bot a picture of its own",
+        "description": "Send the cropped square; the server makes the sizes the apps show, drops the picture's metadata (camera, place) and takes the bot's colours from it. Twenty a day per bot.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetBotPictureRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The bot",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bot"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/bots/{id}/images/{image_id}/use": {
+      "post": {
+        "operationId": "useBotPicture",
+        "tags": [
+          "bots"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Switch to one of the bot's recent or drawn pictures (also how Undo works)",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "image_id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The bot",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bot"
                 }
               }
             }

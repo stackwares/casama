@@ -71,6 +71,7 @@ const STEP_CHARS = 60;
 
 /** The words a phone shows for a tool's step, from app_en.arb's `toolDoing` (D-324). */
 export const LIVE_STEP_WORDS: Record<string, string> = {
+  profile_set_picture: "Changing its picture",
   memory_search: "Searching your memories",
   memory_write: "Saving that to memory",
   memory: "Updating its memory",

@@ -252,6 +252,13 @@ class BotsNotifier extends AsyncNotifier<List<Bot>> {
     return fresh;
   }
 
+  /// Shows a bot the server just returned (a new picture) in place, without waiting for a refetch.
+  void put(Bot bot) {
+    final list = state.value;
+    if (list == null) return;
+    state = AsyncData([for (final b in list) b.id == bot.id ? bot : b]);
+  }
+
   Future<void> _refetch(String orgId, String key) async {
     final gen = _generation;
     try {

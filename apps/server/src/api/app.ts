@@ -30,6 +30,7 @@ import { registerAppRoutes } from "./routes/apps.ts";
 import { registerAttentionRoutes } from "./routes/attention.ts";
 import { registerAutonomyRoutes } from "./routes/autonomy.ts";
 import { billingFor, registerBillingRoutes } from "./routes/billing.ts";
+import { registerBotPictureRoutes } from "./routes/bot-pictures.ts";
 import { registerBotSharingRoutes } from "./routes/bot-sharing.ts";
 import { registerBotTemplateRoutes } from "./routes/bot-template.ts";
 import { registerBotRoutes } from "./routes/bots.ts";
@@ -475,6 +476,7 @@ export function createApp(deps: AppDeps) {
   registerReferralRoutes(app, deps);
   registerWaitlistRoutes(app, deps);
   registerBotRoutes(app, deps);
+  registerBotPictureRoutes(app, deps);
   registerReactionRoutes(app, deps);
   registerBrowserRoutes(app, deps);
   registerChatGptRoutes(app, deps);
