@@ -15193,28 +15193,26 @@ export interface components {
             hide_when_locked?: boolean;
         };
         CardPrefs: {
-            home_place: components["schemas"]["Place"];
-            units: components["schemas"]["CardUnits"];
+            home_place: {
+                name: string;
+                region?: string | null;
+                country?: string | null;
+                country_name?: string | null;
+                lat: number;
+                lng: number;
+                tz?: string | null;
+            } | null;
+            units: {
+                /** @enum {string} */
+                temp?: "C" | "F";
+                /** @enum {string} */
+                wind?: "kph" | "mph" | "ms" | "kn";
+                /** @enum {string} */
+                precip?: "mm" | "in";
+                /** @enum {string} */
+                distance?: "km" | "mi";
+            } | null;
         };
-        Place: {
-            name: string;
-            region?: string | null;
-            country?: string | null;
-            country_name?: string | null;
-            lat: number;
-            lng: number;
-            tz?: string | null;
-        } | null;
-        CardUnits: {
-            /** @enum {string} */
-            temp?: "C" | "F";
-            /** @enum {string} */
-            wind?: "kph" | "mph" | "ms" | "kn";
-            /** @enum {string} */
-            precip?: "mm" | "in";
-            /** @enum {string} */
-            distance?: "km" | "mi";
-        } | null;
         LiveCardList: {
             items: components["schemas"]["LiveCard"][];
         };
@@ -15240,6 +15238,16 @@ export interface components {
         PinLiveCard: {
             units?: components["schemas"]["CardUnits"];
         };
+        CardUnits: {
+            /** @enum {string} */
+            temp?: "C" | "F";
+            /** @enum {string} */
+            wind?: "kph" | "mph" | "ms" | "kn";
+            /** @enum {string} */
+            precip?: "mm" | "in";
+            /** @enum {string} */
+            distance?: "km" | "mi";
+        };
         RefreshLiveCard: {
             view?: string;
             force?: boolean;
@@ -15247,9 +15255,35 @@ export interface components {
         PlaceList: {
             items: components["schemas"]["Place"][];
         };
+        Place: {
+            name: string;
+            region?: string | null;
+            country?: string | null;
+            country_name?: string | null;
+            lat: number;
+            lng: number;
+            tz?: string | null;
+        };
         UpdateCardPrefs: {
-            home_place?: components["schemas"]["Place"];
-            units?: components["schemas"]["CardUnits"];
+            home_place?: {
+                name: string;
+                region?: string | null;
+                country?: string | null;
+                country_name?: string | null;
+                lat: number;
+                lng: number;
+                tz?: string | null;
+            } | null;
+            units?: {
+                /** @enum {string} */
+                temp?: "C" | "F";
+                /** @enum {string} */
+                wind?: "kph" | "mph" | "ms" | "kn";
+                /** @enum {string} */
+                precip?: "mm" | "in";
+                /** @enum {string} */
+                distance?: "km" | "mi";
+            } | null;
         };
         WidgetKeyCreated: {
             /** Format: uuid */

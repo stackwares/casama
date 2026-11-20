@@ -44,7 +44,7 @@ class PinLiveCard {
 
     @override
     int get hashCode =>
-        (units == null ? 0 : units.hashCode);
+        units.hashCode;
 
   factory PinLiveCard.fromJson(Map<String, dynamic> json) => _$PinLiveCardFromJson(json);
 

@@ -120,6 +120,8 @@ import 'package:casama_api/src/model/canvas_preview_event_payload.dart';
 import 'package:casama_api/src/model/canvas_rotation.dart';
 import 'package:casama_api/src/model/canvas_update.dart';
 import 'package:casama_api/src/model/card_prefs.dart';
+import 'package:casama_api/src/model/card_prefs_home_place.dart';
+import 'package:casama_api/src/model/card_prefs_units.dart';
 import 'package:casama_api/src/model/card_units.dart';
 import 'package:casama_api/src/model/catalog_app.dart';
 import 'package:casama_api/src/model/catalog_app_api_key.dart';
@@ -1194,6 +1196,10 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return CanvasUpdate.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CardPrefs':
           return CardPrefs.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'CardPrefsHomePlace':
+          return CardPrefsHomePlace.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'CardPrefsUnits':
+          return CardPrefsUnits.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CardUnits':
           return CardUnits.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CatalogApp':

@@ -27405,100 +27405,94 @@
         "type": "object",
         "properties": {
           "home_place": {
-            "$ref": "#/components/schemas/Place"
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "region": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "country": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "country_name": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "lat": {
+                "type": "number"
+              },
+              "lng": {
+                "type": "number"
+              },
+              "tz": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "name",
+              "lat",
+              "lng"
+            ]
           },
           "units": {
-            "$ref": "#/components/schemas/CardUnits"
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "temp": {
+                "type": "string",
+                "enum": [
+                  "C",
+                  "F"
+                ]
+              },
+              "wind": {
+                "type": "string",
+                "enum": [
+                  "kph",
+                  "mph",
+                  "ms",
+                  "kn"
+                ]
+              },
+              "precip": {
+                "type": "string",
+                "enum": [
+                  "mm",
+                  "in"
+                ]
+              },
+              "distance": {
+                "type": "string",
+                "enum": [
+                  "km",
+                  "mi"
+                ]
+              }
+            }
           }
         },
         "required": [
           "home_place",
           "units"
         ]
-      },
-      "Place": {
-        "type": [
-          "object",
-          "null"
-        ],
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "region": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "country": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "country_name": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "lat": {
-            "type": "number"
-          },
-          "lng": {
-            "type": "number"
-          },
-          "tz": {
-            "type": [
-              "string",
-              "null"
-            ]
-          }
-        },
-        "required": [
-          "name",
-          "lat",
-          "lng"
-        ]
-      },
-      "CardUnits": {
-        "type": [
-          "object",
-          "null"
-        ],
-        "properties": {
-          "temp": {
-            "type": "string",
-            "enum": [
-              "C",
-              "F"
-            ]
-          },
-          "wind": {
-            "type": "string",
-            "enum": [
-              "kph",
-              "mph",
-              "ms",
-              "kn"
-            ]
-          },
-          "precip": {
-            "type": "string",
-            "enum": [
-              "mm",
-              "in"
-            ]
-          },
-          "distance": {
-            "type": "string",
-            "enum": [
-              "km",
-              "mi"
-            ]
-          }
-        }
       },
       "LiveCardList": {
         "type": "object",
@@ -27580,6 +27574,41 @@
           }
         }
       },
+      "CardUnits": {
+        "type": "object",
+        "properties": {
+          "temp": {
+            "type": "string",
+            "enum": [
+              "C",
+              "F"
+            ]
+          },
+          "wind": {
+            "type": "string",
+            "enum": [
+              "kph",
+              "mph",
+              "ms",
+              "kn"
+            ]
+          },
+          "precip": {
+            "type": "string",
+            "enum": [
+              "mm",
+              "in"
+            ]
+          },
+          "distance": {
+            "type": "string",
+            "enum": [
+              "km",
+              "mi"
+            ]
+          }
+        }
+      },
       "RefreshLiveCard": {
         "type": "object",
         "properties": {
@@ -27606,14 +27635,135 @@
           "items"
         ]
       },
+      "Place": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "region": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "country": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "country_name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "lat": {
+            "type": "number"
+          },
+          "lng": {
+            "type": "number"
+          },
+          "tz": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "name",
+          "lat",
+          "lng"
+        ]
+      },
       "UpdateCardPrefs": {
         "type": "object",
         "properties": {
           "home_place": {
-            "$ref": "#/components/schemas/Place"
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "region": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "country": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "country_name": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "lat": {
+                "type": "number"
+              },
+              "lng": {
+                "type": "number"
+              },
+              "tz": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "name",
+              "lat",
+              "lng"
+            ]
           },
           "units": {
-            "$ref": "#/components/schemas/CardUnits"
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "temp": {
+                "type": "string",
+                "enum": [
+                  "C",
+                  "F"
+                ]
+              },
+              "wind": {
+                "type": "string",
+                "enum": [
+                  "kph",
+                  "mph",
+                  "ms",
+                  "kn"
+                ]
+              },
+              "precip": {
+                "type": "string",
+                "enum": [
+                  "mm",
+                  "in"
+                ]
+              },
+              "distance": {
+                "type": "string",
+                "enum": [
+                  "km",
+                  "mi"
+                ]
+              }
+            }
           }
         }
       },

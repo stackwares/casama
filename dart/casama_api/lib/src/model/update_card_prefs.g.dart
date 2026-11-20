@@ -7,9 +7,9 @@ part of 'update_card_prefs.dart';
 // **************************************************************************
 
 abstract class _$UpdateCardPrefsCWProxy {
-  UpdateCardPrefs homePlace(Place? homePlace);
+  UpdateCardPrefs homePlace(CardPrefsHomePlace? homePlace);
 
-  UpdateCardPrefs units(CardUnits? units);
+  UpdateCardPrefs units(CardPrefsUnits? units);
 
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
@@ -19,7 +19,7 @@ abstract class _$UpdateCardPrefsCWProxy {
   /// ```dart
   /// UpdateCardPrefs(...).copyWith(id: 12, name: "My name")
   /// ```
-  UpdateCardPrefs call({Place? homePlace, CardUnits? units});
+  UpdateCardPrefs call({CardPrefsHomePlace? homePlace, CardPrefsUnits? units});
 }
 
 /// Callable proxy for `copyWith` functionality.
@@ -30,10 +30,11 @@ class _$UpdateCardPrefsCWProxyImpl implements _$UpdateCardPrefsCWProxy {
   final UpdateCardPrefs _value;
 
   @override
-  UpdateCardPrefs homePlace(Place? homePlace) => call(homePlace: homePlace);
+  UpdateCardPrefs homePlace(CardPrefsHomePlace? homePlace) =>
+      call(homePlace: homePlace);
 
   @override
-  UpdateCardPrefs units(CardUnits? units) => call(units: units);
+  UpdateCardPrefs units(CardPrefsUnits? units) => call(units: units);
 
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
@@ -52,11 +53,11 @@ class _$UpdateCardPrefsCWProxyImpl implements _$UpdateCardPrefsCWProxy {
       homePlace: homePlace == const $CopyWithPlaceholder()
           ? _value.homePlace
           // ignore: cast_nullable_to_non_nullable
-          : homePlace as Place?,
+          : homePlace as CardPrefsHomePlace?,
       units: units == const $CopyWithPlaceholder()
           ? _value.units
           // ignore: cast_nullable_to_non_nullable
-          : units as CardUnits?,
+          : units as CardPrefsUnits?,
     );
   }
 }
@@ -77,12 +78,15 @@ UpdateCardPrefs _$UpdateCardPrefsFromJson(Map<String, dynamic> json) =>
       final val = UpdateCardPrefs(
         homePlace: $checkedConvert(
           'home_place',
-          (v) => v == null ? null : Place.fromJson(v as Map<String, dynamic>),
+          (v) => v == null
+              ? null
+              : CardPrefsHomePlace.fromJson(v as Map<String, dynamic>),
         ),
         units: $checkedConvert(
           'units',
-          (v) =>
-              v == null ? null : CardUnits.fromJson(v as Map<String, dynamic>),
+          (v) => v == null
+              ? null
+              : CardPrefsUnits.fromJson(v as Map<String, dynamic>),
         ),
       );
       return val;

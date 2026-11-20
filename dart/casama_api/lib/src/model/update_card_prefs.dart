@@ -3,8 +3,8 @@
 //
 
 // ignore_for_file: unused_element
-import 'package:casama_api/src/model/place.dart';
-import 'package:casama_api/src/model/card_units.dart';
+import 'package:casama_api/src/model/card_prefs_units.dart';
+import 'package:casama_api/src/model/card_prefs_home_place.dart';
 import 'package:copy_with_extension/copy_with_extension.dart';
 import 'package:json_annotation/json_annotation.dart';
 
@@ -35,7 +35,7 @@ class UpdateCardPrefs {
   )
 
 
-  final Place? homePlace;
+  final CardPrefsHomePlace? homePlace;
 
 
 
@@ -47,7 +47,7 @@ class UpdateCardPrefs {
   )
 
 
-  final CardUnits? units;
+  final CardPrefsUnits? units;
 
 
 

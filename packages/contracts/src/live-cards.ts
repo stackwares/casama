@@ -34,39 +34,39 @@ export const RefreshLiveCard = z
   })
   .openapi("RefreshLiveCard");
 
-export const CardUnits = z
-  .object({
-    temp: z.enum(["C", "F"]).optional(),
-    wind: z.enum(["kph", "mph", "ms", "kn"]).optional(),
-    precip: z.enum(["mm", "in"]).optional(),
-    distance: z.enum(["km", "mi"]).optional(),
-  })
-  .openapi("CardUnits");
+// The shapes are kept unregistered for their nullable uses: zod-openapi resolves a registered
+// schema that is also used `.nullable()` differently depending on module load order.
+const cardUnitsShape = z.object({
+  temp: z.enum(["C", "F"]).optional(),
+  wind: z.enum(["kph", "mph", "ms", "kn"]).optional(),
+  precip: z.enum(["mm", "in"]).optional(),
+  distance: z.enum(["km", "mi"]).optional(),
+});
+export const CardUnits = cardUnitsShape.openapi("CardUnits");
 
-export const PlaceOut = z
-  .object({
-    name: z.string(),
-    region: z.string().nullable().optional(),
-    country: z.string().nullable().optional(),
-    country_name: z.string().nullable().optional(),
-    lat: z.number(),
-    lng: z.number(),
-    tz: z.string().nullable().optional(),
-  })
-  .openapi("Place");
+const placeShape = z.object({
+  name: z.string(),
+  region: z.string().nullable().optional(),
+  country: z.string().nullable().optional(),
+  country_name: z.string().nullable().optional(),
+  lat: z.number(),
+  lng: z.number(),
+  tz: z.string().nullable().optional(),
+});
+export const PlaceOut = placeShape.openapi("Place");
 
 export const CardPrefs = z
   .object({
-    home_place: PlaceOut.nullable(),
-    units: CardUnits.nullable(),
+    home_place: placeShape.nullable(),
+    units: cardUnitsShape.nullable(),
   })
   .openapi("CardPrefs");
 
 export const UpdateCardPrefs = z
   .object({
     /** A city the person picked from `GET /v1/places`; null clears it. */
-    home_place: PlaceOut.nullable().optional(),
-    units: CardUnits.nullable().optional(),
+    home_place: placeShape.nullable().optional(),
+    units: cardUnitsShape.nullable().optional(),
   })
   .openapi("UpdateCardPrefs");
 

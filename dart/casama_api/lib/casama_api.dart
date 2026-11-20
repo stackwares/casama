@@ -196,6 +196,8 @@ export 'package:casama_api/src/model/canvas_preview_event_payload.dart';
 export 'package:casama_api/src/model/canvas_rotation.dart';
 export 'package:casama_api/src/model/canvas_update.dart';
 export 'package:casama_api/src/model/card_prefs.dart';
+export 'package:casama_api/src/model/card_prefs_home_place.dart';
+export 'package:casama_api/src/model/card_prefs_units.dart';
 export 'package:casama_api/src/model/card_units.dart';
 export 'package:casama_api/src/model/catalog_app.dart';
 export 'package:casama_api/src/model/catalog_app_api_key.dart';

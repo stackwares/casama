@@ -196,6 +196,8 @@ lib/src/model/canvas_preview_event_payload.dart
 lib/src/model/canvas_rotation.dart
 lib/src/model/canvas_update.dart
 lib/src/model/card_prefs.dart
+lib/src/model/card_prefs_home_place.dart
+lib/src/model/card_prefs_units.dart
 lib/src/model/card_units.dart
 lib/src/model/catalog_app.dart
 lib/src/model/catalog_app_api_key.dart

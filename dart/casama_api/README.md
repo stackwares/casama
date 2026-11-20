@@ -755,6 +755,8 @@ Class | Method | HTTP request | Description
  - [CanvasRotation](doc/CanvasRotation.md)
  - [CanvasUpdate](doc/CanvasUpdate.md)
  - [CardPrefs](doc/CardPrefs.md)
+ - [CardPrefsHomePlace](doc/CardPrefsHomePlace.md)
+ - [CardPrefsUnits](doc/CardPrefsUnits.md)
  - [CardUnits](doc/CardUnits.md)
  - [CatalogApp](doc/CatalogApp.md)
  - [CatalogAppApiKey](doc/CatalogAppApiKey.md)
