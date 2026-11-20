@@ -28,7 +28,7 @@ same commit. Shipping details (deploys, app builds) move fast, so check them bef
 
 | Plan | Decisions | What's left |
 |---|---|---|
-| [BOT-WIDGET-PLAN](BOT-WIDGET-PLAN.md) | D-452 | Phases 1–3 written on `feat/bot-widgets`, not built. Phase 0 (iOS and Android builds on real phones, the Apple push key in production), then Live, the free layout and watches |
+| [BOT-WIDGET-PLAN](BOT-WIDGET-PLAN.md) | D-455 | Phases 1–3 written on `feat/bot-widgets`, not built. Phase 0 (iOS and Android builds on real phones, the Apple push key in production), then Live, the free layout and watches |
 | [GAPS-PLAN-2026-11](GAPS-PLAN-2026-11.md) | D-301..D-305 | Items 1–5 live. Item 6 (accessibility pass) and item 7 (more languages) not started; v1 is English only |
 | [LAUNCH-VIDEO-PLAN](LAUNCH-VIDEO-PLAN.md) |  | Main cut v2, 30 s cut and 15 s cut made. Launch date and the narration voice are open; every video needs narration |
 | [LIBRARY-PLAN](LIBRARY-PLAN.md) | D-274, D-276, D-281, D-291, D-294, D-295 | Pins, select several, "Recently opened", "what was made for a ticket" |

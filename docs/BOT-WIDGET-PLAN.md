@@ -1,6 +1,6 @@
 # Bot widgets: a bot puts what it likes on a person's widgets
 
-Status: **in progress** (D-452). Approved 2026-11-20 with §13's defaults. Phases 1–3 written on
+Status: **in progress** (D-455). Approved 2026-11-20 with §13's defaults. Phases 1–3 written on
 `feat/bot-widgets`, not built; Phase 0 and Phases 4–6 not started.
 
 Platform rules below were checked on 2026-11-20 against Apple's and Google's own pages and against

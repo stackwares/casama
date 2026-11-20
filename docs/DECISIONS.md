@@ -6665,7 +6665,7 @@ password and code (D-448), and delegated the rest ("build them all now in 1 go!"
 - **Tests:** `client/test/admin_quick_unlock_test.dart`; passkey tokens in
   `apps/server/test/admin.test.ts`.
 
-## D-452 Bot widgets: a Canvas widget bots fill in, kept changing without more runs (2026-11-20)
+## D-455 Bot widgets: a Canvas widget bots fill in, kept changing without more runs (2026-11-20)
 
 - **Decision (2026-11-20, Oliver: bots should put "whatever they like" on a person's widgets, then "can it build a source and assign it to the widget so it cycles through them?", then "let's get to work now"):** plan in `docs/BOT-WIDGET-PLAN.md`; every §13 default taken, including rotations (decision 19). Phases 1–3 are written; 0 (real devices), 4 (Live), 5 (free layout) and 6 (watches) are not started.
 - **One widget a bot fills in, called Canvas,** beside D-405's nine. A canvas is one bot's content for one person: five templates (text, countdown, number, list, picture), a look (colour, gradient, picture or one of eight built-in paintings; plain, serif, rounded or mono; alignment, icon, accent), and either up to 14 dated entries or a **rotation**: up to 400 items the widget cycles through every day, week or 1–23 hours, in order or shuffled, looping or stopping, worked out from the clock (`rotationAt` and `dealRotation` in `packages/domain/src/canvas.ts`), so a year of daily verses is one model run. The server deals a rotation to widgets as its next 14 dated entries; shuffles are seeded by the canvas id and lap, so every device agrees. **The server picks the text colour** for contrast (`inkFor`) and makes the Lock Screen's 80- and 24-character forms when the bot gives none.
