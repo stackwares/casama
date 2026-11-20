@@ -68,11 +68,18 @@ export interface Decision<U extends DecisionUse> {
   t: DecisionUseSettings<U>;
   /** The acting row's id when `on`, for markDecision(). */
   logId: string | null;
-  /**
-   * Shadow with `wait: false`: settles when every shadow row is written, so a label added later
-   * finds them. Not kept across a durable step's replay; labels then go on whatever rows exist.
-   */
-  settled?: Promise<void>;
+}
+
+/**
+ * Shadow calls sent off the main path, by run and use, until their rows are written. Kept here and
+ * not on the Decision: a durable step's result is serialized, so a promise in it comes back as a
+ * plain object (that failed every chat run with a tool step on 2026-11-20).
+ */
+const inFlight = new Map<string, Promise<void>>();
+
+/** Resolves when this run's shadow rows for `use` are written; at once when none are pending. */
+export function shadowSettled(runId: string | null, use: DecisionUse): Promise<void> {
+  return (runId && inFlight.get(`${runId}:${use}`)) || Promise.resolve();
 }
 
 const none = (questions: Record<string, DecisionQuestion>) =>
@@ -193,9 +200,19 @@ export async function decide<U extends DecisionUse>(
         await record(db, deps, input, model, true, r).catch(warn);
       }),
     );
-    const settled = all.then(() => undefined);
+    const settled = all.then(
+      () => undefined,
+      () => undefined,
+    );
     if (input.wait !== false) await settled;
-    return { mode, answers: none(input.questions), t, logId: null, settled };
+    else if (input.runId) {
+      const key = `${input.runId}:${input.use}`;
+      inFlight.set(key, settled);
+      void settled.then(() => {
+        if (inFlight.get(key) === settled) inFlight.delete(key);
+      });
+    }
+    return { mode, answers: none(input.questions), t, logId: null };
   }
 
   const r = await ask(settings.model);

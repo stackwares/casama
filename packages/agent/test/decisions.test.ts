@@ -724,3 +724,34 @@ describe("the long-run check", () => {
     expect(rows.filter((r) => r.action === "warned")).toHaveLength(1);
   });
 });
+
+describe("in the worker", () => {
+  it("shadow reply checks survive steps whose results are serialized, and still get labelled", async () => {
+    // The worker keeps each step's result serialized (superjson); a promise in one comes back as
+    // a plain object. A JSON round trip does the same to a promise.
+    const serializing = async <T>(_name: string, fn: () => Promise<T>): Promise<T> => {
+      const v = await fn();
+      return v === undefined ? v : (JSON.parse(JSON.stringify(v)) as T);
+    };
+    const botId = await newBot("autonomous");
+    const m = oneStep("mail.send");
+    const fake = fakeBackend({ "a/one": 0.5 });
+    const slow: DecisionBackend = {
+      decide: (c) => new Promise((r) => setTimeout(() => r(fake.backend.decide(c)), 150)),
+    };
+    const decisions = decisionDeps(
+      { shadow_models: ["a/one"], uses: { reply_check: { mode: "shadow" } } },
+      slow,
+    );
+    const runId = await chat(botId, "mail a@b.c");
+    const res = await runAgent(runId, {
+      ...runDeps(m.gateway, decisions, sender([])),
+      step: serializing,
+    });
+    expect(res.status).toBe("completed");
+    await new Promise((r) => setTimeout(r, 500));
+    const [row] = await logOf(runId);
+    expect(row?.shadow).toBe(true);
+    expect(row?.outcome).toMatchObject({ memories: 0, regex_correction: false });
+  });
+});
