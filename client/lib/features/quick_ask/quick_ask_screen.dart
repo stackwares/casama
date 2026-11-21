@@ -60,7 +60,8 @@ class _QuickAskScreenState extends ConsumerState<QuickAskScreen> {
     if (widget.fromShareExtension) {
       Analytics.feature('share_extension');
       takeSharedText().then((t) {
-        if (mounted && t.isNotEmpty) _text.text = t;
+        // setState: Send is enabled from the text, and stayed greyed out until a key was typed.
+        if (mounted && t.isNotEmpty) setState(() => _text.text = t);
       });
     }
   }
@@ -154,6 +155,9 @@ class _QuickAskScreenState extends ConsumerState<QuickAskScreen> {
     final ready = _botId != null && (_text.text.trim().isNotEmpty || _files.isNotEmpty || (_ctx?.selection != null && _withSelection));
     return SubPage(
       title: l10n.quickAsk,
+      // Opened from the share sheet or a shortcut with nothing under it: without this there was
+      // no way out but sending.
+      backFallback: '/bots',
       children: [
         Text(bots.length == 1 ? l10n.quickAskIntroBot(bots.single.name) : l10n.quickAskIntro, style: context.textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant, height: 1.4)),
         const SizedBox(height: AppSpace.lg),

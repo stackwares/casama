@@ -107,7 +107,7 @@ void main() {
 
   testWidgets('a link straight to Settings or the computer on a phone still has a way back', (tester) async {
     await _pumpApp(tester, const Size(400, 860));
-    for (final path in ['/settings', '/computer', '/search']) {
+    for (final path in ['/settings', '/computer', '/search', '/quick-ask?text=hi']) {
       GoRouter.of(tester.element(find.byType(BotsScreen))).go(path);
       await tester.pumpAndSettle();
       await tester.tap(find.byTooltip('Back'));
