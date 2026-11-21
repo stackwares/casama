@@ -34,6 +34,10 @@ Rules that apply to every row:
 | AppImage (+ AppImageHub) | Linux | **Maybe** | See "Other Linux stores" |
 | Own apt / dnf repository (.deb, .rpm) | Debian, Ubuntu, Fedora | **Maybe** | See "Other Linux stores" |
 | Fedora COPR, nixpkgs, Ubuntu PPA, elementary AppCenter | Linux | **Not now** | See "Other Linux stores" |
+| Homebrew Cask (`casama`) | macOS | **Planned** | See "Other Mac stores" |
+| Setapp | macOS | **Maybe** (needs its own build and pricing decision) | See "Other Mac stores" |
+| MacUpdate, Softpedia, Uptodown, Softonic, Mac Informer | macOS | **Planned** (free listings) | See "Other Mac stores" |
+| MacUpdater, Latest, Applite | macOS | **Planned** (nothing to submit: they read Homebrew or our Sparkle feed) | See "Other Mac stores" |
 | Microsoft Store | Windows | MSIX packaging exists (`scripts/package-windows.ps1`); no listing | Decide; reserve the name |
 | Web app | Browser | Live at app.casama.ai | n/a |
 | Samsung Galaxy Store | Android | **Planned** | See "Other Android stores" |
@@ -105,6 +109,26 @@ Both Chrome and Edge ids must be in the server's `CHROME_EXTENSION_IDS` and in
 | CI | `.github/workflows/desktop.yml` builds the `.snap` next to the Linux tarball as an artifact (x64 and arm64) |
 | Upload | `snapcraft upload --release=<channel> dist/casama_*.snap`; Snapcraft login in Vaultwarden once made |
 | Status | Classic request on forum.snapcraft.io not filed (a classic snap can't be published until Canonical approves it, usually a week or two); nothing uploaded |
+
+## Other Mac stores
+
+Everything here distributes the **direct download**: the notarized Developer ID DMG from
+`scripts/package-macos.sh`, which updates itself with Sparkle (feed `appcast-macos.xml`, published by
+`scripts/publish-desktop-release.sh`). Only Setapp needs a build of its own. None of them replaces
+the Mac App Store listing; both ship together as AGENTS.md says.
+
+| # | Store | Reach | What it takes | Effort |
+|---|---|---|---|---|
+| 1 | **Homebrew Cask** | Developers and power users (`brew install --cask casama`); also feeds Applite, Latest and MacUpdater | A cask file in a pull request to `Homebrew/homebrew-cask`: the DMG URL on GitHub Releases, sha256, `auto_updates true` (Sparkle updates it), `livecheck` on the appcast, `zap` paths for `~/Library` cleanup. Homebrew rejects casks for apps that aren't yet "notable" (GitHub stars, forks, watchers) and self-submitted ones get a closer look. Fallback until then: our own tap `stackwares/homebrew-tap` (`brew install --cask stackwares/tap/casama`), which CI can bump on each release. Free | Small |
+| 2 | **Setapp** | About a million paying Mac users; curated, one subscription for all apps | Apply as a developer (review of the app and the company). Setapp apps can't show their own paywall or take payments: Setapp pays us by usage (about 70% of the share for usage, more for users we refer). Needs a Setapp build (`CASAMA_DISTRIBUTION=setapp`): Setapp's framework for licensing, its own bundle id (`ai.casama.app-setapp`), its own update channel (no Sparkle), and a decision on what Setapp members get from Casama Cloud (which plan, how much usage) since our costs are per use. Setapp also lists iOS apps in the EU | Large, and a pricing decision for Oliver |
+| 3 | **MacUpdate** | Long-running Mac download directory | Free developer account; listing with the DMG link, screenshots, description from `client/store/`. Keeps the version current if we give it the appcast | Small |
+| 4 | **Softpedia, Uptodown, Softonic, Mac Informer** | Download directories with search traffic | Free submission forms; some find the app themselves. Uptodown's developer account also covers Android and Windows | Small each |
+| 5 | **MacUpdater, Latest, Applite** | Update and install tools | Nothing to submit: they read Homebrew casks or Sparkle feeds. They pick Casama up once the cask exists | None |
+| — | MacPorts | Developers | Builds from source; Homebrew covers the same people | Not now |
+| — | Paid bundles (BundleHunt, StackSocial) | Deal hunters | Sell lifetime licences at a deep discount; doesn't fit a per-use cloud service | Not doing |
+
+Next steps for Mac, in order: the Homebrew cask (or our own tap until Casama is notable enough),
+then MacUpdate and the free directories; Setapp only after Oliver decides what Setapp members get.
 
 ## Other Linux stores
 
