@@ -19,6 +19,7 @@ same commit. Shipping details (deploys, app builds) move fast, so check them bef
 | Plan | Written | Waiting on |
 |---|---|---|
 | [ADS-ATTRIBUTION-PLAN](ADS-ATTRIBUTION-PLAN.md) | 2026-11-20 | §15 decisions; then a Meta business portfolio, ad account and app (Oliver) |
+| [ANDROID-STORES-PLAN](ANDROID-STORES-PLAN.md) | 2026-11-21 | §7 decisions and Oliver's go-ahead (`CASAMA_DISTRIBUTION` for Android, APK packaging, store choices) |
 | [COMPUTER-PLACES-PLAN](COMPUTER-PLACES-PLAN.md) | 2026-11-21 | §12 decisions and Oliver's go-ahead. A bot keeps its own computer and may also use yours in the same chat |
 | [DECISION-MODEL-PLAN](DECISION-MODEL-PLAN.md) | 2026-11-20 | §12 decisions and Oliver's go-ahead. Phase 0 needs three decision models added to the OpenRouter guardrail |
 | [MEETING-BOT-PLAN](MEETING-BOT-PLAN.md) | 2026-11-21 | §14 decisions. The engine (Recall.ai or our own) is left open on purpose; Phase 0 tries both and needs a Recall trial key and test calls on Meet, Teams and Zoom (§17) |
