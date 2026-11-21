@@ -41,7 +41,8 @@ void main() {
       });
       expect(k.all.length, k.all.toSet().length);
       expect(k.cloud, isEmpty);
-      expect(k.runsChat, {ProviderId.anthropic, ProviderId.openrouter});
+      // A ChatGPT plan always runs chat: it is signed in, so never in the add-key lists.
+      expect(k.runsChat, {ProviderId.anthropic, ProviderId.openrouter, ProviderId.chatgpt});
       expect(k.hints, {ProviderId.tavily: 'search the web'});
     },
   );

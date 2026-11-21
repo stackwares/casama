@@ -152,18 +152,18 @@ class _BotProfileScreenState extends ConsumerState<BotProfileScreen> {
       _avatar = bot.avatarUrl;
       _avatarLoaded = true;
     }
+    // The keys that can run a bot, a ChatGPT plan among them (one shared list, never a copy here).
+    final runsChat = chatKeyProviders(ref);
     final keys = (ref.watch(credentialsProvider).value ?? const <Credential>[])
-        .where(
-          (k) => const {
-            ProviderId.openrouter,
-            ProviderId.openai,
-            ProviderId.anthropic,
-            ProviderId.google,
-            ProviderId.xai,
-            ProviderId.openaiCompatible,
-          }.contains(k.provider),
-        )
+        .where((k) => runsChat.contains(k.provider))
         .toList();
+    // A bot with no model yet starts on the usable key, so "Choose model" lands one tap from done.
+    if (_credentialId == null && keys.isNotEmpty) {
+      _credentialId = preferredKeyId(ref, keys, listen: false);
+      _model ??= ref.read(backendProvider).defaultModelFor(
+        keys.firstWhere((k) => k.id == _credentialId).provider.value,
+      );
+    }
     final computers = ref.watch(computersProvider).value ?? const <Computer>[];
     final usable = computers
         .where(

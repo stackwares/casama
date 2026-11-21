@@ -131,6 +131,16 @@ void main() {
     expect(find.byKey(const Key('modelPicker')), findsOneWidget);
   });
 
+  testWidgets('a connected ChatGPT plan can be picked as the bot\'s key', (tester) async {
+    await setSize(tester, const Size(430, 4400));
+    final backend = FakeBackend()..extraCredentials = [chatGptCredential(orgId)];
+    await tester.pumpWidget(harness(backend, const BotProfileScreen(botId: botId)));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('botKey-2')));
+    await tester.pumpAndSettle();
+    expect(find.text('ChatGPT plan · ChatGPT'), findsWidgets);
+  });
+
   testWidgets('the profile shows who the bot is and its settings in sections; Advanced opens in place', (tester) async {
     await setSize(tester, const Size(430, 4400)); // tall enough to build every row with Advanced open
     await tester.pumpWidget(harness(FakeBackend(), const BotProfileScreen(botId: botId)));

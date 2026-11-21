@@ -64,7 +64,7 @@ class KeyProviders {
       ProviderId.mapbox,
       ProviderId.treg,
     ],
-    runsChat: const {..._chat, ProviderId.openaiCompatible},
+    runsChat: const {..._chat, ProviderId.openaiCompatible, ProviderId.chatgpt},
   );
 
   /// The server's list, read leniently: unknown ids are skipped, and a part that comes out empty
@@ -87,7 +87,9 @@ class KeyProviders {
       more: _withRest(more, chat),
       // An empty cloud list means Casama Cloud supplies every key, so it's kept as sent.
       cloud: ids(remote.cloud),
-      runsChat: runsChat.isEmpty ? fallback.runsChat : runsChat,
+      // A ChatGPT plan always runs chat. It's never in the server's lists, which feed the add-key
+      // form, because it's connected by signing in instead.
+      runsChat: runsChat.isEmpty ? fallback.runsChat : {...runsChat, ProviderId.chatgpt},
       hints: {
         for (final MapEntry(:key, :value)
             in (remote.hints ?? const <String, String>{}).entries)
