@@ -125,6 +125,7 @@ describe("reports and blocks (D-301)", () => {
   });
 
   it("blocking stops invites from that person without telling them", async () => {
+    await h.tdb.admin`update public.profiles set display_name = null where user_id = ${alice.id}`;
     const block = await j(
       await h.request("/v1/me/blocks", {
         method: "POST",
@@ -133,6 +134,8 @@ describe("reports and blocks (D-301)", () => {
       }),
     );
     expect(block.user_id).toBe(alice.id);
+    // An id is enough to block someone, so the answer never carries their full email.
+    expect(JSON.stringify(block)).not.toContain("alice@example.com");
     h.outbox.length = 0;
     const res = await h.request(`/v1/orgs/${orgId}/invites/batch`, {
       method: "POST",

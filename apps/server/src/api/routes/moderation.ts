@@ -12,6 +12,7 @@ import { routes } from "@casama/contracts";
 import { type JwtClaims, withUserSession } from "@casama/db";
 import type { OpenAPIHono } from "@hono/zod-openapi";
 import { sql } from "drizzle-orm";
+import { maskEmail } from "../../billing/comps.ts";
 import { suspendOrg } from "../../services/abuse.ts";
 import { ApiError } from "../errors.ts";
 import type { AppDeps, AppEnv } from "../types.ts";
@@ -271,7 +272,9 @@ export function registerModerationRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps
       order by b.created_at desc`);
   const blockOut = (b: Awaited<ReturnType<typeof blockRows>>[number]) => ({
     user_id: b.user_id,
-    name: b.name || b.email || "Someone",
+    // Blocking needs only a user id, not a shared workspace: a full email here would let anyone
+    // holding an id read that person's address.
+    name: b.name || maskEmail(b.email) || "Someone",
     blocked_at: new Date(b.blocked_at).toISOString(),
   });
 
