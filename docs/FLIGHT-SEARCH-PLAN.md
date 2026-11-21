@@ -3,8 +3,8 @@
 Status: **built, not deployed.** Approved 2026-11-21 (Oliver: "just build the fall backs", without
 buying a SerpApi plan yet, then "go build all in 1 go"). All phases are built (D-471): Kiwi.com →
 Google Flights chain, `live.fares`, charging, limits, the native Fares card, price watches, and
-affiliate link wrapping (switched on by `LIVE_FARES_AFFILIATE_URL` once Oliver's Travelpayouts
-account is approved). Written 2026-11-21;
+affiliate link wrapping (`LIVE_FARES_AFFILIATE_URL`; left unset because Kiwi.com has no deep links
+on Travelpayouts, see D-471). Written 2026-11-21;
 §2 decisions were Claude's at Oliver's request. Phase 0 findings and changes are in D-471.
 
 ## Execution brief (read this first)
@@ -289,7 +289,7 @@ It's a separate thing.
 |---|---|---|
 | SerpApi **Starter plan ($25 a month)**. The account exists since 2026-11-21 (Google sign-in as stackwares@gmail.com, email and phone verified, Free Plan). Its key is in Vaultwarden as "Casama · SerpApi key (Google Flights, stackwares@gmail.com)" | Upgrade before Phase 1 ships on Cloud. The free plan is enough to build | Build and test on the free 250 a month. Cloud runs Kiwi only until the key is set |
 | Set `LIVE_SERPAPI_KEY` and `LIVE_SERPAPI_MONTHLY_CAP=900` on the production server | Deploy | Ships with Kiwi only |
-| Travelpayouts account and the Kiwi.com programme application | Phase 4 | Plain links until accepted |
+| Travelpayouts account (made 2026-11-21, marker 809513; Kiwi.com open but home-page links only) and a payout method | Phase 4 | Plain links |
 | Yes for the local web check (Flutter run) and for each deploy | Phases 2–3 | Widget tests |
 
 Log these in `docs/NEEDS-FROM-OLIVER.md` when the build starts.

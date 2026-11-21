@@ -7276,15 +7276,26 @@ only the last words of a help sentence. So:
   with `{url}` where the booking page goes (URL-encoded); booking links on
   `LIVE_FARES_AFFILIATE_HOSTS` (default `kiwi.com`) are wrapped on the server when the card is built,
   the card gets `affiliate: true`, and the app shows "Casama may earn a commission…". A template, not
-  a marker, because Travelpayouts' link format is only known after Oliver's account is approved.
-  Unset = plain links. Google Flights links are never wrapped.
+  a marker, so another network or brand can be used without code. Unset = plain links. Google
+  Flights links are never wrapped.
+- **Travelpayouts (2026-11-21):** account made with Google as stackwares@gmail.com (no password),
+  marker 809513, project "Casama" (id 604625, https://casama.ai). Their Drive script was skipped: no
+  third-party ad script on casama.ai. Kiwi.com (programme 111, 3%, 30-day cookie, web only) and
+  Aviasales (programme 100) are open to the account with no approval. **Kiwi.com only has ready-made
+  links** (its home pages): `tp.media/click?...&custom_url=` and `tp.media/r?...&u=` both land on
+  kiwi.com's home page, and the Kiwi MCP's booking links (`kiwi.com/u/…`) already carry Kiwi's own
+  `affilid=kiwi-mcp`. So wrapping Kiwi booking links would lose the person's trip:
+  `LIVE_FARES_AFFILIATE_URL` stays unset. Aviasales deep links do work
+  (`https://tp.media/r?marker=809513&trs=604625&p=4114&u={url}` keeps an aviasales.com search URL and
+  adds the marker); a "compare on Aviasales" link per Fares card would be a small follow-up, not
+  built. Payouts need a payout method that only Oliver can enter.
 - **Tests (Phases 3–4):** `packages/agent/test/live-fare-watches.test.ts` (end dates, spread, push
   rules, words), `apps/server/test/fare-watches.test.ts` (start from the card and from the bot, one
   push on a drop and none again that day, five per workspace, Stop, the end date, Fares only),
   `supabase/tests/fare_watches_rls.test.sql`, affiliate cases in both `live-fares` tests, and the
   watch, Settings and disclosure cases in `client/test/live_cards_test.dart`.
 - **Not done:** not deployed; no app build; `LIVE_SERPAPI_KEY` and `LIVE_FARES_AFFILIATE_URL` not on
-  any server; Travelpayouts sign-up is Oliver's.
+  any server; Travelpayouts payout method not set.
 
 ## D-472 Computers burst to 2 CPUs while the machine is free; their share stays their size (2026-11-21)
 
