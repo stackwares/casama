@@ -7301,3 +7301,17 @@ only the last words of a help sentence. So:
   cap on its next wake (sleep removes the container; wake creates a fresh one).
 - **Not done:** dropping gVisor (about 5× faster, but weaker isolation between workspaces) and
   starting the browser at every wake (CPU spent on wakes that never use it).
+
+## D-475 Prod keeps one warm computer, sized like the usual plan, for wakes to claim (2026-11-21)
+
+- **Why:** a bot's first computer tool waits for the wake: 7.2 s median, 15.5 s p90, 27.7 s max
+  over 100 wakes in a week (`computer.state` starting → running), before the browser's own start.
+  The warm pool (D-148) was off in prod.
+- **Change (prod `.env` only):** `WARM_POOL_SIZE=1`, and `COMPUTER_MEMORY_MB=1024` so pool
+  members match the size nearly every computer wakes at (1 CPU, 1 GiB); a wake only claims a member
+  of the default size, and Compose's default was 2048, so no wake could have claimed one. A wake now
+  takes the started member (no network, container or computerd start) and only restores its saved
+  files; desktop wakes and other sizes start as before.
+- **Cost:** one idle headless container, about 15 MiB and no CPU while it waits; it refills after
+  each claim and every minute. Backups of the old `.env` are in `/root/.env.bak-*` on the server.
+- **Self-hosting:** defaults unchanged (`WARM_POOL_SIZE` 0, `COMPUTER_MEMORY_MB` 2048).
