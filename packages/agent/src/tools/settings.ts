@@ -159,7 +159,7 @@ export function registerSettingsTools(
     db: Database;
     fetch: typeof fetch;
     /** The gallery's apps (D-239), beyond the built-in catalog; the server supplies them. */
-    galleryApps?: () => Promise<Array<{ id: string; name: string }>>;
+    galleryApps?: () => Promise<Array<{ id: string; name: string; url?: string }>>;
     /** The public MCP registry mcp.find searches (D-473); tests point it at a fake. */
     registryUrl?: string;
   },
@@ -482,7 +482,8 @@ export function registerSettingsTools(
       if (!args.apps?.length && !asked.length)
         throw new ToolError("bad_args", "Give apps, servers, or both.");
       // Built-in apps first; the gallery's only when one isn't built in (never replacing one).
-      let gallery: Array<{ id: string; name: string; composio?: string }> | null = null;
+      let gallery: Array<{ id: string; name: string; composio?: string; url?: string }> | null =
+        null;
       const fromGallery = async () => {
         gallery ??= deps.galleryApps ? await deps.galleryApps().catch(() => []) : [];
         return gallery;
@@ -524,10 +525,12 @@ export function registerSettingsTools(
             "That address has a key or other values after the ?. Offer the server without url, and the person types the address themselves, so the key stays out of the chat.",
           );
         const key = serverKey(u);
-        const builtIn = APP_CATALOG.find((a) => {
-          const au = a.provider ? null : customServerUrl(a.url);
+        const sameAddress = (a: { provider?: unknown; url?: string }) => {
+          const au = a.provider || !a.url ? null : customServerUrl(a.url);
           return au !== null && serverKey(au) === key;
-        });
+        };
+        // A gallery app's address counts too, so one app never gets two buttons.
+        const builtIn = APP_CATALOG.find(sameAddress) ?? (await fromGallery()).find(sameAddress);
         if (builtIn) {
           if (!apps.some((a) => a.id === builtIn.id)) apps.push(builtIn);
         } else if (have.has(key)) alreadyServers.push(sv.name);

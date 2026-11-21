@@ -276,7 +276,7 @@ export interface WorkerOptions {
   /** Casama Cloud abuse controls (D-094): free workspaces need a verified owner email for computers. */
   requireVerifiedEmail?: boolean;
   /** The gallery's apps (D-239), so bots can offer connect buttons for them too (D-259). */
-  galleryApps?: () => Promise<Array<{ id: string; name: string; composio?: string }>>;
+  galleryApps?: () => Promise<Array<{ id: string; name: string; composio?: string; url?: string }>>;
   /** The whole gallery for gallery.search and gallery.suggest (D-315). */
   gallery?: import("@casama/agent").GalleryCatalog;
   /** The coding agents catalog (D-370): the signed gallery's list over the built-in one. */

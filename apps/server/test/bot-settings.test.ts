@@ -174,7 +174,9 @@ beforeAll(async () => {
   registerSettingsTools(reg, {
     db: h.handle.db,
     fetch: fakeFetch,
-    galleryApps: async () => [{ id: "cal-com", name: "Cal.com" }],
+    galleryApps: async () => [
+      { id: "cal-com", name: "Cal.com", url: "https://mcp.cal.example/mcp" },
+    ],
     registryUrl: "https://mcp.test/registry",
   });
 }, 60_000);
@@ -384,6 +386,17 @@ describe("bot settings tools", () => {
     expect(JSON.stringify(events[0]?.payload.messages)).toContain(
       `"name":"app:connect","context":{"app":"${builtIn.id}"}`,
     );
+
+    // So is a gallery app's: asked for as an app and as a server, it gets one button and no warning.
+    events.length = 0;
+    await call("connections.offer", {
+      apps: ["cal-com"],
+      servers: [{ name: "Cal.com", url: "https://mcp.cal.example/mcp" }],
+      why: "x",
+    });
+    const galleryCard = JSON.stringify(events[0]?.payload.messages);
+    expect(galleryCard.match(/"text":"Connect Cal\.com"/g)).toHaveLength(1);
+    expect(galleryCard).not.toContain("hasn't checked");
 
     // A server on the person's own computer goes to that screen.
     events.length = 0;
