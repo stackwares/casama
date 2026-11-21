@@ -7,6 +7,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/number_format.dart';
 import '../../../core/providers.dart';
@@ -2005,13 +2006,28 @@ class DeviceAccessPrompt extends ConsumerStatefulWidget {
   ConsumerState<DeviceAccessPrompt> createState() => _DeviceAccessPromptState();
 }
 
+/// Allow cards the person answered Not Now, by run and kind, so the card a run's events bring back
+/// after a relaunch stays folded instead of asking again.
+const deviceAccessSkippedKey = 'casama.device_access_skipped';
+
 class _DeviceAccessPromptState extends ConsumerState<DeviceAccessPrompt> {
   bool? _allowed;
   var _busy = false;
 
+  String get _skipId => '${widget.entry.runId ?? ''}:${widget.entry.botId}:${widget.entry.kind.value}';
+
   @override
   void initState() {
     super.initState();
+    unawaited(
+      SharedPreferences.getInstance()
+          .then((p) {
+            if (mounted && (p.getStringList(deviceAccessSkippedKey) ?? const []).contains(_skipId)) {
+              setState(() => _allowed ??= false);
+            }
+          })
+          .catchError((_) {}),
+    );
     // Already allowed (from an earlier card or Settings): show it as done.
     unawaited(
       ref
@@ -2027,7 +2043,16 @@ class _DeviceAccessPromptState extends ConsumerState<DeviceAccessPrompt> {
   }
 
   Future<void> _answer(bool allow) async {
-    if (!allow) return setState(() => _allowed = false);
+    if (!allow) {
+      setState(() => _allowed = false);
+      try {
+        final p = await SharedPreferences.getInstance();
+        final skipped = p.getStringList(deviceAccessSkippedKey) ?? const <String>[];
+        // The latest 100 are plenty: a card older than that is far up a chat.
+        await p.setStringList(deviceAccessSkippedKey, [...skipped.where((x) => x != _skipId), _skipId].reversed.take(100).toList().reversed.toList());
+      } catch (_) {}
+      return;
+    }
     setState(() => _busy = true);
     final ok = await runGuarded(context, () async {
       await ref
