@@ -56,6 +56,7 @@ class _CardsSettingsScreenState extends ConsumerState<CardsSettingsScreen> {
     setState(() => _saving = true);
     try {
       await ref.read(backendProvider).updateCardPrefs(homePlace: home, clearHome: clearHome, units: units);
+      if (!mounted) return;
       ref.invalidate(cardPrefsProvider);
       if (home != null || clearHome) {
         _search.clear();

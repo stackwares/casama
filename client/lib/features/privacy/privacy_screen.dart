@@ -172,7 +172,7 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
                       onChanged: (val) async {
                         await Analytics.setConsentEnabled(val);
                         await Analytics.syncOptOut(ref.read(backendProvider).setAnalyticsOptOut);
-                        setState(() {});
+                        if (mounted) setState(() {});
                       },
                     ),
                   );
