@@ -7515,3 +7515,7 @@ coordinator for Oliver.
   the bot's work; a comment's note repeats the ticket's details, since earlier briefs aren't in the
   history any more. A message typed in the thread during a ticket run still joins it. Threads made
   before this keep their old brief messages.
+- **Voice transcripts (item 4): server-side transcripts deferred.** The app still supplies both
+  sides of a call's transcript. As a cheap guard, the bot's side (saved with `voice: true`) is
+  labelled "[Voice call transcript, as the app heard it]" in the chat's history, so text posted as
+  a transcript can't pass for a reply the model wrote.

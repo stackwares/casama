@@ -2742,7 +2742,14 @@ async function loadRun(db: Database, runId: string): Promise<RunInfo | null> {
               content: withReactions(m.id, asChat(m, partsText(m.content))),
             },
           };
-        const text = partsText(m.content);
+        const said = partsText(m.content);
+        // A call's transcript turns come from the app, not from a model step (D-478): the bot's
+        // side of a call is labelled, so text posted as a transcript can't pass for a reply the
+        // bot wrote.
+        const text =
+          m.role === "assistant" && said && callTranscriptTurn(m.content)
+            ? `${CALL_TRANSCRIPT_LABEL}\n${said}`
+            : said;
         const note = m.role === "user" && m.run_id ? ended.get(m.run_id) : undefined;
         return {
           id: m.id,
@@ -4208,6 +4215,17 @@ async function wakeEveryoneElse(db: Database, info: RunInfo, reply: string): Pro
       returning id`);
     return rows.map((r) => r.id);
   });
+}
+
+/** What the bot's side of a voice call is marked with in a chat's history (D-478). */
+export const CALL_TRANSCRIPT_LABEL = "[Voice call transcript, as the app heard it]";
+
+/** A message saved from a voice call's transcript (parts marked `voice`), not a model reply. */
+export function callTranscriptTurn(content: unknown): boolean {
+  return (
+    Array.isArray(content) &&
+    content.some((p) => !!p && typeof p === "object" && (p as { voice?: unknown }).voice === true)
+  );
 }
 
 /** Failed steps in a row after which a run stops (the loop guard). */
