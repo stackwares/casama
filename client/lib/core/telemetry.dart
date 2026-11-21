@@ -282,6 +282,10 @@ class Telemetry {
         };
         o.beforeSend = (event, _) {
           if (!crashConsent) return null;
+          // Offline session refreshes aren't crashes (isCrashNoise).
+          final thrown = event.throwable;
+          if (thrown != null && isCrashNoise(thrown)) return null;
+          if ((event.exceptions ?? const <SentryException>[]).any((e) => crashNoiseTypes.contains(e.type))) return null;
           for (final e in event.exceptions ?? const <SentryException>[]) {
             if (e.value != null) e.value = scrub(e.value!);
           }
@@ -313,6 +317,8 @@ class Telemetry {
         (event) {
           final eventName = event.event;
           if (eventName == r'$exception') {
+            // Offline session refreshes aren't crashes (isCrashNoise).
+            if (isCrashNoiseEvent(event.properties)) return null;
             event.properties = (_deep(event.properties) as Map?)?.cast<String, Object>();
             event.userProperties = null;
             event.userPropertiesSetOnce = null;
@@ -370,6 +376,8 @@ class Telemetry {
     Map<String, Object?>? context,
     bool warning = false,
   }) async {
+    // Offline session refreshes aren't crashes; Supabase retries them by itself.
+    if (isCrashNoise(error)) return;
     final now = DateTime.now();
 
     // 1. Minute rate-cap check
