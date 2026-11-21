@@ -1,7 +1,11 @@
 # MCP servers in chat: plan
 
-Status: **not started** (written 2026-11-21). Every decision is made (§3, Oliver: "decide all for
-me"). Waiting only for Oliver's go-ahead to build.
+Status: **built** (2026-11-21, D-473). All six phases are done and tested; nothing is deployed and
+no app build has been made. What differs from the sections below is in "Status of the build" at the
+end and in D-473.
+
+Original status: not started (written 2026-11-21). Every decision is made (§3, Oliver: "decide all
+for me"), then "build all in one go".
 
 ## 1. Goal
 
@@ -140,3 +144,24 @@ iOS, Mac.
 - A review or allowlist of custom servers for a workspace.
 - Stdio servers on a phone.
 - Suggesting plugins (already there: `plugins.suggest`).
+
+## Status of the build (2026-11-21)
+
+Phase 0 findings:
+
+- Linear, Notion, Sentry and Stripe answer 401 with OAuth metadata (browser sign-in); DeepWiki and
+  Context7 answer without one. A key-only server answers 401 or 403 with no metadata.
+- The public registry is `GET https://registry.modelcontextprotocol.io/v0/servers?search=&version=latest`;
+  each entry has `remotes` with a type and a URL.
+- The server can't tell which app build it is talking to. §3 #19 changed: a server's button is an
+  `app:route` with the server beside the path, so older builds open Settings instead.
+- `integration_oauth_flows.app_id` is plain text: `custom` needs no migration.
+
+Differences from the plan:
+
+- Two new routes (`/v1/apps/probe`, `/v1/apps/connect-server`) instead of new fields on
+  `/v1/apps/connect`. The sheet narrows the bot's tools with the existing attach route.
+- Two trust states, not three: the registry can't be looked up by address (§3 #9).
+- The limit counts servers marked unverified, whoever connected them.
+
+Left to do, each after Oliver's yes: push, server deploy, web app, then the app builds.

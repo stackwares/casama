@@ -27,7 +27,12 @@ import {
   appByIdOrNull,
   appServerUrl,
   type CatalogApp,
+  CHAT_SERVER_LIMIT,
+  CUSTOM_APP,
   curateCatalog,
+  customServerUrl,
+  serverKey,
+  serverSlug,
 } from "@casama/domain";
 import { captureError } from "@casama/observability";
 import type { OpenAPIHono } from "@hono/zod-openapi";
@@ -367,6 +372,14 @@ export function registerAppRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps, opts:
       }
     }
     if (!id) throw new Error("integration insert returned nothing");
+    // Offered by a bot in a chat (D-473): the person tapped that bot's card, so it gets it.
+    const offeredBy = args.config.added_in_chat_by;
+    if (typeof offeredBy === "string" && !args.integrationId)
+      await db.execute(sql`
+        insert into public.bot_integrations (org_id, bot_id, integration_id)
+        select ${args.orgId}::uuid, b.id, ${id}::uuid from public.bots b
+        where b.id = ${offeredBy}::uuid and b.org_id = ${args.orgId}::uuid
+        on conflict do nothing`);
     await refreshIntegration(db, id, { fetch: fetchImpl, secrets: [] });
     const [row] = await db.select().from(integrations).where(eq(integrations.id, id));
     // The connect funnel's server side (F4): did the connection come up? Ids and enums only.
@@ -382,7 +395,7 @@ export function registerAppRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps, opts:
     });
     if (row?.status === "ok") milestone(db, args.createdBy, "first_connection", args.orgId);
     // A gallery app (D-315): remember it for Installed and updates, and count the person.
-    if (row?.status === "ok" && !builtInIds.has(args.app.id))
+    if (row?.status === "ok" && !builtInIds.has(args.app.id) && args.app.id !== CUSTOM_APP)
       await linkGalleryInstallQuietly(
         db,
         env,
@@ -487,6 +500,213 @@ export function registerAppRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps, opts:
       token_endpoint_auth_method: "none",
     }),
   );
+
+  /** A server outside the catalog (D-473), in the shape the connect code takes. */
+  const customApp = (label: string, url: string): CatalogApp => ({
+    id: CUSTOM_APP,
+    name: label,
+    description: "",
+    category: "developer",
+    color: "64748B",
+    homepage: new URL(url).origin,
+    url,
+    auth: ["oauth", "api_key", "none"],
+    oauthClient: "dcr",
+    capabilities: [],
+  });
+
+  /**
+   * Asks a server how it lets people in (D-473): an `initialize` without credentials. It answers
+   * (no sign-in), refuses and describes a browser sign-in, or just refuses (a key).
+   */
+  const probe = async (u: URL) => {
+    const legacy = u.pathname.endsWith("/sse");
+    let res: Response;
+    try {
+      res = await fetchImpl(u, {
+        method: legacy ? "GET" : "POST",
+        headers: legacy
+          ? { accept: "text/event-stream" }
+          : { "content-type": "application/json", accept: "application/json, text/event-stream" },
+        body: legacy
+          ? undefined
+          : JSON.stringify({
+              jsonrpc: "2.0",
+              id: 1,
+              method: "initialize",
+              params: {
+                protocolVersion: "2025-06-18",
+                capabilities: {},
+                clientInfo: { name: "Casama", version: "1" },
+              },
+            }),
+        signal: AbortSignal.timeout(10_000),
+      });
+    } catch (err) {
+      throw new ApiError(400, "server_unreachable", `Couldn't reach ${u.host}`, {
+        errors: [{ path: "url", message: (err as Error).message.slice(0, 200) }],
+      });
+    }
+    await res.body?.cancel().catch(() => undefined);
+    if (res.ok) return { auth: "none" as const };
+    if (res.status !== 401 && res.status !== 403)
+      throw new ApiError(
+        400,
+        "not_a_server",
+        `${u.host} didn't answer like an MCP server (HTTP ${res.status})`,
+      );
+    try {
+      const info = await discoverOAuthServerInfo(u, { fetchFn: fetchImpl as never });
+      const metadata = info.authorizationServerMetadata;
+      if (metadata?.authorization_endpoint && customServerUrl(metadata.authorization_endpoint))
+        return {
+          auth: "oauth" as const,
+          signInHost: new URL(metadata.authorization_endpoint).host,
+          registers:
+            !!metadata.registration_endpoint ||
+            metadata.client_id_metadata_document_supported === true,
+        };
+    } catch {
+      // No sign-in described: it wants a key.
+    }
+    return { auth: "key" as const };
+  };
+
+  /** The catalog app whose server is at this address, if any. */
+  const appAt = async (u: URL, orgId: string) => {
+    const key = serverKey(u);
+    return (
+      (await currentCatalog(orgId)).find((a) => {
+        try {
+          return !a.provider && serverKey(new URL(a.url)) === key;
+        } catch {
+          return false;
+        }
+      }) ?? null
+    );
+  };
+
+  /**
+   * Starts a browser sign-in the MCP way: discovery, a client (registered here, Casama's client
+   * document, or one the admin set up), PKCE, and a flow row the callback finishes.
+   */
+  const startOAuth = async (
+    c: Context<AppEnv>,
+    a: CatalogApp,
+    o: {
+      orgId: string;
+      sub: string;
+      email?: unknown;
+      name: string;
+      config: Record<string, unknown>;
+      integrationId?: string | null;
+      returnToApp?: boolean;
+    },
+  ) => {
+    try {
+      const info = await discoverOAuthServerInfo(a.url, { fetchFn: fetchImpl as never });
+      const metadata = info.authorizationServerMetadata;
+      const resource = info.resourceMetadata?.resource;
+      // Scopes the catalog chose win over what the server announces (Google's include full mailbox
+      // access, GitHub's include publishing packages); an empty list sends none (Asana rejects
+      // any scope). Apps without a choice follow what the server announces.
+      const announced = (info.resourceMetadata?.scopes_supported as string[] | undefined)?.join(
+        " ",
+      );
+      const scopes =
+        a.scopes !== undefined ? (a.scopes.length ? a.scopes.join(" ") : undefined) : announced;
+      let client: OAuthClient | undefined = clients[a.id];
+      // A server outside the catalog (D-473): Casama's client document where the server reads
+      // those and this API is public, else it registers itself.
+      const customCimd =
+        a.id === CUSTOM_APP &&
+        metadata?.client_id_metadata_document_supported === true &&
+        apiBase(c).startsWith("https://");
+      if (!client && (a.oauthClient === "cimd" || customCimd)) client = { client_id: cimdUrl(c) };
+      if (!client) {
+        if (!metadata?.registration_endpoint)
+          throw new Error(
+            a.id === CUSTOM_APP
+              ? `${a.name} doesn't let new apps sign in by themselves; connect it with a key instead`
+              : `${a.name} doesn't allow automatic sign-up; an admin must register an OAuth client`,
+          );
+        client = await registerClient(info.authorizationServerUrl, {
+          metadata,
+          clientMetadata: {
+            client_name: "Casama",
+            client_uri: env.PUBLIC_APP_URL,
+            redirect_uris: [redirectUri(c)],
+            grant_types: ["authorization_code", "refresh_token"],
+            response_types: ["code"],
+            // A server that takes no client secret at its token endpoint gets asked for a public
+            // client: Composio otherwise registers a confidential one with a secret, the SDK then
+            // follows the announced methods and sends none, and the token exchange fails with
+            // "Missing client_secret".
+            ...(publicClientOnly(metadata) ? { token_endpoint_auth_method: "none" } : {}),
+          },
+          scope: scopes,
+          fetchFn: fetchImpl as never,
+        });
+      }
+      const state = randomBytes(24).toString("base64url");
+      const { authorizationUrl, codeVerifier } = await startAuthorization(
+        info.authorizationServerUrl,
+        {
+          metadata,
+          clientInformation: client as never,
+          redirectUrl: redirectUri(c),
+          scope: scopes,
+          state,
+          resource: resource ? new URL(resource) : undefined,
+        },
+      );
+      // A server nobody checked names its own sign-in page, and the app opens it: https only.
+      if (a.id === CUSTOM_APP && !customServerUrl(authorizationUrl.toString()))
+        throw new Error("its sign-in page isn't an https address");
+      // Google only issues a refresh token when asked for offline access.
+      // Each Google app is its own connection with only its own scopes (no incremental grants,
+      // which would widen every token to all the Google apps connected before).
+      if (isGoogleApp(a)) {
+        authorizationUrl.searchParams.set("access_type", "offline");
+        authorizationUrl.searchParams.set("prompt", "consent");
+        // The account they signed in to Casama with, so Google skips its account chooser (D-204).
+        if (typeof o.email === "string" && o.email)
+          authorizationUrl.searchParams.set("login_hint", o.email);
+      }
+      const [flow] = await db.execute<{ id: string }>(sql`
+      insert into public.integration_oauth_flows (state, org_id, created_by, app_id, name, config, oauth, integration_id)
+      values (${state}, ${o.orgId}::uuid, ${o.sub}::uuid, ${a.id}, ${o.name}, ${JSON.stringify(o.config)}::jsonb,
+        ${JSON.stringify({
+          auth_server: String(info.authorizationServerUrl),
+          metadata,
+          client,
+          code_verifier: codeVerifier,
+          redirect_uri: redirectUri(c),
+          resource,
+          ...(o.returnToApp ? { return_to_app: true } : {}),
+        })}::jsonb, ${o.integrationId ?? null})
+      returning id`);
+      return c.json(
+        {
+          status: "authorize" as const,
+          authorize_url: authorizationUrl.toString(),
+          flow_id: flow!.id,
+        },
+        200,
+      );
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      deps.logger.warn("oauth start failed", { app: a.id, error: (err as Error).message });
+      captureError(err, { service: "casama-api", step: "oauth-start", app_id: a.id });
+      return c.json(
+        {
+          status: "error" as const,
+          error: `Couldn't start ${a.name} sign-in: ${(err as Error).message}`,
+        },
+        200,
+      );
+    }
+  };
 
   // ------------------------------------------------------------------ connect
 
@@ -647,98 +867,129 @@ export function registerAppRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps, opts:
         200,
       );
     }
-    try {
-      const info = await discoverOAuthServerInfo(a.url, { fetchFn: fetchImpl as never });
-      const metadata = info.authorizationServerMetadata;
-      const resource = info.resourceMetadata?.resource;
-      // Scopes the catalog chose win over what the server announces (Google's include full mailbox
-      // access, GitHub's include publishing packages); an empty list sends none (Asana rejects
-      // any scope). Apps without a choice follow what the server announces.
-      const announced = (info.resourceMetadata?.scopes_supported as string[] | undefined)?.join(
-        " ",
+    return startOAuth(c, a, {
+      orgId: body.org_id,
+      sub: claims.sub,
+      email: claims.email,
+      name,
+      config,
+      integrationId: body.integration_id,
+      returnToApp: body.return_to_app,
+    });
+  });
+
+  // ------------------------------------------- servers outside the catalog (D-473)
+
+  app.openapi(routes.probeServer, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const body = c.req.valid("json");
+    if (!(await isAdmin(db, claims, body.org_id)))
+      throw new ApiError(403, "forbidden", "Only owners and admins can connect apps");
+    const u = customServerUrl(body.url);
+    if (!u) throw new ApiError(400, "validation_failed", "Use an https address");
+    const known = await appAt(u, body.org_id);
+    if (known) return c.json({ auth: "none" as const, host: u.host, app_id: known.id }, 200);
+    const p = await probe(u);
+    return c.json(
+      {
+        auth: p.auth,
+        host: u.host,
+        ...(p.auth === "oauth"
+          ? {
+              ...(p.signInHost !== u.host ? { sign_in_host: p.signInHost } : {}),
+              oauth_available: secureRedirect(c) && p.registers,
+            }
+          : {}),
+      },
+      200,
+    );
+  });
+
+  app.openapi(routes.connectServer, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const body = c.req.valid("json");
+    if (!(await isAdmin(db, claims, body.org_id)))
+      throw new ApiError(403, "forbidden", "Only owners and admins can connect apps");
+    const u = customServerUrl(body.url);
+    if (!u) throw new ApiError(400, "validation_failed", "Use an https address");
+    // An address with a query holds its own key, like one the person says does: it goes to Vault.
+    const privateUrl = body.private_url === true || u.search !== "";
+    if (privateUrl && body.method !== "none")
+      throw new ApiError(
+        400,
+        "validation_failed",
+        "An address that holds its own key connects as it is, without a sign-in or another key",
       );
-      const scopes =
-        a.scopes !== undefined ? (a.scopes.length ? a.scopes.join(" ") : undefined) : announced;
-      let client: OAuthClient | undefined = clients[a.id];
-      if (!client && a.oauthClient === "cimd") client = { client_id: cimdUrl(c) };
-      if (!client) {
-        if (!metadata?.registration_endpoint)
-          throw new Error(
-            `${a.name} doesn't allow automatic sign-up; an admin must register an OAuth client`,
-          );
-        client = await registerClient(info.authorizationServerUrl, {
-          metadata,
-          clientMetadata: {
-            client_name: "Casama",
-            client_uri: env.PUBLIC_APP_URL,
-            redirect_uris: [redirectUri(c)],
-            grant_types: ["authorization_code", "refresh_token"],
-            response_types: ["code"],
-            // A server that takes no client secret at its token endpoint gets asked for a public
-            // client: Composio otherwise registers a confidential one with a secret, the SDK then
-            // follows the announced methods and sends none, and the token exchange fails with
-            // "Missing client_secret".
-            ...(publicClientOnly(metadata) ? { token_endpoint_auth_method: "none" } : {}),
-          },
-          scope: scopes,
-          fetchFn: fetchImpl as never,
-        });
-      }
-      const state = randomBytes(24).toString("base64url");
-      const { authorizationUrl, codeVerifier } = await startAuthorization(
-        info.authorizationServerUrl,
-        {
-          metadata,
-          clientInformation: client as never,
-          redirectUrl: redirectUri(c),
-          scope: scopes,
-          state,
-          resource: resource ? new URL(resource) : undefined,
-        },
+    if (body.method === "api_key" && !body.api_key)
+      throw new ApiError(400, "validation_failed", "Paste the key first", {
+        errors: [{ path: "api_key", message: "Required" }],
+      });
+    if (body.bot_id) {
+      const [bot] = await db.execute<{ id: string }>(
+        sql`select id from public.bots where id = ${body.bot_id}::uuid and org_id = ${body.org_id}::uuid`,
       );
-      // Google only issues a refresh token when asked for offline access.
-      // Each Google app is its own connection with only its own scopes (no incremental grants,
-      // which would widen every token to all the Google apps connected before).
-      if (isGoogleApp(a)) {
-        authorizationUrl.searchParams.set("access_type", "offline");
-        authorizationUrl.searchParams.set("prompt", "consent");
-        // The account they signed in to Casama with, so Google skips its account chooser (D-204).
-        if (typeof claims.email === "string" && claims.email)
-          authorizationUrl.searchParams.set("login_hint", claims.email);
-      }
-      const [flow] = await db.execute<{ id: string }>(sql`
-        insert into public.integration_oauth_flows (state, org_id, created_by, app_id, name, config, oauth, integration_id)
-        values (${state}, ${body.org_id}::uuid, ${claims.sub}::uuid, ${a.id}, ${name}, ${JSON.stringify(config)}::jsonb,
-          ${JSON.stringify({
-            auth_server: String(info.authorizationServerUrl),
-            metadata,
-            client,
-            code_verifier: codeVerifier,
-            redirect_uri: redirectUri(c),
-            resource,
-            ...(body.return_to_app ? { return_to_app: true } : {}),
-          })}::jsonb, ${body.integration_id ?? null})
-        returning id`);
+      if (!bot) throw new ApiError(404, "bot_not_found", "Bot not found");
+    }
+    const [count] = await db.execute<{ n: number }>(sql`
+      select count(*)::int as n from public.integrations
+      where org_id = ${body.org_id}::uuid and config ->> 'unverified' = 'true'`);
+    if ((count?.n ?? 0) >= CHAT_SERVER_LIMIT)
+      throw new ApiError(
+        400,
+        "server_limit",
+        `This workspace already has ${CHAT_SERVER_LIMIT} servers added this way. Remove one first.`,
+      );
+    const label = body.name.trim();
+    const a = customApp(label, u.toString());
+    const name = await freeName(body.org_id, serverSlug(label));
+    const config: Record<string, unknown> = {
+      ...(privateUrl ? { url: u.origin, url_in_secret: true } : { url: u.toString() }),
+      auth: body.method,
+      label,
+      unverified: true,
+      ...(body.method === "api_key" && body.auth_header ? { auth_header: body.auth_header } : {}),
+      ...(body.bot_id ? { added_in_chat_by: body.bot_id } : {}),
+    };
+    await db.execute(sql`
+      insert into public.audit_log (org_id, actor_type, actor_id, action, target_type, metadata)
+      values (${body.org_id}::uuid, 'user', ${claims.sub}::uuid, 'integration.connect_started', 'integration',
+        ${JSON.stringify({ host: u.host, method: body.method, bot_id: body.bot_id ?? null })}::jsonb)`);
+    if (body.method === "oauth") {
+      if (!secureRedirect(c))
+        throw new ApiError(
+          400,
+          "oauth_unavailable",
+          `${label} sign-in needs this server to have a public https address (PUBLIC_API_URL).`,
+        );
+      return startOAuth(c, a, {
+        orgId: body.org_id,
+        sub: claims.sub,
+        name,
+        config,
+        returnToApp: body.return_to_app,
+      });
+    }
+    const integration = await saveConnection({
+      orgId: body.org_id,
+      createdBy: claims.sub,
+      app: a,
+      name,
+      config,
+      secret: privateUrl ? u.toString() : body.method === "api_key" ? (body.api_key ?? null) : null,
+    });
+    if ((integration.status as string) === "error") {
+      // A server that never answered leaves nothing behind (and no dead tools on the bot).
+      const [gone] = await db.execute<{ vault_secret_id: string | null }>(
+        sql`delete from public.integrations where id = ${integration.id}::uuid returning vault_secret_id`,
+      );
+      if (gone?.vault_secret_id)
+        await db.execute(sql`delete from vault.secrets where id = ${gone.vault_secret_id}::uuid`);
       return c.json(
-        {
-          status: "authorize" as const,
-          authorize_url: authorizationUrl.toString(),
-          flow_id: flow!.id,
-        },
-        200,
-      );
-    } catch (err) {
-      if (err instanceof ApiError) throw err;
-      deps.logger.warn("oauth start failed", { app: a.id, error: (err as Error).message });
-      captureError(err, { service: "casama-api", step: "oauth-start", app_id: a.id });
-      return c.json(
-        {
-          status: "error" as const,
-          error: `Couldn't start ${a.name} sign-in: ${(err as Error).message}`,
-        },
+        { status: "error" as const, error: integration.error ?? "Couldn't connect" },
         200,
       );
     }
+    return c.json({ status: "connected" as const, integration }, 200);
   });
 
   app.openapi(routes.connectStatus, async (c) => {
@@ -810,7 +1061,11 @@ export function registerAppRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps, opts:
       update public.integration_oauth_flows set status = 'error', error = ${FLOW_IN_PROGRESS}
       where state = ${state} and status = 'pending' and expires_at > now()
       returning id, org_id, created_by, app_id, name, config, oauth, integration_id`);
-    const a = flow ? await findApp(flow.app_id, flow.org_id) : null;
+    const a = !flow
+      ? null
+      : flow.app_id === CUSTOM_APP
+        ? customApp(String(flow.config.label ?? "Server"), String(flow.config.url))
+        : await findApp(flow.app_id, flow.org_id);
     if (!flow || !a)
       return c.html(
         resultPage("This sign-in link has expired. Go back to Casama and try again.", false),

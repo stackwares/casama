@@ -196,6 +196,7 @@ import 'package:casama_api/src/model/connect_domain_request.dart';
 import 'package:casama_api/src/model/connect_domain_result.dart';
 import 'package:casama_api/src/model/connect_domain_result_claim.dart';
 import 'package:casama_api/src/model/connect_flow_status.dart';
+import 'package:casama_api/src/model/connect_server_request.dart';
 import 'package:casama_api/src/model/connection_settings.dart';
 import 'package:casama_api/src/model/content_author.dart';
 import 'package:casama_api/src/model/content_report.dart';
@@ -620,6 +621,8 @@ import 'package:casama_api/src/model/plugin_update_preview.dart';
 import 'package:casama_api/src/model/portal_request.dart';
 import 'package:casama_api/src/model/preview_pack_request.dart';
 import 'package:casama_api/src/model/preview_plugin_request.dart';
+import 'package:casama_api/src/model/probe_server_request.dart';
+import 'package:casama_api/src/model/probe_server_response.dart';
 import 'package:casama_api/src/model/problem.dart';
 import 'package:casama_api/src/model/problem_errors_inner.dart';
 import 'package:casama_api/src/model/profile_space.dart';
@@ -1419,6 +1422,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return ConnectDomainResultClaim.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ConnectFlowStatus':
           return ConnectFlowStatus.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ConnectServerRequest':
+          return ConnectServerRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ConnectionSettings':
           return ConnectionSettings.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ContentAuthor':
@@ -2309,6 +2314,10 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return PreviewPackRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'PreviewPluginRequest':
           return PreviewPluginRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ProbeServerRequest':
+          return ProbeServerRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ProbeServerResponse':
+          return ProbeServerResponse.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Problem':
           return Problem.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ProblemErrorsInner':

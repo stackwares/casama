@@ -5122,6 +5122,96 @@ abstract class AppLocalizations {
   /// **'Connected {app}'**
   String connectedAppSummary(String app);
 
+  /// No description provided for @serverNotChecked.
+  ///
+  /// In en, this message translates to:
+  /// **'Casama hasn\'t checked this server. Connect it only if you trust {host}.'**
+  String serverNotChecked(String host);
+
+  /// No description provided for @serverNotCheckedShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Casama hasn\'t checked this server. Connect it only if you trust who runs it.'**
+  String get serverNotCheckedShort;
+
+  /// No description provided for @serverAddressLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Server address'**
+  String get serverAddressLabel;
+
+  /// No description provided for @serverAddressHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste the server\'s address. If it has a key in it, the key is stored encrypted and stays out of the chat.'**
+  String get serverAddressHelp;
+
+  /// No description provided for @serverChecking.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking the server…'**
+  String get serverChecking;
+
+  /// No description provided for @serverSignInOn.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ll sign in on {host}.'**
+  String serverSignInOn(String host);
+
+  /// No description provided for @serverUseKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Use a key instead'**
+  String get serverUseKey;
+
+  /// No description provided for @serverUseSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in instead'**
+  String get serverUseSignIn;
+
+  /// No description provided for @serverSignInUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} can\'t take a browser sign-in from this Casama server. Use a key.'**
+  String serverSignInUnavailable(String name);
+
+  /// No description provided for @serverNoSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'This server works without signing in.'**
+  String get serverNoSignIn;
+
+  /// No description provided for @serverHeaderLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Header name (optional)'**
+  String get serverHeaderLabel;
+
+  /// No description provided for @serverToolsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Tools it can use'**
+  String get serverToolsTitle;
+
+  /// No description provided for @serverToolsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch off any you don\'t want. Bots still ask before risky steps.'**
+  String get serverToolsHelp;
+
+  /// No description provided for @addedInChatBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Added in chat by {bot}'**
+  String addedInChatBy(String bot);
+
+  /// No description provided for @serverNeedsThisComputer.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} runs on your own computer. Open Casama on that computer and turn on Use this computer to add it.'**
+  String serverNeedsThisComputer(String name);
+
   /// No description provided for @connectAppsTitle.
   ///
   /// In en, this message translates to:

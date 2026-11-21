@@ -9,6 +9,14 @@ The server, apps, CLI, SDK and MCP server share one version number.
 
 ## [Unreleased]
 
+- MCP servers in chat (D-473): a bot can offer an app that isn't built in. It finds the app's MCP
+  server in the public MCP registry (`mcp.find`) or takes an address, and shows a **Connect** card.
+  The sheet asks the server whether it needs a browser sign-in, a key or nothing, then lets you pick
+  which tools that bot may use. Servers added this way are marked as not checked by Casama, their
+  tools never count as low risk, and a workspace holds up to 25. A server for your own computer
+  opens that computer's add form, filled in. New API: `POST /v1/apps/probe` and
+  `POST /v1/apps/connect-server`.
+
 - Flight fares (D-471): bots answer flight-price questions with a **Fares** card of real prices,
   airlines, times and stops, and booking links, instead of searching the web. Kiwi.com's free MCP
   server answers first; Google Flights (SerpApi) is the fallback, at $0.05 of credits per search that

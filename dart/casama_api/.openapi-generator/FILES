@@ -277,6 +277,7 @@ lib/src/model/connect_domain_request.dart
 lib/src/model/connect_domain_result.dart
 lib/src/model/connect_domain_result_claim.dart
 lib/src/model/connect_flow_status.dart
+lib/src/model/connect_server_request.dart
 lib/src/model/connection_settings.dart
 lib/src/model/content_author.dart
 lib/src/model/content_report.dart
@@ -715,6 +716,8 @@ lib/src/model/plugin_update_preview.dart
 lib/src/model/portal_request.dart
 lib/src/model/preview_pack_request.dart
 lib/src/model/preview_plugin_request.dart
+lib/src/model/probe_server_request.dart
+lib/src/model/probe_server_response.dart
 lib/src/model/problem.dart
 lib/src/model/problem_errors_inner.dart
 lib/src/model/profile_space.dart

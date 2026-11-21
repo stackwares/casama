@@ -48,6 +48,10 @@ class Integration {
 
      this.botIds,
 
+     this.addedByBot,
+
+     this.unverified,
+
      this.riskOverrides,
 
      this.device,
@@ -199,6 +203,30 @@ class Integration {
 
   @JsonKey(
     
+    name: r'added_by_bot',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final String? addedByBot;
+
+
+
+  @JsonKey(
+    
+    name: r'unverified',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final bool? unverified;
+
+
+
+  @JsonKey(
+    
     name: r'risk_overrides',
     required: false,
     includeIfNull: false,
@@ -237,6 +265,8 @@ class Integration {
       other.appId == appId &&
       other.auth == auth &&
       other.botIds == botIds &&
+      other.addedByBot == addedByBot &&
+      other.unverified == unverified &&
       other.riskOverrides == riskOverrides &&
       other.device == device;
 
@@ -254,6 +284,8 @@ class Integration {
         (appId == null ? 0 : appId.hashCode) +
         (auth == null ? 0 : auth.hashCode) +
         botIds.hashCode +
+        (addedByBot == null ? 0 : addedByBot.hashCode) +
+        unverified.hashCode +
         riskOverrides.hashCode +
         (device == null ? 0 : device.hashCode);
 

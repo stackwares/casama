@@ -31,6 +31,10 @@ abstract class _$IntegrationCWProxy {
 
   Integration botIds(List<String>? botIds);
 
+  Integration addedByBot(String? addedByBot);
+
+  Integration unverified(bool? unverified);
+
   Integration riskOverrides(Map<String, Risk>? riskOverrides);
 
   Integration device(IntegrationDevice? device);
@@ -56,6 +60,8 @@ abstract class _$IntegrationCWProxy {
     String? appId,
     IntegrationAuthEnum? auth,
     List<String>? botIds,
+    String? addedByBot,
+    bool? unverified,
     Map<String, Risk>? riskOverrides,
     IntegrationDevice? device,
   });
@@ -106,6 +112,12 @@ class _$IntegrationCWProxyImpl implements _$IntegrationCWProxy {
   Integration botIds(List<String>? botIds) => call(botIds: botIds);
 
   @override
+  Integration addedByBot(String? addedByBot) => call(addedByBot: addedByBot);
+
+  @override
+  Integration unverified(bool? unverified) => call(unverified: unverified);
+
+  @override
   Integration riskOverrides(Map<String, Risk>? riskOverrides) =>
       call(riskOverrides: riskOverrides);
 
@@ -134,6 +146,8 @@ class _$IntegrationCWProxyImpl implements _$IntegrationCWProxy {
     Object? appId = const $CopyWithPlaceholder(),
     Object? auth = const $CopyWithPlaceholder(),
     Object? botIds = const $CopyWithPlaceholder(),
+    Object? addedByBot = const $CopyWithPlaceholder(),
+    Object? unverified = const $CopyWithPlaceholder(),
     Object? riskOverrides = const $CopyWithPlaceholder(),
     Object? device = const $CopyWithPlaceholder(),
   }) {
@@ -186,6 +200,14 @@ class _$IntegrationCWProxyImpl implements _$IntegrationCWProxy {
           ? _value.botIds
           // ignore: cast_nullable_to_non_nullable
           : botIds as List<String>?,
+      addedByBot: addedByBot == const $CopyWithPlaceholder()
+          ? _value.addedByBot
+          // ignore: cast_nullable_to_non_nullable
+          : addedByBot as String?,
+      unverified: unverified == const $CopyWithPlaceholder()
+          ? _value.unverified
+          // ignore: cast_nullable_to_non_nullable
+          : unverified as bool?,
       riskOverrides: riskOverrides == const $CopyWithPlaceholder()
           ? _value.riskOverrides
           // ignore: cast_nullable_to_non_nullable
@@ -265,6 +287,8 @@ Integration _$IntegrationFromJson(Map<String, dynamic> json) => $checkedCreate(
         'bot_ids',
         (v) => (v as List<dynamic>?)?.map((e) => e as String).toList(),
       ),
+      addedByBot: $checkedConvert('added_by_bot', (v) => v as String?),
+      unverified: $checkedConvert('unverified', (v) => v as bool?),
       riskOverrides: $checkedConvert(
         'risk_overrides',
         (v) => (v as Map<String, dynamic>?)?.map(
@@ -286,6 +310,7 @@ Integration _$IntegrationFromJson(Map<String, dynamic> json) => $checkedCreate(
     'createdAt': 'created_at',
     'appId': 'app_id',
     'botIds': 'bot_ids',
+    'addedByBot': 'added_by_bot',
     'riskOverrides': 'risk_overrides',
   },
 );
@@ -304,6 +329,8 @@ Map<String, dynamic> _$IntegrationToJson(Integration instance) =>
       'app_id': ?instance.appId,
       'auth': ?_$IntegrationAuthEnumEnumMap[instance.auth],
       'bot_ids': ?instance.botIds,
+      'added_by_bot': ?instance.addedByBot,
+      'unverified': ?instance.unverified,
       'risk_overrides': ?instance.riskOverrides?.map(
         (k, e) => MapEntry(k, _$RiskEnumMap[e]!),
       ),

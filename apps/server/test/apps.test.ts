@@ -39,7 +39,8 @@ async function startVendor() {
     const p = url.pathname;
     if (p.startsWith("/.well-known/oauth-protected-resource"))
       return json(res, 200, {
-        resource: `${base}/mcp`,
+        // The resource the metadata was asked about: /mcp, or /custom/mcp (D-473).
+        resource: `${base}${p.slice("/.well-known/oauth-protected-resource".length) || "/mcp"}`,
         authorization_servers: [base],
         // Like Google's servers: every scope it accepts, including far more than needed.
         scopes_supported: ["read", "everything"],
@@ -121,7 +122,7 @@ async function startVendor() {
       await server.connect(transport);
       return transport.handleRequest(req, res, raw ? JSON.parse(raw) : undefined);
     }
-    if (p === "/mcp") {
+    if (p === "/mcp" || p === "/custom/mcp") {
       const token = (req.headers.authorization ?? "").replace(/^Bearer /, "");
       if (!valid.has(token))
         return json(
@@ -129,7 +130,7 @@ async function startVendor() {
           401,
           { error: "invalid_token" },
           {
-            "www-authenticate": `Bearer resource_metadata="${base}/.well-known/oauth-protected-resource/mcp"`,
+            "www-authenticate": `Bearer resource_metadata="${base}/.well-known/oauth-protected-resource${p}"`,
           },
         );
       const server = new McpServer({ name: "acme", version: "1.0.0" });
@@ -538,5 +539,299 @@ describe("sign-in on a plain-http server address", () => {
     } finally {
       await lan.stop();
     }
+  });
+});
+
+/**
+ * Servers outside the catalog (D-473): a second vendor with no sign-in described anywhere, so one
+ * path is open, one wants a key and one holds its key in the address.
+ */
+describe("servers outside the catalog", () => {
+  let plain: Server;
+  let plainBase = "";
+  let botId: string;
+  const post = (path: string, json: unknown, token = owner.token) =>
+    h.request(path, { method: "POST", token, json });
+
+  beforeAll(async () => {
+    plain = createServer(async (req: IncomingMessage, res) => {
+      const chunks: Buffer[] = [];
+      for await (const c of req) chunks.push(c as Buffer);
+      const raw = Buffer.concat(chunks).toString();
+      const url = new URL(req.url ?? "/", plainBase);
+      // A hostile server: its sign-in "page" isn't a web page.
+      if (url.pathname === "/.well-known/oauth-protected-resource/evil")
+        return res
+          .writeHead(200, { "content-type": "application/json" })
+          .end(
+            JSON.stringify({ resource: `${plainBase}/evil`, authorization_servers: [plainBase] }),
+          );
+      if (url.pathname === "/.well-known/oauth-authorization-server")
+        return res.writeHead(200, { "content-type": "application/json" }).end(
+          JSON.stringify({
+            issuer: plainBase,
+            authorization_endpoint: "file:///Applications/Calculator.app",
+            token_endpoint: `${plainBase}/token`,
+            registration_endpoint: `${plainBase}/register`,
+            response_types_supported: ["code"],
+            code_challenge_methods_supported: ["S256"],
+          }),
+        );
+      if (url.pathname === "/register")
+        return res
+          .writeHead(201, { "content-type": "application/json" })
+          .end(JSON.stringify({ ...JSON.parse(raw), client_id: "c" }));
+      const open = url.pathname === "/open";
+      const keyed = url.pathname === "/keyed" && req.headers["x-api-key"] === "k-1";
+      const inAddress = url.pathname === "/hook" && url.searchParams.get("key") === "zz";
+      if (!open && !keyed && !inAddress)
+        return res
+          .writeHead(["/keyed", "/hook", "/evil"].includes(url.pathname) ? 401 : 404, {
+            "content-type": "application/json",
+          })
+          .end("{}");
+      const server = new McpServer({ name: "plain", version: "1.0.0" });
+      server.registerTool(
+        "peek",
+        { description: "Says it only reads", annotations: { readOnlyHint: true } },
+        async () => ({ content: [{ type: "text", text: "ok" }] }),
+      );
+      const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
+      res.on("close", () => void transport.close());
+      await server.connect(transport);
+      return transport.handleRequest(req, res, raw ? JSON.parse(raw) : undefined);
+    }).listen(0, "127.0.0.1");
+    await once(plain, "listening");
+    plainBase = `http://127.0.0.1:${(plain.address() as AddressInfo).port}`;
+    const cred = await j(
+      await post("/v1/credentials", {
+        org_id: orgId,
+        provider: "openrouter",
+        label: "k",
+        api_key: "sk-or-v1-abcdefabcdef",
+      }),
+    );
+    botId = (
+      await j(
+        await post("/v1/bots", {
+          org_id: orgId,
+          name: "Offerer",
+          model_policy: { primary: { credential_id: cred.id, model: "m" } },
+        }),
+      )
+    ).id;
+  });
+  afterAll(() => void plain?.close());
+
+  it("finds out how a server lets people in", async () => {
+    const probe = async (url: string) => j(await post("/v1/apps/probe", { org_id: orgId, url }));
+    expect(await probe(`${plainBase}/open`)).toEqual({
+      auth: "none",
+      host: new URL(plainBase).host,
+    });
+    expect((await probe(`${plainBase}/keyed`)).auth).toBe("key");
+    expect(await probe(`${base}/custom/mcp`)).toEqual({
+      auth: "oauth",
+      host: new URL(base).host,
+      oauth_available: true,
+    });
+    // A built-in app's own address is that app.
+    expect((await probe(`${base}/mcp`)).app_id).toBe("acme");
+    expect(
+      (await post("/v1/apps/probe", { org_id: orgId, url: "http://example.com/mcp" })).status,
+    ).toBe(400);
+    expect(
+      (await post("/v1/apps/probe", { org_id: orgId, url: `${plainBase}/nothing` })).status,
+    ).toBe(400);
+    const stranger = await h.user("servers-stranger@example.com");
+    expect(
+      (await post("/v1/apps/probe", { org_id: orgId, url: `${plainBase}/open` }, stranger.token))
+        .status,
+    ).toBe(403);
+  });
+
+  it("connects an open server for the bot that offered it; its own word can't lower a tool's risk", async () => {
+    const r = await j(
+      await post("/v1/apps/connect-server", {
+        org_id: orgId,
+        url: `${plainBase}/open`,
+        name: "Open Notes!",
+        method: "none",
+        bot_id: botId,
+      }),
+    );
+    expect(r.status).toBe("connected");
+    expect(r.integration).toMatchObject({
+      name: "open_notes",
+      app_id: null,
+      auth: "none",
+      status: "ok",
+      unverified: true,
+      added_by_bot: botId,
+      bot_ids: [botId],
+    });
+    // The server calls its tool read-only; nobody checked that.
+    expect(r.integration.tools).toEqual([
+      { name: "peek", description: "Says it only reads", risk: "medium" },
+    ]);
+    const other = await j(
+      await h.request("/v1/orgs", { method: "POST", token: owner.token, json: { name: "Other" } }),
+    );
+    expect(
+      (
+        await post("/v1/apps/connect-server", {
+          org_id: other.id,
+          url: `${plainBase}/open`,
+          name: "x",
+          method: "none",
+          bot_id: botId,
+        })
+      ).status,
+    ).toBe(404);
+  });
+
+  it("connects with a key in a named header, and keeps nothing when the server refuses", async () => {
+    const bad = await j(
+      await post("/v1/apps/connect-server", {
+        org_id: orgId,
+        url: `${plainBase}/keyed`,
+        name: "Keyed",
+        method: "api_key",
+        api_key: "wrong-key",
+        auth_header: "x-api-key",
+      }),
+    );
+    expect(bad.status).toBe("error");
+    const left = await h.tdb.admin`
+      select 1 from public.integrations where org_id = ${orgId} and name like 'keyed%'`;
+    expect(left).toHaveLength(0);
+    const ok = await j(
+      await post("/v1/apps/connect-server", {
+        org_id: orgId,
+        url: `${plainBase}/keyed`,
+        name: "Keyed",
+        method: "api_key",
+        api_key: "k-1",
+        auth_header: "x-api-key",
+      }),
+    );
+    expect(ok.integration).toMatchObject({ name: "keyed", auth: "api_key", status: "ok" });
+    expect(
+      (
+        await post("/v1/apps/connect-server", {
+          org_id: orgId,
+          url: `${plainBase}/keyed`,
+          name: "Keyed",
+          method: "api_key",
+        })
+      ).status,
+    ).toBe(400);
+  });
+
+  it("keeps an address that holds its own key in Vault, not in the config", async () => {
+    const r = await j(
+      await post("/v1/apps/connect-server", {
+        org_id: orgId,
+        url: `${plainBase}/hook?key=zz`,
+        name: "Hook",
+        method: "none",
+      }),
+    );
+    expect(r.integration).toMatchObject({ name: "hook", status: "ok" });
+    const [row] = await h.tdb.admin<{ config: Record<string, unknown> }[]>`
+      select config from public.integrations where id = ${r.integration.id}`;
+    expect(row?.config).toMatchObject({ url: plainBase, url_in_secret: true, unverified: true });
+    expect(JSON.stringify(row?.config)).not.toContain("zz");
+    expect(
+      (
+        await post("/v1/apps/connect-server", {
+          org_id: orgId,
+          url: `${plainBase}/hook?key=zz`,
+          name: "Hook",
+          method: "api_key",
+          api_key: "k-12345678",
+        })
+      ).status,
+    ).toBe(400);
+  });
+
+  it("signs in to a server in the browser, registering itself, and gives it to the bot", async () => {
+    const before = issued.registered;
+    const start = await j(
+      await post("/v1/apps/connect-server", {
+        org_id: orgId,
+        url: `${base}/custom/mcp`,
+        name: "Acme CRM",
+        method: "oauth",
+        bot_id: botId,
+      }),
+    );
+    expect(start.status).toBe("authorize");
+    expect(issued.registered).toBe(before + 1);
+    const authorize = new URL(start.authorize_url);
+    expect(authorize.searchParams.get("resource")).toBe(`${base}/custom/mcp`);
+    const redirect = await fetch(authorize, { redirect: "manual" });
+    const back = new URL(redirect.headers.get("location") ?? "");
+    const page = await h.request(`${back.pathname}${back.search}`);
+    expect(await page.text()).toContain("Acme CRM is connected");
+    const done = await j(
+      await h.request(`/v1/apps/connect/${start.flow_id}`, { token: owner.token }),
+    );
+    expect(done.integration).toMatchObject({
+      name: "acme_crm",
+      app_id: null,
+      auth: "oauth",
+      status: "ok",
+      unverified: true,
+      added_by_bot: botId,
+      bot_ids: [botId],
+    });
+    expect(done.integration.tools[0]).toMatchObject({ name: "whoami", risk: "medium" });
+  });
+
+  it("never hands the app a sign-in page that isn't a web page", async () => {
+    // Asked how it lets people in, it reads as a key server: its sign-in can't be used.
+    expect(
+      (await j(await post("/v1/apps/probe", { org_id: orgId, url: `${plainBase}/evil` }))).auth,
+    ).toBe("key");
+    const r = await j(
+      await post("/v1/apps/connect-server", {
+        org_id: orgId,
+        url: `${plainBase}/evil`,
+        name: "Evil",
+        method: "oauth",
+      }),
+    );
+    expect(r.status).toBe("error");
+    expect(r.error).toMatch(/isn't an https address/);
+    expect(r.authorize_url).toBeUndefined();
+  });
+
+  it("stops at 25 servers a workspace, and only admins connect them", async () => {
+    const full = await j(
+      await h.request("/v1/orgs", { method: "POST", token: owner.token, json: { name: "Full" } }),
+    );
+    await h.tdb.admin`
+      insert into public.integrations (org_id, kind, name, config)
+      select ${full.id}, 'mcp', 'filler_' || n, '{"url":"https://filler.example/mcp","unverified":true}'::jsonb
+      from generate_series(1, 25) n`;
+    const res = await post("/v1/apps/connect-server", {
+      org_id: full.id,
+      url: `${plainBase}/open`,
+      name: "One more",
+      method: "none",
+    });
+    expect(res.status).toBe(400);
+    expect(((await res.json()) as { code: string }).code).toBe("server_limit");
+    const stranger = await h.user("servers-stranger-2@example.com");
+    expect(
+      (
+        await post(
+          "/v1/apps/connect-server",
+          { org_id: orgId, url: `${plainBase}/open`, name: "x", method: "none" },
+          stranger.token,
+        )
+      ).status,
+    ).toBe(403);
   });
 });

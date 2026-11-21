@@ -500,6 +500,11 @@ export function createApp(deps: AppDeps) {
     "/oauth/*",
     rateLimit({ perMinute: Math.max(1, Math.floor(perMinute / 4)), trustedIpHeader }),
   );
+  // Each probe makes the API call an address the caller chose (D-473): 20 a minute per person.
+  app.use(
+    "/v1/apps/probe",
+    rateLimit({ perMinute: Math.max(1, Math.floor(perMinute / 6)), trustedIpHeader }),
+  );
   app.use("/v1/*", idempotency(deps.db));
 
   registerSystemRoutes(app, deps);

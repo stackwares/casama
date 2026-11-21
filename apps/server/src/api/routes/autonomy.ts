@@ -126,6 +126,13 @@ const integrationAuth = (i: IntegrationRow): "oauth" | "api_key" | "none" => {
   return i.vaultSecretId ? "api_key" : "none";
 };
 
+/** The bot that offered this connection in a chat, or added it for itself (D-473). */
+const addedByBot = (i: IntegrationRow): string | null => {
+  const c = (i.config ?? {}) as Record<string, unknown>;
+  const id = c.added_in_chat_by ?? c.added_by_bot;
+  return typeof id === "string" && /^[0-9a-f-]{36}$/i.test(id) ? id : null;
+};
+
 export const integrationOut = (i: IntegrationRow, botIds?: string[]) => ({
   id: i.id,
   org_id: i.orgId,
@@ -149,6 +156,8 @@ export const integrationOut = (i: IntegrationRow, botIds?: string[]) => ({
   auth: integrationAuth(i),
   risk_overrides: (i.riskOverrides as Record<string, "low" | "medium" | "high">) ?? {},
   ...(botIds ? { bot_ids: botIds } : {}),
+  added_by_bot: addedByBot(i),
+  unverified: (i.config as Record<string, unknown>)?.unverified === true,
   device:
     i.kind === "local_mcp"
       ? (() => {

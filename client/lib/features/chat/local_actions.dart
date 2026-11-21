@@ -12,7 +12,9 @@ import '../settings/gallery_looks.dart';
 import '../settings/model_keys_screen.dart';
 import '../../theme/appearance.dart';
 import '../../theme/suggested_look.dart';
+import '../companion/companion_screen.dart' show addOfferedLocalServer;
 import '../integrations/connect_app_sheet.dart';
+import '../integrations/connect_server_sheet.dart';
 import '../integrations/integrations_screen.dart' show connectedAppIdsProvider;
 import 'widgets/bot_ui.dart';
 
@@ -34,6 +36,13 @@ Future<bool> handleLocalUiAction(
   switch (action.name) {
     case 'app:route':
       final path = ctx['path'];
+      // A server that isn't one of Casama's apps (D-473) connects right here. The card sends it
+      // as a route, so app builds from before this open the screen where it can be added.
+      final offered = OfferedServer.fromContext(ctx);
+      if (offered != null) {
+        await _connectOffered(context, ref, action, offered, send);
+        return true;
+      }
       if (path is String && path.startsWith('/')) {
         final provider = ctx['provider'];
         // "Continue with ChatGPT" signs in right here where the app can (desktop, D-091).
@@ -117,4 +126,30 @@ Future<bool> handleLocalUiAction(
       }
   }
   return true;
+}
+
+/// Connects a server a bot offered on a card (D-473), then tells the bot it's connected, the way
+/// a connected app does. One that runs on the person's own computer opens that computer's form.
+Future<void> _connectOffered(
+  BuildContext context,
+  WidgetRef ref,
+  BotUiAction action,
+  OfferedServer offered,
+  Future<void> Function(BotUiAction action)? send,
+) async {
+  if (offered.isLocal) {
+    final here = await addOfferedLocalServer(context, ref, label: offered.name, command: offered.command!, args: offered.args);
+    if (!here && context.mounted) showWarning(context, context.l10n.serverNeedsThisComputer(offered.name));
+    return;
+  }
+  final connected = await showConnectServer(context, offered);
+  ref.invalidate(integrationsProvider);
+  if (connected == null || send == null || !context.mounted) return;
+  await send(BotUiAction(
+    surfaceId: action.surfaceId,
+    name: 'connected',
+    context: {'server': offered.name},
+    sourceComponentId: action.sourceComponentId,
+    optionLabels: {offered.name: context.l10n.connectedAppSummary(offered.name)},
+  ));
 }
