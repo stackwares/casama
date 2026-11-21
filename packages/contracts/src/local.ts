@@ -51,9 +51,12 @@ export const LocalDevice = z
     user_id: Uuid,
     computer_id: Uuid.nullable(),
     name: z.string(),
-    platform: z.enum(["macos", "windows", "linux", "chrome"]).openapi({
+    platform: z.enum(["macos", "windows", "linux", "chrome", "app"]).openapi({
       description:
-        '"chrome": a browser-only device (Casama for Chrome, D-323): no computer, browser tools only',
+        '"chrome": a browser-only device (Casama for Chrome, D-323): no computer, browser tools only. "app": the browser inside the Casama app on a phone or tablet; listed only with all_platforms=true, because older apps read this strictly',
+    }),
+    system: z.enum(["ios", "android"]).nullable().optional().openapi({
+      description: 'For platform "app": which system the phone runs',
     }),
     os_version: z.string().nullable().optional().openapi({
       description: 'What the desktop app reported when it last connected, e.g. "macOS 26.2"',
@@ -87,7 +90,14 @@ export const CreateLocalDeviceRequest = z
   .object({
     org_id: Uuid,
     name: z.string().trim().min(1).max(80),
-    platform: z.enum(["macos", "windows", "linux", "chrome"]),
+    platform: z.enum(["macos", "windows", "linux", "chrome", "app"]),
+    system: z.enum(["ios", "android"]).optional().openapi({
+      description: 'Required for platform "app"',
+    }),
+    client_id: z.string().min(8).max(64).optional().openapi({
+      description:
+        'Required for platform "app": the id this app install reports its open chat with (chat focus), so a bot can use the browser only while its chat is on this phone\'s screen',
+    }),
   })
   .openapi("CreateLocalDeviceRequest");
 
@@ -197,3 +207,79 @@ export const CodingAgentTestResult = z
     command: z.string().openapi({ description: "The command that ran" }),
   })
   .openapi("CodingAgentTestResult");
+
+/** The phone app's browser: who has it and for which reasons (owner only). */
+export const AppBrowserSettings = z
+  .object({
+    stage: z.enum(["off", "testers", "on"]).openapi({
+      description: '"off": nobody; "testers": the people listed; "on": everyone on a listed system',
+    }),
+    testers: z.array(Uuid).max(200),
+    reasons: z.object({
+      asked: z.boolean().openapi({ description: "The person asks for it" }),
+      blocked: z.boolean().openapi({ description: "The site blocks the bot's computer" }),
+      signed_in: z
+        .boolean()
+        .openapi({ description: "The person signed in to the site on the phone" }),
+    }),
+    systems: z.array(z.string()).max(2).openapi({ description: '"ios", "android"' }),
+  })
+  .openapi("AppBrowserSettings");
+
+/** A change to the stage: parts left out go back to their defaults; unknown keys are refused. */
+export const SaveAppBrowserRequest = z
+  .strictObject({
+    stage: z.enum(["off", "testers", "on"]),
+    testers: z.array(Uuid).max(200).optional(),
+    reasons: z
+      .strictObject({
+        asked: z.boolean().optional(),
+        blocked: z.boolean().optional(),
+        signed_in: z.boolean().optional(),
+      })
+      .optional(),
+    systems: z
+      .array(z.enum(["ios", "android"]))
+      .max(2)
+      .optional(),
+  })
+  .openapi("SaveAppBrowserRequest");
+
+/** What a signed-in app may do with its browser. `reason` is a plain string so new ones don't break older apps. */
+export const AppBrowserState = z
+  .object({
+    available: z.boolean(),
+    reason: z.string().nullable().openapi({
+      description:
+        'Why not: "off", "not_a_tester", "system_off", "workspace_off", "unavailable" (this server has no device connections)',
+    }),
+    device: LocalDevice.nullable().openapi({
+      description: "This app install's browser in the workspace, when it is paired",
+    }),
+  })
+  .openapi("AppBrowserState");
+
+/** Numbers the stage rules are read from (docs/PHONE-BROWSER-PLAN.md §6). */
+export const AppBrowserNumbers = z
+  .object({
+    days: z.number().int(),
+    blocked_runs: z.number().int().openapi({
+      description: "Runs whose computer browser met a block page while someone had the chat open",
+    }),
+    blocked_people: z.number().int(),
+    watched_browser_runs: z.number().int().openapi({
+      description: "Runs that browsed on the computer while someone had the chat open",
+    }),
+    phone_runs: z.number().int().openapi({ description: "Runs that used a phone's browser" }),
+    phone_people: z.number().int(),
+    phones_paired: z.number().int(),
+    phones_with_sites: z.number().int(),
+    refused_steps: z.number().int().openapi({
+      description: "Steps on a phone that were asked and denied, handed over or refused",
+    }),
+  })
+  .openapi("AppBrowserNumbers");
+
+export const AdminAppBrowser = z
+  .object({ settings: AppBrowserSettings, numbers: AppBrowserNumbers })
+  .openapi("AdminAppBrowser");

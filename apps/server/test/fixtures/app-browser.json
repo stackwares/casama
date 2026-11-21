@@ -1,0 +1,149 @@
+{
+ "name": "app-browser",
+ "turns": [
+  {
+   "when": {
+    "systemIncludes": "extract lasting memories"
+   },
+   "events": [
+    {
+     "type": "text",
+     "text": "{\"memories\":[]}"
+    },
+    {
+     "type": "finish",
+     "usage": {
+      "inputTokens": 300,
+      "outputTokens": 10
+     },
+     "finishReason": "stop",
+     "model": ""
+    }
+   ]
+  },
+  {
+   "when": {
+    "lastRole": "user",
+    "lastUserIncludes": "on my phone"
+   },
+   "events": [
+    {
+     "type": "tool_call",
+     "call": {
+      "callId": "p1",
+      "name": "browser__open",
+      "args": {
+       "url": "https://shop.example/basket",
+       "where": "phone"
+      }
+     }
+    },
+    {
+     "type": "finish",
+     "usage": {
+      "inputTokens": 300,
+      "outputTokens": 10
+     },
+     "finishReason": "tool-calls",
+     "model": ""
+    }
+   ]
+  },
+  {
+   "when": {
+    "lastRole": "tool",
+    "lastToolName": "browser.open",
+    "lastUserIncludes": "on my phone"
+   },
+   "events": [
+    {
+     "type": "tool_call",
+     "call": {
+      "callId": "p2",
+      "name": "browser__snapshot",
+      "args": {}
+     }
+    },
+    {
+     "type": "finish",
+     "usage": {
+      "inputTokens": 300,
+      "outputTokens": 10
+     },
+     "finishReason": "tool-calls",
+     "model": ""
+    }
+   ]
+  },
+  {
+   "when": {
+    "lastRole": "tool",
+    "lastToolName": "browser.snapshot",
+    "lastUserIncludes": "on my phone"
+   },
+   "events": [
+    {
+     "type": "tool_call",
+     "call": {
+      "callId": "p3",
+      "name": "browser__click",
+      "args": {
+       "ref": "e1"
+      }
+     }
+    },
+    {
+     "type": "finish",
+     "usage": {
+      "inputTokens": 300,
+      "outputTokens": 10
+     },
+     "finishReason": "tool-calls",
+     "model": ""
+    }
+   ]
+  },
+  {
+   "when": {
+    "lastRole": "tool",
+    "lastToolName": "browser.click",
+    "lastUserIncludes": "on my phone"
+   },
+   "events": [
+    {
+     "type": "text",
+     "text": "Added the kettle to your basket on your phone."
+    },
+    {
+     "type": "finish",
+     "usage": {
+      "inputTokens": 300,
+      "outputTokens": 10
+     },
+     "finishReason": "stop",
+     "model": ""
+    }
+   ]
+  },
+  {
+   "when": {
+    "lastRole": "user"
+   },
+   "events": [
+    {
+     "type": "text",
+     "text": "Okay."
+    },
+    {
+     "type": "finish",
+     "usage": {
+      "inputTokens": 300,
+      "outputTokens": 10
+     },
+     "finishReason": "stop",
+     "model": ""
+    }
+   ]
+  }
+ ]
+}

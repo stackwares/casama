@@ -15,6 +15,10 @@ abstract class _$CreateLocalDeviceRequestCWProxy {
     CreateLocalDeviceRequestPlatformEnum platform,
   );
 
+  CreateLocalDeviceRequest system(CreateLocalDeviceRequestSystemEnum? system);
+
+  CreateLocalDeviceRequest clientId(String? clientId);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `CreateLocalDeviceRequest(...).copyWith.fieldName(value)`.
@@ -27,6 +31,8 @@ abstract class _$CreateLocalDeviceRequestCWProxy {
     String orgId,
     String name,
     CreateLocalDeviceRequestPlatformEnum platform,
+    CreateLocalDeviceRequestSystemEnum? system,
+    String? clientId,
   });
 }
 
@@ -49,6 +55,14 @@ class _$CreateLocalDeviceRequestCWProxyImpl
     CreateLocalDeviceRequestPlatformEnum platform,
   ) => call(platform: platform);
 
+  @override
+  CreateLocalDeviceRequest system(CreateLocalDeviceRequestSystemEnum? system) =>
+      call(system: system);
+
+  @override
+  CreateLocalDeviceRequest clientId(String? clientId) =>
+      call(clientId: clientId);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `CreateLocalDeviceRequest(...).copyWith.fieldName(value)`.
@@ -62,6 +76,8 @@ class _$CreateLocalDeviceRequestCWProxyImpl
     Object? orgId = const $CopyWithPlaceholder(),
     Object? name = const $CopyWithPlaceholder(),
     Object? platform = const $CopyWithPlaceholder(),
+    Object? system = const $CopyWithPlaceholder(),
+    Object? clientId = const $CopyWithPlaceholder(),
   }) {
     return CreateLocalDeviceRequest(
       orgId: orgId == const $CopyWithPlaceholder() || orgId == null
@@ -76,6 +92,14 @@ class _$CreateLocalDeviceRequestCWProxyImpl
           ? _value.platform
           // ignore: cast_nullable_to_non_nullable
           : platform as CreateLocalDeviceRequestPlatformEnum,
+      system: system == const $CopyWithPlaceholder()
+          ? _value.system
+          // ignore: cast_nullable_to_non_nullable
+          : system as CreateLocalDeviceRequestSystemEnum?,
+      clientId: clientId == const $CopyWithPlaceholder()
+          ? _value.clientId
+          // ignore: cast_nullable_to_non_nullable
+          : clientId as String?,
     );
   }
 }
@@ -103,9 +127,15 @@ CreateLocalDeviceRequest _$CreateLocalDeviceRequestFromJson(
       'platform',
       (v) => $enumDecode(_$CreateLocalDeviceRequestPlatformEnumEnumMap, v),
     ),
+    system: $checkedConvert(
+      'system',
+      (v) =>
+          $enumDecodeNullable(_$CreateLocalDeviceRequestSystemEnumEnumMap, v),
+    ),
+    clientId: $checkedConvert('client_id', (v) => v as String?),
   );
   return val;
-}, fieldKeyMap: const {'orgId': 'org_id'});
+}, fieldKeyMap: const {'orgId': 'org_id', 'clientId': 'client_id'});
 
 Map<String, dynamic> _$CreateLocalDeviceRequestToJson(
   CreateLocalDeviceRequest instance,
@@ -113,6 +143,8 @@ Map<String, dynamic> _$CreateLocalDeviceRequestToJson(
   'org_id': instance.orgId,
   'name': instance.name,
   'platform': _$CreateLocalDeviceRequestPlatformEnumEnumMap[instance.platform]!,
+  'system': ?_$CreateLocalDeviceRequestSystemEnumEnumMap[instance.system],
+  'client_id': ?instance.clientId,
 };
 
 const _$CreateLocalDeviceRequestPlatformEnumEnumMap = {
@@ -120,4 +152,10 @@ const _$CreateLocalDeviceRequestPlatformEnumEnumMap = {
   CreateLocalDeviceRequestPlatformEnum.windows: 'windows',
   CreateLocalDeviceRequestPlatformEnum.linux: 'linux',
   CreateLocalDeviceRequestPlatformEnum.chrome: 'chrome',
+  CreateLocalDeviceRequestPlatformEnum.app: 'app',
+};
+
+const _$CreateLocalDeviceRequestSystemEnumEnumMap = {
+  CreateLocalDeviceRequestSystemEnum.ios: 'ios',
+  CreateLocalDeviceRequestSystemEnum.android: 'android',
 };

@@ -1,8 +1,11 @@
 /**
- * Browser tools (D-323 Phase 3, plan §9.5). One set of tools, two backends:
+ * Browser tools (D-323 Phase 3, plan §9.5). One set of tools, three backends:
  *
  *   browser.* tool ─> BrowserBackend ─┬─ computer: agent-browser on the bot's computer
- *                                      └─ mine: the person's own Chrome, through the device tunnel
+ *                                      ├─ mine: the person's own Chrome, through the device tunnel
+ *                                      └─ phone: the browser inside the person's phone app
+ *                                                (docs/PHONE-BROWSER-PLAN.md), only while they have
+ *                                                this chat open on that phone
  *
  * Both give the same snapshot format and `@e1` refs, so skills and replays work on either. Which one a
  * run uses: the person's browser when the conversation started in it, a routine asks for it, or the
@@ -10,7 +13,16 @@
  * computer. A run keeps the browser it started with, since refs only mean something in one browser.
  */
 import { type BrowserAction, type BrowserResult, EXTRACT_TABLES_JS } from "@casama/contracts";
-import { browsable, CASAMA_DOMAINS, isCasamaAddress } from "@casama/domain";
+import {
+  type AppBrowserReasons,
+  type BrowserBlock,
+  browsable,
+  CASAMA_DOMAINS,
+  detectBrowserBlock,
+  hostOf,
+  isCasamaAddress,
+  siteMatches,
+} from "@casama/domain";
 import { collectExec, type SandboxHandle } from "@casama/sandbox";
 import { z } from "zod";
 import { wrapUntrusted } from "../context.ts";
@@ -22,8 +34,25 @@ export interface UserBrowser {
   call(action: BrowserAction, args: Record<string, unknown>): Promise<BrowserResult>;
 }
 
+/** The browser inside the person's phone app, with what its owner and the instance allow. */
+export interface PhoneBrowser extends UserBrowser {
+  /** Sites the person signed in to there for their bots (its "always" list). */
+  sites: string[];
+  reasons: AppBrowserReasons;
+}
+
 /** What a run knows about browsers (set by the worker). */
 export interface BrowserChoice {
+  /**
+   * The phone app's browser, only when this run may use it right now (the person's own chat, open
+   * on that phone, the phone connected, the stage and workspace allowing it); null otherwise.
+   */
+  phone?(): Promise<PhoneBrowser | null>;
+  /**
+   * Counts a run that browses on its computer while someone watches, and a site that kept the
+   * computer out (the numbers the phone browser's stages are decided from).
+   */
+  noteComputer?(blocked?: { host: string | null; block: BrowserBlock }): Promise<void>;
   /** The person's browser when it's online and lets this bot in; null otherwise. */
   mine(): Promise<UserBrowser | null>;
   /** Waits up to [ms] for the person's browser to come online (routines that need it). */
@@ -34,8 +63,8 @@ export interface BrowserChoice {
    */
   preferred: "mine" | "mine_or_computer" | "computer";
   /** The browser this run settled on. */
-  picked: "mine" | "computer" | null;
-  pick(where: "mine" | "computer"): void;
+  picked: "mine" | "computer" | "phone" | null;
+  pick(where: "mine" | "computer" | "phone"): void;
   /** This server's own addresses (API, web app, sign-in), never opened by a bot. */
   ownUrls: string[];
   /** Keeps a file in the Library (downloads); null when this server has no Library storage. */
@@ -64,7 +93,7 @@ type Out = {
 
 /** One backend's way of doing each action. */
 interface Backend {
-  kind: "mine" | "computer";
+  kind: "mine" | "computer" | "phone";
   run(action: BrowserAction, args: Record<string, unknown>): Promise<Out>;
 }
 
@@ -91,6 +120,35 @@ function mineBackend(b: UserBrowser): Backend {
 const NO_ANSWER = /os error 11|no response came back/i;
 /** `open` waited for the page's load event and gave up; the page itself is open. */
 const LOAD_TIMEOUT = /Timed out after \d+ms waiting for load state/i;
+
+const PHONE_AWAY =
+  "The browser on the person's phone isn't available: it works only while they have this chat open in Casama on that phone, with it switched on for you. If they just left, the page is kept for ten minutes: wait for them, or start again on your own computer (where: \"computer\"). Nothing carries over between the two browsers.";
+const PHONE_NOT_FOR_THIS =
+  "The phone's browser isn't for this: use it when the person asks for it, when a site blocks your own computer, or for a site they signed in to on their phone. Use your own computer (where: \"computer\").";
+
+function phoneBackend(b: UserBrowser): Backend {
+  return {
+    kind: "phone",
+    async run(action, args) {
+      const r = await b.call(action, args);
+      if (!r.ok) {
+        if (r.code === "handed_off") throw new ToolError("handed_off", r.message);
+        if (r.code === "offline" || r.code === "away")
+          throw new ToolError("browser_offline", PHONE_AWAY);
+        if (r.code === "unsupported") throw new ToolError("unsupported", r.message);
+        throw new ToolError(r.code === "asked_denied" ? "denied" : "browser_error", r.message);
+      }
+      return { text: r.text, image: r.image, url: r.url, file: r.file };
+    },
+  };
+}
+
+/** Runs that met a block on their computer, so the phone may be used for them (reason "blocked"). */
+const BLOCKED_RUNS = new Set<string>();
+const noteBlockedRun = (runId: string) => {
+  if (BLOCKED_RUNS.size >= 5000) BLOCKED_RUNS.delete(BLOCKED_RUNS.values().next().value as string);
+  BLOCKED_RUNS.add(runId);
+};
 
 function computerBackend(ctx: ToolContext): Backend {
   const need = async (): Promise<SandboxHandle> => {
@@ -245,20 +303,52 @@ function computerBackend(ctx: ToolContext): Backend {
 }
 
 /** Picks the backend for one call; remembers it for the rest of the run. */
-export async function backendFor(ctx: ToolContext, where?: "mine" | "computer"): Promise<Backend> {
+export async function backendFor(
+  ctx: ToolContext,
+  where?: "mine" | "computer" | "phone",
+  /** The address about to be opened, for sites the person set up on their phone. */
+  url?: string,
+): Promise<Backend> {
   const b = ctx.browser;
   // The computer has one browser: this run takes it, or waits for the run that has it (D-413).
   const computer = async () => {
+    const first = b?.picked !== "computer";
     b?.pick("computer");
     await ctx.claimScreen?.();
+    if (first) void b?.noteComputer?.().catch(() => {});
     return computerBackend(ctx);
   };
   if (!b) {
     if (where === "mine") throw new ToolError("browser_offline", OFFLINE);
+    if (where === "phone") throw new ToolError("browser_offline", PHONE_AWAY);
     return computer();
   }
   const want = where ?? b.picked;
   if (want === "computer") return computer();
+  if (want === "phone") {
+    const p = await b.phone?.();
+    if (!p) throw new ToolError("browser_offline", PHONE_AWAY);
+    // Asked for by name: the person's request, a block this run met, or a site they set up there.
+    if (b.picked !== "phone") {
+      const host = url ? hostOf(url) : null;
+      const ok =
+        p.reasons.asked ||
+        (p.reasons.blocked && BLOCKED_RUNS.has(ctx.runId)) ||
+        (p.reasons.signed_in && !!host && p.sites.some((s) => siteMatches(host, s)));
+      if (!ok) throw new ToolError("refused", PHONE_NOT_FOR_THIS);
+    }
+    b.pick("phone");
+    return phoneBackend(p);
+  }
+  // A site the person signed in to on their phone opens there while they are in the chat (T3).
+  if (!b.picked && url && b.preferred === "computer") {
+    const host = hostOf(url);
+    const p = host ? await b.phone?.().catch(() => null) : null;
+    if (p?.reasons.signed_in && host && p.sites.some((s) => siteMatches(host, s))) {
+      b.pick("phone");
+      return phoneBackend(p);
+    }
+  }
   if (want === "mine") {
     const m = await b.mine();
     if (!m) throw new ToolError("browser_offline", OFFLINE);
@@ -287,7 +377,7 @@ export async function backendFor(ctx: ToolContext, where?: "mine" | "computer"):
  * bot's own computer may still open its local files (file://), as before.
  */
 function checkUrl(url: string, ctx: ToolContext, kind: Backend["kind"]) {
-  if (kind === "mine" && !browsable(url))
+  if (kind !== "computer" && !browsable(url))
     throw new ToolError(
       "refused",
       "Only web pages (http and https) can be opened in the person's browser.",
@@ -300,10 +390,10 @@ function checkUrl(url: string, ctx: ToolContext, kind: Backend["kind"]) {
 }
 
 const Where = z
-  .enum(["mine", "computer"])
+  .enum(["mine", "computer", "phone"])
   .optional()
   .describe(
-    'Which browser: "mine" is the person\'s own Chrome (signed in to their sites), "computer" your own computer\'s. Leave it out to keep using the one this conversation uses.',
+    'Which browser: "mine" is the person\'s own Chrome (signed in to their sites), "computer" your own computer\'s, "phone" the browser inside Casama on the person\'s phone (only when you were told it is available: they must have this chat open there). Leave it out to keep using the one this conversation uses.',
   );
 const Ref = z.string().regex(/^@?e\d+$/);
 
@@ -313,10 +403,36 @@ export function registerBrowserTools(registry: ToolRegistry) {
   const requires = { computer: true };
   const act = async (
     ctx: ToolContext,
-    where: "mine" | "computer" | undefined,
+    where: "mine" | "computer" | "phone" | undefined,
     action: BrowserAction,
     args: Record<string, unknown>,
   ) => (await backendFor(ctx, where)).run(action, args);
+
+  /**
+   * Page text from the bot's own computer: when it is a "prove you're human" or "access denied"
+   * page, count it, and tell the bot when the person's phone could open the site instead (T2).
+   */
+  const read = async (
+    ctx: ToolContext,
+    where: "mine" | "computer" | "phone" | undefined,
+    action: "snapshot" | "read",
+    args: Record<string, unknown>,
+  ) => {
+    const be = await backendFor(ctx, where);
+    const out = await be.run(action, args);
+    if (be.kind !== "computer") return out;
+    const block = detectBrowserBlock(out.text);
+    if (!block) return out;
+    const at = (await be.run("url", {}).catch(() => ({ text: "" }))).text.trim();
+    void ctx.browser?.noteComputer?.({ host: at ? hostOf(at) : null, block }).catch(() => {});
+    const p = await ctx.browser?.phone?.().catch(() => null);
+    if (!p?.reasons.blocked) return out;
+    noteBlockedRun(ctx.runId);
+    return {
+      ...out,
+      text: `${out.text}\n\n[Casama: this site is keeping your computer out (${block.kind === "challenge" ? "it wants a person to prove they're human" : "it refused the visit"}). The person has this chat open on their phone, and its browser may get through: open the page again with where: "phone". They will be asked first, and they can watch and step in.]`,
+    };
+  };
 
   registry.register({
     name: "browser.open",
@@ -328,7 +444,7 @@ export function registerBrowserTools(registry: ToolRegistry) {
     requires,
     schema: z.object({ url: z.string().min(1).max(4000), where: Where }),
     async execute(args, ctx) {
-      const be = await backendFor(ctx, args.where);
+      const be = await backendFor(ctx, args.where, args.url);
       checkUrl(args.url, ctx, be.kind);
       const out = await be.run("open", { url: args.url });
       // A redirect may land on one of Casama's own pages: leave it at once.
@@ -357,7 +473,7 @@ export function registerBrowserTools(registry: ToolRegistry) {
     requires,
     schema: z.object({ interactive_only: z.boolean().optional(), where: Where }),
     async execute(args, ctx) {
-      const out = await act(ctx, args.where, "snapshot", {
+      const out = await read(ctx, args.where, "snapshot", {
         interactive_only: args.interactive_only,
       });
       return web(out.text, `${out.text.split("\n").length} lines`);
@@ -374,7 +490,7 @@ export function registerBrowserTools(registry: ToolRegistry) {
     requires,
     schema: z.object({ where: Where }),
     async execute(args, ctx) {
-      const out = await act(ctx, args.where, "read", {});
+      const out = await read(ctx, args.where, "read", {});
       return web(out.text, `${out.text.length} characters`);
     },
   });
@@ -406,7 +522,7 @@ export function registerBrowserTools(registry: ToolRegistry) {
     requires,
     acceptsSecrets: true,
     // Secrets may only be typed into pages on the secret's allowed hosts.
-    destinationHost: async (args: { where?: "mine" | "computer" }, ctx: ToolContext) => {
+    destinationHost: async (args: { where?: "mine" | "computer" | "phone" }, ctx: ToolContext) => {
       try {
         const be = await backendFor(ctx, args.where);
         return new URL((await be.run("url", {})).text.trim()).hostname;
@@ -487,7 +603,7 @@ export function registerBrowserTools(registry: ToolRegistry) {
     schema: z.object({ path: z.string().max(500).optional(), where: Where }),
     async execute(args, ctx) {
       const be = await backendFor(ctx, args.where);
-      if (be.kind === "mine") {
+      if (be.kind !== "computer") {
         const out = await be.run("screenshot", {});
         const image = out.image
           ? toolImage(Buffer.from(out.image.data, "base64"), out.image.media_type)

@@ -34,6 +34,8 @@ class CreatedLocalDevice {
 
     required  this.platform,
 
+     this.system,
+
      this.osVersion,
 
     required  this.capabilities,
@@ -121,7 +123,7 @@ class CreatedLocalDevice {
 
 
 
-      /// \"chrome\": a browser-only device (Casama for Chrome, D-323): no computer, browser tools only
+      /// \"chrome\": a browser-only device (Casama for Chrome, D-323): no computer, browser tools only. \"app\": the browser inside the Casama app on a phone or tablet; listed only with all_platforms=true, because older apps read this strictly
   @JsonKey(
     
     name: r'platform',
@@ -131,6 +133,19 @@ class CreatedLocalDevice {
 
 
   final CreatedLocalDevicePlatformEnum platform;
+
+
+
+      /// For platform \"app\": which system the phone runs
+  @JsonKey(
+    
+    name: r'system',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final CreatedLocalDeviceSystemEnum? system;
 
 
 
@@ -306,6 +321,7 @@ class CreatedLocalDevice {
       other.computerId == computerId &&
       other.name == name &&
       other.platform == platform &&
+      other.system == system &&
       other.osVersion == osVersion &&
       other.capabilities == capabilities &&
       other.allowedRoots == allowedRoots &&
@@ -328,6 +344,7 @@ class CreatedLocalDevice {
         (computerId == null ? 0 : computerId.hashCode) +
         name.hashCode +
         platform.hashCode +
+        (system == null ? 0 : system.hashCode) +
         (osVersion == null ? 0 : osVersion.hashCode) +
         capabilities.hashCode +
         allowedRoots.hashCode +
@@ -353,22 +370,43 @@ class CreatedLocalDevice {
 
 }
 
-/// \"chrome\": a browser-only device (Casama for Chrome, D-323): no computer, browser tools only
+/// \"chrome\": a browser-only device (Casama for Chrome, D-323): no computer, browser tools only. \"app\": the browser inside the Casama app on a phone or tablet; listed only with all_platforms=true, because older apps read this strictly
 enum CreatedLocalDevicePlatformEnum {
-    /// \"chrome\": a browser-only device (Casama for Chrome, D-323): no computer, browser tools only
+    /// \"chrome\": a browser-only device (Casama for Chrome, D-323): no computer, browser tools only. \"app\": the browser inside the Casama app on a phone or tablet; listed only with all_platforms=true, because older apps read this strictly
 @JsonValue(r'macos')
 macos(r'macos'),
-    /// \"chrome\": a browser-only device (Casama for Chrome, D-323): no computer, browser tools only
+    /// \"chrome\": a browser-only device (Casama for Chrome, D-323): no computer, browser tools only. \"app\": the browser inside the Casama app on a phone or tablet; listed only with all_platforms=true, because older apps read this strictly
 @JsonValue(r'windows')
 windows(r'windows'),
-    /// \"chrome\": a browser-only device (Casama for Chrome, D-323): no computer, browser tools only
+    /// \"chrome\": a browser-only device (Casama for Chrome, D-323): no computer, browser tools only. \"app\": the browser inside the Casama app on a phone or tablet; listed only with all_platforms=true, because older apps read this strictly
 @JsonValue(r'linux')
 linux(r'linux'),
-    /// \"chrome\": a browser-only device (Casama for Chrome, D-323): no computer, browser tools only
+    /// \"chrome\": a browser-only device (Casama for Chrome, D-323): no computer, browser tools only. \"app\": the browser inside the Casama app on a phone or tablet; listed only with all_platforms=true, because older apps read this strictly
 @JsonValue(r'chrome')
-chrome(r'chrome');
+chrome(r'chrome'),
+    /// \"chrome\": a browser-only device (Casama for Chrome, D-323): no computer, browser tools only. \"app\": the browser inside the Casama app on a phone or tablet; listed only with all_platforms=true, because older apps read this strictly
+@JsonValue(r'app')
+app(r'app');
 
 const CreatedLocalDevicePlatformEnum(this.value);
+
+final String value;
+
+@override
+String toString() => value;
+}
+
+
+/// For platform \"app\": which system the phone runs
+enum CreatedLocalDeviceSystemEnum {
+    /// For platform \"app\": which system the phone runs
+@JsonValue(r'ios')
+ios(r'ios'),
+    /// For platform \"app\": which system the phone runs
+@JsonValue(r'android')
+android(r'android');
+
+const CreatedLocalDeviceSystemEnum(this.value);
 
 final String value;
 

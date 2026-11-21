@@ -91,6 +91,7 @@ Class | Method | HTTP request | Description
 [*AdminApi*](doc/AdminApi.md) | [**adminAbuseEvents**](doc/AdminApi.md#adminabuseevents) | **GET** /v1/admin/abuse | Recent abuse signals and actions (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**adminAddWaitlistEntries**](doc/AdminApi.md#adminaddwaitlistentries) | **POST** /v1/admin/waitlist/entries | Let addresses in by hand (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**adminAdmitWaitlist**](doc/AdminApi.md#adminadmitwaitlist) | **POST** /v1/admin/waitlist/admit | Let people in: chosen entries, or the next N (owner only)
+[*AdminApi*](doc/AdminApi.md) | [**adminAppBrowser**](doc/AdminApi.md#adminappbrowser) | **GET** /v1/admin/app-browser | The phone browser&#39;s stage and the numbers its stage rules read (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**adminAppConfig**](doc/AdminApi.md#adminappconfig) | **GET** /v1/admin/app-config | Remote app settings (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**adminApproveDomainOrder**](doc/AdminApi.md#adminapprovedomainorder) | **POST** /v1/admin/domain-orders/{id}/approve | Approve a new workspace&#39;s first purchase so it registers (instance owners)
 [*AdminApi*](doc/AdminApi.md) | [**adminBot**](doc/AdminApi.md#adminbot) | **GET** /v1/admin/admin-bot | The admin bot: which bot may propose admin actions in the owner&#39;s chat (owner only)
@@ -146,6 +147,7 @@ Class | Method | HTTP request | Description
 [*AdminApi*](doc/AdminApi.md) | [**removeAdminDeviceKey**](doc/AdminApi.md#removeadmindevicekey) | **DELETE** /v1/admin/devices/{id} | Remove a device&#39;s key (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**removeAdminPin**](doc/AdminApi.md#removeadminpin) | **DELETE** /v1/admin/pin | Remove the admin PIN (owner only; a fresh passkey or sign-in, not the PIN)
 [*AdminApi*](doc/AdminApi.md) | [**reviewContentReport**](doc/AdminApi.md#reviewcontentreport) | **POST** /v1/admin/content-reports/{id} | Close a report: acted on (optionally suspending the workspace) or dismissed
+[*AdminApi*](doc/AdminApi.md) | [**saveAppBrowser**](doc/AdminApi.md#saveappbrowser) | **PUT** /v1/admin/app-browser | Change who has the phone browser and for which reasons (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**saveBrowserGuard**](doc/AdminApi.md#savebrowserguard) | **PUT** /v1/admin/browser-guard | Replace the added sites; the built-in lists can&#39;t be shortened (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**saveCallLimits**](doc/AdminApi.md#savecalllimits) | **PUT** /v1/admin/call-limits | Replace the saved call limits; refused when a value is unknown or out of range
 [*AdminApi*](doc/AdminApi.md) | [**saveCreditPack**](doc/AdminApi.md#savecreditpack) | **PUT** /v1/admin/credit-packs/{code} | Create or change a credit pack
@@ -437,6 +439,7 @@ Class | Method | HTTP request | Description
 [*LinksApi*](doc/LinksApi.md) | [**revokeBotLink**](doc/LinksApi.md#revokebotlink) | **DELETE** /v1/links/{id} | 
 [*LocalComputerApi*](doc/LocalComputerApi.md) | [**createLocalDevice**](doc/LocalComputerApi.md#createlocaldevice) | **POST** /v1/local-devices | Pair this machine as a bot computer (desktop companion); returns a device token once
 [*LocalComputerApi*](doc/LocalComputerApi.md) | [**deleteLocalDevice**](doc/LocalComputerApi.md#deletelocaldevice) | **DELETE** /v1/local-devices/{id} | 
+[*LocalComputerApi*](doc/LocalComputerApi.md) | [**getAppBrowser**](doc/LocalComputerApi.md#getappbrowser) | **GET** /v1/app-browser | Whether this person may let bots use the browser inside the phone app in this workspace, and this install&#39;s browser when it is paired
 [*LocalComputerApi*](doc/LocalComputerApi.md) | [**listCodingAgents**](doc/LocalComputerApi.md#listcodingagents) | **GET** /v1/coding-agents | The coding agents this server&#39;s bots can hand tasks to (D-370): the signed gallery&#39;s list over the built-in one
 [*LocalComputerApi*](doc/LocalComputerApi.md) | [**listLocalDevices**](doc/LocalComputerApi.md#listlocaldevices) | **GET** /v1/local-devices | 
 [*LocalComputerApi*](doc/LocalComputerApi.md) | [**listOwnCodingAgents**](doc/LocalComputerApi.md#listowncodingagents) | **GET** /v1/local-devices/{id}/coding-agents | Your own coding agents on this computer (D-371); only the device&#39;s owner sees them
@@ -706,6 +709,7 @@ Class | Method | HTTP request | Description
  - [AddUserFactsRequest](doc/AddUserFactsRequest.md)
  - [AddUserFactsRequestItemsInner](doc/AddUserFactsRequestItemsInner.md)
  - [AddWaitlistEntriesRequest](doc/AddWaitlistEntriesRequest.md)
+ - [AdminAppBrowser](doc/AdminAppBrowser.md)
  - [AdminBotSetting](doc/AdminBotSetting.md)
  - [AdminBrowserGuard](doc/AdminBrowserGuard.md)
  - [AdminCallLimits](doc/AdminCallLimits.md)
@@ -754,6 +758,10 @@ Class | Method | HTTP request | Description
  - [AgentImportPlanSources](doc/AgentImportPlanSources.md)
  - [Announcement](doc/Announcement.md)
  - [AnswerMcpQuestionBody](doc/AnswerMcpQuestionBody.md)
+ - [AppBrowserNumbers](doc/AppBrowserNumbers.md)
+ - [AppBrowserSettings](doc/AppBrowserSettings.md)
+ - [AppBrowserSettingsReasons](doc/AppBrowserSettingsReasons.md)
+ - [AppBrowserState](doc/AppBrowserState.md)
  - [AppCatalog](doc/AppCatalog.md)
  - [AppMentionRef](doc/AppMentionRef.md)
  - [AppleSignInTokenRequest](doc/AppleSignInTokenRequest.md)
@@ -1419,6 +1427,8 @@ Class | Method | HTTP request | Description
  - [RunStatus](doc/RunStatus.md)
  - [RunUsage](doc/RunUsage.md)
  - [RunUsageItemsInner](doc/RunUsageItemsInner.md)
+ - [SaveAppBrowserRequest](doc/SaveAppBrowserRequest.md)
+ - [SaveAppBrowserRequestReasons](doc/SaveAppBrowserRequestReasons.md)
  - [SaveCallLimitsRequest](doc/SaveCallLimitsRequest.md)
  - [SaveCreditPackRequest](doc/SaveCreditPackRequest.md)
  - [SaveDevicePlaceRequest](doc/SaveDevicePlaceRequest.md)

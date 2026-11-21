@@ -11159,6 +11159,126 @@
           "name"
         ]
       },
+      "AdminAppBrowser": {
+        "type": "object",
+        "properties": {
+          "settings": {
+            "$ref": "#/components/schemas/AppBrowserSettings"
+          },
+          "numbers": {
+            "$ref": "#/components/schemas/AppBrowserNumbers"
+          }
+        },
+        "required": [
+          "settings",
+          "numbers"
+        ]
+      },
+      "AppBrowserSettings": {
+        "type": "object",
+        "properties": {
+          "stage": {
+            "type": "string",
+            "enum": [
+              "off",
+              "testers",
+              "on"
+            ],
+            "description": "\"off\": nobody; \"testers\": the people listed; \"on\": everyone on a listed system"
+          },
+          "testers": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "maxItems": 200
+          },
+          "reasons": {
+            "type": "object",
+            "properties": {
+              "asked": {
+                "type": "boolean",
+                "description": "The person asks for it"
+              },
+              "blocked": {
+                "type": "boolean",
+                "description": "The site blocks the bot's computer"
+              },
+              "signed_in": {
+                "type": "boolean",
+                "description": "The person signed in to the site on the phone"
+              }
+            },
+            "required": [
+              "asked",
+              "blocked",
+              "signed_in"
+            ]
+          },
+          "systems": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 2,
+            "description": "\"ios\", \"android\""
+          }
+        },
+        "required": [
+          "stage",
+          "testers",
+          "reasons",
+          "systems"
+        ]
+      },
+      "AppBrowserNumbers": {
+        "type": "object",
+        "properties": {
+          "days": {
+            "type": "integer"
+          },
+          "blocked_runs": {
+            "type": "integer",
+            "description": "Runs whose computer browser met a block page while someone had the chat open"
+          },
+          "blocked_people": {
+            "type": "integer"
+          },
+          "watched_browser_runs": {
+            "type": "integer",
+            "description": "Runs that browsed on the computer while someone had the chat open"
+          },
+          "phone_runs": {
+            "type": "integer",
+            "description": "Runs that used a phone's browser"
+          },
+          "phone_people": {
+            "type": "integer"
+          },
+          "phones_paired": {
+            "type": "integer"
+          },
+          "phones_with_sites": {
+            "type": "integer"
+          },
+          "refused_steps": {
+            "type": "integer",
+            "description": "Steps on a phone that were asked and denied, handed over or refused"
+          }
+        },
+        "required": [
+          "days",
+          "blocked_runs",
+          "blocked_people",
+          "watched_browser_runs",
+          "phone_runs",
+          "phone_people",
+          "phones_paired",
+          "phones_with_sites",
+          "refused_steps"
+        ]
+      },
       "CreatedLocalDevice": {
         "allOf": [
           {
@@ -11218,9 +11338,22 @@
               "macos",
               "windows",
               "linux",
-              "chrome"
+              "chrome",
+              "app"
             ],
-            "description": "\"chrome\": a browser-only device (Casama for Chrome, D-323): no computer, browser tools only"
+            "description": "\"chrome\": a browser-only device (Casama for Chrome, D-323): no computer, browser tools only. \"app\": the browser inside the Casama app on a phone or tablet; listed only with all_platforms=true, because older apps read this strictly"
+          },
+          "system": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "ios",
+              "android",
+              null
+            ],
+            "description": "For platform \"app\": which system the phone runs"
           },
           "os_version": {
             "type": [
@@ -11325,8 +11458,23 @@
               "macos",
               "windows",
               "linux",
-              "chrome"
+              "chrome",
+              "app"
             ]
+          },
+          "system": {
+            "type": "string",
+            "enum": [
+              "ios",
+              "android"
+            ],
+            "description": "Required for platform \"app\""
+          },
+          "client_id": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 64,
+            "description": "Required for platform \"app\": the id this app install reports its open chat with (chat focus), so a bot can use the browser only while its chat is on this phone's screen"
           }
         },
         "required": [
@@ -11345,6 +11493,40 @@
         },
         "required": [
           "deleted"
+        ]
+      },
+      "AppBrowserState": {
+        "type": "object",
+        "properties": {
+          "available": {
+            "type": "boolean"
+          },
+          "reason": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Why not: \"off\", \"not_a_tester\", \"system_off\", \"workspace_off\", \"unavailable\" (this server has no device connections)"
+          },
+          "device": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/LocalDevice"
+              },
+              {
+                "type": [
+                  "object",
+                  "null"
+                ],
+                "description": "This app install's browser in the workspace, when it is paired"
+              }
+            ]
+          }
+        },
+        "required": [
+          "available",
+          "reason",
+          "device"
         ]
       },
       "CodingAgentList": {
@@ -11493,6 +11675,57 @@
           "command",
           "result"
         ]
+      },
+      "SaveAppBrowserRequest": {
+        "type": "object",
+        "properties": {
+          "stage": {
+            "type": "string",
+            "enum": [
+              "off",
+              "testers",
+              "on"
+            ]
+          },
+          "testers": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "maxItems": 200
+          },
+          "reasons": {
+            "type": "object",
+            "properties": {
+              "asked": {
+                "type": "boolean"
+              },
+              "blocked": {
+                "type": "boolean"
+              },
+              "signed_in": {
+                "type": "boolean"
+              }
+            },
+            "additionalProperties": false
+          },
+          "systems": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "ios",
+                "android"
+              ]
+            },
+            "maxItems": 2
+          }
+        },
+        "required": [
+          "stage"
+        ],
+        "additionalProperties": false
       },
       "LocalMcpIntegrationList": {
         "type": "object",
@@ -15645,6 +15878,10 @@
             "type": "boolean",
             "description": "Bots may work in members' own browsers (Act, D-323 G9)"
           },
+          "app_browser": {
+            "type": "boolean",
+            "description": "Bots may use the browser inside members' phone apps"
+          },
           "chrome_blocked_sites": {
             "type": "array",
             "items": {
@@ -15783,6 +16020,10 @@
           "chrome_act": {
             "type": "boolean",
             "description": "Bots may work in members' own browsers (Act, D-323 G9)"
+          },
+          "app_browser": {
+            "type": "boolean",
+            "description": "Bots may use the browser inside members' phone apps"
           },
           "chrome_blocked_sites": {
             "type": "array",
@@ -45285,6 +45526,128 @@
         }
       }
     },
+    "/v1/admin/app-browser": {
+      "get": {
+        "operationId": "adminAppBrowser",
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "The phone browser's stage and the numbers its stage rules read (owner only)",
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 90
+            },
+            "required": false,
+            "name": "days",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Stage and numbers",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminAppBrowser"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "operationId": "saveAppBrowser",
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Change who has the phone browser and for which reasons (owner only)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveAppBrowserRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Saved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminAppBrowser"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/local-devices": {
       "post": {
         "operationId": "createLocalDevice",
@@ -45368,6 +45731,20 @@
             },
             "required": true,
             "name": "org_id",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ],
+              "description": "Include browsers inside the phone app (platform \"app\"). Left out by default: apps from before it read the platform strictly"
+            },
+            "required": false,
+            "description": "Include browsers inside the phone app (platform \"app\"). Left out by default: apps from before it read the platform strictly",
+            "name": "all_platforms",
             "in": "query"
           }
         ],
@@ -45515,6 +45892,85 @@
           },
           "404": {
             "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/app-browser": {
+      "get": {
+        "operationId": "getAppBrowser",
+        "tags": [
+          "local computer"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Whether this person may let bots use the browser inside the phone app in this workspace, and this install's browser when it is paired",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "org_id",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ios",
+                "android"
+              ]
+            },
+            "required": true,
+            "name": "system",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 64
+            },
+            "required": true,
+            "name": "client_id",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "State",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppBrowserState"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
             "content": {
               "application/problem+json": {
                 "schema": {

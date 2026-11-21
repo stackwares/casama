@@ -93,6 +93,7 @@ lib/src/model/add_teach_step_request.dart
 lib/src/model/add_user_facts_request.dart
 lib/src/model/add_user_facts_request_items_inner.dart
 lib/src/model/add_waitlist_entries_request.dart
+lib/src/model/admin_app_browser.dart
 lib/src/model/admin_bot_setting.dart
 lib/src/model/admin_browser_guard.dart
 lib/src/model/admin_call_limits.dart
@@ -141,6 +142,10 @@ lib/src/model/agent_import_plan_skipped_inner.dart
 lib/src/model/agent_import_plan_sources.dart
 lib/src/model/announcement.dart
 lib/src/model/answer_mcp_question_body.dart
+lib/src/model/app_browser_numbers.dart
+lib/src/model/app_browser_settings.dart
+lib/src/model/app_browser_settings_reasons.dart
+lib/src/model/app_browser_state.dart
 lib/src/model/app_catalog.dart
 lib/src/model/app_mention_ref.dart
 lib/src/model/apple_sign_in_token_request.dart
@@ -806,6 +811,8 @@ lib/src/model/run_started_event_payload.dart
 lib/src/model/run_status.dart
 lib/src/model/run_usage.dart
 lib/src/model/run_usage_items_inner.dart
+lib/src/model/save_app_browser_request.dart
+lib/src/model/save_app_browser_request_reasons.dart
 lib/src/model/save_call_limits_request.dart
 lib/src/model/save_credit_pack_request.dart
 lib/src/model/save_device_place_request.dart

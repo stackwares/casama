@@ -25,6 +25,10 @@ class CreateLocalDeviceRequest {
     required  this.name,
 
     required  this.platform,
+
+     this.system,
+
+     this.clientId,
   });
 
   @JsonKey(
@@ -63,19 +67,49 @@ class CreateLocalDeviceRequest {
 
 
 
+      /// Required for platform \"app\"
+  @JsonKey(
+    
+    name: r'system',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final CreateLocalDeviceRequestSystemEnum? system;
+
+
+
+      /// Required for platform \"app\": the id this app install reports its open chat with (chat focus), so a bot can use the browser only while its chat is on this phone's screen
+  @JsonKey(
+    
+    name: r'client_id',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final String? clientId;
+
+
+
 
 
     @override
     bool operator ==(Object other) => identical(this, other) || other is CreateLocalDeviceRequest &&
       other.orgId == orgId &&
       other.name == name &&
-      other.platform == platform;
+      other.platform == platform &&
+      other.system == system &&
+      other.clientId == clientId;
 
     @override
     int get hashCode =>
         orgId.hashCode +
         name.hashCode +
-        platform.hashCode;
+        platform.hashCode +
+        system.hashCode +
+        clientId.hashCode;
 
   factory CreateLocalDeviceRequest.fromJson(Map<String, dynamic> json) => _$CreateLocalDeviceRequestFromJson(json);
 
@@ -97,9 +131,29 @@ windows(r'windows'),
 @JsonValue(r'linux')
 linux(r'linux'),
 @JsonValue(r'chrome')
-chrome(r'chrome');
+chrome(r'chrome'),
+@JsonValue(r'app')
+app(r'app');
 
 const CreateLocalDeviceRequestPlatformEnum(this.value);
+
+final String value;
+
+@override
+String toString() => value;
+}
+
+
+/// Required for platform \"app\"
+enum CreateLocalDeviceRequestSystemEnum {
+    /// Required for platform \"app\"
+@JsonValue(r'ios')
+ios(r'ios'),
+    /// Required for platform \"app\"
+@JsonValue(r'android')
+android(r'android');
+
+const CreateLocalDeviceRequestSystemEnum(this.value);
 
 final String value;
 

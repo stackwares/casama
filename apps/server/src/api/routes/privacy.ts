@@ -151,10 +151,11 @@ export function registerPrivacyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       analytics_opt_out: boolean;
       chrome_extension: boolean;
       chrome_act: boolean;
+      app_browser: boolean;
       chrome_blocked_sites: string[];
     }>(
       sql`select run_event_retention_days, require_mfa, require_app_lock, llm_tracing, mcp_decide_approvals, full_access, allow_bot_to_bot, a2a_enabled, analytics_opt_out,
-            chrome_extension, chrome_act, chrome_blocked_sites from public.organizations where id = ${orgId}::uuid`,
+            chrome_extension, chrome_act, app_browser, chrome_blocked_sites from public.organizations where id = ${orgId}::uuid`,
     );
     return {
       run_event_retention_days: o?.run_event_retention_days ?? 180,
@@ -168,6 +169,7 @@ export function registerPrivacyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       analytics_opt_out: o?.analytics_opt_out ?? false,
       chrome_extension: o?.chrome_extension ?? true,
       chrome_act: o?.chrome_act ?? true,
+      app_browser: o?.app_browser ?? true,
       chrome_blocked_sites: o?.chrome_blocked_sites ?? [],
     };
   };
@@ -204,6 +206,7 @@ export function registerPrivacyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       body.analytics_opt_out != null ||
       body.chrome_extension != null ||
       body.chrome_act != null ||
+      body.app_browser != null ||
       body.chrome_blocked_sites != null
     ) {
       if (body.chrome_extension != null)
@@ -212,6 +215,9 @@ export function registerPrivacyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       if (body.chrome_act != null)
         await db.execute(sql`
           update public.organizations set chrome_act = ${body.chrome_act} where id = ${id}::uuid`);
+      if (body.app_browser != null)
+        await db.execute(sql`
+          update public.organizations set app_browser = ${body.app_browser} where id = ${id}::uuid`);
       if (body.chrome_blocked_sites != null) {
         const sites = [
           ...new Set(

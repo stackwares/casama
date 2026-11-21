@@ -2,12 +2,15 @@ import { createRoute, z } from "@hono/zod-openapi";
 import { Integration } from "../autonomy.ts";
 import { jsonBody, jsonResponse, problemResponses, Uuid } from "../common.ts";
 import {
+  AdminAppBrowser,
+  AppBrowserState,
   CodingAgentList,
   CodingAgentTestResult,
   CreatedLocalDevice,
   CreateLocalDeviceRequest,
   LocalDevice,
   OwnCodingAgentList,
+  SaveAppBrowserRequest,
   SetLocalMcpServersRequest,
   SetOwnCodingAgentsRequest,
   TestOwnCodingAgentRequest,
@@ -35,7 +38,15 @@ export const listLocalDevices = createRoute({
   path: "/v1/local-devices",
   tags: ["local computer"],
   security,
-  request: { query: z.object({ org_id: Uuid }) },
+  request: {
+    query: z.object({
+      org_id: Uuid,
+      all_platforms: z.enum(["true", "false"]).optional().openapi({
+        description:
+          'Include browsers inside the phone app (platform "app"). Left out by default: apps from before it read the platform strictly',
+      }),
+    }),
+  },
   responses: {
     200: jsonResponse(
       "Your devices (admins see all)",
@@ -157,4 +168,46 @@ export const testOwnCodingAgent = createRoute({
     404: e404,
     409: e409,
   },
+});
+
+// --- The browser inside the phone app (docs/PHONE-BROWSER-PLAN.md) -----------------------------
+
+export const getAppBrowser = createRoute({
+  operationId: "getAppBrowser",
+  method: "get",
+  path: "/v1/app-browser",
+  tags: ["local computer"],
+  security,
+  summary:
+    "Whether this person may let bots use the browser inside the phone app in this workspace, and this install's browser when it is paired",
+  request: {
+    query: z.object({
+      org_id: Uuid,
+      system: z.enum(["ios", "android"]),
+      client_id: z.string().min(8).max(64),
+    }),
+  },
+  responses: { 200: jsonResponse("State", AppBrowserState), 401: e401, 403: e403 },
+});
+
+export const adminAppBrowser = createRoute({
+  operationId: "adminAppBrowser",
+  method: "get",
+  path: "/v1/admin/app-browser",
+  tags: ["admin"],
+  security,
+  summary: "The phone browser's stage and the numbers its stage rules read (owner only)",
+  request: { query: z.object({ days: z.coerce.number().int().min(1).max(90).optional() }) },
+  responses: { 200: jsonResponse("Stage and numbers", AdminAppBrowser), 401: e401, 403: e403 },
+});
+
+export const saveAppBrowser = createRoute({
+  operationId: "saveAppBrowser",
+  method: "put",
+  path: "/v1/admin/app-browser",
+  tags: ["admin"],
+  security,
+  summary: "Change who has the phone browser and for which reasons (owner only)",
+  request: { body: jsonBody(SaveAppBrowserRequest) },
+  responses: { 200: jsonResponse("Saved", AdminAppBrowser), 400: e400, 401: e401, 403: e403 },
 });

@@ -16,8 +16,14 @@ import { actingUserOf } from "@casama/agent";
 import { BrowserCallBody, type BrowserResult, routes } from "@casama/contracts";
 import { type Database, type JwtClaims, schema, withUserSession } from "@casama/db";
 import {
+  APP_BROWSER_CHECKED,
+  APP_BROWSER_FOCUS_S,
+  APP_BROWSER_UNSUPPORTED,
+  type AppBrowserSystem,
+  appBrowserFor,
   browsable,
   CODING_TEST_TASK,
+  checkAppBrowserSettings,
   checkOwnCodingAgent,
   cleanSitePattern,
   isCasamaAddress,
@@ -32,6 +38,14 @@ import { eq, sql } from "drizzle-orm";
 import type { Hono } from "hono";
 import { stream } from "hono/streaming";
 import { type WebSocket, WebSocketServer } from "ws";
+import {
+  appBrowserNumbers,
+  getAppBrowserSettings,
+  rememberRead,
+  type StepFacts,
+  setAppBrowserSettings,
+  stepVerdict,
+} from "../../services/app-browser.ts";
 import { syncCompanionPluginsQuietly } from "../../services/companion-plugins.ts";
 import { galleryCodingAgents } from "../../services/gallery.ts";
 import { ApiError } from "../errors.ts";
@@ -312,7 +326,36 @@ const caps = (c: unknown) =>
 export function registerLocalRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
   const { db } = deps;
   const registry = deps.devices;
-  const out = (d: DeviceRow) => ({
+  /** Columns newer than the generated schema: the phone browser's system and chat-focus id. */
+  const extrasOf = async (ids: string[]) => {
+    const m = new Map<string, { system: AppBrowserSystem | null; client_id: string | null }>();
+    if (!ids.length) return m;
+    const rows = await db.execute<{
+      id: string;
+      system: AppBrowserSystem | null;
+      client_id: string | null;
+    }>(sql`select id, system, client_id from public.local_devices
+           where id = any(${`{${ids.join(",")}}`}::uuid[])`);
+    for (const r of rows) m.set(r.id, { system: r.system, client_id: r.client_id });
+    return m;
+  };
+  /** Whether [userId] may use the phone app's browser in [orgId] on [system]. */
+  const appBrowserAllowed = async (
+    userId: string,
+    orgId: string,
+    system: AppBrowserSystem | null,
+  ) => {
+    const [o] = await db.execute<{ app_browser: boolean }>(
+      sql`select app_browser from public.organizations where id = ${orgId}::uuid`,
+    );
+    return appBrowserFor(await getAppBrowserSettings(db), {
+      userId,
+      system,
+      workspaceOn: !!o?.app_browser,
+    });
+  };
+  const out = (d: DeviceRow, system?: AppBrowserSystem | null) => ({
+    ...(d.platform === "app" ? { system: system ?? null } : {}),
     id: d.id,
     org_id: d.orgId,
     user_id: d.userId,
@@ -374,6 +417,54 @@ export function registerLocalRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
         .returning();
       return c.json({ ...out(d as DeviceRow), token }, 201);
     }
+    // The browser inside the phone app: no computer either, and one per app install.
+    if (body.platform === "app") {
+      if (!registry)
+        throw new ApiError(403, "unavailable", "This server has no device connections");
+      if (!body.system || !body.client_id)
+        throw new ApiError(400, "bad_request", "A phone browser needs its system and client id");
+      const may = await appBrowserAllowed(claims.sub, body.org_id, body.system);
+      if (!may.available)
+        throw new ApiError(
+          403,
+          "app_browser_off",
+          `The phone browser isn't available (${may.reason})`,
+        );
+      // Pairing again from the same install replaces the token and keeps its bots and sites.
+      const [old] = await db.execute<{ id: string }>(sql`
+        select id from public.local_devices where platform = 'app' and org_id = ${body.org_id}::uuid
+          and user_id = ${claims.sub}::uuid and client_id = ${body.client_id}`);
+      let d: DeviceRow | undefined;
+      if (old) {
+        registry.disconnect(old.id);
+        [d] = await db
+          .update(localDevices)
+          .set({ name: body.name, tokenHash: hashDeviceToken(token), enabled: true })
+          .where(eq(localDevices.id, old.id))
+          .returning();
+      } else {
+        [d] = await db
+          .insert(localDevices)
+          .values({
+            orgId: body.org_id,
+            userId: claims.sub,
+            name: body.name,
+            platform: "app",
+            tokenHash: hashDeviceToken(token),
+            capabilities: { browser: true },
+            allowedRoots: [],
+            allowedBotIds: [],
+            allowedSites: [],
+            blockedSites: [],
+            allowedKinds: [],
+          })
+          .returning();
+      }
+      await db.execute(sql`
+        update public.local_devices set system = ${body.system}, client_id = ${body.client_id}
+        where id = ${(d as DeviceRow).id}::uuid`);
+      return c.json({ ...out(d as DeviceRow, body.system), token }, 201);
+    }
     const created = await db.transaction(async (tx) => {
       const [computer] = await tx
         .insert(computers)
@@ -404,15 +495,19 @@ export function registerLocalRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
 
   app.openapi(routes.listLocalDevices, async (c) => {
     const claims = requireClaims(c.get("claims"));
-    const { org_id } = c.req.valid("query");
-    const rows = await withUserSession(db, claims, (tx) =>
+    const { org_id, all_platforms } = c.req.valid("query");
+    const all = await withUserSession(db, claims, (tx) =>
       tx
         .select()
         .from(localDevices)
         .where(eq(localDevices.orgId, org_id))
         .orderBy(localDevices.createdAt),
     );
-    return c.json({ items: rows.map(out) }, 200);
+    // Apps from before the phone browser read `platform` strictly: one "app" row would break their
+    // whole list, so it is left out unless the caller asks for it.
+    const rows = all_platforms === "true" ? all : all.filter((d) => d.platform !== "app");
+    const extras = await extrasOf(rows.filter((d) => d.platform === "app").map((d) => d.id));
+    return c.json({ items: rows.map((d) => out(d, extras.get(d.id)?.system)) }, 200);
   });
 
   app.openapi(routes.updateLocalDevice, async (c) => {
@@ -459,7 +554,88 @@ export function registerLocalRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     if (body.enabled === false) registry?.disconnect(id);
     if (body.name && d.computerId)
       await db.update(computers).set({ name: body.name }).where(eq(computers.id, d.computerId));
-    return c.json(out(updated as DeviceRow), 200);
+    return c.json(out(updated as DeviceRow, (await extrasOf([id])).get(id)?.system), 200);
+  });
+
+  // --- The browser inside the phone app (docs/PHONE-BROWSER-PLAN.md) -----------------------------
+
+  app.openapi(routes.getAppBrowser, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const q = c.req.valid("query");
+    const [m] = await withUserSession(db, claims, (tx) =>
+      tx.execute<{ ok: boolean }>(sql`select public.is_member(${q.org_id}::uuid) as ok`),
+    );
+    if (!m?.ok) throw new ApiError(403, "forbidden", "You are not a member of this workspace");
+    const [row] = await db.execute<{ id: string }>(sql`
+      select id from public.local_devices where platform = 'app' and org_id = ${q.org_id}::uuid
+        and user_id = ${claims.sub}::uuid and client_id = ${q.client_id}`);
+    const [d] = row ? await db.select().from(localDevices).where(eq(localDevices.id, row.id)) : [];
+    const may = registry
+      ? await appBrowserAllowed(claims.sub, q.org_id, q.system)
+      : ({ available: false, reason: "unavailable" } as const);
+    return c.json(
+      {
+        available: may.available,
+        reason: may.available ? null : may.reason,
+        device: d ? out(d, q.system) : null,
+      },
+      200,
+    );
+  });
+
+  /** Instance owners: INSTANCE_ADMIN_EMAILS, or the first user to sign up when unset (as in Admin). */
+  const requireOwner = async (claims: JwtClaims) => {
+    const allow = (deps.env.INSTANCE_ADMIN_EMAILS ?? "")
+      .split(",")
+      .map((e) => e.trim().toLowerCase())
+      .filter(Boolean);
+    const [u] = await db.execute<{ email: string | null; first: boolean }>(sql`
+      select u.email, u.id = (select id from auth.users order by created_at limit 1) as first
+      from auth.users u where u.id = ${claims.sub}::uuid`);
+    const ok = allow.length ? allow.includes((u?.email ?? "").toLowerCase()) : !!u?.first;
+    if (!ok)
+      throw new ApiError(403, "not_instance_owner", "Only the instance owner can change this");
+  };
+
+  app.openapi(routes.adminAppBrowser, async (c) => {
+    await requireOwner(requireClaims(c.get("claims")));
+    const { days } = c.req.valid("query");
+    return c.json(
+      {
+        settings: await getAppBrowserSettings(db),
+        numbers: await appBrowserNumbers(db, days ?? 14),
+      },
+      200,
+    );
+  });
+
+  app.openapi(routes.saveAppBrowser, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    await requireOwner(claims);
+    const { settings, errors } = checkAppBrowserSettings(c.req.valid("json"));
+    if (!settings) throw new ApiError(400, "validation_failed", errors.join("; "));
+    await setAppBrowserSettings(db, settings);
+    deps.logger.info("phone browser stage changed", { by: claims.sub, stage: settings.stage });
+    // Going back a stage takes effect at once: phones that may no longer connect are dropped.
+    if (registry) {
+      const rows = await db.execute<{
+        id: string;
+        user_id: string;
+        system: AppBrowserSystem | null;
+        app_browser: boolean;
+      }>(sql`select d.id, d.user_id, d.system, o.app_browser from public.local_devices d
+             join public.organizations o on o.id = d.org_id where d.platform = 'app'`);
+      for (const r of rows)
+        if (
+          !appBrowserFor(settings, {
+            userId: r.user_id,
+            system: r.system,
+            workspaceOn: r.app_browser,
+          }).available
+        )
+          registry.disconnect(r.id);
+    }
+    return c.json({ settings, numbers: await appBrowserNumbers(db, 14) }, 200);
   });
 
   // Local MCP servers (D-096): the app registers what it runs; each is a local_mcp integration.
@@ -705,13 +881,26 @@ export function registerInternalRoutes(app: Hono<AppEnv>, deps: AppDeps) {
       allowed_kinds: string[];
       chrome_act: boolean;
       org_blocked: string[];
+      system: AppBrowserSystem | null;
+      client_id: string | null;
+      app_browser: boolean;
     }>(sql`
       select d.id, d.org_id, d.user_id, d.enabled, d.platform, d.capabilities, d.allowed_bot_ids,
-             d.allowed_sites, d.blocked_sites, d.allowed_kinds,
-             o.chrome_extension and o.chrome_act as chrome_act, o.chrome_blocked_sites as org_blocked
+             d.allowed_sites, d.blocked_sites, d.allowed_kinds, d.system, d.client_id,
+             o.chrome_extension and o.chrome_act as chrome_act, o.chrome_blocked_sites as org_blocked,
+             o.app_browser
       from public.local_devices d join public.organizations o on o.id = d.org_id
       where d.id = ${deviceId}::uuid`);
-    return d?.platform === "chrome" ? d : null;
+    if (d?.platform === "chrome") return d;
+    if (d?.platform !== "app") return null;
+    // The phone app's browser: the workspace's own switch and the instance's stage stand in for
+    // the Chrome switches.
+    const may = appBrowserFor(await getAppBrowserSettings(deps.db), {
+      userId: d.user_id,
+      system: d.system,
+      workspaceOn: d.app_browser,
+    });
+    return { ...d, chrome_act: may.available };
   };
 
   app.get("/internal/browser/:device/status", async (c) => {
@@ -734,7 +923,13 @@ export function registerInternalRoutes(app: Hono<AppEnv>, deps: AppDeps) {
     if (!d?.enabled || !d.capabilities?.browser)
       return fail("device_not_found", "That browser isn't paired", 404);
     if (!d.chrome_act)
-      return fail("act_off", "This workspace doesn't let bots use members' browsers");
+      return fail(
+        "act_off",
+        d.platform === "app"
+          ? "The phone browser is switched off"
+          : "This workspace doesn't let bots use members' browsers",
+      );
+    const phone = d.platform === "app";
     const raw = (await c.req.json().catch(() => null)) as {
       action?: unknown;
       args?: unknown;
@@ -758,13 +953,30 @@ export function registerInternalRoutes(app: Hono<AppEnv>, deps: AppDeps) {
         name: string;
         conversation_id: string | null;
         status: string;
-      }>(sql`select r.org_id, r.bot_id, b.name, r.conversation_id, r.status from public.runs r
+        trigger: string;
+        routine_id: string | null;
+        created_by: string | null;
+        on_screen: boolean;
+      }>(sql`select r.org_id, r.bot_id, b.name, r.conversation_id, r.status, r.trigger, r.routine_id,
+                    r.created_by,
+                    exists (select 1 from public.chat_focus f
+                            where f.user_id = ${d.user_id}::uuid and f.client_id = ${d.client_id ?? ""}
+                              and f.conversation_id = r.conversation_id
+                              and f.updated_at > now() - make_interval(secs => ${APP_BROWSER_FOCUS_S})) as on_screen
+             from public.runs r
              join public.bots b on b.id = r.bot_id where r.id = ${raw.run_id}::uuid`);
       if (!r) return fail("run_not_found", "No such run", 404);
       if (r.org_id !== d.org_id || !d.allowed_bot_ids.includes(r.bot_id))
         return fail("bot_not_allowed", "This bot isn't allowed to use that browser");
       if ((await actingUserOf(deps.db, raw.run_id)) !== d.user_id)
         return fail("not_your_browser", "Only the browser's owner's own chats can use it");
+      if (phone) {
+        // Only the person's own chat message, and only while that chat is on this phone's screen.
+        if (r.trigger !== "chat" || r.routine_id || r.created_by !== d.user_id)
+          return fail("not_a_chat", "The phone's browser is only for the person's own chats");
+        if (!r.on_screen)
+          return fail("away", "The person doesn't have this chat open on that phone", 409);
+      }
       who = {
         kind: "run",
         id: raw.run_id,
@@ -783,6 +995,7 @@ export function registerInternalRoutes(app: Hono<AppEnv>, deps: AppDeps) {
             join public.bots b on b.id = w.bot_id where w.id = ${raw.watcher_id}::uuid and w.status = 'active'`,
       );
       if (!w) return fail("watcher_not_found", "No such watcher", 404);
+      if (phone) return fail("bot_not_allowed", "Watchers can't use a phone's browser");
       if (
         w.org_id !== d.org_id ||
         !d.allowed_bot_ids.includes(w.bot_id) ||
@@ -827,8 +1040,9 @@ export function registerInternalRoutes(app: Hono<AppEnv>, deps: AppDeps) {
         ),
       },
     };
-    const result = await new Promise<{ status: number; body: Buffer } | { error: string }>(
-      (resolve) => {
+    /** Sends one request to the device and waits for its whole answer. */
+    const forward = (path: string, payload: unknown) =>
+      new Promise<{ status: number; body: Buffer } | { error: string }>((resolve) => {
         const chunks: Buffer[] = [];
         let status = 502;
         let cancel = () => {};
@@ -837,9 +1051,9 @@ export function registerInternalRoutes(app: Hono<AppEnv>, deps: AppDeps) {
             browserKey(d.id),
             {
               method: "POST",
-              path: `/browser/${action}`,
+              path,
               headers: { "content-type": "application/json" },
-              body: Buffer.from(JSON.stringify(call)),
+              body: Buffer.from(JSON.stringify(payload)),
             },
             {
               onResponse: (st) => {
@@ -855,18 +1069,110 @@ export function registerInternalRoutes(app: Hono<AppEnv>, deps: AppDeps) {
         }
         // The worker gave up (the run was cancelled): tell the browser to stop this call.
         c.req.raw.signal?.addEventListener("abort", () => cancel());
-      },
-    );
-    if ("error" in result)
-      return fail(
+      });
+    const offline = (error: string) =>
+      fail(
         "offline",
-        result.error === "offline"
-          ? "The browser is offline"
-          : `The browser didn't answer: ${result.error}`,
+        error === "offline" ? "The browser is offline" : `The browser didn't answer: ${error}`,
         409,
       );
+    const audit = (what: string, host: string | null, more: Record<string, unknown> = {}) =>
+      void deps.db
+        .execute(sql`
+          insert into public.audit_log (org_id, actor_type, actor_id, action, target_type, target_id, metadata)
+          values (${d.org_id}::uuid, 'bot', ${who.bot_id}::uuid, ${`browser.${what}`}, 'local_device', ${d.id}::uuid,
+                  ${JSON.stringify({ run_id: who.id, host, ...more })}::jsonb)`)
+        .catch(() => {});
+
+    // The phone app's browser: what it can't do, and the step rules, which the server runs so
+    // there is one copy of them (docs/PHONE-BROWSER-PLAN.md §8.5).
+    let expect: string | undefined;
+    if (phone) {
+      if ((APP_BROWSER_UNSUPPORTED as readonly string[]).includes(action))
+        return fail(
+          "unsupported",
+          `The phone's browser has no ${action}; use your own computer for that (where: "computer").`,
+          200,
+        );
+      if ((APP_BROWSER_CHECKED as readonly string[]).includes(action)) {
+        const probed = await forward("/browser/probe", {
+          ...call,
+          action: "probe",
+          args: action === "type" || action === "press" ? { focused: true } : { ref: args.ref },
+        });
+        if ("error" in probed) return offline(probed.error);
+        let facts: StepFacts;
+        try {
+          const a = JSON.parse(probed.body.toString()) as BrowserResult;
+          // The page couldn't say what the step is aimed at (a stale ref, focus it can't see).
+          if (!a.ok)
+            return a.code === "out_of_sight"
+              ? fail(
+                  "handed_off",
+                  "The page's focus is somewhere a bot can't see into, so this step is the person's to do on their phone. Tell them what's left, and don't try another way.",
+                  200,
+                )
+              : c.json(a, 200);
+          const p = JSON.parse(a.text) as { facts?: StepFacts; fingerprint?: string };
+          if (!p.facts || typeof p.fingerprint !== "string") throw new Error("no facts");
+          facts = p.facts;
+          expect = p.fingerprint;
+        } catch {
+          return fail("bad_answer", "The phone's answer about that element couldn't be read", 502);
+        }
+        const host = typeof facts.host === "string" ? facts.host : null;
+        const verdict = stepVerdict(who.id, action, args, facts);
+        if (verdict.kind === "hand_off") {
+          audit("step_handed_off", host, { step: action, reason: verdict.reason });
+          void forward("/browser/handoff", {
+            ...call,
+            action: "handoff",
+            args: { reason: verdict.reason },
+          });
+          return fail(
+            "handed_off",
+            `${verdict.reason}. This step is the person's to do themselves, on the page on their phone. Tell them what's left, and don't try another way.`,
+            200,
+          );
+        }
+        if (verdict.kind === "ask") {
+          const asked = await forward("/browser/ask", {
+            ...call,
+            action: "ask",
+            args: { reason: verdict.reason, step: action, name: facts.name ?? "" },
+          });
+          if ("error" in asked) return offline(asked.error);
+          let yes = false;
+          try {
+            const a = JSON.parse(asked.body.toString()) as BrowserResult;
+            yes = a.ok && a.text === "allow";
+          } catch {
+            yes = false;
+          }
+          if (!yes) {
+            audit("step_denied", host, { step: action, reason: verdict.reason });
+            return fail(
+              "asked_denied",
+              `The person didn't allow this step (${verdict.reason}). Don't try another way; ask them what they'd like instead.`,
+              200,
+            );
+          }
+        }
+      }
+    }
+    const result = await forward(`/browser/${action}`, expect ? { ...call, expect } : call);
+    if ("error" in result) return offline(result.error);
     try {
       const answer = JSON.parse(result.body.toString()) as BrowserResult;
+      let host: string | null = null;
+      try {
+        host = answer.ok && answer.url ? new URL(answer.url).hostname : null;
+      } catch {
+        host = null;
+      }
+      // What the run read on a phone, by site, for the cross-site check on later steps.
+      if (phone && answer.ok && ["snapshot", "read", "extract"].includes(action))
+        rememberRead(who.id, host, answer.text);
       // Every step that changes something in a person's browser goes in the audit log (plan §11).
       if (
         who.kind === "run" &&
@@ -882,20 +1188,8 @@ export function registerInternalRoutes(app: Hono<AppEnv>, deps: AppDeps) {
           "dialog",
           "switch_tab",
         ].includes(action)
-      ) {
-        let host: string | null = null;
-        try {
-          host = answer.url ? new URL(answer.url).hostname : null;
-        } catch {
-          host = null;
-        }
-        void deps.db
-          .execute(sql`
-            insert into public.audit_log (org_id, actor_type, actor_id, action, target_type, target_id, metadata)
-            values (${d.org_id}::uuid, 'bot', ${who.bot_id}::uuid, ${`browser.${action}`}, 'local_device', ${d.id}::uuid,
-                    ${JSON.stringify({ run_id: who.id, host })}::jsonb)`)
-          .catch(() => {});
-      }
+      )
+        audit(action, host);
       return c.json(answer, 200);
     } catch {
       return fail("bad_answer", "The browser's answer couldn't be read", 502);
@@ -1076,8 +1370,25 @@ export function attachLocalConnect(server: Server, deps: AppDeps) {
       .from(localDevices)
       .where(eq(localDevices.tokenHash, hashDeviceToken(token)))
       .catch(() => [] as DeviceRow[]);
-    if (!d?.enabled || (!d.computerId && d.platform !== "chrome"))
+    if (!d?.enabled || (!d.computerId && d.platform !== "chrome" && d.platform !== "app"))
       return reject("401 Unauthorized");
+    if (d.platform === "app") {
+      // The phone app's browser connects only while the stage and the workspace allow its owner.
+      const [x] = await deps.db
+        .execute<{ system: AppBrowserSystem | null; app_browser: boolean }>(
+          sql`select d.system, o.app_browser from public.local_devices d
+              join public.organizations o on o.id = d.org_id where d.id = ${d.id}::uuid`,
+        )
+        .catch(() => [] as Array<{ system: AppBrowserSystem | null; app_browser: boolean }>);
+      const may = x
+        ? appBrowserFor(await getAppBrowserSettings(deps.db), {
+            userId: d.userId,
+            system: x.system,
+            workspaceOn: x.app_browser,
+          })
+        : { available: false };
+      if (!may.available) return reject("403 Forbidden");
+    }
     if (d.platform === "chrome") {
       const [o] = await deps.db
         .execute<{ ok: boolean }>(

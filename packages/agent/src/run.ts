@@ -252,7 +252,13 @@ import { ticketAfterRun, ticketStarted } from "./tickets.ts";
 import { needCredits } from "./tools/autonomy.ts";
 import { type Risk, type ToolDefinition, ToolError, type ToolRegistry } from "./tools/registry.ts";
 import { UI_SHOWN_RESULT, uiChoiceLines } from "./tools/ui.ts";
-import { browserChoiceFor, mineAllowed, preferredBrowser } from "./user-browser.ts";
+import {
+  browserChoiceFor,
+  mineAllowed,
+  phoneFor,
+  phoneHint,
+  preferredBrowser,
+} from "./user-browser.ts";
 
 /** Runs fn as a durable, checkpointed step (DBOS.runStep in the worker; direct call in tests). */
 export type StepRunner = <T>(name: string, fn: () => Promise<T>) => Promise<T>;
@@ -1207,6 +1213,18 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
         return null;
       }),
     );
+    // The browser inside the person's phone app, when this run could use it right now.
+    const phone =
+      deps.local && !externalReply
+        ? phoneHint(
+            await phoneFor(db, deps.local, {
+              runId,
+              orgId: info.orgId,
+              botId: info.botId,
+              actingUserId: info.actingUserId,
+            }).catch(() => null),
+          )
+        : null;
     const contextFor = (summary: string) =>
       buildContext({
         botName: info.botName,
@@ -1232,7 +1250,7 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
         routine: info.routine ? { id: info.routine.id, name: info.routine.name } : undefined,
         person,
         project,
-        hints: [info.repeatHint, externalReply ? EXTERNAL_REPLY_HINT : null].filter(
+        hints: [info.repeatHint, externalReply ? EXTERNAL_REPLY_HINT : null, phone].filter(
           (h): h is string => !!h,
         ),
         // The same for every message of the conversation, so they stay in the cached system text.

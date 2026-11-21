@@ -29,6 +29,8 @@ abstract class _$OrgSettingsCWProxy {
 
   OrgSettings chromeAct(bool? chromeAct);
 
+  OrgSettings appBrowser(bool? appBrowser);
+
   OrgSettings chromeBlockedSites(List<String>? chromeBlockedSites);
 
   /// Creates a new instance with the provided field values.
@@ -51,6 +53,7 @@ abstract class _$OrgSettingsCWProxy {
     bool? analyticsOptOut,
     bool? chromeExtension,
     bool? chromeAct,
+    bool? appBrowser,
     List<String>? chromeBlockedSites,
   });
 }
@@ -102,6 +105,9 @@ class _$OrgSettingsCWProxyImpl implements _$OrgSettingsCWProxy {
   OrgSettings chromeAct(bool? chromeAct) => call(chromeAct: chromeAct);
 
   @override
+  OrgSettings appBrowser(bool? appBrowser) => call(appBrowser: appBrowser);
+
+  @override
   OrgSettings chromeBlockedSites(List<String>? chromeBlockedSites) =>
       call(chromeBlockedSites: chromeBlockedSites);
 
@@ -126,6 +132,7 @@ class _$OrgSettingsCWProxyImpl implements _$OrgSettingsCWProxy {
     Object? analyticsOptOut = const $CopyWithPlaceholder(),
     Object? chromeExtension = const $CopyWithPlaceholder(),
     Object? chromeAct = const $CopyWithPlaceholder(),
+    Object? appBrowser = const $CopyWithPlaceholder(),
     Object? chromeBlockedSites = const $CopyWithPlaceholder(),
   }) {
     return OrgSettings(
@@ -181,6 +188,10 @@ class _$OrgSettingsCWProxyImpl implements _$OrgSettingsCWProxy {
           ? _value.chromeAct
           // ignore: cast_nullable_to_non_nullable
           : chromeAct as bool?,
+      appBrowser: appBrowser == const $CopyWithPlaceholder()
+          ? _value.appBrowser
+          // ignore: cast_nullable_to_non_nullable
+          : appBrowser as bool?,
       chromeBlockedSites: chromeBlockedSites == const $CopyWithPlaceholder()
           ? _value.chromeBlockedSites
           // ignore: cast_nullable_to_non_nullable
@@ -233,6 +244,7 @@ OrgSettings _$OrgSettingsFromJson(Map<String, dynamic> json) => $checkedCreate(
       analyticsOptOut: $checkedConvert('analytics_opt_out', (v) => v as bool?),
       chromeExtension: $checkedConvert('chrome_extension', (v) => v as bool?),
       chromeAct: $checkedConvert('chrome_act', (v) => v as bool?),
+      appBrowser: $checkedConvert('app_browser', (v) => v as bool?),
       chromeBlockedSites: $checkedConvert(
         'chrome_blocked_sites',
         (v) => (v as List<dynamic>?)?.map((e) => e as String).toList(),
@@ -252,6 +264,7 @@ OrgSettings _$OrgSettingsFromJson(Map<String, dynamic> json) => $checkedCreate(
     'analyticsOptOut': 'analytics_opt_out',
     'chromeExtension': 'chrome_extension',
     'chromeAct': 'chrome_act',
+    'appBrowser': 'app_browser',
     'chromeBlockedSites': 'chrome_blocked_sites',
   },
 );
@@ -269,5 +282,6 @@ Map<String, dynamic> _$OrgSettingsToJson(OrgSettings instance) =>
       'analytics_opt_out': ?instance.analyticsOptOut,
       'chrome_extension': ?instance.chromeExtension,
       'chrome_act': ?instance.chromeAct,
+      'app_browser': ?instance.appBrowser,
       'chrome_blocked_sites': ?instance.chromeBlockedSites,
     };

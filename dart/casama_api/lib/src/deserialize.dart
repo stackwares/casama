@@ -17,6 +17,7 @@ import 'package:casama_api/src/model/add_teach_step_request.dart';
 import 'package:casama_api/src/model/add_user_facts_request.dart';
 import 'package:casama_api/src/model/add_user_facts_request_items_inner.dart';
 import 'package:casama_api/src/model/add_waitlist_entries_request.dart';
+import 'package:casama_api/src/model/admin_app_browser.dart';
 import 'package:casama_api/src/model/admin_bot_setting.dart';
 import 'package:casama_api/src/model/admin_browser_guard.dart';
 import 'package:casama_api/src/model/admin_call_limits.dart';
@@ -65,6 +66,10 @@ import 'package:casama_api/src/model/agent_import_plan_skipped_inner.dart';
 import 'package:casama_api/src/model/agent_import_plan_sources.dart';
 import 'package:casama_api/src/model/announcement.dart';
 import 'package:casama_api/src/model/answer_mcp_question_body.dart';
+import 'package:casama_api/src/model/app_browser_numbers.dart';
+import 'package:casama_api/src/model/app_browser_settings.dart';
+import 'package:casama_api/src/model/app_browser_settings_reasons.dart';
+import 'package:casama_api/src/model/app_browser_state.dart';
 import 'package:casama_api/src/model/app_catalog.dart';
 import 'package:casama_api/src/model/app_mention_ref.dart';
 import 'package:casama_api/src/model/apple_sign_in_token_request.dart';
@@ -702,6 +707,8 @@ import 'package:casama_api/src/model/run_started_event.dart';
 import 'package:casama_api/src/model/run_started_event_payload.dart';
 import 'package:casama_api/src/model/run_usage.dart';
 import 'package:casama_api/src/model/run_usage_items_inner.dart';
+import 'package:casama_api/src/model/save_app_browser_request.dart';
+import 'package:casama_api/src/model/save_app_browser_request_reasons.dart';
 import 'package:casama_api/src/model/save_call_limits_request.dart';
 import 'package:casama_api/src/model/save_credit_pack_request.dart';
 import 'package:casama_api/src/model/save_device_place_request.dart';
@@ -1043,6 +1050,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return AddUserFactsRequestItemsInner.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AddWaitlistEntriesRequest':
           return AddWaitlistEntriesRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'AdminAppBrowser':
+          return AdminAppBrowser.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AdminBotSetting':
           return AdminBotSetting.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AdminBrowserGuard':
@@ -1139,6 +1148,14 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return Announcement.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AnswerMcpQuestionBody':
           return AnswerMcpQuestionBody.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'AppBrowserNumbers':
+          return AppBrowserNumbers.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'AppBrowserSettings':
+          return AppBrowserSettings.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'AppBrowserSettingsReasons':
+          return AppBrowserSettingsReasons.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'AppBrowserState':
+          return AppBrowserState.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AppCatalog':
           return AppCatalog.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AppMentionRef':
@@ -2497,6 +2514,10 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return RunUsage.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'RunUsageItemsInner':
           return RunUsageItemsInner.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'SaveAppBrowserRequest':
+          return SaveAppBrowserRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'SaveAppBrowserRequestReasons':
+          return SaveAppBrowserRequestReasons.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SaveCallLimitsRequest':
           return SaveCallLimitsRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SaveCreditPackRequest':

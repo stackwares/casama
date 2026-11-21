@@ -9,6 +9,7 @@ import 'dart:convert';
 import 'package:casama_api/src/deserialize.dart';
 import 'package:dio/dio.dart';
 
+import 'package:casama_api/src/model/app_browser_state.dart';
 import 'package:casama_api/src/model/coding_agent_list.dart';
 import 'package:casama_api/src/model/coding_agent_test_result.dart';
 import 'package:casama_api/src/model/create_local_device_request.dart';
@@ -203,6 +204,95 @@ _responseData = rawData == null ? null : deserialize<DeletedDevice, DeletedDevic
     );
   }
 
+  /// Whether this person may let bots use the browser inside the phone app in this workspace, and this install&#39;s browser when it is paired
+  /// 
+  ///
+  /// Parameters:
+  /// * [orgId] 
+  /// * [system] 
+  /// * [clientId] 
+  /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
+  /// * [headers] - Can be used to add additional headers to the request
+  /// * [extras] - Can be used to add flags to the request
+  /// * [validateStatus] - A [ValidateStatus] callback that can be used to determine request success based on the HTTP status of the response
+  /// * [onSendProgress] - A [ProgressCallback] that can be used to get the send progress
+  /// * [onReceiveProgress] - A [ProgressCallback] that can be used to get the receive progress
+  ///
+  /// Returns a [Future] containing a [Response] with a [AppBrowserState] as data
+  /// Throws [DioException] if API call or serialization fails
+  Future<Response<AppBrowserState>> getAppBrowser({ 
+    required String orgId,
+    required String system,
+    required String clientId,
+    CancelToken? cancelToken,
+    Map<String, dynamic>? headers,
+    Map<String, dynamic>? extra,
+    ValidateStatus? validateStatus,
+    ProgressCallback? onSendProgress,
+    ProgressCallback? onReceiveProgress,
+  }) async {
+    final _path = r'/v1/app-browser';
+    final _options = Options(
+      method: r'GET',
+      headers: <String, dynamic>{
+        ...?headers,
+      },
+      extra: <String, dynamic>{
+        'secure': <Map<String, String>>[
+          {
+            'type': 'http',
+            'scheme': 'bearer',
+            'name': 'bearerAuth',
+          },
+        ],
+        ...?extra,
+      },
+      validateStatus: validateStatus,
+    );
+
+    final _queryParameters = <String, dynamic>{
+      r'org_id': orgId,
+      r'system': system,
+      r'client_id': clientId,
+    };
+
+    final _response = await _dio.request<Object>(
+      _path,
+      options: _options,
+      queryParameters: _queryParameters,
+      cancelToken: cancelToken,
+      onSendProgress: onSendProgress,
+      onReceiveProgress: onReceiveProgress,
+    );
+
+    AppBrowserState? _responseData;
+
+    try {
+final rawData = _response.data;
+_responseData = rawData == null ? null : deserialize<AppBrowserState, AppBrowserState>(rawData, 'AppBrowserState', growable: true);
+
+    } catch (error, stackTrace) {
+      throw DioException(
+        requestOptions: _response.requestOptions,
+        response: _response,
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    return Response<AppBrowserState>(
+      data: _responseData,
+      headers: _response.headers,
+      isRedirect: _response.isRedirect,
+      requestOptions: _response.requestOptions,
+      redirects: _response.redirects,
+      statusCode: _response.statusCode,
+      statusMessage: _response.statusMessage,
+      extra: _response.extra,
+    );
+  }
+
   /// The coding agents this server&#39;s bots can hand tasks to (D-370): the signed gallery&#39;s list over the built-in one
   /// 
   ///
@@ -284,6 +374,7 @@ _responseData = rawData == null ? null : deserialize<CodingAgentList, CodingAgen
   ///
   /// Parameters:
   /// * [orgId] 
+  /// * [allPlatforms] - Include browsers inside the phone app (platform \"app\"). Left out by default: apps from before it read the platform strictly
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -295,6 +386,7 @@ _responseData = rawData == null ? null : deserialize<CodingAgentList, CodingAgen
   /// Throws [DioException] if API call or serialization fails
   Future<Response<LocalDeviceList>> listLocalDevices({ 
     required String orgId,
+    String? allPlatforms,
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
     Map<String, dynamic>? extra,
@@ -323,6 +415,7 @@ _responseData = rawData == null ? null : deserialize<CodingAgentList, CodingAgen
 
     final _queryParameters = <String, dynamic>{
       r'org_id': orgId,
+      if (allPlatforms != null) r'all_platforms': allPlatforms,
     };
 
     final _response = await _dio.request<Object>(

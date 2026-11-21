@@ -42,6 +42,8 @@ class OrgSettings {
 
      this.chromeAct,
 
+     this.appBrowser,
+
      this.chromeBlockedSites,
   });
 
@@ -189,6 +191,19 @@ class OrgSettings {
 
 
 
+      /// Bots may use the browser inside members' phone apps
+  @JsonKey(
+    
+    name: r'app_browser',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final bool? appBrowser;
+
+
+
       /// Sites bots may never act on in members' browsers
   @JsonKey(
     
@@ -217,6 +232,7 @@ class OrgSettings {
       other.analyticsOptOut == analyticsOptOut &&
       other.chromeExtension == chromeExtension &&
       other.chromeAct == chromeAct &&
+      other.appBrowser == appBrowser &&
       other.chromeBlockedSites == chromeBlockedSites;
 
     @override
@@ -232,6 +248,7 @@ class OrgSettings {
         analyticsOptOut.hashCode +
         chromeExtension.hashCode +
         chromeAct.hashCode +
+        appBrowser.hashCode +
         chromeBlockedSites.hashCode;
 
   factory OrgSettings.fromJson(Map<String, dynamic> json) => _$OrgSettingsFromJson(json);

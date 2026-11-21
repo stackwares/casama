@@ -12,6 +12,7 @@ import 'package:dio/dio.dart';
 import 'package:casama_api/src/model/abuse_event_list.dart';
 import 'package:casama_api/src/model/add_admin_device_key_request.dart';
 import 'package:casama_api/src/model/add_waitlist_entries_request.dart';
+import 'package:casama_api/src/model/admin_app_browser.dart';
 import 'package:casama_api/src/model/admin_bot_setting.dart';
 import 'package:casama_api/src/model/admin_browser_guard.dart';
 import 'package:casama_api/src/model/admin_call_limits.dart';
@@ -64,6 +65,7 @@ import 'package:casama_api/src/model/replaced_data_keys.dart';
 import 'package:casama_api/src/model/reported_creation.dart';
 import 'package:casama_api/src/model/reported_creation_list.dart';
 import 'package:casama_api/src/model/review_report_request.dart';
+import 'package:casama_api/src/model/save_app_browser_request.dart';
 import 'package:casama_api/src/model/save_call_limits_request.dart';
 import 'package:casama_api/src/model/save_credit_pack_request.dart';
 import 'package:casama_api/src/model/save_model_catalog_request.dart';
@@ -450,6 +452,89 @@ _responseData = rawData == null ? null : deserialize<WaitlistChanged, WaitlistCh
     }
 
     return Response<WaitlistChanged>(
+      data: _responseData,
+      headers: _response.headers,
+      isRedirect: _response.isRedirect,
+      requestOptions: _response.requestOptions,
+      redirects: _response.redirects,
+      statusCode: _response.statusCode,
+      statusMessage: _response.statusMessage,
+      extra: _response.extra,
+    );
+  }
+
+  /// The phone browser&#39;s stage and the numbers its stage rules read (owner only)
+  /// 
+  ///
+  /// Parameters:
+  /// * [days] 
+  /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
+  /// * [headers] - Can be used to add additional headers to the request
+  /// * [extras] - Can be used to add flags to the request
+  /// * [validateStatus] - A [ValidateStatus] callback that can be used to determine request success based on the HTTP status of the response
+  /// * [onSendProgress] - A [ProgressCallback] that can be used to get the send progress
+  /// * [onReceiveProgress] - A [ProgressCallback] that can be used to get the receive progress
+  ///
+  /// Returns a [Future] containing a [Response] with a [AdminAppBrowser] as data
+  /// Throws [DioException] if API call or serialization fails
+  Future<Response<AdminAppBrowser>> adminAppBrowser({ 
+    int? days,
+    CancelToken? cancelToken,
+    Map<String, dynamic>? headers,
+    Map<String, dynamic>? extra,
+    ValidateStatus? validateStatus,
+    ProgressCallback? onSendProgress,
+    ProgressCallback? onReceiveProgress,
+  }) async {
+    final _path = r'/v1/admin/app-browser';
+    final _options = Options(
+      method: r'GET',
+      headers: <String, dynamic>{
+        ...?headers,
+      },
+      extra: <String, dynamic>{
+        'secure': <Map<String, String>>[
+          {
+            'type': 'http',
+            'scheme': 'bearer',
+            'name': 'bearerAuth',
+          },
+        ],
+        ...?extra,
+      },
+      validateStatus: validateStatus,
+    );
+
+    final _queryParameters = <String, dynamic>{
+      if (days != null) r'days': days,
+    };
+
+    final _response = await _dio.request<Object>(
+      _path,
+      options: _options,
+      queryParameters: _queryParameters,
+      cancelToken: cancelToken,
+      onSendProgress: onSendProgress,
+      onReceiveProgress: onReceiveProgress,
+    );
+
+    AdminAppBrowser? _responseData;
+
+    try {
+final rawData = _response.data;
+_responseData = rawData == null ? null : deserialize<AdminAppBrowser, AdminAppBrowser>(rawData, 'AdminAppBrowser', growable: true);
+
+    } catch (error, stackTrace) {
+      throw DioException(
+        requestOptions: _response.requestOptions,
+        response: _response,
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    return Response<AdminAppBrowser>(
       data: _responseData,
       headers: _response.headers,
       isRedirect: _response.isRedirect,
@@ -4829,6 +4914,102 @@ _responseData = rawData == null ? null : deserialize<ContentReport, ContentRepor
     }
 
     return Response<ContentReport>(
+      data: _responseData,
+      headers: _response.headers,
+      isRedirect: _response.isRedirect,
+      requestOptions: _response.requestOptions,
+      redirects: _response.redirects,
+      statusCode: _response.statusCode,
+      statusMessage: _response.statusMessage,
+      extra: _response.extra,
+    );
+  }
+
+  /// Change who has the phone browser and for which reasons (owner only)
+  /// 
+  ///
+  /// Parameters:
+  /// * [saveAppBrowserRequest] 
+  /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
+  /// * [headers] - Can be used to add additional headers to the request
+  /// * [extras] - Can be used to add flags to the request
+  /// * [validateStatus] - A [ValidateStatus] callback that can be used to determine request success based on the HTTP status of the response
+  /// * [onSendProgress] - A [ProgressCallback] that can be used to get the send progress
+  /// * [onReceiveProgress] - A [ProgressCallback] that can be used to get the receive progress
+  ///
+  /// Returns a [Future] containing a [Response] with a [AdminAppBrowser] as data
+  /// Throws [DioException] if API call or serialization fails
+  Future<Response<AdminAppBrowser>> saveAppBrowser({ 
+    required SaveAppBrowserRequest saveAppBrowserRequest,
+    CancelToken? cancelToken,
+    Map<String, dynamic>? headers,
+    Map<String, dynamic>? extra,
+    ValidateStatus? validateStatus,
+    ProgressCallback? onSendProgress,
+    ProgressCallback? onReceiveProgress,
+  }) async {
+    final _path = r'/v1/admin/app-browser';
+    final _options = Options(
+      method: r'PUT',
+      headers: <String, dynamic>{
+        ...?headers,
+      },
+      extra: <String, dynamic>{
+        'secure': <Map<String, String>>[
+          {
+            'type': 'http',
+            'scheme': 'bearer',
+            'name': 'bearerAuth',
+          },
+        ],
+        ...?extra,
+      },
+      contentType: 'application/json',
+      validateStatus: validateStatus,
+    );
+
+    dynamic _bodyData;
+
+    try {
+_bodyData=jsonEncode(saveAppBrowserRequest);
+    } catch(error, stackTrace) {
+      throw DioException(
+         requestOptions: _options.compose(
+          _dio.options,
+          _path,
+        ),
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    final _response = await _dio.request<Object>(
+      _path,
+      data: _bodyData,
+      options: _options,
+      cancelToken: cancelToken,
+      onSendProgress: onSendProgress,
+      onReceiveProgress: onReceiveProgress,
+    );
+
+    AdminAppBrowser? _responseData;
+
+    try {
+final rawData = _response.data;
+_responseData = rawData == null ? null : deserialize<AdminAppBrowser, AdminAppBrowser>(rawData, 'AdminAppBrowser', growable: true);
+
+    } catch (error, stackTrace) {
+      throw DioException(
+        requestOptions: _response.requestOptions,
+        response: _response,
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    return Response<AdminAppBrowser>(
       data: _responseData,
       headers: _response.headers,
       isRedirect: _response.isRedirect,

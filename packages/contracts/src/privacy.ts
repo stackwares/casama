@@ -77,6 +77,9 @@ export const OrgSettings = z
     chrome_act: z.boolean().optional().openapi({
       description: "Bots may work in members' own browsers (Act, D-323 G9)",
     }),
+    app_browser: z.boolean().optional().openapi({
+      description: "Bots may use the browser inside members' phone apps",
+    }),
     chrome_blocked_sites: z
       .array(z.string().min(1).max(253))
       .max(500)

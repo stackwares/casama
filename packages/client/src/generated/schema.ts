@@ -2803,6 +2803,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/admin/app-browser": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The phone browser's stage and the numbers its stage rules read (owner only) */
+        get: operations["adminAppBrowser"];
+        /** Change who has the phone browser and for which reasons (owner only) */
+        put: operations["saveAppBrowser"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/local-devices": {
         parameters: {
             query?: never;
@@ -2835,6 +2853,23 @@ export interface paths {
         head?: never;
         /** Change capabilities, shared folders, allowed bots or turn the device off */
         patch: operations["updateLocalDevice"];
+        trace?: never;
+    };
+    "/v1/app-browser": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Whether this person may let bots use the browser inside the phone app in this workspace, and this install's browser when it is paired */
+        get: operations["getAppBrowser"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/v1/coding-agents": {
@@ -11597,6 +11632,43 @@ export interface components {
              */
             live_call_id?: string;
         };
+        AdminAppBrowser: {
+            settings: components["schemas"]["AppBrowserSettings"];
+            numbers: components["schemas"]["AppBrowserNumbers"];
+        };
+        AppBrowserSettings: {
+            /**
+             * @description "off": nobody; "testers": the people listed; "on": everyone on a listed system
+             * @enum {string}
+             */
+            stage: "off" | "testers" | "on";
+            testers: string[];
+            reasons: {
+                /** @description The person asks for it */
+                asked: boolean;
+                /** @description The site blocks the bot's computer */
+                blocked: boolean;
+                /** @description The person signed in to the site on the phone */
+                signed_in: boolean;
+            };
+            /** @description "ios", "android" */
+            systems: string[];
+        };
+        AppBrowserNumbers: {
+            days: number;
+            /** @description Runs whose computer browser met a block page while someone had the chat open */
+            blocked_runs: number;
+            blocked_people: number;
+            /** @description Runs that browsed on the computer while someone had the chat open */
+            watched_browser_runs: number;
+            /** @description Runs that used a phone's browser */
+            phone_runs: number;
+            phone_people: number;
+            phones_paired: number;
+            phones_with_sites: number;
+            /** @description Steps on a phone that were asked and denied, handed over or refused */
+            refused_steps: number;
+        };
         CreatedLocalDevice: components["schemas"]["LocalDevice"] & {
             /** @description Device token, shown once; the app keeps it in secure storage */
             token: string;
@@ -11614,10 +11686,15 @@ export interface components {
             computer_id: string | null;
             name: string;
             /**
-             * @description "chrome": a browser-only device (Casama for Chrome, D-323): no computer, browser tools only
+             * @description "chrome": a browser-only device (Casama for Chrome, D-323): no computer, browser tools only. "app": the browser inside the Casama app on a phone or tablet; listed only with all_platforms=true, because older apps read this strictly
              * @enum {string}
              */
-            platform: "macos" | "windows" | "linux" | "chrome";
+            platform: "macos" | "windows" | "linux" | "chrome" | "app";
+            /**
+             * @description For platform "app": which system the phone runs
+             * @enum {string|null}
+             */
+            system?: "ios" | "android" | null;
             /** @description What the desktop app reported when it last connected, e.g. "macOS 26.2" */
             os_version?: string | null;
             capabilities: components["schemas"]["LocalCapabilities"];
@@ -11643,11 +11720,24 @@ export interface components {
             org_id: string;
             name: string;
             /** @enum {string} */
-            platform: "macos" | "windows" | "linux" | "chrome";
+            platform: "macos" | "windows" | "linux" | "chrome" | "app";
+            /**
+             * @description Required for platform "app"
+             * @enum {string}
+             */
+            system?: "ios" | "android";
+            /** @description Required for platform "app": the id this app install reports its open chat with (chat focus), so a bot can use the browser only while its chat is on this phone's screen */
+            client_id?: string;
         };
         DeletedDevice: {
             /** Format: uuid */
             deleted: string;
+        };
+        AppBrowserState: {
+            available: boolean;
+            /** @description Why not: "off", "not_a_tester", "system_off", "workspace_off", "unavailable" (this server has no device connections) */
+            reason: string | null;
+            device: components["schemas"]["LocalDevice"] & (Record<string, never> | null);
         };
         CodingAgentList: {
             items: components["schemas"]["CodingAgentInfo"][];
@@ -11684,6 +11774,17 @@ export interface components {
             /** @description How the answer is read: json_result (a JSON `result`), marker (the agent writes it to {result_file}), json_field:<name>, stream_json or tail */
             result: string;
             timeout_min?: number;
+        };
+        SaveAppBrowserRequest: {
+            /** @enum {string} */
+            stage: "off" | "testers" | "on";
+            testers?: string[];
+            reasons?: {
+                asked?: boolean;
+                blocked?: boolean;
+                signed_in?: boolean;
+            };
+            systems?: ("ios" | "android")[];
         };
         LocalMcpIntegrationList: {
             items: components["schemas"]["Integration"][];
@@ -12843,6 +12944,8 @@ export interface components {
             chrome_extension?: boolean;
             /** @description Bots may work in members' own browsers (Act, D-323 G9) */
             chrome_act?: boolean;
+            /** @description Bots may use the browser inside members' phone apps */
+            app_browser?: boolean;
             /** @description Sites bots may never act on in members' browsers */
             chrome_blocked_sites?: string[];
         };
@@ -12891,6 +12994,8 @@ export interface components {
             chrome_extension?: boolean;
             /** @description Bots may work in members' own browsers (Act, D-323 G9) */
             chrome_act?: boolean;
+            /** @description Bots may use the browser inside members' phone apps */
+            app_browser?: boolean;
             /** @description Sites bots may never act on in members' browsers */
             chrome_blocked_sites?: string[];
         };
@@ -26569,10 +26674,103 @@ export interface operations {
             };
         };
     };
+    adminAppBrowser: {
+        parameters: {
+            query?: {
+                days?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Stage and numbers */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminAppBrowser"];
+                };
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    saveAppBrowser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveAppBrowserRequest"];
+            };
+        };
+        responses: {
+            /** @description Saved */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminAppBrowser"];
+                };
+            };
+            /** @description Validation failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     listLocalDevices: {
         parameters: {
             query: {
                 org_id: string;
+                /** @description Include browsers inside the phone app (platform "app"). Left out by default: apps from before it read the platform strictly */
+                all_platforms?: "true" | "false";
             };
             header?: never;
             path?: never;
@@ -26735,6 +26933,48 @@ export interface operations {
             };
             /** @description Not found */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    getAppBrowser: {
+        parameters: {
+            query: {
+                org_id: string;
+                system: "ios" | "android";
+                client_id: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description State */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AppBrowserState"];
+                };
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };
