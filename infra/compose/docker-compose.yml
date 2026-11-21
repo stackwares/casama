@@ -299,6 +299,8 @@ x-casama: &casama
     LANGFUSE_SECRET_KEY: ${LANGFUSE_SECRET_KEY:-}
     OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
     UPDATE_CHECK_URL: ${UPDATE_CHECK_URL:-}
+    # "Compare on Aviasales" under Fares cards (D-471): an https affiliate link with {url}. Empty: off.
+    LIVE_FARES_COMPARE_URL: ${LIVE_FARES_COMPARE_URL:-}
 
 services:
   # ---------------------------------------------------------------- Supabase
