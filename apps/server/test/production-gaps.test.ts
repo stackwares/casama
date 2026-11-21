@@ -90,6 +90,20 @@ describe("reports and blocks (D-301)", () => {
         })
       ).status,
     ).toBe(404);
+    // A teammate's private chat: same workspace, but not a message Alice can read.
+    const [priv] = await h.handle.db.execute<{ id: string }>(sql`
+      insert into public.conversations (org_id, bot_id, title, private, created_by)
+      select org_id, bot_id, 'Mine', true, ${bob.id}::uuid from public.conversations
+      where id = (select conversation_id from public.messages where id = ${messageId}::uuid)
+      returning id`);
+    const [secret] = await h.handle.db.execute<{ id: string }>(sql`
+      insert into public.messages (org_id, conversation_id, role, author_user_id, content)
+      values (${orgId}::uuid, ${priv?.id}::uuid, 'user', ${bob.id}::uuid, '[{"type":"text","text":"private"}]'::jsonb)
+      returning id`);
+    expect(
+      (await report(alice.token, { target_kind: "message", target_id: secret?.id, reason: "spam" }))
+        .status,
+    ).toBe(404);
     expect(
       (
         await report(stranger.token, {

@@ -154,6 +154,14 @@ export function registerModerationRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps
         from public.messages m left join public.profiles p on p.user_id = m.author_user_id
         where m.id = ${id}::uuid`);
       if (!m || !(await visible(m.org_id))) throw new ApiError(404, "not_found", "Not found");
+      // Being in the workspace isn't enough: a teammate's private chat stays private (D-474).
+      // Row-level security says whether the reporter can read this message.
+      const [seen] = await withUserSession(db, claims, (tx) =>
+        tx.execute<{ ok: boolean }>(
+          sql`select true as ok from public.messages where id = ${id}::uuid`,
+        ),
+      );
+      if (!seen) throw new ApiError(404, "not_found", "Not found");
       return {
         orgId: m.org_id,
         snapshot: `${m.name ?? m.author ?? "Someone"}: ${messageText(m.content)}`.slice(0, 4000),
