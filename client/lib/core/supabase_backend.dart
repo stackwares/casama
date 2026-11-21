@@ -6055,6 +6055,65 @@ class SupabaseBackend implements Backend {
   Future<void> deleteLocalDevice(String id) async =>
       api.localComputer.deleteLocalDevice(id: id);
 
+  // --- the phone browser (docs/PHONE-BROWSER-PLAN.md) ----------------------
+
+  @override
+  Future<AppBrowserState> appBrowserState(String orgId, {required String system, required String clientId}) async =>
+      (await api.localComputer.getAppBrowser(orgId: orgId, system: system, clientId: clientId)).data!;
+
+  @override
+  Future<CreatedLocalDevice> pairAppBrowser(String orgId, {required String name, required String system, required String clientId}) async =>
+      (await api.localComputer.createLocalDevice(
+        createLocalDeviceRequest: CreateLocalDeviceRequest(
+          orgId: orgId,
+          name: name,
+          platform: CreateLocalDeviceRequestPlatformEnum.app,
+          system: CreateLocalDeviceRequestSystemEnum.values.firstWhere((s) => s.value == system),
+          clientId: clientId,
+        ),
+      )).data!;
+
+  @override
+  Future<List<LocalDevice>> allLocalDevices(String orgId) async =>
+      (await api.localComputer.listLocalDevices(orgId: orgId, allPlatforms: 'true')).data!.items;
+
+  @override
+  Future<LocalDevice> updateAppBrowser(
+    String id, {
+    List<String>? botIds,
+    List<String>? allowedSites,
+    List<String>? blockedSites,
+    List<String>? allowedKinds,
+    bool? enabled,
+  }) async => (await api.localComputer.updateLocalDevice(
+    id: id,
+    updateLocalDeviceRequest: UpdateLocalDeviceRequest(
+      allowedBotIds: botIds,
+      allowedSites: allowedSites,
+      blockedSites: blockedSites,
+      allowedKinds: allowedKinds == null ? null : [for (final k in SiteKind.values) if (allowedKinds.contains(k.value)) k],
+      enabled: enabled,
+    ),
+  )).data!;
+
+  @override
+  Future<Map<String, List<String>>> browserGuardSites() async => (await api.system.getBrowserGuardSites()).data!.hosts;
+
+  @override
+  Future<bool> appBrowserWorkspace(String orgId) async => (await api.privacy.getOrgSettings(id: orgId)).data!.appBrowser ?? true;
+
+  @override
+  Future<void> setAppBrowserWorkspace(String orgId, bool on) async {
+    await api.privacy.updateOrgSettings(id: orgId, updateOrgSettingsRequest: UpdateOrgSettingsRequest(appBrowser: on));
+  }
+
+  @override
+  Future<AdminAppBrowser> adminAppBrowser({int? days}) async => (await api.admin.adminAppBrowser(days: days)).data!;
+
+  @override
+  Future<AdminAppBrowser> saveAdminAppBrowser(SaveAppBrowserRequest request) async =>
+      (await api.admin.saveAppBrowser(saveAppBrowserRequest: request)).data!;
+
   // Read entry by entry: an agent a newer server adds in a shape this app can't read is skipped,
   // never the whole list (D-370). An older server without the list answers 404.
   @override

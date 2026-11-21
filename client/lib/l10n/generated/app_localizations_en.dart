@@ -19007,4 +19007,328 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get adminCasamaModelsNote =>
       'Note shown when Casama\'s models are off';
+
+  @override
+  String get appBrowserTitle => 'Browser on This Phone';
+
+  @override
+  String get appBrowserHelp =>
+      'A small browser inside Casama that bots you allow can use while you watch, only while you have their chat open on this phone. Your sign-ins stay on this phone.';
+
+  @override
+  String get appBrowserSwitchHelp =>
+      'Bots you allow can open pages here while their chat is open on this phone.';
+
+  @override
+  String get appBrowserOn => 'On';
+
+  @override
+  String get appBrowserOff => 'Off';
+
+  @override
+  String appBrowserSwitchedOff(String reason) {
+    return 'Switched off: $reason';
+  }
+
+  @override
+  String get appBrowserReasonOff => 'not available yet.';
+
+  @override
+  String get appBrowserReasonNotTester => 'only for testers for now.';
+
+  @override
+  String get appBrowserReasonSystemOff =>
+      'not available on this kind of phone yet.';
+
+  @override
+  String get appBrowserReasonWorkspaceOff =>
+      'an admin turned it off for this workspace.';
+
+  @override
+  String get appBrowserReasonUnavailable =>
+      'this server doesn\'t have device connections.';
+
+  @override
+  String get appBrowserReasonUnsupported =>
+      'this phone\'s browser can\'t run it.';
+
+  @override
+  String get appBrowserReasonNoToken =>
+      'Paired on an earlier install. Turn it on again to pair this phone.';
+
+  @override
+  String get appBrowserConsentTitle => 'Let Bots Use a Browser on This Phone?';
+
+  @override
+  String get appBrowserConsentPages =>
+      'Pages a bot reads here are sent to Casama and to the bot\'s AI model, as pages it reads on its own computer are.';
+
+  @override
+  String get appBrowserConsentSignIns =>
+      'Your sign-ins stay on this phone. Bots never see passwords, card numbers or codes; you type those yourself.';
+
+  @override
+  String get appBrowserConsentWatch =>
+      'It works only while you have the bot\'s chat open here. You can watch, take over or stop it at any time.';
+
+  @override
+  String get appBrowserConsentYours =>
+      'What you browse yourself is never sent anywhere.';
+
+  @override
+  String get appBrowserBots => 'Bots That May Use It';
+
+  @override
+  String get appBrowserBotsHelp =>
+      'Only the bots switched on here can use the browser on this phone.';
+
+  @override
+  String get appBrowserNoBots => 'No bots yet.';
+
+  @override
+  String get appBrowserSites => 'Sites';
+
+  @override
+  String get appBrowserSitesHelp =>
+      'Sites you answered Always or Never. Remove one to be asked again next time.';
+
+  @override
+  String get appBrowserNoSites =>
+      'No sites yet. A bot asks the first time it opens a site.';
+
+  @override
+  String appBrowserRemoveSite(String site) {
+    return 'Remove $site';
+  }
+
+  @override
+  String get appBrowserKinds => 'Sites That Stay Off';
+
+  @override
+  String get appBrowserKindsHelp =>
+      'These kinds of sites stay off unless you turn them on. When one is on, a bot still asks every time.';
+
+  @override
+  String get appBrowserKindBanking => 'Banking and Payments';
+
+  @override
+  String get appBrowserKindHealth => 'Health';
+
+  @override
+  String get appBrowserKindPasswords => 'Password Managers';
+
+  @override
+  String get appBrowserKindGovernment => 'Government ID';
+
+  @override
+  String get appBrowserSignIn => 'Sign In to a Site';
+
+  @override
+  String get appBrowserSignInHelp =>
+      'Open a site, sign in yourself, then let your bots use it. Nothing you do there is sent anywhere.';
+
+  @override
+  String get appBrowserClearData => 'Clear Browsing Data';
+
+  @override
+  String get appBrowserClearDataHelp =>
+      'Signs this browser out of every site and clears what sites saved.';
+
+  @override
+  String get appBrowserClearDataConfirm =>
+      'Clear this browser\'s sign-ins and site data?';
+
+  @override
+  String get appBrowserClearDataDone => 'Browsing data cleared';
+
+  @override
+  String get appBrowserUnpair => 'Unpair This Phone';
+
+  @override
+  String get appBrowserUnpairConfirm =>
+      'Unpair this phone\'s browser? Bots can\'t use it until you turn it on again.';
+
+  @override
+  String appBrowserWorking(String bot) {
+    return '$bot is working';
+  }
+
+  @override
+  String get appBrowserTakeOver => 'Take Over';
+
+  @override
+  String get appBrowserHandBack => 'Hand Back';
+
+  @override
+  String get appBrowserYourTurn => 'Your turn';
+
+  @override
+  String appBrowserPaused(String bot) {
+    return '$bot is paused while you use the page';
+  }
+
+  @override
+  String get appBrowserAway => 'Paused: the chat isn\'t open';
+
+  @override
+  String get appBrowserAddress => 'Site address';
+
+  @override
+  String get appBrowserBack => 'Back';
+
+  @override
+  String get appBrowserForward => 'Forward';
+
+  @override
+  String get appBrowserReload => 'Reload';
+
+  @override
+  String get appBrowserAllowSite => 'Let My Bots Use This Site';
+
+  @override
+  String appBrowserSiteAdded(String site) {
+    return '$site added. Your bots can use it here.';
+  }
+
+  @override
+  String get appBrowserAddressRefused => 'That address can\'t be opened here.';
+
+  @override
+  String get appBrowserSecure => 'Secure connection';
+
+  @override
+  String get appBrowserNotSecure => 'Not secure';
+
+  @override
+  String get appBrowserCardLabel => 'Phone Browser';
+
+  @override
+  String appBrowserSiteAskTitle(String bot, String site) {
+    return '$bot wants to open $site';
+  }
+
+  @override
+  String get appBrowserSiteAskHelp =>
+      'On this phone, with your sign-ins. Always lets it open this site from now on.';
+
+  @override
+  String appBrowserSiteAskKind(String kind) {
+    return '$kind sites ask every time.';
+  }
+
+  @override
+  String get appBrowserOnce => 'Once';
+
+  @override
+  String get appBrowserAlways => 'Always';
+
+  @override
+  String get appBrowserNever => 'Never';
+
+  @override
+  String appBrowserStepAskTitle(String bot) {
+    return 'Allow $bot to do this?';
+  }
+
+  @override
+  String get appBrowserStepAskHelp => 'On this phone, with your sign-ins.';
+
+  @override
+  String appBrowserStepOn(String step, String name) {
+    return '$step: “$name”';
+  }
+
+  @override
+  String get appBrowserDontAllow => 'Don\'t Allow';
+
+  @override
+  String get appBrowserDeviceIos => 'iPhone';
+
+  @override
+  String get appBrowserDeviceAndroid => 'Android Phone';
+
+  @override
+  String get toolOnThisPhone => 'on this phone';
+
+  @override
+  String get appBrowserWorkspaceSwitch => 'Bots in Members\' Phone Browsers';
+
+  @override
+  String get appBrowserWorkspaceSwitchHelp =>
+      'Members can let bots use a browser inside Casama on their phone, while they watch.';
+
+  @override
+  String get adminAppBrowser => 'Phone Browser';
+
+  @override
+  String get adminAppBrowserHelp =>
+      'Who can use the browser in the phone app, for which reasons and on which systems';
+
+  @override
+  String get adminAppBrowserStage => 'Stage';
+
+  @override
+  String get adminAppBrowserStageOff => 'Off';
+
+  @override
+  String get adminAppBrowserStageTesters => 'Testers';
+
+  @override
+  String get adminAppBrowserStageOn => 'On';
+
+  @override
+  String get adminAppBrowserTesters => 'Testers';
+
+  @override
+  String get adminAppBrowserTestersHelp => 'User ids, one per line';
+
+  @override
+  String get adminAppBrowserReasons => 'Reasons';
+
+  @override
+  String get adminAppBrowserReasonAsked => 'When the Person Asks';
+
+  @override
+  String get adminAppBrowserReasonBlocked => 'When a Site Blocks the Computer';
+
+  @override
+  String get adminAppBrowserReasonSignedIn => 'Sites Signed In on the Phone';
+
+  @override
+  String get adminAppBrowserSystems => 'Systems';
+
+  @override
+  String get adminAppBrowserIos => 'iPhone and iPad';
+
+  @override
+  String get adminAppBrowserAndroid => 'Android';
+
+  @override
+  String adminAppBrowserNumbers(int days) {
+    return 'Last $days Days';
+  }
+
+  @override
+  String get adminAppBrowserBlockedRuns => 'Computer runs that hit a block';
+
+  @override
+  String get adminAppBrowserBlockedPeople => 'People who hit a block';
+
+  @override
+  String get adminAppBrowserWatchedRuns => 'Watched browser runs';
+
+  @override
+  String get adminAppBrowserPhoneRuns => 'Runs on a phone';
+
+  @override
+  String get adminAppBrowserPhonePeople => 'People using it';
+
+  @override
+  String get adminAppBrowserPhonesPaired => 'Phones paired';
+
+  @override
+  String get adminAppBrowserPhonesWithSites => 'Phones with sites';
+
+  @override
+  String get adminAppBrowserRefusedSteps => 'Steps refused';
 }

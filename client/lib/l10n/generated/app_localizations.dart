@@ -30739,6 +30739,570 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Note shown when Casama\'s models are off'**
   String get adminCasamaModelsNote;
+
+  /// No description provided for @appBrowserTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Browser on This Phone'**
+  String get appBrowserTitle;
+
+  /// No description provided for @appBrowserHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'A small browser inside Casama that bots you allow can use while you watch, only while you have their chat open on this phone. Your sign-ins stay on this phone.'**
+  String get appBrowserHelp;
+
+  /// No description provided for @appBrowserSwitchHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Bots you allow can open pages here while their chat is open on this phone.'**
+  String get appBrowserSwitchHelp;
+
+  /// No description provided for @appBrowserOn.
+  ///
+  /// In en, this message translates to:
+  /// **'On'**
+  String get appBrowserOn;
+
+  /// No description provided for @appBrowserOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get appBrowserOff;
+
+  /// No description provided for @appBrowserSwitchedOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Switched off: {reason}'**
+  String appBrowserSwitchedOff(String reason);
+
+  /// No description provided for @appBrowserReasonOff.
+  ///
+  /// In en, this message translates to:
+  /// **'not available yet.'**
+  String get appBrowserReasonOff;
+
+  /// No description provided for @appBrowserReasonNotTester.
+  ///
+  /// In en, this message translates to:
+  /// **'only for testers for now.'**
+  String get appBrowserReasonNotTester;
+
+  /// No description provided for @appBrowserReasonSystemOff.
+  ///
+  /// In en, this message translates to:
+  /// **'not available on this kind of phone yet.'**
+  String get appBrowserReasonSystemOff;
+
+  /// No description provided for @appBrowserReasonWorkspaceOff.
+  ///
+  /// In en, this message translates to:
+  /// **'an admin turned it off for this workspace.'**
+  String get appBrowserReasonWorkspaceOff;
+
+  /// No description provided for @appBrowserReasonUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'this server doesn\'t have device connections.'**
+  String get appBrowserReasonUnavailable;
+
+  /// No description provided for @appBrowserReasonUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'this phone\'s browser can\'t run it.'**
+  String get appBrowserReasonUnsupported;
+
+  /// No description provided for @appBrowserReasonNoToken.
+  ///
+  /// In en, this message translates to:
+  /// **'Paired on an earlier install. Turn it on again to pair this phone.'**
+  String get appBrowserReasonNoToken;
+
+  /// No description provided for @appBrowserConsentTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Let Bots Use a Browser on This Phone?'**
+  String get appBrowserConsentTitle;
+
+  /// No description provided for @appBrowserConsentPages.
+  ///
+  /// In en, this message translates to:
+  /// **'Pages a bot reads here are sent to Casama and to the bot\'s AI model, as pages it reads on its own computer are.'**
+  String get appBrowserConsentPages;
+
+  /// No description provided for @appBrowserConsentSignIns.
+  ///
+  /// In en, this message translates to:
+  /// **'Your sign-ins stay on this phone. Bots never see passwords, card numbers or codes; you type those yourself.'**
+  String get appBrowserConsentSignIns;
+
+  /// No description provided for @appBrowserConsentWatch.
+  ///
+  /// In en, this message translates to:
+  /// **'It works only while you have the bot\'s chat open here. You can watch, take over or stop it at any time.'**
+  String get appBrowserConsentWatch;
+
+  /// No description provided for @appBrowserConsentYours.
+  ///
+  /// In en, this message translates to:
+  /// **'What you browse yourself is never sent anywhere.'**
+  String get appBrowserConsentYours;
+
+  /// No description provided for @appBrowserBots.
+  ///
+  /// In en, this message translates to:
+  /// **'Bots That May Use It'**
+  String get appBrowserBots;
+
+  /// No description provided for @appBrowserBotsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Only the bots switched on here can use the browser on this phone.'**
+  String get appBrowserBotsHelp;
+
+  /// No description provided for @appBrowserNoBots.
+  ///
+  /// In en, this message translates to:
+  /// **'No bots yet.'**
+  String get appBrowserNoBots;
+
+  /// No description provided for @appBrowserSites.
+  ///
+  /// In en, this message translates to:
+  /// **'Sites'**
+  String get appBrowserSites;
+
+  /// No description provided for @appBrowserSitesHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Sites you answered Always or Never. Remove one to be asked again next time.'**
+  String get appBrowserSitesHelp;
+
+  /// No description provided for @appBrowserNoSites.
+  ///
+  /// In en, this message translates to:
+  /// **'No sites yet. A bot asks the first time it opens a site.'**
+  String get appBrowserNoSites;
+
+  /// No description provided for @appBrowserRemoveSite.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {site}'**
+  String appBrowserRemoveSite(String site);
+
+  /// No description provided for @appBrowserKinds.
+  ///
+  /// In en, this message translates to:
+  /// **'Sites That Stay Off'**
+  String get appBrowserKinds;
+
+  /// No description provided for @appBrowserKindsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'These kinds of sites stay off unless you turn them on. When one is on, a bot still asks every time.'**
+  String get appBrowserKindsHelp;
+
+  /// No description provided for @appBrowserKindBanking.
+  ///
+  /// In en, this message translates to:
+  /// **'Banking and Payments'**
+  String get appBrowserKindBanking;
+
+  /// No description provided for @appBrowserKindHealth.
+  ///
+  /// In en, this message translates to:
+  /// **'Health'**
+  String get appBrowserKindHealth;
+
+  /// No description provided for @appBrowserKindPasswords.
+  ///
+  /// In en, this message translates to:
+  /// **'Password Managers'**
+  String get appBrowserKindPasswords;
+
+  /// No description provided for @appBrowserKindGovernment.
+  ///
+  /// In en, this message translates to:
+  /// **'Government ID'**
+  String get appBrowserKindGovernment;
+
+  /// No description provided for @appBrowserSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign In to a Site'**
+  String get appBrowserSignIn;
+
+  /// No description provided for @appBrowserSignInHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Open a site, sign in yourself, then let your bots use it. Nothing you do there is sent anywhere.'**
+  String get appBrowserSignInHelp;
+
+  /// No description provided for @appBrowserClearData.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear Browsing Data'**
+  String get appBrowserClearData;
+
+  /// No description provided for @appBrowserClearDataHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Signs this browser out of every site and clears what sites saved.'**
+  String get appBrowserClearDataHelp;
+
+  /// No description provided for @appBrowserClearDataConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear this browser\'s sign-ins and site data?'**
+  String get appBrowserClearDataConfirm;
+
+  /// No description provided for @appBrowserClearDataDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Browsing data cleared'**
+  String get appBrowserClearDataDone;
+
+  /// No description provided for @appBrowserUnpair.
+  ///
+  /// In en, this message translates to:
+  /// **'Unpair This Phone'**
+  String get appBrowserUnpair;
+
+  /// No description provided for @appBrowserUnpairConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Unpair this phone\'s browser? Bots can\'t use it until you turn it on again.'**
+  String get appBrowserUnpairConfirm;
+
+  /// No description provided for @appBrowserWorking.
+  ///
+  /// In en, this message translates to:
+  /// **'{bot} is working'**
+  String appBrowserWorking(String bot);
+
+  /// No description provided for @appBrowserTakeOver.
+  ///
+  /// In en, this message translates to:
+  /// **'Take Over'**
+  String get appBrowserTakeOver;
+
+  /// No description provided for @appBrowserHandBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Hand Back'**
+  String get appBrowserHandBack;
+
+  /// No description provided for @appBrowserYourTurn.
+  ///
+  /// In en, this message translates to:
+  /// **'Your turn'**
+  String get appBrowserYourTurn;
+
+  /// No description provided for @appBrowserPaused.
+  ///
+  /// In en, this message translates to:
+  /// **'{bot} is paused while you use the page'**
+  String appBrowserPaused(String bot);
+
+  /// No description provided for @appBrowserAway.
+  ///
+  /// In en, this message translates to:
+  /// **'Paused: the chat isn\'t open'**
+  String get appBrowserAway;
+
+  /// No description provided for @appBrowserAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Site address'**
+  String get appBrowserAddress;
+
+  /// No description provided for @appBrowserBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get appBrowserBack;
+
+  /// No description provided for @appBrowserForward.
+  ///
+  /// In en, this message translates to:
+  /// **'Forward'**
+  String get appBrowserForward;
+
+  /// No description provided for @appBrowserReload.
+  ///
+  /// In en, this message translates to:
+  /// **'Reload'**
+  String get appBrowserReload;
+
+  /// No description provided for @appBrowserAllowSite.
+  ///
+  /// In en, this message translates to:
+  /// **'Let My Bots Use This Site'**
+  String get appBrowserAllowSite;
+
+  /// No description provided for @appBrowserSiteAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'{site} added. Your bots can use it here.'**
+  String appBrowserSiteAdded(String site);
+
+  /// No description provided for @appBrowserAddressRefused.
+  ///
+  /// In en, this message translates to:
+  /// **'That address can\'t be opened here.'**
+  String get appBrowserAddressRefused;
+
+  /// No description provided for @appBrowserSecure.
+  ///
+  /// In en, this message translates to:
+  /// **'Secure connection'**
+  String get appBrowserSecure;
+
+  /// No description provided for @appBrowserNotSecure.
+  ///
+  /// In en, this message translates to:
+  /// **'Not secure'**
+  String get appBrowserNotSecure;
+
+  /// No description provided for @appBrowserCardLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone Browser'**
+  String get appBrowserCardLabel;
+
+  /// No description provided for @appBrowserSiteAskTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{bot} wants to open {site}'**
+  String appBrowserSiteAskTitle(String bot, String site);
+
+  /// No description provided for @appBrowserSiteAskHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'On this phone, with your sign-ins. Always lets it open this site from now on.'**
+  String get appBrowserSiteAskHelp;
+
+  /// No description provided for @appBrowserSiteAskKind.
+  ///
+  /// In en, this message translates to:
+  /// **'{kind} sites ask every time.'**
+  String appBrowserSiteAskKind(String kind);
+
+  /// No description provided for @appBrowserOnce.
+  ///
+  /// In en, this message translates to:
+  /// **'Once'**
+  String get appBrowserOnce;
+
+  /// No description provided for @appBrowserAlways.
+  ///
+  /// In en, this message translates to:
+  /// **'Always'**
+  String get appBrowserAlways;
+
+  /// No description provided for @appBrowserNever.
+  ///
+  /// In en, this message translates to:
+  /// **'Never'**
+  String get appBrowserNever;
+
+  /// No description provided for @appBrowserStepAskTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow {bot} to do this?'**
+  String appBrowserStepAskTitle(String bot);
+
+  /// No description provided for @appBrowserStepAskHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'On this phone, with your sign-ins.'**
+  String get appBrowserStepAskHelp;
+
+  /// No description provided for @appBrowserStepOn.
+  ///
+  /// In en, this message translates to:
+  /// **'{step}: “{name}”'**
+  String appBrowserStepOn(String step, String name);
+
+  /// No description provided for @appBrowserDontAllow.
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t Allow'**
+  String get appBrowserDontAllow;
+
+  /// No description provided for @appBrowserDeviceIos.
+  ///
+  /// In en, this message translates to:
+  /// **'iPhone'**
+  String get appBrowserDeviceIos;
+
+  /// No description provided for @appBrowserDeviceAndroid.
+  ///
+  /// In en, this message translates to:
+  /// **'Android Phone'**
+  String get appBrowserDeviceAndroid;
+
+  /// No description provided for @toolOnThisPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'on this phone'**
+  String get toolOnThisPhone;
+
+  /// No description provided for @appBrowserWorkspaceSwitch.
+  ///
+  /// In en, this message translates to:
+  /// **'Bots in Members\' Phone Browsers'**
+  String get appBrowserWorkspaceSwitch;
+
+  /// No description provided for @appBrowserWorkspaceSwitchHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Members can let bots use a browser inside Casama on their phone, while they watch.'**
+  String get appBrowserWorkspaceSwitchHelp;
+
+  /// No description provided for @adminAppBrowser.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone Browser'**
+  String get adminAppBrowser;
+
+  /// No description provided for @adminAppBrowserHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Who can use the browser in the phone app, for which reasons and on which systems'**
+  String get adminAppBrowserHelp;
+
+  /// No description provided for @adminAppBrowserStage.
+  ///
+  /// In en, this message translates to:
+  /// **'Stage'**
+  String get adminAppBrowserStage;
+
+  /// No description provided for @adminAppBrowserStageOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get adminAppBrowserStageOff;
+
+  /// No description provided for @adminAppBrowserStageTesters.
+  ///
+  /// In en, this message translates to:
+  /// **'Testers'**
+  String get adminAppBrowserStageTesters;
+
+  /// No description provided for @adminAppBrowserStageOn.
+  ///
+  /// In en, this message translates to:
+  /// **'On'**
+  String get adminAppBrowserStageOn;
+
+  /// No description provided for @adminAppBrowserTesters.
+  ///
+  /// In en, this message translates to:
+  /// **'Testers'**
+  String get adminAppBrowserTesters;
+
+  /// No description provided for @adminAppBrowserTestersHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'User ids, one per line'**
+  String get adminAppBrowserTestersHelp;
+
+  /// No description provided for @adminAppBrowserReasons.
+  ///
+  /// In en, this message translates to:
+  /// **'Reasons'**
+  String get adminAppBrowserReasons;
+
+  /// No description provided for @adminAppBrowserReasonAsked.
+  ///
+  /// In en, this message translates to:
+  /// **'When the Person Asks'**
+  String get adminAppBrowserReasonAsked;
+
+  /// No description provided for @adminAppBrowserReasonBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'When a Site Blocks the Computer'**
+  String get adminAppBrowserReasonBlocked;
+
+  /// No description provided for @adminAppBrowserReasonSignedIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Sites Signed In on the Phone'**
+  String get adminAppBrowserReasonSignedIn;
+
+  /// No description provided for @adminAppBrowserSystems.
+  ///
+  /// In en, this message translates to:
+  /// **'Systems'**
+  String get adminAppBrowserSystems;
+
+  /// No description provided for @adminAppBrowserIos.
+  ///
+  /// In en, this message translates to:
+  /// **'iPhone and iPad'**
+  String get adminAppBrowserIos;
+
+  /// No description provided for @adminAppBrowserAndroid.
+  ///
+  /// In en, this message translates to:
+  /// **'Android'**
+  String get adminAppBrowserAndroid;
+
+  /// No description provided for @adminAppBrowserNumbers.
+  ///
+  /// In en, this message translates to:
+  /// **'Last {days} Days'**
+  String adminAppBrowserNumbers(int days);
+
+  /// No description provided for @adminAppBrowserBlockedRuns.
+  ///
+  /// In en, this message translates to:
+  /// **'Computer runs that hit a block'**
+  String get adminAppBrowserBlockedRuns;
+
+  /// No description provided for @adminAppBrowserBlockedPeople.
+  ///
+  /// In en, this message translates to:
+  /// **'People who hit a block'**
+  String get adminAppBrowserBlockedPeople;
+
+  /// No description provided for @adminAppBrowserWatchedRuns.
+  ///
+  /// In en, this message translates to:
+  /// **'Watched browser runs'**
+  String get adminAppBrowserWatchedRuns;
+
+  /// No description provided for @adminAppBrowserPhoneRuns.
+  ///
+  /// In en, this message translates to:
+  /// **'Runs on a phone'**
+  String get adminAppBrowserPhoneRuns;
+
+  /// No description provided for @adminAppBrowserPhonePeople.
+  ///
+  /// In en, this message translates to:
+  /// **'People using it'**
+  String get adminAppBrowserPhonePeople;
+
+  /// No description provided for @adminAppBrowserPhonesPaired.
+  ///
+  /// In en, this message translates to:
+  /// **'Phones paired'**
+  String get adminAppBrowserPhonesPaired;
+
+  /// No description provided for @adminAppBrowserPhonesWithSites.
+  ///
+  /// In en, this message translates to:
+  /// **'Phones with sites'**
+  String get adminAppBrowserPhonesWithSites;
+
+  /// No description provided for @adminAppBrowserRefusedSteps.
+  ///
+  /// In en, this message translates to:
+  /// **'Steps refused'**
+  String get adminAppBrowserRefusedSteps;
 }
 
 class _AppLocalizationsDelegate

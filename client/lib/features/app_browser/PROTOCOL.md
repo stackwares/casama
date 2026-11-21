@@ -22,6 +22,10 @@ The same socket the desktop app uses (`client/lib/features/companion/companion_i
 - App answers `{type:"response", id, status:200, headers:{}}`, one
   `{type:"chunk", id, data:<base64 JSON of the result>}`, then `{type:"end", id}`.
 - `GET /health` answers `{ok:true}`. Anything else is 404 `{ok:false, code:"not_found"}`.
+- Every answer to a `/browser/*` call is status 200, including `{ok:false, ...}` results. A call the
+  server cancels, or one in flight when the socket closes, gets no answer.
+- `x-casama-os` is `"iOS <version>"` on iPhone; on Android Dart only knows `"Android"` (Dart reports
+  the kernel's version there).
 - The app sends `{type:"hello", platform:"app", version}` on open and every 20 seconds.
 
 The request body (`BrowserCall` in `packages/contracts/src/browser.ts`, plus what the server adds):
@@ -64,7 +68,12 @@ returns (`stale_ref`, `covered`, `page_changed`, ...).
 Every call first checks that the run's conversation is the chat on screen. If it isn't, the answer
 is `away`. A call for a different run than the one working ends the earlier run's session.
 
-While the person has taken over (they touched the page), calls wait for Hand Back, up to 8 minutes.
+While the person has taken over (they touched the page) or a handoff's "Your turn" is showing,
+calls wait for Hand Back, up to 8 minutes (`stop` and `handoff` don't wait). After the person taps
+Stop, every later call of that run answers `away`; a different run may use the page again.
+
+A `dialog` call with no page dialog open answers `error`. `screenshot` passes `args.quality`
+(default 70) to native.
 
 ## 2. Site gate (Dart)
 
@@ -104,7 +113,7 @@ Methods Dart calls (all return a map or null; errors are `PlatformException`):
 |---|---|---|
 | `supported` | | `{supported: bool, reason: String?, realTaps: bool}` |
 | `load` | `url` | |
-| `command` | `json` (a page-script command, see `packages/page-agent/README.md`) | `json` (its answer); `timeout_ms` optional, default 30000 |
+| `command` | `json`: the page-script command as a JSON **string** (see `packages/page-agent/README.md`); `timeout_ms` optional, default 30000 (Dart sends 30000) | `{json: <the answer as a JSON string>}` (Dart also accepts the answer as a map) |
 | `tap` | `x`, `y` (CSS px in the viewport) | (Android only) |
 | `screenshot` | `quality` (default 70) | `{data: base64 jpeg}` |
 | `url` | | `{url, title, loading: bool, canGoBack: bool, canGoForward: bool}` |
@@ -117,11 +126,11 @@ Methods native calls on Dart:
 
 | method | args | Dart returns |
 |---|---|---|
-| `navigate` | `url`, `redirect: bool`, `user: bool` (started by a real touch) | `true` to let it load |
+| `navigate` | `url`, `redirect: bool`, `user: bool` (started by a real touch) | `true` to let it load. While a bot works, a new site shows the site ask first, so the answer can take up to 5 minutes: don't block the UI thread on it (Android: cancel the navigation and `load` the address again when Dart says `true`) |
 | `pageStarted` | `url` | |
 | `pageFinished` | `url`, `title` | |
-| `landed` | `url` (the address actually committed, after redirects) | `true` to keep it; `false` makes native load `about:blank` |
-| `userTouched` | | (a real finger touched the web area) |
+| `landed` | `url` (the address actually committed, after redirects) | `true` to keep it; `false` makes native load `about:blank` (it can also wait for a site ask) |
+| `userTouched` | | (a real finger touched the web area; **never** for native's own `tap`. Dart also ignores one within 800 ms of a `tap` it sent) |
 | `dialog` | `kind` (`alert`/`confirm`/`prompt`), `message` | (answered later with `answerDialog`) |
 | `gone` | `reason` | (the web content process ended; the page is lost) |
 

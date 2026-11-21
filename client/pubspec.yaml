@@ -144,6 +144,9 @@ flutter:
     - assets/scene/
     - assets/fonts/
     - assets/maps/
+    # The phone browser's site lists and page script (docs/PHONE-BROWSER-PLAN.md); used only in
+    # builds with --dart-define=CASAMA_APP_BROWSER=true.
+    - assets/app_browser/
   # Type (D-087, D-163): Google Sans is the default look's face (D-266) and the one text family in
   # the font manifest, which the web app downloads in full before its first frame. Libre
   # Baskerville, Lato, Noto Serif, Figtree, Fraunces and JetBrains Mono ship as plain assets and

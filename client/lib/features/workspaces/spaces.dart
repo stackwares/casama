@@ -33,6 +33,8 @@ import '../../ui/page.dart';
 import '../../ui/revealable.dart';
 import '../../ui/celebration.dart';
 import '../app_lock/confirm_identity.dart';
+import '../app_browser/app_browser_admin.dart';
+import '../app_browser/app_browser_flag.dart';
 
 /// Icons a workspace can have (D-099).
 const spaceIcons = <String, IconData>{
@@ -940,6 +942,8 @@ class ChromeSwitches extends ConsumerWidget {
               : null,
           trailing: Switch(key: const Key('chromeActSwitch'), value: s.extension && s.act, onChanged: s.extension ? hapticOnChanged((v) => set(act: v)) : null),
         ),
+        // The browser inside the phone app (docs/PHONE-BROWSER-PLAN.md), only in builds with it.
+        if (kAppBrowserCode && ref.watch(appBrowserBuildProvider)) AppBrowserWorkspaceTile(orgId: orgId),
       ],
     );
   }

@@ -69,6 +69,8 @@ import 'widgets/mentions.dart';
 import 'read_aloud.dart';
 import 'widgets/composer.dart';
 import 'widgets/screen_card.dart';
+import '../app_browser/app_browser_chat.dart';
+import '../app_browser/app_browser_flag.dart';
 import 'widgets/error_details.dart';
 import 'widgets/reply_usage.dart';
 import 'widgets/screen_held_actions.dart';
@@ -1587,6 +1589,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       // The bot's screen in a corner (SCREEN-CARD-PLAN), for now only as a debug preview.
                       if (screenCardPreview && !widget.group && (layout == LayoutSize.phone || layout == LayoutSize.tablet))
                         Positioned.fill(child: ScreenCardPreview(botName: name, layout: layout)),
+                      // A bot working in this phone's browser from this chat (docs/PHONE-BROWSER-PLAN.md §4).
+                      if (kAppBrowserCode && !widget.group && (layout == LayoutSize.phone || layout == LayoutSize.tablet))
+                        Positioned.fill(child: AppBrowserChatOverlay(conversationId: chat.conversationId, layout: layout)),
                     ],
                   ),
                 ),

@@ -4,6 +4,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../theme/app_colors.dart';
 import '../core/remote_content.dart';
+import '../features/app_browser/app_browser_flag.dart';
 
 /// The kind of thing a tool does, which picks its colour.
 enum ToolTone {
@@ -388,12 +389,17 @@ ToolWords toolWords(
       detail: action.isEmpty ? null : action,
     );
   }
+  var detail = _detailFor(l10n, id, tool, args);
+  // A browser step that ran in the phone's own browser (docs/PHONE-BROWSER-PLAN.md §8.7).
+  if (kAppBrowserCode && id.startsWith('browser_') && args['where'] == 'phone') {
+    detail = detail == null ? l10n.toolOnThisPhone : '$detail · ${l10n.toolOnThisPhone}';
+  }
   return ToolWords(
     icon: icon,
     tone: tone,
     doing: l10n.toolDoing(id),
     done: l10n.toolDid(id),
-    detail: _detailFor(l10n, id, tool, args),
+    detail: detail,
   );
 }
 

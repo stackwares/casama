@@ -52,6 +52,8 @@ import 'features/widgets/canvas_sync.dart' show canvasSyncProvider;
 import 'features/watch/watch_bridge.dart';
 import 'features/app_lock/lock_screen.dart';
 import 'features/permissions/permissions_reporter.dart';
+import 'features/app_browser/app_browser_flag.dart';
+import 'features/app_browser/app_browser_service.dart';
 
 class CasamaApp extends ConsumerWidget {
   const CasamaApp({super.key});
@@ -78,6 +80,8 @@ class CasamaApp extends ConsumerWidget {
     keep(permissionsReporterProvider);
     // Desktop: the companion resumes if this computer is paired and on; tray and global shortcut.
     keep(companionControllerProvider);
+    // The browser inside the phone app (docs/PHONE-BROWSER-PLAN.md): its device socket while it's on.
+    if (kAppBrowserCode && ref.read(appBrowserOnProvider)) keep(appBrowserServiceProvider);
     if (isDesktop) keep(desktopShellProvider);
     // The island (D-324): the feed flows to the Mac's notch and menu bar panel.
     keep(islandBridgeProvider);

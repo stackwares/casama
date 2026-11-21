@@ -3005,6 +3005,37 @@ abstract class Backend {
   );
   Future<void> deleteLocalDevice(String id);
 
+  // The phone browser (docs/PHONE-BROWSER-PLAN.md): a browser inside the phone app bots can use.
+  /// Whether this person may use it on this phone, and this install's device when it's paired.
+  Future<AppBrowserState> appBrowserState(String orgId, {required String system, required String clientId});
+
+  /// Pairs this phone's browser (platform `app`); the token comes back only here.
+  Future<CreatedLocalDevice> pairAppBrowser(String orgId, {required String name, required String system, required String clientId});
+
+  /// The workspace's devices including phone browsers (`all_platforms`).
+  Future<List<LocalDevice>> allLocalDevices(String orgId);
+
+  /// Changes a phone browser's bots, sites, kinds or switch; null leaves a field as it is.
+  Future<LocalDevice> updateAppBrowser(
+    String id, {
+    List<String>? botIds,
+    List<String>? allowedSites,
+    List<String>? blockedSites,
+    List<String>? allowedKinds,
+    bool? enabled,
+  });
+
+  /// Hosts the server added to the off-by-default kinds without a release (D-374), by kind.
+  Future<Map<String, List<String>>> browserGuardSites();
+
+  /// The workspace switch beside "Bots in Members' Browsers" (on unless an admin turned it off).
+  Future<bool> appBrowserWorkspace(String orgId);
+  Future<void> setAppBrowserWorkspace(String orgId, bool on);
+
+  /// The instance owner's stage, testers, reasons, systems and numbers.
+  Future<AdminAppBrowser> adminAppBrowser({int? days});
+  Future<AdminAppBrowser> saveAdminAppBrowser(SaveAppBrowserRequest request);
+
   // Voice (Phase 6)
   Future<String> transcribe(String botId, Uint8List audio, String mime);
   Future<Uint8List> speech(String messageId);

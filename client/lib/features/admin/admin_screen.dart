@@ -31,6 +31,8 @@ import 'remote_settings_cards.dart';
 import 'reports_tab.dart';
 import 'security_tab.dart';
 import 'waitlist_tab.dart';
+import '../app_browser/app_browser_admin.dart';
+import '../app_browser/app_browser_flag.dart';
 
 /// Null when the signed-in user is not this instance's owner.
 final adminOverviewProvider = FutureProvider<AdminOverview?>((ref) async {
@@ -542,6 +544,8 @@ class _Services extends ConsumerWidget {
           const _ModelAccessCard(),
           const _ConnectionSettingsCard(),
           const AppSettingsCard(),
+          // The browser inside the phone app's stage (docs/PHONE-BROWSER-PLAN.md §6).
+          if (kAppBrowserCode) const AppBrowserAdminCard(),
           const SizedBox(height: AppSpace.lg),
           GroupedCard(
             children: [

@@ -20,6 +20,8 @@ import '../desktop/desktop_watch.dart';
 import 'device_labels.dart';
 import 'device_sync.dart';
 import '../../core/analytics.dart';
+import '../app_browser/app_browser_flag.dart';
+import '../app_browser/app_browser_settings.dart';
 
 class _DeviceState {
   const _DeviceState({required this.key, required this.sources, required this.grants});
@@ -145,6 +147,8 @@ class _DeviceConnectionsScreenState extends ConsumerState<DeviceConnectionsScree
                   ],
                 ),
               ],
+              // The browser inside the phone app (docs/PHONE-BROWSER-PLAN.md), only in builds with it.
+              if (kAppBrowserCode) const AppBrowserDeviceTile(),
               const _Browsers(),
               _BrowserAsks(
                 grants: st.grants.where((g) => isBrowserKind(g.kind)).toList(),

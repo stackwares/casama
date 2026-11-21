@@ -103,6 +103,9 @@ import 'providers.dart';
 import '../theme/page_transitions.dart';
 import 'telemetry.dart';
 import '../features/devices/device_connections_screen.dart';
+import '../features/app_browser/app_browser_flag.dart';
+import '../features/app_browser/app_browser_screen.dart';
+import '../features/app_browser/app_browser_settings.dart';
 import '../features/permissions/permissions_screen.dart';
 
 /// The page's screen name for analytics (PostHog's `$screen`): its route as a template, such as
@@ -442,6 +445,13 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/packs/share/:token',
         redirect: (_, s) => packShareLocation(s.pathParameters['token']!),
       ),
+      // The browser inside the phone app, full size (docs/PHONE-BROWSER-PLAN.md); ?mode=person is
+      // the person's own browsing (Sign In to a Site).
+      if (kAppBrowserCode)
+        GoRoute(
+          path: '/phone-browser',
+          pageBuilder: _outside((_, s) => AppBrowserScreen(person: s.uri.queryParameters['mode'] == 'person')),
+        ),
       // Older servers' notification links: the gallery and your submissions (no screens of their own).
       GoRoute(path: '/gallery', redirect: (_, _) => '/settings/gallery'),
       GoRoute(
@@ -1023,6 +1033,12 @@ final routerProvider = Provider<GoRouter>((ref) {
                 path: 'devices',
                 pageBuilder: _page((_, _) => const DeviceConnectionsScreen()),
               ),
+              // Settings → Device connections → Browser on This Phone (docs/PHONE-BROWSER-PLAN.md).
+              if (kAppBrowserCode)
+                GoRoute(
+                  path: 'phone-browser',
+                  pageBuilder: _page((_, _) => const AppBrowserSettingsScreen()),
+                ),
               // System permissions on this device (D-376).
               GoRoute(
                 path: 'permissions',

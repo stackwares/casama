@@ -6865,9 +6865,144 @@ class FakeBackend implements Backend {
   Future<void> deleteLocalDevice(String id) async {
     if (browsers.any((b) => b.id == id)) {
       browsers.removeWhere((b) => b.id == id);
+    } else if (appBrowserDevice?.id == id) {
+      appBrowserDevice = null;
     } else {
       device = null;
     }
+  }
+
+  // --- the phone browser (docs/PHONE-BROWSER-PLAN.md) ---------------------
+
+  /// What `GET /v1/app-browser` says besides the device: whether this person may use it, and why not.
+  bool appBrowserAvailable = true;
+  String? appBrowserReason;
+
+  /// This phone's paired browser (platform app).
+  LocalDevice? appBrowserDevice;
+
+  /// Each pairing: (name, system, client id).
+  final appBrowserPairs = <(String, String, String)>[];
+
+  /// Each change, as "field:value" words like [deviceUpdates].
+  final appBrowserUpdates = <String>[];
+  Map<String, List<String>> guardSites = const {};
+  bool appBrowserWorkspaceOn = true;
+  AppBrowserSettings appBrowserSettings = AppBrowserSettings(
+    stage: AppBrowserSettingsStageEnum.off,
+    testers: const [],
+    reasons: AppBrowserSettingsReasons(asked: true, blocked: false, signedIn: false),
+    systems: const ['android'],
+  );
+  final appBrowserSaves = <SaveAppBrowserRequest>[];
+
+  LocalDevice _appBrowserDevice({
+    String system = 'ios',
+    List<String>? bots,
+    List<String>? allowed,
+    List<String>? blocked,
+    List<String>? kinds,
+    bool? enabled,
+  }) {
+    final d = appBrowserDevice;
+    return LocalDevice(
+      id: d?.id ?? 'phone1',
+      orgId: orgId,
+      userId: 'me',
+      computerId: null,
+      name: d?.name ?? 'iPhone',
+      platform: LocalDevicePlatformEnum.app,
+      system: d?.system ?? LocalDeviceSystemEnum.values.firstWhere((s) => s.value == system),
+      capabilities: LocalCapabilities(browser: true),
+      allowedRoots: const [],
+      allowedBotIds: bots ?? d?.allowedBotIds ?? const [],
+      allowedSites: allowed ?? d?.allowedSites ?? const [],
+      blockedSites: blocked ?? d?.blockedSites ?? const [],
+      allowedKinds: kinds == null ? d?.allowedKinds ?? const [] : [for (final k in SiteKind.values) if (kinds.contains(k.value)) k],
+      enabled: enabled ?? d?.enabled ?? true,
+      online: false,
+      lastSeenAt: null,
+      createdAt: DateTime(2026),
+    );
+  }
+
+  @override
+  Future<AppBrowserState> appBrowserState(String orgId, {required String system, required String clientId}) async =>
+      AppBrowserState(available: appBrowserAvailable, reason: appBrowserAvailable ? null : appBrowserReason, device: appBrowserDevice);
+
+  @override
+  Future<CreatedLocalDevice> pairAppBrowser(String orgId, {required String name, required String system, required String clientId}) async {
+    appBrowserPairs.add((name, system, clientId));
+    appBrowserDevice = null;
+    appBrowserDevice = _appBrowserDevice(system: system);
+    return CreatedLocalDevice.fromJson({...appBrowserDevice!.toJson(), 'name': name, 'token': 'kdev_phone'});
+  }
+
+  @override
+  Future<List<LocalDevice>> allLocalDevices(String orgId) async => [?device, ...browsers, ?appBrowserDevice];
+
+  @override
+  Future<LocalDevice> updateAppBrowser(
+    String id, {
+    List<String>? botIds,
+    List<String>? allowedSites,
+    List<String>? blockedSites,
+    List<String>? allowedKinds,
+    bool? enabled,
+  }) async {
+    appBrowserUpdates.add(
+      [
+        if (botIds != null) 'bots:${botIds.join(',')}',
+        if (allowedSites != null) 'allowed:${allowedSites.join(',')}',
+        if (blockedSites != null) 'blocked:${blockedSites.join(',')}',
+        if (allowedKinds != null) 'kinds:${allowedKinds.join(',')}',
+        if (enabled != null) 'enabled:$enabled',
+      ].join(' '),
+    );
+    return appBrowserDevice = _appBrowserDevice(bots: botIds, allowed: allowedSites, blocked: blockedSites, kinds: allowedKinds, enabled: enabled);
+  }
+
+  @override
+  Future<Map<String, List<String>>> browserGuardSites() async => guardSites;
+
+  @override
+  Future<bool> appBrowserWorkspace(String orgId) async => appBrowserWorkspaceOn;
+
+  @override
+  Future<void> setAppBrowserWorkspace(String orgId, bool on) async => appBrowserWorkspaceOn = on;
+
+  AdminAppBrowser _adminAppBrowser() => AdminAppBrowser(
+    settings: appBrowserSettings,
+    numbers: AppBrowserNumbers(
+      days: 14,
+      blockedRuns: 3,
+      blockedPeople: 2,
+      watchedBrowserRuns: 40,
+      phoneRuns: 7,
+      phonePeople: 2,
+      phonesPaired: 4,
+      phonesWithSites: 1,
+      refusedSteps: 0,
+    ),
+  );
+
+  @override
+  Future<AdminAppBrowser> adminAppBrowser({int? days}) async => _adminAppBrowser();
+
+  @override
+  Future<AdminAppBrowser> saveAdminAppBrowser(SaveAppBrowserRequest request) async {
+    appBrowserSaves.add(request);
+    appBrowserSettings = AppBrowserSettings(
+      stage: AppBrowserSettingsStageEnum.values.firstWhere((s) => s.value == request.stage.value),
+      testers: request.testers ?? appBrowserSettings.testers,
+      reasons: AppBrowserSettingsReasons(
+        asked: request.reasons?.asked ?? appBrowserSettings.reasons.asked,
+        blocked: request.reasons?.blocked ?? appBrowserSettings.reasons.blocked,
+        signedIn: request.reasons?.signedIn ?? appBrowserSettings.reasons.signedIn,
+      ),
+      systems: request.systems == null ? appBrowserSettings.systems : [for (final s in request.systems!) s.value],
+    );
+    return _adminAppBrowser();
   }
 
   // --- Phase 6: voice -------------------------------------------------------
