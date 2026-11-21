@@ -35,7 +35,11 @@ class SetupMascot extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final art = setupArtFor(stage, context.l10n);
-    return SizedBox.square(
+    // Its own node, so a screen reader names the bot on its own instead of folding it into the
+    // caption under it (the screen's Esc shortcut adds a focus node that would merge them).
+    return Semantics(
+      container: true,
+      child: SizedBox.square(
       dimension: size,
       child: AnimatedSwitcher(
         duration: AppMotion.of(context, AppMotion.duration),
@@ -54,6 +58,7 @@ class SetupMascot extends StatelessWidget {
                 animate: ambientMotionOn(context),
                 semanticLabel: art.$1.label,
               ),
+      ),
       ),
     );
   }
