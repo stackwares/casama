@@ -186,4 +186,77 @@ describe("billing fixes (bug hunt 2026-11-21)", () => {
     await h.handle.db.execute(sql`select public.expire_credits()`);
     expect(await credits(orgId)).toBeCloseTo(start + 10, 6);
   });
+
+  const rcHook = (type: string, e: Record<string, unknown> & { app_user_id: string }) => {
+    const w = f.revenuecat.event(type, e);
+    return hook("revenuecat", w.body, w.headers);
+  };
+  const storePro = async (name: string) => {
+    const orgId = await newOrg(name);
+    const sub = f.revenuecat.subscribe({ customerId: orgId, productId: "ai.casama.pro.monthly" });
+    const res = await h.request(`/v1/orgs/${orgId}/billing/purchases`, {
+      method: "POST",
+      token: owner.token,
+      json: { source: "app_store", product_id: "ai.casama.pro.monthly" },
+    });
+    expect(res.status).toBe(200);
+    expect((await billing(orgId)).plan_code).toBe("pro");
+    return { orgId, sub };
+  };
+
+  it("a store refund of an older renewal leaves this period's plan and credits", async () => {
+    const { orgId, sub } = await storePro("Older renewal refund");
+    const before = await credits(orgId);
+    const day = 86_400_000;
+    // Apple refunds last month's renewal: the transaction's period ended about a month ago.
+    expect(
+      (
+        await rcHook("CANCELLATION", {
+          app_user_id: orgId,
+          cancel_reason: "CUSTOMER_SUPPORT",
+          transaction_id: "older-renewal-tx",
+          original_transaction_id: sub.store_subscription_identifier,
+          purchased_at_ms: Date.now() - 60 * day,
+          expiration_at_ms: Date.now() - 30 * day,
+        })
+      ).status,
+    ).toBe(200);
+    const after = await billing(orgId);
+    expect(after.plan_code).toBe("pro");
+    expect(after.subscriptions[0].status).toBe("active");
+    expect(await credits(orgId)).toBeCloseTo(before, 6);
+    // The refunded transaction is on record, with nothing taken.
+    const rows = await h.handle.db.execute<{ current_period: boolean; clawed_usd: string }>(sql`
+      select current_period, clawed_usd::text from public.store_refunds
+      where org_id = ${orgId}::uuid and transaction_id = 'older-renewal-tx'`);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ current_period: false });
+    expect(Number(rows[0]?.clawed_usd)).toBe(0);
+  });
+
+  it("a refund of this period takes its credits; REFUND_REVERSED gives back exactly that", async () => {
+    const { orgId, sub } = await storePro("Refund reversed");
+    const before = await credits(orgId);
+    const refund = {
+      app_user_id: orgId,
+      transaction_id: "this-period-tx",
+      original_transaction_id: sub.store_subscription_identifier,
+      purchased_at_ms: Date.now() - 86_400_000,
+      expiration_at_ms: sub.current_period_ends_at,
+    };
+    await rcHook("CANCELLATION", { ...refund, cancel_reason: "CUSTOMER_SUPPORT" });
+    expect((await billing(orgId)).plan_code).toBe("free");
+    const taken = before - (await credits(orgId));
+    expect(taken).toBeGreaterThan(0);
+    // Some usage in between doesn't change what comes back.
+    await h.deps.billing?.credit(orgId, -0.5, "usage", `spend-${orgId}`);
+    expect((await rcHook("REFUND_REVERSED", refund)).status).toBe(200);
+    const after = await billing(orgId);
+    expect(after.plan_code).toBe("pro");
+    expect(after.subscriptions[0].status).toBe("active");
+    expect(await credits(orgId)).toBeCloseTo(before - 0.5, 6);
+    // Delivered again, it gives nothing more.
+    await rcHook("REFUND_REVERSED", refund);
+    expect(await credits(orgId)).toBeCloseTo(before - 0.5, 6);
+  });
 });

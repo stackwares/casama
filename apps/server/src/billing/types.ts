@@ -88,7 +88,19 @@ export type ParsedEvent = {
    * ids): the server re-reads everything they bought. `refundStoreIds` are store transaction ids a
    * refund was reported for, since a subscription's state alone doesn't say it was refunded.
    */
-  | { kind: "customers"; customerIds: string[]; refundStoreIds: string[] }
+  | {
+      kind: "customers";
+      customerIds: string[];
+      refundStoreIds: string[];
+      /**
+       * The refunded store transaction, and when the period it paid for ended, when the event
+       * says: only a refund of the transaction that paid for the current period takes it back.
+       */
+      refundTransactionId?: string | null;
+      refundPeriodEnd?: Date | null;
+      /** Store transactions whose refund the store reversed (RevenueCat REFUND_REVERSED). */
+      reversedTransactionIds?: string[];
+    }
   | { kind: "ignored" }
 );
 

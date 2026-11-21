@@ -167,11 +167,16 @@ export class BillingService {
         if (!(await domains?.refund(ev.paymentId)))
           await this.applyRefund(provider, ev.paymentId, ev);
       } else if (ev.kind === "customers") {
-        const refunded = new Set<string>();
+        const refunded = new Map<string, StoreRefund>();
         for (const storeId of ev.refundStoreIds) {
           const id = await provider.findSubscription?.(storeId);
-          if (id) refunded.add(id);
+          if (id && !refunded.has(id))
+            refunded.set(id, {
+              transactionId: ev.refundTransactionId ?? storeId,
+              periodEnd: ev.refundPeriodEnd ?? null,
+            });
         }
+        for (const tx of ev.reversedTransactionIds ?? []) await this.reverseStoreRefund(tx);
         for (const id of ev.customerIds) await this.syncStoreCustomer(id, { refunded });
       }
       await this.db.execute(
@@ -206,7 +211,15 @@ export class BillingService {
   }
 
   /** Stores the provider's view of a subscription and recomputes the workspace's entitlement. */
-  async applySnapshot(snap: SubscriptionSnapshot, opts: { orgId?: string; refund?: boolean } = {}) {
+  async applySnapshot(
+    snap: SubscriptionSnapshot,
+    opts: {
+      orgId?: string;
+      refund?: boolean;
+      /** The store transaction a refund was for: recorded in store_refunds with what it took. */
+      refundTransaction?: string;
+    } = {},
+  ) {
     const [existing] = await this.db.execute<{
       org_id: string;
       status: SubscriptionStatus;
@@ -274,6 +287,7 @@ export class BillingService {
     // A refunded period doesn't keep the credits it brought (D-248): every paid grant since the
     // period started (for a yearly plan, each month's), plan-change top-ups included. Once per
     // subscription and period; it may leave the balance below zero, which stops paid usage.
+    let clawed = 0;
     if (opts.refund) {
       const end = periodEnd ?? new Date();
       const start = periodStart(end, plan.interval);
@@ -282,15 +296,27 @@ export class BillingService {
         where org_id = ${orgId}::uuid and delta > 0 and ((reason = 'grant' and reference like 'monthly:%' and reference not like '%:free' and reference not like '%:comp') or reason = 'reset')
           and created_at >= ${start.toISOString()}::timestamptz`);
       const granted = Number(g?.granted ?? 0);
-      if (granted > 0)
+      const ref = `refund-grant:${snap.source}:${snap.externalId}:${end.toISOString().slice(0, 10)}`;
+      const [had] = await this.db.execute<{ n: number }>(sql`
+        select count(*)::int as n from public.credit_ledger
+        where org_id = ${orgId}::uuid and reason = 'refund' and reference = ${ref}`);
+      if (granted > 0 && !had?.n) {
         await this.credit(
           orgId,
           -granted,
           "refund",
-          `refund-grant:${snap.source}:${snap.externalId}:${end.toISOString().slice(0, 10)}`,
+          ref,
           `${plan.name} refunded: its credits for that period come back out`,
         );
+        clawed = granted;
+      }
     }
+    if (opts.refundTransaction)
+      await this.db.execute(sql`
+        insert into public.store_refunds (org_id, subscription_id, transaction_id, current_period, clawed_usd)
+        select ${orgId}::uuid, s.id, ${opts.refundTransaction}, ${opts.refund === true}, ${clawed}
+        from public.subscriptions s where s.source = ${snap.source} and s.external_id = ${snap.externalId}
+        on conflict (subscription_id, transaction_id) do nothing`);
     return this.recompute(orgId);
   }
 
@@ -520,7 +546,9 @@ export class BillingService {
     }
     const partRef = `${ref}:${ev.refundId ?? "partial"}`;
     await this.db.transaction(async (tx) => {
-      await tx.execute(sql`select id from public.organizations where id = ${orgId}::uuid for update`);
+      await tx.execute(
+        sql`select id from public.organizations where id = ${orgId}::uuid for update`,
+      );
       const [seen] = await tx.execute<{ n: number }>(sql`
         select count(*)::int as n from public.credit_ledger
         where org_id = ${orgId}::uuid and reason = 'refund' and reference = ${partRef}`);
@@ -569,7 +597,7 @@ export class BillingService {
    * Purchases RevenueCat lists under this workspace that are already linked to another workspace
    * are left alone and returned in `inUse`.
    */
-  async syncStoreCustomer(orgId: string, opts: { refunded?: Set<string> } = {}) {
+  async syncStoreCustomer(orgId: string, opts: { refunded?: Map<string, StoreRefund> } = {}) {
     const result = {
       found: [] as Array<{ source: string; productId: string }>,
       inUse: [] as string[],
@@ -584,7 +612,24 @@ export class BillingService {
     const customer = await rc.storeCustomer(orgId);
     for (const snap of customer.subscriptions) {
       try {
-        await this.applySnapshot(snap, { orgId, refund: opts.refunded?.has(snap.externalId) });
+        // A refund takes the period back only when it's for the transaction that paid for the
+        // current period; an older renewal's refund is recorded and takes nothing (bug hunt
+        // 2026-11-21). A transaction whose refund is already on record isn't applied twice, so
+        // a repeated report can't take the period back again after REFUND_REVERSED.
+        const r = opts.refunded?.get(snap.externalId);
+        const seen = r
+          ? await this.db.execute<{ n: number }>(sql`
+              select count(*)::int as n from public.store_refunds sr
+              join public.subscriptions s on s.id = sr.subscription_id
+              where s.source = ${snap.source} and s.external_id = ${snap.externalId}
+                and sr.transaction_id = ${r.transactionId}`)
+          : [];
+        const fresh = !!r && !seen[0]?.n;
+        await this.applySnapshot(snap, {
+          orgId,
+          refund: fresh && refundIsCurrent(r?.periodEnd ?? null, snap.currentPeriodEnd),
+          refundTransaction: fresh ? r?.transactionId : undefined,
+        });
         result.found.push({ source: snap.source, productId: snap.productId });
       } catch (err) {
         if (err instanceof BillingError && err.code === "purchase_in_use") {
@@ -625,6 +670,43 @@ export class BillingService {
     }
     if (!customer.subscriptions.length) await this.recompute(orgId);
     return result;
+  }
+
+  /**
+   * The store reversed a refund (RevenueCat REFUND_REVERSED, bug hunt 2026-11-21): gives back
+   * exactly the credits that refund took, once, and lifts the refund from the period it ended, so
+   * the re-read that follows restores the plan from the store's own status.
+   */
+  async reverseStoreRefund(transactionId: string) {
+    const rows = await this.db.execute<{
+      id: string;
+      org_id: string;
+      subscription_id: string;
+      current_period: boolean;
+      clawed_usd: string;
+      external_id: string;
+    }>(sql`
+      update public.store_refunds sr set reversed_at = now()
+      from public.subscriptions s
+      where s.id = sr.subscription_id and sr.transaction_id = ${transactionId} and sr.reversed_at is null
+      returning sr.id, sr.org_id, sr.subscription_id, sr.current_period, sr.clawed_usd::text, s.external_id`);
+    for (const r of rows) {
+      const back = Number(r.clawed_usd);
+      if (back > 0)
+        await this.credit(
+          r.org_id,
+          back,
+          "refund",
+          `refund-reversed:${r.id}`,
+          "Refund reversed: its credits come back",
+        );
+      if (!r.current_period) continue;
+      const snap = await this.provider("revenuecat").fetchSubscription(r.external_id);
+      await this.db.execute(sql`
+        update public.subscriptions set status = ${snap.status}, refunded_through = null, updated_at = now()
+        where id = ${r.subscription_id}::uuid and status = 'refunded'`);
+      await this.applySnapshot(snap, { orgId: r.org_id });
+    }
   }
 
   /**
@@ -1397,6 +1479,23 @@ export class BillingService {
     }
     return { slept };
   }
+}
+
+/** What the server knows about a store refund from its webhook. */
+export interface StoreRefund {
+  transactionId: string;
+  /** When the period the refunded transaction paid for ended; null when the event didn't say. */
+  periodEnd: Date | null;
+}
+
+/**
+ * Whether a refunded transaction paid for the current period: its period ends no earlier than
+ * two days before the current one (renewals are charged around the boundary). Unknown dates count
+ * as current, as before: RevenueCat's refund events always carry the transaction's expiry.
+ */
+export function refundIsCurrent(refundEnd: Date | null, currentEnd: Date | null) {
+  if (!refundEnd || !currentEnd) return true;
+  return refundEnd.getTime() >= currentEnd.getTime() - 2 * 86_400_000;
 }
 
 /**
