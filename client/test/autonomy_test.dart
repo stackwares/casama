@@ -598,6 +598,7 @@ void main() {
     final backend = FakeBackend();
     await tester.pumpWidget(harness(backend, const SecretsScreen()));
     await tester.pumpAndSettle();
+    expect(find.text('No secrets yet'), findsOneWidget);
     await tester.tap(find.byKey(const Key('addSecret')));
     await tester.pumpAndSettle();
     await tester.enterText(find.byKey(const Key('secretName')), 'GITHUB_TOKEN');
@@ -622,6 +623,7 @@ void main() {
     final backend = FakeBackend();
     await tester.pumpWidget(harness(backend, const SecretsScreen()));
     await tester.pumpAndSettle();
+    expect(find.text('No secrets yet'), findsOneWidget);
     await tester.tap(find.byKey(const Key('addSecret')));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Sign-in code'));

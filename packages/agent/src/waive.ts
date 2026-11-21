@@ -56,11 +56,16 @@ export async function lowCreditWorkspaces(db: Database) {
   return db.execute<{ org_id: string; balance: string; owner_id: string }>(sql`
     with bal as (
       select distinct on (l.org_id) l.org_id, l.balance_after as balance
-      from public.credit_ledger l order by l.org_id, l.seq desc)
+      from public.credit_ledger l order by l.org_id, l.seq desc),
+    added as (
+      select distinct on (l.org_id) l.org_id, l.balance_after as peak
+      from public.credit_ledger l where l.delta > 0 order by l.org_id, l.seq desc)
     select bal.org_id, bal.balance::text as balance, m.user_id as owner_id
     from bal
+    left join added on added.org_id = bal.org_id
     join public.memberships m on m.org_id = bal.org_id and m.role = 'owner'
-    where bal.balance > 0 and bal.balance < ${LOW_CREDIT_USD}
+    where bal.balance > 0
+      and bal.balance < least(${LOW_CREDIT_USD}::numeric, coalesce(added.peak * 0.25, ${LOW_CREDIT_USD}::numeric))
       and exists (select 1 from public.usage_ledger u where u.org_id = bal.org_id and u.billable
                   and u.created_at > now() - interval '1 day')
       and not exists (select 1 from public.notifications n where n.org_id = bal.org_id

@@ -1313,7 +1313,7 @@ class _TicketSheetState extends ConsumerState<TicketSheet> {
     bool? review,
     String? user,
   }) async {
-    await runGuarded(
+    final ok = await runGuarded(
       context,
       () => ref
           .read(backendProvider)
@@ -1326,7 +1326,7 @@ class _TicketSheetState extends ConsumerState<TicketSheet> {
             assigneeUserId: user,
           ),
     );
-    ref.invalidate(tasksProvider);
+    if (ok != null) ref.invalidate(tasksProvider);
   }
 
   Future<void> _send() async {
@@ -1351,10 +1351,11 @@ class _TicketSheetState extends ConsumerState<TicketSheet> {
       destructive: true,
     );
     if (!ok || !mounted) return;
-    await runGuarded(
-      context,
-      () => ref.read(backendProvider).deleteTask(widget.taskId),
-    );
+    final deleted = await runGuarded(context, () async {
+      await ref.read(backendProvider).deleteTask(widget.taskId);
+      return true;
+    });
+    if (deleted != true) return;
     ref.invalidate(tasksProvider);
     if (mounted) Navigator.of(context).maybePop();
   }

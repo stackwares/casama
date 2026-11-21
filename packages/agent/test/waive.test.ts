@@ -61,4 +61,18 @@ it("owners of a workspace whose credits fell under $1 are told once a week", asy
   ]);
   await tdb.admin`insert into public.notifications (user_id, org_id, kind) values (${user.id}, ${org!.id}, 'credits_low')`;
   expect((await lowCreditWorkspaces(h.db)).filter((l) => l.org_id === org!.id)).toHaveLength(0);
+
+  // A new free workspace starts with a $1 grant: its first message ($0.01) leaves $0.99 and must
+  // not immediately warn that credits are running low; warning waits until <25% ($0.25) is left.
+  const [freeOrg] = await tdb.admin<{ id: string }[]>`
+    insert into public.organizations (name, slug) values ('Free', 'free-starter') returning id`;
+  await tdb.admin`insert into public.memberships (org_id, user_id, role) values (${freeOrg!.id}, ${user.id}, 'owner')`;
+  await tdb.admin`select public.credit_apply(${freeOrg!.id}::uuid, 1, 'grant', 'monthly:free', 'Free')`;
+  await tdb.admin`insert into public.usage_ledger (org_id, kind, quantity, cost_usd, billable) values (${freeOrg!.id}, 'tokens_in', 1, 0.01, true)`;
+  await tdb.admin`select public.credit_apply(${freeOrg!.id}::uuid, -0.01, 'usage', 'first-msg', 'Usage')`;
+  expect((await lowCreditWorkspaces(h.db)).filter((l) => l.org_id === freeOrg!.id)).toHaveLength(0);
+  await tdb.admin`select public.credit_apply(${freeOrg!.id}::uuid, -0.79, 'usage', 'more-msg', 'Usage')`;
+  expect((await lowCreditWorkspaces(h.db)).filter((l) => l.org_id === freeOrg!.id)).toEqual([
+    { org_id: freeOrg!.id, balance: expect.stringMatching(/^0\.2/), owner_id: user.id },
+  ]);
 });

@@ -1537,7 +1537,7 @@ abstract class AppLocalizations {
   /// No description provided for @noSecrets.
   ///
   /// In en, this message translates to:
-  /// **'No secrets yet. Bots reference them by name, and each one only goes to the hosts you allow.'**
+  /// **'No secrets yet'**
   String get noSecrets;
 
   /// No description provided for @notifications.

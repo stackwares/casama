@@ -182,8 +182,11 @@ class SpringSheetRoute<T> extends PopupRoute<T> {
     final double keyboard = view.viewInsets.bottom;
     final double available = view.size.height - keyboard;
     // The content pads itself above the keyboard, so the keyboard's height
-    // goes on top of the cap.
-    double maxHeight = keyboard + math.max(0.0, math.min(available * _maxHeightFactor, available - view.padding.top - _minTopGap));
+    // goes on top of the cap. While the keyboard is open, only a small gap
+    // stays under the status bar so fields above the sticky footer have room.
+    final double topGap = keyboard > 0 ? 12 : _minTopGap;
+    final double factor = keyboard > 0 ? 0.96 : _maxHeightFactor;
+    double maxHeight = keyboard + math.max(0.0, math.min(available * factor, available - view.padding.top - topGap));
     // A folding phone (D-411): the sheet keeps to the page (not under the side strip) and to the
     // half it belongs to while the fold divides the window: the trailing half of a fold that runs
     // top to bottom, the lower half of one that runs side to side.

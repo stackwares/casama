@@ -93,6 +93,7 @@ class ProjectCoverPicker extends StatelessWidget {
         label: label,
         child: Tooltip(
           message: label,
+          excludeFromSemantics: true,
           child: InkWell(
             key: Key('projectCover-${name ?? 'none'}'),
             borderRadius: BorderRadius.circular(radius + 4),

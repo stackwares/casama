@@ -837,8 +837,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noRoutines => 'No routines yet';
 
   @override
-  String get noSecrets =>
-      'No secrets yet. Bots reference them by name, and each one only goes to the hosts you allow.';
+  String get noSecrets => 'No secrets yet';
 
   @override
   String get notifications => 'Notifications';

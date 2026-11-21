@@ -146,7 +146,7 @@ class ShellHeader extends StatelessWidget implements PreferredSizeWidget {
               padding: const EdgeInsets.only(left: 12),
               child: Center(child: lead),
             ),
-      titleSpacing: slot == null && lead != null ? 4 : 20,
+      titleSpacing: slot == null && lead != null ? 4 : AppSpace.gutter,
       title: title0,
       actions: [...inRow, const SizedBox(width: 12)],
       bottom: bottom,

@@ -535,6 +535,8 @@ void main() {
       // One list: pages moved to the Library (D-274), so Updates has no chips.
       expect(find.byKey(const Key('inboxFilter-updates')), findsNothing);
       expect(find.byKey(const Key('inboxFilter-pages')), findsNothing);
+      // The page header already says Updates; no duplicate section title under it.
+      expect(find.text('Updates'), findsOneWidget);
     },
   );
 

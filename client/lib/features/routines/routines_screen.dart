@@ -214,113 +214,120 @@ class _RoutineCard extends ConsumerWidget {
     final ends = r.endsAt != null ? l10n.routineEndsAt(_formatWhen(context, r.endsAt!)) : null;
     final runsLeft = r.maxRuns != null ? l10n.routineRunsLeft((r.maxRuns! - (r.runCount ?? 0)).clamp(0, r.maxRuns!)) : null;
     final tint = r.enabled ? scheme.primary : scheme.onSurfaceVariant;
+    final hasStatus = next != null || last != null || ends != null || runsLeft != null || !r.enabled || r.waitingForModel == true;
     return AppCard(
       key: Key('routine-${r.id}'),
       onTap: () => _edit(context, ref),
       padding: const EdgeInsets.fromLTRB(AppSpace.md, 14, AppSpace.xs, 14),
-      child: Row(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(color: tint.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(AppRadius.icon)),
-            alignment: Alignment.center,
-            child: Icon(icon, size: 20, color: tint),
-          ),
-          const SizedBox(width: AppSpace.sm),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(r.name, style: context.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
-                const SizedBox(height: 2),
-                Text(schedule, style: context.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant)),
-                if (next != null || last != null || ends != null || runsLeft != null || !r.enabled || r.waitingForModel == true) ...[
-                  const SizedBox(height: 6),
-                  Wrap(
-                    spacing: AppSpace.xs,
-                    runSpacing: 4,
-                    children: [
-                      if (!r.enabled) StatusLabel(text: l10n.routineOff, color: scheme.onSurfaceVariant, pill: true),
-                      if (r.waitingForModel == true)
-                        StatusLabel(
-                          key: Key('routineWaitingModel-${r.id}'),
-                          text: l10n.routineWaitingForModel,
-                          color: context.appColors.warning,
-                          pill: true,
-                          icon: LucideIcons.keyRound,
-                        ),
-                      if (next != null) StatusLabel(text: next, color: context.appColors.positive, pill: true, icon: LucideIcons.clock),
-                      if (ends != null) StatusLabel(key: Key('routineEndsAt-${r.id}'), text: ends, color: scheme.onSurfaceVariant, pill: true, icon: LucideIcons.flag),
-                      if (runsLeft != null) StatusLabel(key: Key('routineRunsLeft-${r.id}'), text: runsLeft, color: scheme.onSurfaceVariant, pill: true, icon: LucideIcons.hash),
-                      if (last != null) Text(last, style: context.textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant)),
-                    ],
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(color: tint.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(AppRadius.icon)),
+                alignment: Alignment.center,
+                child: Icon(icon, size: 20, color: tint),
+              ),
+              const SizedBox(width: AppSpace.sm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(r.name, style: context.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+                    const SizedBox(height: 2),
+                    Text(schedule, style: context.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant)),
+                  ],
+                ),
+              ),
+              Switch(
+                key: Key('routineEnabled-${r.id}'),
+                value: r.enabled,
+                onChanged: hapticOnChanged((v) async {
+                  await runGuarded(context, () => ref.read(backendProvider).setRoutineEnabled(r.id, v));
+                  ref.invalidate(routinesProvider(r.botId));
+                }),
+              ),
+              MenuAnchor(
+                alignmentOffset: const Offset(-120, 0),
+                menuChildren: [
+                  MenuItemButton(
+                    key: Key('runRoutine-${r.id}'),
+                    leadingIcon: const Icon(LucideIcons.play, size: 20),
+                    onPressed: () async {
+                      Analytics.feature('routines_run_now');
+                      final runId = await runGuarded(context, () => ref.read(backendProvider).runRoutine(r.id));
+                      if (runId != null && context.mounted) {
+                        final router = GoRouter.maybeOf(context);
+                        HapticsHelper.success();
+                        showToast(
+                          context,
+                          l10n.routineStarted,
+                          kind: ToastKind.success,
+                          action: router == null ? null : SnackBarAction(label: l10n.viewRun, onPressed: () => router.pushOnce('/bots/${r.botId}/runs/$runId')),
+                        );
+                      }
+                    },
+                    child: Text(l10n.runNow),
+                  ),
+                  MenuItemButton(
+                    key: Key('editRoutine-${r.id}'),
+                    leadingIcon: const Icon(LucideIcons.pencil, size: 20),
+                    onPressed: () => _edit(context, ref),
+                    child: Text(l10n.edit),
+                  ),
+                  if (r.trigger != RoutineTrigger.once)
+                    MenuItemButton(
+                      key: Key('routineEnd-${r.id}'),
+                      leadingIcon: const Icon(LucideIcons.flag, size: 20),
+                      onPressed: () async {
+                        final saved = await showAdaptiveSheet<bool>(context: context, builder: (_) => RoutineEndSheet(routine: r));
+                        if (saved == true) ref.invalidate(routinesProvider(r.botId));
+                      },
+                      child: Text(l10n.routineChangeEnd),
+                    ),
+                  MenuItemButton(
+                    key: Key('deleteRoutine-${r.id}'),
+                    leadingIcon: Icon(LucideIcons.trash2, size: 20, color: scheme.error),
+                    onPressed: () => _delete(context, ref),
+                    child: Text(l10n.delete, style: TextStyle(color: scheme.error)),
                   ),
                 ],
-              ],
-            ),
-          ),
-          Switch(
-            key: Key('routineEnabled-${r.id}'),
-            value: r.enabled,
-            onChanged: hapticOnChanged((v) async {
-              await runGuarded(context, () => ref.read(backendProvider).setRoutineEnabled(r.id, v));
-              ref.invalidate(routinesProvider(r.botId));
-            }),
-          ),
-          MenuAnchor(
-            alignmentOffset: const Offset(-120, 0),
-            menuChildren: [
-              MenuItemButton(
-                key: Key('runRoutine-${r.id}'),
-                leadingIcon: const Icon(LucideIcons.play, size: 20),
-                onPressed: () async {
-                  Analytics.feature('routines_run_now');
-                  final runId = await runGuarded(context, () => ref.read(backendProvider).runRoutine(r.id));
-                  if (runId != null && context.mounted) {
-                    final router = GoRouter.maybeOf(context);
-                    HapticsHelper.success();
-                    showToast(
-                      context,
-                      l10n.routineStarted,
-                      kind: ToastKind.success,
-                      action: router == null ? null : SnackBarAction(label: l10n.viewRun, onPressed: () => router.pushOnce('/bots/${r.botId}/runs/$runId')),
-                    );
-                  }
-                },
-                child: Text(l10n.runNow),
-              ),
-              MenuItemButton(
-                key: Key('editRoutine-${r.id}'),
-                leadingIcon: const Icon(LucideIcons.pencil, size: 20),
-                onPressed: () => _edit(context, ref),
-                child: Text(l10n.edit),
-              ),
-              if (r.trigger != RoutineTrigger.once)
-                MenuItemButton(
-                  key: Key('routineEnd-${r.id}'),
-                  leadingIcon: const Icon(LucideIcons.flag, size: 20),
-                  onPressed: () async {
-                    final saved = await showAdaptiveSheet<bool>(context: context, builder: (_) => RoutineEndSheet(routine: r));
-                    if (saved == true) ref.invalidate(routinesProvider(r.botId));
-                  },
-                  child: Text(l10n.routineChangeEnd),
+                builder: (context, controller, _) => IconButton(
+                  key: Key('routineMenu-${r.id}'),
+                  tooltip: l10n.moreActions,
+                  icon: const Icon(LucideIcons.ellipsisVertical),
+                  onPressed: () => controller.isOpen ? controller.close() : controller.open(),
                 ),
-              MenuItemButton(
-                key: Key('deleteRoutine-${r.id}'),
-                leadingIcon: Icon(LucideIcons.trash2, size: 20, color: scheme.error),
-                onPressed: () => _delete(context, ref),
-                child: Text(l10n.delete, style: TextStyle(color: scheme.error)),
               ),
             ],
-            builder: (context, controller, _) => IconButton(
-              key: Key('routineMenu-${r.id}'),
-              tooltip: l10n.moreActions,
-              icon: const Icon(LucideIcons.ellipsisVertical),
-              onPressed: () => controller.isOpen ? controller.close() : controller.open(),
-            ),
           ),
+          if (hasStatus)
+            Padding(
+              padding: const EdgeInsetsDirectional.fromSTEB(38 + AppSpace.sm, 6, AppSpace.sm, 0),
+              child: Wrap(
+                spacing: AppSpace.xs,
+                runSpacing: 4,
+                children: [
+                  if (!r.enabled) StatusLabel(text: l10n.routineOff, color: scheme.onSurfaceVariant, pill: true),
+                  if (r.waitingForModel == true)
+                    StatusLabel(
+                      key: Key('routineWaitingModel-${r.id}'),
+                      text: l10n.routineWaitingForModel,
+                      color: context.appColors.warning,
+                      pill: true,
+                      icon: LucideIcons.keyRound,
+                    ),
+                  if (next != null) StatusLabel(text: next, color: context.appColors.positive, pill: true, icon: LucideIcons.clock),
+                  if (ends != null) StatusLabel(key: Key('routineEndsAt-${r.id}'), text: ends, color: scheme.onSurfaceVariant, pill: true, icon: LucideIcons.flag),
+                  if (runsLeft != null) StatusLabel(key: Key('routineRunsLeft-${r.id}'), text: runsLeft, color: scheme.onSurfaceVariant, pill: true, icon: LucideIcons.hash),
+                  if (last != null) Text(last, style: context.textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant)),
+                ],
+              ),
+            ),
         ],
       ),
     );

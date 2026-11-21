@@ -213,11 +213,14 @@ class _FirstRunSteps extends ConsumerWidget {
       listenable: Listenable.merge([push.needsAsk, GuidedSetup.active]),
       builder: (context, _) {
         final ask = push.needsAsk.value;
-        if (consent) return Stack(children: [child, _cover(context, const AiConsentStep())]);
+        if (consent) {
+          return Stack(children: [ExcludeSemantics(child: child), _cover(context, const AiConsentStep())]);
+        }
         if (GuidedSetup.active.value) return child;
+        final covered = name || picks || (ask && signInDone);
         return Stack(
         children: [
-          child,
+          ExcludeSemantics(excluding: covered, child: child),
           if (name)
             _cover(context, const NameStep())
           else if (picks)

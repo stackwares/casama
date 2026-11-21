@@ -109,18 +109,21 @@ class ConnectAppTiles extends ConsumerWidget {
 
     // Full width on purpose: ShowHide lines its child up top-start, so a column that shrank to its
     // tiles would sit to the left instead of in the middle.
-    return SizedBox(
+    return Padding(
       key: const Key('connectAppTiles'),
-      width: double.infinity,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Text(l10n.connectAppsTitle, textAlign: TextAlign.center, style: context.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
-          const SizedBox(height: 2),
-          Text(l10n.connectAppsHint, textAlign: TextAlign.center, style: context.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant)),
-          const SizedBox(height: AppSpace.sm),
-          if (width case final known? when known.isFinite) arrange(known) else LayoutBuilder(builder: (context, constraints) => arrange(constraints.maxWidth)),
-        ],
+      padding: const EdgeInsets.only(top: AppSpace.lg),
+      child: SizedBox(
+        width: double.infinity,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Text(l10n.connectAppsTitle, textAlign: TextAlign.center, style: context.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+            const SizedBox(height: 2),
+            Text(l10n.connectAppsHint, textAlign: TextAlign.center, style: context.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant)),
+            const SizedBox(height: AppSpace.sm),
+            if (width case final known? when known.isFinite) arrange(known) else LayoutBuilder(builder: (context, constraints) => arrange(constraints.maxWidth)),
+          ],
+        ),
       ),
     );
   }

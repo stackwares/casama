@@ -71,6 +71,7 @@ class FormSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
     final compact = AppBreakpoints.of(MediaQuery.sizeOf(context).width) == WindowSize.compact;
+    final keyboardOpen = compact && MediaQuery.viewInsetsOf(context).bottom > 0;
     final tint = destructive ? scheme.error : (iconColor ?? scheme.primary);
     final style = destructive ? FilledButton.styleFrom(backgroundColor: scheme.error, foregroundColor: scheme.onError) : null;
     final submitChild = busy
@@ -109,7 +110,7 @@ class FormSheet extends StatelessWidget {
       children: [
         Flexible(
           child: _EdgeScroll(
-            padding: EdgeInsets.fromLTRB(AppSpace.xl, compact ? 0 : AppSpace.xs, AppSpace.xl, AppSpace.lg),
+            padding: EdgeInsets.fromLTRB(AppSpace.xl, compact ? 0 : AppSpace.xs, AppSpace.xl, keyboardOpen ? AppSpace.sm : AppSpace.lg),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               mainAxisSize: MainAxisSize.min,
@@ -157,7 +158,7 @@ class FormSheet extends StatelessWidget {
                   ],
                 ),
                 if (children.isNotEmpty) ...[
-                  const SizedBox(height: AppSpace.xl),
+                  SizedBox(height: keyboardOpen ? AppSpace.md : AppSpace.xl),
                   Column(crossAxisAlignment: CrossAxisAlignment.stretch, spacing: AppSpace.md, children: children),
                 ],
                 if (footer != null) ...[const SizedBox(height: AppSpace.sm), footer!],
@@ -165,7 +166,7 @@ class FormSheet extends StatelessWidget {
             ),
           ),
         ),
-        Padding(padding: const EdgeInsets.fromLTRB(AppSpace.xl, AppSpace.sm, AppSpace.xl, AppSpace.lg), child: actions),
+        Padding(padding: EdgeInsets.fromLTRB(AppSpace.xl, AppSpace.sm, AppSpace.xl, keyboardOpen ? AppSpace.sm : AppSpace.lg), child: actions),
       ],
     );
   }

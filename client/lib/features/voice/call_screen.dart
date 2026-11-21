@@ -186,6 +186,11 @@ class _CallScreenState extends ConsumerState<CallScreen>
         showMessage(context, l10n.callEndedIdle);
       case CallEnd.server:
         showMessage(context, l10n.callEndedLost);
+      case CallEnd.failed:
+        showMessage(
+          context,
+          c.connectedAt == null ? l10n.callFailed : l10n.callEndedLost,
+        );
       default:
     }
     if (c.saveError case final e?) showError(context, e);

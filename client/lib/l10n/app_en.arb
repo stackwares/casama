@@ -265,7 +265,7 @@
   "newRoutine": "New routine",
   "noIntegrationsForBot": "Add integrations in Settings first, then turn them on for this bot here.",
   "noRoutines": "No routines yet",
-  "noSecrets": "No secrets yet. Bots reference them by name, and each one only goes to the hosts you allow.",
+  "noSecrets": "No secrets yet",
   "notifications": "Notifications",
   "openInbox": "Open Inbox",
   "pipedreamApps": "Apps (comma-separated)",

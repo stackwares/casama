@@ -4,6 +4,7 @@ import 'package:material_ui/material_ui.dart';
 import '../core/haptics.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_tokens.dart';
+import 'adaptive_modal.dart';
 import 'app_card.dart';
 
 /// One choice in a [PropertyRow]'s menu.
@@ -103,7 +104,16 @@ class PropertyRow<T> extends StatelessWidget {
           leading: leading,
           title: title,
           subtitle: subtitle,
-          onTap: options.isEmpty ? null : () => controller.isOpen ? controller.close() : controller.open(),
+          onTap: options.isEmpty
+              ? null
+              : () {
+                  if (controller.isOpen) {
+                    controller.close();
+                  } else {
+                    unfocusBeforeModal();
+                    controller.open();
+                  }
+                },
           trailing: ConstrainedBox(
             constraints: BoxConstraints(maxWidth: constraints.maxWidth * 0.45),
             child: Row(

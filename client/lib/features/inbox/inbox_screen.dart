@@ -267,22 +267,28 @@ class _InboxFeed extends ConsumerWidget {
         flushRows();
 
         final hasUnread = notes.any((n) => n.readAt == null);
+        final markAllButton = hasUnread
+            ? TextButton.icon(
+                key: const Key('markAllRead'),
+                onPressed: () => runGuarded(context, ref.read(notificationsProvider.notifier).markAllRead),
+                icon: const Icon(LucideIcons.checkCheck, size: 18),
+                label: Text(l10n.markAllRead),
+              )
+            : null;
         final children = <Widget>[
           if (failed.isNotEmpty) Padding(padding: const EdgeInsets.only(bottom: AppSpace.sm), child: InlineError(error: failed.first.error!, onRetry: refresh)),
           if (all && decisions.isNotEmpty) SectionHeader(title: l10n.inboxNeedsYou, count: decisions.length.humanizedCount(context.l10n.localeName), padding: const EdgeInsets.fromLTRB(AppSpace.xxs, AppSpace.xs, AppSpace.xxs, AppSpace.xs)),
           ...decisions,
-          if (withNotes && updateWidgets.isNotEmpty)
+          if (all && updateWidgets.isNotEmpty)
             SectionHeader(
               title: l10n.inboxUpdates,
               padding: EdgeInsets.fromLTRB(AppSpace.xxs, decisions.isEmpty ? AppSpace.xs : AppSpace.lg, AppSpace.xxs, AppSpace.xs),
-              trailing: hasUnread
-                  ? TextButton.icon(
-                      key: const Key('markAllRead'),
-                      onPressed: () => runGuarded(context, ref.read(notificationsProvider.notifier).markAllRead),
-                      icon: const Icon(LucideIcons.checkCheck, size: 18),
-                      label: Text(l10n.markAllRead),
-                    )
-                  : null,
+              trailing: markAllButton,
+            )
+          else if (updatesOnly && updateWidgets.isNotEmpty && markAllButton != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: AppSpace.xxs),
+              child: Align(alignment: AlignmentDirectional.centerEnd, child: markAllButton),
             ),
           ...updateWidgets,
         ];

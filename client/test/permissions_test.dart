@@ -401,6 +401,7 @@ void main() {
     ));
     await row('not_asked');
     expect(find.text('Turn on'), findsOneWidget);
+    expect(tester.getSemantics(find.byKey(const Key('permTurnOn-health'))).label, contains('Health'));
     await row('denied');
     expect(find.text('Open Health'), findsOneWidget);
     await row('granted');

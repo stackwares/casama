@@ -159,9 +159,16 @@ class PermissionRow extends StatelessWidget {
     final on = permissionOn(state);
     final available = known && ask != null && state != PermissionState.unavailable;
     final text = known && ask == null ? l10n.permStateUnavailable : permissionStateText(l10n, id, state);
+    final name = osPermissionLabel(l10n, id);
     Widget? button;
     if (enabled && needsRestart && onRestart != null) {
-      button = OutlinedButton(key: Key('permRestart-$id'), onPressed: busy ? null : onRestart, child: Text(l10n.permRestart));
+      button = Semantics(
+        button: true,
+        enabled: !busy,
+        label: '${l10n.permRestart} · $name',
+        excludeSemantics: true,
+        child: OutlinedButton(key: Key('permRestart-$id'), onPressed: busy ? null : onRestart, child: Text(l10n.permRestart)),
+      );
     } else if (enabled && available && !on && onTurnOn != null) {
       final label = switch (ask) {
         PermissionAsk.casama => l10n.permChoose,
@@ -170,7 +177,13 @@ class PermissionRow extends StatelessWidget {
         _ when id == 'health' && permissionPlatformOf(platform) == 'ios' => l10n.permOpenHealth,
         _ => l10n.permOpenSettings,
       };
-      button = FilledButton.tonal(key: Key('permTurnOn-$id'), onPressed: busy ? null : onTurnOn, child: Text(label));
+      button = Semantics(
+        button: true,
+        enabled: !busy,
+        label: '$label · $name',
+        excludeSemantics: true,
+        child: FilledButton.tonal(key: Key('permTurnOn-$id'), onPressed: busy ? null : onTurnOn, child: Text(label)),
+      );
     }
     return Padding(
       key: Key('permRow-$id'),

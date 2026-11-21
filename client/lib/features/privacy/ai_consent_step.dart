@@ -295,7 +295,7 @@ class _ConsentPageState extends ConsumerState<_ConsentPage> {
                       Padding(
                         padding: EdgeInsets.fromLTRB(
                           AppSpace.xl,
-                          0,
+                          AppSpace.md,
                           AppSpace.xl,
                           bottom,
                         ),
