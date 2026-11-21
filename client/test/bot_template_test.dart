@@ -31,6 +31,8 @@ void main() {
     await tester.pumpWidget(harness(backend, const ImportBotScreen(token: 't0k3n')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('importPreview')), findsOneWidget);
+    // Opened from a link with nothing behind it: it can still be left.
+    expect(find.byTooltip('Back'), findsOneWidget);
     expect(find.text('dunning'), findsOneWidget);
     expect(find.text('Weekly chase'), findsOneWidget);
     expect(find.text('Gmail'), findsOneWidget);

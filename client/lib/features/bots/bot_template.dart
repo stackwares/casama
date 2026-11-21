@@ -243,6 +243,8 @@ class _ImportBotScreenState extends ConsumerState<ImportBotScreen> {
         final t = snap.data;
         return SubPage(
           title: l10n.importBot,
+          // Opened from a link, often with nothing behind it to go back to.
+          backFallback: '/bots',
           children: [
             if (snap.hasError)
               FormNote(

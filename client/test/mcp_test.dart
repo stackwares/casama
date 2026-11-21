@@ -16,6 +16,8 @@ void main() {
     await tester.pumpWidget(harness(backend, const McpConsentScreen(requestId: 'r1')));
     await tester.pumpAndSettle();
     expect(find.text('Phone AI wants to use Casama'), findsOneWidget);
+    // Opened from a link with nothing behind it: it can still be left.
+    expect(find.byTooltip('Back'), findsOneWidget);
     await tester.tap(find.byKey(const Key('mcpAllow')));
     await tester.pumpAndSettle();
     expect(backend.mcpActions, ['allow:$orgId']);

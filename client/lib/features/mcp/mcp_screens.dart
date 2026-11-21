@@ -65,6 +65,8 @@ class _McpConsentScreenState extends ConsumerState<McpConsentScreen> {
       future: _info,
       builder: (context, snap) => SubPage(
         title: l10n.connectAiApp,
+        // Opened from a link, often with nothing behind it to go back to.
+        backFallback: '/bots',
         children: [
           if (snap.hasError)
             FormNote(
