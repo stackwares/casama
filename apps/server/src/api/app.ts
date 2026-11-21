@@ -10,6 +10,7 @@ import { OpenAPIHono } from "@hono/zod-openapi";
 import { Scalar } from "@scalar/hono-api-reference";
 import { sql } from "drizzle-orm";
 import type { Context } from "hono";
+import { bodyLimit } from "hono/body-limit";
 import { cors } from "hono/cors";
 import { HTTPException } from "hono/http-exception";
 import { registerCasamaLinkRoutes } from "../billing/link.ts";
@@ -111,6 +112,9 @@ import { clientIp } from "./util.ts";
  */
 export const PROVIDER_HOOKS =
   /^\/hooks\/(?:billing\/(?:dodo|revenuecat)|payments\/[0-9a-f-]{36}|registrar\/[^/]+|newsletter\/resend|mail(?:\/events)?)\/?$/;
+
+/** The most a webhook body may hold (mail and git sync have their own caps). */
+export const HOOK_BODY_MAX = 1024 * 1024;
 
 /** Taps with a rate budget of their own: answering a request card (chat or gallery) and stopping a run. */
 export const OWN_BUDGET_TAPS =
@@ -471,6 +475,17 @@ export function createApp(deps: AppDeps) {
   app.use("/hooks/*", (c, next) =>
     PROVIDER_HOOKS.test(c.req.path) ? providerHookLimit(c, next) : hookLimit(c, next),
   );
+  // Anyone can post to a hook, and most read the whole body before checking a signature, so
+  // each has a size cap (D-474): 1 MB, GitHub's push payloads up to its own 25 MB cap, and inbound
+  // mail its own limits in routes/mail.ts.
+  const tooLarge = (c: Context) =>
+    c.json({ code: "payload_too_large", message: "Request body is too large" }, 413);
+  const hookBody = bodyLimit({ maxSize: HOOK_BODY_MAX, onError: tooLarge });
+  const gitSyncBody = bodyLimit({ maxSize: 25 * 1024 * 1024, onError: tooLarge });
+  app.use("/hooks/*", (c, next) => {
+    if (/^\/hooks\/mail(?:\/|$)/.test(c.req.path)) return next();
+    return c.req.path.startsWith("/hooks/git-sync/") ? gitSyncBody(c, next) : hookBody(c, next);
+  });
   app.use(
     "/link/*",
     rateLimit({

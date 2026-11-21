@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { PROVIDER_HOOKS } from "../src/api/app.ts";
+import { HOOK_BODY_MAX, PROVIDER_HOOKS } from "../src/api/app.ts";
 import { type Harness, startHarness } from "./helpers.ts";
 
 describe("webhook rate limits", () => {
@@ -42,5 +42,36 @@ describe("webhook rate limits", () => {
         429,
       );
     expect((await post("/hooks/billing/dodo")).status).not.toBe(429);
+  });
+});
+
+describe("webhook body size (D-474)", () => {
+  let h: Harness;
+  beforeAll(async () => {
+    h = await startHarness();
+  });
+  afterAll(async () => {
+    await h.stop();
+  });
+
+  it("refuses a hook body over the cap before the route reads it", async () => {
+    const big = "x".repeat(HOOK_BODY_MAX + 1);
+    for (const path of ["/hooks/composio", "/hooks/billing/dodo", "/hooks/slack/events"]) {
+      const res = await h.request(path, {
+        method: "POST",
+        body: big,
+        headers: { "content-type": "application/json" },
+      });
+      expect(res.status, path).toBe(413);
+    }
+    // Under the cap the route answers as before (no such workspace here).
+    const ok = await h.request("/hooks/payments/0b0e5c3a-1f2e-4c6d-9a8b-7c6d5e4f3a2b", {
+      method: "POST",
+      body: "{}",
+    });
+    expect(ok.status).not.toBe(413);
+    // Inbound mail keeps its own, larger limit.
+    const mail = await h.request("/hooks/mail", { method: "POST", body: big });
+    expect(mail.status).not.toBe(413);
   });
 });
