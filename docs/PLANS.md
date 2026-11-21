@@ -48,7 +48,7 @@ same commit. Shipping details (deploys, app builds) move fast, so check them bef
 
 | Plan | Decisions | What's left |
 |---|---|---|
-| [OWN-KEYS-PLAN](OWN-KEYS-PLAN.md) | D-465 | Built 2026-11-21: Phases 0–4 done (`instance_settings.model_access`, `resolveModelPolicy`, workspace default, per-bot source, Models screen, admin switch, `waiting_for_model` routines). Left: server deploy (migration `20270312100001`), app builds; Phase 5 (ChatGPT plans on Cloud) waits for OpenAI's hosted-use approval |
+| [OWN-KEYS-PLAN](OWN-KEYS-PLAN.md) | D-465 | Live 2026-11-21: server (`5cf766117`), migration `20270312100001`, web app build 70, docs and `own_providers: true` enabled on Cloud. Left: store builds; Phase 5 (ChatGPT plans on Cloud) waits for OpenAI's hosted-use approval |
 | [COMP-PLANS-PLAN](COMP-PLANS-PLAN.md) | D-461 | Built 2026-11-21: grants, gift codes (casama.ai/g), admin bot tools, `scripts/comps.sh`. Left: server deploy (migrations `20270311100001`/`…02`), web deploy for /g, app builds; then `scripts/comps.sh on` with Oliver's yes |
 | [REVIEW-PROMPT-PLAN](REVIEW-PROMPT-PLAN.md) | D-460 | Built 2026-11-21: first-reply ask, looser Android/iOS rules, Rate Casama row in Help. Left: app builds; Phase 4 checks (Play internal track, iOS debug run) |
 | [WORKSPACE-PICTURES-PLAN](WORKSPACE-PICTURES-PLAN.md) | §6 defaults | Built 2026-11-21: migration `20270310100001_workspace_images.sql`, `/v1/orgs/{id}/image*` + `/v1/workspace-images/{id}`, worker AI drawing, `SpaceAvatar` + `workspace_picture.dart`. Left: server deploy + app builds |
