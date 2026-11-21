@@ -92,6 +92,7 @@ same commit. Shipping details (deploys, app builds) move fast, so check them bef
 | [LINK-PLAN](LINK-PLAN.md) | D-296 | Live in prod |
 | [PLUGINS-AND-PACKS-PLAN](PLUGINS-AND-PACKS-PLAN.md) | D-343 | Live in prod |
 | [REACTIONS-PLAN](REACTIONS-PLAN.md) | D-331 | Live everywhere 2026-11-17 |
+| [OWN-KEYS-PLAN](OWN-KEYS-PLAN.md) | 2026-11-21 | §13 decisions and Oliver's go-ahead. Your own model key or ChatGPT plan on Casama Cloud, and an owner switch that turns Casama's models off per plan. ChatGPT plans on Cloud also wait for OpenAI's hosted-use approval |
 | [SHOWCASE-PLAN](SHOWCASE-PLAN.md) |  | Live on casama.ai 2026-11-19 |
 | [STORE-SCREENSHOTS-PLAN](STORE-SCREENSHOTS-PLAN.md) |  | Checked live 2026-11-20: App Store iPhone, iPad, Mac 10 each (+ folding iPhone 9, Watch 5, previews); Play phone, 7" and 10" tablets 8 each, feature graphic, Wear 5 |
 | [WEEKLY-PLAN-PLAN](WEEKLY-PLAN-PLAN.md) | D-432 | Live (confirmed by Oliver 2026-11-20) |
