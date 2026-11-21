@@ -3970,6 +3970,24 @@ abstract class AppLocalizations {
   /// **'This action changes the instance. Verify your password or a fresh email code to continue.'**
   String get adminConfirmActionHelp;
 
+  /// No description provided for @adminConfirmIdentity.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm it\'s you'**
+  String get adminConfirmIdentity;
+
+  /// No description provided for @adminConfirmSignInCodeHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'This code signs another device in as you. Verify your password or a fresh email code to continue.'**
+  String get adminConfirmSignInCodeHelp;
+
+  /// No description provided for @adminConfirmOwnerActionHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify your password or a fresh email code to continue.'**
+  String get adminConfirmOwnerActionHelp;
+
   /// No description provided for @adminVerifyPassword.
   ///
   /// In en, this message translates to:
@@ -30445,6 +30463,186 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =0 {Expires today} =1 {1 day left} other {{count} days left}}'**
   String savedResetDaysLeft(int count);
+
+  /// No description provided for @modelsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Models'**
+  String get modelsTitle;
+
+  /// No description provided for @modelsRowHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Casama\'s models or your own keys'**
+  String get modelsRowHelp;
+
+  /// No description provided for @modelsIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose whether Casama runs your bots or connect your own model keys. Keys are stored encrypted and never shown again.'**
+  String get modelsIntro;
+
+  /// No description provided for @whoRunsYourBots.
+  ///
+  /// In en, this message translates to:
+  /// **'Who runs your bots'**
+  String get whoRunsYourBots;
+
+  /// No description provided for @whoRunsCasama.
+  ///
+  /// In en, this message translates to:
+  /// **'Casama'**
+  String get whoRunsCasama;
+
+  /// No description provided for @whoRunsCasamaHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Included with your plan; uses workspace credits'**
+  String get whoRunsCasamaHelp;
+
+  /// No description provided for @whoRunsCasamaOffHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Paused on your current plan'**
+  String get whoRunsCasamaOffHelp;
+
+  /// No description provided for @whoRunsOwn.
+  ///
+  /// In en, this message translates to:
+  /// **'Your own provider'**
+  String get whoRunsOwn;
+
+  /// No description provided for @whoRunsOwnHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Billed directly by your provider; uses no Casama credits'**
+  String get whoRunsOwnHelp;
+
+  /// No description provided for @botModelSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Model source'**
+  String get botModelSource;
+
+  /// No description provided for @botModelSourceWorkspace.
+  ///
+  /// In en, this message translates to:
+  /// **'Workspace default'**
+  String get botModelSourceWorkspace;
+
+  /// No description provided for @botModelSourceCasama.
+  ///
+  /// In en, this message translates to:
+  /// **'Casama'**
+  String get botModelSourceCasama;
+
+  /// No description provided for @botModelSourceOwn.
+  ///
+  /// In en, this message translates to:
+  /// **'One of your keys'**
+  String get botModelSourceOwn;
+
+  /// No description provided for @useCasamaFallback.
+  ///
+  /// In en, this message translates to:
+  /// **'If my provider fails, use Casama\'s models'**
+  String get useCasamaFallback;
+
+  /// No description provided for @useCasamaFallbackHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'When your key hits a rate limit or quota, fall back to Casama\'s models using your workspace credits.'**
+  String get useCasamaFallbackHelp;
+
+  /// No description provided for @keyCoversOpenRouter.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat, images, video, read-aloud, voice messages and dictation'**
+  String get keyCoversOpenRouter;
+
+  /// No description provided for @keyCoversGoogle.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat and live calls'**
+  String get keyCoversGoogle;
+
+  /// No description provided for @keyCoversOpenAi.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat and memory search'**
+  String get keyCoversOpenAi;
+
+  /// No description provided for @keyCoversChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat'**
+  String get keyCoversChat;
+
+  /// No description provided for @ownProviderPrivacyNote.
+  ///
+  /// In en, this message translates to:
+  /// **'On your own provider, that provider\'s terms apply to what your bots send it. Casama\'s no-training setting only applies on Casama\'s key.'**
+  String get ownProviderPrivacyNote;
+
+  /// No description provided for @creditsOwnProviderNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Models on your own provider don\'t use credits.'**
+  String get creditsOwnProviderNote;
+
+  /// No description provided for @routineWaitingForModel.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for a model'**
+  String get routineWaitingForModel;
+
+  /// No description provided for @ownProviderRequiredTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect a model to keep chatting'**
+  String get ownProviderRequiredTitle;
+
+  /// No description provided for @ownProviderRequiredBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Casama\'s models aren\'t available on this plan right now. Add your own model key or upgrade your plan.'**
+  String get ownProviderRequiredBody;
+
+  /// No description provided for @modelNoToolsWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'This model doesn\'t support tools, so the bot can only reply in text.'**
+  String get modelNoToolsWarning;
+
+  /// No description provided for @adminModelAccessTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Model access'**
+  String get adminModelAccessTitle;
+
+  /// No description provided for @adminModelAccessHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow workspaces to bring their own model keys, and turn Casama\'s models on or off per plan'**
+  String get adminModelAccessHelp;
+
+  /// No description provided for @adminOwnProviders.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow own model providers on Cloud'**
+  String get adminOwnProviders;
+
+  /// No description provided for @adminCasamaModelsDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Casama\'s models (default)'**
+  String get adminCasamaModelsDefault;
+
+  /// No description provided for @adminCasamaModelsNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Note shown when Casama\'s models are off'**
+  String get adminCasamaModelsNote;
 }
 
 class _AppLocalizationsDelegate

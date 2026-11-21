@@ -123,7 +123,17 @@ class CasamaApp extends ConsumerWidget {
     AdminSecurity.confirmAnywhere = () async {
       final context = router.routerDelegate.navigatorKey.currentContext;
       if (context == null || !context.mounted) return false;
-      return showAdminConfirmation(context);
+      final l10n = context.l10n;
+      final path = AdminSecurity.confirmPath;
+      final isSignInCode = path == '/v1/auth/signin-codes';
+      final isAdminPath = path != null && path.startsWith('/v1/admin/');
+      return showAdminConfirmation(
+        context,
+        title: isAdminPath ? null : l10n.adminConfirmIdentity,
+        help: isSignInCode
+            ? l10n.adminConfirmSignInCodeHelp
+            : (isAdminPath ? null : l10n.adminConfirmOwnerActionHelp),
+      );
     };
     return MaterialApp.router(
       onGenerateTitle: (c) => AppLocalizations.of(c).appTitle,

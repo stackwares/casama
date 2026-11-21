@@ -413,9 +413,28 @@ final class PermissionsBridge {
       case .notDetermined: return "not_asked"
       @unknown default: return "unknown"
       }
+    case "notifications":
+      return notificationState()
     default:
       return "unknown"
     }
+  }
+
+  private func notificationState() -> String {
+    let sem = DispatchSemaphore(value: 0)
+    var out = "unknown"
+    UNUserNotificationCenter.current().getNotificationSettings { settings in
+      switch settings.authorizationStatus {
+      case .authorized: out = "granted"
+      case .provisional: out = "limited"
+      case .denied: out = "denied"
+      case .notDetermined: out = "not_asked"
+      @unknown default: out = "unknown"
+      }
+      sem.signal()
+    }
+    _ = sem.wait(timeout: .now() + 2)
+    return out
   }
 
   static func avState(_ s: AVAuthorizationStatus) -> String {
@@ -441,6 +460,10 @@ final class PermissionsBridge {
       done(CGRequestScreenCaptureAccess() ? "granted" : "denied")
     case "automation":
       DispatchQueue.global(qos: .userInitiated).async { done(self.automation(ask: true)) }
+    case "notifications":
+      UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { _, _ in
+        DispatchQueue.global(qos: .userInitiated).async { done(self.notificationState()) }
+      }
     default:
       done(state(id))
     }

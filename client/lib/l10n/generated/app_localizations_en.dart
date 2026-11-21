@@ -2505,6 +2505,17 @@ class AppLocalizationsEn extends AppLocalizations {
       'This action changes the instance. Verify your password or a fresh email code to continue.';
 
   @override
+  String get adminConfirmIdentity => 'Confirm it\'s you';
+
+  @override
+  String get adminConfirmSignInCodeHelp =>
+      'This code signs another device in as you. Verify your password or a fresh email code to continue.';
+
+  @override
+  String get adminConfirmOwnerActionHelp =>
+      'Verify your password or a fresh email code to continue.';
+
+  @override
   String get adminVerifyPassword => 'Verify password';
 
   @override
@@ -18839,4 +18850,105 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get modelsTitle => 'Models';
+
+  @override
+  String get modelsRowHelp => 'Casama\'s models or your own keys';
+
+  @override
+  String get modelsIntro =>
+      'Choose whether Casama runs your bots or connect your own model keys. Keys are stored encrypted and never shown again.';
+
+  @override
+  String get whoRunsYourBots => 'Who runs your bots';
+
+  @override
+  String get whoRunsCasama => 'Casama';
+
+  @override
+  String get whoRunsCasamaHelp =>
+      'Included with your plan; uses workspace credits';
+
+  @override
+  String get whoRunsCasamaOffHelp => 'Paused on your current plan';
+
+  @override
+  String get whoRunsOwn => 'Your own provider';
+
+  @override
+  String get whoRunsOwnHelp =>
+      'Billed directly by your provider; uses no Casama credits';
+
+  @override
+  String get botModelSource => 'Model source';
+
+  @override
+  String get botModelSourceWorkspace => 'Workspace default';
+
+  @override
+  String get botModelSourceCasama => 'Casama';
+
+  @override
+  String get botModelSourceOwn => 'One of your keys';
+
+  @override
+  String get useCasamaFallback => 'If my provider fails, use Casama\'s models';
+
+  @override
+  String get useCasamaFallbackHelp =>
+      'When your key hits a rate limit or quota, fall back to Casama\'s models using your workspace credits.';
+
+  @override
+  String get keyCoversOpenRouter =>
+      'Chat, images, video, read-aloud, voice messages and dictation';
+
+  @override
+  String get keyCoversGoogle => 'Chat and live calls';
+
+  @override
+  String get keyCoversOpenAi => 'Chat and memory search';
+
+  @override
+  String get keyCoversChat => 'Chat';
+
+  @override
+  String get ownProviderPrivacyNote =>
+      'On your own provider, that provider\'s terms apply to what your bots send it. Casama\'s no-training setting only applies on Casama\'s key.';
+
+  @override
+  String get creditsOwnProviderNote =>
+      'Models on your own provider don\'t use credits.';
+
+  @override
+  String get routineWaitingForModel => 'Waiting for a model';
+
+  @override
+  String get ownProviderRequiredTitle => 'Connect a model to keep chatting';
+
+  @override
+  String get ownProviderRequiredBody =>
+      'Casama\'s models aren\'t available on this plan right now. Add your own model key or upgrade your plan.';
+
+  @override
+  String get modelNoToolsWarning =>
+      'This model doesn\'t support tools, so the bot can only reply in text.';
+
+  @override
+  String get adminModelAccessTitle => 'Model access';
+
+  @override
+  String get adminModelAccessHelp =>
+      'Allow workspaces to bring their own model keys, and turn Casama\'s models on or off per plan';
+
+  @override
+  String get adminOwnProviders => 'Allow own model providers on Cloud';
+
+  @override
+  String get adminCasamaModelsDefault => 'Casama\'s models (default)';
+
+  @override
+  String get adminCasamaModelsNote =>
+      'Note shown when Casama\'s models are off';
 }

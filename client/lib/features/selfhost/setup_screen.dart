@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:casama_sdk/casama_link.dart';
 import 'package:casama_sdk/casama_sdk.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -228,8 +229,12 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
       duration: AppMotion.of(context, AppMotion.fast),
       child: KeyedSubtree(key: ValueKey(stage), child: body),
     );
-    return Scaffold(
-      key: const Key('setupScreen'),
+    return CallbackShortcuts(
+      bindings: {
+        const SingleActivator(LogicalKeyboardKey.escape): _leave,
+      },
+      child: Scaffold(
+        key: const Key('setupScreen'),
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, box) {
@@ -291,6 +296,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
             );
           },
         ),
+      ),
       ),
     );
   }

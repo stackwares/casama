@@ -4,6 +4,7 @@ import 'dart:math' as math;
 
 import 'package:casama_sdk/casama_sdk.dart'
     show problemOf;
+import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -409,7 +410,13 @@ class _CallScreenState extends ConsumerState<CallScreen>
       icon: const Icon(LucideIcons.minimize2),
       onPressed: _asking ? null : _leave,
     );
-    return Scaffold(
+    return CallbackShortcuts(
+      bindings: {
+        const SingleActivator(LogicalKeyboardKey.escape): () {
+          if (!_asking) _leave();
+        },
+      },
+      child: Scaffold(
       appBar: divided
           ? null
           : ShellHeader(
@@ -422,7 +429,9 @@ class _CallScreenState extends ConsumerState<CallScreen>
       body: LayoutBuilder(
         builder: (context, constraints) {
           final side = pageSide(constraints.maxWidth);
-          final controls = <Widget>[
+          final controls = needsKey
+              ? const <Widget>[]
+              : <Widget>[
             _CallButton(
               buttonKey: const Key('muteButton'),
               icon: muted ? LucideIcons.micOff : LucideIcons.mic,
@@ -670,22 +679,23 @@ class _CallScreenState extends ConsumerState<CallScreen>
                   ),
                 ),
               ),
-              SafeArea(
-                top: false,
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    AppSpace.md,
-                    AppSpace.xs,
-                    AppSpace.md,
-                    AppSpace.md,
-                  ),
-                  child: Row(
-                    children: [
-                      for (final control in controls) Expanded(child: control),
-                    ],
+              if (controls.isNotEmpty)
+                SafeArea(
+                  top: false,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpace.md,
+                      AppSpace.xs,
+                      AppSpace.md,
+                      AppSpace.md,
+                    ),
+                    child: Row(
+                      children: [
+                        for (final control in controls) Expanded(child: control),
+                      ],
+                    ),
                   ),
                 ),
-              ),
             ],
           );
           if (tileComputer == null) return callColumn;
@@ -726,6 +736,7 @@ class _CallScreenState extends ConsumerState<CallScreen>
             ],
           );
         },
+      ),
       ),
     );
   }

@@ -14,6 +14,9 @@ class AdminSecurity {
   /// fresh sign-in in a dialog over whatever screen is open. Set once by the app.
   static Future<bool> Function()? confirmAnywhere;
 
+  /// Request path that triggered [confirmAnywhere], so the dialog can tailor its message.
+  static String? confirmPath;
+
   /// Admin sign-in forms on screen. While one is, the router leaves a session that still owes its
   /// two-step code where it is, so the form can ask for the code itself. Opening one needs no
   /// redirect; the last one closing wakes the router (after the frame) to send such a session on.
@@ -221,7 +224,14 @@ class AdminSecurityInterceptor extends Interceptor {
         ? console
         : anywhere == null
         ? null
-        : (_) => anywhere();
+        : (_) async {
+            AdminSecurity.confirmPath = options.uri.path;
+            try {
+              return await anywhere();
+            } finally {
+              AdminSecurity.confirmPath = null;
+            }
+          };
     bool stillOpen() => !inConsole || AdminSecurity.isUnlocked?.call() == true;
     if (options.extra[_retried] == true ||
         err.response?.statusCode != 403 ||

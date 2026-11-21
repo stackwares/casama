@@ -347,7 +347,7 @@ class _DailyChart extends StatelessWidget {
         borderData: FlBorderData(show: false),
         gridData: FlGridData(
           drawVerticalLine: false,
-          horizontalInterval: max == 0 ? 0.25 : max / 3,
+          horizontalInterval: max == 0 ? 1 : max / 3,
           getDrawingHorizontalLine: (_) => FlLine(color: context.appColors.hairline, strokeWidth: 1),
         ),
         titlesData: FlTitlesData(
@@ -357,7 +357,7 @@ class _DailyChart extends StatelessWidget {
             sideTitles: SideTitles(
               showTitles: true,
               reservedSize: 52,
-              interval: max == 0 ? 0.25 : max / 3,
+              interval: max == 0 ? 1 : max / 3,
               getTitlesWidget: (v, meta) => v == meta.max
                   ? const SizedBox.shrink()
                   : Text(formatUsd(v, context.l10n.localeName), style: context.textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant, fontFeatures: AppText.tabular)),

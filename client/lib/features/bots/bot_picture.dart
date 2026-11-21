@@ -1223,6 +1223,7 @@ class _EditableBotAvatarState extends ConsumerState<EditableBotAvatar>
       label: context.l10n.botPictureChange(widget.bot.name),
       child: Tooltip(
         message: context.l10n.botPictureChange(widget.bot.name),
+        verticalOffset: size / 2 + 8,
         child: InkResponse(
           key: const Key('botPictureEdit'),
           focusNode: _focus,

@@ -3,7 +3,7 @@
 Run date: 2026-11-21. Build: `flutter run -d macos --debug` in `client/` (Flutter 3.50.0).
 Backend: local Supabase on :54321, API on :8787 and worker started by hand (see E1).
 Account: `setup-test@example.com` ("Setup Test's space"), shared with two other sessions.
-Status: **findings only, nothing fixed**. Screenshots are in `/tmp/kasama-debug/shots/`.
+Status: **fixed E2, F1, F2, F5, F7, F8, F10, F13; remaining items are by-design, external, or config**. Screenshots are in `/tmp/kasama-debug/shots/`.
 
 ## Environment
 

@@ -34,33 +34,45 @@ Future<bool> showAdminConfirmation(
   bool sensitive = true,
   bool Function()? stillValid,
   bool allowPin = true,
+  String? title,
+  String? help,
 }) async {
   final accepted = await showDialog<bool>(
     context: context,
     useRootNavigator: true,
     barrierDismissible: false,
-    builder: (dialogContext) => AlertDialog(
-      title: Text(
-        sensitive ? context.l10n.adminConfirmAction : context.l10n.adminUnlock,
-      ),
-      content: SizedBox(
-        width: 360,
-        child: AdminAuthentication(
-          sensitive: sensitive,
-          allowPin: allowPin,
-          onVerified: () {
-            if (stillValid?.call() ?? true) {
-              Navigator.of(dialogContext).pop(true);
-            }
-          },
+    builder: (dialogContext) => CallbackShortcuts(
+      bindings: {
+        const SingleActivator(LogicalKeyboardKey.escape): () =>
+            Navigator.of(dialogContext).pop(false),
+      },
+      child: AlertDialog(
+        title: Text(
+          title ??
+              (sensitive
+                  ? context.l10n.adminConfirmAction
+                  : context.l10n.adminUnlock),
         ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(dialogContext).pop(false),
-          child: Text(context.l10n.cancel),
+        content: SizedBox(
+          width: 360,
+          child: AdminAuthentication(
+            sensitive: sensitive,
+            allowPin: allowPin,
+            help: help,
+            onVerified: () {
+              if (stillValid?.call() ?? true) {
+                Navigator.of(dialogContext).pop(true);
+              }
+            },
+          ),
         ),
-      ],
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(context.l10n.cancel),
+          ),
+        ],
+      ),
     ),
   );
   return accepted == true;
@@ -358,11 +370,13 @@ class AdminAuthentication extends ConsumerStatefulWidget {
     this.generation = 0,
     this.showTwoStepTip = false,
     this.allowPin = true,
+    this.help,
   });
   final int generation;
   final VoidCallback onVerified;
   final bool sensitive;
   final bool showTwoStepTip;
+  final String? help;
 
   /// Off when changing the PIN itself: that takes a passkey or password.
   final bool allowPin;
@@ -691,7 +705,10 @@ class _AdminAuthenticationState extends ConsumerState<AdminAuthentication>
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          widget.sensitive ? l10n.adminConfirmActionHelp : l10n.adminLockedHelp,
+          widget.help ??
+              (widget.sensitive
+                  ? l10n.adminConfirmActionHelp
+                  : l10n.adminLockedHelp),
         ),
         const SizedBox(height: 16),
         FutureBuilder<List<Object?>>(

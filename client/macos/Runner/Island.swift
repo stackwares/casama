@@ -799,7 +799,7 @@ extension IslandController {
           return o.perform(sel)?.takeUnretainedValue()
         }
         func legacy(_ attribute: String) -> String {
-          let sel = Selector(("accessibilityAttributeValue:"))
+          let sel = NSSelectorFromString("accessibilityAttributeValue:")
           guard o.responds(to: sel) else { return "" }
           return o.perform(sel, with: attribute)?.takeUnretainedValue() as? String ?? ""
         }

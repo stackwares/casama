@@ -47,7 +47,7 @@ const permissionsChannel = MethodChannel('casama/permissions');
 
 /// Ids the native channel answers on each platform.
 const _nativeIds = <String, Set<String>>{
-  'macos': {'accessibility', 'screen_recording', 'automation', 'full_disk', 'microphone', 'speech'},
+  'macos': {'accessibility', 'screen_recording', 'automation', 'full_disk', 'microphone', 'speech', 'notifications'},
   'ios': {'camera', 'photos', 'microphone', 'speech', 'location_always'},
 };
 
