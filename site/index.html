@@ -250,7 +250,7 @@
       <div class="showcase">
         <figure class="scene scene-desk" data-scene="group">
           <div class="scene-stage">
-            <div class="dev-window" role="img" aria-label="A Casama group chat on a desktop. You ask everyone to plan Sam's 30th; Nova splits the work, and Ada, Milo and Nova start at the same time. Ada's invite, Nova's shortlist of three restaurants and Milo's RSVP page come back, and replies start arriving.">
+            <div class="dev-window" role="img" aria-label="A Casama group chat on a desktop. You ask everyone to plan Sam's 30th; Nova splits the work, and Ada, Milo and Nova start at the same time. Ada's invite, Nova's shortlist of three restaurants and Milo's RSVP page come back, and replies start arriving. On the right, Milo's computer wakes up and builds the RSVP page in a terminal.">
               <div class="win-bar"><i></i><i></i><i></i><span>Casama</span></div>
               <div class="win-body">
                 <aside class="app-side">
@@ -260,7 +260,7 @@
                   <div class="side-label">Bots</div>
                   <div class="side-bot" data-bot="ada"><img src="/assets/bots/casama-lovey.svg" alt="" width="22" height="22" loading="lazy" decoding="async"><span><b>Ada</b><small data-bot-status>Invite ready</small></span><i class="side-dot"></i></div><div class="side-bot" data-bot="milo"><img src="/assets/bots/casama-cool.svg" alt="" width="22" height="22" loading="lazy" decoding="async"><span><b>Milo</b><small data-bot-status>RSVP page live</small></span><i class="side-dot"></i></div><div class="side-bot" data-bot="nova"><img src="/assets/bots/casama-starry.svg" alt="" width="22" height="22" loading="lazy" decoding="async"><span><b>Nova</b><small data-bot-status>Booked a table hold</small></span><i class="side-dot"></i></div><div class="side-bot" data-bot="juno"><img src="/assets/bots/casama-sleepy.svg" alt="" width="22" height="22" loading="lazy" decoding="async"><span><b>Juno</b><small data-bot-status>Idle</small></span><i class="side-dot"></i></div>
                   <div class="side-label">Group chats</div>
-                  <div class="side-bot active"><span class="side-grp"></span><span><b>Sam's birthday</b><small data-rsvp-side>5 of 8 going</small></span></div>
+                  <div class="side-bot active"><span class="side-grp" aria-hidden="true">🎂</span><span><b>Sam's birthday</b><small data-rsvp-side>5 of 8 going</small></span></div>
                   <div class="side-foot"><span>Library</span><span>Tasks</span></div>
                 </aside>
                 <section class="app-chat">
@@ -275,6 +275,22 @@
                     <div class="m bot m-typing" data-typing hidden><img src="/assets/bots/casama-starry.svg" alt="" width="24" height="24" loading="lazy" decoding="async"><div class="m-col"><b class="m-name"></b><p class="dots"><i></i><i></i><i></i></p></div></div>
                   </div>
                   <div class="composer"><span class="c-ico"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span><span class="c-ph">Message Sam's birthday</span><span class="c-ico"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></span><span class="c-send"><svg viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></svg></span></div>
+                </section>
+                <section class="vm desk-vm idle" data-desk-vm>
+                  <div class="vm-bar"><span class="vm-dot"></span><b>Milo's computer</b><span class="vm-who" data-desk-vm-who>Idle</span></div>
+                  <div class="vm-view term-view" data-desk-view>
+                    <div class="term" data-term>
+                      <p data-line><span class="t-p">~/sams30 $</span> casama pages new sams30</p>
+                      <p data-line class="t-dim">Made index.html, rsvp.js</p>
+                      <p data-line class="t-dim">Added the hero picture and an RSVP form</p>
+                      <p data-line class="t-dim">Guest list saves to the Library: guests.csv</p>
+                      <p data-line><span class="t-p">~/sams30 $</span> casama pages publish</p>
+                      <p data-line class="t-ok">Live at sams30.casama.page</p>
+                      <p data-line class="t-dim" data-rsvp-log>New RSVP: 5 of 8 going</p>
+                    </div>
+                    <div class="vm-sleep" data-vm-sleep><span class="vm-moon"></span><b data-vm-sleep-title>Asleep</b><small>Milo's computer wakes in a few seconds when there's work to do.</small></div>
+                  </div>
+                  <div class="vm-foot"><span>Ubuntu · 2 CPU</span><span data-desk-vm-status>Sleeps in 10 min</span></div>
                 </section>
               </div>
             </div>

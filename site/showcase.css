@@ -292,3 +292,37 @@
   .vm { order: -1; border-bottom: 1px solid var(--line); }
   .tab-chat { border-right: 0; }
 }
+
+/* ------------------------------------------------------------------ the bot's computer beside the group chat (desktop) */
+.win-body:has(.desk-vm) { grid-template-columns: 228px minmax(0, 1fr) 300px; }
+.side-grp { display: grid; place-items: center; font-size: 13px; line-height: 1; }
+.desk-vm { border-left: 1px solid var(--line); }
+.desk-vm .vm-bar { padding: 12px 12px 10px; }
+.term-view { background: #16151a; box-shadow: 0 0 0 1px var(--line); }
+.term { position: absolute; inset: 0; padding: 12px; display: flex; flex-direction: column; gap: 7px; font: 400 11px/1.45 var(--font-mono); color: #ece9f1; overflow: hidden; }
+.term p { margin: 0; overflow-wrap: anywhere; }
+.term .t-p { color: #b98be0; }
+.term .t-dim { color: #a19dab; }
+.term .t-ok { color: #6fd39b; }
+.term p.t-new { animation: sc-in .35s var(--ease-out) both; }
+.term [hidden] { display: none; }
+.vm-sleep { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 6px; padding: 20px; text-align: center;
+  background: var(--bg-2); color: var(--ink-2); opacity: 0; pointer-events: none; transition: opacity .5s; }
+.vm-sleep b { color: var(--ink); font-weight: 600; font-size: 13px; }
+.vm-sleep small { font-size: 11.5px; line-height: 1.4; max-width: 22ch; }
+.vm-moon { width: 26px; height: 26px; border-radius: 50%; box-shadow: inset -8px -3px 0 0 var(--ink-2); transform: rotate(-20deg); margin-bottom: 4px; opacity: .7; }
+.desk-vm.asleep .vm-sleep, .desk-vm.waking .vm-sleep { opacity: 1; }
+.desk-vm.waking .vm-moon { animation: sc-wake 1s ease-in-out infinite; }
+@keyframes sc-wake { 50% { opacity: .25; } }
+.desk-vm.asleep .vm-dot, .desk-vm.idle .vm-dot { background: var(--ink-2); animation: none; opacity: .5; }
+.desk-vm.waking .vm-dot { background: #febc2e; }
+@container (max-width: 1040px) {
+  .win-body:has(.desk-vm) { grid-template-columns: 200px minmax(0, 1fr) 260px; }
+}
+@container (max-width: 900px) {
+  .win-body:has(.desk-vm) { grid-template-columns: 228px minmax(0, 1fr); }
+  .desk-vm { display: none; }
+}
+@container (max-width: 700px) {
+  .win-body:has(.desk-vm) { grid-template-columns: minmax(0, 1fr); }
+}

@@ -129,9 +129,40 @@
       bots[b].ring.classList.toggle("working", working);
       $(bots[b].side, "[data-bot-status]").textContent = text;
     };
+    // Milo's computer: asleep until Milo starts, then the build runs in its terminal, then it idles.
+    var vm = $(fig, "[data-desk-vm]");
+    var vmWho = $(fig, "[data-desk-vm-who]");
+    var vmStatus = $(fig, "[data-desk-vm-status]");
+    var lines = $$(fig, "[data-line]");
+    var rsvpLog = $(fig, "[data-rsvp-log]");
+    var sleepTitle = $(fig, "[data-vm-sleep-title]");
+    var setVm = function (state, who, status) {
+      ["asleep", "waking", "idle"].forEach(function (c) { vm.classList.toggle(c, c === state); });
+      vmWho.textContent = who;
+      vmStatus.textContent = status;
+      sleepTitle.textContent = state === "waking" ? "Waking up…" : "Asleep";
+    };
+    var line = function (i) {
+      var el = lines[i];
+      el.hidden = false;
+      el.classList.toggle("t-new", false);
+      void el.offsetWidth;
+      el.classList.add("t-new");
+    };
+    var build = async function () {
+      setVm("waking", "Waking up…", "Starting");
+      await s.wait(1100);
+      setVm("live", "Live", "Working");
+      await s.wait(400);
+      line(0);
+      for (var i = 1; i <= 3; i++) { await s.wait(i === 1 ? 900 : 1200); line(i); }
+      await s.wait(1300);
+      line(4);
+    };
     var setRsvp = function (n, bump) {
       rsvp.textContent = n + " of 8 going";
       rsvpSide.textContent = n + " of 8 going";
+      rsvpLog.textContent = "New RSVP: " + n + " of 8 going";
       if (bump) { rsvp.classList.remove("bump"); void rsvp.offsetWidth; rsvp.classList.add("bump"); }
     };
     return {
@@ -141,6 +172,8 @@
         rsvpSide.textContent = "New chat";
         setRsvp(1);
         rsvpSide.textContent = "New chat";
+        lines.forEach(function (l) { l.hidden = true; l.classList.toggle("t-new", false); });
+        setVm("asleep", "Asleep", "Sleeping");
       },
       play: async function () {
         await s.wait(300);
@@ -154,6 +187,7 @@
         setBot("milo", "Building the RSVP page…", true);
         setBot("nova", "Shortlisting places…", true);
         rsvpSide.textContent = "3 bots working";
+        var building = build();
         await s.wait(900);
         s.typing("cool", "Milo");
         await s.wait(800);
@@ -171,11 +205,19 @@
         await s.wait(1100);
         s.typing("cool", "Milo");
         await s.wait(1200);
+        await building;
         setRsvp(1);
+        line(5);
         s.arrive("milo2");
         setBot("milo", "RSVP page live", false);
-        for (var n = 2; n <= 5; n++) { await s.wait(n === 2 ? 1300 : 750); setRsvp(n, true); }
-        await s.wait(3800);
+        for (var n = 2; n <= 5; n++) {
+          await s.wait(n === 2 ? 1300 : 750);
+          setRsvp(n, true);
+          if (n === 2) line(6);
+        }
+        await s.wait(900);
+        setVm("idle", "Idle", "Sleeps in 10 min");
+        await s.wait(2900);
       }
     };
   });
