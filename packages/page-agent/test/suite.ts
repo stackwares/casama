@@ -5,6 +5,7 @@
  */
 import type { Browser, BrowserContext, BrowserType, Page } from "playwright";
 import { afterAll, beforeAll, describe, expect, inject, it } from "vitest";
+import { clickVerdict, fieldVerdict, keyVerdict } from "../../domain/src/browser-risk.ts";
 import {
   COVERED_BUTTON,
   DEALS_PAGE,
@@ -175,6 +176,41 @@ export function suite(name: string, engine: BrowserType) {
       expect(r.code).toBe("covered");
       expect((await call(page, "locate", { ref })).code).toBe("covered");
       expect(await page.title()).not.toBe("hijacked");
+    });
+
+    it("gives the server's step rules what they need to ask, hand over or let through", async () => {
+      // The whole path a phone's step takes, minus the socket: the page's own facts, read by this
+      // script, judged by the rules the server runs (packages/domain/src/browser-risk.ts).
+      const page = await open(
+        doc(`${RISKY_CONTROLS}
+          <button>Add to basket</button>
+          <form><input name="user" aria-label="User"><input type="password" aria-label="Secret"><button>Continue</button></form>
+          <form><input autocomplete="cc-number" aria-label="Card"><input autocomplete="one-time-code" aria-label="Code"></form>
+          <input type="search" aria-label="Search">`),
+      );
+      const text = await snap(page);
+      const facts = async (needle: string) => {
+        const a = await call(page, "probe", { ref: refOf(text, needle) });
+        expect(a.ok, JSON.stringify(a)).toBe(true);
+        return (a as Answer & { facts: Record<string, never> }).facts;
+      };
+      const click = async (needle: string) => clickVerdict(await facts(needle)).kind;
+      const field = async (needle: string) => fieldVerdict(await facts(needle)).kind;
+      expect(await click('"Add to basket"')).toBe("ok");
+      expect(await click('"Send message"')).toBe("ask");
+      expect(await click('"Buy now"')).toBe("hand_off");
+      // A plain-named button that submits a password form is still a sign-in.
+      expect(await click('"Continue"')).toBe("hand_off");
+      expect(await field('"Password"')).toBe("hand_off");
+      expect(await field('"Secret"')).toBe("hand_off");
+      expect(await field('"Card"')).toBe("hand_off");
+      expect(await field('"Code"')).toBe("hand_off");
+      expect(await field('"Comment"')).toBe("ok");
+      // Enter in a comment box may send it; in a search box outside a form it only searches.
+      const key = async (needle: string) => keyVerdict("Enter", await facts(needle)).kind;
+      expect(await key('"Comment"')).toBe("ask");
+      expect(await key('"Search"')).toBe("ok");
+      expect(await key('"User"')).toBe("hand_off");
     });
 
     it("reports the facts the risk rules need, and the fingerprint follows the label", async () => {
