@@ -336,7 +336,16 @@ class HomeShell extends ConsumerWidget {
       context.go(dests[i].path);
     }
 
-    final shell = _buildShell(context, ref, size, fold, badge, child, dests, go);
+    final built = _buildShell(context, ref, size, fold, badge, child, dests, go);
+    // Back on Library or Tasks goes to Chats first, as Android apps do, instead of closing the app.
+    final otherTab = location == '/library' || location == '/tasks';
+    final shell = PopScope(
+      canPop: !otherTab,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop && otherTab) context.go('/bots');
+      },
+      child: built,
+    );
     if (size == LayoutSize.phone) return shell;
     return CallbackShortcuts(
       bindings: {

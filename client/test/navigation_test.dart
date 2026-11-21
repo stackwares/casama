@@ -105,6 +105,19 @@ void main() {
     expect(find.byType(BotsScreen), findsOneWidget);
   });
 
+  testWidgets('system back on Library or Tasks goes to Chats instead of closing the app', (tester) async {
+    await _pumpApp(tester, const Size(400, 860));
+    final router = GoRouter.of(tester.element(find.byType(FloatingTabChrome)));
+    for (final path in ['/library', '/tasks']) {
+      router.go(path);
+      await tester.pumpAndSettle();
+      final handled = await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(handled, isTrue, reason: path);
+      expect(router.state.uri.path, '/bots', reason: path);
+    }
+  });
+
   testWidgets('a link straight to Settings or the computer on a phone still has a way back', (tester) async {
     await _pumpApp(tester, const Size(400, 860));
     for (final path in ['/settings', '/computer', '/search', '/quick-ask?text=hi']) {
