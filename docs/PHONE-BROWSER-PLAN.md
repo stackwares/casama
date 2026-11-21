@@ -1,8 +1,38 @@
 # A browser on your phone that your bots can use: plan
 
-Status: **approved** (2026-11-21). Oliver took every decision in §13 as written and asked for all
-phases to be built in one go. Being built on branch `phone-browser`. Flutter runs on phones,
-production deploys and each stage switch still wait for his yes (§16).
+Status: **built, not shipped** (2026-11-21, D-472). Oliver took every decision in §13 as written
+and asked for all phases in one go. The code for Phases 0 to 3 and the tools for Phase 4 are on
+branch `phone-browser`. Nothing is deployed, no phone build has been made, and the stage is Off.
+"Built so far" below says what exists and what was never run; §16 is what waits for Oliver.
+
+## Built so far
+
+| Part | Where | Checked how |
+|---|---|---|
+| Stage setting, pairing, the internal route's checks, step rules on the server, block counting, `where: "phone"`, the signed-in-site pick, the per-turn hint | `packages/domain/src/app-browser*.ts`, `browser-blocks.ts`, `browser-risk.ts`; `packages/agent/src/user-browser.ts`, `tools/browser.ts`; `apps/server/src/api/routes/local.ts`, `services/app-browser.ts`; migration `20270313100001_app_browser.sql` | Server, agent and domain tests against a fake phone |
+| The page script | `packages/page-agent`, shipped as `client/assets/app_browser/page_agent.js` | 38 tests in Chromium and WebKit, including the server's step rules judging the facts it reads |
+| The app: socket, session, site rules, settings and consent, browser view, asks, chat card, workspace switch, owner's stage panel | `client/lib/features/app_browser/` | Flutter tests with a fake web area; the site rules match all 198 shared cases |
+| The native web area | `client/ios/Runner/AppDelegate.swift` (`AppBrowser`), `client/android/app/src/appBrowser/` | **Never compiled or run.** The Swift parses. A build needs Oliver's yes |
+| Admin bot tools | `apps/server/src/services/admin-bot-app-browser.ts` | Tests through the real run loop |
+| Build switch | `scripts/app-browser-switch.sh` | By hand |
+| Store release kit | `client/store/app-browser/` | Drafts for Oliver to read |
+
+Different from the plan as written:
+
+- **Asks for risky steps show on the phone, not as a run event.** The server decides and sends the
+  ask to the phone over the same socket; the app shows it in the chat and in the browser view.
+  Simpler, and older apps never see anything new.
+- **No "test phone" that drives real pages through the socket.** The two halves are tested apart:
+  the server against a fake phone, and the real page script against the real step rules. Phase 0's
+  real phones are the first end-to-end run.
+- **The hostile pages run against the page script, not yet through the evals suite** for the phone.
+- **The page script and the site lists ship as assets in every build** (Flutter can't leave an
+  asset out by a build flag). They are data nothing reads without the switch; say so if a reviewer
+  asks, or move them behind a build flavor before Stage 2.
+- **"On this phone" on a tool row** shows only when the bot named the phone; a site that opened
+  there by itself (T3) doesn't say so yet.
+- **Phase 0's real-phone test comes after the build, not before it**, because Oliver asked for
+  everything in one go. Its bar still decides whether each system gets the feature.
 
 Platform and store facts were checked against Apple's, Google's and Flutter's pages on 2026-11-21
 (sources at the end). Line numbers are from the same day. Re-find each one before editing.
@@ -462,15 +492,17 @@ Made as Oliver asked. Say which to change; the rest stand.
 
 ## 16. Left for Oliver
 
-| # | What | Why it waits | Phase |
-|---|---|---|---|
-| 1 | Yes to each Flutter run on your iPhone and an Android phone, and trying the 20 sites | Builds need your yes; real phones are the proof | 0 |
-| 2 | Deploy the block detection | A production deploy | 0 |
-| 3 | Deploy Phase 1's server changes and migration | A production deploy | 1 |
-| 4 | Name the Stage 1 testers and say yes to Stage 1 | A production change | 4 |
-| 5 | Read the consent screen and the privacy page's new section | Legal text | 4 |
-| 6 | Update the App Store privacy answers and Play Data safety, and submit the Stage 2 release with its review notes and a reviewer account that has the feature on | Store forms and uploads are yours | 4 |
-| 7 | Yes to Stage 2, and later to Stages 3 and 4 when their bars are met | Production changes | 4 |
+| # | What | Why it waits |
+|---|---|---|
+| 1 | Say yes to merging `phone-browser` into main and pushing | Your call when it lands |
+| 2 | Deploy the server (migration `20270313100001_app_browser.sql`). The stage stays Off, so nothing changes for anyone; block counting starts | A production deploy |
+| 3 | Yes to a Flutter run on your iPhone and on an Android phone, with `scripts/app-browser-switch.sh on` and `--dart-define=CASAMA_APP_BROWSER=true`. This is the first time the Swift and Kotlin compile; expect fixes | Builds need your yes |
+| 4 | Try the 20 sites on each phone and fill in Phase 0's table. Answers wanted: do Android's taps count as real, do iPhone's script clicks work on enough sites, does a picture work with the app lock on, which of Google, Apple and Microsoft sign-ins work | Real phones are the proof |
+| 5 | Name the Stage 1 testers and say yes to Stage 1 (the admin bot proposes it, or Admin → Phone Browser) | A production change |
+| 6 | Read `client/store/app-browser/`: the review notes, the privacy section, the listing lines and the guide | Legal and store text |
+| 7 | For Stage 2: update the App Store privacy answers and Play Data safety, add the privacy section to the site, and submit a release built with the switch on | Store forms and uploads are yours |
+| 8 | Yes to Stage 2, and later to Stages 3 and 4 when the admin bot says their numbers are met | Production changes |
+| 9 | The local dev database doesn't have the migration yet: `supabase migration up --include-all` after the merge | Shared local database |
 
 ## Sources
 
