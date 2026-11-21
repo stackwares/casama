@@ -1,6 +1,6 @@
 # Bug hunt across every platform: plan
 
-Status: **Built** (2026-11-21). Two rounds done; all open items decided and fixed except those listed as open in `reports/bug-hunt-2026-11-21.md`. Waiting on: a server deploy (4 new migrations) and app builds.
+Status: **Built** (2026-11-21). Three rounds done; every open item decided (third round 2026-11-22, see `reports/bug-hunt-2026-11-21.md`). Waiting on: a server deploy (4 new migrations) and app builds.
 
 ## 1. Goal
 
@@ -187,5 +187,7 @@ Too big, risky, or a product question: log it in §9 as "Needs Oliver" and keep 
 | 22 | Server | worker | Routine claim failure logged no DB reason | Fixed | 1f4109629 |
 | 23 | Server | privacy | `POST /v1/me/blocks` returned the other person's full email | Fixed (masked) | 5365c8249 |
 | 24 | Repo | lint | `pnpm lint` failed (8 errors) | Fixed | b276971a0 |
+| 25 | macOS | sidebar | Bot badge stayed on while its chat was open (inbox-linked notices counted) | Fixed | 6bad61d3f |
+| 26 | Server | device data | Allow card shown for a kind no device shares; bot then said no device connected | Fixed | 368b3dbf3 |
 
 Open items ("Needs Oliver", not fixed): see `reports/bug-hunt-2026-11-21.md`.
