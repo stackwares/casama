@@ -1153,6 +1153,14 @@ describe("open on phone and signing out", () => {
         json: { org_id: org, fingerprint: hashWatchKey(k), platform: "wearos", name: "W" },
       });
     expect((await watch("/v1/watch/me", {}, k2)).status).toBe(200);
+    // Push and call-ring tokens on every phone the person used, and someone else's.
+    await h.tdb.admin`
+      insert into public.devices (user_id, platform, fcm_token) values
+        (${member.id}, 'ios', 'everywhere-phone-1'), (${member.id}, 'android', 'everywhere-phone-2'),
+        (${me.id}, 'ios', 'everywhere-other')`;
+    await h.tdb.admin`
+      insert into public.voip_tokens (user_id, token) values
+        (${member.id}, 'everywhere-voip-1'), (${me.id}, 'everywhere-voip-2')`;
     // Only the person's own session may: not a watch's key, and not signed out.
     const byWatch = await watch("/v1/watch-keys", { method: "DELETE" }, k1);
     expect(byWatch.status).toBe(403);
@@ -1165,6 +1173,11 @@ describe("open on phone and signing out", () => {
     const [left] = await h.tdb.admin<{ n: number }[]>`
       select count(*)::int as n from public.watch_keys where user_id = ${member.id}`;
     expect(left?.n).toBe(0);
+    // Every phone stops getting this person's pushes and call rings, not only the one signing out.
+    const tokens = await h.tdb.admin<{ t: string }[]>`
+      select fcm_token as t from public.devices where fcm_token like 'everywhere-%'
+      union all select token from public.voip_tokens where token like 'everywhere-%' order by 1`;
+    expect(tokens.map((r) => r.t)).toEqual(["everywhere-other", "everywhere-voip-2"]);
     // Someone else's watch is untouched.
     expect((await watch("/v1/watch/me")).status).toBe(200);
     expect(

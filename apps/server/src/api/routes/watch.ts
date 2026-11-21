@@ -568,10 +568,15 @@ export function registerWatchRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
   });
 
   // "Sign Out Everywhere" on the phone: every watch the person signed in, in every workspace.
+  // It's the server call the apps make for Sign Out Everywhere, so it also removes the person's
+  // push and call-ring tokens on every device (D-474): the app itself only deletes this phone's,
+  // and a lost phone kept getting pushes and rings.
   app.openapi(routes.deleteAllWatchKeys, async (c) => {
     const claims = requireSession(c);
     const rows = await db.execute<{ id: string }>(sql`
       delete from public.watch_keys where user_id = ${claims.sub}::uuid returning id`);
+    await db.execute(sql`delete from public.devices where user_id = ${claims.sub}::uuid`);
+    await db.execute(sql`delete from public.voip_tokens where user_id = ${claims.sub}::uuid`);
     return c.json({ deleted: rows.length }, 200);
   });
 
