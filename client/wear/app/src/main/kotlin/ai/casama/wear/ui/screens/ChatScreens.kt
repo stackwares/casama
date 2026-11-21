@@ -14,6 +14,7 @@ import ai.casama.wear.ui.components.BotFace
 import ai.casama.wear.ui.components.Message
 import ai.casama.wear.ui.components.Words
 import ai.casama.wear.ui.components.clockTime
+import ai.casama.wear.ui.components.pastTime
 import ai.casama.wear.ui.go
 import ai.casama.wear.ui.theme.CasamaColors
 import ai.casama.wear.voice.Speaker
@@ -150,7 +151,7 @@ fun ChatScreen(nav: NavHostController, botId: String, conversationId: String?, r
                         if (m.cut) {
                             Text(stringResource(R.string.watch_continues_on_phone), style = MaterialTheme.typography.bodySmall, color = CasamaColors.Secondary)
                         }
-                        m.at?.let { Text(clockTime(it), style = MaterialTheme.typography.labelSmall, color = CasamaColors.Dim) }
+                        m.at?.let { Text(pastTime(it), style = MaterialTheme.typography.labelSmall, color = CasamaColors.Dim) }
                     }
                 }
             }
@@ -211,7 +212,7 @@ fun BotsScreen(nav: NavHostController) {
                                 BotStatus.WORKING -> b.step ?: stringResource(R.string.watch_working)
                                 BotStatus.WAITING -> stringResource(R.string.watch_waiting_for_you)
                                 BotStatus.DISABLED -> stringResource(R.string.watch_off)
-                                BotStatus.IDLE -> b.lastAt?.let { stringResource(R.string.watch_replied_at, clockTime(it).replace(' ', '\u00A0')) } ?: stringResource(R.string.watch_idle)
+                                BotStatus.IDLE -> b.lastAt?.let { stringResource(R.string.watch_replied_at, pastTime(it).replace(' ', '\u00A0')) } ?: stringResource(R.string.watch_idle)
                             }
                             Words(
                                 line,
