@@ -95,6 +95,9 @@ Several sessions edit this same checkout at once, and each one commits from it.
   other session's changes in the working file. In `docs/DECISIONS.md`, check your commit adds only
   your own `## D-…` entry.
 - Before you commit, read `git diff --cached --stat` once more for files you didn't mean to include.
+- **Every commit to `main` is signed.** The "Protect main" ruleset requires it, and the pre-push
+  hook refuses unsigned ones. `git commit`, `cherry-pick` and `rebase` sign on their own;
+  `git commit-tree` doesn't, so a hand-built commit uses `git commit-tree -S`.
 - Never reset, stash, check out or clean files you didn't change; they may be someone's work in
   progress.
 - The public repo's history was restarted (D-406). A pre-push hook refuses commits from the old
