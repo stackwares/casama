@@ -143,4 +143,47 @@ describe("billing fixes (bug hunt 2026-11-21)", () => {
     });
     expect(await credits(orgId)).toBeCloseTo(0, 6);
   });
+
+  it("sandbox credit packs (TestFlight, Play testing) credit for 7 days and are marked sandbox", async () => {
+    const orgId = await newOrg("Sandbox packs");
+    const start = await credits(orgId);
+    const test = f.revenuecat.buy({
+      customerId: orgId,
+      productId: "ai.casama.credits.10",
+      environment: "sandbox",
+    });
+    const real = f.revenuecat.buy({ customerId: orgId, productId: "ai.casama.credits.10" });
+    const res = await h.request(`/v1/orgs/${orgId}/billing/purchases`, {
+      method: "POST",
+      token: owner.token,
+      json: { source: "app_store", product_id: "ai.casama.credits.10" },
+    });
+    expect(res.status).toBe(200);
+    // App Review must see the purchase work: the credits arrive.
+    expect(await credits(orgId)).toBeCloseTo(start + 20, 6);
+    const rows = await h.handle.db.execute<{
+      reference: string;
+      sandbox: boolean;
+      days: string | null;
+    }>(sql`
+      select l.reference, c.sandbox, (extract(epoch from l.expires_at - l.created_at) / 86400)::text as days
+      from public.credit_lots l join public.credit_ledger c
+        on c.org_id = l.org_id and c.reason = l.reason and c.reference = l.reference
+      where l.org_id = ${orgId}::uuid and l.reason = 'purchase'`);
+    const byRef = new Map(rows.map((r) => [r.reference, r]));
+    const sandbox = byRef.get(`revenuecat:${test.id}`);
+    expect(sandbox?.sandbox).toBe(true);
+    expect(Number(sandbox?.days)).toBeCloseTo(7, 3);
+    // A real store pack still never lapses (D-418).
+    expect(byRef.get(`revenuecat:${real.id}`)).toMatchObject({ sandbox: false, days: null });
+    // Syncing again changes nothing.
+    await h.deps.billing?.syncStoreCustomer(orgId);
+    expect(await credits(orgId)).toBeCloseTo(start + 20, 6);
+    // Seven days on, the sandbox credits lapse; the real pack stays.
+    await h.handle.db.execute(sql`
+      update public.credit_lots set expires_at = now() - interval '1 second'
+      where org_id = ${orgId}::uuid and reference = ${`revenuecat:${test.id}`}`);
+    await h.handle.db.execute(sql`select public.expire_credits()`);
+    expect(await credits(orgId)).toBeCloseTo(start + 10, 6);
+  });
 });

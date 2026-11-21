@@ -128,7 +128,12 @@ export interface FakeBilling {
       environment?: string;
     }): RcSub;
     /** A one-time purchase (credit pack). */
-    buy(p: { customerId: string; productId: string; store?: RcStore }): RcPurchase;
+    buy(p: {
+      customerId: string;
+      productId: string;
+      store?: RcStore;
+      environment?: string;
+    }): RcPurchase;
     /** A webhook delivery with the Authorization header and signature RevenueCat would send. */
     event(
       type: string,
@@ -506,7 +511,7 @@ export async function startFakeBilling(
           status: "owned",
           store: b.store ?? "app_store",
           store_purchase_identifier: `GPA.${randomBytes(4).toString("hex")}`,
-          environment: "production",
+          environment: b.environment ?? "production",
           quantity: 1,
         };
         rcPurchases.set(pur.id, pur);

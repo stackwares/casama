@@ -609,6 +609,7 @@ export class BillingService {
       const reference = `revenuecat:${p.id}`;
       if (p.status === "refunded") {
         await this.applyPackRefund([reference]);
+        if (p.sandbox) await this.markSandboxPack(orgId, reference);
         continue;
       }
       // A purchase credits one workspace once, whichever workspace reports it first.
@@ -619,10 +620,28 @@ export class BillingService {
         continue;
       }
       await this.credit(orgId, Number(pack.credits_usd), "purchase", reference, pack.name);
+      if (p.sandbox) await this.markSandboxPack(orgId, reference);
       result.found.push({ source: p.source, productId: p.productId });
     }
     if (!customer.subscriptions.length) await this.recompute(orgId);
     return result;
+  }
+
+  /**
+   * A store pack bought with a sandbox account (bug hunt 2026-11-21): its credits still arrive, so
+   * App Review sees the purchase work, but they lapse 7 days after they were credited and its
+   * ledger rows are marked sandbox for reports. Every re-read applies it again, so it holds even
+   * if a crash came between crediting and marking.
+   */
+  private async markSandboxPack(orgId: string, reference: string) {
+    await this.db.execute(sql`
+      update public.credit_ledger set sandbox = true
+      where org_id = ${orgId}::uuid and reason in ('purchase', 'refund') and reference = ${reference}
+        and not sandbox`);
+    await this.db.execute(sql`
+      update public.credit_lots set expires_at = created_at + interval '7 days'
+      where org_id = ${orgId}::uuid and reason = 'purchase' and reference = ${reference}
+        and expires_at is distinct from created_at + interval '7 days'`);
   }
 
   /**

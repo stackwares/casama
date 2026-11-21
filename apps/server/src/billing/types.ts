@@ -50,6 +50,8 @@ export interface StorePurchase {
   /** Store product id. */
   productId: string;
   status: "owned" | "refunded";
+  /** Bought with a store sandbox account (TestFlight, App Review, Play license testers). */
+  sandbox?: boolean;
 }
 
 /** What one app-store customer (a workspace) bought. */

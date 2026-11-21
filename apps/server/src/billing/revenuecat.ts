@@ -249,6 +249,7 @@ export class RevenueCatProvider implements BillingProvider {
         id: p.id,
         productId: await this.storeProductId(p.product_id),
         status: p.status === "refunded" ? "refunded" : "owned",
+        sandbox: p.environment?.toLowerCase() === "sandbox",
       });
     }
     return { subscriptions, purchases };
