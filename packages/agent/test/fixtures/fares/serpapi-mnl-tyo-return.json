@@ -24,10 +24,7 @@
           "travel_class": "Economy",
           "flight_number": "GK 40",
           "legroom": "29 in",
-          "extensions": [
-            "Below average legroom (29 in)",
-            "Carbon emissions estimate: 245 kg"
-          ],
+          "extensions": ["Below average legroom (29 in)", "Carbon emissions estimate: 245 kg"],
           "overnight": true
         }
       ],
@@ -85,9 +82,7 @@
           "airline_logo": "https://www.gstatic.com/flights/airline_logos/70px/PR.png",
           "travel_class": "Economy",
           "flight_number": "PR 432",
-          "ticket_also_sold_by": [
-            "ANA"
-          ],
+          "ticket_also_sold_by": ["ANA"],
           "legroom": "30 in",
           "extensions": [
             "Average legroom (30 in)",
@@ -184,9 +179,7 @@
           "airline_logo": "https://www.gstatic.com/flights/airline_logos/70px/PR.png",
           "travel_class": "Economy",
           "flight_number": "PR 424",
-          "ticket_also_sold_by": [
-            "ANA"
-          ],
+          "ticket_also_sold_by": ["ANA"],
           "legroom": "31 in",
           "extensions": [
             "Average legroom (31 in)",
@@ -205,9 +198,6 @@
   "price_insights": {
     "lowest_price": 16057,
     "price_level": "typical",
-    "typical_price_range": [
-      13000,
-      29500
-    ]
+    "typical_price_range": [13000, 29500]
   }
 }

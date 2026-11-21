@@ -6,8 +6,9 @@ const read = (path: string) => readFileSync(new URL(`../../../${path}`, import.m
 
 describe("Casama for Chrome's id", () => {
   it("is the one the server, the compose file and the web app allow", () => {
-    expect(read("apps/server/src/env.ts")).toContain(
-      `CHROME_EXTENSION_IDS: z.string().default("${DEV_EXTENSION_ID},${EDGE_EXTENSION_ID}")`,
+    // Whitespace-blind: the formatter may wrap the zod chain over several lines.
+    expect(read("apps/server/src/env.ts").replace(/\s+/g, "")).toContain(
+      `CHROME_EXTENSION_IDS:z.string().default("${DEV_EXTENSION_ID},${EDGE_EXTENSION_ID}")`,
     );
     expect(read("infra/compose/docker-compose.yml")).toContain(
       `CHROME_EXTENSION_IDS: \${CHROME_EXTENSION_IDS:-${DEV_EXTENSION_ID},${EDGE_EXTENSION_ID}}`,
