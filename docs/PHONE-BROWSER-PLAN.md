@@ -1,8 +1,8 @@
 # A browser on your phone that your bots can use: plan
 
-Status: **not started** (written 2026-11-21). Waiting on Oliver's go-ahead. No code yet. Oliver
-asked for it to be built, kept off, and switched on "at the right time, for the right task", with
-those calls made for him; they are made in §5, §6 and §13, and he can change any of them.
+Status: **approved** (2026-11-21). Oliver took every decision in §13 as written and asked for all
+phases to be built in one go. Being built on branch `phone-browser`. Flutter runs on phones,
+production deploys and each stage switch still wait for his yes (§16).
 
 Platform and store facts were checked against Apple's, Google's and Flutter's pages on 2026-11-21
 (sources at the end). Line numbers are from the same day. Re-find each one before editing.
