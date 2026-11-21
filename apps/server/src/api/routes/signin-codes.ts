@@ -15,6 +15,7 @@ import type { OpenAPIHono } from "@hono/zod-openapi";
 import { sql } from "drizzle-orm";
 import { requireFreshOwnerAction } from "../admin-security.ts";
 import { ApiError } from "../errors.ts";
+import { requireLiveSession } from "../live-session.ts";
 import type { AppDeps, AppEnv } from "../types.ts";
 import { isInstanceOwner } from "./admin.ts";
 
@@ -60,6 +61,7 @@ export function registerSignInCodeRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps
 
   app.openapi(routes.createSignInCode, async (c) => {
     const claims = requireClaims(c.get("claims"));
+    await requireLiveSession(db, claims);
     // The code becomes a brand-new sign-in on another device, which would count as a fresh one for
     // the admin console. An instance owner proves a fresh sign-in first, so an unattended app can't
     // mint one.

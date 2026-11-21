@@ -30,6 +30,15 @@ create table if not exists auth.users (
   updated_at timestamptz default now()
 );
 
+-- Sign-in sessions (the columns the API reads: a token's session still standing).
+create table if not exists auth.sessions (
+  id uuid primary key,
+  user_id uuid not null references auth.users (id) on delete cascade,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now(),
+  not_after timestamptz
+);
+
 -- Two-step sign-in factors (the columns the API touches; names unique per person, like Supabase).
 create table if not exists auth.mfa_factors (
   id uuid primary key,

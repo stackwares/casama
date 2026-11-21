@@ -13,6 +13,7 @@ import { type JwtClaims, withUserSession } from "@casama/db";
 import type { OpenAPIHono } from "@hono/zod-openapi";
 import { sql } from "drizzle-orm";
 import { ApiError } from "../errors.ts";
+import { requireLiveSession } from "../live-session.ts";
 import type { AppDeps, AppEnv, WidgetCaller } from "../types.ts";
 import { iso, sha256Hex } from "../util.ts";
 import { billingFor } from "./billing.ts";
@@ -192,6 +193,7 @@ export function registerGlanceRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
 
   app.openapi(routes.createWidgetKey, async (c) => {
     const claims = requireSession(c);
+    await requireLiveSession(db, claims);
     const body = c.req.valid("json");
     if (!(await isMember(claims, body.org_id)))
       throw new ApiError(404, "org_not_found", "Workspace not found");

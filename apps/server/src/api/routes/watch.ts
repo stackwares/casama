@@ -25,6 +25,7 @@ import { sql } from "drizzle-orm";
 import type { Context } from "hono";
 import { streamSSE } from "hono/streaming";
 import { ApiError } from "../errors.ts";
+import { requireLiveSession } from "../live-session.ts";
 import type { AppDeps, AppEnv, WatchCaller } from "../types.ts";
 import { clientIp, iso, sha256Hex } from "../util.ts";
 import { billingFor } from "./billing.ts";
@@ -548,6 +549,7 @@ export function registerWatchRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
 
   app.openapi(routes.registerWatchKey, async (c) => {
     const claims = requireSession(c);
+    await requireLiveSession(db, claims);
     const body = c.req.valid("json");
     if (!(await isMember(claims, body.org_id)))
       throw new ApiError(404, "org_not_found", "Workspace not found");
@@ -664,6 +666,7 @@ export function registerWatchRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
 
   app.openapi(routes.claimWatchCode, async (c) => {
     const claims = requireSession(c);
+    await requireLiveSession(db, claims);
     const { org_id } = c.req.valid("json");
     if (!(await isMember(claims, org_id)))
       throw new ApiError(404, "org_not_found", "Workspace not found");
