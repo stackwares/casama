@@ -573,7 +573,12 @@ class HomeShell extends ConsumerWidget {
               child: panelOpen
                   // Frosted, so the computer reads as its own pane over the chat's wallpaper.
                   ? _ResizablePanel(
-                      child: ComputerScreen(botId: _botId, embedded: true),
+                      // Below the status bar: on an iPad on its side the clock and battery sat
+                      // on top of the computer's card.
+                      child: SafeArea(
+                        left: false,
+                        child: ComputerScreen(botId: _botId, embedded: true),
+                      ),
                     )
                   : const SizedBox(width: 0, height: double.infinity),
             ),
