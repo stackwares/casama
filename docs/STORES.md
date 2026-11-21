@@ -4,8 +4,9 @@ One page for every store and directory that carries a Casama build: the ones tha
 in review, and the ones we plan to add. Update the row in the same commit as any change to a
 listing (submitted, approved, rejected, new version live, dropped).
 
-Status as of **2026-11-21**. Directories, awesome lists and MCP registries are tracked separately in
-`docs/launch/listings.md`.
+Status as of **2026-11-21**. AI-app connector directories and MCP registries are summarised in
+"Connectors and MCP directories" below; the full notes, links and history for those, plus awesome
+lists and general directories, stay in `docs/launch/listings.md`.
 
 Rules that apply to every row:
 
@@ -68,6 +69,34 @@ Notes on the Account and Listing marks:
 - Homebrew, Flathub, F-Droid, AppImageHub and our own package repositories have no account to make:
   they take a pull request from GitHub (Flathub, Homebrew, AppImageHub) or GitLab (F-Droid).
 - The GitHub APK uses our GitHub org (✅); its "listing" is the release notes and the download page.
+
+## Connectors and MCP directories
+
+Places where people (or their AI apps) find Casama's hosted MCP server (`https://api.casama.ai/mcp`
+with sign-in, `https://api.casama.ai/mcp/docs` without) rather than install an app. Detail and links:
+`docs/launch/listings.md`; submission copy, logos and reviewer steps: `packaging/connectors/README.md`.
+Reviewer account: Vaultwarden "Casama · store review account (review@casama.ai)". Same flip-the-row
+rule as above. Marks: ✅ live · ⏳ submitted or waiting · 📝 ready or in progress · ❌ not done · ➖ skipped.
+
+| Directory | State | Where it stands | Next step |
+|---|:-:|---|---|
+| **ChatGPT apps** (OpenAI) | 📝 | Organization Casama set up 2026-11-20; production deployed 2026-11-21. Waiting on OpenAI organization verification, then screenshots | Oliver verifies the org, screenshots with `review@casama.ai`, submit |
+| **Claude Connectors Directory** (Anthropic) | 📝 | Ready except screenshots. Casama Cloud is invite-only, so finders hit the waitlist | Oliver submits Anthropic's form |
+| **Gemini CLI extension** | ✅ | https://github.com/stackwares/casama-gemini, synced with `scripts/sync-gemini-extension.sh`; gallery crawls daily | — |
+| **Official MCP Registry** | ✅ | `io.github.stackwares/casama` 0.2.1 (npm `@casama/mcp` + hosted endpoint) | New version: `mcp-publisher publish` |
+| Glama | ✅ | glama.ai/mcp/servers/stackwares/casama, score A | — |
+| MCPServers.org | ✅ | Two entries approved 2026-11-21 | — |
+| TensorBlock MCP Index | ✅ | PR #6439 merged; correction PR #6441 open | Check the live entry |
+| LobeHub MCP marketplace | ⏳ | Published 2026-11-20 as `stackwares-casama@0.2.1`, status `not_validated` | Check with `lhm plugin list` |
+| MCP.directory | ⏳ | Submitted 2026-11-20 | Check imported details |
+| MCP Market | ⏳ | Free queue, 4–6 weeks | Wait |
+| punkpeye `awesome-mcp-servers` #20098, `awesome-remote-mcp-servers` #5303, MCPPlayground #9 | ⏳ | Pull requests open | Wait for maintainers |
+| PulseMCP | ⏳ | Submissions paused; will import registry entries | Wait |
+| Composio | ⏳ | Toolkit request, partnership email and Discord post sent 2026-11-20 | Watch hello@ inbox and the request thread |
+| Microsoft, Mistral, xAI | ❌ | Later (partner programs) | — |
+| Docker MCP Catalog | ❌ | Needs a Dockerfile for `packages/mcp` | Maybe later |
+| MCP.so, Cursor Directory, PickAPlugin | ➖ | Paid only, or needs a plugin package | — |
+| Smithery, LaunchMCP, `modelcontextprotocol/servers` | ➖ | Shut down, gone, or no route | — |
 
 ## Live and in review
 

@@ -29,7 +29,8 @@ Breaking one of these does real damage. The sections below explain each one.
 - Building on Casama from outside (plugins, the API, A2A, templates, the gallery): the skills in
   `agent-kit/skills/` and `docs-site/develop/agents.md`.
 - **Stores and listings** (Google Play, App Store, Mac App Store, desktop downloads, browser
-  extension stores, Snap, other Android stores): `docs/STORES.md`. Read it before any store work.
+  extension stores, Snap, other Android stores, AI-app connector and MCP directories):
+  `docs/STORES.md`. Read it before any store work.
   Whenever a listing changes (account made, submitted, approved, rejected, new version live, store
   added or dropped), update its row and the "Status as of" date in the same commit.
 - **Download page follows the stores.** When a listing gets a new link (a store goes live, a
