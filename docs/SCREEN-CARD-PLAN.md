@@ -18,6 +18,14 @@ follow the bot on its screen with its face and name; Reduce Motion only fades; t
 uses the lighter picture. Each state rendered in light and dark at phone and tablet widths. Phase 3
 stays undecided until the analytics come in.
 
+**Release (2026-11-21):** the server with Phase 1 is live (eb93602a), and the web app with
+Phases 1 and 2 is live as build 73. A live check on app.casama.ai at phone size found the
+production route answering 500: `sharp` was only a dev dependency, and the image installs with
+`--prod`. Fixed in 44b88cda (sharp is now a runtime dependency), pushed, **not deployed yet**,
+because that deploy also releases other sessions' billing and fare-watch work with 3 migrations.
+Until it ships, the card stays hidden, as it does for any failed picture. Native app builds wait
+for the next store release.
+
 Line numbers are from 2026-11-21. Re-find each one before editing.
 
 ## 0. Summary
