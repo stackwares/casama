@@ -179,4 +179,23 @@ void main() {
       expect(launched, ['https://casama.ai/open/runs/r1/stop']);
     },
   );
+
+  testWidgets('a code panel\'s language and copy button sit above the code, not on its first line', (tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: ChatMarkdown(
+            selectable: false,
+            data: 'Here:\n\n```python\nfrom datetime import datetime, timedelta\nprint(1)\n```',
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final copy = tester.getRect(find.byType(IconButton));
+    final firstLine = tester.getRect(find.byWidgetPredicate(
+      (w) => w is RichText && w.text.toPlainText().contains('from datetime'),
+    ));
+    expect(copy.bottom, lessThanOrEqualTo(firstLine.top));
+  });
 }

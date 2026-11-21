@@ -154,7 +154,9 @@ class _ChatMarkdownState extends State<ChatMarkdown> {
         ),
         (dark ? PreConfig.darkConfig : const PreConfig()).copy(
           decoration: codePanel,
-          padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+          // The top padding leaves room for the language and copy button row ([_CodeBlock]), which
+          // otherwise sat on top of the first line of code.
+          padding: const EdgeInsets.fromLTRB(14, 40, 14, 14),
           margin: const EdgeInsets.symmetric(vertical: 8),
           textStyle: AppText.mono,
           // Code the highlighter leaves unstyled (names, punctuation) is mono too; without this it
@@ -280,7 +282,7 @@ class _CodeBlockState extends State<_CodeBlock> {
       children: [
         widget.child,
         Positioned(
-          top: 12,
+          top: 8,
           right: 6,
           child: Row(
             mainAxisSize: MainAxisSize.min,
