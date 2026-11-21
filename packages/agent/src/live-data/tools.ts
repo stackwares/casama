@@ -12,9 +12,11 @@ import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { actingUserOf } from "../acting.ts";
 import { track } from "../analytics.ts";
+import { needCredits } from "../tools/autonomy.ts";
 import { leanSchema, type ToolContext, ToolError, type ToolRegistry } from "../tools/registry.ts";
 import { LiveDataError } from "./core.ts";
 import type { LiveEngine, LivePerson, LiveResult, LiveTool } from "./engine.ts";
+import type { FaresBilling, FaresMeter } from "./fares.ts";
 import { pageCard } from "./page.ts";
 import type { Place } from "./places.ts";
 
@@ -205,6 +207,39 @@ const SPECS: Record<LiveTool, { name: string; description: string; schema: z.Zod
       card: CARD,
     }),
   },
+  fares: {
+    name: "live.fares",
+    description:
+      'Real flight prices and booking links between two places for given dates; shows a fares card. Use it instead of web search for any flight price or cheapest-flight question. Places can be cities, airports or codes ("Manila", "Tokyo", "LHR", "here" for home).',
+    schema: z.object({
+      from: z.string().min(1).max(100),
+      to: z.string().min(1).max(100),
+      depart: z
+        .string()
+        .max(10)
+        .describe('YYYY-MM-DD, or a month "2027-03" for the cheapest day in it'),
+      return: z.string().max(10).optional().describe("YYYY-MM-DD; leave out for one way"),
+      nights: z
+        .number()
+        .int()
+        .min(1)
+        .max(60)
+        .optional()
+        .describe("With a month: nights at the destination for a return trip"),
+      adults: z.number().int().min(1).max(9).optional(),
+      children: z.number().int().min(0).max(8).optional(),
+      infants: z.number().int().min(0).max(4).optional(),
+      cabin: z.enum(["economy", "premium", "business", "first"]).optional(),
+      max_stops: z.number().int().min(0).max(2).optional(),
+      sort: z.enum(["best", "cheapest", "fastest"]).optional(),
+      currency: z.string().length(3).optional().describe("Only if the person asked for one"),
+      compare_google: z
+        .boolean()
+        .optional()
+        .describe("Search Google Flights first (costs the workspace credits): only when asked"),
+      card: CARD,
+    }),
+  },
   parcel: {
     name: "live.parcel",
     description: "Where a parcel is, from its tracking number; shows a tracking card.",
@@ -259,10 +294,68 @@ export function liveSurface(surfaceId: string, card: Record<string, unknown>) {
 export interface LiveToolDeps {
   db: Database;
   engine: LiveEngine;
+  /** Google Flights searches on the server's SerpApi key (FLIGHT-SEARCH-PLAN §2.6, §2.7). */
+  fares?: FaresBilling;
+}
+
+/** Google Flights searches per workspace per day, by plan: a safety net, not a price. */
+export const FARES_GOOGLE_DAILY: Record<string, number> = { free: 3, plus: 20, pro: 50, max: 100 };
+
+/** A run's meter for paid fare providers: plan and server limits, credits, and the usage row. */
+export function faresMeter(
+  db: Database,
+  ctx: Pick<ToolContext, "orgId" | "botId" | "runId">,
+  cfg: FaresBilling,
+): FaresMeter {
+  return {
+    async allow(provider) {
+      if (provider !== "serpapi") return null;
+      const [r] = await db.execute<{
+        month: number;
+        today: number;
+        plan: string | null;
+        daily: string | null;
+      }>(sql`
+        select
+          (select coalesce(sum(calls + errors), 0)::int from public.live_data_daily
+            where provider = 'fares-serpapi' and day >= date_trunc('month', current_date)::date) as month,
+          (select count(*)::int from public.usage_ledger
+            where org_id = ${ctx.orgId}::uuid and kind = 'data_calls' and meta->>'provider' = 'serpapi'
+              and created_at >= date_trunc('day', now())) as today,
+          e.plan_code as plan,
+          coalesce(e.overrides->>'fares_google_daily', e.limits->>'fares_google_daily') as daily
+        from (select 1) one
+        left join lateral (select plan_code, limits, overrides from public.entitlements
+          where org_id = ${ctx.orgId}::uuid order by created_at desc limit 1) e on true`);
+      if ((r?.month ?? 0) >= cfg.monthlyCap)
+        return "Google Flights' monthly allowance on this server is used up, so only Kiwi.com was searched.";
+      const plan = (r?.plan ?? "").replace(/_(weekly|yearly)$/, "");
+      const daily = r?.daily != null ? Number(r.daily) : (FARES_GOOGLE_DAILY[plan] ?? 100);
+      if ((r?.today ?? 0) >= daily)
+        return `Today's Google Flights searches for this plan (${daily}) are used up, so only Kiwi.com was searched.`;
+      if (cfg.billing) {
+        try {
+          await needCredits(db, ctx.orgId, cfg.priceUsd);
+        } catch {
+          return "Google Flights searches need credits and the workspace is out, so only Kiwi.com was searched. Credits can be added in Billing.";
+        }
+      }
+      return null;
+    },
+    async charge(provider, info) {
+      const billable = cfg.billing && info.billable;
+      await db.execute(sql`
+        insert into public.usage_ledger (org_id, bot_id, run_id, kind, quantity, cost_usd, upstream_cost_usd, billable, meta)
+        values (${ctx.orgId}::uuid, ${ctx.botId}::uuid, ${ctx.runId}::uuid, 'data_calls', 1,
+                ${billable ? cfg.priceUsd : 0}, ${cfg.upstreamUsd}, ${billable},
+                ${JSON.stringify({ provider, service: "flight_fares", route: info.route.slice(0, 120), key: "server", provider_cost_usd: cfg.upstreamUsd, found: info.billable })}::jsonb)`);
+    },
+  };
 }
 
 export function registerLiveTools(registry: ToolRegistry, deps: LiveToolDeps) {
   const { db, engine } = deps;
+  const fares = deps.fares ?? engine.config.faresBilling;
   registerExtraLiveTools(registry, deps);
   for (const tool of engine.available()) {
     const spec = SPECS[tool];
@@ -279,7 +372,9 @@ export function registerLiveTools(registry: ToolRegistry, deps: LiveToolDeps) {
         const person = await livePerson(db, userId);
         let result: LiveResult;
         try {
-          result = await engine.run(tool, args, person);
+          result = await engine.run(tool, args, person, {
+            meter: tool === "fares" && fares ? faresMeter(db, ctx, fares) : undefined,
+          });
         } catch (err) {
           if (err instanceof LiveDataError)
             throw new ToolError(

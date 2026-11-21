@@ -7,8 +7,8 @@ sign-in. It also explains what Casama never sends to a model or anywhere else.
 ## Live cards
 
 Weather, price, rate and other live cards ask public data services for only what is looked up (a
-place rounded to about a kilometre, a ticker, a currency, a word), never your name, account or
-chat. Your home city for cards (**Settings > Cards**) is a city, not an address. See
+place rounded to about a kilometre, a ticker, a currency, a word; for flight fares the places,
+dates and number of travellers), never your name, account or chat. Your home city for cards (**Settings > Cards**) is a city, not an address. See
 [Live cards](/guide/live-cards).
 
 ## Report or block

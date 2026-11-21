@@ -34,6 +34,8 @@ export interface LiveHttp {
     init?: { headers?: Record<string, string>; signal?: AbortSignal },
   ): Promise<string>;
   post<T = unknown>(url: string, body: unknown, headers?: Record<string, string>): Promise<T>;
+  /** The guarded fetch underneath, for a client that needs one (Kiwi.com's MCP server). */
+  raw?: typeof fetch;
 }
 
 /** Fetches JSON and text from fixed provider hosts, with our User-Agent and a 6-second limit. */
@@ -79,6 +81,7 @@ export function liveHttp(fetchImpl: typeof fetch, timeoutMs = 6000): LiveHttp {
     }
   };
   return {
+    raw: fetchImpl,
     async json<T>(
       url: string,
       init?: { headers?: Record<string, string>; signal?: AbortSignal; timeoutMs?: number },

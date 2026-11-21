@@ -1,0 +1,213 @@
+{
+  "search_metadata": {
+    "status": "Success",
+    "google_flights_url": "https://www.google.com/travel/flights?hl=en&gl=ph&curr=PHP&tfs=CBwQAhonEgoyMDI3LTAzLTEyagcIARIDTU5McgcIARIDSE5EcgcIARIDTlJUGicSCjIwMjctMDMtMTlqBwgBEgNITkRqBwgBEgNOUlRyBwgBEgNNTkxAAUgBcAGYAQE&tfu=EgIIAQ"
+  },
+  "best_flights": [
+    {
+      "flights": [
+        {
+          "departure_airport": {
+            "name": "Ninoy Aquino International Airport",
+            "id": "MNL",
+            "time": "2027-03-12 00:50"
+          },
+          "arrival_airport": {
+            "name": "Narita International Airport",
+            "id": "NRT",
+            "time": "2027-03-12 06:10"
+          },
+          "duration": 260,
+          "airplane": "Airbus A320",
+          "airline": "Jetstar",
+          "airline_logo": "https://www.gstatic.com/flights/airline_logos/70px/GK.png",
+          "travel_class": "Economy",
+          "flight_number": "GK 40",
+          "legroom": "29 in",
+          "extensions": [
+            "Below average legroom (29 in)",
+            "Carbon emissions estimate: 245 kg"
+          ],
+          "overnight": true
+        }
+      ],
+      "total_duration": 260,
+      "price": 16057,
+      "type": "Round trip"
+    },
+    {
+      "flights": [
+        {
+          "departure_airport": {
+            "name": "Ninoy Aquino International Airport",
+            "id": "MNL",
+            "time": "2027-03-12 12:15"
+          },
+          "arrival_airport": {
+            "name": "Narita International Airport",
+            "id": "NRT",
+            "time": "2027-03-12 17:45"
+          },
+          "duration": 270,
+          "airplane": "Airbus A330-900neo",
+          "airline": "Cebu Pacific",
+          "airline_logo": "https://www.gstatic.com/flights/airline_logos/70px/5J.png",
+          "travel_class": "Economy",
+          "flight_number": "5J 5056",
+          "legroom": "30 in",
+          "extensions": [
+            "Average legroom (30 in)",
+            "In-seat USB outlet",
+            "Carbon emissions estimate: 173 kg"
+          ]
+        }
+      ],
+      "total_duration": 270,
+      "price": 16192,
+      "type": "Round trip"
+    },
+    {
+      "flights": [
+        {
+          "departure_airport": {
+            "name": "Ninoy Aquino International Airport",
+            "id": "MNL",
+            "time": "2027-03-12 15:25"
+          },
+          "arrival_airport": {
+            "name": "Narita International Airport",
+            "id": "NRT",
+            "time": "2027-03-12 20:30"
+          },
+          "duration": 245,
+          "airplane": "Airbus A321",
+          "airline": "Philippine Airlines",
+          "airline_logo": "https://www.gstatic.com/flights/airline_logos/70px/PR.png",
+          "travel_class": "Economy",
+          "flight_number": "PR 432",
+          "ticket_also_sold_by": [
+            "ANA"
+          ],
+          "legroom": "30 in",
+          "extensions": [
+            "Average legroom (30 in)",
+            "Stream media to your device",
+            "Carbon emissions estimate: 270 kg"
+          ]
+        }
+      ],
+      "total_duration": 245,
+      "price": 17959,
+      "type": "Round trip"
+    }
+  ],
+  "other_flights": [
+    {
+      "flights": [
+        {
+          "departure_airport": {
+            "name": "Ninoy Aquino International Airport",
+            "id": "MNL",
+            "time": "2027-03-12 06:15"
+          },
+          "arrival_airport": {
+            "name": "Narita International Airport",
+            "id": "NRT",
+            "time": "2027-03-12 11:35"
+          },
+          "duration": 260,
+          "airplane": "Airbus A330-900neo",
+          "airline": "Cebu Pacific",
+          "airline_logo": "https://www.gstatic.com/flights/airline_logos/70px/5J.png",
+          "travel_class": "Economy",
+          "flight_number": "5J 5054",
+          "legroom": "30 in",
+          "extensions": [
+            "Average legroom (30 in)",
+            "In-seat USB outlet",
+            "Carbon emissions estimate: 173 kg"
+          ]
+        }
+      ],
+      "total_duration": 260,
+      "price": 16403,
+      "type": "Round trip"
+    },
+    {
+      "flights": [
+        {
+          "departure_airport": {
+            "name": "Ninoy Aquino International Airport",
+            "id": "MNL",
+            "time": "2027-03-12 07:40"
+          },
+          "arrival_airport": {
+            "name": "Narita International Airport",
+            "id": "NRT",
+            "time": "2027-03-12 12:50"
+          },
+          "duration": 250,
+          "airplane": "Airbus A330",
+          "airline": "Philippine Airlines",
+          "airline_logo": "https://www.gstatic.com/flights/airline_logos/70px/PR.png",
+          "travel_class": "Economy",
+          "flight_number": "PR 428",
+          "legroom": "32 in",
+          "extensions": [
+            "Above average legroom (32 in)",
+            "In-seat USB outlet",
+            "Stream media to your device",
+            "Carbon emissions estimate: 220 kg"
+          ]
+        }
+      ],
+      "total_duration": 250,
+      "price": 17959,
+      "type": "Round trip"
+    },
+    {
+      "flights": [
+        {
+          "departure_airport": {
+            "name": "Ninoy Aquino International Airport",
+            "id": "MNL",
+            "time": "2027-03-12 19:10"
+          },
+          "arrival_airport": {
+            "name": "Haneda Airport",
+            "id": "HND",
+            "time": "2027-03-13 00:15"
+          },
+          "duration": 245,
+          "airplane": "Airbus A321",
+          "airline": "Philippine Airlines",
+          "airline_logo": "https://www.gstatic.com/flights/airline_logos/70px/PR.png",
+          "travel_class": "Economy",
+          "flight_number": "PR 424",
+          "ticket_also_sold_by": [
+            "ANA"
+          ],
+          "legroom": "31 in",
+          "extensions": [
+            "Average legroom (31 in)",
+            "Wi-Fi for a fee",
+            "In-seat USB outlet",
+            "On-demand video",
+            "Carbon emissions estimate: 310 kg"
+          ]
+        }
+      ],
+      "total_duration": 245,
+      "price": 23708,
+      "type": "Round trip"
+    }
+  ],
+  "price_insights": {
+    "lowest_price": 16057,
+    "price_level": "typical",
+    "typical_price_range": [
+      13000,
+      29500
+    ]
+  }
+}

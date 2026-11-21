@@ -1,8 +1,9 @@
 # Flight search for bots: plan
 
-Status: **not started.** Written 2026-11-21. Oliver asked for the plan and said "you decide for me", so
-every choice in §2 is already made. Nothing is waiting on an answer. The build starts when Oliver says to
-build it. Phase 0 needs a SerpApi account (§14).
+Status: **in progress.** Approved 2026-11-21 (Oliver: "just build the fall backs", without buying a
+SerpApi plan yet). Phases 0 and 1 are built (D-471): Kiwi.com → Google Flights chain, `live.fares`,
+charging, limits, docs. Phase 2 (native card) and Phase 3 (price watches) next. Written 2026-11-21;
+§2 decisions were Claude's at Oliver's request. Phase 0 findings and changes are in D-471.
 
 ## Execution brief (read this first)
 

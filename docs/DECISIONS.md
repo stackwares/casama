@@ -7204,3 +7204,54 @@ only the last words of a help sentence. So:
 - **Still possible:** Google may ask for extra verification from a datacenter address, or end the
   session later if it notices the automated browser; the person's own Chrome (Casama for Chrome)
   stays the surest path for Google.
+
+## D-471 Flight fares: Kiwi.com first, Google Flights as a paid fallback, one Fares card (2026-11-21)
+
+- **Problem:** asked for flight prices, bots ran `web.search` and `web.fetch` on travel sites, which
+  render with scripts or block bots: vague or stale answers for 3–10k tokens. `live.flight`
+  (aviationstack) only tracks a known flight's status.
+- **Decision (docs/FLIGHT-SEARCH-PLAN.md, Oliver 2026-11-21: "you decide for me", then "just build
+  the fall backs" without buying a SerpApi plan):**
+  - **`live.fares`**, a live-data tool like the others (lazy `live` group, shared cache, refresh
+    without the model), showing a new **Fares** data card (`packages/domain` `DATA_CARDS`). The model
+    gets about 150 tokens: five lines and, from Google, the typical price range.
+  - **The chain** (`packages/agent/src/live-data/fares.ts`, `LIVE_FARES_ORDER`, default
+    `kiwi,serpapi`): Kiwi.com's hosted MCP server (`search-flight`, Streamable HTTP through the
+    egress guard, no key; it takes codes like `HND,NRT` or names) answers first. Google Flights
+    through SerpApi (`engine=google_flights`) runs when Kiwi fails or finds nothing, or first when
+    the person asks to compare (`compare_google`). Google is skipped for month searches (it needs
+    exact dates) and whenever there's no meter, so refreshes, widgets and (later) watches never use
+    it. A provider that errors rests for a minute.
+  - **Round trips on Google cost one search:** Google returns outbound legs with a round-trip
+    price; instead of a second call per option (`departure_token`, `booking_token`), Book opens
+    Google's own results page (`google_flights_url`). The card says return flights are picked there.
+  - **Charging** (`faresMeter` in `live-data/tools.ts`): one `usage_ledger` row kind `data_calls`
+    (the existing paid-data kind, so no migration and no new kind for older apps) per real Google
+    search: `cost_usd` $0.05 (`LIVE_FARES_GOOGLE_PRICE_USD`) and `billable` only when it found fares
+    and billing is on, `upstream_cost_usd` `LIVE_SERPAPI_COST_USD` (0.025). Before a search: the
+    server-wide `LIVE_SERPAPI_MONTHLY_CAP` (default 225, from `live_data_daily` provider
+    `fares-serpapi`), the plan's daily searches (Free 3, Plus 20, Pro 50, Max 100; entitlement
+    `fares_google_daily` overrides) and `needCredits`. Any of those says no → only Kiwi, and the
+    model is told why. Failed calls are never charged.
+  - **Airports** (`live-data/airports.ts`): a bundled OurAirports extract (public domain, 4,007
+    airports with scheduled service, `scripts/airports-extract.mjs`) plus a table of cities with
+    several airports (Tokyo HND/NRT, London ×6, New York ×3…). Kiwi resolves names itself; Google needs
+    codes. "here" uses the home city's nearest large airports. Currency follows the departure
+    country unless the person names one.
+  - **Links** are kept only on the provider's own hosts (kiwi.com, google.com), https only.
+- **Changed from the plan:** the price is an env setting, not `billing_settings`; no workspace
+  SerpApi key yet (it needs a new `ProviderId`, which breaks older apps' key lists, D-384); live
+  tools aren't in the voice-call list, so `live.fares` isn't either; no `live_data_calls` kind
+  (`data_calls` already exists for paid data).
+- **Terms (Phase 0, 2026-11-21):** Kiwi's MCP page has no terms of its own; its website Terms of Use
+  forbid "any commercial use of the Website" (Art. 2.6.7) and don't mention the MCP server. SerpApi's
+  terms are silent on showing results to end users; the free plan isn't marked non-commercial. Ask
+  Kiwi in writing before Casama Cloud relies on it; until then `LIVE_FARES_ORDER=serpapi` is the
+  switch, and self-hosted servers keep Kiwi.
+- **Tests:** `packages/agent/test/live-fares.test.ts` (airports, arguments, both providers from
+  recorded answers in `test/fixtures/fares`, the chain with meter and cache, the card, the engine)
+  and `apps/server/test/live-fares.test.ts` (env → config, meter limits, credits, ledger rows).
+  `packages/agent/scripts/fares-smoke.ts` made one real Kiwi search (15 fares, ~4 s) and one real
+  Google search (11 fares, ~2.5 s) on 2026-11-21.
+- **Not done:** the app's native Fares card (Phase 2), price watches (Phase 3), affiliate links
+  (Phase 4); not deployed; `LIVE_SERPAPI_KEY` not on any server.

@@ -23,6 +23,7 @@ export const DATA_CARDS = [
   "Quake",
   "Storm",
   "Flight",
+  "Fares",
   "Parcel",
   "Score",
   "Standings",
