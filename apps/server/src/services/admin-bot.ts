@@ -14,6 +14,7 @@ import type { Database } from "@casama/db";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { suspendOrg, unsuspendOrg } from "./abuse.ts";
+import { registerAdminAppBrowserTools } from "./admin-bot-app-browser.ts";
 import { registerAdminCompTools } from "./admin-bot-comps.ts";
 import { registerAdminResetTools } from "./admin-bot-resets.ts";
 import {
@@ -486,6 +487,8 @@ export function registerAdminTools(registry: ToolRegistry, deps: AdminBotDeps) {
   registerAdminResetTools(registry, deps, guard, audit);
   // Free plans for friends (docs/COMP-PLANS-PLAN.md §9): the same gate and approvals.
   registerAdminCompTools(registry, deps, guard, audit);
+  // The phone browser's stage (docs/PHONE-BROWSER-PLAN.md §6): the same gate and approvals.
+  registerAdminAppBrowserTools(registry, deps, guard, audit);
 }
 
 /** Names of every admin tool, for the approval route and chat-app buttons. */

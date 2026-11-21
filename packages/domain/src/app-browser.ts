@@ -125,3 +125,85 @@ export const APP_BROWSER_CHECKED = ["click", "fill", "type", "press", "upload"] 
 export const APP_BROWSER_ASK_MS = 5 * 60 * 1000;
 /** How fresh the chat-on-screen report must be (the app repeats it every 30 seconds). */
 export const APP_BROWSER_FOCUS_S = 45;
+
+// --- The stage rules (docs/PHONE-BROWSER-PLAN.md §6) ------------------------------------------
+
+/** The numbers the rules read, over the last 14 days. */
+export interface AppBrowserCounts {
+  blocked_runs: number;
+  blocked_people: number;
+  watched_browser_runs: number;
+  phone_runs: number;
+  phones_paired: number;
+  phones_with_sites: number;
+  refused_steps: number;
+}
+
+export interface AppBrowserStep {
+  /** What switching it on would change. */
+  change: string;
+  /** Whether the numbers a machine can read are there. */
+  numbers_met: boolean;
+  /** What the numbers say. */
+  numbers: string;
+  /** What only the owner can confirm. */
+  still_needs: string[];
+}
+
+/**
+ * The next switches and whether their bars are met. It only reads numbers: a safety miss, a store
+ * approval and days spent in a stage are the owner's to confirm, and are listed, never assumed.
+ */
+export function appBrowserNextSteps(s: AppBrowserSettings, n: AppBrowserCounts): AppBrowserStep[] {
+  const steps: AppBrowserStep[] = [];
+  const pct = (a: number, b: number) => (b > 0 ? Math.round((a / b) * 1000) / 10 : 0);
+  if (s.stage === "off")
+    steps.push({
+      change: "Stage 1: testers (the people you name, on internal test builds)",
+      numbers_met: true,
+      numbers: "No numbers needed.",
+      still_needs: [
+        "Phases 1 to 3 built and deployed",
+        "You used it on an iPhone and an Android phone",
+        "The names of the testers",
+      ],
+    });
+  if (s.stage === "testers")
+    steps.push({
+      change: "Stage 2: on for everyone when they ask for it, Android first",
+      numbers_met: n.phone_runs >= 100,
+      numbers: `${n.phone_runs} runs used a phone's browser in 14 days (bar: 100).`,
+      still_needs: [
+        "14 days as testers",
+        "No safety miss (a step that should have asked, been handed over or refused, and wasn't) and no crash from it",
+        "Version 1.0 approved on both stores",
+        "A store release whose review notes, listing, privacy answers and privacy page describe it",
+      ],
+    });
+  if (s.stage === "on" && !s.systems.includes("ios"))
+    steps.push({
+      change: "iPhone and iPad",
+      numbers_met: true,
+      numbers: "No numbers needed.",
+      still_needs: ["Apple approved a release that describes it"],
+    });
+  if (s.stage === "on" && !s.reasons.blocked) {
+    const share = pct(n.blocked_runs, n.watched_browser_runs);
+    steps.push({
+      change: "Stage 3: also when a site blocks the bot's computer",
+      numbers_met: share >= 5 || n.blocked_people >= 20,
+      numbers: `${n.blocked_runs} of ${n.watched_browser_runs} watched browser runs on the computer met a block (${share}%; bar: 5%), for ${n.blocked_people} people (bar: 20). Under 2% for 60 days after launch means it stays off.`,
+      still_needs: ["14 days in Stage 2 with no safety miss"],
+    });
+  }
+  if (s.stage === "on" && !s.reasons.signed_in) {
+    const share = pct(n.phones_with_sites, n.phones_paired);
+    steps.push({
+      change: "Stage 4: also for sites the person signed in to on the phone",
+      numbers_met: share >= 25,
+      numbers: `${n.phones_with_sites} of ${n.phones_paired} phones have a site added (${share}%; bar: 25%).`,
+      still_needs: ["30 days in Stage 2 with no safety miss"],
+    });
+  }
+  return steps;
+}

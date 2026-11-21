@@ -80,3 +80,47 @@ describe("pages that keep a bot's computer out", () => {
     expect(detectBrowserBlock(`${article} Sorry, you have been blocked.`)?.kind).toBe("denied");
   });
 });
+
+import { appBrowserNextSteps } from "../src/index.ts";
+
+describe("the stage rules", () => {
+  const none = {
+    blocked_runs: 0,
+    blocked_people: 0,
+    watched_browser_runs: 0,
+    phone_runs: 0,
+    phones_paired: 0,
+    phones_with_sites: 0,
+    refused_steps: 0,
+  };
+  it("reads the numbers and never assumes what only the owner can confirm", () => {
+    const off = appBrowserNextSteps(APP_BROWSER_OFF, none);
+    expect(off).toHaveLength(1);
+    expect(off[0]?.still_needs.length).toBeGreaterThan(0);
+
+    const testers = checkAppBrowserSettings({ stage: "testers", testers: [U1] }).settings!;
+    expect(appBrowserNextSteps(testers, { ...none, phone_runs: 99 })[0]?.numbers_met).toBe(false);
+    const ready = appBrowserNextSteps(testers, { ...none, phone_runs: 100 })[0]!;
+    expect(ready.numbers_met).toBe(true);
+    expect(ready.still_needs.join(" ")).toContain("No safety miss");
+
+    const on = checkAppBrowserSettings({ stage: "on", systems: ["android"] }).settings!;
+    const few = appBrowserNextSteps(on, { ...none, watched_browser_runs: 100, blocked_runs: 4 });
+    expect(few.map((s) => s.numbers_met)).toEqual([true, false, false]);
+    const many = appBrowserNextSteps(on, {
+      ...none,
+      watched_browser_runs: 100,
+      blocked_runs: 5,
+      phones_paired: 8,
+      phones_with_sites: 2,
+    });
+    expect(many.map((s) => s.numbers_met)).toEqual([true, true, true]);
+    // Nothing more to switch once every reason and system is on.
+    const all = checkAppBrowserSettings({
+      stage: "on",
+      systems: ["android", "ios"],
+      reasons: { asked: true, blocked: true, signed_in: true },
+    }).settings!;
+    expect(appBrowserNextSteps(all, none)).toEqual([]);
+  });
+});
