@@ -135,8 +135,16 @@ class AdminSecurity {
       (method == 'GET' && (path == '/v1/admin/overview' || path == '/v1/admin/pin')) ||
       (method == 'POST' && path.startsWith('/v1/admin/checks/'));
 
+  /// Casama Link's settings (D-463): an owner setting used outside the console (the guided
+  /// setup, Settings → Casama Link), so the console's lock doesn't hold its requests back. The
+  /// server still asks for a fresh sign-in to change it, which the dialog over any screen answers.
+  static bool _ownerSetting(String path) =>
+      path == '/v1/admin/remote-access' || path.startsWith('/v1/admin/remote-access/');
+
   static bool protectedPath(String path, {String method = 'GET'}) =>
-      path.startsWith('/v1/admin/') && !_openWhileLocked(path, method.toUpperCase());
+      path.startsWith('/v1/admin/') &&
+      !_ownerSetting(path) &&
+      !_openWhileLocked(path, method.toUpperCase());
 }
 
 /// Only freshness rejections are replayed. A timeout or server error can have already

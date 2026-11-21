@@ -7026,3 +7026,21 @@ quality and safety.
 - **Admin bot (amends D-435's "nothing about plans or billing"):** `admin.comps.list` (read), `admin.comps.grant`, `admin.comps.extend`, `admin.comps.revoke`, `admin.compCodes.create`, `admin.compCodes.disable` (also re-enables), each with the owner's fresh yes, same gate, caps and audit as the other admin tools; `comp_events` records the approving owner.
 - **Costs and analytics:** `docs/COSTS.md` "Comps" (worst case about $660 a month at 50 Pro). Events `comp_granted`, `comp_redeemed`, `comp_ended`, `comp_converted`, with no email or code.
 - **Where it differs from the plan:** settings are columns on `billing_settings`, not a `comp_settings` table; the admin bot also got `extend` and `compCodes.disable`; `comp_events` is append-only by trigger. Self-hosted servers have billing off, so they have nothing to give.
+
+## D-463 Casama Link's status isn't behind the admin console lock (2026-11-21)
+
+Found while testing the guided setup (D-309) on a real Mac: the phone step said "Something went
+wrong". D-448's console lock cancels every `/v1/admin/*` request in the app while the console is
+locked, and Casama Link's routes live under `/v1/admin/remote-access`, so the setup's phone step and
+Settings → Casama Link never reached the server. The published images predate D-448, so only the app
+refused; the next image publish would have refused on the server too (a fresh sign-in within five
+minutes).
+
+- **Reads are open to the owner without a fresh sign-in:** `GET /v1/admin/remote-access` and `POST
+  /v1/admin/remote-access/check` (`REMOTE_ACCESS_READS` in `apps/server/src/api/admin-security.ts`).
+  They stay owner-only; they show the address and connection counts, not user data.
+- **Changes still need a fresh sign-in:** `…/remote-access/settings` keeps D-448's rule. In the app,
+  remote-access paths aren't console paths (`AdminSecurity.protectedPath`), so the server's
+  `admin_confirmation_required` is answered by the dialog over the current screen, as for D-448's
+  other owner actions outside the console, then retried once.
+- **Tests:** `apps/server/test/admin-security.test.ts`, `client/test/admin_security_test.dart`.

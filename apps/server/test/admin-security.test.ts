@@ -82,6 +82,18 @@ describe("admin authentication freshness", () => {
     );
     denied(() => check("GET", "/v1/admin/users", undefined, now), "unauthorized");
   });
+  it("reading Casama Link's status needs no fresh sign-in; changing it does (D-463)", () => {
+    expect(() => check("GET", "/v1/admin/remote-access", { sub: "owner" }, now)).not.toThrow();
+    expect(() => check("POST", "/v1/admin/remote-access/check", { sub: "owner" }, now)).not.toThrow();
+    denied(
+      () => check("PUT", "/v1/admin/remote-access/settings", { sub: "owner" }, now),
+      "admin_confirmation_required",
+    );
+    denied(
+      () => check("POST", "/v1/admin/remote-access", { sub: "owner" }, now),
+      "admin_confirmation_required",
+    );
+  });
   it("owner actions outside the console use the one-minute window", () => {
     expect(hasFreshAuthentication(claims(now - 60), true, now)).toBe(true);
     expect(hasFreshAuthentication(claims(now - 61), true, now)).toBe(false);

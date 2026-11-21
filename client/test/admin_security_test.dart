@@ -165,6 +165,27 @@ void main() {
     expect(confirmations, 1);
   });
 
+  test('Casama Link works with the console locked; a change is confirmed over any screen (D-463)', () async {
+    AdminSecurity.isUnlocked = () => false;
+    var anywhere = 0;
+    AdminSecurity.confirmAnywhere = () async {
+      anywhere++;
+      return true;
+    };
+    await dio.get<dynamic>('/v1/admin/remote-access');
+    await dio.post<dynamic>('/v1/admin/remote-access/check');
+    expect(server.requests, 2, reason: 'the reads reach the server');
+    // The server asks for a fresh sign-in to change it: the dialog over the current screen.
+    server
+      ..requests = 0
+      ..status = 403
+      ..code = 'admin_confirmation_required';
+    await dio.put<dynamic>('/v1/admin/remote-access/settings', data: {'enabled': true});
+    expect(anywhere, 1);
+    expect(confirmations, 0, reason: 'not the console lock form');
+    expect(server.requests, 2, reason: 'retried once after the yes');
+  });
+
   test('ordinary requests are not affected by the console lock', () async {
     AdminSecurity.isUnlocked = null;
     await dio.post<dynamic>('/v1/conversations/test');

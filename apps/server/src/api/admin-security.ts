@@ -81,11 +81,18 @@ export const ADMIN_CHECK_PATHS = [
   "/v1/admin/checks/device/challenge",
 ];
 
+/**
+ * Reading Casama Link's status (D-463): an owner setting shown outside the console (the guided
+ * setup's phone step, Settings → Casama Link). Still owner-only; changing it stays fresh.
+ */
+export const REMOTE_ACCESS_READS = ["GET /v1/admin/remote-access", "POST /v1/admin/remote-access/check"];
+
 /** The admin console's own probe that needs no fresh sign-in (instance counts for navigation). */
 export function adminPathExempt(method: string, path: string) {
   return (
     (method === "GET" && (path === "/v1/admin/overview" || path === "/v1/admin/pin")) ||
-    (method === "POST" && ADMIN_CHECK_PATHS.includes(path))
+    (method === "POST" && ADMIN_CHECK_PATHS.includes(path)) ||
+    REMOTE_ACCESS_READS.includes(`${method} ${path}`)
   );
 }
 
