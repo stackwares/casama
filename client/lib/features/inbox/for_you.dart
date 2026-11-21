@@ -72,6 +72,7 @@ class SuggestionCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final colors = context.appColors;
+    final bot = (ref.watch(botsProvider).value ?? const <Bot>[]).where((x) => x.id == s.botId).firstOrNull;
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpace.sm),
       child: AppCard(
@@ -85,11 +86,17 @@ class SuggestionCard extends ConsumerWidget {
               Icon(s.urgency == SuggestionUrgencyEnum.urgent ? LucideIcons.zap : LucideIcons.lightbulb, size: 18, color: s.urgency == SuggestionUrgencyEnum.urgent ? colors.warning : null),
               const SizedBox(width: AppSpace.xs),
               Expanded(child: Text(s.title, style: context.textTheme.titleSmall)),
+              const SizedBox(width: AppSpace.xs),
+              TimeAgo(s.createdAt, style: context.textTheme.labelSmall?.copyWith(color: context.colorScheme.onSurfaceVariant)),
             ]),
             // The bot's own offer, as its push said it (D-247).
             if ((s.pushText ?? '').trim().isNotEmpty) Text(s.pushText!.trim(), style: context.textTheme.bodyMedium?.copyWith(fontStyle: FontStyle.italic)),
             if (s.bodyMd.isNotEmpty) Text(s.bodyMd),
-            Text(l10n.suggestedBy(botName), style: context.textTheme.labelSmall?.copyWith(color: context.colorScheme.onSurfaceVariant)),
+            Row(children: [
+              BotAvatar(name: botName, avatar: bot?.avatarUrl, size: 20),
+              const SizedBox(width: AppSpace.xs),
+              Expanded(child: Text(l10n.suggestedBy(botName), style: context.textTheme.labelSmall?.copyWith(color: context.colorScheme.onSurfaceVariant))),
+            ]),
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [

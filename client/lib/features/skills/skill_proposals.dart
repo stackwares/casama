@@ -80,6 +80,8 @@ class SkillProposalCard extends ConsumerWidget {
               Icon(isEdit ? LucideIcons.filePen : LucideIcons.sparkles, size: 18, color: context.colorScheme.primary),
               const SizedBox(width: AppSpace.sm),
               Expanded(child: Text(isEdit ? l10n.skillEditFrom(botName, p.name) : l10n.skillIdeaFrom(botName, p.name), style: context.textTheme.titleSmall)),
+              const SizedBox(width: AppSpace.xs),
+              TimeAgo(p.createdAt, style: context.textTheme.labelSmall?.copyWith(color: context.colorScheme.onSurfaceVariant)),
             ]),
             Text(p.description),
             if (p.reason.isNotEmpty) Text(p.reason, style: context.textTheme.bodySmall),
