@@ -15,6 +15,8 @@ abstract class _$ModelOptionCWProxy {
 
   ModelOption featured(bool? featured);
 
+  ModelOption tools(bool? tools);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `ModelOption(...).copyWith.fieldName(value)`.
@@ -28,6 +30,7 @@ abstract class _$ModelOptionCWProxy {
     String name,
     int? contextLength,
     bool? featured,
+    bool? tools,
   });
 }
 
@@ -51,6 +54,9 @@ class _$ModelOptionCWProxyImpl implements _$ModelOptionCWProxy {
   @override
   ModelOption featured(bool? featured) => call(featured: featured);
 
+  @override
+  ModelOption tools(bool? tools) => call(tools: tools);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `ModelOption(...).copyWith.fieldName(value)`.
@@ -65,6 +71,7 @@ class _$ModelOptionCWProxyImpl implements _$ModelOptionCWProxy {
     Object? name = const $CopyWithPlaceholder(),
     Object? contextLength = const $CopyWithPlaceholder(),
     Object? featured = const $CopyWithPlaceholder(),
+    Object? tools = const $CopyWithPlaceholder(),
   }) {
     return ModelOption(
       id: id == const $CopyWithPlaceholder() || id == null
@@ -83,6 +90,10 @@ class _$ModelOptionCWProxyImpl implements _$ModelOptionCWProxy {
           ? _value.featured
           // ignore: cast_nullable_to_non_nullable
           : featured as bool?,
+      tools: tools == const $CopyWithPlaceholder()
+          ? _value.tools
+          // ignore: cast_nullable_to_non_nullable
+          : tools as bool?,
     );
   }
 }
@@ -109,6 +120,7 @@ ModelOption _$ModelOptionFromJson(Map<String, dynamic> json) =>
           (v) => (v as num?)?.toInt(),
         ),
         featured: $checkedConvert('featured', (v) => v as bool?),
+        tools: $checkedConvert('tools', (v) => v as bool?),
       );
       return val;
     }, fieldKeyMap: const {'contextLength': 'context_length'});
@@ -119,4 +131,5 @@ Map<String, dynamic> _$ModelOptionToJson(ModelOption instance) =>
       'name': instance.name,
       'context_length': ?instance.contextLength,
       'featured': ?instance.featured,
+      'tools': ?instance.tools,
     };

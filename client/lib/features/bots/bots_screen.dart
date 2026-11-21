@@ -46,6 +46,8 @@ import '../search/search_view.dart';
 import '../workspaces/spaces.dart';
 import '../../ui/celebration.dart';
 import '../../core/analytics.dart';
+import '../../core/billing.dart';
+import '../billing/paywall.dart';
 
 String botStatusLabel(BuildContext context, BotStatusEnum s) => switch (s) {
   BotStatusEnum.working => context.l10n.botStatusWorking,
@@ -920,12 +922,40 @@ class _CreateBotSheetState extends ConsumerState<CreateBotSheet> {
           // A missing key is a required step, so it's asked for in plain sight.
           if (needsKey) ...[
             const SizedBox(height: AppSpace.lg),
-            Text(
-              l10n.addModelKeyFirst,
-              style: Theme.of(context).textTheme.bodyMedium,
+            Builder(
+              builder: (context) {
+                final billing = ref.watch(billingProvider).value;
+                final casamaOff = billing?.casamaModels == BillingSummaryCasamaModelsEnum.off;
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  spacing: 8,
+                  children: [
+                    Text(
+                      casamaOff
+                          ? ((billing?.casamaModelsNote?.trim().isNotEmpty ?? false)
+                              ? billing!.casamaModelsNote!
+                              : l10n.ownProviderRequiredBody)
+                          : l10n.addModelKeyFirst,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                    if (casamaOff)
+                      Align(
+                        alignment: AlignmentDirectional.centerStart,
+                        child: TextButton.icon(
+                          key: const Key('createBotSeePlans'),
+                          onPressed: () {
+                            Analytics.log('own_provider_required_shown', {'surface': 'create_bot', 'outcome': 'upgrade'});
+                            openPaywall(context, source: 'own_provider_required');
+                          },
+                          icon: const Icon(LucideIcons.gem, size: 16),
+                          label: Text(l10n.seePlans),
+                        ),
+                      ),
+                    AddKeyForm(onAdded: () => ref.invalidate(credentialsProvider)),
+                  ],
+                );
+              },
             ),
-            const SizedBox(height: 8),
-            AddKeyForm(onAdded: () => ref.invalidate(credentialsProvider)),
           ] else if (_modelInSight && !fixedModel) ...[
             const SizedBox(height: AppSpace.lg),
             ...keyFields,

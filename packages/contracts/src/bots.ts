@@ -502,6 +502,9 @@ export const ModelOption = z
       .boolean()
       .optional()
       .openapi({ description: "Recommended by Casama; listed first" }),
+    tools: z.boolean().optional().openapi({
+      description: "Whether the model supports tool calls (when known from the model catalog)",
+    }),
   })
   .openapi("ModelOption");
 

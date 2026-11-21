@@ -10129,6 +10129,8 @@ export interface components {
             context_length?: number;
             /** @description Recommended by Casama; listed first */
             featured?: boolean;
+            /** @description Whether the model supports tool calls (when known from the model catalog) */
+            tools?: boolean;
         };
         CredentialList: {
             items: components["schemas"]["Credential"][];

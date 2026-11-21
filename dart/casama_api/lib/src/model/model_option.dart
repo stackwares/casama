@@ -27,6 +27,8 @@ class ModelOption {
      this.contextLength,
 
      this.featured,
+
+     this.tools,
   });
 
   @JsonKey(
@@ -78,6 +80,19 @@ class ModelOption {
 
 
 
+      /// Whether the model supports tool calls (when known from the model catalog)
+  @JsonKey(
+    
+    name: r'tools',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final bool? tools;
+
+
+
 
 
     @override
@@ -85,14 +100,16 @@ class ModelOption {
       other.id == id &&
       other.name == name &&
       other.contextLength == contextLength &&
-      other.featured == featured;
+      other.featured == featured &&
+      other.tools == tools;
 
     @override
     int get hashCode =>
         id.hashCode +
         name.hashCode +
         contextLength.hashCode +
-        featured.hashCode;
+        featured.hashCode +
+        tools.hashCode;
 
   factory ModelOption.fromJson(Map<String, dynamic> json) => _$ModelOptionFromJson(json);
 

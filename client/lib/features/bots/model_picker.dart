@@ -114,7 +114,9 @@ class ModelPickerField extends ConsumerWidget {
         decoration: InputDecoration(
           labelText: l10n.model,
           enabled: enabled,
-          helperText: locked == null ? null : l10n.casamaCloudModelLocked,
+          helperText: locked != null
+              ? l10n.casamaCloudModelLocked
+              : (selected?.tools == false ? l10n.modelNoToolsWarning : null),
           prefixIcon: const Icon(LucideIcons.sparkles, size: 20),
           suffixIcon: Icon(
             locked == null ? LucideIcons.chevronDown : LucideIcons.lock,

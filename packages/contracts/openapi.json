@@ -6293,6 +6293,10 @@
           "featured": {
             "type": "boolean",
             "description": "Recommended by Casama; listed first"
+          },
+          "tools": {
+            "type": "boolean",
+            "description": "Whether the model supports tool calls (when known from the model catalog)"
           }
         },
         "required": [

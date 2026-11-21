@@ -35,6 +35,7 @@ export function registerBotTools(
 ) {
   const { db } = deps;
   const onCasamaKey = (policy: Record<string, unknown> | null | undefined) => {
+    if (policy?.source === "casama") return true;
     const primary = policy?.primary as { credential_id?: string } | undefined;
     return primary?.credential_id === PLATFORM_OPENROUTER_CREDENTIAL_ID;
   };

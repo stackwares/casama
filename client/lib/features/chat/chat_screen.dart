@@ -2180,10 +2180,23 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                               openPaywall(context, source: 'limit');
                               return;
                             }
+                            if (n.errorCode == 'own_provider_required') {
+                              Analytics.log('own_provider_required_shown', {'surface': 'chat', 'outcome': 'add_key'});
+                            }
                             context.pushOnce(fix.route);
                           },
                           icon: Icon(fix.route.startsWith('/settings/billing') || fix.route == '/settings/plans' ? LucideIcons.gem : LucideIcons.keyRound, size: 18),
                           label: Text(fix.label),
+                        ),
+                      if (n.errorCode == 'own_provider_required')
+                        TextButton.icon(
+                          key: const Key('noticeUpgrade'),
+                          onPressed: () {
+                            Analytics.log('own_provider_required_shown', {'surface': 'chat', 'outcome': 'upgrade'});
+                            openPaywall(context, source: 'own_provider_required');
+                          },
+                          icon: const Icon(LucideIcons.gem, size: 18),
+                          label: Text(context.l10n.seePlans),
                         ),
                       if (canRetry)
                         TextButton.icon(

@@ -1170,11 +1170,18 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       );
       if (!conv) throw new ApiError(404, "conversation_not_found", "Conversation not found");
       if (conv.welcome) {
+        let platformAllowed = true;
+        if (deps.env.BILLING_ENABLED) {
+          const [ent] = await db.execute<{ plan_code: string | null }>(sql`
+            select plan_code from public.entitlements
+            where org_id = ${conv.org_id}::uuid order by created_at desc limit 1`);
+          platformAllowed = casamaModelsAllowed(ent?.plan_code ?? "free", true);
+        }
         const r = await handleWelcomeAction(
           {
             db,
             modelOverrides: modelOverrides(deps.env),
-            platformModel: Boolean(deps.env.CLOUD_MODEL_UPSTREAM_KEY),
+            platformModel: Boolean(deps.env.CLOUD_MODEL_UPSTREAM_KEY) && platformAllowed,
           },
           { orgId: conv.org_id, botId: conv.bot_id, conversationId: id, userId: claims.sub },
           {
@@ -1386,7 +1393,9 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       userId: claims.sub,
       botName: b.bot_name ?? "Casama",
       modelOverrides: modelOverrides(deps.env),
-      platformModel: Boolean(deps.env.CLOUD_MODEL_UPSTREAM_KEY),
+      platformModel:
+        Boolean(deps.env.CLOUD_MODEL_UPSTREAM_KEY) &&
+        (!deps.env.BILLING_ENABLED || casamaModelsAllowed("free", true)),
     });
     track(db, {
       event: "workspace_created",

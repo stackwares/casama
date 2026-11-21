@@ -1,4 +1,4 @@
-import { featuredModelsFor, type ModelOption } from "@casama/domain";
+import { catalogPriceRow, featuredModelsFor, type ModelOption } from "@casama/domain";
 import type { ProviderId } from "./gateway/types.ts";
 
 export interface ModelListSource {
@@ -131,11 +131,15 @@ export async function fetchProviderModels(
 export function mergeModelList(provider: string, live: ModelOption[]): ModelOption[] {
   const featured = featuredModelsFor(provider);
   const byId = new Map(live.map((m) => [m.id, m]));
+  const withCatalog = (m: ModelOption): ModelOption => {
+    const tools = catalogPriceRow(m.id.toLowerCase())?.tools;
+    return tools !== undefined ? { ...m, tools } : m;
+  };
   const top = featured
     .filter((m) => live.length === 0 || byId.has(m.id))
-    .map((m) => ({ ...m, ...byId.get(m.id), featured: true }));
+    .map((m) => withCatalog({ ...m, ...byId.get(m.id), featured: true }));
   const seen = new Set(top.map((m) => m.id));
-  const rest = live.filter((m) => !seen.has(m.id) && !NOT_CHAT.test(m.id));
+  const rest = live.filter((m) => !seen.has(m.id) && !NOT_CHAT.test(m.id)).map(withCatalog);
   return [...top, ...rest];
 }
 

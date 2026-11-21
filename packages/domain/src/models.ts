@@ -31,6 +31,7 @@ export interface ModelOption {
   name: string;
   context_length?: number;
   featured?: boolean;
+  tools?: boolean;
 }
 
 /**
