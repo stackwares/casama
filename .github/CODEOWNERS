@@ -1,0 +1,17 @@
+# Every change to this repository needs a review from a maintainer before it can merge.
+# The "Protect main" ruleset requires code-owner review on pull requests to main; maintainers
+# (repository admins) bypass it for their own direct pushes.
+*                       @oliverbytes
+
+# Sensitive areas, listed so they stay owned even if the catch-all above is narrowed later.
+/ee/                    @oliverbytes
+/infra/                 @oliverbytes
+/deploy/                @oliverbytes
+/supabase/              @oliverbytes
+/scripts/               @oliverbytes
+/.github/               @oliverbytes
+/LICENSE                @oliverbytes
+/LICENSES/              @oliverbytes
+/LICENSING.md           @oliverbytes
+/CLA.md                 @oliverbytes
+/TRADEMARKS.md          @oliverbytes
