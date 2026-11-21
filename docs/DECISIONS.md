@@ -7454,3 +7454,31 @@ only the last words of a help sentence. So:
 - **iOS share extension:** shared pictures and files are copied into the App Group container and
   attached in quick ask as files (was: only their names, as text).
 - **Billing:** the "Upgrade to Pro" banner opens the paywall on Pro.
+## D-474 Bug hunt security fixes: waitlist seats, revoked sessions, sign-out everywhere, tokens, reports, hook bodies (2026-11-21)
+
+Open items 1, 2, 3 and 5 from `reports/bug-hunt-2026-11-21.md`, decided by the coordinator for
+Oliver ("you decide everything").
+
+- **An invite that let someone past the waitlist keeps its seat.** A workspace could invite an
+  address, let the person sign up, revoke the invite and repeat, so the gate had no limit.
+  `signup_invited_with_seat` now also counts invites whose person signed up while they stood and
+  that were later revoked (`invite_gate_holds`, filled by a delete trigger on `invites`) or ran
+  out, as long as that person isn't a member. Only the gate changes; joining a workspace doesn't.
+- **Credentials come only from a session that still stands.** An access token outlives Sign Out
+  Everywhere by up to an hour. Making a sign-in code, a watch key (from the phone or by code) or a
+  widget key now checks the token's `session_id` in `auth.sessions` (and its `not_after`) and
+  answers 401 `session_ended` when it's gone. Tokens without a session id (Casama's own) skip it.
+- **Sign Out Everywhere removes push and call-ring tokens on every device.** The apps delete only
+  this phone's rows. `DELETE /v1/watch-keys`, the server call every app already makes for Sign Out
+  Everywhere, now also deletes all of the person's `devices` and `voip_tokens` rows, so shipped
+  apps get it without an update.
+- **A push token moves only within the same install.** D-437's handover trigger let anyone who
+  knew a token take it from its owner. `devices` and `voip_tokens` get an optional `install_id`;
+  a row that has one moves to another account only from a row with the same one. Rows without
+  it (every app today) keep D-437's behaviour until the apps send it.
+- **Reporting a message needs read access to it,** not only membership of its workspace: a
+  teammate's private chat can't be reported (or quoted into the abuse inbox) by someone who can't
+  open it.
+- **Webhook bodies are capped:** 1 MB on `/hooks/*`, 25 MB for git sync (GitHub's own cap), and
+  inbound mail keeps its own limits; over the cap is 413 `payload_too_large`.
+- **Not changed:** Casama Link's daily cap counts only Link spend, as intended.

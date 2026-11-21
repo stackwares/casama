@@ -355,6 +355,46 @@ describe("the gate in the sign-up hook", () => {
     expect(await hookVerdict(await k.hook("first@example.dev"))).toBe(200);
   });
 
+  it("an invite that let someone sign up keeps its seat after it is revoked or runs out", async () => {
+    const org = (
+      await j(
+        await h.request("/v1/orgs", { method: "POST", token: owner.token, json: { name: "Loop" } }),
+      )
+    ).id;
+    await h.tdb.admin`delete from public.entitlements where org_id = ${org}::uuid`;
+    await h.tdb.admin`
+      insert into public.entitlements (org_id, plan_code, limits)
+      values (${org}::uuid, (select code from public.plans order by code limit 1), '{"seats": 2}'::jsonb)`;
+    const invite = async (email: string) => {
+      const [row] = await h.tdb.admin<{ id: string }[]>`
+        insert into public.invites (org_id, email, role, token_hash)
+        values (${org}::uuid, ${email}, 'member', ${randomUUID()}) returning id`;
+      return row?.id as string;
+    };
+    const revoke = (inviteId: string) =>
+      h.request(`/v1/orgs/${org}/invites/${inviteId}`, { method: "DELETE", token: owner.token });
+    // The owner plus one seat: the first invite lets its person in, and they sign up.
+    const first = await invite("loop1@example.dev");
+    expect(await hookVerdict(await k.hook("loop1@example.dev"))).toBe(200);
+    await h.user("loop1@example.dev");
+    // Revoking it doesn't give the seat back: the next invite can't get anyone past the gate.
+    expect((await revoke(first)).status).toBe(204);
+    await invite("loop2@example.dev");
+    expect(await hookVerdict(await k.hook("loop2@example.dev"))).toBe(403);
+    // A revoked invite nobody signed up through frees its seat as before.
+    await h.tdb
+      .admin`update public.entitlements set limits = '{"seats": 3}'::jsonb where org_id = ${org}::uuid`;
+    expect(await hookVerdict(await k.hook("loop2@example.dev"))).toBe(200);
+    // Running out works the same way: loop2 signs up, then the invite expires.
+    await h.user("loop2@example.dev");
+    await h.tdb.admin`
+      update public.invites set expires_at = (
+        select created_at + interval '1 millisecond' from auth.users where email = 'loop2@example.dev')
+      where email = 'loop2@example.dev'`;
+    await invite("loop3@example.dev");
+    expect(await hookVerdict(await k.hook("loop3@example.dev"))).toBe(403);
+  });
+
   it("refuses calls Auth didn't sign", async () => {
     expect(await hookVerdict(await k.hook("pat@example.dev", { signed: false }))).toBe(401);
   });
