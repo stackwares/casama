@@ -324,3 +324,30 @@ it("voice calls, Link and check-ins see today's limit cleared by a reset", async
   // Link and check-ins count only their own spend, from the moment the limit was cleared.
   expect((await h.db.execute<{ at: Date | null }>(at))[0]!.at).not.toBeNull();
 });
+it("undo gives back the campaign budget and the period allowance it used (bug hunt 2026-11-21)", async () => {
+  await service.setSettings(owner, {
+    enabled: true,
+    per_period: 1,
+    max_held: 3,
+    notify_owners: true,
+  });
+  const w = await freeWorkspace("reset-undo-gives-back");
+  await grantSpent(w.id);
+  const first = await handOut([w.id], { budget_usd: 1 });
+  const second = await handOut([w.id]);
+  const used = await service.redeem(w.id, w.owner);
+  expect(used.refilled_usd).toBe(1);
+  // One reset a period: the second one waits.
+  expect((await service.saved(w.id, true))[0]!.unavailable_reason).toBe("period_limit");
+  // A quarter of the refill was spent before the undo; that part really was handed out.
+  await t.admin`select public.credit_apply(${w.id},-0.25,'usage','spend-undo-gives-back',null)`;
+  await service.resetAction(owner, used.reset_id, "undo");
+  const [campaign] =
+    await t.admin`select refilled_usd from public.limit_reset_campaigns where id=${first.id}`;
+  expect(Number(campaign!.refilled_usd)).toBeCloseTo(0.25, 6);
+  // The period's allowance is back: the other saved reset can be used.
+  const [saved] = await service.saved(w.id, true);
+  expect(saved!.campaign_id).toBe(second.id);
+  expect(saved!.unavailable_reason).toBeNull();
+  expect((await service.redeem(w.id, w.owner)).refilled_usd).toBe(1);
+});
