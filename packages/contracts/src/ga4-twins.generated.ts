@@ -36,9 +36,6 @@ export const ANALYTICS_CLIENT_EVENTS: Record<string, string[]> = {
   "sign_in_completed": [],
   "two_step_completed": [],
   "signed_out": [],
-  "onboarding_begin": [
-    "path"
-  ],
   "guided_setup_opened": [],
   "guided_setup_step": [
     "step",
@@ -252,12 +249,6 @@ export const GA4_CLIENT_TWINS: Record<string, { name: string; params: string[]; 
   "sign_in_completed": {
     "name": "login",
     "params": []
-  },
-  "onboarding_begin": {
-    "name": "tutorial_begin",
-    "params": [
-      "path"
-    ]
   },
   "onboarding_complete": {
     "name": "tutorial_complete",

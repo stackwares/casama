@@ -123,12 +123,12 @@
     },
     {
       "name": "onboarding_begin",
-      "by": ["client", "server"],
-      "description": "Onboarding started on one of three paths.",
+      "by": ["server"],
+      "description": "Onboarding started: the space and bot are made in one step when someone signs up.",
       "properties": {
         "path": {
           "type": "string",
-          "values": ["welcome_chat", "manual", "joined_team"]
+          "values": ["auto"]
         }
       },
       "funnels": ["F2"],

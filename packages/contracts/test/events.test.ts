@@ -110,6 +110,8 @@ describe("openapi", () => {
             "/v1/photos/{id}",
             // Bot pictures load the same way, and native widgets fetch them without a session (D-456).
             "/v1/bot-images/{id}",
+            // Workspace pictures too: join pages and the app show them before anyone signs in.
+            "/v1/workspace-images/{id}",
             // Reports from the sites zone's own page come from visitors, who have no account.
             "/v1/site-reports",
             // Casama Help on the websites answers signed-out visitors (D-401).

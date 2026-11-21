@@ -6,7 +6,6 @@ const analyticsClientEvents = <String>{
   'sign_in_completed',
   'two_step_completed',
   'signed_out',
-  'onboarding_begin',
   'guided_setup_opened',
   'guided_setup_step',
   'onboarding_step_done',
@@ -107,7 +106,6 @@ const analyticsFeatures = <String>{
 /// event properties it copies and constants it adds.
 const analyticsGa4Twins = <String, ({String name, List<String> params, Map<String, Object> set})>{
   'sign_in_completed': (name: 'login', params: <String>[], set: <String, Object>{}),
-  'onboarding_begin': (name: 'tutorial_begin', params: <String>['path'], set: <String, Object>{}),
   'onboarding_complete': (name: 'tutorial_complete', params: <String>['path'], set: <String, Object>{}),
   'invite_shared': (name: 'share', params: <String>['method'], set: <String, Object>{'content_type': 'invite'}),
   'referral_shared': (name: 'share', params: <String>['method'], set: <String, Object>{'content_type': 'referral'}),
