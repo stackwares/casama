@@ -12,6 +12,7 @@ import 'package:casama/l10n/generated/app_localizations.dart';
 import 'package:casama/theme/app_theme.dart';
 import 'package:casama/ui/screen_tile.dart';
 import 'package:casama/ui/shell_layout.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
@@ -184,6 +185,29 @@ void main() {
     );
     await _settle(tester);
     expect(_visible(tester), isFalse);
+  });
+
+  testWidgets('screen readers get one node the size of the card, with Hide as an action', (tester) async {
+    final handle = tester.ensureSemantics();
+    await _pumpCard(tester);
+    _set(_running([_step('a'), _step('b')]));
+    await _settle(tester);
+    await tester.pump(const Duration(milliseconds: 400));
+    final node = tester.getSemantics(find.byKey(const Key('screenCard')));
+    expect(node.label, contains('Ava'));
+    // Found on Android: it used to merge into the full-screen layer, so TalkBack framed the chat.
+    final tile = tester.getRect(find.byKey(const Key('screenTile')));
+    expect(node.rect.width, closeTo(tile.width, 1));
+    expect(node.rect.height, closeTo(tile.height, 1));
+
+    final hide = CustomSemanticsAction.getIdentifier(CustomSemanticsAction(label: lookupAppLocalizations(const Locale('en')).callTileHide));
+    expect(node.getSemanticsData().customSemanticsActionIds, contains(hide));
+    tester.binding.performSemanticsAction(
+      SemanticsActionEvent(type: SemanticsAction.customAction, viewId: tester.view.viewId, nodeId: node.id, arguments: hide),
+    );
+    await _settle(tester);
+    expect(_visible(tester), isFalse);
+    handle.dispose();
   });
 
   testWidgets('closing hides it for this reply only', (tester) async {

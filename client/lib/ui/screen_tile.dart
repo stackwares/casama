@@ -1,3 +1,4 @@
+import 'package:flutter/semantics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:material_ui/material_ui.dart';
@@ -75,10 +76,15 @@ class ScreenTile extends StatelessWidget {
     };
     final duration = AppMotion.of(context, AppMotion.fast);
     return Semantics(
+      // Its own node, the card's size. Without it the label merged into the full-screen layer the
+      // card floats in, so TalkBack framed (and tapped) the whole chat.
+      container: true,
       button: true,
       label: l10n.screenCardLabel(botName, label ?? l10n.screenCardLive),
       onTapHint: l10n.screenCardOpen,
       onLongPressHint: onLongPress == null ? null : l10n.screenCardMore,
+      // The close button is folded in below, so it stays reachable as an action.
+      customSemanticsActions: {CustomSemanticsAction(label: l10n.callTileHide): onClose},
       excludeSemantics: true,
       child: AnimatedContainer(
         duration: duration,
