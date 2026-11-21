@@ -1913,8 +1913,8 @@ Future<void> showGalleryDetail(BuildContext context, GalleryItem item) =>
     showAdaptiveSheet<void>(
       context: context,
       dialogMaxWidth: 620,
-      builder: (_) => _GalleryDetail(
+      builder: (c) => _GalleryDetail(
         item: item,
-        brightness: Theme.of(context).brightness,
+        brightness: Theme.of(c).brightness,
       ),
     );

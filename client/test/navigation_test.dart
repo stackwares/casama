@@ -145,4 +145,15 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(SettingsScreen), findsOneWidget);
   });
+
+  testWidgets('changing routes dismisses an open adaptive modal sheet on the root navigator', (tester) async {
+    await _pumpApp(tester, const Size(900, 1000));
+    final router = GoRouter.of(tester.element(find.byType(BotsScreen)));
+    await tester.tap(find.byKey(const Key('createMenu')));
+    await tester.pumpAndSettle();
+    expect(find.byType(CreateBotSheet), findsOneWidget);
+    router.go('/inbox');
+    await tester.pumpAndSettle();
+    expect(find.byType(CreateBotSheet), findsNothing);
+  });
 }

@@ -1,4 +1,5 @@
 import 'package:casama_sdk/casama_sdk.dart';
+import 'package:dio/dio.dart' show DioException, RequestOptions, Response;
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -260,5 +261,44 @@ void main() {
     await tester.pumpAndSettle();
     expect(backend.mailActions, contains('claim:$botId:front.desk:profile'));
   });
+
+  testWidgets('opening the inbox with no address shows the claim setup state instead of an error', (tester) async {
+    await setSize(tester, const Size(900, 1200));
+    final backend = _NoAddressMailBackend();
+    await tester.pumpWidget(harness(backend, const Scaffold(body: MailScreen(botId: botId))));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('mailNoAddress')), findsOneWidget);
+    expect(find.text('Give Ada an email address'), findsOneWidget);
+    expect(find.byKey(const Key('mailClaimAddress')), findsOneWidget);
+  });
+}
+
+class _NoAddressMailBackend extends FakeBackend {
+  @override
+  Future<MailMessageList> mailMessages(
+    String botId, {
+    String? verdict,
+    String? tag,
+    String? sender,
+    String? q,
+    int? limit,
+    String? cursor,
+  }) async {
+    final req = RequestOptions(path: '/v1/bots/$botId/email/messages');
+    throw DioException(
+      requestOptions: req,
+      response: Response(
+        requestOptions: req,
+        statusCode: 404,
+        data: {
+          'type': 'about:blank',
+          'title': 'Not Found',
+          'status': 404,
+          'code': 'address_not_found',
+          'detail': 'This bot has no address',
+        },
+      ),
+    );
+  }
 }
 

@@ -700,6 +700,17 @@ class _CreateBotSheetState extends ConsumerState<CreateBotSheet> {
   var _modelInSight = false;
 
   @override
+  void initState() {
+    super.initState();
+    // Retry cached load errors from an earlier temporary outage when the sheet opens.
+    scheduleMicrotask(() {
+      if (!mounted) return;
+      if (ref.read(templatesProvider).hasError) ref.invalidate(templatesProvider);
+      if (ref.read(credentialsProvider).hasError) ref.invalidate(credentialsProvider);
+    });
+  }
+
+  @override
   void dispose() {
     _name.dispose();
     _persona.dispose();
@@ -835,6 +846,12 @@ class _CreateBotSheetState extends ConsumerState<CreateBotSheet> {
                       ),
                     ],
                   ),
+                ),
+                IconButton(
+                  key: const Key('closeCreateBot'),
+                  tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
+                  icon: const Icon(LucideIcons.x),
+                  onPressed: _busy ? null : () => Navigator.of(context).maybePop(),
                 ),
               ],
             ),

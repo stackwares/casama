@@ -53,6 +53,15 @@ void main() {
         errorText(ctx, down),
         "Your Casama server isn't responding right now. Try again in a moment.",
       );
+      // Microphone permission denial reads as a friendly permission prompt, never raw "Bad state:".
+      expect(
+        errorText(ctx, StateError('Microphone permission denied')),
+        "Casama doesn't have permission. Allow it in the system settings, then try again.",
+      );
+      expect(
+        errorText(ctx, StateError('Something else failed')),
+        'Something else failed',
+      );
     },
   );
 }

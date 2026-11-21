@@ -73,9 +73,12 @@ String errorText(BuildContext context, Object error) {
     if (status >= 500) return context.l10n.serverNotResponding;
     return context.l10n.somethingWentWrong;
   }
+  if (error is StateError && error.message == 'Microphone permission denied') {
+    return context.l10n.devicePermissionDenied;
+  }
   final s = error.toString();
   final m = RegExp(r'message: ([^,)]+)').firstMatch(s);
-  return m?.group(1) ?? s.replaceFirst('Exception: ', '');
+  return m?.group(1) ?? s.replaceFirst(RegExp(r'^(Exception|Bad state): '), '');
 }
 
 void showError(BuildContext context, Object error, [StackTrace? stackTrace]) {

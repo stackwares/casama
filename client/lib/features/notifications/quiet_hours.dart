@@ -42,7 +42,7 @@ String quietSummary(BuildContext context, QuietHoursView q) =>
 Future<void> showQuietHours(BuildContext context, WidgetRef ref) async {
   final current = await ref.read(quietHoursProvider.future);
   if (!context.mounted) return;
-  final picked = await showAdaptiveSheet<QuietHoursView>(context: context, builder: (_) => _QuietSheet(initial: current, title: context.l10n.quietHours));
+  final picked = await showAdaptiveSheet<QuietHoursView>(context: context, builder: (c) => _QuietSheet(initial: current, title: c.l10n.quietHours));
   if (picked == null || !context.mounted) return;
   await runGuarded(context, () => ref.read(backendProvider).setQuietHours(picked));
   ref.invalidate(quietHoursProvider);

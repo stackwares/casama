@@ -121,4 +121,33 @@ void main() {
     // The hero replaces the icon tile.
     expect(find.byIcon(Icons.group), findsNothing);
   });
+
+  testWidgets('CreateBotSheet has a close button and fallback mascot image errorBuilder renders without Icon', (tester) async {
+    await setSize(tester, const Size(900, 1100));
+    final backend = FakeBackend();
+    final router = GoRouter(routes: [
+      GoRoute(
+        path: '/',
+        builder: (_, _) => Scaffold(
+          body: Consumer(builder: (context, ref, _) => TextButton(onPressed: () => showCreateBot(context, ref), child: const Text('open'))),
+        ),
+      ),
+    ]);
+    await tester.pumpWidget(ProviderScope(
+      overrides: [backendProvider.overrideWithValue(backend)],
+      child: MaterialApp.router(
+        routerConfig: router,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+      ),
+    ));
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('closeCreateBot')), findsOneWidget);
+    final img = tester.widget<Image>(find.byType(Image).first);
+    expect(img.errorBuilder, isNotNull);
+    await tester.tap(find.byKey(const Key('closeCreateBot')));
+    await tester.pumpAndSettle();
+    expect(find.byType(CreateBotSheet), findsNothing);
+  });
 }

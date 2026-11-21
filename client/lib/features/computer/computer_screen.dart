@@ -96,11 +96,13 @@ class ComputerScreen extends ConsumerWidget {
       data: (list) {
         final c = computerId != null
             ? list.where((x) => x.id == computerId).firstOrNull
-            : computerForBot(
+            : botId != null
+            ? computerForBot(
                 list,
-                botId ?? '',
+                botId!,
                 defaultComputerId: defaultComputerId,
-              );
+              )
+            : (computerForBot(list, '') ?? list.firstOrNull);
         if (c == null) {
           return _NoComputer(
             botId: botId,

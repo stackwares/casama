@@ -6,6 +6,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../core/providers.dart';
 import '../core/server_reachability.dart';
+import '../features/settings/about_you_screen.dart' show aboutYouProvider, userFactsProvider;
 import '../l10n/generated/app_localizations.dart';
 import '../theme/app_tokens.dart';
 import '../core/link_browser.dart';
@@ -77,6 +78,19 @@ class _ServerReachabilityBarState extends ConsumerState<ServerReachabilityBar> {
       ref.invalidate(botsProvider);
       // The computer panel beside a chat failed too while the server was away.
       ref.invalidate(computersProvider);
+      ref.invalidate(templatesProvider);
+      ref.invalidate(credentialsProvider);
+      ref.invalidate(aboutYouProvider);
+      ref.invalidate(userFactsProvider);
+      ref.invalidate(skillsProvider);
+      ref.invalidate(integrationsProvider);
+      ref.invalidate(secretsProvider);
+      ref.invalidate(tasksProvider);
+      ref.invalidate(approvalsProvider);
+      ref.invalidate(takeoversProvider);
+      ref.invalidate(notificationsProvider);
+      ref.invalidate(usageTodayProvider);
+      ref.invalidate(usageMonthProvider);
     }
     if (mounted) setState(() {});
   }

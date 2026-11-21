@@ -81,6 +81,7 @@ class MascotImage extends StatelessWidget {
     size: size,
     animate: animate,
     semanticLabel: semanticLabel,
+    colors: mascot.colors,
   );
 }
 
@@ -174,6 +175,7 @@ Widget _mascotArt(
   required double size,
   required bool animate,
   String? semanticLabel,
+  List<Color>? colors,
 }) {
   final moving = animate && !MediaQuery.disableAnimationsOf(context);
   final drawn = size * _zoom;
@@ -186,6 +188,25 @@ Widget _mascotArt(
     gaplessPlayback: true,
     filterQuality: FilterQuality.medium,
     excludeFromSemantics: true,
+    errorBuilder: (context, error, stack) {
+      final tint = colors?.first ?? Theme.of(context).colorScheme.primary;
+      return SizedBox.square(
+        dimension: drawn,
+        child: Center(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: colors ?? [tint.withValues(alpha: 0.24), tint.withValues(alpha: 0.08)],
+              ),
+            ),
+            child: SizedBox.square(dimension: drawn * 0.68),
+          ),
+        ),
+      );
+    },
   );
   Widget art;
   if (moving) {

@@ -57,6 +57,17 @@ class _AboutYouScreenState extends ConsumerState<AboutYouScreen> {
   var _busy = false;
 
   @override
+  void initState() {
+    super.initState();
+    // Retry cached load errors from an earlier temporary outage when the page opens.
+    scheduleMicrotask(() {
+      if (!mounted) return;
+      if (ref.read(aboutYouProvider).hasError) ref.invalidate(aboutYouProvider);
+      if (ref.read(userFactsProvider).hasError) ref.invalidate(userFactsProvider);
+    });
+  }
+
+  @override
   void dispose() {
     _name.dispose();
     _pronouns.dispose();

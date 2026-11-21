@@ -36,12 +36,12 @@ class LinksScreen extends ConsumerWidget {
       if (created == null || !context.mounted) return;
       await showAdaptiveSheet<void>(
         context: context,
-        builder: (_) => FormSheet(
+        builder: (c) => FormSheet(
           icon: LucideIcons.link,
           title: l10n.linksInviteReady,
           subtitle: l10n.linksInviteHelp,
           submitLabel: l10n.close,
-          onSubmit: () => Navigator.pop(context),
+          onSubmit: () => Navigator.pop(c),
           children: [
             Row(
               children: [

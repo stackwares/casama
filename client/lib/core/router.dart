@@ -1136,10 +1136,20 @@ final routerProvider = Provider<GoRouter>((ref) {
   // A link kept through sign-in (D-326) is done with once the app has landed on it and the person
   // has moved on. Not sooner: until they go somewhere themselves, redirects keep running from the
   // sign-in page and must keep ending at the link.
+  var lastPath = router.routerDelegate.currentConfiguration.isEmpty
+      ? ''
+      : router.routerDelegate.currentConfiguration.uri.path;
   void landed() {
+    final config = router.routerDelegate.currentConfiguration;
+    if (config.isEmpty) return;
+    final uri = config.uri;
+    if (lastPath.isNotEmpty && uri.path != lastPath) {
+      router.routerDelegate.navigatorKey.currentState?.popUntil((r) => r is! PopupRoute);
+    }
+    lastPath = uri.path;
     final pending = ref.read(pendingOpenLinkProvider.notifier);
     if (ref.read(pendingOpenLinkProvider) == null) return;
-    pending.landedOn(router.routerDelegate.currentConfiguration.uri.toString());
+    pending.landedOn(uri.toString());
   }
   router.routerDelegate.addListener(landed);
   ref.onDispose(() => router.routerDelegate.removeListener(landed));

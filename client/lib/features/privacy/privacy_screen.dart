@@ -109,9 +109,9 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
         dialogMaxWidth: 460,
         builder: (c) => FormSheet(
           icon: LucideIcons.circleCheck,
-          iconColor: context.appColors.positive,
+          iconColor: c.appColors.positive,
           title: l10n.accountDeleted,
-          subtitle: l10n.accountDeletedBody(r.purgeAfter.toLocal().formattedWeekdayDate(context)),
+          subtitle: l10n.accountDeletedBody(r.purgeAfter.toLocal().formattedWeekdayDate(c)),
           submitLabel: l10n.close,
           showCancel: false,
           onSubmit: () => Navigator.pop(c),

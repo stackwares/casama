@@ -1,4 +1,5 @@
 import 'package:casama_sdk/casama_sdk.dart';
+import 'package:dio/dio.dart' show DioException;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:material_ui/material_ui.dart';
@@ -182,6 +183,12 @@ class _MailScreenState extends ConsumerState<MailScreen> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final address = ref.watch(mailAddressProvider(widget.botId)).value;
+    final messages = ref.watch(mailMessagesProvider((botId: widget.botId, verdict: _verdict)));
+    final noAddress = messages.hasError &&
+        (problemOf(messages.error!)?.code == 'address_not_found' ||
+            (messages.error is DioException &&
+                (messages.error! as DioException).response?.statusCode == 404));
+    final botName = ref.watch(botProvider(widget.botId))?.name ?? l10n.theBot;
     final selecting = _selected != null;
     return SubPage(
       title: l10n.botEmailInbox,
@@ -224,8 +231,24 @@ class _MailScreenState extends ConsumerState<MailScreen> {
         children: [
           if (address != null) _StorageLine(address: address),
           Expanded(
-            child: AsyncView(
-              value: ref.watch(mailMessagesProvider((botId: widget.botId, verdict: _verdict))),
+            child: noAddress
+                ? EmptyState(
+                    key: const Key('mailNoAddress'),
+                    icon: LucideIcons.mail,
+                    title: l10n.botEmailClaimTitle(botName),
+                    message: l10n.botEmailClaimHelp,
+                    action: FilledButton.icon(
+                      key: const Key('mailClaimAddress'),
+                      onPressed: () async {
+                        await showBotEmailSheet(context, widget.botId);
+                        if (mounted) _refreshAll();
+                      },
+                      icon: const Icon(LucideIcons.plus, size: 18),
+                      label: Text(l10n.botEmailClaim),
+                    ),
+                  )
+                : AsyncView(
+              value: messages,
               onRetry: () {
                 setState(_reset);
                 ref.invalidate(mailMessagesProvider((botId: widget.botId, verdict: _verdict)));
