@@ -87,14 +87,24 @@ function mineBackend(b: UserBrowser): Backend {
   };
 }
 
+/** agent-browser's daemon got the command but didn't answer (it may still be starting). */
+const NO_ANSWER = /os error 11|no response came back/i;
+/** `open` waited for the page's load event and gave up; the page itself is open. */
+const LOAD_TIMEOUT = /Timed out after \d+ms waiting for load state/i;
+
 function computerBackend(ctx: ToolContext): Backend {
   const need = async (): Promise<SandboxHandle> => {
     if (!ctx.computer) throw new ToolError("no_computer", "This bot has no computer available.");
     return ctx.computer();
   };
-  const ab = async (args: string, timeoutMs = 90_000) => {
+  const ab = async (args: string, timeoutMs = 90_000, retrySafe = false) => {
     const h = await need();
-    const r = await collectExec(h.exec(`agent-browser ${args}`, { timeoutMs }));
+    let r = await collectExec(h.exec(`agent-browser ${args}`, { timeoutMs }));
+    // Just after a wake the browser can still be starting and the daemon doesn't answer in time
+    // ("os error 11"). A command that's safe to repeat tries once more here, instead of failing
+    // back to the model and costing it a whole turn.
+    if (r.code !== 0 && retrySafe && NO_ANSWER.test(`${r.stdout}${r.stderr}`))
+      r = await collectExec(h.exec(`agent-browser ${args}`, { timeoutMs }));
     const out = `${r.stdout}${r.stderr ? `\n${r.stderr}` : ""}`.trim();
     if (r.code !== 0)
       throw new ToolError(
@@ -112,11 +122,24 @@ function computerBackend(ctx: ToolContext): Backend {
     async run(action, a) {
       switch (action) {
         case "open":
-          return { text: (await ab(`open ${shq(String(a.url))}`)) || `Opened ${a.url}` };
+          try {
+            return {
+              text: (await ab(`open ${shq(String(a.url))}`, 90_000, true)) || `Opened ${a.url}`,
+            };
+          } catch (e) {
+            // A heavy page that never fires "load" is still open and usually usable.
+            if (e instanceof ToolError && LOAD_TIMEOUT.test(e.message))
+              return {
+                text: `Opened ${a.url}; it's still loading. Take a snapshot to see what's there.`,
+              };
+            throw e;
+          }
         case "snapshot":
-          return { text: await ab(`snapshot${a.interactive_only === false ? "" : " -i"}`) };
+          return {
+            text: await ab(`snapshot${a.interactive_only === false ? "" : " -i"}`, 90_000, true),
+          };
         case "read":
-          return { text: await ab("read") };
+          return { text: await ab("read", 90_000, true) };
         case "click":
           return { text: (await ab(`click ${ref(a.ref)}`)) || `Clicked ${ref(a.ref)}` };
         case "fill":
@@ -133,9 +156,9 @@ function computerBackend(ctx: ToolContext): Backend {
               (await ab(`scroll ${a.direction}${a.amount ? ` ${a.amount}` : ""}`)) || "Scrolled",
           };
         case "url":
-          return { text: await ab("get url", 20_000) };
+          return { text: await ab("get url", 20_000, true) };
         case "tabs":
-          return { text: (await ab("tab")) || "No tabs" };
+          return { text: (await ab("tab", 90_000, true)) || "No tabs" };
         case "switch_tab":
           return {
             text: a.url

@@ -22,6 +22,7 @@ import {
   ensureWayOut,
   extractTarget,
   fillCard,
+  isCasamaAddress,
   isCredentialChange,
   needsApproval,
   type PluginCard,
@@ -1970,6 +1971,11 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
           const started = await step(`takeover-${i}-${call.callId}`, () =>
             startTakeoverStep(deps, info, call, bus),
           );
+          // The card is already showing; get the visible desktop ready while the person opens it.
+          if (!("error" in started))
+            await step(`takeover-prep-${i}-${call.callId}`, () =>
+              prepareTakeoverDesktop(deps, started),
+            );
           if ("error" in started) {
             const res = await step(`blocked-${i}-${call.callId}`, () =>
               blockedStep(deps, info, call, started.error, bus, "takeover_failed"),
@@ -5132,14 +5138,21 @@ async function blockedStep(
   return { content: message, untrusted: false };
 }
 
-/** Creates a takeover request for the bot's desktop computer (the wait happens in the run loop). */
+/**
+ * Creates a takeover request for the bot's desktop computer (the wait happens in the run loop).
+ * The card goes out first; `prepareTakeoverDesktop` then switches the computer to a visible desktop,
+ * so the person isn't kept waiting for a restart before they even see the request.
+ */
 async function startTakeoverStep(
   deps: RunDeps,
   info: RunInfo,
   call: ToolCall,
   busFn: () => Promise<EventBus>,
-): Promise<{ id: string } | { error: string }> {
-  const reason = String((call.args as { reason?: unknown }).reason ?? "")
+): Promise<
+  { id: string; computerId: string; url: string | null; restart: boolean } | { error: string }
+> {
+  const args = call.args as { reason?: unknown; url?: unknown };
+  const reason = String(args.reason ?? "")
     .slice(0, 1000)
     .trim();
   if (!reason) return { error: "Give a reason so the person knows what to do." };
@@ -5152,28 +5165,45 @@ async function startTakeoverStep(
       error:
         "You're working on the person's own computer, which they can't take over from the app. Ask them in chat to do this step on that computer and tell you when it's done.",
     };
-  // The page the bot is on, so the person lands where they are needed.
-  const url = await currentBrowserUrl(computers, row.id);
-  if (row.profile !== "desktop") {
-    // A person needs a screen: switch this computer to the desktop profile (files are kept). It
+  const asked = typeof args.url === "string" && /^https?:\/\//.test(args.url) ? args.url : null;
+  if (asked && isCasamaAddress(asked, deps.ownUrls ?? []))
+    return { error: "Casama's own pages can't be opened on your computer." };
+  // The page to show: the one the bot asked for, else the one it's on.
+  const url = asked ?? (await currentBrowserUrl(computers, row.id));
+  if (row.profile !== "desktop")
+    // A person needs a screen: this computer switches to the desktop profile (files are kept). It
     // goes back to headless when it next sleeps after the takeover (D-178).
     await deps.db.execute(
       sql`update public.computers set profile = 'desktop', desktop_for_takeover = true where id = ${row.id}::uuid`,
     );
-    await computers.stop(row.id).catch(() => {});
-  }
-  const handle = await computers.ensureRunning(row.id);
-  if (url) {
-    // Reopen it in a visible window (desktop computers run the browser headed).
-    const quoted = `'${url.replace(/'/g, "'\\''")}'`;
-    await collectExec(
-      handle.exec(`agent-browser close >/dev/null 2>&1; agent-browser open ${quoted}`, {
-        timeoutMs: 60_000,
-      }),
-    ).catch(() => {});
-  }
   const id = await createTakeover(deps.db, info, row.id, reason, busFn, deps.notifications);
-  return { id };
+  return { id, computerId: row.id, url, restart: row.profile !== "desktop" };
+}
+
+/** Restarts the computer as a desktop if it still runs headless, and opens the page in a window. */
+async function prepareTakeoverDesktop(
+  deps: RunDeps,
+  t: { computerId: string; url: string | null; restart: boolean },
+): Promise<true> {
+  const computers = deps.computers;
+  if (!computers) return true;
+  try {
+    // It was running the headless image: restart it on the desktop profile set above.
+    if (t.restart) await computers.stop(t.computerId).catch(() => {});
+    const handle = await computers.ensureRunning(t.computerId);
+    if (t.url) {
+      // Reopen it in a visible window (desktop computers run the browser headed).
+      const quoted = `'${t.url.replace(/'/g, "'\\''")}'`;
+      await collectExec(
+        handle.exec(`agent-browser close >/dev/null 2>&1; agent-browser open ${quoted}`, {
+          timeoutMs: 60_000,
+        }),
+      ).catch(() => {});
+    }
+  } catch {
+    // The live view starts the computer itself when the person opens it.
+  }
+  return true;
 }
 
 /** The browser's current page, if the computer is running and the browser has one open. */

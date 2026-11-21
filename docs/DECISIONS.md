@@ -7170,3 +7170,19 @@ only the last words of a help sentence. So:
   follows the autonomy setting: asking, not refusing.
 - **Offline Chrome:** the `browser_offline` message now points to the computer's browser, saved
   logins, `secrets.request` and the takeover, not only "open Chrome".
+
+## D-469 The takeover card shows first; the bot asks for Google sign-ins straight away (2026-11-21)
+
+- **Problem:** after D-468, a Google sign-in took 3m23s to reach the Take Control card: 23 s waking
+  the computer, two headless `browser.open` calls the browser daemon never answered ("os error 11",
+  ~40 s each), one that timed out on Google's `load` event (36 s), and 45 s restarting the computer
+  as a desktop before the card was created.
+- **Card first:** `startTakeoverStep` marks the computer for the desktop and creates the request
+  (card and push) at once; a second durable step, `prepareTakeoverDesktop`, restarts it and reopens
+  the page while the person opens the card.
+- **`url` on the takeover:** `computer.request_takeover` takes the page to open. For Google, Apple,
+  Microsoft and banks the prompt says to call it straight away with the sign-in page, not to open it
+  headless first (the takeover reopens it in a window anyway). Casama's own pages are refused.
+- **Browser on the computer:** commands that are safe to repeat (open, snapshot, read, url, tabs)
+  try once more when the daemon doesn't answer, instead of failing back to the model; an `open` whose
+  page never fires `load` reports the page as open and still loading.
