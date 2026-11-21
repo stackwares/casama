@@ -7186,3 +7186,21 @@ only the last words of a help sentence. So:
 - **Browser on the computer:** commands that are safe to repeat (open, snapshot, read, url, tabs)
   try once more when the daemon doesn't answer, instead of failing back to the model; an `open` whose
   page never fires `load` reports the page as open and still loading.
+
+## D-470 A takeover gives the person a plain browser, so Google lets them sign in (2026-11-21)
+
+- **Problem:** Google's sign-in refused the takeover browser ("This browser or app may not be
+  secure"). The takeover reopened the page with `agent-browser open`: Chromium driven over the
+  DevTools protocol (`--remote-debugging-port`), which Google detects.
+- **Takeover:** `prepareTakeoverDesktop` closes agent-browser's browser, waits until nothing uses the
+  profile, and starts the desktop's plain Chromium (`casama-open-browser`, no debugging port) on the
+  same `~/.browser-profile`, detached with `setsid -f`, marked `--class=casama-takeover`.
+- **Hand-back:** before the bot carries on, the run closes that browser (SIGTERM, so cookies are
+  written) and waits for the profile to be free, then tells the bot to open the page again. Its own
+  browser starts on the same profile, still signed in. Checked in a desktop container: the cookie
+  survives the switch both ways.
+- **Matching:** `pgrep`/`pkill` use `--class=[c]asama-takeover` so they don't match the shell that
+  runs them.
+- **Still possible:** Google may ask for extra verification from a datacenter address, or end the
+  session later if it notices the automated browser; the person's own Chrome (Casama for Chrome)
+  stays the surest path for Google.
