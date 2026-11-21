@@ -348,7 +348,7 @@ one or both:
 
 | Where | How |
 | --- | --- |
-| iOS, iPadOS, Android, macOS, Windows and Linux | The Flutter app in [`client`](client) |
+| iOS, iPadOS, Android, macOS, Windows and Linux | The Flutter app in [`client`](client) (macOS: `brew install --cask stackwares/tap/casama`) |
 | The web | The same app at [app.casama.ai](https://app.casama.ai), or served by your own server |
 | Your browser *(coming soon)* | Casama for Chrome, Edge and Firefox, in [`apps/extension`](apps/extension). [Casama for Chrome](docs-site/guide/chrome.md) |
 | The terminal | The `casama` CLI: `brew install stackwares/tap/casama`, or a binary from [Releases](https://github.com/stackwares/casama/releases). [CLI](docs-site/develop/cli.md) |
