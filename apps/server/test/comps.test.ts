@@ -255,6 +255,28 @@ describe("comps", () => {
     expect(Number(month?.total)).toBe(proCredits);
   });
 
+  it("isn't ended by a free trial: trials ignore comps both ways", async () => {
+    const p = await person("trialer");
+    const comp = await j(
+      await asAdmin("/v1/admin/comps", "POST", { user_id: p.id, plan_code: "plus", months: 12 }),
+    );
+    // A store or web trial of a higher plan, not yet paid for.
+    await h.handle.db.execute(sql`
+      insert into public.subscriptions (org_id, source, external_id, plan_code, status, current_period_end)
+      values (${p.org}::uuid, 'app_store', ${`trial-${p.org}`}, 'max', 'trialing', now() + interval '7 days')`);
+    await settle();
+    const [row] = await h.handle.db.execute<{ ended: boolean }>(sql`
+      select ended_at is not null as ended from public.comps where id = ${comp.id}::uuid`);
+    expect(row?.ended).toBe(false);
+    // Once the trial turns into a paid plan, it takes over.
+    await h.handle.db.execute(sql`
+      update public.subscriptions set status = 'active' where external_id = ${`trial-${p.org}`}`);
+    await settle();
+    const [after] = await h.handle.db.execute<{ end_reason: string | null }>(sql`
+      select end_reason from public.comps where id = ${comp.id}::uuid`);
+    expect(after?.end_reason).toBe("replaced_by_purchase");
+  });
+
   it("redeems a gift code once per person, never past its uses, only by a workspace owner", async () => {
     const created = await asAdmin("/v1/admin/comp-codes", "POST", {
       plan_code: "pro",

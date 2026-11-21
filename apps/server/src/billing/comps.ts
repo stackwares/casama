@@ -697,13 +697,14 @@ export class Comps {
       sql`select id from public.comps where ended_at is null and ends_at <= now() order by ends_at limit 200`,
     );
     for (const d of due) if (await this.end(d.id, "expired", null)) ended++;
-    // A paid plan at least as high took over.
+    // A paid plan at least as high took over. A trial isn't paid: trials ignore comps both ways
+    // (D-461), so starting one doesn't throw away the rest of a comp.
     const replaced = await this.db.execute<{ id: string }>(sql`
       select c.id from public.comps c join public.plans cp on cp.code = c.plan_code
       where c.ended_at is null and exists (
         select 1 from public.subscriptions s join public.plans p on p.code = s.plan_code
         where s.org_id = c.org_id and s.source <> 'comp' and s.status = any(${arr(ENTITLED)}::text[])
-          and (s.status <> 'trialing' or not s.trial_blocked)
+          and s.status <> 'trialing'
           and (s.current_period_end is null or s.current_period_end > now()) and p.sort >= cp.sort)
       limit 200`);
     for (const r of replaced) if (await this.end(r.id, "replaced_by_purchase", null)) ended++;
