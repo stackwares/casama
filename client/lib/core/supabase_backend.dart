@@ -4989,6 +4989,33 @@ class SupabaseBackend implements Backend {
   }
 
   @override
+  Future<Map<String, Object?>> watchFares(String cardId, {double? below}) async {
+    try {
+      final res = await api.api.dio.post<Map<String, dynamic>>(
+        '/v1/live-cards/$cardId/watch',
+        data: {'below': ?below},
+        options: _json,
+      );
+      return Map<String, Object?>.from(res.data!);
+    } on DioException catch (e) {
+      final body = e.response?.data;
+      if (body is Map && body['code'] == 'too_many_watches') throw const FareWatchFull();
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> unwatchFares(String cardId) async {
+    await api.api.dio.delete<Object?>('/v1/live-cards/$cardId/watch', options: Options(headers: authHeaders));
+  }
+
+  @override
+  Future<List<Map<String, Object?>>> fareWatches() async {
+    final res = await api.api.dio.get<Map<String, dynamic>>('/v1/me/fare-watches', options: Options(headers: authHeaders));
+    return [for (final w in (res.data?['items'] as List? ?? const [])) Map<String, Object?>.from(w as Map)];
+  }
+
+  @override
   Future<Map<String, Object?>> cardPrefs() async {
     final res = await api.api.dio.get<Map<String, dynamic>>('/v1/me/card-prefs', options: Options(headers: authHeaders));
     return Map<String, Object?>.from(res.data ?? const {});

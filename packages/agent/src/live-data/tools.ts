@@ -16,9 +16,10 @@ import { needCredits } from "../tools/autonomy.ts";
 import { leanSchema, type ToolContext, ToolError, type ToolRegistry } from "../tools/registry.ts";
 import { LiveDataError } from "./core.ts";
 import type { LiveEngine, LivePerson, LiveResult, LiveTool } from "./engine.ts";
-import type { FaresBilling, FaresMeter } from "./fares.ts";
+import { type FaresBilling, type FaresMeter, fareMoney } from "./fares.ts";
 import { pageCard } from "./page.ts";
 import type { Place } from "./places.ts";
+import { startFareWatch, WatchError } from "./watches.ts";
 
 /** What the model reads after a live card was shown. */
 export const LIVE_CARD_SHOWN =
@@ -237,6 +238,12 @@ const SPECS: Record<LiveTool, { name: string; description: string; schema: z.Zod
         .boolean()
         .optional()
         .describe("Search Google Flights first (costs the workspace credits): only when asked"),
+      watch: z
+        .object({ below: z.number().positive().optional() })
+        .optional()
+        .describe(
+          "Watch this price: checked every few hours, the person gets a push when it drops (to `below`, if given). Only when asked",
+        ),
       card: CARD,
     }),
   },
@@ -394,6 +401,10 @@ export function registerLiveTools(registry: ToolRegistry, deps: LiveToolDeps) {
           result,
         }).catch(() => null);
         const card = ref ? withRef(built.card, ref) : built.card;
+        const watchNote =
+          tool === "fares" && args.watch && typeof args.watch === "object"
+            ? await watchFromTool(db, ref, userId, ctx.botId, args.watch as { below?: number })
+            : "";
         const surfaceId = `ui_${randomUUID().replaceAll("-", "").slice(0, 16)}`;
         await ctx.emit("ui.shown", {
           surface_id: surfaceId,
@@ -411,9 +422,31 @@ export function registerLiveTools(registry: ToolRegistry, deps: LiveToolDeps) {
               (built.card.live as { source?: { id?: string } } | undefined)?.source?.id ?? null,
           },
         });
-        return { content: `${built.text}\n\n${LIVE_CARD_SHOWN}`, preview: built.preview };
+        return {
+          content: `${built.text}${watchNote ? `\n${watchNote}` : ""}\n\n${LIVE_CARD_SHOWN}`,
+          preview: built.preview,
+        };
       },
     });
+  }
+}
+
+/** `live.fares` with `watch`: starts the person's price watch on the new card; answers a line for the model. */
+async function watchFromTool(
+  db: Database,
+  ref: string | null,
+  userId: string | null,
+  botId: string | null,
+  watch: { below?: number },
+) {
+  if (!ref || !userId) return "(The price watch couldn't start: no card or person.)";
+  try {
+    const w = await startFareWatch(db, { cardId: ref, userId, botId, below: watch.below ?? null });
+    const ends = new Date(w.ends_at).toISOString().slice(0, 10);
+    return `Watching this price until ${ends}${w.below ? ` for ${fareMoney(w.below, w.currency)} or less` : " for a good drop"}; the person gets a push when it drops. They can stop it on the card or in Settings → Cards.`;
+  } catch (err) {
+    if (err instanceof WatchError) return `(The price watch didn't start: ${err.message})`;
+    return "(The price watch couldn't start.)";
   }
 }
 

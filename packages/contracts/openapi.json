@@ -29316,6 +29316,92 @@
         "additionalProperties": {},
         "description": "The card's component, with its `live` block"
       },
+      "FareWatchList": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FareWatch"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "FareWatch": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "card_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "bot_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "route": {
+            "type": "string"
+          },
+          "below": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "currency": {
+            "type": "string"
+          },
+          "first_price": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "last_price": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "last_checked_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "ends_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "card_id",
+          "bot_id",
+          "route",
+          "below",
+          "currency",
+          "first_price",
+          "last_price",
+          "last_checked_at",
+          "ends_at",
+          "created_at"
+        ]
+      },
       "PinnedLiveCard": {
         "type": "object",
         "properties": {
@@ -29535,6 +29621,19 @@
                 ]
               }
             }
+          }
+        }
+      },
+      "WatchFares": {
+        "type": "object",
+        "properties": {
+          "below": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "exclusiveMinimum": 0,
+            "maximum": 10000000
           }
         }
       },
@@ -71933,6 +72032,42 @@
         }
       }
     },
+    "/v1/me/fare-watches": {
+      "get": {
+        "operationId": "listFareWatches",
+        "tags": [
+          "cards"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "The person's active price watches",
+        "responses": {
+          "200": {
+            "description": "Watches",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FareWatchList"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/live-cards/{id}/pin": {
       "post": {
         "operationId": "pinLiveCard",
@@ -72292,6 +72427,156 @@
           },
           "429": {
             "description": "Rate limited",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/live-cards/{id}/watch": {
+      "delete": {
+        "operationId": "unwatchLiveCard",
+        "tags": [
+          "cards"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Stop watching a Fares card's price",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Stopped",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "ok"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "watchLiveCard",
+        "tags": [
+          "cards"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Watch a Fares card's price: the server checks it every few hours (free providers only) and pushes when it drops. Up to 5 watches per workspace",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WatchFares"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Watching",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FareWatch"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
             "content": {
               "application/problem+json": {
                 "schema": {

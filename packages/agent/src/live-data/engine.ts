@@ -33,12 +33,14 @@ import { type LiveCache, LiveDataError, type LiveHttp } from "./core.ts";
 import {
   FARE_PROVIDERS,
   type FareProviderId,
+  type FaresAffiliate,
   type FaresBilling,
   type FaresDeps,
   type FaresMeter,
   fareQuery,
   faresCard,
   searchFares,
+  withAffiliate,
 } from "./fares.ts";
 import {
   anyQuote,
@@ -90,6 +92,8 @@ export interface LiveConfig {
   faresOrder?: FareProviderId[];
   /** Charging for Google Flights searches on the server's key (the tool's meter). */
   faresBilling?: FaresBilling;
+  /** Affiliate booking links (FLIGHT-SEARCH-PLAN Phase 4): a template and the hosts it wraps. */
+  faresAffiliate?: FaresAffiliate;
 }
 
 /** What the engine knows about the person a run acts for. */
@@ -612,7 +616,7 @@ export class LiveEngine {
           { force, meter: opts.meter, preferGoogle: args.compare_google === true },
         );
         return {
-          built: faresCard(q, a),
+          built: withAffiliate(faresCard(q, a), this.config.faresAffiliate),
           // A refresh repeats the same trip; the places stay as the person named them.
           resolved: {
             from: args.from,

@@ -2,12 +2,15 @@ import { createRoute, z } from "@hono/zod-openapi";
 import { jsonBody, jsonResponse, problemResponses, Uuid } from "../common.ts";
 import {
   CardPrefs,
+  FareWatch,
+  FareWatchList,
   LiveCardList,
   LiveCardOut,
   PinLiveCard,
   PlaceList,
   RefreshLiveCard,
   UpdateCardPrefs,
+  WatchFares,
 } from "../live-cards.ts";
 
 /** Live data cards (docs/RICH-CARDS-PLAN.md §4.4–4.6). */
@@ -119,4 +122,43 @@ export const searchPlaces = createRoute({
   summary: "Cities matching a name, for picking a home city",
   request: { query: z.object({ q: z.string().min(2).max(120) }) },
   responses: { 200: jsonResponse("Places", PlaceList), 400: e400, 401: e401, 429: e429 },
+});
+
+export const watchLiveCard = createRoute({
+  operationId: "watchLiveCard",
+  method: "post",
+  path: "/v1/live-cards/{id}/watch",
+  tags: ["cards"],
+  security,
+  summary:
+    "Watch a Fares card's price: the server checks it every few hours (free providers only) and pushes when it drops. Up to 5 watches per workspace",
+  request: { params: idParam, body: jsonBody(WatchFares) },
+  responses: {
+    200: jsonResponse("Watching", FareWatch),
+    400: e400,
+    401: e401,
+    403: e403,
+    404: e404,
+  },
+});
+
+export const unwatchLiveCard = createRoute({
+  operationId: "unwatchLiveCard",
+  method: "delete",
+  path: "/v1/live-cards/{id}/watch",
+  tags: ["cards"],
+  security,
+  summary: "Stop watching a Fares card's price",
+  request: { params: idParam },
+  responses: { 200: jsonResponse("Stopped", z.object({ ok: z.boolean() })), 401: e401, 404: e404 },
+});
+
+export const listFareWatches = createRoute({
+  operationId: "listFareWatches",
+  method: "get",
+  path: "/v1/me/fare-watches",
+  tags: ["cards"],
+  security,
+  summary: "The person's active price watches",
+  responses: { 200: jsonResponse("Watches", FareWatchList), 401: e401 },
 });

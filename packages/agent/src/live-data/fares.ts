@@ -727,3 +727,54 @@ export function faresCard(q: FareQuery, a: FaresAnswer): Built {
     short: `${from.label} → ${to.label}, ${dates}: from ${fareMoney(cheapest, q.currency)}`,
   };
 }
+
+/**
+ * Affiliate booking links (FLIGHT-SEARCH-PLAN Phase 4). [template] is the affiliate network's link
+ * with `{url}` where the booking page goes (URL-encoded), for example a Travelpayouts link; only
+ * booking links on [hosts] (default kiwi.com) are wrapped. Set with LIVE_FARES_AFFILIATE_URL.
+ */
+export type FaresAffiliate = { template: string; hosts: string[] };
+
+/** A checked affiliate setting, or undefined when the template is missing or unsafe. */
+export function faresAffiliate(
+  template: string | undefined,
+  hosts: string | undefined,
+): FaresAffiliate | undefined {
+  if (!template?.includes("{url}")) return undefined;
+  try {
+    if (new URL(template.replace("{url}", "x")).protocol !== "https:") return undefined;
+  } catch {
+    return undefined;
+  }
+  const list = (hosts ?? "kiwi.com")
+    .split(",")
+    .map((h) => h.trim().toLowerCase())
+    .filter(Boolean);
+  return { template, hosts: list.length ? list : ["kiwi.com"] };
+}
+
+const onHost = (link: string, hosts: string[]) => {
+  try {
+    const h = new URL(link).hostname.toLowerCase();
+    return hosts.some((x) => h === x || h.endsWith(`.${x}`));
+  } catch {
+    return false;
+  }
+};
+
+/**
+ * Wraps a Fares card's booking links in the affiliate template. A card with wrapped links says so
+ * (`affiliate: true`), and the app shows the disclosure line under it.
+ */
+export function withAffiliate(built: Built, aff: FaresAffiliate | undefined): Built {
+  if (!aff) return built;
+  const card = built.card as { options?: FareOption[] };
+  let wrapped = false;
+  const options = (card.options ?? []).map((o) => {
+    if (!o.link || !onHost(o.link, aff.hosts)) return o;
+    wrapped = true;
+    return { ...o, link: aff.template.replace("{url}", encodeURIComponent(o.link)) };
+  });
+  if (!wrapped) return built;
+  return { ...built, card: { ...built.card, options, affiliate: true } };
+}

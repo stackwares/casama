@@ -5,9 +5,11 @@
  * (whoever can read its run's chat; personal cards only their person).
  */
 import {
+  type FareWatchRow,
   type LiveCardRow,
   LiveDataError,
   LiveEngine,
+  listFareWatches,
   liveCache,
   liveHttp,
   loadLiveCard,
@@ -16,8 +18,11 @@ import {
   type Place,
   pinLiveCard,
   refreshLiveCard,
+  startFareWatch,
+  stopFareWatch,
   unitsForZone,
   unpinLiveCard,
+  WatchError,
 } from "@casama/agent";
 import { routes } from "@casama/contracts";
 import { type JwtClaims, withUserSession } from "@casama/db";
@@ -183,6 +188,53 @@ export function registerLiveCardRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
     await unpinLiveCard(db, id, claims.sub);
     deps.glance?.changed(claims.sub, { urgent: true });
     return c.json({ ok: true }, 200);
+  });
+
+  const watchOut = (w: FareWatchRow) => ({
+    id: w.id,
+    card_id: w.live_card_id,
+    bot_id: w.bot_id,
+    route: w.route,
+    below: w.below === null ? null : Number(w.below),
+    currency: w.currency,
+    first_price: w.first_price === null ? null : Number(w.first_price),
+    last_price: w.last_price === null ? null : Number(w.last_price),
+    last_checked_at: w.last_checked_at ? new Date(w.last_checked_at).toISOString() : null,
+    ends_at: new Date(w.ends_at).toISOString(),
+    created_at: new Date(w.created_at).toISOString(),
+  });
+
+  // Price watches on Fares cards (docs/FLIGHT-SEARCH-PLAN.md §9).
+  app.openapi(routes.watchLiveCard, async (c) => {
+    const claims = requireSession(c);
+    limit(claims.sub);
+    const { id } = c.req.valid("param");
+    const body = c.req.valid("json");
+    const row = await visible(claims, id);
+    const [m] = await withUserSession(db, claims, (tx) =>
+      tx.execute<{ ok: boolean }>(sql`select public.is_member(${row.org_id}::uuid) as ok`),
+    );
+    if (!m?.ok) throw new ApiError(403, "forbidden", "Not a member of this workspace");
+    try {
+      const w = await startFareWatch(db, { cardId: id, userId: claims.sub, below: body.below });
+      return c.json(watchOut(w), 200);
+    } catch (err) {
+      if (err instanceof WatchError) throw new ApiError(400, err.code, err.message);
+      throw err;
+    }
+  });
+
+  app.openapi(routes.unwatchLiveCard, async (c) => {
+    const claims = requireSession(c);
+    const { id } = c.req.valid("param");
+    await visible(claims, id);
+    return c.json({ ok: await stopFareWatch(db, id, claims.sub) }, 200);
+  });
+
+  app.openapi(routes.listFareWatches, async (c) => {
+    const claims = requireSession(c);
+    const rows = await listFareWatches(db, claims.sub);
+    return c.json({ items: rows.map(watchOut) }, 200);
   });
 
   const prefsOf = async (userId: string) => {

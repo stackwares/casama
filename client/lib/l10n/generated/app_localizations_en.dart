@@ -18195,6 +18195,69 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get cardFaresAffiliate =>
+      'Casama may earn a commission when you book through these links. It doesn\'t change the price.';
+
+  @override
+  String get cardFaresWatch => 'Watch price';
+
+  @override
+  String cardFaresWatching(String date) {
+    return 'Watching · ends $date';
+  }
+
+  @override
+  String cardFaresWatchingBelow(String price, String date) {
+    return 'Watching for $price or less · ends $date';
+  }
+
+  @override
+  String get cardFaresWatchStop => 'Stop';
+
+  @override
+  String get cardFaresWatchTitle => 'Watch this price';
+
+  @override
+  String get cardFaresWatchBody =>
+      'Casama checks this trip every few hours and sends you a notification when the price drops. It stops after the departure date or in 60 days.';
+
+  @override
+  String get cardFaresWatchTarget => 'Tell me when it\'s under (optional)';
+
+  @override
+  String get cardFaresWatchAnyDrop => 'Leave empty for any big drop';
+
+  @override
+  String get cardFaresWatchStart => 'Watch';
+
+  @override
+  String get cardFaresWatchStarted =>
+      'Watching this price. You\'ll get a notification when it drops.';
+
+  @override
+  String get cardFaresWatchStopped => 'Stopped watching this price.';
+
+  @override
+  String get cardFaresWatchFull =>
+      'You\'re already watching 5 fares. Stop one in Settings → Cards first.';
+
+  @override
+  String get cardFaresWatchFailed =>
+      'Couldn\'t change the price watch. Try again.';
+
+  @override
+  String get cardsFareWatches => 'Price watches';
+
+  @override
+  String get cardsFareWatchesNone =>
+      'No price watches. Tap Watch price on a flight fares card to get a notification when it drops.';
+
+  @override
+  String cardsFareWatchLine(String price, String date) {
+    return 'Now $price · ends $date';
+  }
+
+  @override
   String get cardFromBot => 'Written by the bot; it may be wrong';
 
   @override

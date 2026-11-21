@@ -1,7 +1,11 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../../../../core/analytics.dart';
+import '../../../../core/backend.dart';
+import '../../../../core/providers.dart';
 import '../../../../core/widgets.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../theme/app_tokens.dart';
@@ -29,19 +33,30 @@ final faresComponent = liveCard('Fares', const [
   'options',
   'typical',
   'searchUrl',
-], (context, p, ctl) => _Fares(p: p));
+  'affiliate',
+], (context, p, ctl) => _Fares(p: p, cardId: ctl.ref));
+
+/// The person's active price watches (FLIGHT-SEARCH-PLAN §9); empty when the server is older.
+final fareWatchesProvider = FutureProvider<List<Map<String, Object?>>>((ref) async {
+  try {
+    return await ref.watch(backendProvider).fareWatches();
+  } catch (_) {
+    return const [];
+  }
+});
 
 enum _Sort { best, cheapest, fastest }
 
-class _Fares extends StatefulWidget {
-  const _Fares({required this.p});
+class _Fares extends ConsumerStatefulWidget {
+  const _Fares({required this.p, this.cardId});
   final P p;
+  final String? cardId;
 
   @override
-  State<_Fares> createState() => _FaresState();
+  ConsumerState<_Fares> createState() => _FaresState();
 }
 
-class _FaresState extends State<_Fares> {
+class _FaresState extends ConsumerState<_Fares> {
   late _Sort _sort = switch (widget.p.s('sort')) {
     'cheapest' => _Sort.cheapest,
     'fastest' => _Sort.fastest,
@@ -229,8 +244,173 @@ class _FaresState extends State<_Fares> {
               ),
           ] else
             Text(l.cardFaresCheck, style: context.cardLabel),
+          if (p.b('affiliate') == true) ...[
+            const SizedBox(height: 4),
+            Text(l.cardFaresAffiliate, key: const Key('faresAffiliate'), style: context.cardLabel),
+          ],
+          if (widget.cardId case final id? when cheapest != null) ...[
+            const SizedBox(height: 8),
+            _WatchRow(cardId: id, currency: cur, cheapest: cheapest),
+          ],
         ],
       ),
+    );
+  }
+}
+
+/// "Watch price", or "Watching · ends Apr 2" with Stop (FLIGHT-SEARCH-PLAN §9).
+class _WatchRow extends ConsumerStatefulWidget {
+  const _WatchRow({required this.cardId, required this.currency, required this.cheapest});
+  final String cardId;
+  final String? currency;
+  final num cheapest;
+
+  @override
+  ConsumerState<_WatchRow> createState() => _WatchRowState();
+}
+
+class _WatchRowState extends ConsumerState<_WatchRow> {
+  bool _busy = false;
+
+  Future<void> _start() async {
+    final l = context.l10n;
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    final below = await showDialog<double?>(
+      context: context,
+      builder: (_) => _WatchDialog(currency: widget.currency, cheapest: widget.cheapest),
+    );
+    if (below == null || !mounted) return;
+    setState(() => _busy = true);
+    try {
+      await ref.read(backendProvider).watchFares(widget.cardId, below: below > 0 ? below : null);
+      ref.invalidate(fareWatchesProvider);
+      messenger?.showSnackBar(SnackBar(content: Text(l.cardFaresWatchStarted)));
+      Analytics.log('fare_watch_started', {'target': below > 0});
+    } on FareWatchFull {
+      messenger?.showSnackBar(SnackBar(content: Text(l.cardFaresWatchFull)));
+    } catch (_) {
+      messenger?.showSnackBar(SnackBar(content: Text(l.cardFaresWatchFailed)));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _stop() async {
+    final l = context.l10n;
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    setState(() => _busy = true);
+    try {
+      await ref.read(backendProvider).unwatchFares(widget.cardId);
+      ref.invalidate(fareWatchesProvider);
+      messenger?.showSnackBar(SnackBar(content: Text(l.cardFaresWatchStopped)));
+      Analytics.log('fare_watch_stopped', {'where': 'card'});
+    } catch (_) {
+      messenger?.showSnackBar(SnackBar(content: Text(l.cardFaresWatchFailed)));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final watches = ref.watch(fareWatchesProvider).value ?? const [];
+    final w = watches.where((x) => x['card_id'] == widget.cardId).firstOrNull;
+    if (w == null) {
+      return Align(
+        alignment: Alignment.centerLeft,
+        child: OutlinedButton.icon(
+          key: const Key('faresWatch'),
+          onPressed: _busy ? null : _start,
+          icon: const Icon(LucideIcons.bellPlus, size: 16),
+          label: Text(l.cardFaresWatch),
+        ),
+      );
+    }
+    final ends = DateTime.tryParse('${w['ends_at']}');
+    final date = ends == null ? '' : DateFormat.MMMd(l.localeName).format(ends.toLocal());
+    final below = w['below'];
+    return LivePanel(
+      child: Row(
+        children: [
+          const Icon(LucideIcons.bellRing, size: 16, color: _planeBlue),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              below is num
+                  ? l.cardFaresWatchingBelow(fmtFare(context, below, widget.currency), date)
+                  : l.cardFaresWatching(date),
+              style: context.cardLabel,
+            ),
+          ),
+          TextButton(
+            key: const Key('faresWatchStop'),
+            onPressed: _busy ? null : _stop,
+            child: Text(l.cardFaresWatchStop),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Asks for an optional target price; answers 0 for "any big drop", null when cancelled.
+class _WatchDialog extends StatefulWidget {
+  const _WatchDialog({required this.currency, required this.cheapest});
+  final String? currency;
+  final num cheapest;
+
+  @override
+  State<_WatchDialog> createState() => _WatchDialogState();
+}
+
+class _WatchDialogState extends State<_WatchDialog> {
+  final _target = TextEditingController();
+
+  @override
+  void dispose() {
+    _target.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    return AlertDialog(
+      title: Text(l.cardFaresWatchTitle),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(l.cardFaresWatchBody),
+          const SizedBox(height: 16),
+          TextField(
+            key: const Key('faresWatchTarget'),
+            controller: _target,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            decoration: InputDecoration(
+              labelText: l.cardFaresWatchTarget,
+              helperText: l.cardFaresWatchAnyDrop,
+              suffixText: widget.currency,
+              hintText: (widget.cheapest * 0.9).round().toString(),
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(MaterialLocalizations.of(context).cancelButtonLabel),
+        ),
+        FilledButton(
+          key: const Key('faresWatchStart'),
+          onPressed: () {
+            final v = double.tryParse(_target.text.replaceAll(RegExp(r'[^0-9.]'), ''));
+            Navigator.of(context).pop(v ?? 0);
+          },
+          child: Text(l.cardFaresWatchStart),
+        ),
+      ],
     );
   }
 }

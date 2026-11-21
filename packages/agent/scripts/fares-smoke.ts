@@ -4,7 +4,7 @@
  * (costs one search of the plan). Not run in CI.
  */
 import { liveCache, liveHttp } from "../src/live-data/core.ts";
-import { fareQuery, faresCard, type FaresMeter, searchFares } from "../src/live-data/fares.ts";
+import { type FaresMeter, fareQuery, faresCard, searchFares } from "../src/live-data/fares.ts";
 
 const which = process.argv[2] ?? "kiwi";
 const meter: FaresMeter = {

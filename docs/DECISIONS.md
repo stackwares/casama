@@ -7259,8 +7259,32 @@ only the last words of a help sentence. So:
   airports, bags (Kiwi), and Book (the system or in-app browser, D-352). Google cards say the return
   is picked on Google Flights. Older apps leave the card out; the bot's sentence still answers.
   Not pinnable to widgets yet.
-- **Not done:** price watches (Phase 3), affiliate links (Phase 4); not deployed; no app build;
-  `LIVE_SERPAPI_KEY` not on any server.
+- **Price watches (Phase 3, Oliver: "go build all in 1 go"):** a new table `fare_watches`
+  (migration `20270314100001`, RLS: a person reads only their own; the server writes) instead of
+  watch fields on pins, because a watch is one person's while a card belongs to the chat, and
+  watches need no widget. Started with **Watch price** on the card (optional target price) or by the
+  bot (`live.fares` with `watch: {below?}`); at most 5 active per workspace, one per card and person.
+  The worker checks due watches every 5 minutes next to pinned cards (`sweepFareWatches` in
+  `live-data/watches.ts`): each watch every 6 hours ± 30 minutes, through the card's own refresh, so
+  it uses free providers only (no meter → Google is skipped) and the shared cache. A push (kind
+  `fare_drop`, the Routines notification group, plain text) when the price is at or under the target
+  and lower than the last push, or 10% under the last push (or the first price); at most one a day.
+  A watch ends after the departure day (or month) or 60 days, whichever is first. Settings → Cards
+  lists active watches with Stop. Routes: `POST/DELETE /v1/live-cards/{id}/watch`,
+  `GET /v1/me/fare-watches`.
+- **Affiliate links (Phase 4):** `LIVE_FARES_AFFILIATE_URL` is the affiliate network's https link
+  with `{url}` where the booking page goes (URL-encoded); booking links on
+  `LIVE_FARES_AFFILIATE_HOSTS` (default `kiwi.com`) are wrapped on the server when the card is built,
+  the card gets `affiliate: true`, and the app shows "Casama may earn a commission…". A template, not
+  a marker, because Travelpayouts' link format is only known after Oliver's account is approved.
+  Unset = plain links. Google Flights links are never wrapped.
+- **Tests (Phases 3–4):** `packages/agent/test/live-fare-watches.test.ts` (end dates, spread, push
+  rules, words), `apps/server/test/fare-watches.test.ts` (start from the card and from the bot, one
+  push on a drop and none again that day, five per workspace, Stop, the end date, Fares only),
+  `supabase/tests/fare_watches_rls.test.sql`, affiliate cases in both `live-fares` tests, and the
+  watch, Settings and disclosure cases in `client/test/live_cards_test.dart`.
+- **Not done:** not deployed; no app build; `LIVE_SERPAPI_KEY` and `LIVE_FARES_AFFILIATE_URL` not on
+  any server; Travelpayouts sign-up is Oliver's.
 
 ## D-472 Computers burst to 2 CPUs while the machine is free; their share stays their size (2026-11-21)
 

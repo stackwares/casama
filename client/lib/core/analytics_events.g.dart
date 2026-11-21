@@ -64,6 +64,8 @@ const analyticsClientEvents = <String>{
   'app_mention_connect_started',
   'group_chat_from_mention',
   'card_refreshed',
+  'fare_watch_started',
+  'fare_watch_stopped',
   'card_pinned',
   'card_unpinned',
   'card_shared',

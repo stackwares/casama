@@ -2279,6 +2279,24 @@
       "funnels": []
     },
     {
+      "name": "fare_watch_started",
+      "by": ["client"],
+      "description": "The person started a price watch on a Fares card (FLIGHT-SEARCH-PLAN §9).",
+      "properties": {
+        "target": { "type": "boolean", "description": "Whether they set a target price" }
+      },
+      "funnels": []
+    },
+    {
+      "name": "fare_watch_stopped",
+      "by": ["client"],
+      "description": "The person stopped a price watch, on the card or in Settings → Cards.",
+      "properties": {
+        "where": { "type": "string", "values": ["card", "settings"] }
+      },
+      "funnels": []
+    },
+    {
       "name": "card_pinned",
       "by": ["client"],
       "description": "A live card was pinned to the person's widgets (RICH-CARDS-PLAN §4.5).",

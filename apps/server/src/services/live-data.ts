@@ -1,5 +1,10 @@
 /** Live data cards (docs/RICH-CARDS-PLAN.md): the engine's settings from the environment. */
-import { FARE_PROVIDERS, type FareProviderId, type LiveConfig } from "@casama/agent";
+import {
+  FARE_PROVIDERS,
+  type FareProviderId,
+  faresAffiliate,
+  type LiveConfig,
+} from "@casama/agent";
 import type { Env } from "../env.ts";
 
 export function liveDataConfigFromEnv(
@@ -21,6 +26,8 @@ export function liveDataConfigFromEnv(
     | "LIVE_SERPAPI_MONTHLY_CAP"
     | "LIVE_SERPAPI_COST_USD"
     | "LIVE_FARES_GOOGLE_PRICE_USD"
+    | "LIVE_FARES_AFFILIATE_URL"
+    | "LIVE_FARES_AFFILIATE_HOSTS"
     | "BILLING_ENABLED"
   >,
 ): LiveConfig | null {
@@ -60,5 +67,6 @@ function faresConfig(
       monthlyCap: env.LIVE_SERPAPI_MONTHLY_CAP,
       billing,
     },
+    faresAffiliate: faresAffiliate(env.LIVE_FARES_AFFILIATE_URL, env.LIVE_FARES_AFFILIATE_HOSTS),
   };
 }

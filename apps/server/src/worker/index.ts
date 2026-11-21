@@ -78,6 +78,7 @@ import {
   searchProviderFor,
   serverSearchChain,
   startLivePrices,
+  sweepFareWatches,
   TregProvider,
   TwilioClient,
   type VoipSender,
@@ -1040,6 +1041,12 @@ export async function startWorker(opts: WorkerOptions) {
         void (async () => {
           const changed = await refreshPins(db, liveEngine);
           for (const userId of changed) glancePusher?.changed(userId, { urgent: false });
+          // Fare price watches (FLIGHT-SEARCH-PLAN §9): free providers only, pushes on a drop.
+          await sweepFareWatches(db, liveEngine, (userId, orgId, message) =>
+            notifications.notify(userId, orgId, "fare_drop", message),
+          ).catch((e: unknown) =>
+            opts.logger.warn("fare watches not checked", { error: String(e) }),
+          );
           if (++pinTicks % 12 === 0) await pruneLiveCache(db);
         })().catch((e: unknown) =>
           opts.logger.warn("pinned cards not refreshed", { error: String(e) }),

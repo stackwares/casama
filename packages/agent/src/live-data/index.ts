@@ -8,3 +8,4 @@ export * from "./pins.ts";
 export * from "./places.ts";
 export * from "./refresh.ts";
 export * from "./tools.ts";
+export * from "./watches.ts";

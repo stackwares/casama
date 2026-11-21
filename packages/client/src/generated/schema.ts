@@ -7937,6 +7937,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/me/fare-watches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The person's active price watches */
+        get: operations["listFareWatches"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/live-cards/{id}/pin": {
         parameters: {
             query?: never;
@@ -8001,6 +8018,24 @@ export interface paths {
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/live-cards/{id}/watch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Watch a Fares card's price: the server checks it every few hours (free providers only) and pushes when it drops. Up to 5 watches per workspace */
+        post: operations["watchLiveCard"];
+        /** Stop watching a Fares card's price */
+        delete: operations["unwatchLiveCard"];
         options?: never;
         head?: never;
         patch?: never;
@@ -16426,6 +16461,28 @@ export interface components {
         LiveCardData: {
             [key: string]: unknown;
         };
+        FareWatchList: {
+            items: components["schemas"]["FareWatch"][];
+        };
+        FareWatch: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            card_id: string;
+            /** Format: uuid */
+            bot_id: string | null;
+            route: string;
+            below: number | null;
+            currency: string;
+            first_price: number | null;
+            last_price: number | null;
+            /** Format: date-time */
+            last_checked_at: string | null;
+            /** Format: date-time */
+            ends_at: string;
+            /** Format: date-time */
+            created_at: string;
+        };
         PinnedLiveCard: {
             /** Format: uuid */
             canvas_id: string;
@@ -16481,6 +16538,9 @@ export interface components {
                 /** @enum {string} */
                 distance?: "km" | "mi";
             } | null;
+        };
+        WatchFares: {
+            below?: number | null;
         };
         WidgetKeyCreated: {
             /** Format: uuid */
@@ -46018,6 +46078,35 @@ export interface operations {
             };
         };
     };
+    listFareWatches: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Watches */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FareWatchList"];
+                };
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     pinLiveCard: {
         parameters: {
             query?: never;
@@ -46266,6 +46355,110 @@ export interface operations {
             };
             /** @description Rate limited */
             429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    watchLiveCard: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WatchFares"];
+            };
+        };
+        responses: {
+            /** @description Watching */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FareWatch"];
+                };
+            };
+            /** @description Validation failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    unwatchLiveCard: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Stopped */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        ok: boolean;
+                    };
+                };
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not found */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

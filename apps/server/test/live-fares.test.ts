@@ -76,6 +76,22 @@ describe("fares config", () => {
     });
     expect(liveDataConfigFromEnv(env({ LIVE_FARES: "off" }))!.kiwiMcpUrl).toBeUndefined();
   });
+
+  it("wraps booking links only with a safe affiliate template", () => {
+    expect(liveDataConfigFromEnv(env())!.faresAffiliate).toBeUndefined();
+    expect(
+      liveDataConfigFromEnv(env({ LIVE_FARES_AFFILIATE_URL: "http://x.example/{url}" }))!
+        .faresAffiliate,
+    ).toBeUndefined();
+    expect(
+      liveDataConfigFromEnv(
+        env({
+          LIVE_FARES_AFFILIATE_URL: "https://tp.example/r?u={url}",
+          LIVE_FARES_AFFILIATE_HOSTS: "kiwi.com,www.kiwi.com",
+        }),
+      )!.faresAffiliate,
+    ).toEqual({ template: "https://tp.example/r?u={url}", hosts: ["kiwi.com", "www.kiwi.com"] });
+  });
 });
 
 describe("fares meter", () => {

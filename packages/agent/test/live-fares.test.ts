@@ -14,6 +14,7 @@ import {
   type FareSearch,
   type FaresMeter,
   fareQuery,
+  faresAffiliate,
   faresCard,
   kiwiArgs,
   parseKiwi,
@@ -21,6 +22,7 @@ import {
   resetFareProviders,
   searchFares,
   serpParams,
+  withAffiliate,
 } from "../src/live-data/fares.ts";
 
 const fixture = (name: string) =>
@@ -298,5 +300,49 @@ describe("engine", () => {
       unofficial: false,
     });
     expect(off.available()).not.toContain("fares");
+  });
+});
+
+describe("affiliate links (Phase 4)", () => {
+  const card = () =>
+    faresCard(trip(), {
+      provider: "kiwi",
+      options: KIWI.options,
+      fetchedAt: new Date(),
+    } as never);
+
+  it("takes only an https template with {url}", () => {
+    expect(faresAffiliate(undefined, undefined)).toBeUndefined();
+    expect(faresAffiliate("https://tp.example/r?m=1", undefined)).toBeUndefined();
+    expect(faresAffiliate("http://tp.example/r?u={url}", undefined)).toBeUndefined();
+    expect(faresAffiliate("javascript:{url}", undefined)).toBeUndefined();
+    expect(faresAffiliate("https://tp.example/r?u={url}", " Kiwi.com , ")).toEqual({
+      template: "https://tp.example/r?u={url}",
+      hosts: ["kiwi.com"],
+    });
+  });
+
+  it("wraps booking links on the listed hosts and marks the card", () => {
+    const aff = faresAffiliate("https://tp.example/r?marker=42&u={url}", undefined)!;
+    const plain = card();
+    const built = withAffiliate(plain, aff);
+    const opts = built.card.options as { link: string }[];
+    const orig = plain.card.options as { link: string }[];
+    expect(built.card.affiliate).toBe(true);
+    expect(opts[0]!.link).toBe(
+      `https://tp.example/r?marker=42&u=${encodeURIComponent(orig[0]!.link)}`,
+    );
+    expect(built.text).toBe(plain.text);
+    // Google's links aren't in the programme: left alone, no disclosure.
+    const google = withAffiliate(
+      faresCard(trip(), {
+        provider: "serpapi",
+        options: SERP.options,
+        fetchedAt: new Date(),
+      } as never),
+      aff,
+    );
+    expect(google.card.affiliate).toBeUndefined();
+    expect(withAffiliate(plain, undefined)).toBe(plain);
   });
 });

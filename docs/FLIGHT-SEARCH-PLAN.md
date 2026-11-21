@@ -1,9 +1,10 @@
 # Flight search for bots: plan
 
-Status: **in progress.** Approved 2026-11-21 (Oliver: "just build the fall backs", without buying a
-SerpApi plan yet). Phases 0–2 are built (D-471): Kiwi.com → Google Flights chain, `live.fares`,
-charging, limits, docs, and the native Fares card. Phase 3 (price watches) and Phase 4 (affiliate
-links) wait for Oliver's go-ahead. Written 2026-11-21;
+Status: **built, not deployed.** Approved 2026-11-21 (Oliver: "just build the fall backs", without
+buying a SerpApi plan yet, then "go build all in 1 go"). All phases are built (D-471): Kiwi.com →
+Google Flights chain, `live.fares`, charging, limits, the native Fares card, price watches, and
+affiliate link wrapping (switched on by `LIVE_FARES_AFFILIATE_URL` once Oliver's Travelpayouts
+account is approved). Written 2026-11-21;
 §2 decisions were Claude's at Oliver's request. Phase 0 findings and changes are in D-471.
 
 ## Execution brief (read this first)

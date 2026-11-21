@@ -237,6 +237,12 @@ export const ANALYTICS_CLIENT_EVENTS: Record<string, string[]> = {
     "trigger",
     "result"
   ],
+  "fare_watch_started": [
+    "target"
+  ],
+  "fare_watch_stopped": [
+    "where"
+  ],
   "card_pinned": [
     "card",
     "waiting"

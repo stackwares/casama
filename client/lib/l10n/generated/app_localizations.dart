@@ -29342,6 +29342,108 @@ abstract class AppLocalizations {
   /// **'{cabin} cabin, {checked} checked bags'**
   String cardFaresBags(int cabin, int checked);
 
+  /// No description provided for @cardFaresAffiliate.
+  ///
+  /// In en, this message translates to:
+  /// **'Casama may earn a commission when you book through these links. It doesn\'t change the price.'**
+  String get cardFaresAffiliate;
+
+  /// No description provided for @cardFaresWatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Watch price'**
+  String get cardFaresWatch;
+
+  /// No description provided for @cardFaresWatching.
+  ///
+  /// In en, this message translates to:
+  /// **'Watching · ends {date}'**
+  String cardFaresWatching(String date);
+
+  /// No description provided for @cardFaresWatchingBelow.
+  ///
+  /// In en, this message translates to:
+  /// **'Watching for {price} or less · ends {date}'**
+  String cardFaresWatchingBelow(String price, String date);
+
+  /// No description provided for @cardFaresWatchStop.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop'**
+  String get cardFaresWatchStop;
+
+  /// No description provided for @cardFaresWatchTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Watch this price'**
+  String get cardFaresWatchTitle;
+
+  /// No description provided for @cardFaresWatchBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Casama checks this trip every few hours and sends you a notification when the price drops. It stops after the departure date or in 60 days.'**
+  String get cardFaresWatchBody;
+
+  /// No description provided for @cardFaresWatchTarget.
+  ///
+  /// In en, this message translates to:
+  /// **'Tell me when it\'s under (optional)'**
+  String get cardFaresWatchTarget;
+
+  /// No description provided for @cardFaresWatchAnyDrop.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave empty for any big drop'**
+  String get cardFaresWatchAnyDrop;
+
+  /// No description provided for @cardFaresWatchStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Watch'**
+  String get cardFaresWatchStart;
+
+  /// No description provided for @cardFaresWatchStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Watching this price. You\'ll get a notification when it drops.'**
+  String get cardFaresWatchStarted;
+
+  /// No description provided for @cardFaresWatchStopped.
+  ///
+  /// In en, this message translates to:
+  /// **'Stopped watching this price.'**
+  String get cardFaresWatchStopped;
+
+  /// No description provided for @cardFaresWatchFull.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re already watching 5 fares. Stop one in Settings → Cards first.'**
+  String get cardFaresWatchFull;
+
+  /// No description provided for @cardFaresWatchFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t change the price watch. Try again.'**
+  String get cardFaresWatchFailed;
+
+  /// No description provided for @cardsFareWatches.
+  ///
+  /// In en, this message translates to:
+  /// **'Price watches'**
+  String get cardsFareWatches;
+
+  /// No description provided for @cardsFareWatchesNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No price watches. Tap Watch price on a flight fares card to get a notification when it drops.'**
+  String get cardsFareWatchesNone;
+
+  /// No description provided for @cardsFareWatchLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Now {price} · ends {date}'**
+  String cardsFareWatchLine(String price, String date);
+
   /// No description provided for @cardFromBot.
   ///
   /// In en, this message translates to:

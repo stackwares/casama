@@ -361,6 +361,14 @@ export const EnvSchema = z.object({
   LIVE_SERPAPI_MONTHLY_CAP: z.coerce.number().int().min(0).default(225),
   LIVE_SERPAPI_COST_USD: z.coerce.number().min(0).default(0.025),
   LIVE_FARES_GOOGLE_PRICE_USD: z.coerce.number().min(0).default(0.05),
+  /**
+   * Affiliate booking links on Fares cards (FLIGHT-SEARCH-PLAN Phase 4): an https link with `{url}`
+   * where the booking page goes, URL-encoded (for example a Travelpayouts Kiwi.com link with
+   * Casama's marker). Only links on LIVE_FARES_AFFILIATE_HOSTS (default kiwi.com) are wrapped, and
+   * the card shows a disclosure line. Unset = plain links.
+   */
+  LIVE_FARES_AFFILIATE_URL: z.string().optional(),
+  LIVE_FARES_AFFILIATE_HOSTS: z.string().optional(),
   TREG_API_KEY: z.string().optional(),
   TREG_RESALE: z.enum(["on", "off"]).default("off"),
   TREG_API_URL: z.url().optional(),
