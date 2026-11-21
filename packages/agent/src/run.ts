@@ -2881,10 +2881,10 @@ async function spend(
       (select balance_after from public.credit_ledger where org_id = ${info.orgId}::uuid order by seq desc limit 1) as credits,
       (select coalesce(sum(cost_usd), 0) from public.usage_ledger
         where org_id = ${info.orgId}::uuid and billable and billed_at is null) as unbilled,
-      (select coalesce(sum(cost_usd), 0) from public.usage_ledger
+      greatest(0, (select coalesce(sum(cost_usd), 0) from public.usage_ledger
         where org_id = ${info.orgId}::uuid and billable
           and kind <> all('{computer_seconds,stream_seconds}'::text[])
-          and created_at >= date_trunc('day', now() at time zone 'utc') at time zone 'utc') - public.limit_reset_offset(${info.orgId}::uuid,'daily') as cloud_today`);
+          and created_at >= date_trunc('day', now() at time zone 'utc') at time zone 'utc') - public.limit_reset_offset(${info.orgId}::uuid,'daily')) as cloud_today`);
   // Entitlements are the only billing input (D-070): a monthly cost cap and credits. Computer
   // hours stop only the computer, at its start (computers.ts), never the whole run (D-442).
   const limits = row?.limits ?? {};
