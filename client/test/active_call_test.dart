@@ -34,6 +34,9 @@ class CallsConnector implements VoiceCallConnector {
     calls.add(c);
     return c;
   }
+
+  @override
+  Future<bool> micAllowed() async => true;
 }
 
 const otherBotId = 'bot-max';
