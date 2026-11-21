@@ -18,38 +18,40 @@ Rules that apply to every row:
 
 ## Status at a glance
 
-✅ = yes · ❌ = not yet · ➖ = not doing / doesn't apply. "Submitted" means sent to the store (or
-published, where there is no review); "Live" means people can install it from there today.
+✅ = yes · ⏳ = waiting for the store's review · ❌ = not yet · ➖ = not doing / doesn't apply.
+"Submitted" means sent for the store's public release (or published, where there is no review).
+"Testing" means a test channel has a build testers can install: TestFlight, Play internal / closed /
+open testing, Snap beta and so on. "Live" means anyone can install it from the store's public page.
 
-| Store | Platform | Submitted | Live | Where it stands | Next step |
-|---|---|:-:|:-:|---|---|
-| **Web app** (app.casama.ai) | Browser | ✅ | ✅ | Live | — |
-| **Direct download** (GitHub Releases) | macOS, Windows, Linux | ✅ | ✅ | v0.1.0 released 2026-11-21 | Each release with its Mac App Store twin |
-| **Google Play** (phone, tablet) | Android | ✅ | ❌ | Closed testing Alpha 0.1.0 (44) in review since 2026-11-19 | Open testing / production when Oliver says |
-| **Google Play** (Wear OS) | Wear OS | ❌ | ❌ | Tracks exist (`wear:internal`, `wear:beta`, `wear:production`) | Ship with every phone release (AGENTS.md) |
-| **App Store** (iPhone, iPad, Watch inside) | iOS | ❌ | ❌ | Listing, privacy, IAPs ready; never sent for review | First review when Oliver says |
-| **Mac App Store** | macOS | ❌ | ❌ | Same record as iOS; profiles regenerated 2026-11-19 | Ships together with the direct DMG |
-| **Chrome Web Store** | Chrome, Brave, Arc, Vivaldi, Opera | ✅ | ❌ | 0.1.0 in review since 2026-11-21 (id `kkfppfhkjnenffibmnkphnbejidkmbkj`) | Wait |
-| **Edge Add-ons** | Edge | ✅ | ❌ | 0.1.0 in review since 2026-11-21 (about 7 business days) | Wait |
-| **Firefox Add-ons** (AMO) | Firefox | ✅ | ❌ | 0.1.0 in review since 2026-11-21 (`casama@casama.ai`) | Wait |
-| **Snap Store** | Linux | ❌ | ❌ | Name `casama` approved 2026-11-18; classic confinement request not filed | File classic request, first upload |
-| **Microsoft Store** | Windows | ❌ | ❌ | MSIX packaging exists (`scripts/package-windows.ps1`); no listing | Decide; reserve the name |
-| Homebrew Cask (`casama`) | macOS | ❌ | ❌ | Planned; own tap first (0 stars, not "notable" yet) | See "Other Mac stores" |
-| MacUpdate, Softpedia, Uptodown, Softonic, Mac Informer | macOS | ❌ | ❌ | Planned (free listings) | See "Other Mac stores" |
-| MacUpdater, Latest, Applite | macOS | ➖ | ❌ | Nothing to submit: they read Homebrew or our Sparkle feed | Comes with the cask |
-| Setapp | macOS | ❌ | ❌ | Maybe: needs its own build and a pricing decision | See "Other Mac stores" |
-| Flathub (Flatpak) | Linux | ❌ | ❌ | Planned | See "Other Linux stores" |
-| AUR (`casama-bin`) | Arch Linux | ❌ | ❌ | Planned | See "Other Linux stores" |
-| AppImage (+ AppImageHub) | Linux | ❌ | ❌ | Maybe | See "Other Linux stores" |
-| Own apt / dnf repository (.deb, .rpm) | Debian, Ubuntu, Fedora | ❌ | ❌ | Maybe | See "Other Linux stores" |
-| Fedora COPR, nixpkgs, Ubuntu PPA, elementary AppCenter | Linux | ➖ | ➖ | Not now | See "Other Linux stores" |
-| GitHub Releases APK (+ Obtainium, IzzyOnDroid) | Android | ❌ | ❌ | Planned | See "Other Android stores" |
-| Samsung Galaxy Store | Android | ❌ | ❌ | Planned | See "Other Android stores" |
-| Aptoide, APKPure, Uptodown | Android | ❌ | ❌ | Maybe | See "Other Android stores" |
-| Amazon Appstore | Fire tablets only | ❌ | ❌ | Maybe | See "Other Android stores" |
-| Huawei AppGallery | Android without Google | ❌ | ❌ | Later | See "Other Android stores" |
-| F-Droid | Android (FOSS only) | ❌ | ❌ | Later | See "Other Android stores" |
-| China mainland stores (Xiaomi, OPPO, vivo, Tencent, Baidu) | Android | ➖ | ➖ | Not doing: China is off on purpose (no CAC AIGC filing) | — |
+| Store | Platform | Submitted | Testing | Live | Where it stands | Next step |
+|---|---|:-:|:-:|:-:|---|---|
+| **Web app** (app.casama.ai) | Browser | ✅ | ➖ | ✅ | Live | — |
+| **Direct download** (GitHub Releases) | macOS, Windows, Linux | ✅ | ➖ | ✅ | v0.1.0 released 2026-11-21 | Each release with its Mac App Store twin |
+| **Google Play** (phone, tablet) | Android | ❌ | ✅ | ❌ | Internal testing 0.1.0 (67) available. Closed testing (Alpha) 0.1.0 (49), promoted 2026-11-20, ⏳ under Play review (the API can't show approval; check the Console). Production 0.1.0 (67) saved as a draft, not sent | Production when Oliver says |
+| **Google Play** (Wear OS) | Wear OS | ❌ | ✅ | ❌ | Internal testing 0.1.0 (1000000067) available. `wear:production` 0.1.0 (1000000067) saved as a draft, not sent; `wear:beta` (open testing) empty. Wear has no closed track | Production with the phone release (AGENTS.md) |
+| **App Store** (iPhone, iPad, Watch inside) | iOS | ❌ | ✅ | ❌ | TestFlight internal ("Casama team") has 0.1.0 (67). External "Public Beta" group: 67 ⏳ in Beta App Review since 2026-11-20; public link https://testflight.apple.com/join/n21dCaRu works once approved. App Store version 1.0 still "Prepare for Submission" | App Review when Oliver says |
+| **Mac App Store** | macOS | ❌ | ✅ | ❌ | Same as iOS: TestFlight internal has 0.1.0 (67); "Public Beta" 67 ⏳ in Beta App Review since 2026-11-20 (same link). Mac version 1.0 "Prepare for Submission" | Ships together with the direct DMG |
+| **Chrome Web Store** | Chrome, Brave, Arc, Vivaldi, Opera | ✅ | ➖ | ⏳ | 0.1.0 in review since 2026-11-21 (id `kkfppfhkjnenffibmnkphnbejidkmbkj`) | Wait |
+| **Edge Add-ons** | Edge | ✅ | ➖ | ⏳ | 0.1.0 in review since 2026-11-21 (about 7 business days) | Wait |
+| **Firefox Add-ons** (AMO) | Firefox | ✅ | ➖ | ⏳ | 0.1.0 in review since 2026-11-21 (`casama@casama.ai`) | Wait |
+| **Snap Store** | Linux | ❌ | ❌ | ❌ | Name `casama` approved 2026-11-18; classic confinement request not filed | File classic request, first upload |
+| **Microsoft Store** | Windows | ❌ | ❌ | ❌ | MSIX packaging exists (`scripts/package-windows.ps1`); no listing | Decide; reserve the name |
+| Homebrew Cask (`casama`) | macOS | ❌ | ➖ | ❌ | Planned; own tap first (0 stars, not "notable" yet) | See "Other Mac stores" |
+| MacUpdate, Softpedia, Uptodown, Softonic, Mac Informer | macOS | ❌ | ➖ | ❌ | Planned (free listings) | See "Other Mac stores" |
+| MacUpdater, Latest, Applite | macOS | ➖ | ➖ | ❌ | Nothing to submit: they read Homebrew or our Sparkle feed | Comes with the cask |
+| Setapp | macOS | ❌ | ➖ | ❌ | Maybe: needs its own build and a pricing decision | See "Other Mac stores" |
+| Flathub (Flatpak) | Linux | ❌ | ❌ | ❌ | Planned | See "Other Linux stores" |
+| AUR (`casama-bin`) | Arch Linux | ❌ | ➖ | ❌ | Planned | See "Other Linux stores" |
+| AppImage (+ AppImageHub) | Linux | ❌ | ➖ | ❌ | Maybe | See "Other Linux stores" |
+| Own apt / dnf repository (.deb, .rpm) | Debian, Ubuntu, Fedora | ❌ | ➖ | ❌ | Maybe | See "Other Linux stores" |
+| Fedora COPR, nixpkgs, Ubuntu PPA, elementary AppCenter | Linux | ➖ | ➖ | ➖ | Not now | See "Other Linux stores" |
+| GitHub Releases APK (+ Obtainium, IzzyOnDroid) | Android | ❌ | ➖ | ❌ | Planned | See "Other Android stores" |
+| Samsung Galaxy Store | Android | ❌ | ❌ | ❌ | Planned | See "Other Android stores" |
+| Aptoide, APKPure, Uptodown | Android | ❌ | ➖ | ❌ | Maybe | See "Other Android stores" |
+| Amazon Appstore | Fire tablets only | ❌ | ❌ | ❌ | Maybe | See "Other Android stores" |
+| Huawei AppGallery | Android without Google | ❌ | ❌ | ❌ | Later | See "Other Android stores" |
+| F-Droid | Android (FOSS only) | ❌ | ➖ | ❌ | Later | See "Other Android stores" |
+| China mainland stores (Xiaomi, OPPO, vivo, Tencent, Baidu) | Android | ➖ | ➖ | ➖ | Not doing: China is off on purpose (no CAC AIGC filing) | — |
 
 When a store's state changes, flip its marks in the same commit (AGENTS.md).
 
@@ -67,7 +69,7 @@ When a store's state changes, flip its marks in the same commit (AGENTS.md).
 | Testers | Email list "Casama team" + "License Testers" |
 | CLI | `gplay` (profile play-publisher); skills `publish-gplay`, `gplay-populate-iap-info` |
 | Build | `scripts/package-android.sh` + `scripts/package-wear.sh` (Wear goes with every Play release) |
-| Status | Alpha 0.1.0 (44) closed testing sent for review 2026-11-19; managed publishing off |
+| Status (checked with `gplay`, 2026-11-21) | internal 0.1.0 (67) completed; alpha (closed testing) 0.1.0 (49) completed, promoted from internal 2026-11-20, under review; production 0.1.0 (67) draft; wear:internal 0.1.0 (1000000067) completed; wear:production 0.1.0 (1000000067) draft; beta and wear:beta empty. Managed publishing off, so Alpha reaches testers on approval. Until the app is published, Play only allows drafts outside internal testing |
 
 ### App Store and Mac App Store
 
@@ -82,7 +84,8 @@ When a store's state changes, flip its marks in the same commit (AGENTS.md).
 | Territories | All except China mainland (App Compliance answered No for both CAC entries) |
 | CLI | `asc`; skills `publish-asc`, `asc-metadata-sync`, `app-store-preflight-skills` |
 | Build | `scripts/package-ios.sh`, `scripts/package-macos-appstore.sh` (with `CASAMA_DISTRIBUTION=appstore`) |
-| Status | Never sent for review. Watch app ships inside the iOS record when built |
+| TestFlight (checked with `asc`, 2026-11-21) | Internal group "Casama team": every build, iOS + Mac, latest 0.1.0 (67). External group "Public Beta" (public link https://testflight.apple.com/join/n21dCaRu, feedback on): build 67 iOS + Mac waiting for Beta App Review since 2026-11-20 |
+| Status | App Store versions 1.0 (iOS, Mac) in "Prepare for Submission": never sent for App Review. Watch app ships inside the iOS record when built |
 
 ### Desktop direct download
 
