@@ -1,6 +1,6 @@
 # A browser on your phone that your bots can use: plan
 
-Status: **built, not shipped** (2026-11-21, D-472). Oliver took every decision in §13 as written
+Status: **built, not shipped** (2026-11-21, D-476). Oliver took every decision in §13 as written
 and asked for all phases in one go. The code for Phases 0 to 3 and the tools for Phase 4 are on
 branch `phone-browser`. Nothing is deployed, no phone build has been made, and the stage is Off.
 "Built so far" below says what exists and what was never run; §16 is what waits for Oliver.

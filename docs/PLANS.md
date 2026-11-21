@@ -33,7 +33,6 @@ same commit. Shipping details (deploys, app builds) move fast, so check them bef
 
 | Plan | Decisions | What's left |
 |---|---|---|
-| [PHONE-BROWSER-PLAN](PHONE-BROWSER-PLAN.md) | §13 as written | Approved 2026-11-21 ("start building all now in 1 go"). Building on branch `phone-browser`; phases 0–3 in code, Phase 4 (switching on) follows its bars. Flutter runs on phones, deploys and stage switches wait for Oliver's yes (§16) |
 | [SCREEN-CARD-PLAN](SCREEN-CARD-PLAN.md) | — | Approved 2026-11-21 with every default in §11. Phase 0 done (measurements, sample card driven in the web app). Phases 1 and 2 built 2026-11-21 (lighter screenshot route, show/hide rules, setting, analytics; states, menu, first-time line, group chats, call tile), web build 73 live; server fix 44b88cda (sharp at runtime) pushed, awaiting the next server deploy. Phase 3 undecided |
 | [SETUP-SCREEN-PLAN](SETUP-SCREEN-PLAN.md) | D-309 | Built 2026-11-21: two-pane setup screen with the painted scene and a mascot per step; real progress on the parts download |
 | [BOT-EMAIL-NEXT-PLAN](BOT-EMAIL-NEXT-PLAN.md) | D-451 | Live 2026-11-20: server (`9cfc36a2`) and web app build 61; Cloudflare asked for 10,000 a day. Left: store builds; raise `MAIL_SEND_DAILY_MAX` when Cloudflare answers |
@@ -50,6 +49,7 @@ same commit. Shipping details (deploys, app builds) move fast, so check them bef
 
 | Plan | Decisions | What's left |
 |---|---|---|
+| [PHONE-BROWSER-PLAN](PHONE-BROWSER-PLAN.md) | D-476 | Built 2026-11-21: server, page script, app screens, native web area, admin bot tools, store kit. Stage is Off; public builds don't contain it. Left (§16): a server deploy (migration `20270319100001`), the first phone builds (the Swift and Kotlin have never compiled), the 20-site test on an iPhone and an Android phone, then each stage with Oliver's yes |
 | [FLIGHT-SEARCH-PLAN](FLIGHT-SEARCH-PLAN.md) | D-471 | Built 2026-11-21, all phases: Kiwi.com → Google Flights chain, `live.fares`, $0.05 Google charge, limits, native Fares card, price watches (migration `20270314100001`), affiliate link wrapping. Left: Travelpayouts sign-up and `LIVE_FARES_AFFILIATE_URL` (Oliver), Kiwi's written OK and SerpApi Starter before Cloud relies on Google, server deploy, app builds |
 | [MCP-IN-CHAT-PLAN](MCP-IN-CHAT-PLAN.md) | D-473 | Built 2026-11-21 on local main, tests green. Not pushed or deployed; no app builds. Bots offer any MCP server in chat and the person signs in there |
 | [BUG-HUNT-PLAN](BUG-HUNT-PLAN.md) | — | First pass 2026-11-21: 24 fixes on main (`reports/bug-hunt-2026-11-21.md`). Left: server deploy (closes the `casama_migrations` RLS hole in prod), "Needs Oliver" items, macOS core path and Apple Watch screens |

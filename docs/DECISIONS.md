@@ -7326,3 +7326,63 @@ only the last words of a help sentence. So:
 - **Cost:** one idle headless container, about 15 MiB and no CPU while it waits; it refills after
   each claim and every minute. Backups of the old `.env` are in `/root/.env.bak-*` on the server.
 - **Self-hosting:** defaults unchanged (`WARM_POOL_SIZE` 0, `COMPUTER_MEMORY_MB` 2048).
+
+## D-476 A browser inside the phone app that a bot can drive, built and kept off (2026-11-21)
+
+- **Asked by Oliver:** "drive our own platform-native in-app webview instead of from a bot's
+  computer, for specific tasks only, falling back to the Linux computer's browser", then "build it
+  but not enable right away, enable at the right time at the right task and you decide it for me",
+  then "start building all now in 1 go". Plan: `docs/PHONE-BROWSER-PLAN.md`, every decision in its
+  §13 taken as written.
+- **What it is:** a third place for the `browser.*` tools, next to the bot's computer and the
+  person's Chrome (D-323): a web area inside the app on iPhone, iPad and Android. Tools take
+  `where: "phone"`. The bot's computer stays the default.
+- **The one exception to "No WebViews in the app"** (D-092): a web area may show other people's
+  websites as a browser a bot or the person uses. It never draws a Casama screen or a plugin's
+  screen, and it is our own Swift and Kotlin, no WebView package. `AGENTS.md` says so.
+- **Built but off, without hiding it:** Apple (2.5.19) and Google Play forbid features that ship
+  hidden and are switched on later. So the Dart, Swift and Kotlin are compiled in only with
+  `scripts/app-browser-switch.sh on` plus `--dart-define=CASAMA_APP_BROWSER=true`; public store
+  builds leave it off until the release that describes it (`client/store/app-browser/`). After
+  that the server stages it.
+- **The stage** is one instance setting, `instance_settings` key `app_browser`: `off` (default),
+  `testers` (listed user ids) or `on` (per system), plus which reasons are on. `GET`/`PUT
+  /v1/admin/app-browser`, Admin → Phone Browser, and the admin bot (`admin.phone_browser.status`,
+  `admin.phone_browser.set`, D-435). Going back a stage drops connected phones at once. The
+  workspace switch is `organizations.app_browser` (default on).
+- **When a run may use it** (all of): the stage and workspace allow the person; they turned it on
+  for that phone and allowed the bot; the run is their own chat message (`trigger = 'chat'`, no
+  routine, created by them); that chat is open on that very phone (a `chat_focus` row from the
+  phone's client id, under 45 seconds old); the phone's socket is connected. Checked in the worker
+  (`phoneFor`) and again on every call in the API's tunnel.
+- **Why a run uses it:** the person asks (T1); a site keeps the bot's computer out (T2: block
+  pages are recognised from the text a snapshot or read already returned, counted in the audit log
+  as `browser.blocked`, and offered only when that reason is on); or the site is on the phone's
+  "always" list (T3: a first `browser.open` goes there). Each reason is switched on separately.
+- **The phone is a `local_devices` row of platform `app`** (with `system` and the app's
+  `client_id`), on the same device socket as Casama for Chrome. `GET /v1/local-devices` leaves
+  these rows out unless `all_platforms=true`, because shipped apps read `platform` strictly.
+- **One copy of the step rules:** `risk.ts` moved from the extension to
+  `packages/domain/src/browser-risk.ts`. For a phone the server asks the page what a step is aimed
+  at (`/browser/probe`), then lets it through, sends an ask to the phone (`/browser/ask`, five
+  minutes, anything but "allow" is no), or hands it over. The step carries the element's
+  fingerprint and the page refuses it if the element changed. Site rules run on the phone, in
+  Dart, against cases generated from the TypeScript (`pnpm --filter @casama/domain
+  gen:app-browser`).
+- **The page script** (`packages/page-agent`, shipped as an asset, never downloaded) reads a page
+  into the same snapshot text and refs as the other browsers, leaves hidden text out, never reads
+  password, card or code fields, and runs in an isolated script world in every frame: content
+  worlds on iOS, `JS_INJECTION_IN_FRAME_AND_WORLD` on Android (androidx.webkit 1.18). A phone
+  without that support reports "not available"; there is no fallback into the page's own world.
+- **Its own cookie jar:** `WKWebsiteDataStore(forIdentifier:)` (iOS 17+) and a WebView profile.
+  No disguise as Safari or Chrome. Cookies never leave the phone.
+- **Not on a phone:** console, network, watchers' page checks, routines, tabs, background use.
+- **Tests:** `apps/server/test/app-browser.test.ts` (a fake phone on the real socket and worker),
+  `admin-bot-app-browser.test.ts`, `packages/agent/test/browser-phone.test.ts`,
+  `packages/domain/test/app-browser.test.ts`, `packages/page-agent` (38 tests in Chromium and
+  WebKit), and Flutter tests for the session, socket, site rules and screens.
+- **Not done:** the Swift and Kotlin have never been compiled or run (a build needs Oliver's yes);
+  no end-to-end run through the socket with real pages; the 20-site phone test (plan Phase 0); the
+  page script and site lists ship as assets in every build; a site that opens on the phone by
+  itself doesn't say "on this phone" on its tool row. Nothing is deployed and the stage is Off.
+

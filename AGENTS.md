@@ -66,7 +66,7 @@ Run from the repository root unless a line says otherwise. The full list is in
 - **No WebViews in the app, with one exception.** Every screen is native Flutter. Plugin UI is data
   plus A2UI screens drawn with the app's own component catalog; grow that catalog instead of embedding
   web content. Opening a link in the system browser or in-app browser tab is fine. The one exception
-  (D-472): the phone browser (`client/lib/features/app_browser/`, `docs/PHONE-BROWSER-PLAN.md`) shows
+  (D-476): the phone browser (`client/lib/features/app_browser/`, `docs/PHONE-BROWSER-PLAN.md`) shows
   other people's websites in a web area that a bot or the person uses as a browser. It never draws a
   Casama screen or a plugin's screen, it is our own native code (no WebView package), and it is
   compiled in only with `scripts/app-browser-switch.sh on`. Don't add a second web area or widen
