@@ -5,7 +5,8 @@
 # takes payment: play (the default) buys through Google Play; apk (GitHub Releases, Obtainium,
 # IzzyOnDroid, Aptoide, APKPure, Uptodown) and galaxy (Samsung Galaxy Store) use web checkout. Every
 # distribution is signed with the same upload key. A non-Play build is copied to dist/ as
-# casama-<version>-android-<abi>.apk (or -universal.apk).
+# casama-<version>-android-<abi>.apk (or -universal.apk); the Galaxy Store build is named
+# casama-<version>-galaxy-<abi>.apk, so it never overwrites the APK or lands on the GitHub release.
 # An APK is built per ABI (--split-per-abi): one universal APK carries three copies of every
 # native library (about 330 MB). Pass `apk --no-split` for the universal one. Every APK keeps
 # pubspec's build number (no +1000 per ABI): see force-version-code-ignoring-abi in
@@ -91,16 +92,17 @@ flutter build "$target" --release \
 if [[ "$distribution" != "play" ]]; then
   version=$(grep '^version:' pubspec.yaml | awk '{print $2}' | cut -d+ -f1)
   mkdir -p ../dist
+  label=android; [[ "$distribution" == "galaxy" ]] && label=galaxy
   out=build/app/outputs/flutter-apk
   if [[ "$split" == "1" ]]; then
     for abi in arm64-v8a armeabi-v7a x86_64; do
       [[ -f "$out/app-$abi-release.apk" ]] || continue
-      dest="../dist/casama-$version-android-$abi.apk"
+      dest="../dist/casama-$version-$label-$abi.apk"
       cp "$out/app-$abi-release.apk" "$dest"
       echo "$dest"
     done
   else
-    dest="../dist/casama-$version-android-universal.apk"
+    dest="../dist/casama-$version-$label-universal.apk"
     cp "$out/app-release.apk" "$dest"
     echo "$dest"
   fi
