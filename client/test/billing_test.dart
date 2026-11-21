@@ -318,7 +318,9 @@ void main() {
   testWidgets('the plan stays up top, the usage row opens Usage, Casama Link folds under Advanced', (tester) async {
     SharedPreferences.setMockInitialValues({});
     await setSize(tester, const Size(430, 1800));
-    await tester.pumpWidget(app(FakeBackend()..billingEnabled = true));
+    await tester.pumpWidget(app(FakeBackend()
+      ..billingEnabled = true
+      ..extraUsageItems = [BillingUsageItem(kind: 'voice_seconds', instance: '', quantity: 60, costUsd: 0.01)]));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('currentPlan')), findsOneWidget);
     expect(find.byKey(const Key('openPaywall')), findsOneWidget);
@@ -332,6 +334,9 @@ void main() {
     expect(find.byKey(const Key('createLinkKey')), findsOneWidget);
     // Each charge with the server it came from stays reachable here.
     expect(find.byKey(const Key('billedItems')), findsOneWidget);
+    // Named, never the raw kind.
+    expect(find.text('Voice calls'), findsOneWidget);
+    expect(find.text('voice_seconds'), findsNothing);
 
     await tester.ensureVisible(find.byKey(const Key('billingUsage')));
     await tester.tap(find.byKey(const Key('billingUsage')));

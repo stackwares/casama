@@ -6387,6 +6387,9 @@ class FakeBackend implements Backend {
 
   /// The billing usage call's credit history, newest first.
   var creditEntries = <CreditEntry>[];
+
+  /// More of this month's charges, after the computer hours.
+  var extraUsageItems = <BillingUsageItem>[];
   @override
   Future<BillingUsage> billingUsage(String orgId) async => BillingUsage(
     periodStart: DateTime.utc(2026, 11),
@@ -6397,6 +6400,7 @@ class FakeBackend implements Backend {
         quantity: 7200,
         costUsd: 0.1,
       ),
+      ...extraUsageItems,
     ],
     totalUsd: 0.1,
     credits: creditEntries,

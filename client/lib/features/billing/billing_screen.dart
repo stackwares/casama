@@ -9,6 +9,7 @@ import 'package:casama_sdk/casama_sdk.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../chat/widgets/reply_usage.dart' show usageKindIcon, usageKindLabel;
 import '../../core/analytics.dart';
 import '../../core/billing.dart';
 import '../../core/display_text.dart';
@@ -689,7 +690,8 @@ class _BilledItems extends ConsumerWidget {
         'computer_seconds' => (l10n.usageComputerHours((i.quantity / 3600).humanizedCount(context.l10n.localeName, decimalDigits: 2)), LucideIcons.monitor),
         'stream_seconds' => (l10n.usageLiveViewMinutes((i.quantity / 60).humanizedCount(context.l10n.localeName, decimalDigits: 0)), LucideIcons.monitorPlay),
         _models => (l10n.kindModels, LucideIcons.sparkles),
-        _ => (i.kind, LucideIcons.receiptText),
+        // Voice, speech, pictures, search…: their names, never the raw kind ("voice_seconds").
+        _ => (usageKindLabel(context, i.kind), usageKindIcon(i.kind)),
       };
       return (i.instance.isUsable ? '$what · ${i.instance}' : what, icon);
     }
