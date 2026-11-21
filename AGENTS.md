@@ -28,6 +28,10 @@ Breaking one of these does real damage. The sections below explain each one.
   `grep -n '^## D-212 ' docs/DECISIONS.md` or a keyword search, then read only that entry.
 - Building on Casama from outside (plugins, the API, A2A, templates, the gallery): the skills in
   `agent-kit/skills/` and `docs-site/develop/agents.md`.
+- **Stores and listings** (Google Play, App Store, Mac App Store, desktop downloads, browser
+  extension stores, Snap, other Android stores): `docs/STORES.md`. Read it before any store work.
+  Whenever a listing changes (account made, submitted, approved, rejected, new version live, store
+  added or dropped), update its row and the "Status as of" date in the same commit.
 
 ## Everyday commands
 
@@ -323,6 +327,8 @@ session once ran for 19 hours with nobody using it, holding memory, CPU, a port 
   user picked, but always in this order, and finish each one (health check, upload accepted) before
   you start the next. "Web" covers casama.ai, docs, gallery, casama.link and app.casama.ai. Each
   deploy still needs its own yes, as above.
+- **Every store upload updates `docs/STORES.md`** in the same task: the version, status and date
+  for that store's row.
 - **Builds may run in parallel; deploys stay in order.** When the machine has room (check load and
   free memory and disk, and `scripts/heavy.sh --status`), build several of the chosen platforms at
   once, then ship them in the order above. Parallel Flutter builds need separate checkouts (one
