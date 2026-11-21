@@ -863,9 +863,12 @@ class _ModelAccessSheetState extends State<_ModelAccessSheet> {
           DropdownButtonFormField<String>(
             key: Key('adminCasamaModelsPlan-$plan'),
             initialValue: _plans[plan] ?? 'default',
-            decoration: InputDecoration(labelText: 'Plan: $plan'),
+            // Each tier also covers its yearly and weekly plans (server: basePlanTier).
+            decoration: InputDecoration(
+              labelText: l10n.adminModelAccessPlan('${plan[0].toUpperCase()}${plan.substring(1)}'),
+            ),
             items: [
-              const DropdownMenuItem(value: 'default', child: Text('Follow default')),
+              DropdownMenuItem(value: 'default', child: Text(l10n.adminModelAccessFollowDefault)),
               DropdownMenuItem(value: 'on', child: Text(l10n.on)),
               DropdownMenuItem(value: 'off', child: Text(l10n.off)),
             ],

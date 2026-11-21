@@ -415,6 +415,9 @@ void main() {
     // A model next: ChatGPT in one click, or a key; or later.
     expect(find.text('Give your bots a model'), findsOneWidget);
     expect(find.byKey(const Key('continueWithChatGpt')), findsOneWidget);
+    // The provider tiles make the page taller than the window: scroll to "Later" first.
+    await tester.ensureVisible(find.byKey(const Key('setupSkipModel')));
+    await settle(tester);
     await tester.tap(find.byKey(const Key('setupSkipModel')));
     await settle(tester);
     expect(GuidedSetup.skipped.value, {'ai'});

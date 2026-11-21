@@ -1195,14 +1195,17 @@ class SupabaseBackend implements Backend {
     String persona = '',
     String? templateId,
     String? avatarUrl,
+    bool followWorkspace = false,
   }) async => (await api.bots.createBot(
     createBotRequest: CreateBotRequest(
       orgId: orgId,
       name: name,
       personaMd: persona,
-      modelPolicy: ModelPolicy(
-        primary: ModelChoice(credentialId: credentialId, model: model),
-      ),
+      modelPolicy: followWorkspace
+          ? ModelPolicy(source_: ModelPolicySource_Enum.workspace)
+          : ModelPolicy(
+              primary: ModelChoice(credentialId: credentialId, model: model),
+            ),
       templateId: templateId,
       avatarUrl: avatarUrl,
     ),

@@ -35,6 +35,9 @@ const _keyErrors = {
 /// Failures that mean the workspace is out of credits or over its plan: the fix is the plans page.
 const limitErrors = {'out_of_credits', 'quota_exceeded', 'cloud_daily_cap', 'computer_hours_exceeded', 'plan_limit'};
 
+/// The failed runs whose "own provider required" card was already counted this session.
+final _shownOwnProviderRequired = <String>{};
+
 /// A one-tap fix for a failure people can fix themselves: no model, or a missing or rejected key.
 /// With no key at all, "no model" also leads to Model keys rather than a model list that's empty.
 ({String label, String route})? errorFix(BuildContext context, WidgetRef ref, NoticeEntry entry, String botId) {
@@ -42,7 +45,10 @@ const limitErrors = {'out_of_credits', 'quota_exceeded', 'cloud_daily_cap', 'com
   if (entry.kind != NoticeKind.failed || code == null) return null;
   final keys = (route: '/settings/keys', label: context.l10n.addModelKeyTitle);
   if (code == 'own_provider_required') {
-    Analytics.log('own_provider_required_shown', {'surface': 'chat', 'outcome': 'shown'});
+    // This runs on every rebuild of the chat list: count each failed run once.
+    if (_shownOwnProviderRequired.add(entry.refId ?? entry.text)) {
+      Analytics.log('own_provider_required_shown', {'surface': 'chat', 'outcome': 'shown'});
+    }
     return keys;
   }
   // Out of credits offers packs to a paying workspace; the other limits are about the plan (D-248).

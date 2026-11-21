@@ -1587,6 +1587,8 @@ abstract class Backend {
     List<String> botIds, {
     String? title,
   });
+  /// [followWorkspace] makes the bot follow the workspace's "Who runs your bots" choice instead of
+  /// pinning [credentialId] (Casama Cloud with own providers, when nobody picked a key, D-465).
   Future<Bot> createBot(
     String orgId, {
     required String name,
@@ -1595,6 +1597,7 @@ abstract class Backend {
     String persona,
     String? templateId,
     String? avatarUrl,
+    bool followWorkspace,
   });
   Future<List<Template>> templates();
 

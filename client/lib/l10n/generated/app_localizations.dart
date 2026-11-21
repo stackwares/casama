@@ -30488,6 +30488,18 @@ abstract class AppLocalizations {
   /// **'Who runs your bots'**
   String get whoRunsYourBots;
 
+  /// No description provided for @adminModelAccessPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'{plan} plan (monthly, yearly and weekly)'**
+  String adminModelAccessPlan(String plan);
+
+  /// No description provided for @adminModelAccessFollowDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Follow default'**
+  String get adminModelAccessFollowDefault;
+
   /// No description provided for @whoRunsCasama.
   ///
   /// In en, this message translates to:

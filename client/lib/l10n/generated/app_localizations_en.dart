@@ -18864,6 +18864,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get whoRunsYourBots => 'Who runs your bots';
 
   @override
+  String adminModelAccessPlan(String plan) {
+    return '$plan plan (monthly, yearly and weekly)';
+  }
+
+  @override
+  String get adminModelAccessFollowDefault => 'Follow default';
+
+  @override
   String get whoRunsCasama => 'Casama';
 
   @override

@@ -407,8 +407,15 @@ class _WhoRunsYourBotsSectionState extends ConsumerState<_WhoRunsYourBotsSection
     final org = widget.org;
     final billing = widget.billing;
     final l10n = context.l10n;
+    // A ChatGPT plan runs only for the person who connected it, so it can't be the default for
+    // everyone in the workspace (teammates' runs would quietly fall back); bots can still pick one.
     final keys = (ref.watch(credentialsProvider).value ?? const <Credential>[])
-        .where((k) => k.id != casamaCloudCredentialId && chatKeyProviders(ref).contains(k.provider))
+        .where(
+          (k) =>
+              k.id != casamaCloudCredentialId &&
+              k.provider != ProviderId.chatgpt &&
+              chatKeyProviders(ref).contains(k.provider),
+        )
         .toList();
     final casamaAvailable = billing?.casamaModels != BillingSummaryCasamaModelsEnum.off;
     final admin = org.role != OrgRole.member;

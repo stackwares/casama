@@ -671,6 +671,8 @@ class _CreateBotSheetState extends ConsumerState<CreateBotSheet> {
   final _persona = TextEditingController();
   String _model = '';
   var _modelPicked = false;
+  // Whether the person changed the key from the one preselected for them.
+  var _keyPicked = false;
   String? _autoName;
   String? _credentialId;
   String? _templateId;
@@ -772,6 +774,7 @@ class _CreateBotSheetState extends ConsumerState<CreateBotSheet> {
         onChanged: hapticOnChanged(
           (v) => setState(() {
             _credentialId = v;
+            _keyPicked = true;
             _modelPicked = false;
             _fillDefaultModel(keys);
           }),
@@ -1018,6 +1021,13 @@ class _CreateBotSheetState extends ConsumerState<CreateBotSheet> {
                             templateId: _templateId,
                             // With a picture, the mascot picked is what it goes back to without one.
                             avatarUrl: _avatar,
+                            // On Cloud with own providers, an untouched key means "follow the
+                            // workspace", not a pin to whichever key happened to be first (D-465).
+                            followWorkspace: !fixedModel &&
+                                !_keyPicked &&
+                                !_modelPicked &&
+                                ref.read(billingProvider).value?.enabled == true &&
+                                ref.read(backendProvider).ownProviders,
                           ),
                     );
                     if (!context.mounted) return;

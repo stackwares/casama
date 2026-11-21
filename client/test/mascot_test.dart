@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lottie/lottie.dart';
+import 'package:casama/core/billing.dart';
 import 'package:casama/core/providers.dart';
 import 'package:casama/core/widgets.dart';
 import 'package:casama/features/bots/bots_screen.dart';
@@ -100,6 +101,38 @@ void main() {
     await tester.tap(find.widgetWithText(FilledButton, 'Create'));
     await tester.pumpAndSettle();
     expect(backend.createdBotAvatar, 'mascot:starry');
+  });
+
+  testWidgets('on Cloud with own providers, an untouched key follows the workspace (D-465)', (tester) async {
+    await setSize(tester, const Size(600, 1100));
+    final backend = FakeBackend()
+      ..billingEnabled = true
+      ..ownProvidersValue = true;
+    final router = GoRouter(routes: [
+      GoRoute(
+        path: '/',
+        builder: (_, _) => Scaffold(
+          body: Consumer(builder: (context, ref, _) => TextButton(onPressed: () => showCreateBot(context, ref), child: const Text('open'))),
+        ),
+      ),
+      GoRoute(path: '/bots/:id/chat', builder: (_, _) => const Text('chat opened')),
+    ]);
+    await tester.pumpWidget(ProviderScope(
+      overrides: [
+        backendProvider.overrideWithValue(backend),
+        billingProvider.overrideWith((ref) async => backend.billing('org')),
+      ],
+      child: MaterialApp.router(
+        routerConfig: router,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+      ),
+    ));
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Create'));
+    await tester.pumpAndSettle();
+    expect(backend.createdBotFollowsWorkspace, isTrue);
   });
 
   testWidgets('a sheet can carry a group of mascots over its title', (tester) async {

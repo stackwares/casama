@@ -2433,7 +2433,9 @@ class FakeBackend implements Backend {
     String persona = '',
     String? templateId,
     String? avatarUrl,
+    bool followWorkspace = false,
   }) async {
+    createdBotFollowsWorkspace = followWorkspace;
     createdBotTemplate = templateId;
     createdBotAvatar = avatarUrl;
     createdBot = (name: name, model: model);
@@ -2441,6 +2443,9 @@ class FakeBackend implements Backend {
   }
 
   String? createdBotTemplate;
+
+  /// Whether the last createBot asked to follow the workspace default.
+  bool createdBotFollowsWorkspace = false;
   String? createdBotAvatar;
   ({String name, String model})? createdBot;
 
