@@ -38,6 +38,7 @@ import 'ui/server_unreachable_view.dart';
 import 'ui/text_scale.dart';
 import 'ui/friendly_error_view.dart';
 import 'core/analytics.dart';
+import 'core/provider_retry.dart';
 
 /// Connects to the API and Supabase and returns the app widget with its backend.
 ///
@@ -82,6 +83,7 @@ Future<(Widget, SupabaseBackend)> bootstrap(AppConfig config, {VoidCallback? onS
   await linkBrowser;
   await appLock;
   final app = ProviderScope(
+    retry: appProviderRetry,
     overrides: [
       backendProvider.overrideWithValue(backend),
       localCacheProvider.overrideWithValue(openLocalCache()),
