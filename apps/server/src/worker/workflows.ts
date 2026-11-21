@@ -63,6 +63,7 @@ import { ee } from "../ee.ts";
 import { linkUpkeep } from "../link/upkeep.ts";
 import { sweepSignups } from "../services/analytics-signups.ts";
 import { pendingSummaries, summarizeCall } from "../services/call-summary.ts";
+import { dropEmptyCallTopics } from "../services/empty-call-topics.ts";
 import { sweepReferralRewards } from "../services/referrals.ts";
 import { vendorUsageSweep } from "../services/vendors/sweep.ts";
 import { type BuyingContext, ordersUpkeep, registerOrder } from "../sites/buying.ts";
@@ -571,6 +572,11 @@ export const routinesTickWorkflow = DBOS.registerWorkflow(
     await DBOS.runStep(() => endSilentCalls(rt().db).catch(captureStep("end-silent-calls", 0)), {
       name: "end-silent-calls",
     });
+    // The topics those calls made for themselves and never used (D-478).
+    await DBOS.runStep(
+      () => dropEmptyCallTopics(rt().db).catch(captureStep("empty-call-topics", 0)),
+      { name: "empty-call-topics" },
+    );
     // Call cards still waiting for a summary (a call the sweep or a limit ended): summarized once.
     const pendingCalls = await DBOS.runStep(
       () => pendingSummaries(rt().db).catch(captureStep("pending-summaries", [] as string[])),

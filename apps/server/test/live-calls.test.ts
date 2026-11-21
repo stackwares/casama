@@ -7,6 +7,7 @@ import { setCallLimits } from "@casama/domain";
 import { sql } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { endSilentCalls } from "../src/billing/live-calls.ts";
+import { dropEmptyCallTopics } from "../src/services/empty-call-topics.ts";
 import { type Harness, j, startHarness } from "./helpers.ts";
 
 const FIXTURES = fileURLToPath(new URL("./fixtures/chat.json", import.meta.url));
@@ -520,5 +521,59 @@ describe("live calls (D-327)", () => {
       systemInstruction: { parts: Array<{ text: string }> };
     };
     expect(nextSetup.systemInstruction.parts[0]?.text).not.toContain("Voice call ·");
+  }, 120_000);
+
+  it("D-478: a call that never got a word in, or couldn't start, leaves no empty topic", async () => {
+    const w = await workspace("live-empty-topic@example.com");
+    const topics = async () =>
+      (
+        await h.handle.db.execute<{ id: string }>(sql`
+          select id from public.conversations where org_id = ${w.orgId}::uuid and title = 'Voice call'`)
+      ).map((r) => r.id);
+    const hangUp = (conversationId: string, liveCallId: string) =>
+      h.request("/v1/voice/transcript", {
+        method: "POST",
+        token: w.owner.token,
+        json: {
+          conversation_id: conversationId,
+          live_call_id: liveCallId,
+          turns: [],
+          seconds: 0,
+          provider: "gemini",
+        },
+      });
+    // A new call (the microphone refused): its topic goes when it ends with nothing said.
+    const s = await startCall(w.owner.token, w.botId);
+    expect(await topics()).toEqual([s.conversation_id]);
+    expect((await hangUp(s.conversation_id, s.live_call_id)).status).toBe(200);
+    expect(await topics()).toEqual([]);
+    // A call placed in an existing chat never removes the chat.
+    const inChat = await startCall(w.owner.token, w.botId, w.convId);
+    expect((await hangUp(w.convId, inChat.live_call_id)).status).toBe(200);
+    const [kept] = await h.handle.db.execute<{ n: number }>(
+      sql`select count(*)::int as n from public.conversations where id = ${w.convId}::uuid`,
+    );
+    expect(kept?.n).toBe(1);
+    // A call whose app vanished: the worker's sweep removes its topic once it's ended.
+    const quiet = await startCall(w.owner.token, w.botId);
+    await h.handle.db.execute(sql`
+      update public.live_calls set ended_at = now(), end_reason = 'silent'
+      where id = ${quiet.live_call_id}::uuid`);
+    expect(await dropEmptyCallTopics(h.handle.db)).toBe(1);
+    expect(await topics()).toEqual([]);
+    // A call that can't start (no token from the provider) leaves no topic either.
+    const voiceSession = h.deps.workflows.voiceSession;
+    h.deps.workflows.voiceSession = async () => ({ ok: false, error: "provider down" });
+    try {
+      const refused = await h.request("/v1/voice/session", {
+        method: "POST",
+        token: w.owner.token,
+        json: { bot_id: w.botId },
+      });
+      expect(refused.status).toBe(409);
+    } finally {
+      h.deps.workflows.voiceSession = voiceSession;
+    }
+    expect(await topics()).toEqual([]);
   }, 120_000);
 });

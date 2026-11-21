@@ -30,6 +30,7 @@ import {
   settleCall,
 } from "../../billing/live-calls.ts";
 import { updateCard } from "../../services/call-recap.ts";
+import { dropEmptyCallTopics, dropUnusedCallTopic } from "../../services/empty-call-topics.ts";
 import { createRelay, relayedUsage, relayUrl } from "../live-relay.ts";
 
 /** Live calls on the server's key one workspace can have open at once. */
@@ -229,23 +230,11 @@ export function registerVoiceRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       greeting = callGreeting(call.reason);
       conversation_id = call.conversation_id ?? conversation_id;
     }
-    const conv = conversation_id
+    // A new call's topic is made with its call record, once every check has passed (D-478), and
+    // goes again if the call can't start: each failed attempt used to leave an empty "Voice call".
+    const existing = conversation_id
       ? await visibleConversation(claims, conversation_id, bot.id)
-      : (
-          await withUserSession(db, claims, (tx) =>
-            tx
-              .insert(conversations)
-              .values({
-                orgId: bot.orgId,
-                botId: bot.id,
-                title: "Voice call",
-                createdBy: claims.sub,
-                personal: true,
-              })
-              .returning(),
-          )
-        )[0];
-    if (!conv) throw new Error("conversation insert returned nothing");
+      : null;
     // A call the person started (D-234): the bot picks up and says hi first, like answering a phone.
     if (!greeting) {
       const [p] = await db.execute<{ name: string | null }>(sql`
@@ -269,7 +258,7 @@ export function registerVoiceRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     }
     // Context carries over (D-327): the conversation's last turns, so a call picks up where the
     // chat, or the last call, left off. Only for a conversation that already existed.
-    const earlier = conversation_id ? await callContext(bot.orgId, conv.id, bot.name) : "";
+    const earlier = existing ? await callContext(bot.orgId, existing.id, bot.name) : "";
     // The date and time, as a chat is told them: without it "remind me tomorrow at nine" left the
     // model guessing the date for the reminder's run_at.
     const [zone] = await db.execute<{ timezone: string | null }>(
@@ -338,17 +327,32 @@ export function registerVoiceRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
                 : "This workspace used today's spending limit. It resets at midnight UTC.",
           );
       }
-      const [row] = await tx.execute<{ id: string }>(sql`
+      const convId =
+        existing?.id ??
+        (
+          await tx
+            .insert(conversations)
+            .values({
+              orgId: bot.orgId,
+              botId: bot.id,
+              title: "Voice call",
+              createdBy: claims.sub,
+              personal: true,
+            })
+            .returning({ id: conversations.id })
+        )[0]?.id;
+      if (!convId) throw new Error("conversation insert returned nothing");
+      const [row] = await tx.execute<{ id: string; conversation_id: string }>(sql`
         insert into public.live_calls (org_id, bot_id, conversation_id, user_id, phone_call_id, provider, billable)
-        values (${bot.orgId}::uuid, ${bot.id}::uuid, ${conv.id}::uuid, ${claims.sub}::uuid,
+        values (${bot.orgId}::uuid, ${bot.id}::uuid, ${convId}::uuid, ${claims.sub}::uuid,
                 ${call_id ?? null}::uuid, 'gemini', ${billable})
-        returning id`);
+        returning id, conversation_id`);
       if (!row) throw new Error("live call insert returned nothing");
       if (billable)
         // A hold costs Casama nothing yet: the settling row carries what the call cost (D-395).
         await tx.execute(sql`insert into public.usage_ledger (org_id, bot_id, kind, quantity, cost_usd, upstream_cost_usd, billable, meta)
           values (${bot.orgId}::uuid, ${bot.id}::uuid, 'voice_seconds', 0, ${cloudCharge(hold)}, 0, true,
-                  ${JSON.stringify({ hold: true, conversation_id: conv.id, live_call_id: row.id, provider: "gemini", key: "server", provider_cost_usd: hold })}::jsonb)`);
+                  ${JSON.stringify({ hold: true, conversation_id: convId, live_call_id: row.id, provider: "gemini", key: "server", provider_cost_usd: hold })}::jsonb)`);
       return row;
     });
     let s: Extract<Awaited<ReturnType<typeof deps.workflows.voiceSession>>, { ok: true }>;
@@ -366,6 +370,7 @@ export function registerVoiceRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
         sql`delete from public.usage_ledger where org_id = ${bot.orgId}::uuid and billed_at is null and meta->>'live_call_id' = ${live.id}`,
       );
       await db.execute(sql`delete from public.live_calls where id = ${live.id}::uuid`);
+      if (!existing) await dropUnusedCallTopic(db, live.conversation_id).catch(() => {});
       throw e;
     }
     if (s.provider !== "gemini")
@@ -389,7 +394,7 @@ export function registerVoiceRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
         expires_at: s.expiresAt,
         connect_url: connectUrl,
         setup: s.setup,
-        conversation_id: conv.id,
+        conversation_id: live.conversation_id,
         tools: s.tools,
         speak_first: true,
         live_call_id: live.id,
@@ -659,6 +664,8 @@ export function registerVoiceRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       });
       milestone(db, claims.sub, "first_voice_call", conv.orgId);
     }
+    // A call that never got a word in leaves no empty topic behind (D-478).
+    if (live) await dropEmptyCallTopics(db, live.id).catch(() => 0);
     return c.json({ saved: turns.length }, 200);
   });
 

@@ -7502,3 +7502,9 @@ coordinator for Oliver.
   tick fails chat, chat-app, routine, watcher and task runs that are still `running` with no event
   for 6 hours (`run_stale`, "This stopped responding and was ended…"), expiring their approvals and
   takeovers and letting go of their screen and desktop leases. Waiting statuses aren't touched.
+- **Failed call attempts leave no empty "Voice call" topic.** A new call's topic is now made in
+  the same transaction as its call record, after the plan, credit and limit checks, and removed if
+  the provider gives no token. A call that ends with nothing in its topic (no message, run or other
+  open call) removes the topic it made for itself, when the app hangs up and in the worker's sweep
+  for calls whose app went quiet. A call placed in an existing chat never removes that chat. The
+  apps also check the microphone before asking for a session (client side).
