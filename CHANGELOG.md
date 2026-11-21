@@ -26,7 +26,8 @@ The server, apps, CLI, SDK and MCP server share one version number.
   free providers only and sends a notification when the fare drops, at most once a day, until the
   departure date or 60 days; up to 5 watches per workspace, listed in Settings → Cards. Servers can
   set `LIVE_FARES_AFFILIATE_URL` to wrap Kiwi.com booking links in an affiliate link; the card then
-  says Casama may earn a commission.
+  says Casama may earn a commission. With `LIVE_FARES_COMPARE_URL` set, a Fares card also gets
+  **Compare on Aviasales**, the same trip as an Aviasales search through the server's affiliate link.
 
 - Free plans (D-461): Casama Cloud can give a workspace Plus, Pro or Max free for up to 12 months,
   by email or with a gift code (`G-XXXXX-XXXXX`, or a casama.ai/g/ link). Billing shows **Free from

@@ -84,4 +84,6 @@ Flight fares work with no key through Kiwi.com's MCP server. To add Google Fligh
 `LIVE_FARES=off` turns fares off. Price watches need nothing extra; they use Kiwi.com only. To earn
 from bookings, set `LIVE_FARES_AFFILIATE_URL` to your affiliate network's link with `{url}` where the
 booking page goes (`LIVE_FARES_AFFILIATE_HOSTS` lists the booking sites it applies to, default
-`kiwi.com`).
+`kiwi.com`). For a **Compare on Aviasales** button under each Fares card, set
+`LIVE_FARES_COMPARE_URL` to your affiliate link with `{url}` where the Aviasales search page goes,
+for example a Travelpayouts `https://tp.media/r?marker=…&trs=…&p=4114&u={url}` link.

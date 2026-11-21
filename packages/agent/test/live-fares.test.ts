@@ -9,6 +9,7 @@ import { homeAirports, resolveAirports } from "../src/live-data/airports.ts";
 import { liveCache, liveHttp } from "../src/live-data/core.ts";
 import { LiveEngine } from "../src/live-data/engine.ts";
 import {
+  aviasalesSearchUrl,
   type FareProvider,
   type FareQuery,
   type FareSearch,
@@ -16,6 +17,7 @@ import {
   fareQuery,
   faresAffiliate,
   faresCard,
+  faresCompare,
   kiwiArgs,
   parseKiwi,
   parseSerp,
@@ -23,6 +25,7 @@ import {
   searchFares,
   serpParams,
   withAffiliate,
+  withCompare,
 } from "../src/live-data/fares.ts";
 
 const fixture = (name: string) =>
@@ -344,5 +347,66 @@ describe("affiliate links (Phase 4)", () => {
     );
     expect(google.card.affiliate).toBeUndefined();
     expect(withAffiliate(plain, undefined)).toBe(plain);
+  });
+});
+
+describe("compare on Aviasales", () => {
+  const built = (over: Record<string, unknown> = {}) =>
+    faresCard(trip(over), {
+      provider: "kiwi",
+      options: KIWI.options,
+      fetchedAt: new Date(),
+    } as never);
+
+  it("takes only an https template with {url}", () => {
+    expect(faresCompare(undefined)).toBeUndefined();
+    expect(faresCompare("https://tp.example/r?p=4114")).toBeUndefined();
+    expect(faresCompare("http://tp.example/r?u={url}")).toBeUndefined();
+    expect(faresCompare(" https://tp.example/r?u={url} ")).toEqual({
+      template: "https://tp.example/r?u={url}",
+    });
+  });
+
+  it("writes the trip as an Aviasales search, with city codes, cabin and travellers", () => {
+    expect(aviasalesSearchUrl(built().card)).toBe(
+      "https://www.aviasales.com/search/MNL1203TYO19031",
+    );
+    expect(
+      aviasalesSearchUrl(
+        built({ return: undefined, cabin: "business", adults: 2, infants: 1 }).card,
+      ),
+    ).toBe("https://www.aviasales.com/search/MNL1203TYOc201");
+    expect(
+      aviasalesSearchUrl({ ...built().card, from: { label: "?", codes: [] } }),
+    ).toBeUndefined();
+  });
+
+  it("takes a month search's days from the cheapest option", () => {
+    const card = built({ depart: "2027-03", return: undefined, nights: 7 }).card;
+    const opts = card.options as {
+      price: number;
+      out: { depart: string };
+      back?: { depart: string };
+    }[];
+    const low = [...opts].sort((a, b) => a.price - b.price)[0]!;
+    const dm = (d: string) => `${d.slice(8, 10)}${d.slice(5, 7)}`;
+    expect(aviasalesSearchUrl(card)).toBe(
+      `https://www.aviasales.com/search/MNL${dm(low.out.depart)}TYO${dm(low.back!.depart)}1`,
+    );
+  });
+
+  it("adds the link and the disclosure, leaving the words alone", () => {
+    const cmp = faresCompare("https://tp.example/r?marker=42&u={url}")!;
+    const plain = built();
+    const out = withCompare(plain, cmp);
+    expect(out.card.compare).toEqual({
+      name: "Aviasales",
+      url: `https://tp.example/r?marker=42&u=${encodeURIComponent("https://www.aviasales.com/search/MNL1203TYO19031")}`,
+    });
+    expect(out.card.affiliate).toBe(true);
+    expect(out.text).toBe(plain.text);
+    expect(withCompare(plain, undefined)).toBe(plain);
+    const empty = { ...plain, card: { ...plain.card, options: [] } };
+    expect(withCompare(empty, cmp)).toBe(empty);
   });
 });

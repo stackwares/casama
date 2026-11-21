@@ -3,6 +3,7 @@ import {
   FARE_PROVIDERS,
   type FareProviderId,
   faresAffiliate,
+  faresCompare,
   type LiveConfig,
 } from "@casama/agent";
 import type { Env } from "../env.ts";
@@ -28,6 +29,7 @@ export function liveDataConfigFromEnv(
     | "LIVE_FARES_GOOGLE_PRICE_USD"
     | "LIVE_FARES_AFFILIATE_URL"
     | "LIVE_FARES_AFFILIATE_HOSTS"
+    | "LIVE_FARES_COMPARE_URL"
     | "BILLING_ENABLED"
   >,
 ): LiveConfig | null {
@@ -68,5 +70,6 @@ function faresConfig(
       billing,
     },
     faresAffiliate: faresAffiliate(env.LIVE_FARES_AFFILIATE_URL, env.LIVE_FARES_AFFILIATE_HOSTS),
+    faresCompare: faresCompare(env.LIVE_FARES_COMPARE_URL),
   };
 }

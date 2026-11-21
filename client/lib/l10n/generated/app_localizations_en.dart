@@ -18282,6 +18282,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Casama may earn a commission when you book through these links. It doesn\'t change the price.';
 
   @override
+  String cardFaresCompare(String site) {
+    return 'Compare on $site';
+  }
+
+  @override
   String get cardFaresWatch => 'Watch price';
 
   @override

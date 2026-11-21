@@ -778,3 +778,129 @@ export function withAffiliate(built: Built, aff: FaresAffiliate | undefined): Bu
   if (!wrapped) return built;
   return { ...built, card: { ...built.card, options, affiliate: true } };
 }
+
+/**
+ * A "compare" link under a Fares card (D-471): the same trip as a search on Aviasales, opened through
+ * the affiliate network so a booking there earns Casama a share. [template] is an https link with
+ * `{url}` where the Aviasales search goes, URL-encoded, for example
+ * `https://tp.media/r?marker=…&trs=…&p=4114&u={url}`. Set with LIVE_FARES_COMPARE_URL.
+ */
+export type FaresCompare = { template: string };
+
+/** A checked compare setting, or undefined when the template is missing or unsafe. */
+export function faresCompare(template: string | undefined): FaresCompare | undefined {
+  const t = template?.trim();
+  if (!t?.includes("{url}")) return undefined;
+  try {
+    if (new URL(t.replace("{url}", "x")).protocol !== "https:") return undefined;
+  } catch {
+    return undefined;
+  }
+  return { template: t };
+}
+
+/** IATA city codes for the cities [METROS] lists with more than one airport. */
+const CITY_CODES: Record<string, string> = {
+  "HND,NRT": "TYO",
+  "ITM,KIX": "OSA",
+  "GMP,ICN": "SEL",
+  "PVG,SHA": "SHA",
+  "PEK,PKX": "BJS",
+  "TPE,TSA": "TPE",
+  "BKK,DMK": "BKK",
+  "CGK,HLP": "JKT",
+  "KUL,SZB": "KUL",
+  "DWC,DXB": "DXB",
+  "IST,SAW": "IST",
+  "LCY,LGW,LHR,LTN,SEN,STN": "LON",
+  "BVA,CDG,ORY": "PAR",
+  "BGY,LIN,MXP": "MIL",
+  "CIA,FCO": "ROM",
+  "DME,SVO,VKO": "MOW",
+  "ARN,BMA,NYO": "STO",
+  "EWR,JFK,LGA": "NYC",
+  "MDW,ORD": "CHI",
+  "BWI,DCA,IAD": "WAS",
+  "OAK,SFO,SJC": "SFO",
+  "BUR,LAX,LGB,ONT,SNA": "LAX",
+  "FLL,MIA": "MIA",
+  "HOU,IAH": "HOU",
+  "DAL,DFW": "DFW",
+  "YTZ,YYZ": "YTO",
+  "CGH,GRU,VCP": "SAO",
+  "GIG,SDU": "RIO",
+  "AEP,EZE": "BUE",
+  "MEX,NLU": "MEX",
+  "AVV,MEL": "MEL",
+};
+
+/** One code Aviasales understands for a place: its airport, or the city code for several. */
+function placeCode(codes: unknown): string | undefined {
+  const list = Array.isArray(codes)
+    ? codes.filter((c): c is string => typeof c === "string" && /^[A-Z]{3}$/.test(c))
+    : [];
+  if (list.length <= 1) return list[0];
+  return CITY_CODES[[...list].sort().join(",")] ?? list[0];
+}
+
+const ddmm = (day: string | undefined) => {
+  const m = /^\d{4}-(\d{2})-(\d{2})/.exec(day ?? "");
+  return m ? `${m[2]}${m[1]}` : undefined;
+};
+
+const CABIN_LETTER: Record<Cabin, string> = {
+  economy: "",
+  premium: "w",
+  business: "c",
+  first: "f",
+};
+
+/**
+ * The card's trip as an Aviasales search page: `ORIGIN DDMM DEST [DDMM] [cabin] adults [children
+ * [infants]]`, for example `https://www.aviasales.com/search/TYO1203MNL1903c21`. A month search
+ * takes the cheapest option's days. Undefined when a place has no airport code or there is no day.
+ */
+export function aviasalesSearchUrl(card: Record<string, unknown>): string | undefined {
+  const from = placeCode((card.from as { codes?: unknown } | undefined)?.codes);
+  const to = placeCode((card.to as { codes?: unknown } | undefined)?.codes);
+  if (!from || !to || from === to) return undefined;
+  const options = (card.options as FareOption[] | undefined) ?? [];
+  const cheapest = [...options].sort((a, b) => a.price - b.price)[0];
+  const depart = String(card.depart ?? "");
+  const out = DAY.test(depart) ? ddmm(depart) : ddmm(cheapest?.out.depart);
+  if (!out) return undefined;
+  const roundTrip = card.roundTrip === true;
+  const ret = roundTrip
+    ? ddmm(
+        typeof card.return === "string" && DAY.test(card.return)
+          ? card.return
+          : cheapest?.back?.depart,
+      )
+    : "";
+  if (roundTrip && !ret) return undefined;
+  const t = (card.travellers ?? {}) as { adults?: number; children?: number; infants?: number };
+  const n = (v: unknown, min: number) => Math.min(9, Math.max(min, Math.floor(Number(v) || 0)));
+  const adults = n(t.adults ?? 1, 1);
+  const children = n(t.children, 0);
+  const infants = n(t.infants, 0);
+  const people = `${adults}${children || infants ? children : ""}${infants ? infants : ""}`;
+  const cabin = CABIN_LETTER[card.cabin as Cabin] ?? "";
+  return `https://www.aviasales.com/search/${from}${out}${to}${ret}${cabin}${people}`;
+}
+
+/**
+ * Adds the compare link to a Fares card that has fares: `compare: {name, url}`, and `affiliate:
+ * true` so the app shows the disclosure line. The words the model reads don't change.
+ */
+export function withCompare(built: Built, cmp: FaresCompare | undefined): Built {
+  if (!cmp) return built;
+  const card = built.card as Record<string, unknown>;
+  if (!(card.options as unknown[] | undefined)?.length) return built;
+  const search = aviasalesSearchUrl(card);
+  if (!search) return built;
+  const url = cmp.template.replace("{url}", encodeURIComponent(search));
+  return {
+    ...built,
+    card: { ...built.card, compare: { name: "Aviasales", url }, affiliate: true },
+  };
+}

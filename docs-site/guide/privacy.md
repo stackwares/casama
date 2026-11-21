@@ -11,7 +11,9 @@ place rounded to about a kilometre, a ticker, a currency, a word; for flight far
 dates and number of travellers), never your name, account or chat. A price watch keeps the trip
 and the last price on Casama's server until it ends, and the checks send only the trip. When a fares
 card says its links are affiliate links, **Book** opens the affiliate network's link first, so that
-network sees the tap before the booking site opens. Your home city for cards (**Settings > Cards**) is a city, not an address. See
+network sees the tap before the booking site opens. **Compare on Aviasales** works the same way: it
+opens the affiliate network's link with the trip (places, dates, travellers and cabin), then
+Aviasales. Your home city for cards (**Settings > Cards**) is a city, not an address. See
 [Live cards](/guide/live-cards).
 
 ## Report or block

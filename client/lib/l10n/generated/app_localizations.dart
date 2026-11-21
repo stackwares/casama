@@ -29480,6 +29480,12 @@ abstract class AppLocalizations {
   /// **'Casama may earn a commission when you book through these links. It doesn\'t change the price.'**
   String get cardFaresAffiliate;
 
+  /// No description provided for @cardFaresCompare.
+  ///
+  /// In en, this message translates to:
+  /// **'Compare on {site}'**
+  String cardFaresCompare(String site);
+
   /// No description provided for @cardFaresWatch.
   ///
   /// In en, this message translates to:

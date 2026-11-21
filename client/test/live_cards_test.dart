@@ -150,6 +150,25 @@ void main() {
     await tester.pumpWidget(const SizedBox());
   });
 
+  testWidgets('a Fares card shows its compare link only when it is https', (tester) async {
+    final card = Map<String, Object?>.from(live['fares_kiwi']! as Map)
+      ..['affiliate'] = true
+      ..['compare'] = {'name': 'Aviasales', 'url': 'https://tp.example/r?u=x'};
+    await show(tester, [
+      {'id': 'root', ...card},
+    ], size: const Size(390, 2400));
+    _noErrors(tester);
+    expect(find.byKey(const Key('faresCompare')), findsOneWidget);
+    expect(find.text('Compare on Aviasales'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+    card['compare'] = {'name': 'Aviasales', 'url': 'javascript:alert(1)'};
+    await show(tester, [
+      {'id': 'root', ...card},
+    ], size: const Size(390, 2400));
+    expect(find.byKey(const Key('faresCompare')), findsNothing);
+    await tester.pumpWidget(const SizedBox());
+  });
+
   testWidgets('a full workspace hears it can watch no more', (tester) async {
     const ref = '00000000-0000-0000-0000-0000000000f2';
     final card = Map<String, Object?>.from(live['fares_kiwi']! as Map);

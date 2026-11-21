@@ -35,12 +35,14 @@ import {
   type FareProviderId,
   type FaresAffiliate,
   type FaresBilling,
+  type FaresCompare,
   type FaresDeps,
   type FaresMeter,
   fareQuery,
   faresCard,
   searchFares,
   withAffiliate,
+  withCompare,
 } from "./fares.ts";
 import {
   anyQuote,
@@ -94,6 +96,8 @@ export interface LiveConfig {
   faresBilling?: FaresBilling;
   /** Affiliate booking links (FLIGHT-SEARCH-PLAN Phase 4): a template and the hosts it wraps. */
   faresAffiliate?: FaresAffiliate;
+  /** The Aviasales compare link under Fares cards (LIVE_FARES_COMPARE_URL). */
+  faresCompare?: FaresCompare;
 }
 
 /** What the engine knows about the person a run acts for. */
@@ -616,7 +620,10 @@ export class LiveEngine {
           { force, meter: opts.meter, preferGoogle: args.compare_google === true },
         );
         return {
-          built: withAffiliate(faresCard(q, a), this.config.faresAffiliate),
+          built: withCompare(
+            withAffiliate(faresCard(q, a), this.config.faresAffiliate),
+            this.config.faresCompare,
+          ),
           // A refresh repeats the same trip; the places stay as the person named them.
           resolved: {
             from: args.from,

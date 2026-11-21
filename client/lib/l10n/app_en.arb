@@ -6041,6 +6041,8 @@
   "cardFaresBags": "{cabin} cabin, {checked} checked bags",
   "@cardFaresBags": {"placeholders": {"cabin": {"type": "int"}, "checked": {"type": "int"}}},
   "cardFaresAffiliate": "Casama may earn a commission when you book through these links. It doesn't change the price.",
+  "cardFaresCompare": "Compare on {site}",
+  "@cardFaresCompare": {"placeholders": {"site": {"type": "String"}}},
   "cardFaresWatch": "Watch price",
   "cardFaresWatching": "Watching · ends {date}",
   "@cardFaresWatching": {"placeholders": {"date": {"type": "String"}}},

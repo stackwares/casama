@@ -369,6 +369,12 @@ export const EnvSchema = z.object({
    */
   LIVE_FARES_AFFILIATE_URL: z.string().optional(),
   LIVE_FARES_AFFILIATE_HOSTS: z.string().optional(),
+  /**
+   * The "Compare on Aviasales" link under Fares cards (D-471): an https link with `{url}` where the
+   * Aviasales search page goes, URL-encoded (Casama Cloud: a Travelpayouts tp.media/r link with
+   * Casama's marker, p=4114). The card shows a disclosure line. Unset = no compare link.
+   */
+  LIVE_FARES_COMPARE_URL: z.string().optional(),
   TREG_API_KEY: z.string().optional(),
   TREG_RESALE: z.enum(["on", "off"]).default("off"),
   TREG_API_URL: z.url().optional(),

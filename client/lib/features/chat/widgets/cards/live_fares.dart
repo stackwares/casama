@@ -34,6 +34,7 @@ final faresComponent = liveCard('Fares', const [
   'typical',
   'searchUrl',
   'affiliate',
+  'compare',
 ], (context, p, ctl) => _Fares(p: p, cardId: ctl.ref));
 
 /// The person's active price watches (FLIGHT-SEARCH-PLAN §9); empty when the server is older.
@@ -244,6 +245,16 @@ class _FaresState extends ConsumerState<_Fares> {
               ),
           ] else
             Text(l.cardFaresCheck, style: context.cardLabel),
+          if (p.map('compare').s('url') case final u? when u.startsWith('https://'))
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                key: const Key('faresCompare'),
+                onPressed: () => openCardLink(u),
+                icon: const Icon(LucideIcons.externalLink, size: 14),
+                label: Text(l.cardFaresCompare(p.map('compare').s('name') ?? 'Aviasales')),
+              ),
+            ),
           if (p.b('affiliate') == true) ...[
             const SizedBox(height: 4),
             Text(l.cardFaresAffiliate, key: const Key('faresAffiliate'), style: context.cardLabel),

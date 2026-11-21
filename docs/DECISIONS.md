@@ -7287,8 +7287,18 @@ only the last words of a help sentence. So:
   `affilid=kiwi-mcp`. So wrapping Kiwi booking links would lose the person's trip:
   `LIVE_FARES_AFFILIATE_URL` stays unset. Aviasales deep links do work
   (`https://tp.media/r?marker=809513&trs=604625&p=4114&u={url}` keeps an aviasales.com search URL and
-  adds the marker); a "compare on Aviasales" link per Fares card would be a small follow-up, not
-  built. Payouts need a payout method that only Oliver can enter.
+  adds the marker). Payouts need a payout method that only Oliver can enter.
+- **Compare on Aviasales (2026-11-22):** `LIVE_FARES_COMPARE_URL` (an https template with `{url}`)
+  adds `compare: {name: "Aviasales", url}` and `affiliate: true` to every Fares card that has fares,
+  at build and on refresh (`withCompare` in `fares.ts`). The search page is
+  `aviasales.com/search/ORIGIN DDMM DEST [DDMM] [cabin] adults [children [infants]]`; cabin letters
+  w/c/f for premium, business, first (Travelpayouts' docs); a city with several airports uses its
+  IATA city code (Tokyo → TYO); a month search takes the cheapest option's days; no link when a place
+  has no code. The app shows **Compare on Aviasales** under the fares, https links only, with the
+  disclosure line. A link, not a provider: Aviasales has no free search API for us (real-time search
+  needs 50k monthly users), so its prices aren't on the card. Casama Cloud's value:
+  `https://tp.media/r?marker=809513&trs=604625&p=4114&u={url}` (not secret; the marker shows in
+  every link). Tests: the compare cases in both `live-fares` tests and `live_cards_test.dart`.
 - **Tests (Phases 3–4):** `packages/agent/test/live-fare-watches.test.ts` (end dates, spread, push
   rules, words), `apps/server/test/fare-watches.test.ts` (start from the card and from the bot, one
   push on a drop and none again that day, five per workspace, Stop, the end date, Fares only),

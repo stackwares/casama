@@ -91,6 +91,11 @@ describe("fares config", () => {
         }),
       )!.faresAffiliate,
     ).toEqual({ template: "https://tp.example/r?u={url}", hosts: ["kiwi.com", "www.kiwi.com"] });
+    expect(liveDataConfigFromEnv(env())!.faresCompare).toBeUndefined();
+    expect(
+      liveDataConfigFromEnv(env({ LIVE_FARES_COMPARE_URL: "https://tp.example/r?p=4114&u={url}" }))!
+        .faresCompare,
+    ).toEqual({ template: "https://tp.example/r?p=4114&u={url}" });
   });
 });
 
