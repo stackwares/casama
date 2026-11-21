@@ -4,8 +4,22 @@ Everything Microsoft Partner Center asks for, ready to paste (plan §13, D-323 P
 the Chrome package unchanged: same zip, same code, same permissions. Inside Edge the extension calls
 itself "Casama for Edge" and says "Edge" where Chrome's copy says "Chrome" (`src/lib/browser.ts`).
 
-Nothing here has been uploaded. The Partner Center account (free), the draft and every submission
-wait for Oliver (plan §19). Uploading is a release: Oliver's yes each time (AGENTS.md).
+**Submitted 2026-11-21** (version 0.1.0, In review, about 7 business days) from Oliver's Partner
+Center account. Each new submission is a release: Oliver's yes each time (AGENTS.md).
+
+| Edge item | Value |
+|---|---|
+| Product ID | `8bf15261-6f8c-40ad-a8e6-cf36378a68ab` |
+| Store ID | `0RDCKCP6QHRC` |
+| CRX ID (extension id in Edge) | `danikigkoiofpcecjobopcgdflgcmchm` |
+| Dashboard | https://partner.microsoft.com/dashboard/microsoftedge/8bf15261-6f8c-40ad-a8e6-cf36378a68ab/packages/dashboard |
+
+What Partner Center wanted that differs from the notes below: the support contact must be an email
+(`support@casama.ai`, not a URL); the Privacy page asks the Chrome store's questions (single purpose,
+a reason per permission including `identity` and `gcm`, remote code, data usage, privacy URL), so
+copy them from `../listing.md`. The reviewer account (Vaultwarden "Casama · store review account")
+has the bots "Anna" and "Casama", not "Researcher" and "Approver", so the notes sent use Anna and
+drop the Approver step.
 
 ## Package
 
@@ -35,7 +49,7 @@ wait for Oliver (plan §19). Uploading is a release: Oliver's yes each time (AGE
 | Category | Productivity |
 | Privacy policy | Yes: https://casama.ai/privacy#chrome (the section covers every browser) |
 | Website | https://casama.ai |
-| Support contact | https://docs.casama.ai/guide/chrome |
+| Support contact | support@casama.ai (Partner Center wants an email) |
 | Mature content | No |
 
 ## Store listing (English)
