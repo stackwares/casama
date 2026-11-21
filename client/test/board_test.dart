@@ -1,8 +1,14 @@
 import 'package:material_ui/material_ui.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
+import 'package:casama/core/providers.dart';
+import 'package:casama/features/app_lock/app_lock.dart';
 import 'package:casama/features/board/board_screen.dart';
+import 'package:casama/l10n/generated/app_localizations.dart';
 
 import 'app_test.dart' show harness, setSize;
+import 'fake_unlockers.dart';
 import 'fake_backend.dart';
 
 void main() {
@@ -134,5 +140,32 @@ void main() {
       tester.widget<TextField>(find.byKey(const Key('ticketTitle'))).controller!.text,
       'Research my top three competitors',
     );
+  });
+
+  testWidgets("the ticket sheet's thread button opens the ticket's own conversation", (tester) async {
+    await setSize(tester, const Size(1500, 1000));
+    final backend = FakeBackend();
+    backend.taskList[0] = backend.taskList[0].rebuild(conversationId: 'conv-ticket');
+    final router = GoRouter(routes: [
+      GoRoute(path: '/', builder: (_, _) => const BoardScreen()),
+      GoRoute(path: '/bots/:botId/chat', builder: (_, s) => Text('chat ${s.uri.queryParameters['c']}')),
+    ]);
+    await tester.pumpWidget(ProviderScope(
+      overrides: [
+        backendProvider.overrideWithValue(backend),
+        unlockersProvider.overrideWithValue(FakeUnlockers()),
+      ],
+      child: MaterialApp.router(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        routerConfig: router,
+      ),
+    ));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('ticket-t1')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('openThread')));
+    await tester.pumpAndSettle();
+    expect(find.text('chat conv-ticket'), findsOneWidget);
   });
 }

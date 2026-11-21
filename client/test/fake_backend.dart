@@ -7528,7 +7528,7 @@ Credential chatGptCredential(
   createdAt: DateTime(2026),
 );
 
-extension on Task {
+extension TaskRebuild on Task {
   Task rebuild({
     String? id,
     String? title,
@@ -7540,6 +7540,7 @@ extension on Task {
     bool? reviewRequired,
     double? position,
     int? comments,
+    String? conversationId,
   }) => Task(
     id: id ?? this.id,
     title: title ?? this.title,
@@ -7555,7 +7556,7 @@ extension on Task {
     labels: labels,
     position: position ?? this.position,
     reviewRequired: reviewRequired ?? this.reviewRequired,
-    conversationId: conversationId,
+    conversationId: conversationId ?? this.conversationId,
     projectId: projectId,
     milestoneId: milestoneId,
     parentTaskId: parentTaskId,

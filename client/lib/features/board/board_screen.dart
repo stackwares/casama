@@ -1549,7 +1549,8 @@ class _TicketSheetState extends ConsumerState<TicketSheet> {
               ),
               onPressed: () {
                 Navigator.of(context).maybePop();
-                context.pushOnce('/bots/${task.assigneeBotId}/chat');
+                // The ticket's own conversation, not the bot's main chat (where its work isn't).
+                context.pushOnce('/bots/${task.assigneeBotId}/chat?c=${task.conversationId}');
               },
               icon: const Icon(LucideIcons.messageCircle, size: 18),
               label: Text(l10n.openThread),
