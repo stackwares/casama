@@ -84,7 +84,9 @@ describe("admin authentication freshness", () => {
   });
   it("reading Casama Link's status needs no fresh sign-in; changing it does (D-463)", () => {
     expect(() => check("GET", "/v1/admin/remote-access", { sub: "owner" }, now)).not.toThrow();
-    expect(() => check("POST", "/v1/admin/remote-access/check", { sub: "owner" }, now)).not.toThrow();
+    expect(() =>
+      check("POST", "/v1/admin/remote-access/check", { sub: "owner" }, now),
+    ).not.toThrow();
     denied(
       () => check("PUT", "/v1/admin/remote-access/settings", { sub: "owner" }, now),
       "admin_confirmation_required",
