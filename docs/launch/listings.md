@@ -106,7 +106,7 @@ TensorBlock metadata correction submitted as https://github.com/TensorBlock/awes
 | Cursor Directory | **Skipped.** It is now a plugin marketplace ("Submit a plugin" behind a sign-in), not a plain MCP list. Would need Casama packaged as a Cursor plugin. |
 | LaunchMCP | **Gone.** The domain redirects to a for-sale page. |
 | PickAPlugin | **Skipped.** Catalogs ChatGPT and Codex plugins; not a fit unless Casama ships as one. (Free by email: hello@pickaplugin.com.) |
-| Docker MCP Catalog | **Not done.** PR route to docker/mcp-registry; local servers need a Dockerfile, which packages/mcp doesn't have. Possible later. |
+| Docker MCP Catalog | **Submitted** 2026-11-21 as a remote entry, so no Dockerfile: https://github.com/docker/mcp-registry/pull/7478 (`servers/casama-docs`: `type: remote`, streamable-http, `https://api.casama.ai/mcp/docs`, empty `tools.json`, category documentation; `go run ./cmd/validate --name casama-docs` passes). The full `/mcp` server needs sign-in and Docker's OAuth block takes provider tokens, so only the docs endpoint went in. |
 | Smithery | **Not available.** Accounts, CLI and proxy shut down 2026-10-31; it stays only as a public registry. |
 | modelcontextprotocol/servers | **No route.** It takes issues, not PRs, and retired its third-party list in favour of the registry. |
 

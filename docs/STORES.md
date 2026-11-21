@@ -94,7 +94,7 @@ rule as above. Marks: ✅ live · ⏳ submitted or waiting · 📝 ready or in p
 | PulseMCP | ⏳ | Submissions paused; will import registry entries | Wait |
 | Composio | ⏳ | Toolkit request, partnership email and Discord post sent 2026-11-20 | Watch hello@ inbox and the request thread |
 | Microsoft, Mistral, xAI | ❌ | Later (partner programs) | — |
-| Docker MCP Catalog | ❌ | Needs a Dockerfile for `packages/mcp` | Maybe later |
+| Docker MCP Catalog | ⏳ | Remote entry `casama-docs` (docs endpoint, no sign-in; no Dockerfile needed): https://github.com/docker/mcp-registry/pull/7478 opened 2026-11-21, validation passes | Wait for Docker's review; appears on hub.docker.com/mcp within 24 h of merge |
 | MCP.so, Cursor Directory, PickAPlugin | ➖ | Paid only, or needs a plugin package | — |
 | Smithery, LaunchMCP, `modelcontextprotocol/servers` | ➖ | Shut down, gone, or no route | — |
 
