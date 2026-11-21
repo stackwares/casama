@@ -1,6 +1,6 @@
 # Your own model provider on Casama Cloud, and a switch to turn Casama's models off: plan
 
-Status: **live** (written 2026-11-21; Phases 0–4 built and deployed to production 2026-11-21, D-465: server `5cf766117eef`, web app build 70, docs, and `own_providers: true` enabled; store builds and Phase 5 wait on store release / OpenAI's hosted-use approval).
+Status: **live** (written 2026-11-21; Phases 0–4 built and deployed to production 2026-11-21, D-465: server `5cf766117eef`, web app build 70, docs, and `own_providers: true` enabled; audit fixes D-466 live on server `0aaa3af6b` and web app build 71; store builds and Phase 5 wait on store release / OpenAI's hosted-use approval).
 
 Oliver asked (2026-11-21) whether Casama's models can be switched off remotely so people use their
 own ChatGPT plan or API keys ("just in case we go bankrupt"), and then whether people on Casama
