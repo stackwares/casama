@@ -39,7 +39,7 @@ open testing, Snap beta and so on. "Live" means anyone can install it from the s
 | **Edge Add-ons** | Edge | ✅ | ✅ | ✅ | ➖ | ⏳ | 0.1.0 in review since 2026-11-21 (about 7 business days) | Wait |
 | **Firefox Add-ons** (AMO) | Firefox | ✅ | ✅ | ✅ | ➖ | ⏳ | 0.1.0 in review since 2026-11-21 (`casama@casama.ai`) | Wait |
 | **Snap Store** | Linux | ✅ | 📝 | ❌ | ❌ | ❌ | Name `casama` approved 2026-11-18; classic confinement request not filed | File classic request, first upload |
-| **Microsoft Store** | Windows | ❓ | ❌ | ❌ | ❌ | ❌ | MSIX packaging exists (`scripts/package-windows.ps1`); no listing | Decide; reserve the name |
+| **Microsoft Store** | Windows | ✅ | ✅ | ❌ | ❌ | ❌ | Account and listing set up in Partner Center (Oliver, 2026-11-21); no package uploaded. The Store build needs the Partner Center identity in `msix_config` (see "Microsoft Store" below) | Fill in the ids, build a Store MSIX, submit when Oliver says |
 | Homebrew Cask (`casama`) | macOS | ➖ | ❌ | ❌ | ➖ | ❌ | Planned; own tap first (0 stars, not "notable" yet) | See "Other Mac stores" |
 | MacUpdate, Softpedia, Uptodown, Softonic, Mac Informer | macOS | ❌ | ❌ | ❌ | ➖ | ❌ | Planned (free listings) | See "Other Mac stores" |
 | MacUpdater, Latest, Applite | macOS | ➖ | ➖ | ➖ | ➖ | ❌ | Nothing to submit: they read Homebrew or our Sparkle feed | Comes with the cask |
@@ -64,8 +64,7 @@ Notes on the Account and Listing marks:
 - Snap: the publisher account exists (it owns the name `casama`); the store page fills from
   `snap/snapcraft.yaml` on the first upload, plus screenshots and links added in the snapcraft.io
   dashboard afterwards.
-- Microsoft Store: Oliver's Partner Center account exists (it published the Edge add-on), but the
-  Windows apps program inside it hasn't been checked.
+- Microsoft Store: account and listing confirmed by Oliver on 2026-11-21.
 - Homebrew, Flathub, F-Droid, AppImageHub and our own package repositories have no account to make:
   they take a pull request from GitHub (Flathub, Homebrew, AppImageHub) or GitLab (F-Droid).
 - The GitHub APK uses our GitHub org (✅); its "listing" is the release notes and the download page.
@@ -122,6 +121,23 @@ Notes on the Account and Listing marks:
 
 Both Chrome and Edge ids must be in the server's `CHROME_EXTENSION_IDS` and in
 `chromeExtensionIds` (`client/lib/core/chrome_extension.dart`). Both are.
+
+### Microsoft Store
+
+| Field | Value |
+|---|---|
+| Account | Oliver's Microsoft Partner Center account (the same one that publishes the Edge add-on) |
+| Listing | Set up in Partner Center (Oliver, 2026-11-21) |
+| Store ID / Product ID | _to fill in from Partner Center → Product identity_ |
+| Package identity | _to fill in: Package/Identity/Name, Package/Identity/Publisher (`CN=…`), Publisher display name_ |
+| Package | `scripts/package-windows.ps1` (`msix` package, config `msix_config` in `client/pubspec.yaml`) |
+| Status | No package uploaded |
+
+The MSIX we ship on GitHub has `store: false` and our own identity (`ai.casama.app`, publisher
+"Casama", signed with `MSIX_CERT`). A Store upload instead needs `store: true` and the exact
+identity name, publisher and publisher display name from Partner Center's Product identity page,
+and is left unsigned: Microsoft signs it. Store installs update through the Store, so the Store build
+should skip WinSparkle. Both builds come from the same commit and version.
 
 ### Snap Store
 
