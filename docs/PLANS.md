@@ -25,6 +25,7 @@ same commit. Shipping details (deploys, app builds) move fast, so check them bef
 | [DECISION-MODEL-PLAN](DECISION-MODEL-PLAN.md) | 2026-11-20 | §12 decisions and Oliver's go-ahead. Phase 0 needs three decision models added to the OpenRouter guardrail |
 | [FLIGHT-SEARCH-PLAN](FLIGHT-SEARCH-PLAN.md) | 2026-11-21 | Oliver's go-ahead to build; the decisions are made (§2). Phase 0 needs a SerpApi account (free plan is enough to build; Starter $25/month before Cloud) |
 | [MEETING-BOT-PLAN](MEETING-BOT-PLAN.md) | 2026-11-21 | §14 decisions. The engine (Recall.ai or our own) is left open on purpose; Phase 0 tries both and needs a Recall trial key and test calls on Meet, Teams and Zoom (§17) |
+| [PHONE-BROWSER-PLAN](PHONE-BROWSER-PLAN.md) | 2026-11-21 | Oliver's go-ahead; the decisions are made (§13). A browser inside the phone app that a bot can drive, falling back to its computer. Built into test builds only, switched on in stages (§6). Phase 0 needs a server deploy and Flutter runs on an iPhone and an Android phone |
 | [RETENTION-MESSAGING-PLAN](RETENTION-MESSAGING-PLAN.md) | 2026-11-20 | §14 decisions; then 1.0 release and Apple's access |
 | [SES-MIGRATION-PLAN](SES-MIGRATION-PLAN.md) | 2026-11-20 | §14 decisions; then an AWS account (Oliver) and AWS's sending review in Phase 0 |
 | [SIRI-AI-PLAN](SIRI-AI-PLAN.md) | 2026-11-20 | §13 decisions; then a debug build on the iPhone for Phase 0 |
