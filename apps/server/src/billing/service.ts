@@ -707,9 +707,18 @@ export class BillingService {
         // credits are too: the share of the period left. Before, upgrading the day before renewal
         // paid a day's difference for the whole month's extra credits, and downgrading back kept
         // them (billing audit 2026-11-17). Starting to pay (from Free or a trial) tops up in full.
+        // A yearly plan grants credits every month of the year, so its share is of this grant
+        // month, not of the year (bug hunt 2026-11-21).
         if (amount > 0 && done?.paid_before && best?.current_period_end && !trial && !comp) {
-          const days = plan.interval === "year" ? 365 : plan.interval === "week" ? 7 : 30;
-          const left = (new Date(best.current_period_end).getTime() - Date.now()) / 86_400_000;
+          const periodEnd = new Date(best.current_period_end);
+          const { start, end } = grantPeriod(periodEnd, plan.interval);
+          const days =
+            plan.interval === "year"
+              ? (end.getTime() - start.getTime()) / 86_400_000
+              : plan.interval === "week"
+                ? 7
+                : 30;
+          const left = (end.getTime() - Date.now()) / 86_400_000;
           const share = Math.min(1, Math.max(0, left / days));
           amount = Math.round(amount * share * 100) / 100;
           note = `${plan.name} ${plan.interval === "week" ? "weekly" : "monthly"} credits (the rest of this period)`;
@@ -1294,6 +1303,27 @@ export class BillingService {
     }
     return { slept };
   }
+}
+
+/**
+ * The grant period credits are given for right now: the paid period itself, except that a yearly
+ * plan grants each month of its year (public.grant_month), so it's the month of the year we're in.
+ */
+export function grantPeriod(
+  periodEnd: Date,
+  interval: string,
+  now = new Date(),
+): { start: Date; end: Date } {
+  const start = periodStart(periodEnd, interval);
+  if (interval !== "year") return { start, end: periodEnd };
+  const monthStart = (n: number) => {
+    const d = new Date(start);
+    d.setUTCMonth(d.getUTCMonth() + n);
+    return d;
+  };
+  for (let n = 1; n <= 12; n++)
+    if (monthStart(n) > now) return { start: monthStart(n - 1), end: monthStart(n) };
+  return { start: monthStart(11), end: periodEnd };
 }
 
 /** When a paid period ending at [end] started, for a plan billed every [interval]. */
