@@ -7454,6 +7454,7 @@ only the last words of a help sentence. So:
 - **iOS share extension:** shared pictures and files are copied into the App Group container and
   attached in quick ask as files (was: only their names, as text).
 - **Billing:** the "Upgrade to Pro" banner opens the paywall on Pro.
+
 ## D-474 Bug hunt security fixes: waitlist seats, revoked sessions, sign-out everywhere, tokens, reports, hook bodies (2026-11-21)
 
 Open items 1, 2, 3 and 5 from `reports/bug-hunt-2026-11-21.md`, decided by the coordinator for
@@ -7519,3 +7520,48 @@ coordinator for Oliver.
   sides of a call's transcript. As a cheap guard, the bot's side (saved with `voice: true`) is
   labelled "[Voice call transcript, as the app heard it]" in the chat's history, so text posted as
   a transcript can't pass for a reply the model wrote.
+
+## D-479 Billing fixes from the bug hunt of 2026-11-21: store refunds by transaction, sandbox packs, partial pack refunds, yearly top-ups, reset undo, low-credit rule
+
+- **Decision (2026-11-21, Oliver to the coordinator: "you decide everything"):** fixes for
+  `reports/bug-hunt-2026-11-21.md` items 6–10 and 12. Amends D-297 (refunds, sandbox), D-333
+  (sandbox, plan-change top-ups), D-443 (undo) and D-275 (low credits).
+- **Store refunds by transaction (item 6, confirmed):** a RevenueCat refund (CANCELLATION with
+  `CUSTOMER_SUPPORT`) of any transaction used to take the current period back, plan and credits,
+  even for last month's renewal; and REFUND_REVERSED changed nothing. Now the refunded
+  transaction's own period end (the event's `expiration_at_ms`) decides: it takes the period back
+  only when it ends no earlier than two days before the subscription's current period end. Every
+  refund is recorded in `store_refunds` (subscription, transaction, `current_period`,
+  `clawed_usd`); an older renewal's refund takes nothing. A transaction already on record isn't
+  applied again. REFUND_REVERSED gives back exactly `clawed_usd` (a positive `refund` entry, so
+  it refills the lots it came from and keeps their expiry), once, and lifts the refund so the
+  plan follows the store's status again. An event without the transaction's expiry still counts as
+  a refund of the current period, as before: RevenueCat's refund events always carry it, and
+  guessing "older" would let a refunded period keep its plan.
+- **Sandbox store packs (item 7):** packs bought with a store sandbox account (TestFlight, App
+  Review, Play license testers; RevenueCat `environment: sandbox`) still credit the production
+  server, so App Review sees purchases work, but their lot lapses 7 days after it was credited
+  and their ledger rows carry `credit_ledger.sandbox = true` for reports to leave out. Real store
+  packs still never lapse (D-418). Sandbox subscriptions are unchanged (D-333). Sandbox packs
+  credited before this change are left as they were.
+- **Partial refunds of web packs (item 8):** a partial Dodo refund takes back the refunded share
+  of the pack's credits, rounded down to the cent, only from what's left of that pack's own lot
+  (never the month's credits, never below zero). Refunds of one payment add up: each takes what
+  the refunds so far call for, less what earlier ones took, so a later full refund takes only the
+  rest. A full refund still takes the whole pack and may leave the balance below zero (D-248). A
+  partial refund whose amounts the provider didn't report takes nothing.
+- **Yearly top-up (item 9):** a move between paid yearly plans tops up by the share of the
+  current grant month left (`grantPeriod`, the month of the paid year `public.grant_month`
+  names), not of the year. Monthly (30 days) and weekly (7 days) are unchanged.
+- **Undoing a saved reset (item 10):** the campaign's `refilled_usd` gets back what the undo took
+  back; credits the workspace already spent were really handed out and stay counted. Undone
+  resets no longer count toward the resets a period allows, so another saved reset can be used.
+- **Low credits (item 12):** the Usage meter's "1% used" was right; the push was wrong (below $1,
+  so a new $1 Free grant was low after a cent). 920333e45 fixed the push earlier the same day;
+  the email sweep still used the old rule. Both now share `lowCreditLimit`: $1 or a quarter of
+  the balance the last top-up left, whichever is lower, where give-backs (a released hold, a
+  waived failed run) aren't top-ups. No client change is needed; notifications sent under the old
+  rule stay in the inbox until read.
+- **Migrations:** `20270318100001_sandbox_credit_packs.sql`, `20270318100002_store_refunds.sql`.
+- **Tests:** `apps/server/test/billing-fixes.test.ts`, `apps/server/test/limit-resets.test.ts`
+  (undo), `packages/agent/test/waive.test.ts` (give-backs).
