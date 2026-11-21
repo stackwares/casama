@@ -47,6 +47,12 @@ export const DEV_KEY =
   "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAuab6v3EXkPtAJyDMpsF2jQwkLWdFfslW0DkwQSCn3D6VxAiD4sb9qIes5wH7tu4BPB6r1tMPNDvi7GWf/TC0NRUfj2dmGCWHnYN4rI9uRj2sQ5zqBbWMKQHvAaZ9sPaynPMZQPbfLdAQx2Mbc24znUb5Efivi3kBfYw+jnlSkRpa8fIvF7tVdlVqu8Mnix8P+1Mnu0hJ9oW/TQWzCa7/oXRSydnuVzWAr3GpEX9iJHvHb7X/wjICILE3vnY6pTfBJTCdPaRtgR02+ck+w2zTdRwnnTrrdNokcebzSX5fzTJSUs0JQqfaVrtaYfuXILQr03mQhfEpraynqjdSGOJQ+QIDAQAB";
 export const DEV_EXTENSION_ID = "kkfppfhkjnenffibmnkphnbejidkmbkj";
 
+/**
+ * Edge Add-ons gives the same store zip its own id (it ignores the manifest key). Submitted
+ * 2026-11-21 (store/edge/listing.md). The server and the web app allow it next to the Chrome id.
+ */
+export const EDGE_EXTENSION_ID = "danikigkoiofpcecjobopcgdflgcmchm";
+
 /** Pages that may hand the extension a sign-in (route 1 in the plan, §9.2). */
 export function webAppOrigins(target: Target): string[] {
   const store = ["https://app.casama.ai/*"];

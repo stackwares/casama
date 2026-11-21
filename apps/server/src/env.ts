@@ -65,10 +65,11 @@ export const EnvSchema = z.object({
   CORS_ORIGINS: z.string().default(""),
   /**
    * Casama for Chrome (D-323): extension ids whose pages may call the API from the browser, comma
-   * separated. The default is the id the repository's manifest key gives the extension. Outside
+   * separated. The default is the id the repository's manifest key gives the extension, then the
+   * Edge Add-ons item's id. Outside
    * production any chrome-extension:// origin is allowed, as localhost is.
    */
-  CHROME_EXTENSION_IDS: z.string().default("kkfppfhkjnenffibmnkphnbejidkmbkj"),
+  CHROME_EXTENSION_IDS: z.string().default("kkfppfhkjnenffibmnkphnbejidkmbkj,danikigkoiofpcecjobopcgdflgcmchm"),
   /**
    * Casama for Firefox (D-323 Phase 5): allow any moz-extension:// origin. Firefox gives each
    * install its own random origin, so there's no id to list. Off keeps Firefox out.

@@ -6,10 +6,10 @@ import 'chrome_extension_web.dart'
 /// these. The id comes from the manifest key in apps/extension/src/manifest.ts; when the store
 /// item exists, its public key becomes that key, so dev builds and the store share one id.
 /// apps/extension/test/ids.test.ts keeps this list, the server's default and the manifest in step.
-/// Edge Add-ons gives the same package its own id (D-323 Phase 5): add it here once the Edge item
-/// exists, and to the server's CHROME_EXTENSION_IDS, so Connect Chrome works in Edge too. Firefox
+/// Edge Add-ons gives the same package its own id (D-323 Phase 5), the second entry; the server's
+/// CHROME_EXTENSION_IDS lists it too, so Connect Chrome works in Edge. Firefox
 /// can't take a sign-in from a web page, so it has no id here.
-const chromeExtensionIds = ['kkfppfhkjnenffibmnkphnbejidkmbkj'];
+const chromeExtensionIds = ['kkfppfhkjnenffibmnkphnbejidkmbkj', 'danikigkoiofpcecjobopcgdflgcmchm'];
 
 enum ChromeHandover {
   /// The extension is signed in.
