@@ -11,7 +11,9 @@ import '../../../ui/screen_tile.dart';
 /// on a phone before it's wired to real pictures (SCREEN-CARD-PLAN Phase 0). Turn it on with
 /// `?previewScreenCard=1` on the web or `--dart-define=PREVIEW_SCREEN_CARD=1` on a device.
 final bool screenCardPreview =
-    kDebugMode && (Uri.base.queryParameters.containsKey('previewScreenCard') || const bool.fromEnvironment('PREVIEW_SCREEN_CARD'));
+    kDebugMode && (Uri.base.queryParameters.containsKey('previewScreenCard') || const {'1', 'true'}.contains(_previewDefine));
+
+const _previewDefine = String.fromEnvironment('PREVIEW_SCREEN_CARD');
 
 /// How wide the card is: 38% of the chat on phones, between 132 and 168 points; 220 on tablets.
 double screenCardWidth(double chatWidth, LayoutSize layout) => layout == LayoutSize.phone ? (chatWidth * 0.38).clamp(132.0, 168.0) : 220.0;
@@ -176,7 +178,7 @@ class _SampleScreenState extends State<_SampleScreen> {
                             for (var k = 0; k < 3; k++) ...[
                               if (k > 0) SizedBox(width: w * 0.03),
                               Container(
-                                width: w * 0.28,
+                                width: w * 0.26,
                                 height: h * 0.26,
                                 decoration: BoxDecoration(
                                   color: k == picked ? const Color(0xFFDDE6FF) : const Color(0xFFF1F3F6),
