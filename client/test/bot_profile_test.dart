@@ -136,7 +136,7 @@ void main() {
     final backend = FakeBackend()..extraCredentials = [chatGptCredential(orgId)];
     await tester.pumpWidget(harness(backend, const BotProfileScreen(botId: botId)));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('botKey-2')));
+    await tester.tap(find.byKey(const ValueKey('botKey-2-false')));
     await tester.pumpAndSettle();
     expect(find.text('ChatGPT plan · ChatGPT'), findsWidgets);
   });
