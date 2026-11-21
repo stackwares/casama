@@ -70,6 +70,15 @@ List<int> bundle() {
 
 /// One-click local server (D-147).
 void main() {
+  test('a bare program name is found on the added PATH, not this app\'s own', () {
+    final env = {'PATH': '/usr/bin:/bin:/usr/local/bin:/opt/homebrew/bin'};
+    bool isFile(String p) => p == '/usr/local/bin/docker' || p == '/opt/homebrew/bin/docker';
+    expect(SystemProcessRunner.resolve('docker', env: env, isFile: isFile), '/usr/local/bin/docker');
+    expect(SystemProcessRunner.resolve('/bin/sh', env: env, isFile: isFile), '/bin/sh');
+    expect(SystemProcessRunner.resolve('nope', env: env, isFile: isFile), 'nope');
+    expect(SystemProcessRunner.environment['PATH'], contains('/usr/local/bin'));
+  });
+
   late Directory tmp;
   setUp(() => tmp = Directory.systemTemp.createTempSync('kls'));
   tearDown(() => tmp.deleteSync(recursive: true));

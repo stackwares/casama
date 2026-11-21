@@ -416,13 +416,48 @@ class DockerStep extends StatefulWidget {
   State<DockerStep> createState() => _DockerStepState();
 }
 
+/// The troubleshooting guide's Docker entries, linked from the "taking a while" help.
+final dockerHelpUrl = Uri.parse('https://docs.casama.ai/self-hosting/troubleshooting#docker-is-not-running-or-this-user-cannot-use-it');
+final dockerComposeHelpUrl = Uri.parse('https://docs.casama.ai/self-hosting/troubleshooting#docker-compose-v2-is-needed');
+
 class _DockerStepState extends State<DockerStep> {
   var _opening = false;
   double? _freeGb;
 
+  /// How long a wait goes before the page offers help instead of only a spinner.
+  static const slowAfter = Duration(seconds: 45);
+  Timer? _slowTimer;
+  var _slow = false;
+  var _rechecking = false;
+
+  void _startSlowTimer() {
+    _slowTimer?.cancel();
+    _slow = false;
+    _slowTimer = Timer(slowAfter, () {
+      if (!mounted) return;
+      Analytics.log('guided_setup_step', {'step': 'docker', 'action': 'slow', 'state': widget.state.name});
+      setState(() => _slow = true);
+    });
+  }
+
+  @override
+  void dispose() {
+    _slowTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _recheck() async {
+    setState(() => _rechecking = true);
+    // Try opening it again too: a Docker that was quit from its menu doesn't come back by itself.
+    if (widget.state == DockerState.notRunning && widget.check.isMac) await widget.check.open();
+    await widget.onCheck();
+    if (mounted) setState(() => _rechecking = false);
+  }
+
   @override
   void initState() {
     super.initState();
+    _startSlowTimer();
     // Installed but closed: open it for them, once. Docker shows its own window if it needs a yes.
     if (widget.state == DockerState.notRunning && widget.check.isMac) unawaited(_open());
     unawaited(widget.check.freeDiskGb().then((gb) {
@@ -433,6 +468,7 @@ class _DockerStepState extends State<DockerStep> {
   @override
   void didUpdateWidget(DockerStep old) {
     super.didUpdateWidget(old);
+    if (old.state != widget.state) _startSlowTimer();
     // Just installed: open it without another click.
     if (old.state == DockerState.notInstalled && widget.state == DockerState.notRunning && widget.check.isMac && !_opening) {
       unawaited(_open());
@@ -509,6 +545,61 @@ class _DockerStepState extends State<DockerStep> {
             icon: LucideIcons.hardDrive,
             color: context.colorScheme.error,
           ),
+        if (_slow) _slowHelp(context),
+      ],
+    );
+  }
+
+  /// After [slowAfter]: what to look at, what the app saw, a check-again button and the guide.
+  Widget _slowHelp(BuildContext context) {
+    final l10n = context.l10n;
+    final mac = widget.check.isMac;
+    final tips = switch (widget.state) {
+      DockerState.notInstalled => [
+        (LucideIcons.appWindow, l10n.setupDockerSlowInstalled),
+        (LucideIcons.boxes, l10n.setupDockerSlowOther),
+      ],
+      DockerState.notRunning when mac => [
+        (LucideIcons.menu, l10n.setupDockerSlowMenuBar),
+        (LucideIcons.squareCheckBig, l10n.setupDockerSlowTerms),
+        (LucideIcons.rotateCcw, l10n.setupDockerSlowRestart),
+        (LucideIcons.boxes, l10n.setupDockerSlowOther),
+      ],
+      _ => [(LucideIcons.terminal, l10n.setupDockerSlowTerminal)],
+    };
+    final detail = widget.check.lastDetail;
+    return Column(
+      key: const Key('setupDockerSlow'),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      spacing: AppSpace.sm,
+      children: [
+        Text(l10n.setupDockerSlowTitle, style: context.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+        GroupedCard(
+          children: [for (final (icon, text) in tips) GroupedTile(icon: icon, title: text)],
+        ),
+        if (detail != null && detail.isNotEmpty)
+          FormNote(l10n.setupDockerSlowSaw(detail), key: const Key('setupDockerSaw'), icon: LucideIcons.terminal),
+        Wrap(
+          spacing: AppSpace.sm,
+          runSpacing: AppSpace.xs,
+          children: [
+            TextButton.icon(
+              key: const Key('setupDockerRecheck'),
+              onPressed: _rechecking ? null : _recheck,
+              icon: const Icon(LucideIcons.refreshCw, size: 18),
+              label: Text(l10n.setupDockerRecheck),
+            ),
+            TextButton.icon(
+              key: const Key('setupDockerGuide'),
+              onPressed: () {
+                Analytics.log('guided_setup_step', const {'step': 'docker', 'action': 'guide'});
+                unawaited(setupOpenUrl(widget.state == DockerState.noCompose ? dockerComposeHelpUrl : dockerHelpUrl));
+              },
+              icon: const Icon(LucideIcons.externalLink, size: 18),
+              label: Text(l10n.setupDockerGuide),
+            ),
+          ],
+        ),
       ],
     );
   }

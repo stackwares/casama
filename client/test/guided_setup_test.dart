@@ -282,6 +282,31 @@ void main() {
     expect(find.textContaining('Only 4 GB of disk space is free'), findsOneWidget);
   });
 
+  onMac('a long wait offers help: what Docker said, Check Again and the guide', (tester) async {
+    final urls = <Uri>[];
+    setupOpenUrl = (u) async => urls.add(u);
+    await setSize(tester, const Size(900, 1200));
+    final check = _Docker(DockerState.notRunning)..lastDetail = 'Cannot connect to the Docker daemon';
+    var checks = 0;
+    await tester.pumpWidget(
+      harness(FakeBackend(), Scaffold(body: SingleChildScrollView(child: DockerStep(state: DockerState.notRunning, check: check, onCheck: () async => checks++)))),
+    );
+    await settle(tester);
+    expect(find.byKey(const Key('setupDockerSlow')), findsNothing, reason: 'only a spinner at first');
+    await tester.pump(const Duration(seconds: 46));
+    await settle(tester);
+    expect(find.byKey(const Key('setupDockerSlow')), findsOneWidget);
+    expect(find.textContaining('Cannot connect to the Docker daemon'), findsOneWidget);
+    final opened = check.opened;
+    await tester.tap(find.byKey(const Key('setupDockerRecheck')));
+    await settle(tester);
+    expect(check.opened, opened + 1, reason: 'opens Docker again');
+    expect(checks, greaterThan(0));
+    await tester.tap(find.byKey(const Key('setupDockerGuide')));
+    await settle(tester);
+    expect(urls.single.fragment, 'docker-is-not-running-or-this-user-cannot-use-it');
+  });
+
   onMac('with Docker ready: one click downloads, starts and connects to the server', (tester) async {
     final backend = FakeBackend()..signedIn = false;
     String? switched;

@@ -81,10 +81,29 @@ class SystemProcessRunner implements ProcessRunner {
     return env;
   }
 
+  /// The full path of [exe] on [environment]'s PATH. Dart looks a bare name up on this app's own
+  /// PATH, not on the one passed in `environment`, so an app opened from Finder never found
+  /// `docker` and the guided setup said "Starting Docker…" forever while Docker ran.
+  static String resolve(String exe, {Map<String, String>? env, bool Function(String path)? isFile}) {
+    if (exe.contains('/')) return exe;
+    final found = isFile ?? (p) => File(p).existsSync();
+    for (final dir in ((env ?? environment)['PATH'] ?? '').split(':')) {
+      if (dir.isNotEmpty && found('$dir/$exe')) return '$dir/$exe';
+    }
+    return exe;
+  }
+
   @override
-  Future<ProcessResult> run(String exe, List<String> args, {String? cwd}) => Process.run(exe, args, workingDirectory: cwd, environment: environment);
+  Future<ProcessResult> run(String exe, List<String> args, {String? cwd}) {
+    final env = environment;
+    return Process.run(resolve(exe, env: env), args, workingDirectory: cwd, environment: env);
+  }
+
   @override
-  Future<Process> start(String exe, List<String> args, {String? cwd}) => Process.start(exe, args, workingDirectory: cwd, environment: environment);
+  Future<Process> start(String exe, List<String> args, {String? cwd}) {
+    final env = environment;
+    return Process.start(resolve(exe, env: env), args, workingDirectory: cwd, environment: env);
+  }
 }
 
 /// Whether nothing listens on [port] (TCP and UDP, on loopback and on every interface).

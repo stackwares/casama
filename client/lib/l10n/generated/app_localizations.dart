@@ -14968,6 +14968,66 @@ abstract class AppLocalizations {
   /// **'This Docker has no Compose v2. Docker Desktop includes it; on Linux, install the docker-compose-plugin package.'**
   String get setupDockerComposeBody;
 
+  /// No description provided for @setupDockerSlowTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Taking a while?'**
+  String get setupDockerSlowTitle;
+
+  /// No description provided for @setupDockerSlowMenuBar.
+  ///
+  /// In en, this message translates to:
+  /// **'Look for the whale in the menu bar. Docker is ready when it stops moving.'**
+  String get setupDockerSlowMenuBar;
+
+  /// No description provided for @setupDockerSlowTerms.
+  ///
+  /// In en, this message translates to:
+  /// **'If Docker shows a window asking you to accept its terms, finish that first. Signing in to Docker is optional.'**
+  String get setupDockerSlowTerms;
+
+  /// No description provided for @setupDockerSlowRestart.
+  ///
+  /// In en, this message translates to:
+  /// **'Still stuck? Quit Docker from its menu, then press Check Again.'**
+  String get setupDockerSlowRestart;
+
+  /// No description provided for @setupDockerSlowInstalled.
+  ///
+  /// In en, this message translates to:
+  /// **'Already installed it? Open Docker once from Applications so it can set itself up.'**
+  String get setupDockerSlowInstalled;
+
+  /// No description provided for @setupDockerSlowOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Using OrbStack or Colima instead? Start it. Casama works with any Docker that answers docker info.'**
+  String get setupDockerSlowOther;
+
+  /// No description provided for @setupDockerSlowTerminal.
+  ///
+  /// In en, this message translates to:
+  /// **'Run docker info in a terminal to see what Docker says.'**
+  String get setupDockerSlowTerminal;
+
+  /// No description provided for @setupDockerSlowSaw.
+  ///
+  /// In en, this message translates to:
+  /// **'Docker said: {detail}'**
+  String setupDockerSlowSaw(String detail);
+
+  /// No description provided for @setupDockerRecheck.
+  ///
+  /// In en, this message translates to:
+  /// **'Check Again'**
+  String get setupDockerRecheck;
+
+  /// No description provided for @setupDockerGuide.
+  ///
+  /// In en, this message translates to:
+  /// **'Troubleshooting Guide'**
+  String get setupDockerGuide;
+
   /// No description provided for @setupDiskLow.
   ///
   /// In en, this message translates to:

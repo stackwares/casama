@@ -9503,6 +9503,44 @@ class AppLocalizationsEn extends AppLocalizations {
       'This Docker has no Compose v2. Docker Desktop includes it; on Linux, install the docker-compose-plugin package.';
 
   @override
+  String get setupDockerSlowTitle => 'Taking a while?';
+
+  @override
+  String get setupDockerSlowMenuBar =>
+      'Look for the whale in the menu bar. Docker is ready when it stops moving.';
+
+  @override
+  String get setupDockerSlowTerms =>
+      'If Docker shows a window asking you to accept its terms, finish that first. Signing in to Docker is optional.';
+
+  @override
+  String get setupDockerSlowRestart =>
+      'Still stuck? Quit Docker from its menu, then press Check Again.';
+
+  @override
+  String get setupDockerSlowInstalled =>
+      'Already installed it? Open Docker once from Applications so it can set itself up.';
+
+  @override
+  String get setupDockerSlowOther =>
+      'Using OrbStack or Colima instead? Start it. Casama works with any Docker that answers docker info.';
+
+  @override
+  String get setupDockerSlowTerminal =>
+      'Run docker info in a terminal to see what Docker says.';
+
+  @override
+  String setupDockerSlowSaw(String detail) {
+    return 'Docker said: $detail';
+  }
+
+  @override
+  String get setupDockerRecheck => 'Check Again';
+
+  @override
+  String get setupDockerGuide => 'Troubleshooting Guide';
+
+  @override
   String setupDiskLow(String gb) {
     return 'Only $gb GB of disk space is free. The server needs about 10 GB.';
   }

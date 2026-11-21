@@ -20,6 +20,16 @@ Instance owners can also check the health of each service under Settings → adm
 user to the `docker` group (`sudo usermod -aG docker $USER`), sign out and back in, and run
 `docker info` to check.
 
+**In the Mac app's guided setup** (Set Up Casama on This Mac), the Docker step waits until
+`docker info` answers. If it waits for more than a minute:
+
+- Look for Docker's whale in the menu bar. Docker is ready when the whale stops moving.
+- If Docker shows a window asking you to accept its terms, finish that first. Signing in to Docker
+  is optional.
+- Run `docker info` in Terminal. If it prints a server version, press **Check Again** in the app.
+  If it prints an error, quit Docker from its menu, open it again, and wait for the whale.
+- OrbStack and Colima work too: start them, and make sure `docker info` answers.
+
 ### "Docker Compose v2 is needed"
 
 **Cause:** Only the old `docker-compose` (v1) is installed, or no Compose at all.

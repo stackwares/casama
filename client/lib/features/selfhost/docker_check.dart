@@ -46,26 +46,40 @@ class DockerCheck {
       '${Platform.environment['HOME']}/Applications/Docker.app',
   ];
 
+  /// What the last [state] check saw, in Docker's own words, for the "taking a while" help.
+  String? lastDetail;
+
   Future<DockerState> state() async {
+    lastDetail = null;
     final ProcessResult info;
     try {
       info = await runner.run('docker', ['info', '--format', '{{.ServerVersion}}']);
     } on ProcessException {
       // No command line yet: Docker Desktop puts it on the PATH the first time it is opened.
+      lastDetail = 'docker: command not found';
       return isMac && macApps.any(exists) ? DockerState.notRunning : DockerState.notInstalled;
     }
     if (info.exitCode != 0) {
-      final said = '${info.stderr}'.toLowerCase();
-      if (!isMac && said.contains('permission denied')) return DockerState.noPermission;
+      final said = '${info.stderr}'.trim();
+      lastDetail = said.isEmpty ? 'docker info: exit ${info.exitCode}' : _lastLines(said);
+      if (!isMac && said.toLowerCase().contains('permission denied')) return DockerState.noPermission;
       return DockerState.notRunning;
     }
     try {
       final compose = await runner.run('docker', ['compose', 'version']);
-      if (compose.exitCode != 0) return DockerState.noCompose;
+      if (compose.exitCode != 0) {
+        lastDetail = _lastLines('${compose.stderr}'.trim());
+        return DockerState.noCompose;
+      }
     } on ProcessException {
       return DockerState.noCompose;
     }
     return DockerState.ready;
+  }
+
+  static String _lastLines(String s) {
+    final lines = s.split('\n').where((l) => l.trim().isNotEmpty).toList();
+    return lines.skip(lines.length > 3 ? lines.length - 3 : 0).join('\n');
   }
 
   /// Whether this Mac has an Apple chip (true also when the app itself runs translated).
