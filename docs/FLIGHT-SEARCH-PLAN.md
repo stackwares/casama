@@ -44,8 +44,8 @@ separate plan (§15).
 | 3 | **No booking in this plan.** The card's buttons open the provider's booking page in the system browser or in-app browser tab (D-352). No WebView. | Booking means selling tickets (Duffel: $3 an order, payments, refunds, airline rules). That's a different product and needs its own plan (§15). |
 | 4 | **Duffel and LetsFG aren't used.** Amadeus Self-Service is gone (shut down 2026-07-17). | Duffel bills searches past 1,500 per booking, so search-only use would cost $0.005 a search with nothing booked. LetsFG is a small vendor with no public price. |
 | 5 | **Shared cache, 30 minutes,** keyed by route, dates, passengers, cabin, currency and provider. Stored in `live_data_cache` like other live data. | Fares aren't personal. The same search from two people within 30 minutes is one upstream call. Fares move often, so 30 minutes is the most we keep. |
-| 6 | **SerpApi caps per plan, per workspace, per day:** Free 0 (Kiwi only), Plus 10, Pro 30, Max 60. A server-wide monthly ceiling, `LIVE_SERPAPI_MONTHLY_CAP`, sits 10% under the bought SerpApi quota. At a cap the chain skips SerpApi; it never fails the search while Kiwi answers. | Keeps Casama's bill fixed and known. Free users still get real fares from Kiwi. |
-| 7 | **Costs are recorded, not billed to credits,** at first (like web search, D-384). Each SerpApi call writes `usage_ledger` kind `live_data_calls` at cost with `meta.provider: "serpapi"`. Cache hits and Kiwi calls are $0 and only counted in `live_data_daily`. | Follows the rule in `docs/COSTS.md` for paid live-data providers. Revisit billing once real use is known (§8). |
+| 6 | **SerpApi safety caps per plan, per workspace, per day:** Free 3, Plus 20, Pro 50, Max 100. A server-wide monthly ceiling, `LIVE_SERPAPI_MONTHLY_CAP`, sits 10% under the bought SerpApi quota. At a cap the chain skips SerpApi; it never fails the search while Kiwi answers. | People pay for these searches (§2.7), so the caps only stop a runaway bot or a loop. The monthly ceiling keeps Casama from going over the SerpApi plan. |
+| 7 | **Google Flights searches are charged to credits; everything else about fares is free to the person.** One search answered by SerpApi costs a flat **$0.05 of credits** (`fares_search_usd` in `billing_settings`), and that covers its follow-up calls within 30 minutes (the return leg, Book links). **Free:** Kiwi answers, cache hits, price watches (Kiwi only), card refreshes that hit the cache, and any search on the workspace's own SerpApi key. The bot's own model tokens are charged as usual (fewer than today, since it no longer reads pages). | Same as app calls on Casama's Composio account (D-244: provider price × markup, from credits). A flat price per search is easier to read in the usage list than per-call charges, and nobody gets charged for tapping Book. At about 1.5 SerpApi calls per search, a search costs us $0.023–0.038 depending on the SerpApi plan, so $0.05 keeps a margin like the 1.3 markup elsewhere. |
 | 8 | **Airports are resolved locally** from a bundled OurAirports extract (public domain): city or airport name → IATA codes, including city groups (Tokyo → HND, NRT; London → LHR, LGW, STN, LTN, LCY, SEN). | Both providers want codes. A local lookup needs no network, costs nothing, and lets the card say "Tokyo (HND/NRT)". |
 | 9 | **Price watches** (Phase 3): "tell me if Manila–Tokyo drops below ₱9,000". A pinned Fares card with a target, rechecked by the worker at most every 6 hours on Kiwi only. A push goes out when the cheapest fare is at or below the target, or drops 10% since the last push. At most 5 watches per workspace, and each ends after the departure date or 60 days. | It's the travel feature people actually come back for, and on Kiwi alone it costs nothing. Built on the live-card pins and refresh (`pins.ts`, `refresh.ts`) and plain-text pushes (D-312), not a new scheduler. |
 | 10 | **Self-hosted servers:** Kiwi is on by default (`LIVE_FARES=auto`, which means on unless `LIVE_DATA=off`). SerpApi only works with the owner's own `LIVE_SERPAPI_KEY`. A workspace can also add its own SerpApi key in Service keys, and that key is used first (same pattern as search keys, D-384). | Works with no keys, like the rest of live data. |
@@ -154,6 +154,15 @@ A new `component: "Fares"` built in `packages/agent/src/live-data/cards.ts` and 
 
 - Cache: `live_data_cache`, key `fares:{provider}:{from}:{to}:{depart}:{return}:{pax}:{cabin}:{currency}`,
   30 minutes. A hit is counted in `live_data_daily` as a cache hit.
+- **Charging** (§2.7): the first SerpApi call of a search writes one `usage_ledger` row, kind
+  `live_data_calls`, `billable` true, `cost_usd` = `fares_search_usd` ($0.05), `upstream_cost_usd` = what
+  SerpApi cost (D-395), `meta: {provider: "serpapi", search_id}`. Follow-up calls for the same search
+  (return leg, Book link) within 30 minutes write rows at `cost_usd` 0 with their `upstream_cost_usd`, so
+  the margin stays visible to the instance owner. Kiwi calls and cache hits write no row. A workspace's own
+  SerpApi key writes `cost_usd` 0 and no upstream cost. A workspace with no credits left skips SerpApi and
+  gets Kiwi's answer only; the bot says Google Flights needs credits, using the usual out-of-credits wording.
+- The reply's usage list shows the charge as "Flight fares" (`reply_usage.dart`: a label and icon for the
+  kind, if `live_data_calls` isn't there yet). Check that older apps show an unknown kind without failing.
 - **SerpApi caps** (§2.6) are checked before each SerpApi call: a per-workspace daily counter, and a
   server monthly counter against `LIVE_SERPAPI_MONTHLY_CAP`. Both are read from `usage_ledger`, so no new
   table. The per-plan numbers live with the other plan limits (`apps/server/src/billing/limits.ts`)
@@ -169,11 +178,12 @@ A new `component: "Fares"` built in `packages/agent/src/live-data/cards.ts` and 
 |---|---|
 | Kiwi | $0 |
 | SerpApi | Starter $25 a month to begin. Assumptions: Kiwi answers about 85% of searches, the cache takes 20% of the rest, and SerpApi only runs on misses, `compare_google` and Book clicks. At 2,000 fare searches a month that's about 300–400 SerpApi calls. The Developer plan ($75 for 5,000) covers about 25k fare searches a month |
-| Per active workspace | Under $0.05 a month at today's use. Recorded at cost, `billable` false |
+| What people pay | $0.05 of credits per Google Flights search. Kiwi searches, cache hits, watches and own-key searches are free (§2.7) |
+| Casama's margin | $0.012–0.027 per charged search. The SerpApi plan itself is a fixed monthly cost, so it only pays for itself above roughly 500–1,500 charged searches a month; below that Casama covers the gap (at most $25–75 a month) |
 | Airports data | $0 (public domain) |
 
 `docs/COSTS.md` gets a **Flight fares** row in the same commit as Phase 1: providers, prices, the caps,
-`usage_ledger` kind `live_data_calls` with `meta.provider`, and "revisit billing at $100 a month". The
+`usage_ledger` kind `live_data_calls` with `meta.provider`, the $0.05 charge, and "revisit the price if the margin goes negative for a month". The
 **Live data cards** row drops "flights (aviationstack)" from "not bought" only if that key is ever bought.
 It's a separate thing.
 
@@ -261,7 +271,7 @@ It's a separate thing.
 - `packages/agent/test/live-fares.test.ts`: place resolution (codes, cities with several airports,
   countries, "here", ambiguous names), date checks, each provider's parsing from the Phase 0 fixtures,
   chain order and fallback, cache hits and key isolation by currency, SerpApi caps (workspace daily and
-  server monthly, skipped not failed), workspace key first, the `usage_ledger` row and its cost, link
+  server monthly, skipped not failed), workspace key first, the charge (one $0.05 row per search, $0 follow-ups, nothing for Kiwi, cache or own key, upstream cost kept, no credits means Kiwi only), link
   domain checks, and the text the model gets (5 lines, length cap).
 - `apps/server/test/live-data*.test.ts`: env to config (`auto` on and off with billing, `LIVE_DATA=off`).
 - pgTAP only if the Service keys migration lands (the new provider value, RLS unchanged).
