@@ -3658,6 +3658,12 @@ async function toolStep(
     "gen_ai.agent.id": info.botId,
   });
   try {
+    // Stop pressed while an earlier call of this turn ran: the rest of the turn doesn't run (the
+    // next step ends the run as cancelled).
+    const [stop] = await deps.db.execute<{ c: Date | null }>(
+      sql`select cancel_requested_at as c from public.runs where id = ${info.runId}::uuid`,
+    );
+    if (stop?.c) throw new ToolError("cancelled", "The run was stopped, so this didn't run.");
     const parsed = registry.parse(call.name, call.args);
     span.setAttribute(
       "casama.tool.risk",

@@ -385,6 +385,55 @@ describe("runAgent", () => {
     expect(JSON.stringify(done?.payload)).toContain("Answered by the backup.");
   });
 
+  it("Stop skips the tool calls still waiting in the same model turn", async () => {
+    const botId = await makeBot();
+    const { runId } = await startRun(botId, "do two things");
+    const ran: string[] = [];
+    const tools = deps(new ReplayGateway([])).tools;
+    tools.register({
+      name: "first.thing",
+      description: "x",
+      risk: "low",
+      selfOnly: true,
+      schema: z.object({}),
+      execute: async () => {
+        ran.push("first");
+        // The person presses Stop while this runs.
+        await tdb.admin`update public.runs set cancel_requested_at = now(), cancelled_by = ${userId} where id = ${runId}`;
+        return { content: "ok" };
+      },
+    });
+    tools.register({
+      name: "second.thing",
+      description: "x",
+      risk: "low",
+      selfOnly: true,
+      schema: z.object({}),
+      execute: async () => {
+        ran.push("second");
+        return { content: "ok" };
+      },
+    });
+    const gw = new ReplayGateway([
+      {
+        name: "two tools",
+        turns: [
+          {
+            when: { lastUserIncludes: "do two things", lastRole: "user" },
+            events: [
+              { type: "tool_call", call: { callId: "t1", name: "first.thing", args: {} } },
+              { type: "tool_call", call: { callId: "t2", name: "second.thing", args: {} } },
+              { ...finish(), finishReason: "tool-calls" },
+            ],
+          },
+          { when: { lastRole: "tool" }, events: [{ type: "text", text: "Done." }, finish()] },
+        ],
+      },
+    ]);
+    expect((await runAgent(runId, deps(gw, { tools }))).status).toBe("cancelled");
+    expect(ran).toEqual(["first"]);
+  });
+
   it("cancels mid-stream within 2 seconds", async () => {
     const botId = await makeBot();
     const { runId } = await startRun(botId, "say something slow");
