@@ -183,6 +183,12 @@ final class AppModel: ObservableObject {
   func start() {
     guard !started else { return }
     started = true
+    #if DEBUG
+    if let raw = UserDefaults.standard.string(forKey: "CasamaWatchServer"),
+       let url = URL(string: raw), WatchServer.usable(url) {
+      WatchAccount.server = url
+    }
+    #endif
     loadSaved()
     // A recording left by an ask that never finished (the app was closed mid-send).
     AskQueueStore.purgeTemp()

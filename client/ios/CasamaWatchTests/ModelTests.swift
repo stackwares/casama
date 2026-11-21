@@ -376,6 +376,10 @@ struct ModelTests {
     check(!GlanceAge.isStale(savedAt: now.addingTimeInterval(-10 * 60), now: now), "ten minutes old is still now")
     check(GlanceAge.isStale(savedAt: now.addingTimeInterval(-31 * 60), now: now), "half an hour old is dated")
     check(GlanceAge.isStale(savedAt: nil, now: now), "never saved is dated")
+
+    check(WristPolicy.isNoPasscode(errorCode: -5, passcodeNotSetCode: -5), "passcodeNotSet is reported as noPasscode")
+    check(!WristPolicy.isNoPasscode(errorCode: -6, passcodeNotSetCode: -5), "other LocalAuthentication errors are not noPasscode")
+    check(!WristPolicy.isNoPasscode(errorCode: nil, passcodeNotSetCode: -5), "missing error is not noPasscode")
   }
 
   // MARK: Bot pictures (docs/BOT-PICTURES-PLAN.md §5)

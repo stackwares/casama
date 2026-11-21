@@ -185,6 +185,16 @@ enum GlanceAge {
   }
 }
 
+/// Whether a LocalAuthentication error means the watch has no passcode set (§8.7). Any other failure
+/// (off-wrist cancel, sensor unavailable, temporary lockout, nil error) is a failed check, not a
+/// missing passcode.
+enum WristPolicy {
+  static func isNoPasscode(errorCode: Int?, passcodeNotSetCode: Int) -> Bool {
+    guard let errorCode else { return false }
+    return errorCode == passcodeNotSetCode
+  }
+}
+
 // MARK: Sign-in codes
 
 enum WatchCodeFormat {

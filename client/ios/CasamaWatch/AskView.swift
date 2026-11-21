@@ -143,8 +143,11 @@ struct AskView: View {
   @State private var choosing = false
   @State private var moveOn: Task<Void, Never>?
 
+  private var activeBotId: String? {
+    chosenBot ?? botId ?? model.defaultAskBot
+  }
   private var bot: Glance.Bot? {
-    guard let id = chosenBot ?? botId else { return nil }
+    guard let id = activeBotId else { return nil }
     return model.glance?.bot(id)
   }
   private var botName: String { bot?.name ?? "" }
@@ -190,8 +193,11 @@ struct AskView: View {
     }
     .navigationTitle(WatchL10n.ask)
     .onAppear {
-      if chosenBot == nil { chosenBot = botId }
+      if chosenBot == nil { chosenBot = botId ?? model.defaultAskBot }
       if stage == .ready, dictation, !outOfCredits { listen() }
+    }
+    .onChange(of: model.defaultAskBot) { _, next in
+      if chosenBot == nil { chosenBot = next }
     }
     .onDisappear {
       recorder.cancel()
@@ -294,8 +300,10 @@ struct AskView: View {
   }
 
   private func send(text: String?, audio: URL?) {
-    guard let botId = chosenBot ?? botId else {
+    guard let botId = activeBotId else {
       if let audio { try? FileManager.default.removeItem(at: audio) }
+      Haptic.problem()
+      stage = .problem(WatchL10n.couldntReach)
       return
     }
     stage = .sending

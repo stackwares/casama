@@ -13,6 +13,7 @@ struct ApprovalView: View {
   @State private var approval: WatchApproval?
   /// Not on this watch (another workspace, or not this person's to see): only the phone answers it.
   @State private var elsewhere = false
+  @State private var reachable = true
   @State private var busy = false
   @State private var note: String?
 
@@ -25,6 +26,7 @@ struct ApprovalView: View {
   var body: some View {
     ScrollView {
       VStack(alignment: .leading, spacing: 8) {
+        if !reachable || !model.online { DatedBanner(savedAt: model.savedAt) }
         HStack(spacing: 6) {
           BotMarkView(name: bot, avatar: avatar, size: 26, muted: hideWords)
           Eyebrow(text: WatchL10n.needsOkFrom(bot), color: WatchTheme.needs(model.online))
@@ -48,7 +50,13 @@ struct ApprovalView: View {
     }
     .navigationTitle(WatchL10n.needsYou)
     .disabled(busy)
+    .refreshable { await load() }
     .task { await load() }
+    .onChange(of: model.online) { _, online in
+      if online, approval == nil, !elsewhere {
+        Task { await load() }
+      }
+    }
     // What went wrong when it was answered from its notification: read when this screen opens for
     // it, and when it was open already.
     .onChange(of: model.pendingNotes[id], initial: true) { _, left in
@@ -93,6 +101,10 @@ struct ApprovalView: View {
         .buttonStyle(PillStyle(tone: .allow))
         .disabled(true)
         .opacity(0.5)
+      if !reachable || !model.online {
+        Button(WatchL10n.tryAgain) { Task { await load() } }
+          .buttonStyle(PillStyle(tone: .plain, small: true))
+      }
       denyButton
     }
   }
@@ -106,13 +118,16 @@ struct ApprovalView: View {
     guard let api = WatchAPI.current() else { return }
     do {
       approval = try await api.approval(id)
+      reachable = true
     } catch WatchAPIError.notFound {
       // The server has no such request for this watch. It may be waiting in the person's other
       // workspace (a push without `org_id` can't say so), so never "Already answered": a request
       // that was answered still comes back, with how it went.
+      reachable = true
       elsewhere = true
     } catch {
       // Offline: the seed stays on screen and Deny still tries.
+      reachable = false
     }
   }
 

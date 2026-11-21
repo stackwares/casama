@@ -18,7 +18,9 @@ struct RootView: View {
       case .signingIn(let waiting):
         SigningInView(waiting: waiting)
       case .code(let code):
-        CodeView(code: code)
+        NavigationStack {
+          CodeView(code: code)
+        }
       case .codeExpired:
         MessageScreen(mascot: "sleepy", title: WatchL10n.useCode) {
           Button(WatchL10n.newCode) { model.startCode() }.buttonStyle(PillStyle(tone: .main))

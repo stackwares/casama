@@ -303,7 +303,9 @@ struct HoldToAllowButton: View {
 
   @Environment(\.accessibilityVoiceOverEnabled) private var voiceOver
   @Environment(\.accessibilityReduceMotion) private var reduceMotion
+  @Environment(\.isEnabled) private var isEnabled
   @State private var progress: CGFloat = 0
+  @State private var completed = false
   @State private var confirming = false
 
   var body: some View {
@@ -335,15 +337,23 @@ struct HoldToAllowButton: View {
       .contentShape(Capsule())
       .onLongPressGesture(minimumDuration: duration, maximumDistance: 20, perform: {
         Haptic.click()
+        completed = true
         progress = 1
         action()
       }, onPressingChanged: { pressing in
         if pressing {
+          completed = false
           if reduceMotion { progress = 0.5 } else { withAnimation(.linear(duration: duration)) { progress = 1 } }
-        } else {
+        } else if !completed {
           withAnimation(.easeOut(duration: 0.15)) { progress = 0 }
         }
       })
+      .onChange(of: isEnabled) { _, enabled in
+        if enabled && completed {
+          completed = false
+          withAnimation(.easeOut(duration: 0.15)) { progress = 0 }
+        }
+      }
       .accessibilityElement(children: .ignore)
       .accessibilityLabel(WatchL10n.holdToAllow)
       .accessibilityAddTraits(.isButton)

@@ -12,8 +12,13 @@ final class RunFollower: ObservableObject {
   @Published var run: WatchRun?
   @Published var reachable = true
   private var task: Task<Void, Never>?
+  private var followingId: String?
 
   func follow(_ id: String) {
+    if followingId != id {
+      stopFollowing()
+      followingId = id
+    }
     guard task == nil else { return }
     task = Task { [weak self] in
       var wait: UInt64 = 1
@@ -21,18 +26,21 @@ final class RunFollower: ObservableObject {
         guard let api = WatchAPI.current() else { return }
         do {
           for try await fresh in api.runStream(id) {
-            guard let self else { return }
+            guard !Task.isCancelled, let self else { return }
             self.update(fresh)
             self.reachable = true
             wait = 1
           }
           // The server closed the stream (110 s) or the run ended.
-          if self?.run?.phase.ended ?? false { return }
+          if Task.isCancelled || (self?.run?.phase.ended ?? false) { return }
+        } catch is CancellationError {
+          return
         } catch WatchAPIError.notFound {
           return
         } catch WatchAPIError.signedOut {
           return
         } catch {
+          guard !Task.isCancelled else { return }
           self?.reachable = false
           try? await Task.sleep(nanoseconds: wait * 1_000_000_000)
           wait = min(wait * 2, 30)
@@ -67,6 +75,8 @@ final class Speaker: NSObject, ObservableObject, AVAudioPlayerDelegate, AVSpeech
 
   @Published var speaking: String?
   private var player: AVAudioPlayer?
+  private var speechTask: Task<Void, Never>?
+  private var activeUtterance: AVSpeechUtterance?
   private let synth = AVSpeechSynthesizer()
 
   override init() {
@@ -78,23 +88,28 @@ final class Speaker: NSObject, ObservableObject, AVAudioPlayerDelegate, AVSpeech
     if speaking == message.id { stop(); return }
     stop()
     speaking = message.id
-    Task {
+    speechTask = Task {
       activate()
       if serverVoice && message.canSpeak, let api = WatchAPI.current(), let data = try? await api.speech(message: message.id),
-         speaking == message.id, let p = try? AVAudioPlayer(data: data) {
+         !Task.isCancelled, speaking == message.id, let p = try? AVAudioPlayer(data: data) {
         p.delegate = self
         player = p
         p.play()
         return
       }
-      guard speaking == message.id else { return }
+      guard !Task.isCancelled, speaking == message.id else { return }
       let utterance = AVSpeechUtterance(string: message.text)
       utterance.voice = AVSpeechSynthesisVoice(language: Locale.current.identifier)
+      activeUtterance = utterance
       synth.speak(utterance)
     }
   }
 
   func stop() {
+    speechTask?.cancel()
+    speechTask = nil
+    activeUtterance = nil
+    player?.delegate = nil
     player?.stop()
     player = nil
     if synth.isSpeaking { synth.stopSpeaking(at: .immediate) }
@@ -113,11 +128,17 @@ final class Speaker: NSObject, ObservableObject, AVAudioPlayerDelegate, AVSpeech
   }
 
   nonisolated func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
-    Task { @MainActor in self.stop() }
+    Task { @MainActor in
+      guard self.player === player else { return }
+      self.stop()
+    }
   }
 
   nonisolated func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didFinish utterance: AVSpeechUtterance) {
-    Task { @MainActor in self.stop() }
+    Task { @MainActor in
+      guard self.activeUtterance === utterance else { return }
+      self.stop()
+    }
   }
 }
 
@@ -361,7 +382,11 @@ struct ChatView: View {
       .padding(.horizontal, 2)
     }
     .navigationTitle(name)
+    .refreshable { await load() }
     .task { await load() }
+    .onChange(of: model.glance?.madeAt) { _, _ in
+      Task { await load() }
+    }
   }
 
   private func load() async {

@@ -129,11 +129,12 @@ enum WristCheck {
     let context = LAContext()
     var error: NSError?
     guard context.canEvaluatePolicy(.deviceOwnerAuthenticationWithWristDetection, error: &error) else {
-      if let code = error?.code, code == LAError.passcodeNotSet.rawValue { return .noPasscode }
-      return error == nil ? .failed : .noPasscode
+      return WristPolicy.isNoPasscode(errorCode: error?.code, passcodeNotSetCode: LAError.passcodeNotSet.rawValue) ? .noPasscode : .failed
     }
     do {
       return try await context.evaluatePolicy(.deviceOwnerAuthenticationWithWristDetection, localizedReason: reason) ? .ok : .failed
+    } catch let error as LAError where error.code == .passcodeNotSet {
+      return .noPasscode
     } catch {
       return .failed
     }

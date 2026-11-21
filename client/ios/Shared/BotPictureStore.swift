@@ -79,6 +79,15 @@ final class BotPictureStore: @unchecked Sendable {
   /// A file younger than this survives a prune: another process (the app starting a Live Activity,
   /// a widget that just fetched) may still be about to draw it from a list this one never saw.
   static let pruneGrace: TimeInterval = 24 * 3600
+  /// Maximum decoded bitmaps kept in memory: smaller on watchOS so complication extensions stay well
+  /// under their 30 MB memory ceiling.
+  static let maxMemoryEntries: Int = {
+    #if os(watchOS)
+    return 12
+    #else
+    return 24
+    #endif
+  }()
 
   /// The app group the process shares files through: the app with its widgets and Live Activities,
   /// or the watch app with its complications. The Mac one is named after the team, because a
@@ -139,7 +148,7 @@ final class BotPictureStore: @unchecked Sendable {
           let image = CGImageSourceCreateImageAtIndex(src, 0, nil) else { return nil }
     lock.lock()
     // A mark is a handful of bots; a small cache is enough and keeps a widget's memory low.
-    if memory.count >= 24 { memory.removeAll() }
+    if memory.count >= Self.maxMemoryEntries { memory.removeAll() }
     memory[id] = image
     lock.unlock()
     return image
@@ -179,6 +188,9 @@ final class BotPictureStore: @unchecked Sendable {
   /// Deletes the files of pictures no longer in [keep]. Pass the full set the process knows about
   /// (every bot of the glance and the canvases), never a partial one.
   func prune(keep: Set<String>, now: Date = Date()) {
+    lock.lock()
+    memory = memory.filter { keep.contains($0.key) }
+    lock.unlock()
     guard let dir = directory,
           let files = try? FileManager.default.contentsOfDirectory(at: dir, includingPropertiesForKeys: [.contentModificationDateKey]) else { return }
     for f in files where f.pathExtension == "png" {
@@ -187,9 +199,6 @@ final class BotPictureStore: @unchecked Sendable {
       let modified = (try? f.resourceValues(forKeys: [.contentModificationDateKey]))?.contentModificationDate
       if let modified, now.timeIntervalSince(modified) < Self.pruneGrace { continue }
       try? FileManager.default.removeItem(at: f)
-      lock.lock()
-      memory[id] = nil
-      lock.unlock()
     }
   }
 
