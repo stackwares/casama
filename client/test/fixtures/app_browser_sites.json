@@ -1,0 +1,2183 @@
+{
+ "policies": {
+  "empty": {
+   "blocked_sites": [],
+   "allowed_sites": [],
+   "allowed_kinds": [],
+   "own_urls": []
+  },
+  "shop": {
+   "blocked_sites": [
+    "ads.example",
+    "*.tracker.example"
+   ],
+   "allowed_sites": [
+    "shop.example",
+    "*.docs.example"
+   ],
+   "allowed_kinds": [],
+   "own_urls": [
+    "https://api.myserver.example:8443",
+    "http://localhost:54321"
+   ]
+  },
+  "banking_on": {
+   "blocked_sites": [],
+   "allowed_sites": [
+    "paypal.com"
+   ],
+   "allowed_kinds": [
+    "banking"
+   ],
+   "own_urls": []
+  }
+ },
+ "cases": [
+  {
+   "policy": "empty",
+   "once": [],
+   "url": "about:blank",
+   "expect": {
+    "kind": "allowed"
+   }
+  },
+  {
+   "policy": "empty",
+   "once": [],
+   "url": "file:///etc/passwd",
+   "expect": {
+    "kind": "refused",
+    "host": "",
+    "why": "not_web"
+   }
+  },
+  {
+   "policy": "empty",
+   "once": [],
+   "url": "javascript:alert(1)",
+   "expect": {
+    "kind": "refused",
+    "host": "",
+    "why": "not_web"
+   }
+  },
+  {
+   "policy": "empty",
+   "once": [],
+   "url": "ftp://shop.example/",
+   "expect": {
+    "kind": "refused",
+    "host": "shop.example",
+    "why": "not_web"
+   }
+  },
+  {
+   "policy": "empty",
+   "once": [],
+   "url": "not a url",
+   "expect": {
+    "kind": "refused",
+    "host": "not a url",
+    "why": "not_web"
+   }
+  },
+  {
+   "policy": "empty",
+   "once": [],
+   "url": "https://chromewebstore.google.com/detail/x",
+   "expect": {
+    "kind": "refused",
+    "host": "chromewebstore.google.com",
+    "why": "not_web"
+   }
+  },
+  {
+   "policy": "empty",
+   "once": [],
+   "url": "https://casama.ai/",
+   "expect": {
+    "kind": "refused",
+    "host": "casama.ai",
+    "why": "casama"
+   }
+  },
+  {
+   "policy": "empty",
+   "once": [],
+   "url": "https://app.casama.ai/c/1",
+   "expect": {
+    "kind": "refused",
+    "host": "app.casama.ai",
+    "why": "casama"
+   }
+  },
+  {
+   "policy": "empty",
+   "once": [],
+   "url": "https://x.casama.link/",
+   "expect": {
+    "kind": "refused",
+    "host": "x.casama.link",
+    "why": "casama"
+   }
+  },
+  {
+   "policy": "empty",
+   "once": [],
+   "url": "https://kasama.ai",
+   "expect": {
+    "kind": "refused",
+    "host": "kasama.ai",
+    "why": "casama"
+   }
+  },
+  {
+   "policy": "empty",
+   "once": [],
+   "url": "https://notcasama.ai/",
+   "expect": {
+    "kind": "ask",
+    "host": "notcasama.ai"
+   }
+  },
+  {
+   "policy": "empty",
+   "once": [],
+   "url": "https://api.myserver.example:8443/v1",
+   "expect": {
+    "kind": "ask",
+    "host": "api.myserver.example"
+   }
+  },
+  {
+   "policy": "empty",
+   "once": [],
+   "url": "https://api.myserver.example/other-port",
+   "expect": {
+    "kind": "ask",
+    "host": "api.myserver.example"
+   }
+  },
+  {
+   "policy": "empty",
+   "once": [],
+   "url": "http://localhost:54321/auth",
+   "expect": {
+    "kind": "ask",
+    "host": "localhost"
+   }
+  },
+  {
+   "policy": "empty",
+   "once": [],
+   "url": "https://shop.example/basket",
+   "expect": {
+    "kind": "ask",
+    "host": "shop.example"
+   }
+  },
+  {
+   "policy": "empty",
+   "once": [],
+   "url": "https://www.shop.example/",
+   "expect": {
+    "kind": "ask",
+    "host": "shop.example"
+   }
+  },
+  {
+   "policy": "empty",
+   "once": [],
+   "url": "https://WWW.Shop.Example./orders",
+   "expect": {
+    "kind": "ask",
+    "host": "shop.example"
+   }
+  },
+  {
+   "policy": "empty",
+   "once": [],
+   "url": "https://pay.shop.example/",
+   "expect": {
+    "kind": "ask",
+    "host": "pay.shop.example"
+   }
+  },
+  {
+   "policy": "empty",
+   "once": [],
+   "url": "https://notshop.example/",
+   "expect": {
+    "kind": "ask",
+    "host": "notshop.example"
+   }
+  },
+  {
+   "policy": "empty",
+   "once": [],
+   "url": "https://docs.example/",
+   "expect": {
+    "kind": "ask",
+    "host": "docs.example"
+   }
+  },
+  {
+   "policy": "empty",
+   "once": [],
+   "url": "https://a.docs.example/",
+   "expect": {
+    "kind": "ask",
+    "host": "a.docs.example"
+   }
+  },
+  {
+   "policy": "empty",
+   "once": [],
+   "url": "https://ads.example/x",
+   "expect": {
+    "kind": "ask",
+    "host": "ads.example"
+   }
+  },
+  {
+   "policy": "empty",
+   "once": [],
+   "url": "https://cdn.ads.example/x",
+   "expect": {
+    "kind": "ask",
+    "host": "cdn.ads.example"
+   }
+  },
+  {
+   "policy": "empty",
+   "once": [],
+   "url": "https://tracker.example/",
+   "expect": {
+    "kind": "ask",
+    "host": "tracker.example"
+   }
+  },
+  {
+   "policy": "empty",
+   "once": [],
+   "url": "https://a.tracker.example/",
+   "expect": {
+    "kind": "ask",
+    "host": "a.tracker.example"
+   }
+  },
+  {
+   "policy": "empty",
+   "once": [],
+   "url": "https://news.example/story",
+   "expect": {
+    "kind": "ask",
+    "host": "news.example"
+   }
+  },
+  {
+   "policy": "empty",
+   "once": [],
+   "url": "https://www.paypal.com/signin",
+   "expect": {
+    "kind": "refused",
+    "host": "paypal.com",
+    "why": "banking"
+   }
+  },
+  {
+   "policy": "empty",
+   "once": [],
+   "url": "https://chase.com/",
+   "expect": {
+    "kind": "refused",
+    "host": "chase.com",
+    "why": "banking"
+   }
+  },
+  {
+   "policy": "empty",
+   "once": [],
+   "url": "https://secure.bankofexample.com/",
+   "expect": {
+    "kind": "ask",
+    "host": "secure.bankofexample.com"
+   }
+  },
+  {
+   "policy": "empty",
+   "once": [],
+   "url": "https://1password.com/",
+   "expect": {
+    "kind": "refused",
+    "host": "1password.com",
+    "why": "passwords"
+   }
+  },
+  {
+   "policy": "empty",
+   "once": [],
+   "url": "https://my.healthportal.example/",
+   "expect": {
+    "kind": "ask",
+    "host": "my.healthportal.example"
+   }
+  },
+  {
+   "policy": "empty",
+   "once": [],
+   "url": "https://www.irs.gov/",
+   "expect": {
+    "kind": "refused",
+    "host": "irs.gov",
+    "why": "government"
+   }
+  },
+  {
+   "policy": "empty",
+   "once": [],
+   "url": "https://accounts.google.com/",
+   "expect": {
+    "kind": "ask",
+    "host": "accounts.google.com"
+   }
+  },
+  {
+   "policy": "empty",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "about:blank",
+   "expect": {
+    "kind": "allowed"
+   }
+  },
+  {
+   "policy": "empty",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "file:///etc/passwd",
+   "expect": {
+    "kind": "refused",
+    "host": "",
+    "why": "not_web"
+   }
+  },
+  {
+   "policy": "empty",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "javascript:alert(1)",
+   "expect": {
+    "kind": "refused",
+    "host": "",
+    "why": "not_web"
+   }
+  },
+  {
+   "policy": "empty",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "ftp://shop.example/",
+   "expect": {
+    "kind": "refused",
+    "host": "shop.example",
+    "why": "not_web"
+   }
+  },
+  {
+   "policy": "empty",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "not a url",
+   "expect": {
+    "kind": "refused",
+    "host": "not a url",
+    "why": "not_web"
+   }
+  },
+  {
+   "policy": "empty",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://chromewebstore.google.com/detail/x",
+   "expect": {
+    "kind": "refused",
+    "host": "chromewebstore.google.com",
+    "why": "not_web"
+   }
+  },
+  {
+   "policy": "empty",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://casama.ai/",
+   "expect": {
+    "kind": "refused",
+    "host": "casama.ai",
+    "why": "casama"
+   }
+  },
+  {
+   "policy": "empty",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://app.casama.ai/c/1",
+   "expect": {
+    "kind": "refused",
+    "host": "app.casama.ai",
+    "why": "casama"
+   }
+  },
+  {
+   "policy": "empty",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://x.casama.link/",
+   "expect": {
+    "kind": "refused",
+    "host": "x.casama.link",
+    "why": "casama"
+   }
+  },
+  {
+   "policy": "empty",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://kasama.ai",
+   "expect": {
+    "kind": "refused",
+    "host": "kasama.ai",
+    "why": "casama"
+   }
+  },
+  {
+   "policy": "empty",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://notcasama.ai/",
+   "expect": {
+    "kind": "ask",
+    "host": "notcasama.ai"
+   }
+  },
+  {
+   "policy": "empty",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://api.myserver.example:8443/v1",
+   "expect": {
+    "kind": "ask",
+    "host": "api.myserver.example"
+   }
+  },
+  {
+   "policy": "empty",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://api.myserver.example/other-port",
+   "expect": {
+    "kind": "ask",
+    "host": "api.myserver.example"
+   }
+  },
+  {
+   "policy": "empty",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "http://localhost:54321/auth",
+   "expect": {
+    "kind": "ask",
+    "host": "localhost"
+   }
+  },
+  {
+   "policy": "empty",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://shop.example/basket",
+   "expect": {
+    "kind": "ask",
+    "host": "shop.example"
+   }
+  },
+  {
+   "policy": "empty",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://www.shop.example/",
+   "expect": {
+    "kind": "ask",
+    "host": "shop.example"
+   }
+  },
+  {
+   "policy": "empty",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://WWW.Shop.Example./orders",
+   "expect": {
+    "kind": "ask",
+    "host": "shop.example"
+   }
+  },
+  {
+   "policy": "empty",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://pay.shop.example/",
+   "expect": {
+    "kind": "ask",
+    "host": "pay.shop.example"
+   }
+  },
+  {
+   "policy": "empty",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://notshop.example/",
+   "expect": {
+    "kind": "ask",
+    "host": "notshop.example"
+   }
+  },
+  {
+   "policy": "empty",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://docs.example/",
+   "expect": {
+    "kind": "ask",
+    "host": "docs.example"
+   }
+  },
+  {
+   "policy": "empty",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://a.docs.example/",
+   "expect": {
+    "kind": "ask",
+    "host": "a.docs.example"
+   }
+  },
+  {
+   "policy": "empty",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://ads.example/x",
+   "expect": {
+    "kind": "ask",
+    "host": "ads.example"
+   }
+  },
+  {
+   "policy": "empty",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://cdn.ads.example/x",
+   "expect": {
+    "kind": "ask",
+    "host": "cdn.ads.example"
+   }
+  },
+  {
+   "policy": "empty",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://tracker.example/",
+   "expect": {
+    "kind": "ask",
+    "host": "tracker.example"
+   }
+  },
+  {
+   "policy": "empty",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://a.tracker.example/",
+   "expect": {
+    "kind": "ask",
+    "host": "a.tracker.example"
+   }
+  },
+  {
+   "policy": "empty",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://news.example/story",
+   "expect": {
+    "kind": "allowed"
+   }
+  },
+  {
+   "policy": "empty",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://www.paypal.com/signin",
+   "expect": {
+    "kind": "refused",
+    "host": "paypal.com",
+    "why": "banking"
+   }
+  },
+  {
+   "policy": "empty",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://chase.com/",
+   "expect": {
+    "kind": "refused",
+    "host": "chase.com",
+    "why": "banking"
+   }
+  },
+  {
+   "policy": "empty",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://secure.bankofexample.com/",
+   "expect": {
+    "kind": "ask",
+    "host": "secure.bankofexample.com"
+   }
+  },
+  {
+   "policy": "empty",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://1password.com/",
+   "expect": {
+    "kind": "refused",
+    "host": "1password.com",
+    "why": "passwords"
+   }
+  },
+  {
+   "policy": "empty",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://my.healthportal.example/",
+   "expect": {
+    "kind": "ask",
+    "host": "my.healthportal.example"
+   }
+  },
+  {
+   "policy": "empty",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://www.irs.gov/",
+   "expect": {
+    "kind": "refused",
+    "host": "irs.gov",
+    "why": "government"
+   }
+  },
+  {
+   "policy": "empty",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://accounts.google.com/",
+   "expect": {
+    "kind": "ask",
+    "host": "accounts.google.com"
+   }
+  },
+  {
+   "policy": "shop",
+   "once": [],
+   "url": "about:blank",
+   "expect": {
+    "kind": "allowed"
+   }
+  },
+  {
+   "policy": "shop",
+   "once": [],
+   "url": "file:///etc/passwd",
+   "expect": {
+    "kind": "refused",
+    "host": "",
+    "why": "not_web"
+   }
+  },
+  {
+   "policy": "shop",
+   "once": [],
+   "url": "javascript:alert(1)",
+   "expect": {
+    "kind": "refused",
+    "host": "",
+    "why": "not_web"
+   }
+  },
+  {
+   "policy": "shop",
+   "once": [],
+   "url": "ftp://shop.example/",
+   "expect": {
+    "kind": "refused",
+    "host": "shop.example",
+    "why": "not_web"
+   }
+  },
+  {
+   "policy": "shop",
+   "once": [],
+   "url": "not a url",
+   "expect": {
+    "kind": "refused",
+    "host": "not a url",
+    "why": "not_web"
+   }
+  },
+  {
+   "policy": "shop",
+   "once": [],
+   "url": "https://chromewebstore.google.com/detail/x",
+   "expect": {
+    "kind": "refused",
+    "host": "chromewebstore.google.com",
+    "why": "not_web"
+   }
+  },
+  {
+   "policy": "shop",
+   "once": [],
+   "url": "https://casama.ai/",
+   "expect": {
+    "kind": "refused",
+    "host": "casama.ai",
+    "why": "casama"
+   }
+  },
+  {
+   "policy": "shop",
+   "once": [],
+   "url": "https://app.casama.ai/c/1",
+   "expect": {
+    "kind": "refused",
+    "host": "app.casama.ai",
+    "why": "casama"
+   }
+  },
+  {
+   "policy": "shop",
+   "once": [],
+   "url": "https://x.casama.link/",
+   "expect": {
+    "kind": "refused",
+    "host": "x.casama.link",
+    "why": "casama"
+   }
+  },
+  {
+   "policy": "shop",
+   "once": [],
+   "url": "https://kasama.ai",
+   "expect": {
+    "kind": "refused",
+    "host": "kasama.ai",
+    "why": "casama"
+   }
+  },
+  {
+   "policy": "shop",
+   "once": [],
+   "url": "https://notcasama.ai/",
+   "expect": {
+    "kind": "ask",
+    "host": "notcasama.ai"
+   }
+  },
+  {
+   "policy": "shop",
+   "once": [],
+   "url": "https://api.myserver.example:8443/v1",
+   "expect": {
+    "kind": "refused",
+    "host": "api.myserver.example",
+    "why": "casama"
+   }
+  },
+  {
+   "policy": "shop",
+   "once": [],
+   "url": "https://api.myserver.example/other-port",
+   "expect": {
+    "kind": "ask",
+    "host": "api.myserver.example"
+   }
+  },
+  {
+   "policy": "shop",
+   "once": [],
+   "url": "http://localhost:54321/auth",
+   "expect": {
+    "kind": "refused",
+    "host": "localhost",
+    "why": "casama"
+   }
+  },
+  {
+   "policy": "shop",
+   "once": [],
+   "url": "https://shop.example/basket",
+   "expect": {
+    "kind": "allowed"
+   }
+  },
+  {
+   "policy": "shop",
+   "once": [],
+   "url": "https://www.shop.example/",
+   "expect": {
+    "kind": "allowed"
+   }
+  },
+  {
+   "policy": "shop",
+   "once": [],
+   "url": "https://WWW.Shop.Example./orders",
+   "expect": {
+    "kind": "allowed"
+   }
+  },
+  {
+   "policy": "shop",
+   "once": [],
+   "url": "https://pay.shop.example/",
+   "expect": {
+    "kind": "allowed"
+   }
+  },
+  {
+   "policy": "shop",
+   "once": [],
+   "url": "https://notshop.example/",
+   "expect": {
+    "kind": "ask",
+    "host": "notshop.example"
+   }
+  },
+  {
+   "policy": "shop",
+   "once": [],
+   "url": "https://docs.example/",
+   "expect": {
+    "kind": "ask",
+    "host": "docs.example"
+   }
+  },
+  {
+   "policy": "shop",
+   "once": [],
+   "url": "https://a.docs.example/",
+   "expect": {
+    "kind": "allowed"
+   }
+  },
+  {
+   "policy": "shop",
+   "once": [],
+   "url": "https://ads.example/x",
+   "expect": {
+    "kind": "refused",
+    "host": "ads.example",
+    "why": "blocked"
+   }
+  },
+  {
+   "policy": "shop",
+   "once": [],
+   "url": "https://cdn.ads.example/x",
+   "expect": {
+    "kind": "refused",
+    "host": "cdn.ads.example",
+    "why": "blocked"
+   }
+  },
+  {
+   "policy": "shop",
+   "once": [],
+   "url": "https://tracker.example/",
+   "expect": {
+    "kind": "ask",
+    "host": "tracker.example"
+   }
+  },
+  {
+   "policy": "shop",
+   "once": [],
+   "url": "https://a.tracker.example/",
+   "expect": {
+    "kind": "refused",
+    "host": "a.tracker.example",
+    "why": "blocked"
+   }
+  },
+  {
+   "policy": "shop",
+   "once": [],
+   "url": "https://news.example/story",
+   "expect": {
+    "kind": "ask",
+    "host": "news.example"
+   }
+  },
+  {
+   "policy": "shop",
+   "once": [],
+   "url": "https://www.paypal.com/signin",
+   "expect": {
+    "kind": "refused",
+    "host": "paypal.com",
+    "why": "banking"
+   }
+  },
+  {
+   "policy": "shop",
+   "once": [],
+   "url": "https://chase.com/",
+   "expect": {
+    "kind": "refused",
+    "host": "chase.com",
+    "why": "banking"
+   }
+  },
+  {
+   "policy": "shop",
+   "once": [],
+   "url": "https://secure.bankofexample.com/",
+   "expect": {
+    "kind": "ask",
+    "host": "secure.bankofexample.com"
+   }
+  },
+  {
+   "policy": "shop",
+   "once": [],
+   "url": "https://1password.com/",
+   "expect": {
+    "kind": "refused",
+    "host": "1password.com",
+    "why": "passwords"
+   }
+  },
+  {
+   "policy": "shop",
+   "once": [],
+   "url": "https://my.healthportal.example/",
+   "expect": {
+    "kind": "ask",
+    "host": "my.healthportal.example"
+   }
+  },
+  {
+   "policy": "shop",
+   "once": [],
+   "url": "https://www.irs.gov/",
+   "expect": {
+    "kind": "refused",
+    "host": "irs.gov",
+    "why": "government"
+   }
+  },
+  {
+   "policy": "shop",
+   "once": [],
+   "url": "https://accounts.google.com/",
+   "expect": {
+    "kind": "ask",
+    "host": "accounts.google.com"
+   }
+  },
+  {
+   "policy": "shop",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "about:blank",
+   "expect": {
+    "kind": "allowed"
+   }
+  },
+  {
+   "policy": "shop",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "file:///etc/passwd",
+   "expect": {
+    "kind": "refused",
+    "host": "",
+    "why": "not_web"
+   }
+  },
+  {
+   "policy": "shop",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "javascript:alert(1)",
+   "expect": {
+    "kind": "refused",
+    "host": "",
+    "why": "not_web"
+   }
+  },
+  {
+   "policy": "shop",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "ftp://shop.example/",
+   "expect": {
+    "kind": "refused",
+    "host": "shop.example",
+    "why": "not_web"
+   }
+  },
+  {
+   "policy": "shop",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "not a url",
+   "expect": {
+    "kind": "refused",
+    "host": "not a url",
+    "why": "not_web"
+   }
+  },
+  {
+   "policy": "shop",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://chromewebstore.google.com/detail/x",
+   "expect": {
+    "kind": "refused",
+    "host": "chromewebstore.google.com",
+    "why": "not_web"
+   }
+  },
+  {
+   "policy": "shop",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://casama.ai/",
+   "expect": {
+    "kind": "refused",
+    "host": "casama.ai",
+    "why": "casama"
+   }
+  },
+  {
+   "policy": "shop",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://app.casama.ai/c/1",
+   "expect": {
+    "kind": "refused",
+    "host": "app.casama.ai",
+    "why": "casama"
+   }
+  },
+  {
+   "policy": "shop",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://x.casama.link/",
+   "expect": {
+    "kind": "refused",
+    "host": "x.casama.link",
+    "why": "casama"
+   }
+  },
+  {
+   "policy": "shop",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://kasama.ai",
+   "expect": {
+    "kind": "refused",
+    "host": "kasama.ai",
+    "why": "casama"
+   }
+  },
+  {
+   "policy": "shop",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://notcasama.ai/",
+   "expect": {
+    "kind": "ask",
+    "host": "notcasama.ai"
+   }
+  },
+  {
+   "policy": "shop",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://api.myserver.example:8443/v1",
+   "expect": {
+    "kind": "refused",
+    "host": "api.myserver.example",
+    "why": "casama"
+   }
+  },
+  {
+   "policy": "shop",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://api.myserver.example/other-port",
+   "expect": {
+    "kind": "ask",
+    "host": "api.myserver.example"
+   }
+  },
+  {
+   "policy": "shop",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "http://localhost:54321/auth",
+   "expect": {
+    "kind": "refused",
+    "host": "localhost",
+    "why": "casama"
+   }
+  },
+  {
+   "policy": "shop",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://shop.example/basket",
+   "expect": {
+    "kind": "allowed"
+   }
+  },
+  {
+   "policy": "shop",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://www.shop.example/",
+   "expect": {
+    "kind": "allowed"
+   }
+  },
+  {
+   "policy": "shop",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://WWW.Shop.Example./orders",
+   "expect": {
+    "kind": "allowed"
+   }
+  },
+  {
+   "policy": "shop",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://pay.shop.example/",
+   "expect": {
+    "kind": "allowed"
+   }
+  },
+  {
+   "policy": "shop",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://notshop.example/",
+   "expect": {
+    "kind": "ask",
+    "host": "notshop.example"
+   }
+  },
+  {
+   "policy": "shop",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://docs.example/",
+   "expect": {
+    "kind": "ask",
+    "host": "docs.example"
+   }
+  },
+  {
+   "policy": "shop",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://a.docs.example/",
+   "expect": {
+    "kind": "allowed"
+   }
+  },
+  {
+   "policy": "shop",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://ads.example/x",
+   "expect": {
+    "kind": "refused",
+    "host": "ads.example",
+    "why": "blocked"
+   }
+  },
+  {
+   "policy": "shop",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://cdn.ads.example/x",
+   "expect": {
+    "kind": "refused",
+    "host": "cdn.ads.example",
+    "why": "blocked"
+   }
+  },
+  {
+   "policy": "shop",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://tracker.example/",
+   "expect": {
+    "kind": "ask",
+    "host": "tracker.example"
+   }
+  },
+  {
+   "policy": "shop",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://a.tracker.example/",
+   "expect": {
+    "kind": "refused",
+    "host": "a.tracker.example",
+    "why": "blocked"
+   }
+  },
+  {
+   "policy": "shop",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://news.example/story",
+   "expect": {
+    "kind": "allowed"
+   }
+  },
+  {
+   "policy": "shop",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://www.paypal.com/signin",
+   "expect": {
+    "kind": "refused",
+    "host": "paypal.com",
+    "why": "banking"
+   }
+  },
+  {
+   "policy": "shop",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://chase.com/",
+   "expect": {
+    "kind": "refused",
+    "host": "chase.com",
+    "why": "banking"
+   }
+  },
+  {
+   "policy": "shop",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://secure.bankofexample.com/",
+   "expect": {
+    "kind": "ask",
+    "host": "secure.bankofexample.com"
+   }
+  },
+  {
+   "policy": "shop",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://1password.com/",
+   "expect": {
+    "kind": "refused",
+    "host": "1password.com",
+    "why": "passwords"
+   }
+  },
+  {
+   "policy": "shop",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://my.healthportal.example/",
+   "expect": {
+    "kind": "ask",
+    "host": "my.healthportal.example"
+   }
+  },
+  {
+   "policy": "shop",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://www.irs.gov/",
+   "expect": {
+    "kind": "refused",
+    "host": "irs.gov",
+    "why": "government"
+   }
+  },
+  {
+   "policy": "shop",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://accounts.google.com/",
+   "expect": {
+    "kind": "ask",
+    "host": "accounts.google.com"
+   }
+  },
+  {
+   "policy": "banking_on",
+   "once": [],
+   "url": "about:blank",
+   "expect": {
+    "kind": "allowed"
+   }
+  },
+  {
+   "policy": "banking_on",
+   "once": [],
+   "url": "file:///etc/passwd",
+   "expect": {
+    "kind": "refused",
+    "host": "",
+    "why": "not_web"
+   }
+  },
+  {
+   "policy": "banking_on",
+   "once": [],
+   "url": "javascript:alert(1)",
+   "expect": {
+    "kind": "refused",
+    "host": "",
+    "why": "not_web"
+   }
+  },
+  {
+   "policy": "banking_on",
+   "once": [],
+   "url": "ftp://shop.example/",
+   "expect": {
+    "kind": "refused",
+    "host": "shop.example",
+    "why": "not_web"
+   }
+  },
+  {
+   "policy": "banking_on",
+   "once": [],
+   "url": "not a url",
+   "expect": {
+    "kind": "refused",
+    "host": "not a url",
+    "why": "not_web"
+   }
+  },
+  {
+   "policy": "banking_on",
+   "once": [],
+   "url": "https://chromewebstore.google.com/detail/x",
+   "expect": {
+    "kind": "refused",
+    "host": "chromewebstore.google.com",
+    "why": "not_web"
+   }
+  },
+  {
+   "policy": "banking_on",
+   "once": [],
+   "url": "https://casama.ai/",
+   "expect": {
+    "kind": "refused",
+    "host": "casama.ai",
+    "why": "casama"
+   }
+  },
+  {
+   "policy": "banking_on",
+   "once": [],
+   "url": "https://app.casama.ai/c/1",
+   "expect": {
+    "kind": "refused",
+    "host": "app.casama.ai",
+    "why": "casama"
+   }
+  },
+  {
+   "policy": "banking_on",
+   "once": [],
+   "url": "https://x.casama.link/",
+   "expect": {
+    "kind": "refused",
+    "host": "x.casama.link",
+    "why": "casama"
+   }
+  },
+  {
+   "policy": "banking_on",
+   "once": [],
+   "url": "https://kasama.ai",
+   "expect": {
+    "kind": "refused",
+    "host": "kasama.ai",
+    "why": "casama"
+   }
+  },
+  {
+   "policy": "banking_on",
+   "once": [],
+   "url": "https://notcasama.ai/",
+   "expect": {
+    "kind": "ask",
+    "host": "notcasama.ai"
+   }
+  },
+  {
+   "policy": "banking_on",
+   "once": [],
+   "url": "https://api.myserver.example:8443/v1",
+   "expect": {
+    "kind": "ask",
+    "host": "api.myserver.example"
+   }
+  },
+  {
+   "policy": "banking_on",
+   "once": [],
+   "url": "https://api.myserver.example/other-port",
+   "expect": {
+    "kind": "ask",
+    "host": "api.myserver.example"
+   }
+  },
+  {
+   "policy": "banking_on",
+   "once": [],
+   "url": "http://localhost:54321/auth",
+   "expect": {
+    "kind": "ask",
+    "host": "localhost"
+   }
+  },
+  {
+   "policy": "banking_on",
+   "once": [],
+   "url": "https://shop.example/basket",
+   "expect": {
+    "kind": "ask",
+    "host": "shop.example"
+   }
+  },
+  {
+   "policy": "banking_on",
+   "once": [],
+   "url": "https://www.shop.example/",
+   "expect": {
+    "kind": "ask",
+    "host": "shop.example"
+   }
+  },
+  {
+   "policy": "banking_on",
+   "once": [],
+   "url": "https://WWW.Shop.Example./orders",
+   "expect": {
+    "kind": "ask",
+    "host": "shop.example"
+   }
+  },
+  {
+   "policy": "banking_on",
+   "once": [],
+   "url": "https://pay.shop.example/",
+   "expect": {
+    "kind": "ask",
+    "host": "pay.shop.example"
+   }
+  },
+  {
+   "policy": "banking_on",
+   "once": [],
+   "url": "https://notshop.example/",
+   "expect": {
+    "kind": "ask",
+    "host": "notshop.example"
+   }
+  },
+  {
+   "policy": "banking_on",
+   "once": [],
+   "url": "https://docs.example/",
+   "expect": {
+    "kind": "ask",
+    "host": "docs.example"
+   }
+  },
+  {
+   "policy": "banking_on",
+   "once": [],
+   "url": "https://a.docs.example/",
+   "expect": {
+    "kind": "ask",
+    "host": "a.docs.example"
+   }
+  },
+  {
+   "policy": "banking_on",
+   "once": [],
+   "url": "https://ads.example/x",
+   "expect": {
+    "kind": "ask",
+    "host": "ads.example"
+   }
+  },
+  {
+   "policy": "banking_on",
+   "once": [],
+   "url": "https://cdn.ads.example/x",
+   "expect": {
+    "kind": "ask",
+    "host": "cdn.ads.example"
+   }
+  },
+  {
+   "policy": "banking_on",
+   "once": [],
+   "url": "https://tracker.example/",
+   "expect": {
+    "kind": "ask",
+    "host": "tracker.example"
+   }
+  },
+  {
+   "policy": "banking_on",
+   "once": [],
+   "url": "https://a.tracker.example/",
+   "expect": {
+    "kind": "ask",
+    "host": "a.tracker.example"
+   }
+  },
+  {
+   "policy": "banking_on",
+   "once": [],
+   "url": "https://news.example/story",
+   "expect": {
+    "kind": "ask",
+    "host": "news.example"
+   }
+  },
+  {
+   "policy": "banking_on",
+   "once": [],
+   "url": "https://www.paypal.com/signin",
+   "expect": {
+    "kind": "ask",
+    "host": "paypal.com",
+    "site_kind": "banking"
+   }
+  },
+  {
+   "policy": "banking_on",
+   "once": [],
+   "url": "https://chase.com/",
+   "expect": {
+    "kind": "ask",
+    "host": "chase.com",
+    "site_kind": "banking"
+   }
+  },
+  {
+   "policy": "banking_on",
+   "once": [],
+   "url": "https://secure.bankofexample.com/",
+   "expect": {
+    "kind": "ask",
+    "host": "secure.bankofexample.com"
+   }
+  },
+  {
+   "policy": "banking_on",
+   "once": [],
+   "url": "https://1password.com/",
+   "expect": {
+    "kind": "refused",
+    "host": "1password.com",
+    "why": "passwords"
+   }
+  },
+  {
+   "policy": "banking_on",
+   "once": [],
+   "url": "https://my.healthportal.example/",
+   "expect": {
+    "kind": "ask",
+    "host": "my.healthportal.example"
+   }
+  },
+  {
+   "policy": "banking_on",
+   "once": [],
+   "url": "https://www.irs.gov/",
+   "expect": {
+    "kind": "refused",
+    "host": "irs.gov",
+    "why": "government"
+   }
+  },
+  {
+   "policy": "banking_on",
+   "once": [],
+   "url": "https://accounts.google.com/",
+   "expect": {
+    "kind": "ask",
+    "host": "accounts.google.com"
+   }
+  },
+  {
+   "policy": "banking_on",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "about:blank",
+   "expect": {
+    "kind": "allowed"
+   }
+  },
+  {
+   "policy": "banking_on",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "file:///etc/passwd",
+   "expect": {
+    "kind": "refused",
+    "host": "",
+    "why": "not_web"
+   }
+  },
+  {
+   "policy": "banking_on",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "javascript:alert(1)",
+   "expect": {
+    "kind": "refused",
+    "host": "",
+    "why": "not_web"
+   }
+  },
+  {
+   "policy": "banking_on",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "ftp://shop.example/",
+   "expect": {
+    "kind": "refused",
+    "host": "shop.example",
+    "why": "not_web"
+   }
+  },
+  {
+   "policy": "banking_on",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "not a url",
+   "expect": {
+    "kind": "refused",
+    "host": "not a url",
+    "why": "not_web"
+   }
+  },
+  {
+   "policy": "banking_on",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://chromewebstore.google.com/detail/x",
+   "expect": {
+    "kind": "refused",
+    "host": "chromewebstore.google.com",
+    "why": "not_web"
+   }
+  },
+  {
+   "policy": "banking_on",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://casama.ai/",
+   "expect": {
+    "kind": "refused",
+    "host": "casama.ai",
+    "why": "casama"
+   }
+  },
+  {
+   "policy": "banking_on",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://app.casama.ai/c/1",
+   "expect": {
+    "kind": "refused",
+    "host": "app.casama.ai",
+    "why": "casama"
+   }
+  },
+  {
+   "policy": "banking_on",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://x.casama.link/",
+   "expect": {
+    "kind": "refused",
+    "host": "x.casama.link",
+    "why": "casama"
+   }
+  },
+  {
+   "policy": "banking_on",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://kasama.ai",
+   "expect": {
+    "kind": "refused",
+    "host": "kasama.ai",
+    "why": "casama"
+   }
+  },
+  {
+   "policy": "banking_on",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://notcasama.ai/",
+   "expect": {
+    "kind": "ask",
+    "host": "notcasama.ai"
+   }
+  },
+  {
+   "policy": "banking_on",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://api.myserver.example:8443/v1",
+   "expect": {
+    "kind": "ask",
+    "host": "api.myserver.example"
+   }
+  },
+  {
+   "policy": "banking_on",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://api.myserver.example/other-port",
+   "expect": {
+    "kind": "ask",
+    "host": "api.myserver.example"
+   }
+  },
+  {
+   "policy": "banking_on",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "http://localhost:54321/auth",
+   "expect": {
+    "kind": "ask",
+    "host": "localhost"
+   }
+  },
+  {
+   "policy": "banking_on",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://shop.example/basket",
+   "expect": {
+    "kind": "ask",
+    "host": "shop.example"
+   }
+  },
+  {
+   "policy": "banking_on",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://www.shop.example/",
+   "expect": {
+    "kind": "ask",
+    "host": "shop.example"
+   }
+  },
+  {
+   "policy": "banking_on",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://WWW.Shop.Example./orders",
+   "expect": {
+    "kind": "ask",
+    "host": "shop.example"
+   }
+  },
+  {
+   "policy": "banking_on",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://pay.shop.example/",
+   "expect": {
+    "kind": "ask",
+    "host": "pay.shop.example"
+   }
+  },
+  {
+   "policy": "banking_on",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://notshop.example/",
+   "expect": {
+    "kind": "ask",
+    "host": "notshop.example"
+   }
+  },
+  {
+   "policy": "banking_on",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://docs.example/",
+   "expect": {
+    "kind": "ask",
+    "host": "docs.example"
+   }
+  },
+  {
+   "policy": "banking_on",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://a.docs.example/",
+   "expect": {
+    "kind": "ask",
+    "host": "a.docs.example"
+   }
+  },
+  {
+   "policy": "banking_on",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://ads.example/x",
+   "expect": {
+    "kind": "ask",
+    "host": "ads.example"
+   }
+  },
+  {
+   "policy": "banking_on",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://cdn.ads.example/x",
+   "expect": {
+    "kind": "ask",
+    "host": "cdn.ads.example"
+   }
+  },
+  {
+   "policy": "banking_on",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://tracker.example/",
+   "expect": {
+    "kind": "ask",
+    "host": "tracker.example"
+   }
+  },
+  {
+   "policy": "banking_on",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://a.tracker.example/",
+   "expect": {
+    "kind": "ask",
+    "host": "a.tracker.example"
+   }
+  },
+  {
+   "policy": "banking_on",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://news.example/story",
+   "expect": {
+    "kind": "allowed"
+   }
+  },
+  {
+   "policy": "banking_on",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://www.paypal.com/signin",
+   "expect": {
+    "kind": "allowed"
+   }
+  },
+  {
+   "policy": "banking_on",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://chase.com/",
+   "expect": {
+    "kind": "ask",
+    "host": "chase.com",
+    "site_kind": "banking"
+   }
+  },
+  {
+   "policy": "banking_on",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://secure.bankofexample.com/",
+   "expect": {
+    "kind": "ask",
+    "host": "secure.bankofexample.com"
+   }
+  },
+  {
+   "policy": "banking_on",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://1password.com/",
+   "expect": {
+    "kind": "refused",
+    "host": "1password.com",
+    "why": "passwords"
+   }
+  },
+  {
+   "policy": "banking_on",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://my.healthportal.example/",
+   "expect": {
+    "kind": "ask",
+    "host": "my.healthportal.example"
+   }
+  },
+  {
+   "policy": "banking_on",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://www.irs.gov/",
+   "expect": {
+    "kind": "refused",
+    "host": "irs.gov",
+    "why": "government"
+   }
+  },
+  {
+   "policy": "banking_on",
+   "once": [
+    "news.example",
+    "paypal.com"
+   ],
+   "url": "https://accounts.google.com/",
+   "expect": {
+    "kind": "ask",
+    "host": "accounts.google.com"
+   }
+  }
+ ]
+}

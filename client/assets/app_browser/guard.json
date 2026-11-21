@@ -1,0 +1,82 @@
+{
+ "casama": [
+  "casama.ai",
+  "casama.link",
+  "kasama.ai"
+ ],
+ "kinds": [
+  "passwords",
+  "banking",
+  "health",
+  "government"
+ ],
+ "hosts": {
+  "banking": [
+   "paypal.com",
+   "stripe.com",
+   "wise.com",
+   "chase.com",
+   "bankofamerica.com",
+   "wellsfargo.com",
+   "citi.com",
+   "capitalone.com",
+   "americanexpress.com",
+   "hsbc.com",
+   "barclays.co.uk",
+   "revolut.com",
+   "monzo.com",
+   "n26.com",
+   "schwab.com",
+   "fidelity.com",
+   "vanguard.com",
+   "robinhood.com",
+   "coinbase.com",
+   "binance.com",
+   "kraken.com",
+   "venmo.com",
+   "bdo.com.ph",
+   "bpi.com.ph",
+   "gcash.com",
+   "maya.ph"
+  ],
+  "health": [
+   "mychart.org",
+   "epic.com",
+   "patient.info",
+   "healthvault.com",
+   "kaiserpermanente.org",
+   "nhs.uk",
+   "zocdoc.com",
+   "doximity.com",
+   "teladoc.com",
+   "23andme.com"
+  ],
+  "passwords": [
+   "1password.com",
+   "bitwarden.com",
+   "lastpass.com",
+   "dashlane.com",
+   "keepersecurity.com",
+   "nordpass.com",
+   "proton.me",
+   "passwords.google.com"
+  ],
+  "government": [
+   "irs.gov",
+   "ssa.gov",
+   "login.gov",
+   "id.me",
+   "gov.uk",
+   "service.gov.uk",
+   "usps.com",
+   "dmv.ca.gov",
+   "philsys.gov.ph",
+   "bir.gov.ph"
+  ]
+ },
+ "words": {
+  "banking": "(^|[.-])(bank|banking|onlinebanking|netbanking|ebanking|creditunion)([.-]|$)",
+  "health": "(^|[.-])(mychart|patientportal|patient|health|clinic|hospital)([.-]|$)",
+  "government": "(^|\\.)gov(\\.[a-z]{2})?$|(^|\\.)gob\\.[a-z]{2}$|(^|\\.)gouv\\.[a-z]{2}$"
+ }
+}
