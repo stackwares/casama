@@ -36,12 +36,13 @@ Future<bool> openPaywall(
   BuildContext context, {
   String? reason,
   String source = 'limit',
+  String? tier,
 }) async {
   final upgraded = await Navigator.of(context, rootNavigator: true).push<bool>(
     MaterialPageRoute(
       fullscreenDialog: true,
       // Over the whole app, so it keeps clear of a folding phone's strip and fold itself (D-411).
-      builder: (_) => OutsideShell(child: PaywallScreen(reason: reason, source: source)),
+      builder: (_) => OutsideShell(child: PaywallScreen(reason: reason, source: source, tier: tier)),
     ),
   );
   if (upgraded != true) {
@@ -160,11 +161,14 @@ Set<String> popularPaywallTiers(List<PaywallTier> tiers) {
 /// Casama's paid plans, sold with the mascots: who you get, what they can do, a tier and a billing
 /// period to pick, and one button (D-236, D-244).
 class PaywallScreen extends ConsumerStatefulWidget {
-  const PaywallScreen({super.key, this.reason, this.source = 'limit'});
+  const PaywallScreen({super.key, this.reason, this.source = 'limit', this.tier});
 
   /// Why it opened, in the server's words ("Your plan allows 2 bots."). Shown as a small pill.
   final String? reason;
   final String source;
+
+  /// The tier to open on (`pro` from the "Upgrade to Pro" banner), instead of the default one.
+  final String? tier;
 
   @override
   ConsumerState<PaywallScreen> createState() => _PaywallScreenState();
@@ -172,7 +176,7 @@ class PaywallScreen extends ConsumerStatefulWidget {
 
 class _PaywallScreenState extends ConsumerState<PaywallScreen>
     with WidgetsBindingObserver {
-  String? _tier;
+  late String? _tier = widget.tier;
   // Null until the person picks a period: then the server's default plan decides (D-332).
   PaywallPeriod? _pickedPeriod;
   var _busy = false;

@@ -420,7 +420,8 @@ class _UpgradeBanner extends StatelessWidget {
             ),
           ),
           child: InkWell(
-            onTap: () => openPaywall(context, source: 'settings'),
+            // The banner says "Upgrade to Pro", so the paywall opens on Pro, not the default tier.
+            onTap: () => openPaywall(context, source: 'settings', tier: 'pro'),
             child: Padding(
               padding: const EdgeInsets.fromLTRB(AppSpace.md, AppSpace.sm, AppSpace.md, AppSpace.sm),
               child: Row(
