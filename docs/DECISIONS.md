@@ -7497,3 +7497,8 @@ coordinator for Oliver.
 - **Editing a message takes the chat lock** a send takes (D-413). A run whose start can't be
   queued, after a send or an edit, fails with `run.failed` on its stream and the request fails;
   an edit used to answer 202 for a run that would never reply.
+- **Runs stuck in `running` are ended.** D-393's watchdog is in the chat and only re-reads a run;
+  the worker's orphan sweep only catches runs whose workflow has ended. A new sweep in the same
+  tick fails chat, chat-app, routine, watcher and task runs that are still `running` with no event
+  for 6 hours (`run_stale`, "This stopped responding and was ended…"), expiring their approvals and
+  takeovers and letting go of their screen and desktop leases. Waiting statuses aren't touched.

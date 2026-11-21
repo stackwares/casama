@@ -34,6 +34,8 @@ import {
   type RunDeps,
   refreshIntegration,
   refreshStarters,
+  releaseDesktop,
+  releaseScreen,
   revokeToken,
   rewrapAllKeys,
   runAgent,
@@ -403,6 +405,38 @@ export async function failOrphanedRuns(db: Database) {
   return rows.length;
 }
 
+/** Hours a working run may go without an event before it counts as stuck (D-478). */
+export const STALE_RUN_HOURS = 6;
+
+/**
+ * Fails chat and routine runs still marked `running` with no event for [hours] (D-478): a run
+ * that's really working writes events every few seconds, and one waiting for a person is in a
+ * waiting status instead, so these were lost (the workflow gone with an old worker, its records
+ * purged) and would show as working forever. Their approvals, takeovers and computer leases go
+ * with them. Returns how many it failed.
+ */
+export async function failStaleRuns(db: Database, hours = STALE_RUN_HOURS) {
+  const rows = await db.execute<{ id: string }>(sql`
+    select r.id from public.runs r
+    where r.status = 'running'
+      and r.trigger in ('chat', 'channel', 'routine', 'watcher', 'task')
+      and coalesce(r.started_at, r.created_at) < now() - make_interval(hours => ${hours})
+      and not exists (select 1 from public.run_events e
+                      where e.run_id = r.id and e.created_at > now() - make_interval(hours => ${hours}))
+    order by r.created_at
+    limit 50`);
+  for (const r of rows) {
+    await failUnfinishedRun(
+      r.id,
+      "This stopped responding and was ended. Send your message again to pick it up.",
+      "run_stale",
+    );
+    await releaseScreen(db, r.id).catch(() => {});
+    await releaseDesktop(db, r.id).catch(() => {});
+  }
+  return rows.length;
+}
+
 /** How long an ended workflow's recorded steps are kept. */
 export const WORKFLOW_KEEP_DAYS = 7;
 
@@ -684,6 +718,11 @@ export const routinesTickWorkflow = DBOS.registerWorkflow(
     // the two writes): nothing will finish them, so the chat would show "working" forever (D-268).
     await DBOS.runStep(() => failOrphanedRuns(rt().db).catch(captureStep("orphaned-runs", 0)), {
       name: "orphaned-runs",
+    });
+    // Runs still `running` that haven't written an event for hours (their workflow lost, or
+    // its records purged): nothing will finish them either (D-478).
+    await DBOS.runStep(() => failStaleRuns(rt().db).catch(captureStep("stale-runs", 0)), {
+      name: "stale-runs",
     });
     // Each run waits in its workspace's line (billing audit 2026-11-17); runs queued by an older
     // process without a workspace key get one, or they'd never start.
