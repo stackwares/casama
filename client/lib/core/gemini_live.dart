@@ -461,7 +461,14 @@ class GeminiLiveCall implements VoiceCall {
       connectTimeout,
     );
     await c._open();
-    await c._audio.startMic(c._onMic);
+    try {
+      await c._audio.startMic(c._onMic);
+    } catch (_) {
+      // No mic (permission denied): nobody holds this call to hang it up, so close its
+      // connection here, or it stays open and keeps resuming after the call screen gave up.
+      await c.hangUp();
+      rethrow;
+    }
     return c;
   }
 

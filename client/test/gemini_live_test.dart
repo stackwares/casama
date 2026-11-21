@@ -43,6 +43,12 @@ class _FakeChannel implements WebSocketChannel {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
+class _NoMicAudio extends _FakeAudio {
+  @override
+  Future<void> startMic(void Function(Uint8List pcm16k) onChunk) async =>
+      throw StateError('Microphone permission denied');
+}
+
 class _FakeAudio implements PcmAudio {
   void Function(Uint8List)? mic;
   final played = <int>[];
@@ -285,6 +291,29 @@ void main() {
   });
 
   group('GeminiLiveCall', () {
+    test('no mic: the connection it opened is closed, not left resuming', () async {
+      final channels = <_FakeChannel>[];
+      final audio = _NoMicAudio();
+      await expectLater(
+        GeminiLiveCall.open(
+          _session(),
+          audio: audio,
+          connect: (u) {
+            final c = _FakeChannel(u);
+            channels.add(c);
+            return c;
+          },
+        ),
+        throwsA(isA<StateError>()),
+      );
+      expect(channels.single.sink.closed, isTrue);
+      expect(audio.disposed, isTrue);
+      // The relay closing it afterwards starts no resume try.
+      await channels.single.incoming.close();
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+      expect(channels, hasLength(1));
+    });
+
     test('connects with the token, sends the setup, streams the mic, and resumes on goAway', () async {
       final channels = <_FakeChannel>[];
       final audio = _FakeAudio();
