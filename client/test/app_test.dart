@@ -533,7 +533,8 @@ void main() {
     'a run that failed for want of a model offers to add a key, in the chat and its details',
     (tester) async {
       await setSize(tester, const Size(500, 900));
-      final backend = FakeBackend();
+      // No key at all: the fix is Model keys (with a key it's Choose model).
+      final backend = FakeBackend()..noKeys = true;
       await tester.pumpWidget(
         harness(
           backend,
