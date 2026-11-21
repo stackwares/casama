@@ -18,35 +18,40 @@ Rules that apply to every row:
 
 ## Status at a glance
 
-| Store | Platform | Status | Next step |
-|---|---|---|---|
-| Google Play (phone, tablet) | Android | Closed testing Alpha 0.1.0 (44) sent for review 2026-11-19 | Open testing / production when Oliver says |
-| Google Play (Wear OS) | Wear OS | Tracks exist (`wear:internal`, `wear:beta`, `wear:production`) | Ship with every phone release (AGENTS.md) |
-| App Store (iPhone, iPad, Watch inside) | iOS | Listing, privacy, IAPs ready; never sent for review | First review when Oliver says |
-| Mac App Store | macOS | Same record as iOS; profiles regenerated 2026-11-19 | Ships together with the direct DMG |
-| Direct download (GitHub Releases) | macOS, Windows, Linux | `scripts/publish-desktop-release.sh` | Each release with its Mac App Store twin |
-| Chrome Web Store | Chrome, Brave, Arc, Vivaldi, Opera | Submitted 0.1.0 on 2026-11-21, pending review (id `kkfppfhkjnenffibmnkphnbejidkmbkj`) | Wait |
-| Edge Add-ons | Edge | Submitted 0.1.0 on 2026-11-21, in review (about 7 business days) | Wait |
-| Firefox Add-ons (AMO) | Firefox | Submitted 0.1.0 on 2026-11-21, pending review (`casama@casama.ai`) | Wait |
-| Snap Store | Linux | Name `casama` approved 2026-11-18; classic confinement request not filed | File classic request, first upload |
-| Flathub (Flatpak) | Linux | **Planned** | See "Other Linux stores" |
-| AUR (`casama-bin`) | Arch Linux | **Planned** | See "Other Linux stores" |
-| AppImage (+ AppImageHub) | Linux | **Maybe** | See "Other Linux stores" |
-| Own apt / dnf repository (.deb, .rpm) | Debian, Ubuntu, Fedora | **Maybe** | See "Other Linux stores" |
-| Fedora COPR, nixpkgs, Ubuntu PPA, elementary AppCenter | Linux | **Not now** | See "Other Linux stores" |
-| Homebrew Cask (`casama`) | macOS | **Planned** | See "Other Mac stores" |
-| Setapp | macOS | **Maybe** (needs its own build and pricing decision) | See "Other Mac stores" |
-| MacUpdate, Softpedia, Uptodown, Softonic, Mac Informer | macOS | **Planned** (free listings) | See "Other Mac stores" |
-| MacUpdater, Latest, Applite | macOS | **Planned** (nothing to submit: they read Homebrew or our Sparkle feed) | See "Other Mac stores" |
-| Microsoft Store | Windows | MSIX packaging exists (`scripts/package-windows.ps1`); no listing | Decide; reserve the name |
-| Web app | Browser | Live at app.casama.ai | n/a |
-| Samsung Galaxy Store | Android | **Planned** | See "Other Android stores" |
-| GitHub Releases APK (+ Obtainium, IzzyOnDroid) | Android | **Planned** | See "Other Android stores" |
-| Amazon Appstore | Fire tablets only | **Maybe** | See "Other Android stores" |
-| Huawei AppGallery | Android without Google | **Later** | See "Other Android stores" |
-| F-Droid | Android (FOSS only) | **Later** | See "Other Android stores" |
-| Aptoide, APKPure, Uptodown | Android | **Maybe** | See "Other Android stores" |
-| China mainland stores (Xiaomi, OPPO, vivo, Tencent, Baidu) | Android | **Not doing** | China is off on purpose (no CAC AIGC filing) |
+✅ = yes · ❌ = not yet · ➖ = not doing / doesn't apply. "Submitted" means sent to the store (or
+published, where there is no review); "Live" means people can install it from there today.
+
+| Store | Platform | Submitted | Live | Where it stands | Next step |
+|---|---|:-:|:-:|---|---|
+| **Web app** (app.casama.ai) | Browser | ✅ | ✅ | Live | — |
+| **Direct download** (GitHub Releases) | macOS, Windows, Linux | ✅ | ✅ | v0.1.0 released 2026-11-21 | Each release with its Mac App Store twin |
+| **Google Play** (phone, tablet) | Android | ✅ | ❌ | Closed testing Alpha 0.1.0 (44) in review since 2026-11-19 | Open testing / production when Oliver says |
+| **Google Play** (Wear OS) | Wear OS | ❌ | ❌ | Tracks exist (`wear:internal`, `wear:beta`, `wear:production`) | Ship with every phone release (AGENTS.md) |
+| **App Store** (iPhone, iPad, Watch inside) | iOS | ❌ | ❌ | Listing, privacy, IAPs ready; never sent for review | First review when Oliver says |
+| **Mac App Store** | macOS | ❌ | ❌ | Same record as iOS; profiles regenerated 2026-11-19 | Ships together with the direct DMG |
+| **Chrome Web Store** | Chrome, Brave, Arc, Vivaldi, Opera | ✅ | ❌ | 0.1.0 in review since 2026-11-21 (id `kkfppfhkjnenffibmnkphnbejidkmbkj`) | Wait |
+| **Edge Add-ons** | Edge | ✅ | ❌ | 0.1.0 in review since 2026-11-21 (about 7 business days) | Wait |
+| **Firefox Add-ons** (AMO) | Firefox | ✅ | ❌ | 0.1.0 in review since 2026-11-21 (`casama@casama.ai`) | Wait |
+| **Snap Store** | Linux | ❌ | ❌ | Name `casama` approved 2026-11-18; classic confinement request not filed | File classic request, first upload |
+| **Microsoft Store** | Windows | ❌ | ❌ | MSIX packaging exists (`scripts/package-windows.ps1`); no listing | Decide; reserve the name |
+| Homebrew Cask (`casama`) | macOS | ❌ | ❌ | Planned; own tap first (0 stars, not "notable" yet) | See "Other Mac stores" |
+| MacUpdate, Softpedia, Uptodown, Softonic, Mac Informer | macOS | ❌ | ❌ | Planned (free listings) | See "Other Mac stores" |
+| MacUpdater, Latest, Applite | macOS | ➖ | ❌ | Nothing to submit: they read Homebrew or our Sparkle feed | Comes with the cask |
+| Setapp | macOS | ❌ | ❌ | Maybe: needs its own build and a pricing decision | See "Other Mac stores" |
+| Flathub (Flatpak) | Linux | ❌ | ❌ | Planned | See "Other Linux stores" |
+| AUR (`casama-bin`) | Arch Linux | ❌ | ❌ | Planned | See "Other Linux stores" |
+| AppImage (+ AppImageHub) | Linux | ❌ | ❌ | Maybe | See "Other Linux stores" |
+| Own apt / dnf repository (.deb, .rpm) | Debian, Ubuntu, Fedora | ❌ | ❌ | Maybe | See "Other Linux stores" |
+| Fedora COPR, nixpkgs, Ubuntu PPA, elementary AppCenter | Linux | ➖ | ➖ | Not now | See "Other Linux stores" |
+| GitHub Releases APK (+ Obtainium, IzzyOnDroid) | Android | ❌ | ❌ | Planned | See "Other Android stores" |
+| Samsung Galaxy Store | Android | ❌ | ❌ | Planned | See "Other Android stores" |
+| Aptoide, APKPure, Uptodown | Android | ❌ | ❌ | Maybe | See "Other Android stores" |
+| Amazon Appstore | Fire tablets only | ❌ | ❌ | Maybe | See "Other Android stores" |
+| Huawei AppGallery | Android without Google | ❌ | ❌ | Later | See "Other Android stores" |
+| F-Droid | Android (FOSS only) | ❌ | ❌ | Later | See "Other Android stores" |
+| China mainland stores (Xiaomi, OPPO, vivo, Tencent, Baidu) | Android | ➖ | ➖ | Not doing: China is off on purpose (no CAC AIGC filing) | — |
+
+When a store's state changes, flip its marks in the same commit (AGENTS.md).
 
 ## Live and in review
 
