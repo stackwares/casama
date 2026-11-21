@@ -85,13 +85,14 @@ and they land better once there is a launch to point to.
 | Glama | Server live at https://glama.ai/mcp/servers/stackwares/casama; hosted docs connector imported from the registry. |
 | punkpeye/awesome-mcp-servers | https://github.com/punkpeye/awesome-mcp-servers/pull/20098 open; submission check passes. Duplicate #19871 closed. |
 | punkpeye/awesome-remote-mcp-servers | https://github.com/punkpeye/awesome-remote-mcp-servers/pull/5303 open. |
-| TensorBlock MCP Index | https://github.com/TensorBlock/awesome-mcp-servers/issues/6438 submitted; automation opened draft https://github.com/TensorBlock/awesome-mcp-servers/pull/6439. Draft metadata incorrectly uses the documentation page as endpoint and omits stdio; fix before merge. |
+| TensorBlock MCP Index | **Merged** 2026-11-21: https://github.com/TensorBlock/awesome-mcp-servers/pull/6439 (from issue #6438). Correction PR #6441 was opened against its draft branch; check live entry if needed. |
 | MCPPlayground | https://github.com/MCPPlayground/awesome-mcp-servers/pull/9 open. |
 | PulseMCP | Submissions paused; its page says it will import official registry entries after reopening. |
-| MCPServers.org | Submitted free on 2026-11-20; confirmation says review within two weeks. |
+| MCPServers.org | **Live** 2026-11-21 (approved): https://mcpservers.org/servers/docs-casama-ai-guide-mcp (`Casama`) and https://mcpservers.org/servers/github-com-stackwares-casama-tree-main-packages-mcp (`Casama MCP`). |
 | MCP.directory | Submitted on 2026-11-20; confirmation says review within 24 hours. Check imported monorepo details when live. |
 | MCP.so | Current submission page shows only a $39 paid submission; no free option visible. Not submitted. |
 | MCP Market | Submitted to free GitHub queue on 2026-11-20; confirmation estimates 4–6 weeks. Paid expedited GitHub listing $29; remote submission reported $69. |
+| ToolPotion | **Live** 2026-11-20: https://toolpotion.ai/en/ai-apps/casama (offers a free dofollow link for placing their badge on `casama.ai`; skipped per no-badge rule). |
 
 TensorBlock metadata correction submitted as https://github.com/TensorBlock/awesome-mcp-servers/pull/6441 against its generated draft branch. Awaiting maintainer action.
 
@@ -118,7 +119,7 @@ Reviewer account: `review@casama.ai` (Vaultwarden "Casama · store review accoun
 | --- | --- |
 | Claude Connectors Directory | Ready except screenshots. Blocker: Casama Cloud is invite-only, so people who find it there hit the waitlist. Oliver submits (Anthropic form). |
 | ChatGPT apps | Ready except screenshots. OpenAI organization set up 2026-11-20 (see "ChatGPT app: where it stands" below); waiting on Oliver's organization verification. |
-| Gemini CLI extensions | Extension built and validated (`packaging/gemini-cli/`, `scripts/sync-gemini-extension.sh`). Needs the public repo `stackwares/casama-gemini` with the `gemini-cli-extension` topic. |
+| Gemini CLI extensions | **Published** 2026-11-21: https://github.com/stackwares/casama-gemini (public, topic `gemini-cli-extension`), synced and validated with `scripts/sync-gemini-extension.sh`. Gallery crawls daily. |
 | Microsoft, Mistral, xAI | Later (partner programs). |
 | Composio | Toolkit request posted 2026-11-20 as "Casama" (support@casama.ai): https://request.composio.dev/boards/tool-requests/posts/casama-ai-bots-with-their-own-computers-hosted-mcp-rest-api-oauth-2-1. Composio builds toolkits themselves; votes move requests up. Text in `packaging/connectors/composio-request.md`. Partnership email sent from hello@casama.ai to partnerships@composio.dev on 2026-11-20 (Composio Toolkit Program, links the board post, offers a test workspace and co-marketing). Custom MCP toolkits in our own Composio project casama_dev (not public): `CUSTOM_CASAMA` = docs server `/mcp/docs`, no sign-in, 5 tools synced and `CUSTOM_CASAMA_SEARCH_DOCS` tested; `CUSTOM_CASAMA_7H519` = `/mcp` with DCR OAuth, tools sync on the first connected account. Composio Discord (discord.gg/composio, account casama.ai, server rules agreed): toolkit request posted in #feature-request with the tool-request tag, https://discord.com/channels/1170785031560646836/1247166813205303379/threads/1573284945982390372 (server rule: no self-promotion, so keep follow-ups to the request thread). |
 
