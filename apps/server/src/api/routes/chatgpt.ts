@@ -258,9 +258,11 @@ export function registerChatGptRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       captureError(err, { service: "casama-api", step: "chatgpt-sign-in" });
       // OpenAI's guidance for a refused code: discard it and sign in again with the issued client,
       // which the next start picks up (issued_client_id above).
+      // Its own code (same message), so an app that can start the sign-in again by itself does,
+      // and the person never sees this first refusal.
       const refused = err instanceof ChatGptAuthError && err.code === "invalid_grant";
       throw await fail(
-        "chatgpt_sign_in_failed",
+        refused ? "chatgpt_sign_in_retry" : "chatgpt_sign_in_failed",
         refused
           ? "ChatGPT didn't accept this sign-in. Try again: the next one finishes setting up."
           : err instanceof ChatGptAuthError

@@ -140,7 +140,9 @@ describe("sign-in", () => {
     fake.state.failNextExchange = true;
     const failed = await signIn(retry.token);
     expect(failed.status).toBe(400);
-    expect((await j(failed)).code).toBe("chatgpt_sign_in_failed");
+    const body = await j(failed);
+    expect(body.code).toBe("chatgpt_sign_in_retry");
+    expect(body.detail).toContain("Try again");
     const [row] = await h.tdb.admin<
       { error: string }[]
     >`select error from public.integration_oauth_flows where created_by = ${retry.id} order by created_at desc limit 1`;
