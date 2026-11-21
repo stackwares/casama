@@ -288,7 +288,7 @@ export class Comps {
   }
 
   /** Refuses a comp a workspace couldn't use: one running already, or a paid plan at least as high. */
-  private async requireUseful(orgId: string, planCode: string) {
+  private async requireUseful(orgId: string, planCode: string, redeeming = false) {
     const [r] = await this.db.execute<{ running: boolean; paying: boolean }>(sql`
       select
         exists (select 1 from public.comps where org_id = ${orgId}::uuid and ended_at is null) as running,
@@ -302,7 +302,9 @@ export class Comps {
     if (r?.running)
       throw new BillingError(
         "comp_exists",
-        "This workspace already has a free plan. Extend that one instead.",
+        redeeming
+          ? "This workspace already has a free plan from Casama. Redeem the code once it ends, or in another workspace you own."
+          : "This workspace already has a free plan. Extend that one instead.",
         409,
       );
     if (r?.paying)
@@ -648,7 +650,7 @@ export class Comps {
         throw new BillingError("comp_code_used_up", "That code has been used up", 409);
       if (!s.code_plans.includes(c.plan_code))
         throw new BillingError("comp_code_expired", "That code has expired", 409);
-      await this.requireUseful(orgId, c.plan_code);
+      await this.requireUseful(orgId, c.plan_code, true);
       await this.requireRoom(s);
       const compId = await this.create({
         orgId,
