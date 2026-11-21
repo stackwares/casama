@@ -2808,8 +2808,12 @@ async function loadRun(db: Database, runId: string): Promise<RunInfo | null> {
         { timezone: row.timezone ?? "UTC" },
       );
   }
-  // Subagent runs carry their task in the run's budget instead of a conversation message.
-  const task = typeof row.run_budget?.task === "string" ? (row.run_budget.task as string) : null;
+  // Subagent runs carry their task in the run's budget instead of a conversation message, and so
+  // do ticket runs (D-478), whose note is sealed in a workspace that encrypts content.
+  const task =
+    typeof row.run_budget?.task === "string"
+      ? (contentKeys.open(row.run_budget.task) as string)
+      : null;
   if (!current && task) current = { id: `task-${row.id}`, text: task };
   const skills = await db.execute<{ name: string; description: string }>(sql`
     select distinct on (name) name, description from public.skills

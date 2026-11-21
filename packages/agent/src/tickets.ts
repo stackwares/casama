@@ -25,9 +25,9 @@ type TicketRow = {
 
 const FINISHED = new Set(["done"]);
 
-function brief(t: TicketRow) {
+function brief(t: TicketRow, lead = `You are assigned the ticket "${t.title}" (id ${t.id}).`) {
   return [
-    `You are assigned the ticket "${t.title}" (id ${t.id}).`,
+    lead,
     `Priority: ${t.priority}.${t.due_at ? ` Due: ${new Date(t.due_at).toISOString().slice(0, 10)}.` : ""}`,
     t.details_md ? `\n${t.details_md}\n` : "",
     "Work on it now. Post progress on the ticket with tasks.comment. When you finish, use tasks.update with " +
@@ -72,17 +72,17 @@ export async function startTicketWork(
         sql`update public.tasks set conversation_id = ${conversationId}::uuid where id = ${t.id}::uuid`,
       );
     }
-    const [run] = await tx.execute<{ id: string }>(sql`
-      insert into public.runs (org_id, bot_id, conversation_id, created_by, trigger, project_id)
-      values (${t.org_id}::uuid, ${t.assignee_bot_id}::uuid, ${conversationId}::uuid, ${opts.actorUserId}::uuid, 'task', ${t.project_id ?? null}::uuid)
-      returning id`);
+    // The brief is the run's task note, not a message (D-478): written as the person's own message
+    // it showed in the ticket's thread as if they had typed the internal instructions. A comment
+    // run repeats the ticket's details, since earlier briefs aren't in the thread's history.
     const text = opts.comment
-      ? `New comment on the ticket "${t.title}" (id ${t.id}):\n\n${opts.comment}`
+      ? `New comment on the ticket "${t.title}" (id ${t.id}):\n\n${opts.comment}\n\n${brief(t, "About the ticket:")}`
       : brief(t);
-    await tx.execute(sql`
-      insert into public.messages (org_id, conversation_id, role, author_user_id, content, run_id)
-      values (${t.org_id}::uuid, ${conversationId}::uuid, 'user', ${opts.actorUserId}::uuid,
-              ${contentKeys.sealJson(t.org_id, [{ type: "text", text }])}::jsonb, ${run?.id}::uuid)`);
+    const [run] = await tx.execute<{ id: string }>(sql`
+      insert into public.runs (org_id, bot_id, conversation_id, created_by, trigger, project_id, budget)
+      values (${t.org_id}::uuid, ${t.assignee_bot_id}::uuid, ${conversationId}::uuid, ${opts.actorUserId}::uuid, 'task',
+              ${t.project_id ?? null}::uuid, ${JSON.stringify({ task: contentKeys.seal(t.org_id, text), ticket: t.id })}::jsonb)
+      returning id`);
     await tx.execute(
       sql`update public.conversations set last_message_at = now() where id = ${conversationId}::uuid`,
     );

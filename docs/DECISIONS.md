@@ -7508,3 +7508,10 @@ coordinator for Oliver.
   open call) removes the topic it made for itself, when the app hangs up and in the worker's sweep
   for calls whose app went quiet. A call placed in an existing chat never removes that chat. The
   apps also check the microphone before asking for a session (client side).
+- **A ticket's brief is the run's task note, not the person's message.** Assigning a ticket or
+  commenting on it wrote the internal instructions ("You are assigned the ticket … tasks.comment
+  …") into the thread as the person's own message. The brief now goes in the run's budget as its
+  task (as subagent and pickup runs do, sealed in an encrypting workspace), so the thread shows only
+  the bot's work; a comment's note repeats the ticket's details, since earlier briefs aren't in the
+  history any more. A message typed in the thread during a ticket run still joins it. Threads made
+  before this keep their old brief messages.

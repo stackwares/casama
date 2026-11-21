@@ -103,6 +103,11 @@ describe("ticket board", () => {
       (x) => x.status === "done",
     );
     expect(done.result_md).toContain("Fixed the login redirect");
+    // The brief is the run's task note (D-478), not a message the person seems to have sent.
+    const mine = await h.tdb.admin<{ n: number }[]>`
+      select count(*)::int as n from public.messages
+      where conversation_id = ${t.conversation_id} and role = 'user'`;
+    expect(mine[0]?.n).toBe(0);
     const cs = await comments(t.id);
     expect(cs.at(-1)).toMatchObject({ author_type: "bot" });
     expect(cs.at(-1)?.body_md).toContain("Fixed the login redirect");

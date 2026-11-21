@@ -1242,10 +1242,10 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
                 and r.cancel_requested_at is null
                 and r.trigger not in ('routine', 'voice', 'watcher') and r.routine_id is null
                 and r.voice_call is null and r.parent_run_id is null
-                -- An update's pickup run (D-402) answers its task note, not a message of the
-                -- person's, and looks for new messages the same way (D-478).
+                -- An update's pickup run (D-402) and a ticket's run answer their task note, not a
+                -- message of the person's, and look for new messages the same way (D-478).
                 and (exists (select 1 from public.messages m where m.run_id = r.id and m.role = 'user')
-                     or r.budget ? 'resumes')
+                     or r.budget ? 'resumes' or r.budget ? 'ticket')
               order by r.created_at desc limit 1`);
             if (active) {
               const { parts: appParts } = await resolveMessageAppParts(tx, {
