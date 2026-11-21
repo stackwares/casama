@@ -30,6 +30,12 @@ void main() {
 
     await tester.tap(find.widgetWithText(Tab, 'Services'));
     await tester.pumpAndSettle();
+    // The settings cards above the list (the phone browser's among them) push it below the fold.
+    await tester.scrollUntilVisible(
+      find.text('Postgres (Supabase)'),
+      300,
+      scrollable: find.descendant(of: find.byType(ListView), matching: find.byType(Scrollable)).first,
+    );
     expect(find.text('Postgres (Supabase)'), findsOneWidget);
   });
 
