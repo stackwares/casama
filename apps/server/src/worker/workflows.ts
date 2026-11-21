@@ -961,6 +961,7 @@ export const listCredentialModelsWorkflow = DBOS.registerWorkflow(
         listCredentialModels(rt().db, credentialId, orgId, {
           offline: rt().offlineModels,
           credentials: rt().agent.credentials,
+          fetch: rt().agent.billCloudModels ? safeFetch : undefined,
         }),
       { name: "list" },
     ),

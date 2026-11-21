@@ -9,6 +9,7 @@ import {
   isValidCron,
   isValidTimezone,
   nextRunAt,
+  ownProvidersAllowed,
   PLATFORM_OPENROUTER_CREDENTIAL_ID,
   portableBotAvatar,
 } from "@casama/domain";
@@ -196,14 +197,18 @@ export function registerBotTemplateRoutes(app: OpenAPIHono<AppEnv>, deps: AppDep
       if (!isValidCron(r.schedule_cron))
         throw new ApiError(400, "invalid_cron", `Routine "${r.name}" has an invalid schedule.`);
     await enforceLimit(db, body.org_id, "max_bots", claims.sub);
-    const cloud = deps.env.BILLING_ENABLED && Boolean(deps.env.CLOUD_MODEL_UPSTREAM_KEY);
-    const cloudKey = cloud || body.credential_id === PLATFORM_OPENROUTER_CREDENTIAL_ID;
-    const model = cloud
-      ? (await getCloudModels(deps.db)).chat
-      : cloudKey
-        ? (defaultModelFor("openrouter", modelOverrides(deps.env)) ?? CLOUD_LOCKED_MODEL)
-        : body.model;
-    const credentialId = cloud ? PLATFORM_OPENROUTER_CREDENTIAL_ID : body.credential_id;
+    const forceCloud =
+      deps.env.BILLING_ENABLED &&
+      !ownProvidersAllowed(true) &&
+      Boolean(deps.env.CLOUD_MODEL_UPSTREAM_KEY);
+    const cloudKey = forceCloud || body.credential_id === PLATFORM_OPENROUTER_CREDENTIAL_ID;
+    const model =
+      cloudKey && deps.env.BILLING_ENABLED
+        ? (await getCloudModels(deps.db)).chat
+        : cloudKey
+          ? (defaultModelFor("openrouter", modelOverrides(deps.env)) ?? CLOUD_LOCKED_MODEL)
+          : body.model;
+    const credentialId = cloudKey ? PLATFORM_OPENROUTER_CREDENTIAL_ID : body.credential_id;
     const botId = await withUserSession(db, claims, async (tx) => {
       if (!cloudKey) {
         const [cred] = await tx.execute<{ id: string }>(sql`

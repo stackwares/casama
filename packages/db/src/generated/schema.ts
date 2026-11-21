@@ -797,6 +797,7 @@ export const routines = pgTable("routines", {
 	runCount: integer("run_count").default(0).notNull(),
 	browser: text().default('computer').notNull(),
 	editedByOther: boolean("edited_by_other").default(false).notNull(),
+	waitingForModel: boolean("waiting_for_model").default(false).notNull(),
 }, (table) => [
 	index("routines_due_idx").using("btree", table.enabled.asc().nullsLast().op("timestamptz_ops"), table.nextRunAt.asc().nullsLast().op("bool_ops")),
 	index("routines_ends_idx").using("btree", table.endsAt.asc().nullsLast().op("timestamptz_ops")).where(sql`(enabled AND (ends_at IS NOT NULL))`),
@@ -1339,6 +1340,7 @@ export const organizations = pgTable("organizations", {
 	requireAppLock: boolean("require_app_lock").default(false).notNull(),
 	fullAccess: boolean("full_access").default(false).notNull(),
 	avatarUrl: text("avatar_url"),
+	modelDefault: jsonb("model_default"),
 }, (table) => [
 	foreignKey({
 			columns: [table.createdBy],

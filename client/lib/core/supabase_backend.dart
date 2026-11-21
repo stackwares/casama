@@ -773,14 +773,32 @@ class SupabaseBackend implements Backend {
     String? name,
     String? icon,
     String? color,
-  }) async => (await api.workspaces.updateOrg(
-    id: orgId,
-    updateOrganizationRequest: UpdateOrganizationRequest(
-      name: name,
-      icon: icon,
-      color: color,
-    ),
-  )).data!;
+    WorkspaceModelDefault? modelDefault,
+    bool clearModelDefault = false,
+  }) async {
+    if (clearModelDefault) {
+      final res = await api.api.dio.patch<Map<String, dynamic>>(
+        '/v1/orgs/$orgId',
+        data: {
+          'name': ?name,
+          'icon': ?icon,
+          'color': ?color,
+          'model_default': null,
+        },
+        options: Options(headers: authHeaders, contentType: 'application/json'),
+      );
+      return Organization.fromJson(res.data!);
+    }
+    return (await api.workspaces.updateOrg(
+      id: orgId,
+      updateOrganizationRequest: UpdateOrganizationRequest(
+        name: name,
+        icon: icon,
+        color: color,
+        modelDefault: modelDefault,
+      ),
+    )).data!;
+  }
   @override
   Future<List<InviteLink>> inviteLinks(String orgId) async =>
       (await api.workspaces.listInviteLinks(id: orgId)).data!.items;
@@ -1124,6 +1142,9 @@ class SupabaseBackend implements Backend {
 
   @override
   KeyProviders get keyProviders => KeyProviders.from(config?.keyProviders);
+
+  @override
+  bool get ownProviders => config?.ownProviders ?? !(config?.billingEnabled ?? false);
 
   @override
   bool get chatGptSignIn => config?.chatgptSignIn ?? false;
@@ -5384,6 +5405,12 @@ class SupabaseBackend implements Backend {
   @override
   Future<CloudModels> setAdminCloudModels(CloudModels models) async =>
       (await api.admin.setAdminCloudModels(cloudModels: models)).data!;
+  @override
+  Future<AdminModelAccess> adminModelAccess() async =>
+      (await api.admin.adminModelAccess()).data!;
+  @override
+  Future<AdminModelAccess> setAdminModelAccess(AdminModelAccess access) async =>
+      (await api.admin.setAdminModelAccess(adminModelAccess: access)).data!;
   @override
   Future<AdminPricing> adminPricing() async => (await api.admin.adminPricing()).data!;
   @override

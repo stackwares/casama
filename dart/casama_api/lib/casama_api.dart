@@ -116,6 +116,8 @@ export 'package:casama_api/src/model/admin_margin.dart';
 export 'package:casama_api/src/model/admin_margin_by_day_inner.dart';
 export 'package:casama_api/src/model/admin_margin_by_kind_inner.dart';
 export 'package:casama_api/src/model/admin_margin_top_orgs_inner.dart';
+export 'package:casama_api/src/model/admin_model_access.dart';
+export 'package:casama_api/src/model/admin_model_access_casama_models.dart';
 export 'package:casama_api/src/model/admin_model_catalog.dart';
 export 'package:casama_api/src/model/admin_org.dart';
 export 'package:casama_api/src/model/admin_org_list.dart';
@@ -1098,6 +1100,7 @@ export 'package:casama_api/src/model/workspace_files_export_files_inner.dart';
 export 'package:casama_api/src/model/workspace_files_result.dart';
 export 'package:casama_api/src/model/workspace_member.dart';
 export 'package:casama_api/src/model/workspace_member_list.dart';
+export 'package:casama_api/src/model/workspace_model_default.dart';
 export 'package:casama_api/src/model/write_agent_import_files_request.dart';
 export 'package:casama_api/src/model/write_agent_import_files_response.dart';
 

@@ -122,20 +122,21 @@ export class CredentialResolver {
     }
     const rows = await this.db.execute<{
       provider: ProviderId;
+      label: string;
       base_url: string | null;
       key: string | null;
       owner_user_id: string | null;
       status: string;
       settings: { fallback_on_limit?: boolean } | null;
     }>(sql`
-      select c.provider, c.base_url, s.decrypted_secret as key, c.owner_user_id, c.status, c.settings
+      select c.provider, c.label, c.base_url, s.decrypted_secret as key, c.owner_user_id, c.status, c.settings
       from public.model_credentials c
       left join vault.decrypted_secrets s on s.id = c.vault_secret_id
       where c.id = ${choice.credential_id}::uuid and c.org_id = ${orgId}::uuid`);
     const row = rows[0];
     if (!row) throw new Error("model_credential_not_found");
+    const fallbackOnLimit = row.settings?.fallback_on_limit === true;
     if (row.provider === "chatgpt") {
-      const fallbackOnLimit = row.settings?.fallback_on_limit === true;
       const fail = (code: string, message: string, retryable: boolean) =>
         new ModelCallError(message, { code, retryable, credentialId: choice.credential_id });
       if (ctx && row.owner_user_id !== ctx.actingUserId)
@@ -166,6 +167,7 @@ export class CredentialResolver {
         apiKey: tokens.access_token,
         baseUrl: this.chatgpt.apiUrl ?? CHATGPT_API_URL,
         credentialId: choice.credential_id,
+        credentialLabel: row.label,
         reasoningEffort,
         fallbackOnLimit,
       };
@@ -176,7 +178,9 @@ export class CredentialResolver {
       apiKey: row.key ?? undefined,
       ...this.viaGateway(row.provider, row.base_url),
       credentialId: choice.credential_id,
+      credentialLabel: row.label,
       reasoningEffort,
+      fallbackOnLimit,
     };
   }
 

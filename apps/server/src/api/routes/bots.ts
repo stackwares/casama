@@ -19,12 +19,18 @@ import { contentKeys, type JwtClaims, pgErrorCode, schema, withUserSession } fro
 import {
   type AppMentionRefInput,
   BOT_TEMPLATES,
+  type BotModelPolicy,
   CLOUD_LOCKED_MODEL,
+  casamaModelsAllowed,
   cloudRunPolicy,
   defaultModelFor,
   featuredModelsFor,
+  KEY_PROVIDERS,
   lockCloudPolicy,
+  ownProvidersAllowed,
   parseMentions,
+  resolveModelPolicy,
+  type WorkspaceModelDefault,
 } from "@casama/domain";
 import { withSpan } from "@casama/observability";
 import type { OpenAPIHono } from "@hono/zod-openapi";
@@ -346,16 +352,62 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     if (!(org[0] as { ok?: boolean } | undefined)?.ok)
       throw new ApiError(404, "org_not_found", "Organization not found");
     await enforceLimit(db, body.org_id, "max_bots", claims.sub);
-    const modelPolicy =
-      deps.env.BILLING_ENABLED && deps.env.CLOUD_MODEL_UPSTREAM_KEY
+    await checkPolicy(claims, body.org_id, body.model_policy);
+    let modelPolicy: Record<string, unknown>;
+    if (deps.env.BILLING_ENABLED && !ownProvidersAllowed(true)) {
+      modelPolicy = deps.env.CLOUD_MODEL_UPSTREAM_KEY
         ? cloudRunPolicy(await getCloudModels(db))
-        : deps.env.BILLING_ENABLED || deps.env.CLOUD_MODEL_UPSTREAM_KEY
+        : lockCloudPolicy(
+            body.model_policy ?? {},
+            defaultModelFor("openrouter", modelOverrides(deps.env)) ?? CLOUD_LOCKED_MODEL,
+          );
+    } else if (deps.env.BILLING_ENABLED && ownProvidersAllowed(true)) {
+      const assigned = await getCloudModels(db);
+      const locked = assigned.chat;
+      if (body.model_policy && (body.model_policy.source || body.model_policy.primary)) {
+        modelPolicy = lockCloudPolicy(body.model_policy, locked);
+      } else {
+        // Resolve against workspace default or Casama's models so old clients see a populated primary
+        const [[orgRow], creds] = await Promise.all([
+          db.execute<{ plan_code: string | null; model_default: unknown }>(sql`
+            select (select plan_code from public.entitlements where org_id = ${body.org_id}::uuid order by created_at desc limit 1) as plan_code,
+                   model_default
+            from public.organizations where id = ${body.org_id}::uuid`),
+          db.execute<{
+            id: string;
+            provider: string;
+            owner_user_id: string | null;
+            status: string;
+          }>(sql`
+            select id, provider, owner_user_id, status from public.model_credentials
+            where org_id = ${body.org_id}::uuid order by created_at`),
+        ]);
+        const resolved = resolveModelPolicy({
+          billingEnabled: true,
+          hasPlatformKey: Boolean(deps.env.CLOUD_MODEL_UPSTREAM_KEY),
+          planCode: orgRow?.plan_code ?? "free",
+          assigned,
+          botPolicy: (body.model_policy ?? {}) as BotModelPolicy,
+          workspaceDefault: (orgRow?.model_default as WorkspaceModelDefault | null) ?? null,
+          credentials: creds,
+          actingUserId: claims.sub,
+          modelOverrides: modelOverrides(deps.env),
+        });
+        modelPolicy = resolved.ok
+          ? resolved.policy
+          : deps.env.CLOUD_MODEL_UPSTREAM_KEY
+            ? cloudRunPolicy(assigned)
+            : lockCloudPolicy(body.model_policy ?? {}, locked);
+      }
+    } else {
+      modelPolicy =
+        deps.env.BILLING_ENABLED || deps.env.CLOUD_MODEL_UPSTREAM_KEY
           ? lockCloudPolicy(
               body.model_policy ?? {},
               defaultModelFor("openrouter", modelOverrides(deps.env)) ?? CLOUD_LOCKED_MODEL,
             )
           : (body.model_policy ?? {});
-    await checkPolicy(claims, body.org_id, modelPolicy);
+    }
     // A built-in starter bot or one from the gallery (D-241).
     const template = body.template_id ? await findTemplate(deps.env, body.template_id) : undefined;
     if (body.template_id && !template)
@@ -1558,6 +1610,34 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
         errors: [{ path: "base_url", message: "Required" }],
       });
     }
+    if (deps.env.BILLING_ENABLED && body.base_url) {
+      let host = "";
+      try {
+        host = new URL(body.base_url).hostname.replace(/^\[|\]$/g, "").toLowerCase();
+      } catch {
+        host = "";
+      }
+      if (
+        !host ||
+        host === "localhost" ||
+        host.endsWith(".localhost") ||
+        host.endsWith(".local") ||
+        host === "127.0.0.1" ||
+        host === "::1" ||
+        host === "0.0.0.0" ||
+        host.startsWith("10.") ||
+        host.startsWith("192.168.") ||
+        host.startsWith("169.254.") ||
+        /^172\.(1[6-9]|2\d|3[01])\./.test(host)
+      ) {
+        throw new ApiError(
+          400,
+          "validation_failed",
+          "Casama Cloud cannot connect to a local or private network address",
+          { errors: [{ path: "base_url", message: "Must be a public address" }] },
+        );
+      }
+    }
     if (body.provider !== "openai_compatible" && !body.api_key) {
       throw new ApiError(400, "validation_failed", "api_key is required", {
         errors: [{ path: "api_key", message: "Required" }],
@@ -1605,6 +1685,21 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       orgId: cred.orgId,
       properties: { provider: cred.provider },
     });
+    const isChatProvider = (KEY_PROVIDERS.runs_chat as readonly string[]).includes(body.provider);
+    if (deps.env.BILLING_ENABLED && isChatProvider) {
+      track(db, {
+        event: "own_provider_added",
+        userId: claims.sub,
+        orgId: cred.orgId,
+        properties: { provider: cred.provider },
+      });
+    }
+    if (isChatProvider) {
+      // Wake any routines in this workspace that were waiting for a model (§3.4).
+      await db.execute(sql`
+        update public.routines set waiting_for_model = false
+        where org_id = ${cred.orgId}::uuid and waiting_for_model`);
+    }
     return c.json(credOut(cred), 201);
   });
 
@@ -1625,7 +1720,16 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       .filter((r) => offered.has(r.provider))
       .map(credOut);
     // Own keys stay first. Casama's key is last so a new bot prefers a key the workspace added.
-    if (deps.env.CLOUD_MODEL_UPSTREAM_KEY) items.push(cloudCredential(org_id));
+    if (deps.env.CLOUD_MODEL_UPSTREAM_KEY) {
+      let includeCasama = true;
+      if (deps.env.BILLING_ENABLED) {
+        const [ent] = await db.execute<{ plan_code: string | null }>(sql`
+          select plan_code from public.entitlements
+          where org_id = ${org_id}::uuid order by created_at desc limit 1`);
+        includeCasama = casamaModelsAllowed(ent?.plan_code ?? "free", true);
+      }
+      if (includeCasama) items.push(cloudCredential(org_id));
+    }
     return c.json({ items }, 200);
   });
 
@@ -1676,7 +1780,7 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       tx.select().from(modelCredentials).where(eq(modelCredentials.id, id)),
     );
     if (!cred) throw new ApiError(404, "credential_not_found", "Credential not found");
-    if (body.fallback_on_limit !== undefined && cred.ownerUserId !== claims.sub)
+    if (body.fallback_on_limit !== undefined && cred.ownerUserId && cred.ownerUserId !== claims.sub)
       throw new ApiError(403, "forbidden", "Only the plan's owner can change this setting");
     if (!(await canManage(claims, cred)))
       throw new ApiError(403, "forbidden", "Only owners and admins can change model keys");

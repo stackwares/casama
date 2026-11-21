@@ -2441,6 +2441,49 @@
         }
       },
       "funnels": []
+    },
+    {
+      "name": "own_provider_added",
+      "by": ["server"],
+      "description": "A Casama Cloud workspace added its own chat model key or ChatGPT plan (OWN-KEYS-PLAN §8).",
+      "properties": {
+        "provider": {
+          "type": "string"
+        }
+      },
+      "funnels": []
+    },
+    {
+      "name": "model_source_changed",
+      "by": ["server"],
+      "description": "A workspace default or a bot's model source was changed (OWN-KEYS-PLAN §8).",
+      "properties": {
+        "scope": {
+          "type": "string",
+          "values": ["workspace", "bot"]
+        },
+        "to_source": {
+          "type": "string",
+          "values": ["workspace", "casama", "own"]
+        }
+      },
+      "funnels": []
+    },
+    {
+      "name": "own_provider_required_shown",
+      "by": ["client"],
+      "description": "The blocked card for own_provider_required was shown or acted on (OWN-KEYS-PLAN §8).",
+      "properties": {
+        "surface": {
+          "type": "string",
+          "values": ["chat", "empty_chat", "create_bot", "setup"]
+        },
+        "outcome": {
+          "type": "string",
+          "values": ["shown", "add_key", "connect_chatgpt", "see_plans"]
+        }
+      },
+      "funnels": []
     }
   ]
 }

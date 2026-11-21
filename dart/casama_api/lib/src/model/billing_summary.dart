@@ -58,6 +58,10 @@ class BillingSummary {
 
      this.comp,
 
+     this.casamaModels,
+
+     this.casamaModelsNote,
+
     required  this.subscriptions,
 
     required  this.providers,
@@ -258,6 +262,32 @@ class BillingSummary {
 
 
 
+      /// Whether Casama's own model keys are available on this workspace's plan (docs/OWN-KEYS-PLAN.md §6)
+  @JsonKey(
+    
+    name: r'casama_models',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final BillingSummaryCasamaModelsEnum? casamaModels;
+
+
+
+      /// Optional note from the instance owner when Casama's models are turned off (§3.3)
+  @JsonKey(
+    
+    name: r'casama_models_note',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final String? casamaModelsNote;
+
+
+
   @JsonKey(
     
     name: r'subscriptions',
@@ -302,6 +332,8 @@ class BillingSummary {
       other.daily == daily &&
       other.computerHours == computerHours &&
       other.comp == comp &&
+      other.casamaModels == casamaModels &&
+      other.casamaModelsNote == casamaModelsNote &&
       other.subscriptions == subscriptions &&
       other.providers == providers;
 
@@ -323,6 +355,8 @@ class BillingSummary {
         (daily == null ? 0 : daily.hashCode) +
         (computerHours == null ? 0 : computerHours.hashCode) +
         (comp == null ? 0 : comp.hashCode) +
+        casamaModels.hashCode +
+        (casamaModelsNote == null ? 0 : casamaModelsNote.hashCode) +
         subscriptions.hashCode +
         providers.hashCode;
 
@@ -349,6 +383,24 @@ appStore(r'app_store'),
 googlePlay(r'google_play');
 
 const BillingSummarySource_Enum(this.value);
+
+final String value;
+
+@override
+String toString() => value;
+}
+
+
+/// Whether Casama's own model keys are available on this workspace's plan (docs/OWN-KEYS-PLAN.md §6)
+enum BillingSummaryCasamaModelsEnum {
+    /// Whether Casama's own model keys are available on this workspace's plan (docs/OWN-KEYS-PLAN.md §6)
+@JsonValue(r'on')
+on_(r'on'),
+    /// Whether Casama's own model keys are available on this workspace's plan (docs/OWN-KEYS-PLAN.md §6)
+@JsonValue(r'off')
+off(r'off');
+
+const BillingSummaryCasamaModelsEnum(this.value);
 
 final String value;
 

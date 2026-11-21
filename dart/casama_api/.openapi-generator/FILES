@@ -116,6 +116,8 @@ lib/src/model/admin_margin.dart
 lib/src/model/admin_margin_by_day_inner.dart
 lib/src/model/admin_margin_by_kind_inner.dart
 lib/src/model/admin_margin_top_orgs_inner.dart
+lib/src/model/admin_model_access.dart
+lib/src/model/admin_model_access_casama_models.dart
 lib/src/model/admin_model_catalog.dart
 lib/src/model/admin_org.dart
 lib/src/model/admin_org_list.dart
@@ -1098,6 +1100,7 @@ lib/src/model/workspace_files_export_files_inner.dart
 lib/src/model/workspace_files_result.dart
 lib/src/model/workspace_member.dart
 lib/src/model/workspace_member_list.dart
+lib/src/model/workspace_model_default.dart
 lib/src/model/write_agent_import_files_request.dart
 lib/src/model/write_agent_import_files_response.dart
 pubspec.yaml

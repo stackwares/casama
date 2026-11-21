@@ -356,6 +356,10 @@ export const Routine = z
       description:
         'Where its browser work happens (D-323 C13): "computer" (the bot\'s own), "mine" (your Chrome; waits until it\'s online) or "mine_or_computer"',
     }),
+    waiting_for_model: z.boolean().optional().openapi({
+      description:
+        "True when a scheduled run was skipped because Casama's models are off for this plan and no own provider is connected (docs/OWN-KEYS-PLAN.md §3.4)",
+    }),
     conversation_id: Uuid.nullable(),
     created_at: ts,
   })

@@ -23,6 +23,8 @@ abstract class _$OrganizationCWProxy {
 
   Organization avatarUrl(String? avatarUrl);
 
+  Organization modelDefault(WorkspaceModelDefault? modelDefault);
+
   Organization createdAt(DateTime createdAt);
 
   /// Creates a new instance with the provided field values.
@@ -42,6 +44,7 @@ abstract class _$OrganizationCWProxy {
     String? icon,
     String? color,
     String? avatarUrl,
+    WorkspaceModelDefault? modelDefault,
     DateTime createdAt,
   });
 }
@@ -78,6 +81,10 @@ class _$OrganizationCWProxyImpl implements _$OrganizationCWProxy {
   Organization avatarUrl(String? avatarUrl) => call(avatarUrl: avatarUrl);
 
   @override
+  Organization modelDefault(WorkspaceModelDefault? modelDefault) =>
+      call(modelDefault: modelDefault);
+
+  @override
   Organization createdAt(DateTime createdAt) => call(createdAt: createdAt);
 
   /// Creates a new instance with the provided field values.
@@ -98,6 +105,7 @@ class _$OrganizationCWProxyImpl implements _$OrganizationCWProxy {
     Object? icon = const $CopyWithPlaceholder(),
     Object? color = const $CopyWithPlaceholder(),
     Object? avatarUrl = const $CopyWithPlaceholder(),
+    Object? modelDefault = const $CopyWithPlaceholder(),
     Object? createdAt = const $CopyWithPlaceholder(),
   }) {
     return Organization(
@@ -133,6 +141,10 @@ class _$OrganizationCWProxyImpl implements _$OrganizationCWProxy {
           ? _value.avatarUrl
           // ignore: cast_nullable_to_non_nullable
           : avatarUrl as String?,
+      modelDefault: modelDefault == const $CopyWithPlaceholder()
+          ? _value.modelDefault
+          // ignore: cast_nullable_to_non_nullable
+          : modelDefault as WorkspaceModelDefault?,
       createdAt: createdAt == const $CopyWithPlaceholder() || createdAt == null
           ? _value.createdAt
           // ignore: cast_nullable_to_non_nullable
@@ -152,29 +164,50 @@ extension $OrganizationCopyWith on Organization {
 // JsonSerializableGenerator
 // **************************************************************************
 
-Organization _$OrganizationFromJson(
-  Map<String, dynamic> json,
-) => $checkedCreate('Organization', json, ($checkedConvert) {
-  $checkKeys(
-    json,
-    requiredKeys: const ['id', 'name', 'slug', 'plan', 'region', 'created_at'],
-  );
-  final val = Organization(
-    id: $checkedConvert('id', (v) => v as String),
-    name: $checkedConvert('name', (v) => v as String),
-    slug: $checkedConvert('slug', (v) => v as String),
-    plan: $checkedConvert('plan', (v) => v as String),
-    region: $checkedConvert('region', (v) => v as String),
-    icon: $checkedConvert('icon', (v) => v as String?),
-    color: $checkedConvert('color', (v) => v as String?),
-    avatarUrl: $checkedConvert('avatar_url', (v) => v as String?),
-    createdAt: $checkedConvert(
-      'created_at',
-      (v) => DateTime.parse(v as String),
-    ),
-  );
-  return val;
-}, fieldKeyMap: const {'avatarUrl': 'avatar_url', 'createdAt': 'created_at'});
+Organization _$OrganizationFromJson(Map<String, dynamic> json) =>
+    $checkedCreate(
+      'Organization',
+      json,
+      ($checkedConvert) {
+        $checkKeys(
+          json,
+          requiredKeys: const [
+            'id',
+            'name',
+            'slug',
+            'plan',
+            'region',
+            'created_at',
+          ],
+        );
+        final val = Organization(
+          id: $checkedConvert('id', (v) => v as String),
+          name: $checkedConvert('name', (v) => v as String),
+          slug: $checkedConvert('slug', (v) => v as String),
+          plan: $checkedConvert('plan', (v) => v as String),
+          region: $checkedConvert('region', (v) => v as String),
+          icon: $checkedConvert('icon', (v) => v as String?),
+          color: $checkedConvert('color', (v) => v as String?),
+          avatarUrl: $checkedConvert('avatar_url', (v) => v as String?),
+          modelDefault: $checkedConvert(
+            'model_default',
+            (v) => v == null
+                ? null
+                : WorkspaceModelDefault.fromJson(v as Map<String, dynamic>),
+          ),
+          createdAt: $checkedConvert(
+            'created_at',
+            (v) => DateTime.parse(v as String),
+          ),
+        );
+        return val;
+      },
+      fieldKeyMap: const {
+        'avatarUrl': 'avatar_url',
+        'modelDefault': 'model_default',
+        'createdAt': 'created_at',
+      },
+    );
 
 Map<String, dynamic> _$OrganizationToJson(Organization instance) =>
     <String, dynamic>{
@@ -186,5 +219,6 @@ Map<String, dynamic> _$OrganizationToJson(Organization instance) =>
       'icon': ?instance.icon,
       'color': ?instance.color,
       'avatar_url': ?instance.avatarUrl,
+      'model_default': ?instance.modelDefault?.toJson(),
       'created_at': instance.createdAt.toIso8601String(),
     };

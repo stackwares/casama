@@ -182,6 +182,7 @@ export async function startHarness(
       push: opts.worker.push,
       egressExemptCidrs: opts.worker.egressExemptCidrs,
       providerBases: opts.worker.providerBases,
+      platformOpenRouterKey: env.CLOUD_MODEL_UPSTREAM_KEY,
       serverGeminiKey: env.GOOGLE_AI_API_KEY,
       voiceContext: voiceContext(env),
       deviceWaitMs: opts.worker.deviceWaitMs,

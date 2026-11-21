@@ -146,4 +146,44 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('modelSearch')), findsNothing);
   });
+
+  testWidgets('with ownProviders enabled on Cloud, own keys open the model list', (tester) async {
+    final backend = FakeBackend()
+      ..billingEnabled = true
+      ..ownProvidersValue = true;
+    await tester.pumpWidget(_picker(backend, 'cred'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('modelPicker')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('modelSearch')), findsOneWidget);
+  });
+
+  testWidgets('with ownProviders enabled on Cloud, Models screen shows Who runs your bots', (tester) async {
+    final backend = FakeBackend()
+      ..billingEnabled = true
+      ..ownProvidersValue = true
+      ..extraCredentials = [_key(casamaCloudCredentialId, ProviderId.openrouter)];
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          backendProvider.overrideWithValue(backend),
+          billingProvider.overrideWith((ref) async => backend.billing('org')),
+        ],
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const ModelKeysScreen(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Models'), findsWidgets);
+    expect(find.text('Who runs your bots'), findsOneWidget);
+    expect(find.byKey(const Key('workspaceDefaultCasama')), findsOneWidget);
+    expect(find.byKey(const Key('workspaceDefaultOwn')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('workspaceDefaultOwn')));
+    await tester.pumpAndSettle();
+    expect(backend.orgModelDefault?.source_.value, 'own');
+    expect(backend.orgModelDefault?.credentialId, 'cred');
+  });
 }

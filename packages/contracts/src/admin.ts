@@ -493,3 +493,28 @@ export const AdminBotSetting = z
 export const SetAdminBotRequest = z
   .object({ enabled: z.boolean(), bot_id: z.uuid().nullable().optional() })
   .openapi("SetAdminBotRequest");
+
+const casamaModelsSwitch = z.enum(["on", "off"]);
+
+/**
+ * Model access on Casama Cloud (docs/OWN-KEYS-PLAN.md §3.3, §6): whether workspaces may connect
+ * their own model keys or ChatGPT plans, and whether Casama's own model keys are on or off per plan.
+ */
+export const AdminModelAccess = z
+  .object({
+    own_providers: z.boolean().openapi({
+      description: "Whether Cloud workspaces may use their own model keys and ChatGPT plans.",
+    }),
+    casama_models: z.object({
+      default: casamaModelsSwitch.openapi({
+        description: "Default state for any plan not listed in plans.",
+      }),
+      plans: z.record(z.string(), casamaModelsSwitch).openapi({
+        description: "Per-plan override (for example { free: 'off' }).",
+      }),
+    }),
+    note: z.string().max(500).nullable().openapi({
+      description: "Optional note shown on the blocked card when Casama's models are off.",
+    }),
+  })
+  .openapi("AdminModelAccess");

@@ -112,6 +112,7 @@ Class | Method | HTTP request | Description
 [*AdminApi*](doc/AdminApi.md) | [**adminMailAddresses**](doc/AdminApi.md#adminmailaddresses) | **GET** /v1/admin/mail | Hosted bot addresses with recent sending health (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**adminMailReservedNames**](doc/AdminApi.md#adminmailreservednames) | **GET** /v1/admin/mail-reserved-names | Instance-added reserved mail names (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**adminMargin**](doc/AdminApi.md#adminmargin) | **GET** /v1/admin/margin | Usage charged against what it cost the server (owner only)
+[*AdminApi*](doc/AdminApi.md) | [**adminModelAccess**](doc/AdminApi.md#adminmodelaccess) | **GET** /v1/admin/model-access | Whether Cloud workspaces may use their own model providers and whether Casama&#39;s models are on per plan (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**adminModelCatalog**](doc/AdminApi.md#adminmodelcatalog) | **GET** /v1/admin/model-catalog | The model catalog: saved values and the ones in code (owner only; D-373)
 [*AdminApi*](doc/AdminApi.md) | [**adminOrgs**](doc/AdminApi.md#adminorgs) | **GET** /v1/admin/orgs | Workspaces with their limits and spend
 [*AdminApi*](doc/AdminApi.md) | [**adminOverview**](doc/AdminApi.md#adminoverview) | **GET** /v1/admin/overview | Instance totals (owner only)
@@ -155,6 +156,7 @@ Class | Method | HTTP request | Description
 [*AdminApi*](doc/AdminApi.md) | [**setAdminCloudModels**](doc/AdminApi.md#setadmincloudmodels) | **PUT** /v1/admin/models | Change the models Casama Cloud runs (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**setAdminConnectionSettings**](doc/AdminApi.md#setadminconnectionsettings) | **PUT** /v1/admin/connections | Choose how apps without their own sign-in connect (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**setAdminDecisions**](doc/AdminApi.md#setadmindecisions) | **PUT** /v1/admin/decisions | Change decision model settings (owner only)
+[*AdminApi*](doc/AdminApi.md) | [**setAdminModelAccess**](doc/AdminApi.md#setadminmodelaccess) | **PUT** /v1/admin/model-access | Change own-provider access and the per-plan Casama models switch (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**setAdminPin**](doc/AdminApi.md#setadminpin) | **PUT** /v1/admin/pin | Set or change the admin PIN (owner only; a fresh passkey or sign-in, not the PIN)
 [*AdminApi*](doc/AdminApi.md) | [**setAdminVendor**](doc/AdminApi.md#setadminvendor) | **PUT** /v1/admin/vendors/{vendor} | 
 [*AdminApi*](doc/AdminApi.md) | [**setBillingSettings**](doc/AdminApi.md#setbillingsettings) | **PATCH** /v1/admin/billing-settings | Change the markup on usage paid with Casama&#39;s keys
@@ -727,6 +729,8 @@ Class | Method | HTTP request | Description
  - [AdminMarginByDayInner](doc/AdminMarginByDayInner.md)
  - [AdminMarginByKindInner](doc/AdminMarginByKindInner.md)
  - [AdminMarginTopOrgsInner](doc/AdminMarginTopOrgsInner.md)
+ - [AdminModelAccess](doc/AdminModelAccess.md)
+ - [AdminModelAccessCasamaModels](doc/AdminModelAccessCasamaModels.md)
  - [AdminModelCatalog](doc/AdminModelCatalog.md)
  - [AdminOrg](doc/AdminOrg.md)
  - [AdminOrgList](doc/AdminOrgList.md)
@@ -1709,6 +1713,7 @@ Class | Method | HTTP request | Description
  - [WorkspaceFilesResult](doc/WorkspaceFilesResult.md)
  - [WorkspaceMember](doc/WorkspaceMember.md)
  - [WorkspaceMemberList](doc/WorkspaceMemberList.md)
+ - [WorkspaceModelDefault](doc/WorkspaceModelDefault.md)
  - [WriteAgentImportFilesRequest](doc/WriteAgentImportFilesRequest.md)
  - [WriteAgentImportFilesResponse](doc/WriteAgentImportFilesResponse.md)
 

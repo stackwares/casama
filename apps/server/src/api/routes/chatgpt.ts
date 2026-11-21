@@ -16,9 +16,11 @@ import {
   pkcePair,
   randomToken,
   tokensFrom,
+  track,
 } from "@casama/agent";
 import { PRODUCT_NAME, routes } from "@casama/contracts";
 import { type JwtClaims, schema, withUserSession } from "@casama/db";
+import { ownProvidersAllowed } from "@casama/domain";
 import { captureError } from "@casama/observability";
 import type { OpenAPIHono } from "@hono/zod-openapi";
 import { eq, sql } from "drizzle-orm";
@@ -36,6 +38,7 @@ function requireClaims(claims: JwtClaims | undefined): JwtClaims {
 
 /** Whether this server offers ChatGPT plan sign-in (off on Casama Cloud until OpenAI approves). */
 export function chatGptSignInEnabled(env: AppDeps["env"]) {
+  if (env.BILLING_ENABLED && !ownProvidersAllowed(true)) return false;
   if (env.CHATGPT_SIGN_IN === "on") return true;
   if (env.CHATGPT_SIGN_IN === "off") return false;
   return !env.BILLING_ENABLED;
@@ -327,6 +330,17 @@ export function registerChatGptRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     await db.execute(sql`insert into public.audit_log (org_id, actor_type, actor_id, action, target_type, target_id, metadata)
       values (${row.orgId}::uuid, 'user', ${claims.sub}::uuid, 'credential.chatgpt_connected', 'model_credential', ${row.id}::uuid,
               ${JSON.stringify({ status })}::jsonb)`);
+    if (env.BILLING_ENABLED) {
+      track(db, {
+        event: "own_provider_added",
+        userId: claims.sub,
+        orgId: row.orgId,
+        properties: { provider: "chatgpt" },
+      });
+    }
+    await db.execute(sql`
+      update public.routines set waiting_for_model = false
+      where org_id = ${row.orgId}::uuid and waiting_for_model`);
     return c.json(credOut(row), 200);
   });
 }

@@ -236,13 +236,21 @@ class _RoutineCard extends ConsumerWidget {
                 Text(r.name, style: context.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
                 const SizedBox(height: 2),
                 Text(schedule, style: context.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant)),
-                if (next != null || last != null || ends != null || runsLeft != null || !r.enabled) ...[
+                if (next != null || last != null || ends != null || runsLeft != null || !r.enabled || r.waitingForModel == true) ...[
                   const SizedBox(height: 6),
                   Wrap(
                     spacing: AppSpace.xs,
                     runSpacing: 4,
                     children: [
                       if (!r.enabled) StatusLabel(text: l10n.routineOff, color: scheme.onSurfaceVariant, pill: true),
+                      if (r.waitingForModel == true)
+                        StatusLabel(
+                          key: Key('routineWaitingModel-${r.id}'),
+                          text: l10n.routineWaitingForModel,
+                          color: context.appColors.warning,
+                          pill: true,
+                          icon: LucideIcons.keyRound,
+                        ),
                       if (next != null) StatusLabel(text: next, color: context.appColors.positive, pill: true, icon: LucideIcons.clock),
                       if (ends != null) StatusLabel(key: Key('routineEndsAt-${r.id}'), text: ends, color: scheme.onSurfaceVariant, pill: true, icon: LucideIcons.flag),
                       if (runsLeft != null) StatusLabel(key: Key('routineRunsLeft-${r.id}'), text: runsLeft, color: scheme.onSurfaceVariant, pill: true, icon: LucideIcons.hash),

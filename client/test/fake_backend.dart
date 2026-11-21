@@ -125,12 +125,17 @@ class FakeBackend implements Backend {
             role: orgRole,
             suspended: orgSuspended,
             requireAppLock: requireAppLockValue,
+            modelDefault: orgModelDefault,
           ),
           ...extraOrgs,
         ];
   var orgName = 'Test Org';
   String? orgIcon;
   String? orgColor;
+  WorkspaceModelDefault? orgModelDefault;
+  var ownProvidersValue = false;
+  @override
+  bool get ownProviders => ownProvidersValue;
   final extraOrgs = <OrganizationWithRole>[];
   final links = <InviteLink>[];
   final joined = <String>[];
@@ -140,6 +145,8 @@ class FakeBackend implements Backend {
     String? name,
     String? icon,
     String? color,
+    WorkspaceModelDefault? modelDefault,
+    bool clearModelDefault = false,
   }) async {
     orgName = name ?? orgName;
     if (icon != null) {
@@ -147,6 +154,11 @@ class FakeBackend implements Backend {
       workspaceAvatar = null;
     }
     orgColor = color ?? orgColor;
+    if (clearModelDefault) {
+      orgModelDefault = null;
+    } else if (modelDefault != null) {
+      orgModelDefault = modelDefault;
+    }
     return Organization(
       id: orgId,
       name: orgName,
@@ -156,6 +168,7 @@ class FakeBackend implements Backend {
       icon: orgIcon,
       color: orgColor,
       avatarUrl: workspaceAvatar,
+      modelDefault: orgModelDefault,
       createdAt: DateTime(2026),
     );
   }
@@ -5655,6 +5668,19 @@ class FakeBackend implements Backend {
   @override
   Future<CloudModels> setAdminCloudModels(CloudModels models) async =>
       cloudModels = models;
+  var modelAccess = AdminModelAccess(
+    ownProviders: false,
+    casamaModels: AdminModelAccessCasamaModels(
+      default_: AdminModelAccessCasamaModelsDefault_Enum.on_,
+      plans: const {},
+    ),
+    note: null,
+  );
+  @override
+  Future<AdminModelAccess> adminModelAccess() async => modelAccess;
+  @override
+  Future<AdminModelAccess> setAdminModelAccess(AdminModelAccess access) async =>
+      modelAccess = access;
   var pricing = AdminPricing(
     billingEnabled: true,
     plans: [

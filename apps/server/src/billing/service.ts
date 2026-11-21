@@ -6,7 +6,12 @@
 import { randomUUID } from "node:crypto";
 import { milestone, track } from "@casama/agent";
 import type { Database } from "@casama/db";
-import { cloudModelDailyCap, setCloudMarkup } from "@casama/domain";
+import {
+  casamaModelsAllowed,
+  cloudModelDailyCap,
+  modelAccess,
+  setCloudMarkup,
+} from "@casama/domain";
 import { deterministicUuid, getProductAnalytics } from "@casama/observability";
 import { sql } from "drizzle-orm";
 import { type AccountEmailKind, queueAccountEmail } from "../services/account-emails.ts";
@@ -792,6 +797,10 @@ export class BillingService {
       credits_usd: this.enabled ? await this.balance(orgId) : 0,
       daily: await this.dailyUsage(orgId, ent?.plan_code, ent?.limits),
       computer_hours: await this.computerHours(orgId, ent?.limits),
+      casama_models: casamaModelsAllowed(ent?.plan_code ?? this.defaultPlan, this.enabled)
+        ? ("on" as const)
+        : ("off" as const),
+      casama_models_note: modelAccess().note,
       subscriptions: subs.map((s) => ({
         id: s.id,
         source: s.source as BillingSource,

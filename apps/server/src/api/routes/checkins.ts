@@ -24,6 +24,7 @@ const LIMIT_CODES = new Set([
   "cloud_daily_cap",
   "computer_hours_exceeded",
   "plan_limit",
+  "own_provider_required",
 ]);
 
 const claimsOf = (c: { get(k: "claims"): JwtClaims | undefined }) => {

@@ -132,6 +132,10 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
       title: l10n.privacy,
       children: [
         FormNote(l10n.privacyIntro, icon: LucideIcons.shield),
+        if (ref.watch(backendProvider).ownProviders) ...[
+          const SizedBox(height: AppSpace.xs),
+          FormNote(l10n.ownProviderPrivacyNote, icon: LucideIcons.keyRound),
+        ],
         SectionHeader(title: l10n.yourData),
         GroupedCard(
           children: [

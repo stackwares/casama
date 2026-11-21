@@ -21,6 +21,10 @@ export const ModelChoice = z
 
 export const ModelPolicy = z
   .object({
+    source: z.enum(["workspace", "casama", "own"]).optional().openapi({
+      description:
+        'Where this bot gets its model (docs/OWN-KEYS-PLAN.md §6): "workspace" (follow the workspace default), "casama" (Casama\'s models), or "own" (a specific key and model)',
+    }),
     primary: ModelChoice.optional(),
     fallbacks: z.array(ModelChoice).max(5).optional(),
     cheap: ModelChoice.optional().openapi({
@@ -391,7 +395,8 @@ export const Credential = z
       .nullable()
       .openapi({ description: "The signed-in ChatGPT account's email (chatgpt only)" }),
     fallback_on_limit: z.boolean().openapi({
-      description: "chatgpt: use the bot's next model when the plan limit is reached",
+      description:
+        "If this provider fails or hits its limit, use the bot's next model (or Casama's models on Cloud)",
     }),
     embedding_model: z.string().nullable().openapi({
       description:

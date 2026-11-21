@@ -19,7 +19,13 @@ import {
   withOpenRouterRouting,
 } from "@casama/agent";
 import type { Database } from "@casama/db";
-import { cloudModelDailyCap, cloudOpenRouterCharge, cloudOpenRouterCost } from "@casama/domain";
+import {
+  casamaModelsAllowed,
+  cloudModelDailyCap,
+  cloudOpenRouterCharge,
+  cloudOpenRouterCost,
+  ownProviderRequiredError,
+} from "@casama/domain";
 import { captureError } from "@casama/observability";
 import { sql } from "drizzle-orm";
 import type { Context, Hono } from "hono";
@@ -174,6 +180,7 @@ export function registerCasamaLinkRoutes(app: Hono, opts: LinkOptions) {
   app.get("/link/v1/whoami", async (c) => {
     const k = caller(c);
     const summary = await billing.summary(k.orgId);
+    const allowModels = casamaModelsAllowed(summary.plan_code, true);
     return c.json({
       org_id: k.orgId,
       instance_name: k.instance,
@@ -181,7 +188,7 @@ export function registerCasamaLinkRoutes(app: Hono, opts: LinkOptions) {
       plan_code: summary.plan_code,
       credits_usd: summary.credits_usd,
       computers: !!opts.supervisor && k.scopes.includes("computers"),
-      models: !!opts.models && k.scopes.includes("models"),
+      models: !!opts.models && k.scopes.includes("models") && allowModels,
       remote_access: !!opts.servers && k.scopes.includes("remote_access"),
       push: !!opts.push && k.scopes.includes("push"),
     });
@@ -395,6 +402,14 @@ export function registerCasamaLinkRoutes(app: Hono, opts: LinkOptions) {
     const k = caller(c);
     if (!opts.models || !k.scopes.includes("models"))
       return err(c, 403, "models_unavailable", "Model credits are not available for this key");
+    const [ent] = await db.execute<{ plan_code: string | null }>(sql`
+      select plan_code from public.entitlements
+      where org_id = ${k.orgId}::uuid order by created_at desc limit 1`);
+    const planCode = ent?.plan_code ?? "free";
+    if (!casamaModelsAllowed(planCode, true)) {
+      const refused = ownProviderRequiredError({ planCode });
+      return err(c, 402, refused.code, refused.message);
+    }
     const req = (await c.req.json()) as Record<string, unknown> & {
       model?: string;
       stream?: boolean;

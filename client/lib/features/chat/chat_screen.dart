@@ -18,7 +18,9 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:dio/dio.dart' show DioException, DioExceptionType;
 
 import '../../core/backend.dart';
+import '../../core/billing.dart';
 import '../../core/chat_focus.dart';
+import '../settings/model_keys_screen.dart' show casamaCloudCredentialId;
 import '../../core/device_dictation.dart';
 import '../../core/display_text.dart';
 import '../../core/haptics.dart';
@@ -2609,6 +2611,11 @@ class _EmptyThread extends ConsumerWidget {
         ? [for (final s in served.items) (s.emoji, s.text)]
         : _suggestions(context);
     final source = served == null || served.items.isEmpty ? 'app' : served.source_.value;
+    final billing = ref.watch(billingProvider).value;
+    final keys = ref.watch(credentialsProvider).value ?? const <Credential>[];
+    final runsChat = ref.watch(backendProvider).keyProviders.runsChat;
+    final hasOwnChatKey = keys.any((k) => k.id != casamaCloudCredentialId && runsChat.contains(k.provider));
+    final needsOwnProvider = billing?.casamaModels == BillingSummaryCasamaModelsEnum.off && !hasOwnChatKey;
     return CustomScrollView(
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       slivers: [
@@ -2620,6 +2627,60 @@ class _EmptyThread extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                if (needsOwnProvider) ...[
+                  AppCard(
+                    key: const Key('ownProviderRequiredCard'),
+                    padding: const EdgeInsets.all(AppSpace.md),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      spacing: AppSpace.sm,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(LucideIcons.keyRound, size: 20, color: scheme.primary),
+                            const SizedBox(width: AppSpace.xs),
+                            Expanded(
+                              child: Text(
+                                l10n.ownProviderRequiredTitle,
+                                style: context.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                              ),
+                            ),
+                          ],
+                        ),
+                        Text(
+                          (billing?.casamaModelsNote?.trim().isNotEmpty ?? false)
+                              ? billing!.casamaModelsNote!
+                              : l10n.ownProviderRequiredBody,
+                          style: context.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+                        ),
+                        Wrap(
+                          spacing: AppSpace.xs,
+                          runSpacing: AppSpace.xs,
+                          children: [
+                            FilledButton.tonalIcon(
+                              key: const Key('ownProviderAddKey'),
+                              onPressed: () {
+                                Analytics.log('own_provider_required_shown', {'surface': 'empty_chat', 'outcome': 'add_key'});
+                                context.pushOnce('/settings/keys');
+                              },
+                              icon: const Icon(LucideIcons.keyRound, size: 16),
+                              label: Text(l10n.addKey),
+                            ),
+                            TextButton(
+                              key: const Key('ownProviderSeePlans'),
+                              onPressed: () {
+                                Analytics.log('own_provider_required_shown', {'surface': 'empty_chat', 'outcome': 'upgrade'});
+                                openPaywall(context, source: 'own_provider_required');
+                              },
+                              child: Text(l10n.seePlans),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: AppSpace.md),
+                ],
                 const Spacer(),
                 Column(
                   mainAxisSize: MainAxisSize.min,

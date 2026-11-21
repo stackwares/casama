@@ -1,5 +1,5 @@
 import { API_VERSION, PRODUCT_NAME, routes } from "@casama/contracts";
-import { defaultModelFor, defaultModels, KEY_PROVIDERS } from "@casama/domain";
+import { defaultModelFor, defaultModels, KEY_PROVIDERS, ownProvidersAllowed } from "@casama/domain";
 import type { OpenAPIHono } from "@hono/zod-openapi";
 import { type Env, modelOverrides } from "../../env.ts";
 import { abuseControlsOn, signupProofKinds } from "../../services/abuse.ts";
@@ -59,6 +59,7 @@ export function registerSystemRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
         default_reasoning_effort: deps.env.DEFAULT_REASONING_EFFORT,
         wallpapers_enabled: Boolean(deps.env.UNSPLASH_ACCESS_KEY),
         chatgpt_sign_in: chatGptSignInEnabled(deps.env),
+        own_providers: ownProvidersAllowed(deps.env.BILLING_ENABLED),
         server_voice: serverVoice(deps.env),
         // Watch keys and their routes (D-410).
         watch: true,
@@ -68,8 +69,17 @@ export function registerSystemRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
         sign_in_codes: !!authAdminFor(deps),
         // Casama's monthly email (D-408): only where the server has its Resend key.
         newsletter: !!newsletterConfig(deps.env),
-        // One list for the apps' add-key form and model pickers (D-374).
-        key_providers: KEY_PROVIDERS,
+        // One list for the apps' add-key form and model pickers (D-374). When own_providers is on,
+        // key_providers.cloud gains the chat providers so shipped apps show them too (§6).
+        key_providers:
+          deps.env.BILLING_ENABLED && ownProvidersAllowed(true)
+            ? {
+                ...KEY_PROVIDERS,
+                cloud: Array.from(
+                  new Set([...KEY_PROVIDERS.chat, "openai_compatible", ...KEY_PROVIDERS.cloud]),
+                ),
+              }
+            : KEY_PROVIDERS,
         ...(deps.env.DISABLE_SIGNUP === undefined
           ? {}
           : { signups_open: !deps.env.DISABLE_SIGNUP }),

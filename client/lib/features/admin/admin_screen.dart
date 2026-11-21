@@ -44,6 +44,7 @@ final _adminUsersProvider = FutureProvider<List<AdminUser>>((r) => r.watch(backe
 final _adminServicesProvider = FutureProvider<List<AdminService>>((r) => r.watch(backendProvider).adminServices());
 final _connectionSettingsProvider = FutureProvider.autoDispose<ConnectionSettings>((r) => r.watch(backendProvider).adminConnectionSettings());
 final _cloudModelsProvider = FutureProvider.autoDispose<CloudModels>((r) => r.watch(backendProvider).adminCloudModels());
+final _modelAccessProvider = FutureProvider.autoDispose<AdminModelAccess>((r) => r.watch(backendProvider).adminModelAccess());
 final _adminOrgsProvider = FutureProvider.autoDispose<List<AdminOrg>>((r) => r.watch(backendProvider).adminOrgs());
 final _adminAbuseProvider = FutureProvider.autoDispose<List<AbuseEvent>>((r) => r.watch(backendProvider).adminAbuseEvents());
 
@@ -538,6 +539,7 @@ class _Services extends ConsumerWidget {
       data: (items) => PageColumn(
         children: [
           const _CloudModelsCard(),
+          const _ModelAccessCard(),
           const _ConnectionSettingsCard(),
           const AppSettingsCard(),
           const SizedBox(height: AppSpace.lg),
@@ -729,6 +731,159 @@ class _CloudModelsSheetState extends State<_CloudModelsSheet> {
         box(const Key('cloudStt'), _stt, 'Dictation (OpenRouter)'),
         box(const Key('cloudEmbedding'), _embedding, 'Embeddings'),
         box(const Key('cloudVideo'), _video, 'Video (OpenRouter)', last: true),
+      ],
+    );
+  }
+}
+
+/// Who can connect their own model keys and which plans include Casama's models.
+class _ModelAccessCard extends ConsumerWidget {
+  const _ModelAccessCard();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final access = ref.watch(_modelAccessProvider).value;
+    if (access == null) return const SizedBox.shrink();
+    final def = access.casamaModels.default_ == AdminModelAccessCasamaModelsDefault_Enum.on_
+        ? l10n.on
+        : l10n.off;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SectionHeader(title: l10n.adminModelAccessTitle),
+        GroupedCard(
+          children: [
+            GroupedTile(
+              key: const Key('adminModelAccess'),
+              icon: LucideIcons.keyRound,
+              title: access.ownProviders ? l10n.adminOwnProviders : l10n.adminModelAccessTitle,
+              subtitle: '${l10n.adminCasamaModelsDefault}: $def',
+              onTap: () async {
+                final next = await showAdaptiveSheet<AdminModelAccess>(
+                  context: context,
+                  builder: (_) => _ModelAccessSheet(current: access),
+                );
+                if (next == null || !context.mounted) return;
+                final ok = await runGuarded(
+                  context,
+                  () => ref.read(backendProvider).setAdminModelAccess(next),
+                );
+                if (ok != null) ref.invalidate(_modelAccessProvider);
+              },
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpace.lg),
+      ],
+    );
+  }
+}
+
+class _ModelAccessSheet extends StatefulWidget {
+  const _ModelAccessSheet({required this.current});
+  final AdminModelAccess current;
+
+  @override
+  State<_ModelAccessSheet> createState() => _ModelAccessSheetState();
+}
+
+class _ModelAccessSheetState extends State<_ModelAccessSheet> {
+  late var _ownProviders = widget.current.ownProviders;
+  late var _default = widget.current.casamaModels.default_;
+  late final Map<String, String> _plans = {
+    for (final e in widget.current.casamaModels.plans.entries)
+      e.key: e.value.value,
+  };
+  late final _note = TextEditingController(text: widget.current.note ?? '');
+
+  @override
+  void dispose() {
+    _note.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return FormSheet(
+      icon: LucideIcons.keyRound,
+      title: l10n.adminModelAccessTitle,
+      subtitle: l10n.adminModelAccessHelp,
+      submitLabel: l10n.save,
+      submitKey: const Key('saveModelAccess'),
+      onSubmit: () {
+        final plans = <String, AdminModelAccessCasamaModelsPlansEnum>{
+          for (final e in _plans.entries)
+            if (e.value == 'on')
+              e.key: AdminModelAccessCasamaModelsPlansEnum.on_
+            else if (e.value == 'off')
+              e.key: AdminModelAccessCasamaModelsPlansEnum.off,
+        };
+        Navigator.pop(
+          context,
+          AdminModelAccess(
+            ownProviders: _ownProviders,
+            casamaModels: AdminModelAccessCasamaModels(
+              default_: _default,
+              plans: plans,
+            ),
+            note: _note.text.trim().isEmpty ? null : _note.text.trim(),
+          ),
+        );
+      },
+      children: [
+        SwitchListTile(
+          key: const Key('adminOwnProvidersSwitch'),
+          contentPadding: EdgeInsets.zero,
+          title: Text(l10n.adminOwnProviders),
+          subtitle: Text(l10n.adminModelAccessHelp),
+          value: _ownProviders,
+          onChanged: (v) => setState(() => _ownProviders = v),
+        ),
+        DropdownButtonFormField<AdminModelAccessCasamaModelsDefault_Enum>(
+          key: const Key('adminCasamaModelsDefault'),
+          initialValue: _default,
+          decoration: InputDecoration(labelText: l10n.adminCasamaModelsDefault),
+          items: [
+            DropdownMenuItem(
+              value: AdminModelAccessCasamaModelsDefault_Enum.on_,
+              child: Text(l10n.on),
+            ),
+            DropdownMenuItem(
+              value: AdminModelAccessCasamaModelsDefault_Enum.off,
+              child: Text(l10n.off),
+            ),
+          ],
+          onChanged: (v) {
+            if (v != null) setState(() => _default = v);
+          },
+        ),
+        for (final plan in const ['free', 'plus', 'pro', 'max'])
+          DropdownButtonFormField<String>(
+            key: Key('adminCasamaModelsPlan-$plan'),
+            initialValue: _plans[plan] ?? 'default',
+            decoration: InputDecoration(labelText: 'Plan: $plan'),
+            items: [
+              const DropdownMenuItem(value: 'default', child: Text('Follow default')),
+              DropdownMenuItem(value: 'on', child: Text(l10n.on)),
+              DropdownMenuItem(value: 'off', child: Text(l10n.off)),
+            ],
+            onChanged: (v) {
+              setState(() {
+                if (v == null || v == 'default') {
+                  _plans.remove(plan);
+                } else {
+                  _plans[plan] = v;
+                }
+              });
+            },
+          ),
+        TextField(
+          key: const Key('adminModelAccessNote'),
+          controller: _note,
+          decoration: InputDecoration(labelText: l10n.adminCasamaModelsNote),
+        ),
       ],
     );
   }

@@ -24,7 +24,7 @@ import {
 } from "@casama/agent";
 import { routes } from "@casama/contracts";
 import { type JwtClaims, withUserSession } from "@casama/db";
-import { cloudCharge } from "@casama/domain";
+import { casamaModelsAllowed, cloudCharge } from "@casama/domain";
 import type { OpenAPIHono } from "@hono/zod-openapi";
 import { sql } from "drizzle-orm";
 import { WebSocket, WebSocketServer } from "ws";
@@ -367,15 +367,22 @@ function bridge(deps: AppDeps, id: string, twilio: WebSocket) {
         select coalesce(p.display_name, split_part(u.email, '@', 1), 'the person') as name, b.name as bot
         from public.bots b, auth.users u left join public.profiles p on p.user_id = u.id where b.id = ${call.bot_id}::uuid and u.id = ${call.user_id}::uuid`);
       // A call on the server's voice key needs credits, like an in-app call.
-      if (
-        deps.billing &&
-        (await billsCalls(deps, call.org_id)) &&
-        (await deps.billing.balance(call.org_id)) <= 0
-      ) {
-        await db.execute(
-          sql`update public.outbound_calls set status = 'failed', error = 'out_of_credits', ended_at = now() where id = ${id}::uuid`,
-        );
-        return close();
+      if (deps.billing && (await billsCalls(deps, call.org_id))) {
+        const [ent] = await db.execute<{ plan_code: string | null }>(sql`
+          select plan_code from public.entitlements
+          where org_id = ${call.org_id}::uuid order by created_at desc limit 1`);
+        if (!casamaModelsAllowed(ent?.plan_code ?? "free", true)) {
+          await db.execute(
+            sql`update public.outbound_calls set status = 'failed', error = 'voice_key_missing', ended_at = now() where id = ${id}::uuid`,
+          );
+          return close();
+        }
+        if ((await deps.billing.balance(call.org_id)) <= 0) {
+          await db.execute(
+            sql`update public.outbound_calls set status = 'failed', error = 'out_of_credits', ended_at = now() where id = ${id}::uuid`,
+          );
+          return close();
+        }
       }
       const s = await deps.workflows.voiceSession(
         call.org_id,

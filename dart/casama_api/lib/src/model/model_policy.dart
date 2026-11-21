@@ -21,12 +21,27 @@ class ModelPolicy {
   /// Returns a new [ModelPolicy] instance.
   ModelPolicy({
 
+     this.source_,
+
      this.primary,
 
      this.fallbacks,
 
      this.cheap,
   });
+
+      /// Where this bot gets its model (docs/OWN-KEYS-PLAN.md §6): \"workspace\" (follow the workspace default), \"casama\" (Casama's models), or \"own\" (a specific key and model)
+  @JsonKey(
+    
+    name: r'source',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final ModelPolicySource_Enum? source_;
+
+
 
   @JsonKey(
     
@@ -69,12 +84,14 @@ class ModelPolicy {
 
     @override
     bool operator ==(Object other) => identical(this, other) || other is ModelPolicy &&
+      other.source_ == source_ &&
       other.primary == primary &&
       other.fallbacks == fallbacks &&
       other.cheap == cheap;
 
     @override
     int get hashCode =>
+        source_.hashCode +
         primary.hashCode +
         fallbacks.hashCode +
         cheap.hashCode;
@@ -89,4 +106,25 @@ class ModelPolicy {
   }
 
 }
+
+/// Where this bot gets its model (docs/OWN-KEYS-PLAN.md §6): \"workspace\" (follow the workspace default), \"casama\" (Casama's models), or \"own\" (a specific key and model)
+enum ModelPolicySource_Enum {
+    /// Where this bot gets its model (docs/OWN-KEYS-PLAN.md §6): \"workspace\" (follow the workspace default), \"casama\" (Casama's models), or \"own\" (a specific key and model)
+@JsonValue(r'workspace')
+workspace(r'workspace'),
+    /// Where this bot gets its model (docs/OWN-KEYS-PLAN.md §6): \"workspace\" (follow the workspace default), \"casama\" (Casama's models), or \"own\" (a specific key and model)
+@JsonValue(r'casama')
+casama(r'casama'),
+    /// Where this bot gets its model (docs/OWN-KEYS-PLAN.md §6): \"workspace\" (follow the workspace default), \"casama\" (Casama's models), or \"own\" (a specific key and model)
+@JsonValue(r'own')
+own(r'own');
+
+const ModelPolicySource_Enum(this.value);
+
+final String value;
+
+@override
+String toString() => value;
+}
+
 

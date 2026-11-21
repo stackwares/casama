@@ -2,6 +2,7 @@ import { randomBytes } from "node:crypto";
 import { track } from "@casama/agent";
 import { routes } from "@casama/contracts";
 import { type JwtClaims, pgErrorCode, pgErrorMessage, schema, withUserSession } from "@casama/db";
+import { KEY_PROVIDERS, ownProvidersAllowed, type WorkspaceModelDefault } from "@casama/domain";
 import {
   getInternalAccountRules,
   isInternalEmail,
@@ -32,18 +33,34 @@ const orgOut = (o: {
   icon?: string | null;
   color?: string | null;
   avatarUrl?: string | null;
+  modelDefault?: unknown;
   createdAt: string | Date;
-}) => ({
-  id: o.id,
-  name: o.name,
-  slug: o.slug,
-  plan: o.plan,
-  region: o.region,
-  icon: o.icon ?? null,
-  color: o.color ?? null,
-  avatar_url: o.avatarUrl ?? null,
-  created_at: iso(o.createdAt),
-});
+}) => {
+  const md =
+    o.modelDefault && typeof o.modelDefault === "object"
+      ? (o.modelDefault as WorkspaceModelDefault)
+      : null;
+  return {
+    id: o.id,
+    name: o.name,
+    slug: o.slug,
+    plan: o.plan,
+    region: o.region,
+    icon: o.icon ?? null,
+    color: o.color ?? null,
+    avatar_url: o.avatarUrl ?? null,
+    model_default:
+      md && (md.source === "casama" || md.source === "own")
+        ? {
+            source: md.source,
+            ...(md.credential_id !== undefined ? { credential_id: md.credential_id } : {}),
+            ...(md.model !== undefined ? { model: md.model } : {}),
+            ...(md.cheap_model !== undefined ? { cheap_model: md.cheap_model } : {}),
+          }
+        : null,
+    created_at: iso(o.createdAt),
+  };
+};
 
 export function registerWorkspaceRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
   const { db, env } = deps;
@@ -192,6 +209,31 @@ export function registerWorkspaceRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps)
     const { id } = c.req.valid("param");
     const b = c.req.valid("json");
     await requireAdmin(claims, id);
+    if (b.model_default !== undefined && b.model_default !== null) {
+      if (env.BILLING_ENABLED && !ownProvidersAllowed(true) && b.model_default.source === "own") {
+        throw new ApiError(
+          403,
+          "own_providers_disabled",
+          "Using your own model provider is not enabled on this server",
+        );
+      }
+      if (b.model_default.source === "own") {
+        if (!b.model_default.credential_id) {
+          throw new ApiError(400, "validation_failed", "Choose a model key or ChatGPT plan");
+        }
+        const [cred] = await db.execute<{ provider: string }>(sql`
+          select provider from public.model_credentials
+          where id = ${b.model_default.credential_id}::uuid and org_id = ${id}::uuid`);
+        const chatSet = new Set<string>([...KEY_PROVIDERS.runs_chat, "chatgpt"]);
+        if (!cred || !chatSet.has(cred.provider)) {
+          throw new ApiError(
+            400,
+            "validation_failed",
+            "That key is not in this workspace or cannot run chat models",
+          );
+        }
+      }
+    }
     const [row] = await withUserSession(db, claims, (tx) =>
       tx
         .update(organizations)
@@ -199,11 +241,31 @@ export function registerWorkspaceRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps)
           ...(b.name !== undefined ? { name: b.name } : {}),
           ...(b.icon !== undefined ? { icon: b.icon, avatarUrl: null } : {}),
           ...(b.color !== undefined ? { color: b.color } : {}),
+          ...(b.model_default !== undefined ? { modelDefault: b.model_default } : {}),
         })
         .where(eq(organizations.id, id))
         .returning(),
     );
     if (!row) throw new ApiError(404, "org_not_found", "Workspace not found");
+    if (b.model_default !== undefined) {
+      await db.execute(sql`
+        insert into public.audit_log (org_id, actor_type, actor_id, action, target_type, target_id, metadata)
+        values (${id}::uuid, 'user', ${claims.sub}::uuid, 'workspace.model_default', 'organization', ${id}::uuid,
+                ${JSON.stringify({ model_default: b.model_default })}::jsonb)`);
+      track(db, {
+        event: "model_source_changed",
+        userId: claims.sub,
+        orgId: id,
+        properties: {
+          scope: "workspace",
+          to_source: b.model_default?.source ?? "casama",
+        },
+      });
+      // Wake any routines in this workspace that were waiting for a model (§3.4).
+      await db.execute(sql`
+        update public.routines set waiting_for_model = false
+        where org_id = ${id}::uuid and waiting_for_model`);
+    }
     return c.json(orgOut(row), 200);
   });
 

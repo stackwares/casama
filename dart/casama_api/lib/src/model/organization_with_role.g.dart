@@ -23,6 +23,8 @@ abstract class _$OrganizationWithRoleCWProxy {
 
   OrganizationWithRole avatarUrl(String? avatarUrl);
 
+  OrganizationWithRole modelDefault(WorkspaceModelDefault? modelDefault);
+
   OrganizationWithRole createdAt(DateTime createdAt);
 
   OrganizationWithRole role(OrgRole role);
@@ -50,6 +52,7 @@ abstract class _$OrganizationWithRoleCWProxy {
     String? icon,
     String? color,
     String? avatarUrl,
+    WorkspaceModelDefault? modelDefault,
     DateTime createdAt,
     OrgRole role,
     bool? requireMfa,
@@ -92,6 +95,10 @@ class _$OrganizationWithRoleCWProxyImpl
       call(avatarUrl: avatarUrl);
 
   @override
+  OrganizationWithRole modelDefault(WorkspaceModelDefault? modelDefault) =>
+      call(modelDefault: modelDefault);
+
+  @override
   OrganizationWithRole createdAt(DateTime createdAt) =>
       call(createdAt: createdAt);
 
@@ -127,6 +134,7 @@ class _$OrganizationWithRoleCWProxyImpl
     Object? icon = const $CopyWithPlaceholder(),
     Object? color = const $CopyWithPlaceholder(),
     Object? avatarUrl = const $CopyWithPlaceholder(),
+    Object? modelDefault = const $CopyWithPlaceholder(),
     Object? createdAt = const $CopyWithPlaceholder(),
     Object? role = const $CopyWithPlaceholder(),
     Object? requireMfa = const $CopyWithPlaceholder(),
@@ -166,6 +174,10 @@ class _$OrganizationWithRoleCWProxyImpl
           ? _value.avatarUrl
           // ignore: cast_nullable_to_non_nullable
           : avatarUrl as String?,
+      modelDefault: modelDefault == const $CopyWithPlaceholder()
+          ? _value.modelDefault
+          // ignore: cast_nullable_to_non_nullable
+          : modelDefault as WorkspaceModelDefault?,
       createdAt: createdAt == const $CopyWithPlaceholder() || createdAt == null
           ? _value.createdAt
           // ignore: cast_nullable_to_non_nullable
@@ -229,6 +241,12 @@ OrganizationWithRole _$OrganizationWithRoleFromJson(
       icon: $checkedConvert('icon', (v) => v as String?),
       color: $checkedConvert('color', (v) => v as String?),
       avatarUrl: $checkedConvert('avatar_url', (v) => v as String?),
+      modelDefault: $checkedConvert(
+        'model_default',
+        (v) => v == null
+            ? null
+            : WorkspaceModelDefault.fromJson(v as Map<String, dynamic>),
+      ),
       createdAt: $checkedConvert(
         'created_at',
         (v) => DateTime.parse(v as String),
@@ -242,6 +260,7 @@ OrganizationWithRole _$OrganizationWithRoleFromJson(
   },
   fieldKeyMap: const {
     'avatarUrl': 'avatar_url',
+    'modelDefault': 'model_default',
     'createdAt': 'created_at',
     'requireMfa': 'require_mfa',
     'requireAppLock': 'require_app_lock',
@@ -259,6 +278,7 @@ Map<String, dynamic> _$OrganizationWithRoleToJson(
   'icon': ?instance.icon,
   'color': ?instance.color,
   'avatar_url': ?instance.avatarUrl,
+  'model_default': ?instance.modelDefault?.toJson(),
   'created_at': instance.createdAt.toIso8601String(),
   'role': _$OrgRoleEnumMap[instance.role]!,
   'require_mfa': ?instance.requireMfa,

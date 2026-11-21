@@ -13,6 +13,8 @@ abstract class _$UpdateOrganizationRequestCWProxy {
 
   UpdateOrganizationRequest color(String? color);
 
+  UpdateOrganizationRequest modelDefault(WorkspaceModelDefault? modelDefault);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `UpdateOrganizationRequest(...).copyWith.fieldName(value)`.
@@ -21,7 +23,12 @@ abstract class _$UpdateOrganizationRequestCWProxy {
   /// ```dart
   /// UpdateOrganizationRequest(...).copyWith(id: 12, name: "My name")
   /// ```
-  UpdateOrganizationRequest call({String? name, String? icon, String? color});
+  UpdateOrganizationRequest call({
+    String? name,
+    String? icon,
+    String? color,
+    WorkspaceModelDefault? modelDefault,
+  });
 }
 
 /// Callable proxy for `copyWith` functionality.
@@ -41,6 +48,10 @@ class _$UpdateOrganizationRequestCWProxyImpl
   @override
   UpdateOrganizationRequest color(String? color) => call(color: color);
 
+  @override
+  UpdateOrganizationRequest modelDefault(WorkspaceModelDefault? modelDefault) =>
+      call(modelDefault: modelDefault);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `UpdateOrganizationRequest(...).copyWith.fieldName(value)`.
@@ -54,6 +65,7 @@ class _$UpdateOrganizationRequestCWProxyImpl
     Object? name = const $CopyWithPlaceholder(),
     Object? icon = const $CopyWithPlaceholder(),
     Object? color = const $CopyWithPlaceholder(),
+    Object? modelDefault = const $CopyWithPlaceholder(),
   }) {
     return UpdateOrganizationRequest(
       name: name == const $CopyWithPlaceholder()
@@ -68,6 +80,10 @@ class _$UpdateOrganizationRequestCWProxyImpl
           ? _value.color
           // ignore: cast_nullable_to_non_nullable
           : color as String?,
+      modelDefault: modelDefault == const $CopyWithPlaceholder()
+          ? _value.modelDefault
+          // ignore: cast_nullable_to_non_nullable
+          : modelDefault as WorkspaceModelDefault?,
     );
   }
 }
@@ -91,9 +107,15 @@ UpdateOrganizationRequest _$UpdateOrganizationRequestFromJson(
     name: $checkedConvert('name', (v) => v as String?),
     icon: $checkedConvert('icon', (v) => v as String?),
     color: $checkedConvert('color', (v) => v as String?),
+    modelDefault: $checkedConvert(
+      'model_default',
+      (v) => v == null
+          ? null
+          : WorkspaceModelDefault.fromJson(v as Map<String, dynamic>),
+    ),
   );
   return val;
-});
+}, fieldKeyMap: const {'modelDefault': 'model_default'});
 
 Map<String, dynamic> _$UpdateOrganizationRequestToJson(
   UpdateOrganizationRequest instance,
@@ -101,4 +123,5 @@ Map<String, dynamic> _$UpdateOrganizationRequestToJson(
   'name': ?instance.name,
   'icon': ?instance.icon,
   'color': ?instance.color,
+  'model_default': ?instance.modelDefault?.toJson(),
 };

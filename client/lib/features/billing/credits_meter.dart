@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import '../../core/backend.dart' show UsageFilter;
 import '../../core/billing.dart';
 import '../../core/number_format.dart';
+import '../../core/providers.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
@@ -153,6 +154,10 @@ class CreditsMeter extends ConsumerWidget {
               : l10n.creditsExplainerShort,
           style: muted,
         ),
+        if (ref.watch(backendProvider).ownProviders) ...[
+          const SizedBox(height: 4),
+          Text(l10n.creditsOwnProviderNote, style: muted),
+        ],
         if (billing.daily case final daily?) ...[
           const SizedBox(height: AppSpace.md),
           _DailyLimit(daily: daily),

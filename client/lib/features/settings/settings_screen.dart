@@ -496,11 +496,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       subtitle: l10n.linkRow,
                       onTap: () => open('/settings/link'), selected: sel('/settings/link'),
                     ),
-                  // Casama Cloud runs the models (D-188): only search, maps and data keys are left to add.
-                  // Once Casama Cloud covers every key itself, the row goes away.
+                  // Casama Cloud runs the models (D-188): only search, maps and data keys are left to add,
+                  // unless own providers are enabled on this server.
                   if (ref.watch(billingProvider).value?.enabled == true) ...[
-                    if (ref.watch(backendProvider).keyProviders.cloud.isNotEmpty)
-                    GroupedTile(icon: LucideIcons.keyRound, title: l10n.serviceKeys, subtitle: l10n.serviceKeysHelp, onTap: () => open('/settings/keys'), selected: sel('/settings/keys')),
+                    if (backend.ownProviders)
+                      GroupedTile(icon: LucideIcons.keyRound, title: l10n.modelsTitle, subtitle: l10n.modelsRowHelp, onTap: () => open('/settings/keys'), selected: sel('/settings/keys'))
+                    else if (ref.watch(backendProvider).keyProviders.cloud.isNotEmpty)
+                      GroupedTile(icon: LucideIcons.keyRound, title: l10n.serviceKeys, subtitle: l10n.serviceKeysHelp, onTap: () => open('/settings/keys'), selected: sel('/settings/keys')),
                   ] else
                     GroupedTile(icon: LucideIcons.keyRound, title: l10n.modelKeys, subtitle: l10n.modelKeysHelp, onTap: () => open('/settings/keys'), selected: sel('/settings/keys')),
               ]),
@@ -688,6 +690,7 @@ Map<String, String> _settingsSearchWords(AppLocalizations l10n, {String? orgName
   l10n.skills: 'skills catalog abilities instructions',
   l10n.casamaLink: 'remote access address tunnel self host phone',
   l10n.serviceKeys: 'api keys search maps data',
+  l10n.modelsTitle: 'api keys openai anthropic openrouter gemini models providers ollama local models',
   l10n.modelKeys: 'api keys openai anthropic openrouter gemini models providers ollama local models',
   l10n.account: 'email change email password sign out everywhere login',
   l10n.twoStepSignIn: '2fa mfa two factor authenticator totp otp security code',
@@ -791,7 +794,7 @@ class _VoiceSettingsDialogState extends ConsumerState<VoiceSettingsDialog> {
       busy: _busy,
       onSubmit: _save,
       children: [
-        if (cloud)
+        if (cloud && !ref.watch(backendProvider).ownProviders)
           Padding(
             padding: const EdgeInsets.only(bottom: AppSpace.md),
             child: Text(l10n.casamaCloudModelLocked),

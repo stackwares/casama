@@ -20,11 +20,14 @@ import {
   checkCallLimits,
   checkCostTables,
   checkGuardAdditions,
+  checkModelAccess,
   checkModelCatalog,
   DEFAULT_DOMAIN_TLDS,
+  type ModelAccess,
   type ModelCatalog,
   setCallLimits,
   setCostTables,
+  setModelAccess,
   setModelCatalog,
   setSensitiveSiteAdditions,
 } from "@casama/domain";
@@ -103,6 +106,14 @@ export async function loadRemoteSettings(db: Exec, warn?: (msg: string, e: unkno
     setCallLimits(row?.value ?? null);
   } catch (e) {
     warn?.("call limits not loaded", e);
+  }
+  try {
+    const [row] = await db.execute<{ value: unknown }>(
+      sql`select value from public.instance_settings where key = ${MODEL_ACCESS_KEY}`,
+    );
+    setModelAccess(row?.value ?? null);
+  } catch (e) {
+    warn?.("model access not loaded", e);
   }
 }
 
@@ -233,4 +244,25 @@ export async function saveCallLimits(db: Exec, limits: Partial<CallLimits>) {
     values (${CALL_LIMITS_KEY}, ${JSON.stringify(limits)}::jsonb, now())
     on conflict (key) do update set value = excluded.value, updated_at = now()`);
   setCallLimits(limits);
+}
+
+// ---------------------------------------------------------------- model access (OWN-KEYS-PLAN §3.3)
+
+export const MODEL_ACCESS_KEY = "model_access";
+
+/** The saved model access setting (defaults when unset or invalid). */
+export async function storedModelAccess(db: Exec): Promise<ModelAccess> {
+  const [row] = await db.execute<{ value: unknown }>(
+    sql`select value from public.instance_settings where key = ${MODEL_ACCESS_KEY}`,
+  );
+  return checkModelAccess(row?.value).access;
+}
+
+/** Saves model access that passed its check, and applies it in this process. */
+export async function saveModelAccess(db: Exec, access: ModelAccess): Promise<ModelAccess> {
+  await db.execute(sql`
+    insert into public.instance_settings (key, value, updated_at)
+    values (${MODEL_ACCESS_KEY}, ${JSON.stringify(access)}::jsonb, now())
+    on conflict (key) do update set value = excluded.value, updated_at = now()`);
+  return setModelAccess(access);
 }

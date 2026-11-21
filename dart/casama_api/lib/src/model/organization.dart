@@ -3,6 +3,7 @@
 //
 
 // ignore_for_file: unused_element
+import 'package:casama_api/src/model/workspace_model_default.dart';
 import 'package:copy_with_extension/copy_with_extension.dart';
 import 'package:json_annotation/json_annotation.dart';
 
@@ -35,6 +36,8 @@ class Organization {
      this.color,
 
      this.avatarUrl,
+
+     this.modelDefault,
 
     required  this.createdAt,
   });
@@ -137,6 +140,18 @@ class Organization {
 
   @JsonKey(
     
+    name: r'model_default',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final WorkspaceModelDefault? modelDefault;
+
+
+
+  @JsonKey(
+    
     name: r'created_at',
     required: true,
     includeIfNull: false,
@@ -159,6 +174,7 @@ class Organization {
       other.icon == icon &&
       other.color == color &&
       other.avatarUrl == avatarUrl &&
+      other.modelDefault == modelDefault &&
       other.createdAt == createdAt;
 
     @override
@@ -171,6 +187,7 @@ class Organization {
         (icon == null ? 0 : icon.hashCode) +
         (color == null ? 0 : color.hashCode) +
         (avatarUrl == null ? 0 : avatarUrl.hashCode) +
+        (modelDefault == null ? 0 : modelDefault.hashCode) +
         createdAt.hashCode;
 
   factory Organization.fromJson(Map<String, dynamic> json) => _$OrganizationFromJson(json);

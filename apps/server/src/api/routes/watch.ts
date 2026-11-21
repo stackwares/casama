@@ -19,6 +19,7 @@ import {
 } from "@casama/agent";
 import { routes } from "@casama/contracts";
 import { type Database, type JwtClaims, withUserSession } from "@casama/db";
+import { casamaModelsAllowed } from "@casama/domain";
 import type { OpenAPIHono } from "@hono/zod-openapi";
 import { sql } from "drizzle-orm";
 import type { Context } from "hono";
@@ -717,7 +718,14 @@ export function registerWatchRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
 
   /** Voice features for a workspace: the server's own keys, or the workspace's OpenRouter key. */
   const voiceFor = async (orgId: string) => {
-    const own = serverVoice(deps.env);
+    let allowPlatform = true;
+    if (billing.enabled) {
+      const [ent] = await db.execute<{ plan_code: string | null }>(sql`
+        select plan_code from public.entitlements
+        where org_id = ${orgId}::uuid order by created_at desc limit 1`);
+      allowPlatform = casamaModelsAllowed(ent?.plan_code ?? "free", true);
+    }
+    const own = allowPlatform ? serverVoice(deps.env) : [];
     if (own.includes("dictation") && own.includes("read_aloud"))
       return { dictation: true, speech: true };
     const [k] = await db.execute<{ ok: boolean }>(sql`

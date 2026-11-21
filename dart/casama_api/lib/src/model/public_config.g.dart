@@ -27,6 +27,8 @@ abstract class _$PublicConfigCWProxy {
 
   PublicConfig chatgptSignIn(bool? chatgptSignIn);
 
+  PublicConfig ownProviders(bool? ownProviders);
+
   PublicConfig serverVoice(List<PublicConfigServerVoiceEnum>? serverVoice);
 
   PublicConfig watch(bool? watch);
@@ -71,6 +73,7 @@ abstract class _$PublicConfigCWProxy {
     PublicConfigDefaultReasoningEffortEnum defaultReasoningEffort,
     bool? wallpapersEnabled,
     bool? chatgptSignIn,
+    bool? ownProviders,
     List<PublicConfigServerVoiceEnum>? serverVoice,
     bool? watch,
     List<PublicConfigSignupProofsEnum>? signupProofs,
@@ -129,6 +132,10 @@ class _$PublicConfigCWProxyImpl implements _$PublicConfigCWProxy {
   @override
   PublicConfig chatgptSignIn(bool? chatgptSignIn) =>
       call(chatgptSignIn: chatgptSignIn);
+
+  @override
+  PublicConfig ownProviders(bool? ownProviders) =>
+      call(ownProviders: ownProviders);
 
   @override
   PublicConfig serverVoice(List<PublicConfigServerVoiceEnum>? serverVoice) =>
@@ -196,6 +203,7 @@ class _$PublicConfigCWProxyImpl implements _$PublicConfigCWProxy {
     Object? defaultReasoningEffort = const $CopyWithPlaceholder(),
     Object? wallpapersEnabled = const $CopyWithPlaceholder(),
     Object? chatgptSignIn = const $CopyWithPlaceholder(),
+    Object? ownProviders = const $CopyWithPlaceholder(),
     Object? serverVoice = const $CopyWithPlaceholder(),
     Object? watch = const $CopyWithPlaceholder(),
     Object? signupProofs = const $CopyWithPlaceholder(),
@@ -257,6 +265,10 @@ class _$PublicConfigCWProxyImpl implements _$PublicConfigCWProxy {
           ? _value.chatgptSignIn
           // ignore: cast_nullable_to_non_nullable
           : chatgptSignIn as bool?,
+      ownProviders: ownProviders == const $CopyWithPlaceholder()
+          ? _value.ownProviders
+          // ignore: cast_nullable_to_non_nullable
+          : ownProviders as bool?,
       serverVoice: serverVoice == const $CopyWithPlaceholder()
           ? _value.serverVoice
           // ignore: cast_nullable_to_non_nullable
@@ -361,6 +373,7 @@ PublicConfig _$PublicConfigFromJson(
         (v) => v as bool?,
       ),
       chatgptSignIn: $checkedConvert('chatgpt_sign_in', (v) => v as bool?),
+      ownProviders: $checkedConvert('own_providers', (v) => v as bool?),
       serverVoice: $checkedConvert(
         'server_voice',
         (v) => (v as List<dynamic>?)
@@ -420,6 +433,7 @@ PublicConfig _$PublicConfigFromJson(
     'defaultReasoningEffort': 'default_reasoning_effort',
     'wallpapersEnabled': 'wallpapers_enabled',
     'chatgptSignIn': 'chatgpt_sign_in',
+    'ownProviders': 'own_providers',
     'serverVoice': 'server_voice',
     'signupProofs': 'signup_proofs',
     'traceUrlTemplate': 'trace_url_template',
@@ -446,6 +460,7 @@ Map<String, dynamic> _$PublicConfigToJson(PublicConfig instance) =>
               .defaultReasoningEffort]!,
       'wallpapers_enabled': ?instance.wallpapersEnabled,
       'chatgpt_sign_in': ?instance.chatgptSignIn,
+      'own_providers': ?instance.ownProviders,
       'server_voice': ?instance.serverVoice
           ?.map((e) => _$PublicConfigServerVoiceEnumEnumMap[e]!)
           .toList(),

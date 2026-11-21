@@ -7,6 +7,8 @@ part of 'model_policy.dart';
 // **************************************************************************
 
 abstract class _$ModelPolicyCWProxy {
+  ModelPolicy source_(ModelPolicySource_Enum? source_);
+
   ModelPolicy primary(ModelChoice? primary);
 
   ModelPolicy fallbacks(List<ModelChoice>? fallbacks);
@@ -22,6 +24,7 @@ abstract class _$ModelPolicyCWProxy {
   /// ModelPolicy(...).copyWith(id: 12, name: "My name")
   /// ```
   ModelPolicy call({
+    ModelPolicySource_Enum? source_,
     ModelChoice? primary,
     List<ModelChoice>? fallbacks,
     ModelChoice? cheap,
@@ -34,6 +37,10 @@ class _$ModelPolicyCWProxyImpl implements _$ModelPolicyCWProxy {
   const _$ModelPolicyCWProxyImpl(this._value);
 
   final ModelPolicy _value;
+
+  @override
+  ModelPolicy source_(ModelPolicySource_Enum? source_) =>
+      call(source_: source_);
 
   @override
   ModelPolicy primary(ModelChoice? primary) => call(primary: primary);
@@ -55,11 +62,16 @@ class _$ModelPolicyCWProxyImpl implements _$ModelPolicyCWProxy {
   /// ```
   @override
   ModelPolicy call({
+    Object? source_ = const $CopyWithPlaceholder(),
     Object? primary = const $CopyWithPlaceholder(),
     Object? fallbacks = const $CopyWithPlaceholder(),
     Object? cheap = const $CopyWithPlaceholder(),
   }) {
     return ModelPolicy(
+      source_: source_ == const $CopyWithPlaceholder()
+          ? _value.source_
+          // ignore: cast_nullable_to_non_nullable
+          : source_ as ModelPolicySource_Enum?,
       primary: primary == const $CopyWithPlaceholder()
           ? _value.primary
           // ignore: cast_nullable_to_non_nullable
@@ -92,6 +104,10 @@ ModelPolicy _$ModelPolicyFromJson(Map<String, dynamic> json) => $checkedCreate(
   json,
   ($checkedConvert) {
     final val = ModelPolicy(
+      source_: $checkedConvert(
+        'source',
+        (v) => $enumDecodeNullable(_$ModelPolicySource_EnumEnumMap, v),
+      ),
       primary: $checkedConvert(
         'primary',
         (v) =>
@@ -111,11 +127,19 @@ ModelPolicy _$ModelPolicyFromJson(Map<String, dynamic> json) => $checkedCreate(
     );
     return val;
   },
+  fieldKeyMap: const {'source_': 'source'},
 );
 
 Map<String, dynamic> _$ModelPolicyToJson(ModelPolicy instance) =>
     <String, dynamic>{
+      'source': ?_$ModelPolicySource_EnumEnumMap[instance.source_],
       'primary': ?instance.primary?.toJson(),
       'fallbacks': ?instance.fallbacks?.map((e) => e.toJson()).toList(),
       'cheap': ?instance.cheap?.toJson(),
     };
+
+const _$ModelPolicySource_EnumEnumMap = {
+  ModelPolicySource_Enum.workspace: 'workspace',
+  ModelPolicySource_Enum.casama: 'casama',
+  ModelPolicySource_Enum.own: 'own',
+};

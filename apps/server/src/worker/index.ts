@@ -87,7 +87,7 @@ import {
   workspaceSearchProvider,
 } from "@casama/agent";
 import { contentKeys, createDb, type Database } from "@casama/db";
-import { openRouterModelId } from "@casama/domain";
+import { casamaModelsAllowed, openRouterModelId } from "@casama/domain";
 import type { Logger } from "@casama/observability";
 import { LocalProvider, SupervisorProvider, unavailableProvider } from "@casama/sandbox";
 import { DBOS, DBOSClient } from "@dbos-inc/dbos-sdk";
@@ -306,11 +306,13 @@ export function buildGateway(
     | "cloudModelChatRouting"
   > & {
     chatgptFetch?: typeof fetch;
+    customFetch?: typeof fetch;
   },
 ): ModelGateway {
   if (opts.modelFixtures) return new ReplayGateway(loadFixtures(opts.modelFixtures));
   const real = new AiSdkGateway({
     chatgpt: { fetch: opts.chatgptFetch },
+    customFetch: opts.customFetch,
     platformRouting: opts.cloudModelRouting,
     platformChatRouting: opts.cloudModelChatRouting,
   });
@@ -321,6 +323,19 @@ export function buildGateway(
     stream: (req) =>
       inner.stream({ ...req, maxOutputTokens: Math.min(req.maxOutputTokens ?? cap, cap) }),
   };
+}
+
+/** Whether a workspace is allowed to use Casama's shared model keys right now (OWN-KEYS-PLAN §3.5). */
+async function canUseCasamaModels(
+  db: Database,
+  orgId: string,
+  billingEnabled: boolean,
+): Promise<boolean> {
+  if (!billingEnabled) return true;
+  const [ent] = await db.execute<{ plan_code: string | null }>(sql`
+    select plan_code from public.entitlements
+    where org_id = ${orgId}::uuid order by created_at desc limit 1`);
+  return casamaModelsAllowed(ent?.plan_code ?? "free", true);
 }
 
 /** Launches DBOS on the application Postgres, in its own `dbos` schema. */
@@ -339,7 +354,12 @@ export async function startWorker(opts: WorkerOptions) {
   );
   const chatgptFetch = customChatGpt ? fetch : fetchOut;
   const chatgpt = { ...opts.chatgpt, fetch: chatgptFetch };
-  const gateway = buildGateway({ ...opts, chatgptFetch });
+  const billingOn = opts.billing?.enabled === true;
+  const gateway = buildGateway({
+    ...opts,
+    chatgptFetch,
+    customFetch: billingOn ? fetchOut : undefined,
+  });
   const credentials = new CredentialResolver(db, {
     chatgpt,
     aiGateway: opts.aiGateway,
@@ -352,10 +372,12 @@ export async function startWorker(opts: WorkerOptions) {
     if (mode === "hash") return hashEmbedder();
     const cred = await credentials.embeddingCredential(orgId);
     if (cred && opts.billing) cred.model = (await getCloudModels(db)).embedding;
-    if (cred) return openAiEmbedder(cred);
+    if (cred) return openAiEmbedder(cred, billingOn ? fetchOut : undefined);
     // No OpenAI key of their own: the shared OpenRouter key, on OpenAI's text-embedding-3-small
     // (1536 dimensions, like every stored vector; $0.02 per million tokens) (D-194).
-    if (!opts.platformOpenRouterKey) return null;
+    if (!opts.platformOpenRouterKey || !(await canUseCasamaModels(db, orgId, billingOn))) {
+      return null;
+    }
     return openAiEmbedder({
       provider: "openrouter",
       model: OPENROUTER_EMBEDDING_MODEL,
@@ -532,7 +554,8 @@ export async function startWorker(opts: WorkerOptions) {
       // A workspace without its own OpenRouter key draws on the server's shared key, like chat,
       // dictation and memory search (D-186, D-194): on any server that has one, not only with
       // billing. Self-hosted, the usage row is at cost and nobody is charged.
-      const key = or?.key || opts.platformOpenRouterKey;
+      const allowPlatform = or?.key ? true : await canUseCasamaModels(db, orgId, billingOn);
+      const key = or?.key || (allowPlatform ? opts.platformOpenRouterKey : undefined);
       if (!key) return null;
       const openrouter = new OpenRouterMediaProvider(key, {
         fetch: fetchOut,
@@ -543,7 +566,7 @@ export async function startWorker(opts: WorkerOptions) {
       });
       // With billing on, media made on the server's own key is charged with markup and needs
       // credits (D-246).
-      const payer = opts.billing?.enabled === true && !or?.key ? "openrouter" : null;
+      const payer = billingOn && !or?.key ? "openrouter" : null;
       return new MediaRouter(openrouter, openrouter, { image: payer, video: payer });
     },
     // The check on image and video prompts (D-419): the bot's background model, whatever key or
@@ -573,11 +596,12 @@ export async function startWorker(opts: WorkerOptions) {
     speechFor: async (orgId) => {
       const assigned = opts.billing ? await getCloudModels(db) : null;
       const or = await providerKey(orgId, ["openrouter"]);
-      const key = or?.key || opts.platformOpenRouterKey;
+      const allowPlatform = or?.key ? true : await canUseCasamaModels(db, orgId, billingOn);
+      const key = or?.key || (allowPlatform ? opts.platformOpenRouterKey : undefined);
       if (!key) return null;
       return {
         key,
-        billable: opts.billing?.enabled === true && !or?.key,
+        billable: billingOn && !or?.key,
         model: assigned?.tts ? openRouterModelId(assigned.tts) : undefined,
         bases: opts.providerBases?.openrouter
           ? { openrouter: opts.providerBases.openrouter }

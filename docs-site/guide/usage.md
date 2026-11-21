@@ -145,6 +145,8 @@ failed with a clear message and a stable code (for live calls, see
 | `wall_time_exceeded` | The run ran out of time |
 | `stuck_looping` | The bot kept failing the same way and stopped |
 | `no_model_configured` | The bot has no model. Add a model key and pick a model in **Bot profile**. |
+| `own_provider_required` | Casama's models aren't available on your plan right now. Add your own model key in **Settings → Models** or upgrade your plan. |
+| `own_provider_limit` | Your own model key hit its rate limit or spending cap with its provider. Check your account with that provider, or turn on **If my provider fails, use Casama's models** on the key. |
 
 ## Casama Cloud plans and credits
 

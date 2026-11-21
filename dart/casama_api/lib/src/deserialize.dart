@@ -40,6 +40,8 @@ import 'package:casama_api/src/model/admin_margin.dart';
 import 'package:casama_api/src/model/admin_margin_by_day_inner.dart';
 import 'package:casama_api/src/model/admin_margin_by_kind_inner.dart';
 import 'package:casama_api/src/model/admin_margin_top_orgs_inner.dart';
+import 'package:casama_api/src/model/admin_model_access.dart';
+import 'package:casama_api/src/model/admin_model_access_casama_models.dart';
 import 'package:casama_api/src/model/admin_model_catalog.dart';
 import 'package:casama_api/src/model/admin_org.dart';
 import 'package:casama_api/src/model/admin_org_list.dart';
@@ -981,6 +983,7 @@ import 'package:casama_api/src/model/workspace_files_export_files_inner.dart';
 import 'package:casama_api/src/model/workspace_files_result.dart';
 import 'package:casama_api/src/model/workspace_member.dart';
 import 'package:casama_api/src/model/workspace_member_list.dart';
+import 'package:casama_api/src/model/workspace_model_default.dart';
 import 'package:casama_api/src/model/write_agent_import_files_request.dart';
 import 'package:casama_api/src/model/write_agent_import_files_response.dart';
 
@@ -1086,6 +1089,10 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return AdminMarginByKindInner.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AdminMarginTopOrgsInner':
           return AdminMarginTopOrgsInner.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'AdminModelAccess':
+          return AdminModelAccess.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'AdminModelAccessCasamaModels':
+          return AdminModelAccessCasamaModels.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AdminModelCatalog':
           return AdminModelCatalog.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AdminOrg':
@@ -3091,6 +3098,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return WorkspaceMember.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'WorkspaceMemberList':
           return WorkspaceMemberList.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'WorkspaceModelDefault':
+          return WorkspaceModelDefault.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'WriteAgentImportFilesRequest':
           return WriteAgentImportFilesRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'WriteAgentImportFilesResponse':

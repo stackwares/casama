@@ -41,6 +41,8 @@ class PublicConfig {
 
      this.chatgptSignIn,
 
+     this.ownProviders,
+
      this.serverVoice,
 
      this.watch,
@@ -174,6 +176,18 @@ class PublicConfig {
 
 
   final bool? chatgptSignIn;
+
+
+
+  @JsonKey(
+    
+    name: r'own_providers',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final bool? ownProviders;
 
 
 
@@ -346,6 +360,7 @@ class PublicConfig {
       other.defaultReasoningEffort == defaultReasoningEffort &&
       other.wallpapersEnabled == wallpapersEnabled &&
       other.chatgptSignIn == chatgptSignIn &&
+      other.ownProviders == ownProviders &&
       other.serverVoice == serverVoice &&
       other.watch == watch &&
       other.signupProofs == signupProofs &&
@@ -371,6 +386,7 @@ class PublicConfig {
         defaultReasoningEffort.hashCode +
         wallpapersEnabled.hashCode +
         chatgptSignIn.hashCode +
+        ownProviders.hashCode +
         serverVoice.hashCode +
         watch.hashCode +
         signupProofs.hashCode +

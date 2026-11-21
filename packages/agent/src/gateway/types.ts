@@ -24,9 +24,11 @@ export interface ResolvedModel {
   apiKey?: string;
   baseUrl?: string;
   credentialId?: string;
+  /** The workspace label of the credential (for naming which key failed on an own-provider error). */
+  credentialLabel?: string;
   /** Reasoning effort for reasoning models (OpenAI, OpenRouter and ChatGPT plans). */
   reasoningEffort?: "none" | "low" | "medium" | "high" | "xhigh" | "max";
-  /** chatgpt: the owner allows moving to the next model when the plan limit is reached. */
+  /** The person allowed moving to the next model (or Casama's models) when this provider fails. */
   fallbackOnLimit?: boolean;
   /** Extra request headers (an authenticated Cloudflare AI Gateway, D-145). */
   headers?: Record<string, string>;

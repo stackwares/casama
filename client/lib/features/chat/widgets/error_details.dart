@@ -7,6 +7,7 @@ import 'package:casama_sdk/casama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../../core/analytics.dart';
 import '../../../core/billing.dart';
 import '../../../core/providers.dart';
 import '../../../core/share.dart';
@@ -24,6 +25,7 @@ import '../../billing/paywall.dart';
 const _keyErrors = {
   'model_credential_not_found',
   'model_auth_failed',
+  'own_provider_limit',
   'chatgpt_needs_reconnect',
   'chatgpt_plan_usage_off',
   'chatgpt_plan_not_yours',
@@ -39,11 +41,15 @@ const limitErrors = {'out_of_credits', 'quota_exceeded', 'cloud_daily_cap', 'com
   final code = entry.errorCode;
   if (entry.kind != NoticeKind.failed || code == null) return null;
   final keys = (route: '/settings/keys', label: context.l10n.addModelKeyTitle);
+  if (code == 'own_provider_required') {
+    Analytics.log('own_provider_required_shown', {'surface': 'chat', 'outcome': 'shown'});
+    return keys;
+  }
   // Out of credits offers packs to a paying workspace; the other limits are about the plan (D-248).
   if (code == 'out_of_credits') return (route: '/settings/billing', label: context.l10n.seePlans);
   if (limitErrors.contains(code)) return (route: '/settings/plans', label: context.l10n.seePlans);
-  // Casama Cloud runs on its own key and model (D-188): there's nothing for a person to change.
-  if (ref.read(billingProvider).value?.enabled == true) return null;
+  // Casama Cloud runs on its own key and model unless own providers are enabled (D-188).
+  if (ref.read(billingProvider).value?.enabled == true && !ref.read(backendProvider).ownProviders) return null;
   if (_keyErrors.contains(code)) return keys;
   if (code != 'no_model_configured') return null;
   final hasKeys = ref.read(credentialsProvider).value?.isNotEmpty ?? false;

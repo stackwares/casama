@@ -4,7 +4,7 @@ import { checkVendor, listVendors, updateVendor } from "../../services/vendors/i
 import { replaceAllDataKeys } from "@casama/agent";
 import { routes } from "@casama/contracts";
 import type { JwtClaims } from "@casama/db";
-import { setCloudMarkup } from "@casama/domain";
+import { checkModelAccess, setCloudMarkup } from "@casama/domain";
 import type { OpenAPIHono } from "@hono/zod-openapi";
 import { sql } from "drizzle-orm";
 import { ee } from "../../ee.ts";
@@ -23,6 +23,7 @@ import {
   setDecisionSettings,
 } from "../../services/decisions.ts";
 import { mailReservedNames, setMailReservedNames } from "../../services/mail-reserved-names.ts";
+import { saveModelAccess, storedModelAccess } from "../../services/remote-settings.ts";
 import { CASAMA_VERSION } from "../../version.ts";
 import {
   ADMIN_PIN_MAX_FAILURES,
@@ -191,6 +192,35 @@ export function registerAdminRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       chat: saved.chat,
       live: saved.live,
       image: saved.image,
+    });
+    return c.json(saved, 200);
+  });
+
+  app.openapi(routes.adminModelAccess, async (c) => {
+    await requireOwner(requireClaims(c.get("claims")));
+    return c.json(await storedModelAccess(db), 200);
+  });
+
+  app.openapi(routes.setAdminModelAccess, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    await requireOwner(claims);
+    const body = c.req.valid("json");
+    const checked = checkModelAccess(body);
+    if (checked.errors.length) {
+      throw new ApiError(400, "validation_failed", checked.errors.join("; "));
+    }
+    const saved = await saveModelAccess(db, checked.access);
+    await db
+      .execute(sql`update public.routines set waiting_for_model = false where waiting_for_model`)
+      .catch(() => {});
+    await db.execute(sql`
+      insert into public.audit_log (org_id, actor_type, actor_id, action, target_type, metadata)
+      select m.org_id, 'user', ${claims.sub}::uuid, 'admin.model_access', 'instance_settings', ${JSON.stringify(saved)}::jsonb
+      from public.memberships m where m.user_id = ${claims.sub}::uuid order by m.created_at limit 1`);
+    deps.logger.info("model access changed", {
+      by: claims.sub,
+      own_providers: saved.own_providers,
+      casama_models: saved.casama_models,
     });
     return c.json(saved, 200);
   });

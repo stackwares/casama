@@ -13,8 +13,11 @@ adds a paid service or a vendor changes its price.
 - **Users pay for usage through credits**, metered in `usage_ledger` (`kind`, `quantity`, `cost_usd`).
   A plan includes some credits and computer hours; beyond that they buy credit packs.
 - **Bring-your-own keys and the ChatGPT plan cost us nothing** for models: the run is logged with
-  `cost_usd = 0` (or `source = chatgpt_plan`). Everything else (computers, phone, voice on our keys,
-  Composio, search on our keys) is ours to cover.
+  `cost_usd = 0` (or `source = chatgpt_plan`), and when `instance_settings.model_access.own_providers`
+  is on (D-465), a Casama Cloud workspace can run its bots on its own model key with zero credits.
+  The instance owner can also turn Casama's models off per plan (`casama_models`), so a plan's model
+  cost drops to $0 while workspaces on their own keys keep running. Everything else (computers,
+  phone, voice on our keys, Composio, search on our keys) is ours to cover.
 - **Stores and payments take a cut before we see anything** (see "Fees on revenue"). A price has to
   cover costs *after* that cut.
 - **Rule of thumb:** charge at least **cost × 1.3** for metered usage, and price plans so that

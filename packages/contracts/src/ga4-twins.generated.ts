@@ -241,6 +241,10 @@ export const ANALYTICS_CLIENT_EVENTS: Record<string, string[]> = {
   ],
   "card_reported": [
     "card"
+  ],
+  "own_provider_required_shown": [
+    "surface",
+    "outcome"
   ]
 };
 

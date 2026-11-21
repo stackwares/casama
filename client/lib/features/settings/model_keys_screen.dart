@@ -19,9 +19,25 @@ import '../../ui/page.dart';
 import '../../ui/glow_button.dart';
 import '../../ui/revealable.dart';
 import '../../core/remote_content.dart';
+import '../bots/model_picker.dart';
 
 /// Casama Cloud's shared OpenRouter key (D-186). The same id the server uses.
 const casamaCloudCredentialId = '00000000-0000-4000-8000-0000000000c1';
+
+/// What each chat or multi-feature key covers on the Models page.
+String? keyCoversLabel(BuildContext context, ProviderId p) {
+  final l10n = context.l10n;
+  return switch (p) {
+    ProviderId.openrouter => l10n.keyCoversOpenRouter,
+    ProviderId.google => l10n.keyCoversGoogle,
+    ProviderId.openai => l10n.keyCoversOpenAi,
+    ProviderId.anthropic ||
+    ProviderId.xai ||
+    ProviderId.chatgpt ||
+    ProviderId.openaiCompatible => l10n.keyCoversChat,
+    _ => null,
+  };
+}
 
 /// A provider's name as people know it, with what it is for when that isn't obvious.
 String providerLabel(ProviderId p) => switch (p) {
@@ -366,25 +382,29 @@ class ModelKeysScreen extends ConsumerWidget {
     final l10n = context.l10n;
     final keys = ref.watch(credentialsProvider);
     final org = ref.watch(currentOrgProvider);
-    // Casama Cloud runs every model, voice and image (D-188): only service keys are left to manage.
-    final cloud = ref.watch(billingProvider).value?.enabled == true;
+    final billing = ref.watch(billingProvider).value;
+    final cloud = billing?.enabled == true;
+    final ownProviders = ref.watch(backendProvider).ownProviders;
+    final serviceOnly = cloud && !ownProviders;
     final cloudKeys = ref.watch(backendProvider).keyProviders.cloud;
     return SubPage(
-      title: cloud ? l10n.serviceKeys : l10n.modelKeys,
+      title: serviceOnly ? l10n.serviceKeys : (cloud ? l10n.modelsTitle : l10n.modelKeys),
       children: [
-        FormNote(cloud ? l10n.serviceKeysIntro : l10n.modelKeysIntro),
+        FormNote(serviceOnly ? l10n.serviceKeysIntro : (cloud ? l10n.modelsIntro : l10n.modelKeysIntro)),
         // Keys are per workspace; say which, so a new workspace's empty list isn't a surprise.
         if (org != null) ...[
           const SizedBox(height: AppSpace.xs),
           FormNote(l10n.modelKeysFor(org.name), icon: LucideIcons.building2),
         ],
+        if (cloud && ownProviders && org != null)
+          _WhoRunsYourBotsSection(org: org, billing: billing),
         SectionHeader(title: l10n.yourKeys),
         AsyncView(
           value: keys,
           onRetry: () => ref.invalidate(credentialsProvider),
           loading: const _KeysSkeleton(),
           data: (items) {
-            final ordered = cloud
+            final ordered = serviceOnly
                 ? items.where((k) => cloudKeys.contains(k.provider)).toList()
                 : [
                     ...items.where((k) => k.id == casamaCloudCredentialId),
@@ -392,7 +412,7 @@ class ModelKeysScreen extends ConsumerWidget {
                   ];
             return ordered.isEmpty
                 ? AppCard(
-                    child: FormNote(cloud ? l10n.noServiceKeys : l10n.noKeys, icon: LucideIcons.keyRound),
+                    child: FormNote(serviceOnly ? l10n.noServiceKeys : l10n.noKeys, icon: LucideIcons.keyRound),
                   )
                 : GroupedCard(
                     children: [for (final k in ordered) _KeyRow(credential: k)],
@@ -403,11 +423,185 @@ class ModelKeysScreen extends ConsumerWidget {
         AppCard(
           padding: const EdgeInsets.all(AppSpace.lg),
           child: AddKeyForm(
-            providers: cloud ? cloudKeys : null,
+            providers: serviceOnly ? cloudKeys : null,
             initialProvider: ProviderId.values
                 .where((p) => p.value == provider)
                 .firstOrNull,
             onAdded: () => ref.invalidate(credentialsProvider),
+          ),
+        ),
+        if (ownProviders) ...[
+          const SizedBox(height: AppSpace.sm),
+          FormNote(l10n.ownProviderPrivacyNote, icon: LucideIcons.shield),
+        ],
+      ],
+    );
+  }
+}
+
+/// Workspace default for who runs bots on Casama Cloud when own providers are enabled.
+class _WhoRunsYourBotsSection extends ConsumerWidget {
+  const _WhoRunsYourBotsSection({required this.org, required this.billing});
+  final OrganizationWithRole org;
+  final BillingSummary? billing;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final keys = (ref.watch(credentialsProvider).value ?? const <Credential>[])
+        .where((k) => k.id != casamaCloudCredentialId && chatKeyProviders(ref).contains(k.provider))
+        .toList();
+    final casamaAvailable = billing?.casamaModels != BillingSummaryCasamaModelsEnum.off;
+    final admin = org.role != OrgRole.member;
+    final current = org.modelDefault;
+    final source = !casamaAvailable
+        ? WorkspaceModelDefaultSource_Enum.own
+        : (current?.source_ ?? WorkspaceModelDefaultSource_Enum.casama);
+    final chosenKey = keys.where((k) => k.id == current?.credentialId).firstOrNull ?? keys.firstOrNull;
+    final chosenModel = current?.model ??
+        (chosenKey == null ? '' : (ref.watch(backendProvider).defaultModelFor(chosenKey.provider.value) ?? ''));
+
+    Future<void> save(WorkspaceModelDefault next) async {
+      if (!admin) return;
+      await runGuarded(
+        context,
+        () => ref.read(backendProvider).updateOrg(org.id, modelDefault: next),
+      );
+      ref.invalidate(organizationsProvider);
+      ref.invalidate(botsProvider);
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SectionHeader(title: l10n.whoRunsYourBots),
+        AppCard(
+          padding: const EdgeInsets.all(AppSpace.lg),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            spacing: AppSpace.md,
+            children: [
+              RadioGroup<WorkspaceModelDefaultSource_Enum>(
+                groupValue: source,
+                onChanged: !admin
+                    ? (_) {}
+                    : (v) {
+                        if (v == null) return;
+                        if (v == WorkspaceModelDefaultSource_Enum.casama && casamaAvailable) {
+                          save(WorkspaceModelDefault(source_: WorkspaceModelDefaultSource_Enum.casama));
+                        } else if (v == WorkspaceModelDefaultSource_Enum.own && chosenKey != null) {
+                          final m = chosenModel.isNotEmpty
+                              ? chosenModel
+                              : (ref.read(backendProvider).defaultModelFor(chosenKey.provider.value) ?? '');
+                          if (m.isNotEmpty) {
+                            save(
+                              WorkspaceModelDefault(
+                                source_: WorkspaceModelDefaultSource_Enum.own,
+                                credentialId: chosenKey.id,
+                                model: m,
+                              ),
+                            );
+                          }
+                        }
+                      },
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  spacing: AppSpace.xs,
+                  children: [
+                    if (casamaAvailable)
+                      ListTile(
+                        key: const Key('workspaceDefaultCasama'),
+                        contentPadding: EdgeInsets.zero,
+                        title: Text(l10n.whoRunsCasama),
+                        subtitle: Text(l10n.whoRunsCasamaHelp),
+                        trailing: const Radio<WorkspaceModelDefaultSource_Enum>(
+                          value: WorkspaceModelDefaultSource_Enum.casama,
+                        ),
+                        onTap: !admin
+                            ? null
+                            : () => save(WorkspaceModelDefault(source_: WorkspaceModelDefaultSource_Enum.casama)),
+                      ),
+                    ListTile(
+                      key: const Key('workspaceDefaultOwn'),
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(l10n.whoRunsOwn),
+                      subtitle: Text(l10n.whoRunsOwnHelp),
+                      trailing: const Radio<WorkspaceModelDefaultSource_Enum>(
+                        value: WorkspaceModelDefaultSource_Enum.own,
+                      ),
+                      onTap: !admin || chosenKey == null
+                          ? null
+                          : () {
+                              final m = chosenModel.isNotEmpty
+                                  ? chosenModel
+                                  : (ref.read(backendProvider).defaultModelFor(chosenKey.provider.value) ?? '');
+                              if (m.isNotEmpty) {
+                                save(
+                                  WorkspaceModelDefault(
+                                    source_: WorkspaceModelDefaultSource_Enum.own,
+                                    credentialId: chosenKey.id,
+                                    model: m,
+                                  ),
+                                );
+                              }
+                            },
+                    ),
+                  ],
+                ),
+              ),
+              if (source == WorkspaceModelDefaultSource_Enum.own && keys.isNotEmpty) ...[
+                DropdownButtonFormField<String>(
+                  key: ValueKey('workspaceDefaultKey-${chosenKey?.id}'),
+                  isExpanded: true,
+                  initialValue: chosenKey?.id,
+                  decoration: InputDecoration(
+                    labelText: l10n.modelKey,
+                    prefixIcon: const Icon(LucideIcons.keyRound, size: 20),
+                  ),
+                  items: [
+                    for (final k in keys)
+                      DropdownMenuItem(
+                        value: k.id,
+                        child: Text(
+                          '${k.label} · ${providerLabel(k.provider)}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                  ],
+                  onChanged: !admin
+                      ? null
+                      : hapticOnChanged((id) {
+                          if (id == null) return;
+                          final k = keys.firstWhere((x) => x.id == id);
+                          final m = ref.read(backendProvider).defaultModelFor(k.provider.value) ?? chosenModel;
+                          if (m.isNotEmpty) {
+                            save(
+                              WorkspaceModelDefault(
+                                source_: WorkspaceModelDefaultSource_Enum.own,
+                                credentialId: k.id,
+                                model: m,
+                              ),
+                            );
+                          }
+                        }, haptic: HapticsHelper.selection),
+                ),
+                ModelPickerField(
+                  credentialId: chosenKey?.id,
+                  value: chosenModel,
+                  onChanged: (m) {
+                    if (!admin || chosenKey == null || m.isEmpty) return;
+                    save(
+                      WorkspaceModelDefault(
+                        source_: WorkspaceModelDefaultSource_Enum.own,
+                        credentialId: chosenKey.id,
+                        model: m,
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ],
           ),
         ),
       ],
@@ -537,7 +731,8 @@ class _KeyRowState extends ConsumerState<_KeyRow> {
             false => (l10n.keyFailing, colors.negative),
             null => (l10n.keyUntested, context.colorScheme.onSurfaceVariant),
           };
-    final subtitle = cloud
+    final covers = cloud ? null : keyCoversLabel(context, k.provider);
+    final baseSubtitle = cloud
         ? l10n.casamaCloudKeyHint
         : plan
         ? [
@@ -546,8 +741,13 @@ class _KeyRowState extends ConsumerState<_KeyRow> {
             mine ? l10n.planOnlyYou : l10n.planOtherMember,
           ].join(' · ')
         : '${providerLabel(k.provider)}${k.keyHint.isUsable ? ' · …${k.keyHint}' : ''}';
+    final subtitle = covers != null && backend.ownProviders
+        ? '$baseSubtitle · $covers'
+        : baseSubtitle;
     final canTest = cloud ? false : (plan ? mine : admin);
     final canRemove = cloud ? false : (mine || admin);
+    final onCloud = ref.watch(billingProvider).value?.enabled == true;
+    final canFallback = mine || (!plan && admin && !cloud && onCloud && backend.keyProviders.runsChat.contains(k.provider));
     return GroupedTile(
       icon: plan ? LucideIcons.messageCircle : LucideIcons.keyRound,
       iconColor: statusColor == colors.negative ? colors.negative : null,
@@ -601,14 +801,14 @@ class _KeyRowState extends ConsumerState<_KeyRow> {
                     value: 'reconnect',
                     child: Text(l10n.reconnect),
                   ),
-                if (mine)
+                if (canFallback)
                   CheckedPopupMenuItem(
                     key: const Key('fallbackOnLimit'),
                     value: 'fallback',
                     checked: k.fallbackOnLimit,
                     child: Tooltip(
-                      message: l10n.useNextModelAtLimitHelp,
-                      child: Text(l10n.useNextModelAtLimit),
+                      message: onCloud && !plan ? l10n.useCasamaFallbackHelp : l10n.useNextModelAtLimitHelp,
+                      child: Text(onCloud && !plan ? l10n.useCasamaFallback : l10n.useNextModelAtLimit),
                     ),
                   ),
                 if (plan)

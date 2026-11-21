@@ -13,6 +13,7 @@
 
 import type { Database } from "@casama/db";
 import {
+  casamaModelsAllowed,
   cloudOpenRouterCharge,
   cloudOpenRouterCost,
   type DecisionMode,
@@ -213,6 +214,17 @@ export async function decide<U extends DecisionUse>(
       });
     }
     return { mode, answers: none(input.questions), t, logId: null };
+  }
+
+  if (deps.billable) {
+    const [ent] = await db
+      .execute<{ plan_code: string | null }>(sql`
+        select plan_code from public.entitlements
+        where org_id = ${input.orgId}::uuid order by created_at desc limit 1`)
+      .catch(() => [] as Array<{ plan_code: string | null }>);
+    if (!casamaModelsAllowed(ent?.plan_code ?? "free", true)) {
+      return off;
+    }
   }
 
   const r = await ask(settings.model);

@@ -2863,6 +2863,9 @@
           "chatgpt_sign_in": {
             "type": "boolean"
           },
+          "own_providers": {
+            "type": "boolean"
+          },
           "server_voice": {
             "type": "array",
             "items": {
@@ -3939,6 +3942,47 @@
           }
         ]
       },
+      "WorkspaceModelDefault": {
+        "type": [
+          "object",
+          "null"
+        ],
+        "properties": {
+          "source": {
+            "type": "string",
+            "enum": [
+              "casama",
+              "own"
+            ]
+          },
+          "credential_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "model": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "cheap_model": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "minLength": 1,
+            "maxLength": 200
+          }
+        },
+        "required": [
+          "source"
+        ]
+      },
       "Organization": {
         "type": "object",
         "properties": {
@@ -3975,6 +4019,9 @@
               "string",
               "null"
             ]
+          },
+          "model_default": {
+            "$ref": "#/components/schemas/WorkspaceModelDefault"
           },
           "created_at": {
             "type": "string",
@@ -4699,6 +4746,9 @@
               "null"
             ],
             "pattern": "^#[0-9a-fA-F]{6}$"
+          },
+          "model_default": {
+            "$ref": "#/components/schemas/WorkspaceModelDefault"
           }
         }
       },
@@ -5085,7 +5135,7 @@
           },
           "fallback_on_limit": {
             "type": "boolean",
-            "description": "chatgpt: use the bot's next model when the plan limit is reached"
+            "description": "If this provider fails or hits its limit, use the bot's next model (or Casama's models on Cloud)"
           },
           "embedding_model": {
             "type": [
@@ -5341,6 +5391,15 @@
       "ModelPolicy": {
         "type": "object",
         "properties": {
+          "source": {
+            "type": "string",
+            "enum": [
+              "workspace",
+              "casama",
+              "own"
+            ],
+            "description": "Where this bot gets its model (docs/OWN-KEYS-PLAN.md §6): \"workspace\" (follow the workspace default), \"casama\" (Casama's models), or \"own\" (a specific key and model)"
+          },
           "primary": {
             "$ref": "#/components/schemas/ModelChoice"
           },
@@ -9281,6 +9340,10 @@
             ],
             "description": "Where its browser work happens (D-323 C13): \"computer\" (the bot's own), \"mine\" (your Chrome; waits until it's online) or \"mine_or_computer\""
           },
+          "waiting_for_model": {
+            "type": "boolean",
+            "description": "True when a scheduled run was skipped because Casama's models are off for this plan and no own provider is connected (docs/OWN-KEYS-PLAN.md §3.4)"
+          },
           "conversation_id": {
             "type": [
               "string",
@@ -12648,6 +12711,56 @@
           "top_orgs"
         ]
       },
+      "AdminModelAccess": {
+        "type": "object",
+        "properties": {
+          "own_providers": {
+            "type": "boolean",
+            "description": "Whether Cloud workspaces may use their own model keys and ChatGPT plans."
+          },
+          "casama_models": {
+            "type": "object",
+            "properties": {
+              "default": {
+                "type": "string",
+                "enum": [
+                  "on",
+                  "off"
+                ],
+                "description": "Default state for any plan not listed in plans."
+              },
+              "plans": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string",
+                  "enum": [
+                    "on",
+                    "off"
+                  ]
+                },
+                "description": "Per-plan override (for example { free: 'off' })."
+              }
+            },
+            "required": [
+              "default",
+              "plans"
+            ]
+          },
+          "note": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 500,
+            "description": "Optional note shown on the blocked card when Casama's models are off."
+          }
+        },
+        "required": [
+          "own_providers",
+          "casama_models",
+          "note"
+        ]
+      },
       "AdminOrgList": {
         "type": "object",
         "properties": {
@@ -13937,6 +14050,21 @@
               "keep_from"
             ],
             "description": "A plan given free by Casama, while it runs (docs/COMP-PLANS-PLAN.md). `source` then says default, for older apps"
+          },
+          "casama_models": {
+            "type": "string",
+            "enum": [
+              "on",
+              "off"
+            ],
+            "description": "Whether Casama's own model keys are available on this workspace's plan (docs/OWN-KEYS-PLAN.md §6)"
+          },
+          "casama_models_note": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Optional note from the instance owner when Casama's models are turned off (§3.3)"
           },
           "subscriptions": {
             "type": "array",
@@ -46873,6 +47001,116 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/AdminMargin"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/model-access": {
+      "get": {
+        "operationId": "adminModelAccess",
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Whether Cloud workspaces may use their own model providers and whether Casama's models are on per plan (owner only)",
+        "responses": {
+          "200": {
+            "description": "Whether Cloud workspaces may use their own model providers and whether Casama's models are on per plan (owner only)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminModelAccess"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "operationId": "setAdminModelAccess",
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Change own-provider access and the per-plan Casama models switch (owner only)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminModelAccess"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminModelAccess"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
                 }
               }
             }

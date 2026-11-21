@@ -4,6 +4,7 @@ import {
   type ActionRule,
   APPROVAL_TTL_MS,
   appByIdOrNull,
+  type BotModelPolicy,
   CLOUD_LOCKED_MODEL,
   type CloudModelAssignment,
   cardResult,
@@ -13,7 +14,6 @@ import {
   cloudModelDailyCap,
   cloudOpenRouterCharge,
   cloudOpenRouterCost,
-  cloudRunPolicy,
   computerHoursMessage,
   DATA_CARDS,
   defaultModelFor,
@@ -23,17 +23,18 @@ import {
   extractTarget,
   fillCard,
   isCredentialChange,
-  lockCloudPolicy,
   needsApproval,
   type PluginCard,
   parseMentions,
   RUN_DEFAULTS,
   resolveActionRule,
+  resolveModelPolicy,
   smallModelFor,
   surfaceMessages,
   toolCategory,
   UiCheckError,
   useSharedKeyForMissing,
+  type WorkspaceModelDefault,
 } from "@casama/domain";
 import { captureError, type Logger } from "@casama/observability";
 import { runCompletedMilestones, track } from "./analytics.ts";
@@ -47,6 +48,7 @@ const LIMIT_CODES = new Set([
   "cloud_daily_cap",
   "computer_hours_exceeded",
   "plan_limit",
+  "own_provider_required",
 ]);
 
 import { collectExec, type ObjectStore, SandboxError, type SandboxHandle } from "@casama/sandbox";
@@ -246,6 +248,7 @@ import {
   withHomePaths,
 } from "./team-computer.ts";
 import { ticketAfterRun, ticketStarted } from "./tickets.ts";
+import { needCredits } from "./tools/autonomy.ts";
 import { type Risk, type ToolDefinition, ToolError, type ToolRegistry } from "./tools/registry.ts";
 import { UI_SHOWN_RESULT, uiChoiceLines } from "./tools/ui.ts";
 import { browserChoiceFor, mineAllowed, preferredBrowser } from "./user-browser.ts";
@@ -350,6 +353,10 @@ interface RunInfo {
   persona: string;
   autonomy: "ask_always" | "ask_risky" | "autonomous";
   policy: ModelPolicy;
+  /** The bot's stored model_policy before check-in cheap-model substitution or policy resolution. */
+  rawBotPolicy?: ModelPolicy;
+  /** Set when resolveModelPolicy refuses the run (e.g. own_provider_required). */
+  policyError?: { code: string; message: string };
   timezone: string;
   now: string;
   summary: string;
@@ -576,24 +583,103 @@ async function adoptSharedKey(db: Database, info: RunInfo, credentials: RunDeps[
     where id = ${info.botId}::uuid`);
 }
 
+/**
+ * Resolves the effective model policy for a bot in its workspace (docs/OWN-KEYS-PLAN.md §3.1, §6).
+ */
+async function resolveBotPolicy(
+  db: Database,
+  input: {
+    orgId: string;
+    botPolicy: ModelPolicy;
+    actingUserId: string | null;
+    routineKind?: string | null;
+    billCloudModels: boolean;
+    hasPlatformKey: boolean;
+    assigned: CloudModelAssignment | null;
+    cloudLockedModel: string;
+  },
+) {
+  const [[orgRow], creds] = await Promise.all([
+    db.execute<{ plan_code: string | null; model_default: unknown }>(sql`
+      select (select plan_code from public.entitlements where org_id = ${input.orgId}::uuid order by created_at desc limit 1) as plan_code,
+             model_default
+      from public.organizations where id = ${input.orgId}::uuid`),
+    db.execute<{
+      id: string;
+      provider: string;
+      owner_user_id: string | null;
+      status: string;
+      fallback_on_limit: boolean;
+    }>(sql`
+      select id, provider, owner_user_id, status,
+             coalesce((settings ->> 'fallback_on_limit')::boolean, false) as fallback_on_limit
+      from public.model_credentials
+      where org_id = ${input.orgId}::uuid
+      order by created_at`),
+  ]);
+  const res = resolveModelPolicy({
+    billingEnabled: input.billCloudModels,
+    hasPlatformKey: input.hasPlatformKey,
+    planCode: orgRow?.plan_code ?? "free",
+    assigned: input.assigned,
+    cloudLockedModel: input.cloudLockedModel,
+    botPolicy: input.botPolicy as BotModelPolicy,
+    workspaceDefault: (orgRow?.model_default as WorkspaceModelDefault | null) ?? null,
+    credentials: creds,
+    actingUserId: input.actingUserId,
+  });
+  if (!res.ok) return res;
+  const policy = res.policy;
+  // Check-ins (brief and scan routines, D-114) run on the background/cheap model when available.
+  if ((input.routineKind === "brief" || input.routineKind === "scan") && policy.cheap) {
+    return {
+      ...res,
+      policy: { ...policy, primary: policy.cheap },
+    };
+  }
+  return res;
+}
+
 export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: string }> {
   const { step, db } = deps;
   const log = deps.logger;
 
   const info = await step("load", async () => {
     const loaded = await loadRun(db, runId);
-    if (loaded) await adoptSharedKey(db, loaded, deps.credentials);
+    if (loaded && !deps.billCloudModels) await adoptSharedKey(db, loaded, deps.credentials);
     return loaded;
   });
-  // Casama Cloud picks every model. A change in the admin console applies on the next run (D-188).
+  // Casama Cloud picks every model on Casama's key; own keys and workspace defaults resolve via
+  // resolveModelPolicy (docs/OWN-KEYS-PLAN.md §3.1, §6).
   const assigned = deps.billCloudModels && deps.cloudModels ? await deps.cloudModels() : null;
   const cloudLocked =
     assigned?.chat || deps.cloudLockedModel || defaultModelFor("openrouter") || CLOUD_LOCKED_MODEL;
-  // The shared key runs the server's model everywhere; self-hosted servers that set it are protected too.
-  if (info)
-    info.policy = assigned ? cloudRunPolicy(assigned) : lockCloudPolicy(info.policy, cloudLocked);
   if (!info) return { status: "missing" };
   if (TERMINAL.has(info.status)) return { status: info.status };
+  const resolvedPolicy = await resolveBotPolicy(db, {
+    orgId: info.orgId,
+    botPolicy: info.rawBotPolicy ?? info.policy,
+    actingUserId: info.actingUserId,
+    routineKind: info.routine?.kind,
+    billCloudModels: deps.billCloudModels === true,
+    hasPlatformKey: Boolean(deps.credentials.platformChoice()),
+    assigned,
+    cloudLockedModel: cloudLocked,
+  });
+  if (resolvedPolicy.ok) {
+    info.policy = resolvedPolicy.policy;
+    info.policyError = undefined;
+    // Clear waiting_for_model if this routine was waiting and now has a model (§3.4).
+    if (info.routine?.id) {
+      await db
+        .execute(sql`
+          update public.routines set waiting_for_model = false
+          where id = ${info.routine.id}::uuid and waiting_for_model`)
+        .catch(() => {});
+    }
+  } else {
+    info.policyError = { code: resolvedPolicy.code, message: resolvedPolicy.message };
+  }
   const limits = {
     ...RUN_DEFAULTS,
     ...deps.limits,
@@ -740,6 +826,27 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
             orgId: info.orgId,
             properties: { kind: reason, surface: "run" },
           });
+      }
+      if (admitted.code === "own_provider_required" && info.routine?.id) {
+        await step("routine-wait-model", async () => {
+          const routineId = info.routine?.id;
+          if (!routineId) return;
+          const [marked] = await db.execute<{ id: string }>(sql`
+            update public.routines set waiting_for_model = true
+            where id = ${routineId}::uuid and not waiting_for_model
+            returning id`);
+          const recipient = info.routine?.createdBy ?? info.botOwner;
+          if (marked && recipient && deps.notifications) {
+            await deps.notifications
+              .notify(recipient, info.orgId, "routine_result", {
+                title: `${info.botName}: Waiting for a model`,
+                body: admitted.message,
+                link: "/settings/keys",
+                bot_id: info.botId,
+              })
+              .catch(() => {});
+          }
+        });
       }
       await step("reject", () => finishFailed(db, info, admitted, bus));
       return { status: "failed" };
@@ -2316,6 +2423,10 @@ export function failureMessage(code: string, detail: string): string {
       "That model isn't included on Casama's key. Add your own key to choose a model.",
     cloud_daily_cap:
       "This workspace used today's limit on Casama's models. It resets at midnight UTC. Upgrade in Billing for a higher daily limit.",
+    own_provider_required:
+      "Casama's models aren't available on this plan right now. Add your own model key in Settings to keep chatting.",
+    own_provider_limit:
+      "Your model provider's quota or credit balance is exhausted. Check your billing with that provider, or switch models in Settings → Models.",
   };
   const redacted = detail
     .replace(/\b(sk|pk|rk|key|tok|ghp|gho|xox[abp])[-_][A-Za-z0-9_-]{8,}/gi, "[redacted]")
@@ -2324,6 +2435,7 @@ export function failureMessage(code: string, detail: string): string {
     .split("\n")[0]
     ?.slice(0, 300)
     .trim();
+  if (redacted && /^Your key\b/i.test(redacted)) return redacted;
   const head = reason[code] ?? "Something went wrong while the bot was working.";
   return redacted && !reason[code] ? `${head} ${redacted}` : head;
 }
@@ -2700,6 +2812,7 @@ async function loadRun(db: Database, runId: string): Promise<RunInfo | null> {
           : row.persona_md),
     autonomy: row.autonomy,
     // Check-ins (D-114) run on the bot's cheaper model when it has one.
+    rawBotPolicy: row.model_policy ?? {},
     policy:
       (row.routine_kind === "brief" || row.routine_kind === "scan") && row.model_policy?.cheap
         ? { ...row.model_policy, primary: row.model_policy.cheap }
@@ -2806,17 +2919,18 @@ async function spend(
     dailyLimit: info.dailyLimit,
     orgPeriod: Number(row?.org_period ?? 0),
     quotaLimit: caps.length ? Math.min(...caps) : null,
-    // On a credit-gated plan every run needs credits, whatever key its model is on: fallbacks,
-    // app calls, paid data, media and computers all bill Casama's accounts (D-246).
-    credits: gate ? Number(row?.credits ?? 0) : null,
-    unbilledUsd: gate ? Number(row?.unbilled ?? 0) : 0,
+    // A run whose primary model is on the workspace's own provider runs at cost 0 to Casama and
+    // is not gated by credits or cloud_daily_usd at run start (docs/OWN-KEYS-PLAN.md §3.1). Paid
+    // tools still check credits when called.
+    credits: onPlatform && gate ? Number(row?.credits ?? 0) : null,
+    unbilledUsd: onPlatform && gate ? Number(row?.unbilled ?? 0) : 0,
     reserveUsd: onPlatform && gate && primary ? cloudCallReserveUsd(primary.model) : undefined,
-    // The daily cap covers all spend on the server's keys (models, media, voice, apps), not only
-    // model tokens.
+    // The daily cap covers spend on the server's keys; own-provider runs aren't stopped by it.
     cloudToday: billCloudModels ? Number(row?.cloud_today ?? 0) : 0,
-    cloudDailyCap: billCloudModels
-      ? cloudModelDailyCap(row?.plan_code, limits.cloud_daily_usd)
-      : null,
+    cloudDailyCap:
+      onPlatform && billCloudModels
+        ? cloudModelDailyCap(row?.plan_code, limits.cloud_daily_usd)
+        : null,
   });
 }
 
@@ -2830,6 +2944,13 @@ async function admission(
   cloudLocked = CLOUD_LOCKED_MODEL,
   checkModel = true,
 ): Promise<StepOutcome> {
+  if (info.policyError) {
+    return {
+      ok: false,
+      code: info.policyError.code,
+      message: info.policyError.message,
+    };
+  }
   if (checkModel && !info.policy.primary)
     return {
       ok: false,
@@ -2861,10 +2982,25 @@ async function admission(
 export async function startVerdict(
   db: Database,
   runId: string,
-  opts: { billCloudModels: boolean },
+  opts: { billCloudModels: boolean; hasPlatformKey?: boolean },
 ): Promise<{ ok: true } | { ok: false; code: string; message: string }> {
   const info = await loadRun(db, runId);
   if (!info) return { ok: false, code: "run_not_found", message: "Run not found" };
+  const resolved = await resolveBotPolicy(db, {
+    orgId: info.orgId,
+    botPolicy: info.rawBotPolicy ?? info.policy,
+    actingUserId: info.actingUserId,
+    routineKind: info.routine?.kind,
+    billCloudModels: opts.billCloudModels,
+    hasPlatformKey: opts.hasPlatformKey ?? true,
+    assigned: null,
+    cloudLockedModel: CLOUD_LOCKED_MODEL,
+  });
+  if (resolved.ok) {
+    info.policy = resolved.policy;
+  } else {
+    info.policyError = { code: resolved.code, message: resolved.message };
+  }
   const verdict = await admission(db, info, opts.billCloudModels, CLOUD_LOCKED_MODEL, false);
   return verdict.ok ? { ok: true } : verdict;
 }
@@ -5192,6 +5328,11 @@ function integrationDefs(
           : undefined;
       const label = String(rec.config.label ?? spec.integration);
       try {
+        // Managed Composio calls on Casama Cloud draw on the server's account and require credits
+        // per call, even when the run's model is on the workspace's own key (OWN-KEYS-PLAN §3.1).
+        if (rec.kind === "composio" && rec.config.managed === true && billApps) {
+          await needCredits(db, ctx.orgId, cloudCharge(COMPOSIO_CALL_USD));
+        }
         let structured: unknown;
         const full = await adapter
           .callTool(spec.tool, args, {
@@ -5408,7 +5549,17 @@ export async function backgroundComplete(
   const assigned = deps.billCloudModels && deps.cloudModels ? await deps.cloudModels() : null;
   const cloudLocked =
     assigned?.chat || deps.cloudLockedModel || defaultModelFor("openrouter") || CLOUD_LOCKED_MODEL;
-  info.policy = assigned ? cloudRunPolicy(assigned) : lockCloudPolicy(info.policy, cloudLocked);
+  const resolvedPolicy = await resolveBotPolicy(db, {
+    orgId: info.orgId,
+    botPolicy: bot.model_policy ?? {},
+    actingUserId: input.userId,
+    billCloudModels: deps.billCloudModels === true,
+    hasPlatformKey: Boolean(deps.credentials.platformChoice()),
+    assigned,
+    cloudLockedModel: cloudLocked,
+  });
+  if (!resolvedPolicy.ok) return null;
+  info.policy = resolvedPolicy.policy;
   const verdict = await admission(db, info, deps.billCloudModels === true, cloudLocked);
   if (!verdict.ok) return null;
   const [ent] = await db.execute<{ plan: string | null }>(

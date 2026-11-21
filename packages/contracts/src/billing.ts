@@ -110,6 +110,14 @@ export const BillingSummary = z
       description:
         "A plan given free by Casama, while it runs (docs/COMP-PLANS-PLAN.md). `source` then says default, for older apps",
     }),
+    casama_models: z.enum(["on", "off"]).optional().openapi({
+      description:
+        "Whether Casama's own model keys are available on this workspace's plan (docs/OWN-KEYS-PLAN.md §6)",
+    }),
+    casama_models_note: z.string().nullable().optional().openapi({
+      description:
+        "Optional note from the instance owner when Casama's models are turned off (§3.3)",
+    }),
     subscriptions: z.array(Subscription),
     providers: z.array(Source),
   })

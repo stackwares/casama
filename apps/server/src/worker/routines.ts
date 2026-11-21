@@ -13,7 +13,7 @@ import {
 } from "@casama/agent";
 import type { Database } from "@casama/db";
 import { contentKeys } from "@casama/db";
-import { nextRunAt } from "@casama/domain";
+import { CHAT_PROVIDERS, casamaModelsAllowed, nextRunAt } from "@casama/domain";
 import { sql } from "drizzle-orm";
 
 interface RoutineRow {
@@ -198,7 +198,33 @@ export async function claimDueRoutines(
           const [trashed] = await tx.execute(sql`
             select 1 from public.pages p join public.creations c on c.page_id = p.id
             where p.refresh_routine_id = ${r.id}::uuid and c.deleted_at is not null limit 1`);
-          if (!capped && !briefed && !trashed) made = await createRoutineRun(tx, r, "routine");
+          // A routine waiting for a model (docs/OWN-KEYS-PLAN.md §3.4) skips silently until the
+          // workspace connects a model or Casama's models are turned back on for its plan.
+          let waitingForModel = Boolean(r.waiting_for_model);
+          if (waitingForModel) {
+            const [[ent], [ownChat]] = await Promise.all([
+              tx.execute<{ plan_code: string | null }>(sql`
+                select plan_code from public.entitlements
+                where org_id = ${r.org_id}::uuid order by created_at desc limit 1`),
+              tx.execute<{ ok: boolean }>(sql`
+                select exists (
+                  select 1 from public.model_credentials
+                  where org_id = ${r.org_id}::uuid
+                    and status = 'ok'
+                    and provider = any(${`{${CHAT_PROVIDERS.join(",")}}`}::text[])
+                ) as ok`),
+            ]);
+            const planCode = ent?.plan_code ?? "free";
+            const billingOn = planCode !== "selfhost";
+            if (casamaModelsAllowed(planCode, billingOn) || ownChat?.ok) {
+              waitingForModel = false;
+              await tx.execute(
+                sql`update public.routines set waiting_for_model = false where id = ${r.id}::uuid`,
+              );
+            }
+          }
+          if (!capped && !briefed && !trashed && !waitingForModel)
+            made = await createRoutineRun(tx, r, "routine");
           if (r.trigger?.type === "once") {
             // A one-time routine runs once and switches itself off.
             await tx.execute(

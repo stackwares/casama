@@ -21,10 +21,11 @@ String? casamaLockedModel(
   final billing = listen
       ? ref.watch(billingProvider).value
       : ref.read(billingProvider).value;
-  if (billing?.enabled != true && credentialId != casamaCloudCredentialId) return null;
   final backend = listen
       ? ref.watch(backendProvider)
       : ref.read(backendProvider);
+  final forcedCloud = billing?.enabled == true && !backend.ownProviders;
+  if (!forcedCloud && credentialId != casamaCloudCredentialId) return null;
   return backend.defaultModelFor('openrouter');
 }
 
@@ -33,12 +34,13 @@ String? casamaLockedModel(
 Set<ProviderId> chatKeyProviders(WidgetRef ref, {bool listen = true}) =>
     (listen ? ref.watch(backendProvider) : ref.read(backendProvider)).keyProviders.runsChat;
 
-/// True where Casama chooses every model (D-188): on Casama Cloud (billing on), and wherever
+/// True where Casama chooses every model (D-188): on Casama Cloud without own providers, and wherever
 /// Casama's own key is the only chat key, since the server fixes that key's model. The key and
 /// model fields are not shown there at all: there is nothing for a person to choose.
 bool casamaModelFixed(WidgetRef ref, {bool listen = true}) {
   final billing = listen ? ref.watch(billingProvider) : ref.read(billingProvider);
-  if (billing.value?.enabled == true) return true;
+  final backend = listen ? ref.watch(backendProvider) : ref.read(backendProvider);
+  if (billing.value?.enabled == true && !backend.ownProviders) return true;
   final keys = (listen ? ref.watch(credentialsProvider) : ref.read(credentialsProvider)).value;
   final runsChat = chatKeyProviders(ref, listen: listen);
   final chat = (keys ?? const <Credential>[]).where((k) => runsChat.contains(k.provider));

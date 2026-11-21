@@ -7063,3 +7063,36 @@ menu), but the app said only "Can't reach your Casama server".
   Compose's own "Image … Pulling/Pulled" lines (docs/SETUP-SCREEN-PLAN.md §3).
 - **Tests:** `client/test/local_docker_test.dart`, `client/test/chat_load_error_test.dart`,
   `client/test/guided_setup_test.dart`.
+
+## D-465 Own model providers on Casama Cloud, and a remote switch to turn Casama's models off per plan (2026-11-21)
+
+Implemented `docs/OWN-KEYS-PLAN.md` (Phases 0–4).
+
+- **Remote setting (`instance_settings.model_access`):** `own_providers` (boolean, default `false`
+  when absent so existing Cloud behavior stays unchanged until turned on), `casama_models` (`default:
+  "on" | "off"` plus per-plan `plans` overrides), and an optional `note` shown when Casama's models
+  are off. Reloaded within a minute by `startRemoteSettings` (`packages/domain/src/model-access.ts`,
+  `apps/server/src/services/remote-settings.ts`) and editable in **Admin → Services → Model access**
+  (`GET/PUT /v1/admin/model-access`).
+- **One resolver (`resolveModelPolicy`):** `packages/domain/src/resolve-model-policy.ts` resolves
+  every run's model policy from the bot's `model_policy.source` (`"workspace" | "casama" | "own"`),
+  the workspace's `organizations.model_default` (`"casama" | "own"`), `model_access`, and the
+  workspace's plan. When a bot's own provider fails and `fallback_on_limit` is on for that key, it
+  falls back to Casama's models only when Casama's models are on for the plan; otherwise it never
+  silently spends credits.
+- **Credits and daily caps apply only to Casama's keys:** `spend()` in `packages/agent/src/run.ts`
+  checks `credits` and `cloudDailyCap` only when `onPlatform` is true. A workspace with $0 credits
+  can chat and run routines on its own key; tools inside the run that use Casama's keys (images,
+  video, speech, managed Composio apps) still check `needCredits`.
+- **Every other caller of Casama's model keys is gated:** when `casamaModelsAllowed` is false for a
+  workspace's plan, embeddings fall back to keyword search (`null`), while images, video, read-aloud,
+  dictation, live voice, phone calls, watch voice and `/link/v1/models/chat/completions` require an
+  own key (`own_provider_required`). Due routines without a usable model set
+  `routines.waiting_for_model = true`, notify workspace owners once, and clear automatically via DB
+  triggers when a bot's `model_policy` or the workspace's `entitlements` change
+  (`supabase/migrations/20270312100001_own_model_providers.sql`).
+- **Custom URLs on Cloud:** `openai_compatible` keys on a hosted server use `safeFetch` so private,
+  loopback and link-local hosts are refused (`createCredential`, `testCredential`, `listModels`, and
+  `gateway/ai-sdk.ts`).
+- **Tests:** `packages/domain/test/model-access.test.ts`,
+  `packages/domain/test/resolve-model-policy.test.ts`, `apps/server/test/own-keys.test.ts`.

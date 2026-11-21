@@ -3153,6 +3153,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/admin/model-access": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Whether Cloud workspaces may use their own model providers and whether Casama's models are on per plan (owner only) */
+        get: operations["adminModelAccess"];
+        /** Change own-provider access and the per-plan Casama models switch (owner only) */
+        put: operations["setAdminModelAccess"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/admin/orgs": {
         parameters: {
             query?: never;
@@ -9176,6 +9194,7 @@ export interface components {
             default_reasoning_effort: "none" | "low" | "medium" | "high" | "xhigh" | "max";
             wallpapers_enabled?: boolean;
             chatgpt_sign_in?: boolean;
+            own_providers?: boolean;
             server_voice?: ("live" | "read_aloud" | "dictation")[];
             watch?: boolean;
             signup_proofs?: ("app_check" | "pow")[];
@@ -9447,6 +9466,14 @@ export interface components {
             /** @description Suspended by the instance owner: bots don't run and computers don't start */
             suspended?: boolean;
         };
+        WorkspaceModelDefault: {
+            /** @enum {string} */
+            source: "casama" | "own";
+            /** Format: uuid */
+            credential_id?: string | null;
+            model?: string | null;
+            cheap_model?: string | null;
+        } | null;
         Organization: {
             /** Format: uuid */
             id: string;
@@ -9457,6 +9484,7 @@ export interface components {
             icon?: string | null;
             color?: string | null;
             avatar_url?: string | null;
+            model_default?: components["schemas"]["WorkspaceModelDefault"];
             /** Format: date-time */
             created_at: string;
         };
@@ -9643,6 +9671,7 @@ export interface components {
             name?: string;
             icon?: string | null;
             color?: string | null;
+            model_default?: components["schemas"]["WorkspaceModelDefault"];
         };
         WorkspaceBadgeList: {
             items: components["schemas"]["WorkspaceBadge"][];
@@ -9756,7 +9785,7 @@ export interface components {
             status: components["schemas"]["CredentialStatus"];
             /** @description The signed-in ChatGPT account's email (chatgpt only) */
             account: string | null;
-            /** @description chatgpt: use the bot's next model when the plan limit is reached */
+            /** @description If this provider fails or hits its limit, use the bot's next model (or Casama's models on Cloud) */
             fallback_on_limit: boolean;
             /** @description openai_compatible: the server's embedding model, used for memory and knowledge search when there's no OpenAI key (D-271) */
             embedding_model: string | null;
@@ -9834,6 +9863,11 @@ export interface components {
             } | null;
         };
         ModelPolicy: {
+            /**
+             * @description Where this bot gets its model (docs/OWN-KEYS-PLAN.md §6): "workspace" (follow the workspace default), "casama" (Casama's models), or "own" (a specific key and model)
+             * @enum {string}
+             */
+            source?: "workspace" | "casama" | "own";
             primary?: components["schemas"]["ModelChoice"];
             fallbacks?: components["schemas"]["ModelChoice"][];
             cheap?: components["schemas"]["ModelChoice"] & unknown;
@@ -11007,6 +11041,8 @@ export interface components {
              * @enum {string}
              */
             browser?: "computer" | "mine" | "mine_or_computer";
+            /** @description True when a scheduled run was skipped because Casama's models are off for this plan and no own provider is connected (docs/OWN-KEYS-PLAN.md §3.4) */
+            waiting_for_model?: boolean;
             /** Format: uuid */
             conversation_id: string | null;
             /** Format: date-time */
@@ -11968,6 +12004,23 @@ export interface components {
                 upstream_usd: number;
             }[];
         };
+        AdminModelAccess: {
+            /** @description Whether Cloud workspaces may use their own model keys and ChatGPT plans. */
+            own_providers: boolean;
+            casama_models: {
+                /**
+                 * @description Default state for any plan not listed in plans.
+                 * @enum {string}
+                 */
+                default: "on" | "off";
+                /** @description Per-plan override (for example { free: 'off' }). */
+                plans: {
+                    [key: string]: "on" | "off";
+                };
+            };
+            /** @description Optional note shown on the blocked card when Casama's models are off. */
+            note: string | null;
+        };
         AdminOrgList: {
             items: components["schemas"]["AdminOrg"][];
         };
@@ -12315,6 +12368,13 @@ export interface components {
                  */
                 keep_from: string;
             } | null;
+            /**
+             * @description Whether Casama's own model keys are available on this workspace's plan (docs/OWN-KEYS-PLAN.md §6)
+             * @enum {string}
+             */
+            casama_models?: "on" | "off";
+            /** @description Optional note from the instance owner when Casama's models are turned off (§3.3) */
+            casama_models_note?: string | null;
             subscriptions: components["schemas"]["Subscription"][];
             providers: components["schemas"]["BillingSource"][];
         };
@@ -27814,6 +27874,95 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AdminMargin"];
+                };
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    adminModelAccess: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Whether Cloud workspaces may use their own model providers and whether Casama's models are on per plan (owner only) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminModelAccess"];
+                };
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    setAdminModelAccess: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdminModelAccess"];
+            };
+        };
+        responses: {
+            /** @description Updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminModelAccess"];
+                };
+            };
+            /** @description Validation failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
                 };
             };
             /** @description Not authenticated */

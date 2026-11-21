@@ -188,7 +188,7 @@ class Credential {
 
 
 
-      /// chatgpt: use the bot's next model when the plan limit is reached
+      /// If this provider fails or hits its limit, use the bot's next model (or Casama's models on Cloud)
   @JsonKey(
     
     name: r'fallback_on_limit',

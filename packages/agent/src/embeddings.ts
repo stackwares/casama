@@ -13,8 +13,8 @@ export interface Embedder {
   embed(text: string): Promise<number[]>;
 }
 
-export function openAiEmbedder(m: ResolvedModel): Embedder {
-  const provider = createOpenAI({ apiKey: m.apiKey, baseURL: m.baseUrl });
+export function openAiEmbedder(m: ResolvedModel, fetchImpl?: typeof fetch): Embedder {
+  const provider = createOpenAI({ apiKey: m.apiKey, baseURL: m.baseUrl, fetch: fetchImpl });
   return {
     model: m.model,
     async embed(text) {

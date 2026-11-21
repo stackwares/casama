@@ -7,6 +7,15 @@ export type OrgRole = z.infer<typeof OrgRole>;
 
 export const InviteRole = z.enum(["admin", "member"]).openapi("InviteRole");
 
+export const WorkspaceModelDefault = z
+  .object({
+    source: z.enum(["casama", "own"]),
+    credential_id: Uuid.nullable().optional(),
+    model: z.string().min(1).max(200).nullable().optional(),
+    cheap_model: z.string().min(1).max(200).nullable().optional(),
+  })
+  .openapi("WorkspaceModelDefault");
+
 export const Organization = z
   .object({
     id: Uuid,
@@ -20,6 +29,8 @@ export const Organization = z
     color: z.string().nullable().optional(),
     /** A picture of its own (`image:<uuid>:<rrggbb><rrggbb>`). */
     avatar_url: z.string().nullable().optional(),
+    /** Workspace-wide model choice (Settings → Models, docs/OWN-KEYS-PLAN.md §6). */
+    model_default: WorkspaceModelDefault.nullable().optional(),
     created_at: z.iso.datetime({ offset: true }),
   })
   .openapi("Organization");
@@ -33,6 +44,7 @@ export const UpdateOrganizationRequest = z
       .regex(/^#[0-9a-fA-F]{6}$/)
       .nullable()
       .optional(),
+    model_default: WorkspaceModelDefault.nullable().optional(),
   })
   .openapi("UpdateOrganizationRequest");
 
@@ -271,6 +283,11 @@ export const PublicConfig = z
     wallpapers_enabled: z.boolean().optional(),
     /** Whether people can connect a ChatGPT plan here (desktop app and CLI sign-in). */
     chatgpt_sign_in: z.boolean().optional(),
+    /**
+     * Whether Casama Cloud workspaces may connect and run their own model keys or ChatGPT plans
+     * (docs/OWN-KEYS-PLAN.md §6). Always true on self-hosted servers.
+     */
+    own_providers: z.boolean().optional(),
     /**
      * Voice features this server's own keys cover, as on Casama Cloud: live (Gemini Live) with
      * GOOGLE_AI_API_KEY; read_aloud and dictation with the shared OpenRouter key (D-261). A

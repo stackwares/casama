@@ -17,7 +17,7 @@ import {
 } from "@casama/agent";
 import { routes } from "@casama/contracts";
 import { contentKeys, type JwtClaims, schema, withUserSession } from "@casama/db";
-import { callLimits, cloudCharge, isValidTimezone } from "@casama/domain";
+import { callLimits, casamaModelsAllowed, cloudCharge, isValidTimezone } from "@casama/domain";
 import type { OpenAPIHono } from "@hono/zod-openapi";
 import { eq, sql } from "drizzle-orm";
 import { billsCalls as billsCallsOn } from "../../billing/calls.ts";
@@ -255,6 +255,18 @@ export function registerVoiceRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     }
     // Calls included on Casama Cloud are paid from credits: none left, no call.
     const billable = !!deps.billing && (await billsCalls(bot.orgId));
+    if (billable) {
+      const [ent] = await db.execute<{ plan_code: string | null }>(sql`
+        select plan_code from public.entitlements
+        where org_id = ${bot.orgId}::uuid order by created_at desc limit 1`);
+      if (!casamaModelsAllowed(ent?.plan_code ?? "free", true)) {
+        throw new ApiError(
+          409,
+          "voice_key_missing",
+          "Live calls need a Google AI (Gemini) key. Add one in Settings → Models.",
+        );
+      }
+    }
     // Context carries over (D-327): the conversation's last turns, so a call picks up where the
     // chat, or the last call, left off. Only for a conversation that already existed.
     const earlier = conversation_id ? await callContext(bot.orgId, conv.id, bot.name) : "";

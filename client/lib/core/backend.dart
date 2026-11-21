@@ -1475,6 +1475,8 @@ abstract class Backend {
     String? name,
     String? icon,
     String? color,
+    WorkspaceModelDefault? modelDefault,
+    bool clearModelDefault = false,
   });
   Future<List<InviteLink>> inviteLinks(String orgId);
   Future<CreatedInviteLink> createInviteLink(
@@ -1560,6 +1562,10 @@ abstract class Backend {
   /// The model-key providers from the server (D-374): the add-key form's groups and hints, the keys
   /// worth adding on Casama Cloud, and the keys that run chat. The app's own copy for older servers.
   KeyProviders get keyProviders;
+
+  /// Whether workspaces on this server may bring their own model keys and ChatGPT plans
+  /// (docs/OWN-KEYS-PLAN.md §6). Always true on self-hosted servers.
+  bool get ownProviders;
 
   // ChatGPT plan sign-in (D-091)
   /// Whether this server lets people connect a ChatGPT plan.
@@ -2786,6 +2792,11 @@ abstract class Backend {
   /// Server capacity for the Admin screen (D-252): memory, computers' share of the budget, 30-day peaks.
   Future<ServerCapacity> adminCapacity();
   Future<CloudModels> setAdminCloudModels(CloudModels models);
+
+  /// Model access switch (docs/OWN-KEYS-PLAN.md §3.3): own providers on Cloud, and Casama's models
+  /// on or off per plan.
+  Future<AdminModelAccess> adminModelAccess();
+  Future<AdminModelAccess> setAdminModelAccess(AdminModelAccess access);
 
   // Pricing editor (D-244): plans, credit packs and the usage markup, for the instance owner.
   Future<AdminPricing> adminPricing();

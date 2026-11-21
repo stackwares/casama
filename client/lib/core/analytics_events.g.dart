@@ -65,6 +65,7 @@ const analyticsClientEvents = <String>{
   'card_unpinned',
   'card_shared',
   'card_reported',
+  'own_provider_required_shown',
 };
 
 /// The closed list of `feature_used` features.

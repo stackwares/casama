@@ -43,6 +43,8 @@ abstract class _$RoutineCWProxy {
 
   Routine browser(RoutineBrowserEnum? browser);
 
+  Routine waitingForModel(bool? waitingForModel);
+
   Routine conversationId(String? conversationId);
 
   Routine createdAt(DateTime createdAt);
@@ -74,6 +76,7 @@ abstract class _$RoutineCWProxy {
     int? maxRuns,
     int? runCount,
     RoutineBrowserEnum? browser,
+    bool? waitingForModel,
     String? conversationId,
     DateTime createdAt,
   });
@@ -143,6 +146,10 @@ class _$RoutineCWProxyImpl implements _$RoutineCWProxy {
   Routine browser(RoutineBrowserEnum? browser) => call(browser: browser);
 
   @override
+  Routine waitingForModel(bool? waitingForModel) =>
+      call(waitingForModel: waitingForModel);
+
+  @override
   Routine conversationId(String? conversationId) =>
       call(conversationId: conversationId);
 
@@ -177,6 +184,7 @@ class _$RoutineCWProxyImpl implements _$RoutineCWProxy {
     Object? maxRuns = const $CopyWithPlaceholder(),
     Object? runCount = const $CopyWithPlaceholder(),
     Object? browser = const $CopyWithPlaceholder(),
+    Object? waitingForModel = const $CopyWithPlaceholder(),
     Object? conversationId = const $CopyWithPlaceholder(),
     Object? createdAt = const $CopyWithPlaceholder(),
   }) {
@@ -255,6 +263,10 @@ class _$RoutineCWProxyImpl implements _$RoutineCWProxy {
           ? _value.browser
           // ignore: cast_nullable_to_non_nullable
           : browser as RoutineBrowserEnum?,
+      waitingForModel: waitingForModel == const $CopyWithPlaceholder()
+          ? _value.waitingForModel
+          // ignore: cast_nullable_to_non_nullable
+          : waitingForModel as bool?,
       conversationId: conversationId == const $CopyWithPlaceholder()
           ? _value.conversationId
           // ignore: cast_nullable_to_non_nullable
@@ -349,6 +361,7 @@ Routine _$RoutineFromJson(Map<String, dynamic> json) => $checkedCreate(
         'browser',
         (v) => $enumDecodeNullable(_$RoutineBrowserEnumEnumMap, v),
       ),
+      waitingForModel: $checkedConvert('waiting_for_model', (v) => v as bool?),
       conversationId: $checkedConvert('conversation_id', (v) => v as String?),
       createdAt: $checkedConvert(
         'created_at',
@@ -366,6 +379,7 @@ Routine _$RoutineFromJson(Map<String, dynamic> json) => $checkedCreate(
     'endsAt': 'ends_at',
     'maxRuns': 'max_runs',
     'runCount': 'run_count',
+    'waitingForModel': 'waiting_for_model',
     'conversationId': 'conversation_id',
     'createdAt': 'created_at',
   },
@@ -390,6 +404,7 @@ Map<String, dynamic> _$RoutineToJson(Routine instance) => <String, dynamic>{
   'max_runs': ?instance.maxRuns,
   'run_count': ?instance.runCount,
   'browser': ?_$RoutineBrowserEnumEnumMap[instance.browser],
+  'waiting_for_model': ?instance.waitingForModel,
   'conversation_id': instance.conversationId,
   'created_at': instance.createdAt.toIso8601String(),
 };

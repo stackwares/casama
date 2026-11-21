@@ -39,6 +39,10 @@ abstract class _$BillingSummaryCWProxy {
 
   BillingSummary comp(BillingSummaryComp? comp);
 
+  BillingSummary casamaModels(BillingSummaryCasamaModelsEnum? casamaModels);
+
+  BillingSummary casamaModelsNote(String? casamaModelsNote);
+
   BillingSummary subscriptions(List<Subscription> subscriptions);
 
   BillingSummary providers(List<BillingSource> providers);
@@ -68,6 +72,8 @@ abstract class _$BillingSummaryCWProxy {
     BillingSummaryDaily? daily,
     BillingSummaryComputerHours? computerHours,
     BillingSummaryComp? comp,
+    BillingSummaryCasamaModelsEnum? casamaModels,
+    String? casamaModelsNote,
     List<Subscription> subscriptions,
     List<BillingSource> providers,
   });
@@ -134,6 +140,14 @@ class _$BillingSummaryCWProxyImpl implements _$BillingSummaryCWProxy {
   BillingSummary comp(BillingSummaryComp? comp) => call(comp: comp);
 
   @override
+  BillingSummary casamaModels(BillingSummaryCasamaModelsEnum? casamaModels) =>
+      call(casamaModels: casamaModels);
+
+  @override
+  BillingSummary casamaModelsNote(String? casamaModelsNote) =>
+      call(casamaModelsNote: casamaModelsNote);
+
+  @override
   BillingSummary subscriptions(List<Subscription> subscriptions) =>
       call(subscriptions: subscriptions);
 
@@ -167,6 +181,8 @@ class _$BillingSummaryCWProxyImpl implements _$BillingSummaryCWProxy {
     Object? daily = const $CopyWithPlaceholder(),
     Object? computerHours = const $CopyWithPlaceholder(),
     Object? comp = const $CopyWithPlaceholder(),
+    Object? casamaModels = const $CopyWithPlaceholder(),
+    Object? casamaModelsNote = const $CopyWithPlaceholder(),
     Object? subscriptions = const $CopyWithPlaceholder(),
     Object? providers = const $CopyWithPlaceholder(),
   }) {
@@ -238,6 +254,14 @@ class _$BillingSummaryCWProxyImpl implements _$BillingSummaryCWProxy {
           ? _value.comp
           // ignore: cast_nullable_to_non_nullable
           : comp as BillingSummaryComp?,
+      casamaModels: casamaModels == const $CopyWithPlaceholder()
+          ? _value.casamaModels
+          // ignore: cast_nullable_to_non_nullable
+          : casamaModels as BillingSummaryCasamaModelsEnum?,
+      casamaModelsNote: casamaModelsNote == const $CopyWithPlaceholder()
+          ? _value.casamaModelsNote
+          // ignore: cast_nullable_to_non_nullable
+          : casamaModelsNote as String?,
       subscriptions:
           subscriptions == const $CopyWithPlaceholder() || subscriptions == null
           ? _value.subscriptions
@@ -331,6 +355,14 @@ BillingSummary _$BillingSummaryFromJson(
             ? null
             : BillingSummaryComp.fromJson(v as Map<String, dynamic>),
       ),
+      casamaModels: $checkedConvert(
+        'casama_models',
+        (v) => $enumDecodeNullable(_$BillingSummaryCasamaModelsEnumEnumMap, v),
+      ),
+      casamaModelsNote: $checkedConvert(
+        'casama_models_note',
+        (v) => v as String?,
+      ),
       subscriptions: $checkedConvert(
         'subscriptions',
         (v) => (v as List<dynamic>)
@@ -356,6 +388,8 @@ BillingSummary _$BillingSummaryFromJson(
     'trialAvailable': 'trial_available',
     'creditsUsd': 'credits_usd',
     'computerHours': 'computer_hours',
+    'casamaModels': 'casama_models',
+    'casamaModelsNote': 'casama_models_note',
   },
 );
 
@@ -377,6 +411,9 @@ Map<String, dynamic> _$BillingSummaryToJson(BillingSummary instance) =>
       'daily': ?instance.daily?.toJson(),
       'computer_hours': ?instance.computerHours?.toJson(),
       'comp': ?instance.comp?.toJson(),
+      'casama_models':
+          ?_$BillingSummaryCasamaModelsEnumEnumMap[instance.casamaModels],
+      'casama_models_note': ?instance.casamaModelsNote,
       'subscriptions': instance.subscriptions.map((e) => e.toJson()).toList(),
       'providers': instance.providers
           .map((e) => _$BillingSourceEnumMap[e]!)
@@ -388,6 +425,11 @@ const _$BillingSummarySource_EnumEnumMap = {
   BillingSummarySource_Enum.dodo: 'dodo',
   BillingSummarySource_Enum.appStore: 'app_store',
   BillingSummarySource_Enum.googlePlay: 'google_play',
+};
+
+const _$BillingSummaryCasamaModelsEnumEnumMap = {
+  BillingSummaryCasamaModelsEnum.on_: 'on',
+  BillingSummaryCasamaModelsEnum.off: 'off',
 };
 
 const _$BillingSourceEnumMap = {

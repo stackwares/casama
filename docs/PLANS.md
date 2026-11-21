@@ -48,6 +48,7 @@ same commit. Shipping details (deploys, app builds) move fast, so check them bef
 
 | Plan | Decisions | What's left |
 |---|---|---|
+| [OWN-KEYS-PLAN](OWN-KEYS-PLAN.md) | D-465 | Built 2026-11-21: Phases 0–4 done (`instance_settings.model_access`, `resolveModelPolicy`, workspace default, per-bot source, Models screen, admin switch, `waiting_for_model` routines). Left: server deploy (migration `20270312100001`), app builds; Phase 5 (ChatGPT plans on Cloud) waits for OpenAI's hosted-use approval |
 | [COMP-PLANS-PLAN](COMP-PLANS-PLAN.md) | D-461 | Built 2026-11-21: grants, gift codes (casama.ai/g), admin bot tools, `scripts/comps.sh`. Left: server deploy (migrations `20270311100001`/`…02`), web deploy for /g, app builds; then `scripts/comps.sh on` with Oliver's yes |
 | [REVIEW-PROMPT-PLAN](REVIEW-PROMPT-PLAN.md) | D-460 | Built 2026-11-21: first-reply ask, looser Android/iOS rules, Rate Casama row in Help. Left: app builds; Phase 4 checks (Play internal track, iOS debug run) |
 | [WORKSPACE-PICTURES-PLAN](WORKSPACE-PICTURES-PLAN.md) | §6 defaults | Built 2026-11-21: migration `20270310100001_workspace_images.sql`, `/v1/orgs/{id}/image*` + `/v1/workspace-images/{id}`, worker AI drawing, `SpaceAvatar` + `workspace_picture.dart`. Left: server deploy + app builds |
@@ -93,7 +94,6 @@ same commit. Shipping details (deploys, app builds) move fast, so check them bef
 | [LINK-PLAN](LINK-PLAN.md) | D-296 | Live in prod |
 | [PLUGINS-AND-PACKS-PLAN](PLUGINS-AND-PACKS-PLAN.md) | D-343 | Live in prod |
 | [REACTIONS-PLAN](REACTIONS-PLAN.md) | D-331 | Live everywhere 2026-11-17 |
-| [OWN-KEYS-PLAN](OWN-KEYS-PLAN.md) | 2026-11-21 | §13 decisions and Oliver's go-ahead. Your own model key or ChatGPT plan on Casama Cloud, and an owner switch that turns Casama's models off per plan. ChatGPT plans on Cloud also wait for OpenAI's hosted-use approval |
 | [SHOWCASE-PLAN](SHOWCASE-PLAN.md) |  | Live on casama.ai 2026-11-19 |
 | [STORE-SCREENSHOTS-PLAN](STORE-SCREENSHOTS-PLAN.md) |  | Checked live 2026-11-20: App Store iPhone, iPad, Mac 10 each (+ folding iPhone 9, Watch 5, previews); Play phone, 7" and 10" tablets 8 each, feature graphic, Wear 5 |
 | [WEEKLY-PLAN-PLAN](WEEKLY-PLAN-PLAN.md) | D-432 | Live (confirmed by Oliver 2026-11-20) |

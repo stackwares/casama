@@ -27,7 +27,12 @@ import {
 } from "@casama/agent";
 import type { Database } from "@casama/db";
 import type { CloudModelAssignment } from "@casama/domain";
-import { cloudOpenRouterCharge, cloudOpenRouterCost, openRouterModelId } from "@casama/domain";
+import {
+  casamaModelsAllowed,
+  cloudOpenRouterCharge,
+  cloudOpenRouterCost,
+  openRouterModelId,
+} from "@casama/domain";
 import { sql } from "drizzle-orm";
 
 export interface VoiceRuntime {
@@ -137,6 +142,15 @@ async function hasCredits(db: Database, orgId: string) {
   return !r?.gate || Number(r.credits ?? 0) - Number(r.unbilled) > 0;
 }
 
+/** Whether the workspace may use Casama's shared model keys right now (OWN-KEYS-PLAN §3.5). */
+async function canUseCasamaModels(db: Database, orgId: string, billPlatform?: boolean) {
+  if (!billPlatform) return true;
+  const [ent] = await db.execute<{ plan_code: string | null }>(sql`
+    select plan_code from public.entitlements
+    where org_id = ${orgId}::uuid order by created_at desc limit 1`);
+  return casamaModelsAllowed(ent?.plan_code ?? "free", true);
+}
+
 async function ledger(
   db: Database,
   orgId: string,
@@ -162,8 +176,10 @@ export async function voiceTranscribe(
   const assigned = await rt.cloudModels?.();
   // Dictation is OpenRouter (D-261): the workspace's own key, else the server's shared one (D-194).
   const own = await rt.key(orgId, ["openrouter"]);
-  const shared = !own?.key && !!rt.platformOpenRouterKey;
-  const k = { provider: "openrouter" as const, key: own?.key ?? rt.platformOpenRouterKey ?? null };
+  const allowPlatform = own?.key ? true : await canUseCasamaModels(rt.db, orgId, rt.billPlatform);
+  const platformKey = allowPlatform ? rt.platformOpenRouterKey : undefined;
+  const shared = !own?.key && !!platformKey;
+  const k = { provider: "openrouter" as const, key: own?.key ?? platformKey ?? null };
   const model = openRouterModelId(assigned?.stt ?? OPENROUTER_STT_MODEL);
   // The app reads these codes: with no service it switches to the phone's own dictation, and a
   // failed clip is offered again instead of a bare "Something went wrong".
@@ -239,7 +255,8 @@ export async function voiceSpeak(rt: VoiceRuntime, orgId: string, messageId: str
   // Read-aloud is Gemini TTS on OpenRouter: the workspace's own key, else the server's shared
   // one (D-261).
   const own = await rt.key(orgId, ["openrouter"]);
-  const key = own?.key ?? rt.platformOpenRouterKey;
+  const allowPlatform = own?.key ? true : await canUseCasamaModels(rt.db, orgId, rt.billPlatform);
+  const key = own?.key ?? (allowPlatform ? rt.platformOpenRouterKey : undefined);
   if (!key)
     return {
       ok: false as const,
@@ -303,7 +320,10 @@ export async function voiceSession(
   // Every call, including a phone call, is Gemini Live: the workspace's Google key, otherwise the
   // server's own (D-260).
   const google = await rt.key(orgId, ["google"]);
-  const key = google?.key ?? rt.serverGeminiKey;
+  const allowPlatform = google?.key
+    ? true
+    : await canUseCasamaModels(rt.db, orgId, rt.billPlatform);
+  const key = google?.key ?? (allowPlatform ? rt.serverGeminiKey : undefined);
   if (!key)
     return {
       ok: false as const,

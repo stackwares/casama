@@ -3,6 +3,7 @@
 //
 
 // ignore_for_file: unused_element
+import 'package:casama_api/src/model/workspace_model_default.dart';
 import 'package:copy_with_extension/copy_with_extension.dart';
 import 'package:json_annotation/json_annotation.dart';
 
@@ -25,6 +26,8 @@ class UpdateOrganizationRequest {
      this.icon,
 
      this.color,
+
+     this.modelDefault,
   });
 
   @JsonKey(
@@ -63,19 +66,33 @@ class UpdateOrganizationRequest {
 
 
 
+  @JsonKey(
+    
+    name: r'model_default',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final WorkspaceModelDefault? modelDefault;
+
+
+
 
 
     @override
     bool operator ==(Object other) => identical(this, other) || other is UpdateOrganizationRequest &&
       other.name == name &&
       other.icon == icon &&
-      other.color == color;
+      other.color == color &&
+      other.modelDefault == modelDefault;
 
     @override
     int get hashCode =>
         name.hashCode +
         (icon == null ? 0 : icon.hashCode) +
-        (color == null ? 0 : color.hashCode);
+        (color == null ? 0 : color.hashCode) +
+        (modelDefault == null ? 0 : modelDefault.hashCode);
 
   factory UpdateOrganizationRequest.fromJson(Map<String, dynamic> json) => _$UpdateOrganizationRequestFromJson(json);
 

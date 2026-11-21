@@ -5,6 +5,7 @@ import 'package:casama_sdk/casama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/backend.dart';
+import '../../core/billing.dart';
 import '../../core/providers.dart';
 import '../../core/remote_config.dart';
 import '../../core/widgets.dart';
@@ -76,16 +77,40 @@ class _BotProfileScreenState extends ConsumerState<BotProfileScreen> {
     super.dispose();
   }
 
+  static const _workspaceDefaultKey = '__workspace__';
+
+  bool get _cloudOwnProviders =>
+      ref.read(billingProvider).value?.enabled == true &&
+      ref.read(backendProvider).ownProviders;
+
+  String _initialCredentialId(Bot bot) {
+    if (_cloudOwnProviders &&
+        (bot.modelPolicy.source_ == null ||
+            bot.modelPolicy.source_ == ModelPolicySource_Enum.workspace)) {
+      return _workspaceDefaultKey;
+    }
+    return bot.modelPolicy.primary?.credentialId ?? '';
+  }
+
   /// Casama's key on Casama Cloud keeps Casama's model. Anywhere else, the field's value.
   String _chosenModel({required bool listen}) =>
-      casamaLockedModel(ref, _credentialId, listen: listen) ?? _model ?? '';
+      _credentialId == _workspaceDefaultKey
+      ? (botModelPrimary(listen: listen) ?? '')
+      : (casamaLockedModel(ref, _credentialId, listen: listen) ?? _model ?? '');
+
+  String? botModelPrimary({required bool listen}) =>
+      (listen ? ref.watch(botProvider(widget.botId)) : ref.read(botProvider(widget.botId)))
+          ?.modelPolicy
+          .primary
+          ?.model;
 
   bool _dirty(Bot bot) =>
       _name!.text.trim() != bot.name ||
       _persona!.text != bot.personaMd ||
       _autonomy != bot.autonomy.value ||
-      _credentialId != bot.modelPolicy.primary?.credentialId ||
-      _chosenModel(listen: true) != bot.modelPolicy.primary?.model ||
+      _credentialId != _initialCredentialId(bot) ||
+      (_credentialId != _workspaceDefaultKey &&
+          _chosenModel(listen: true) != bot.modelPolicy.primary?.model) ||
       _avatar != bot.avatarUrl;
 
   Future<void> _save(Bot bot) async {
@@ -93,14 +118,27 @@ class _BotProfileScreenState extends ConsumerState<BotProfileScreen> {
     setState(() => _busy = true);
     final model = _chosenModel(listen: false);
     final modelChanged =
-        _credentialId != bot.modelPolicy.primary?.credentialId ||
-        model != bot.modelPolicy.primary?.model;
-    final policy = modelChanged && _credentialId != null && model.isNotEmpty
-        ? {
-            ...bot.modelPolicy.toJson(),
-            'primary': {'credential_id': _credentialId, 'model': model},
-          }
-        : null;
+        _credentialId != _initialCredentialId(bot) ||
+        (_credentialId != _workspaceDefaultKey &&
+            model != bot.modelPolicy.primary?.model);
+    final Map<String, dynamic>? policy;
+    if (!modelChanged) {
+      policy = null;
+    } else if (_credentialId == _workspaceDefaultKey) {
+      policy = {
+        ...bot.modelPolicy.toJson(),
+        'source': 'workspace',
+      };
+    } else if (_credentialId != null && _credentialId!.isNotEmpty && model.isNotEmpty) {
+      policy = {
+        ...bot.modelPolicy.toJson(),
+        if (_cloudOwnProviders)
+          'source': _credentialId == casamaCloudCredentialId ? 'casama' : 'own',
+        'primary': {'credential_id': _credentialId, 'model': model},
+      };
+    } else {
+      policy = null;
+    }
     final ok = await runGuarded(context, () async {
       await ref
           .read(backendProvider)
@@ -146,7 +184,13 @@ class _BotProfileScreenState extends ConsumerState<BotProfileScreen> {
     _name ??= TextEditingController(text: bot.name);
     _persona ??= TextEditingController(text: bot.personaMd);
     _autonomy ??= bot.autonomy.value;
-    _credentialId ??= bot.modelPolicy.primary?.credentialId;
+    final cloudOwn = ref.watch(billingProvider).value?.enabled == true &&
+        ref.watch(backendProvider).ownProviders;
+    _credentialId ??= cloudOwn &&
+            (bot.modelPolicy.source_ == null ||
+                bot.modelPolicy.source_ == ModelPolicySource_Enum.workspace)
+        ? _workspaceDefaultKey
+        : bot.modelPolicy.primary?.credentialId;
     _model ??= bot.modelPolicy.primary?.model;
     if (!_avatarLoaded) {
       _avatar = bot.avatarUrl;
@@ -158,7 +202,7 @@ class _BotProfileScreenState extends ConsumerState<BotProfileScreen> {
         .where((k) => runsChat.contains(k.provider))
         .toList();
     // A bot with no model yet starts on the usable key, so "Choose model" lands one tap from done.
-    if (_credentialId == null && keys.isNotEmpty) {
+    if ((_credentialId == null || _credentialId!.isEmpty) && keys.isNotEmpty) {
       _credentialId = preferredKeyId(ref, keys, listen: false);
       _model ??= ref.read(backendProvider).defaultModelFor(
         keys.firstWhere((k) => k.id == _credentialId).provider.value,
@@ -369,8 +413,9 @@ class _BotProfileScreenState extends ConsumerState<BotProfileScreen> {
             children: [
               DropdownButtonFormField<String>(
                 isExpanded: true,
-                key: ValueKey('botKey-${keys.length}'),
-                initialValue: keys.any((k) => k.id == _credentialId)
+                key: ValueKey('botKey-${keys.length}-$cloudOwn'),
+                initialValue: (_credentialId == _workspaceDefaultKey && cloudOwn) ||
+                        keys.any((k) => k.id == _credentialId)
                     ? _credentialId
                     : null,
                 decoration: InputDecoration(
@@ -378,6 +423,15 @@ class _BotProfileScreenState extends ConsumerState<BotProfileScreen> {
                   prefixIcon: const Icon(LucideIcons.keyRound, size: 20),
                 ),
                 items: [
+                  if (cloudOwn)
+                    DropdownMenuItem(
+                      value: _workspaceDefaultKey,
+                      child: Text(
+                        l10n.botModelSourceWorkspace,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
                   for (final k in keys)
                     DropdownMenuItem(
                       value: k.id,
@@ -404,11 +458,12 @@ class _BotProfileScreenState extends ConsumerState<BotProfileScreen> {
                   haptic: HapticsHelper.selection,
                 ),
               ),
-              ModelPickerField(
-                credentialId: _credentialId,
-                value: _chosenModel(listen: true),
-                onChanged: (m) => setState(() => _model = m),
-              ),
+              if (_credentialId != _workspaceDefaultKey)
+                ModelPickerField(
+                  credentialId: _credentialId,
+                  value: _chosenModel(listen: true),
+                  onChanged: (m) => setState(() => _model = m),
+                ),
             ],
           ),
         ),

@@ -1,7 +1,6 @@
 # Your own model provider on Casama Cloud, and a switch to turn Casama's models off: plan
 
-Status: **not started** (written 2026-11-21). Waiting on Oliver's answers in §13 and his go-ahead.
-No code yet.
+Status: **built** (written 2026-11-21; Phases 0–4 built 2026-11-21, D-465; Phase 5 waits for OpenAI's hosted-use approval).
 
 Oliver asked (2026-11-21) whether Casama's models can be switched off remotely so people use their
 own ChatGPT plan or API keys ("just in case we go bankrupt"), and then whether people on Casama
@@ -310,6 +309,32 @@ and web sign-in question (today desktop and CLI only) decided then.
 Phases 1 and 3 on the server, plus widening `key_providers.cloud`, are the smallest set that gives
 a working emergency switch for the apps already installed. Deploys and app builds each need
 Oliver's yes, in the usual order.
+
+### Phase 0 findings (2026-11-21)
+
+1. **Every caller of Casama's model keys (`CLOUD_MODEL_UPSTREAM_KEY` / `00000000-0000-4000-8000-0000000000c1` and `GOOGLE_AI_API_KEY`):**
+   - **Agent runs (chat, routines, check-ins, subagents, delegation, projects, watchers):** `packages/agent/src/run.ts` (`runAgent` and `backgroundComplete`, which also powers starters `refreshStartersWorkflow`, call summaries `summarizeCallWorkflow`, and media safety `mediaSafetyFor`).
+   - **Start verdict for check-in suggestions:** `apps/server/src/api/routes/checkins.ts` (`startVerdict` in `packages/agent/src/run.ts`).
+   - **Bot creation, update, template import, and welcome:** `apps/server/src/api/routes/bots.ts` (`createBot`, `updateBot`, `handleWelcomeAction`, `startWelcome` -> `ensureBotModel`), `apps/server/src/api/routes/bot-template.ts` (`importBot`), and `packages/agent/src/tools/bots.ts` (`registerBotTools`).
+   - **Credentials listing & model picker for platform key:** `apps/server/src/api/routes/bots.ts` (`listCredentials` and `listCredentialModels`).
+   - **Embeddings (memory & knowledge search):** `apps/server/src/worker/index.ts` (`embedderFor`: workspace's `openai` or `openai_compatible` key first, else `platformOpenRouterKey`).
+   - **Media generation (images, video, bot pictures, workspace pictures):** `apps/server/src/worker/index.ts` (`mediaFor`: workspace's `openrouter` key first, else `platformOpenRouterKey`; called by `media.image.generate`, `media.video.generate`, `drawBotPictures`, and `drawWorkspacePictures`).
+   - **Spoken audio (`media.audio.generate`):** `apps/server/src/worker/index.ts` (`speechFor`: workspace's `openrouter` key first, else `platformOpenRouterKey`).
+   - **Voice dictation & read-aloud (`/v1/voice/transcribe`, `/v1/messages/{id}/speech`):** `apps/server/src/worker/voice.ts` (`voiceTranscribe`, `voiceSpeak`: workspace's `openrouter` key first, else `platformOpenRouterKey`).
+   - **Live calls & outbound phone calls (`/v1/voice/session`, `/telephony/stream/:id`):** `apps/server/src/worker/voice.ts` (`voiceSession`), `apps/server/src/api/routes/voice.ts`, `apps/server/src/api/routes/telephony.ts`, and `apps/server/src/billing/calls.ts` (`billsCalls`: workspace's `google` key first, else `GOOGLE_AI_API_KEY`).
+   - **Watch route & `/v1/config` (`server_voice`):** `apps/server/src/api/routes/watch.ts` (`voiceFor`) and `apps/server/src/api/routes/system.ts` (`serverVoice`).
+   - **Casama Link model relay (`/link/v1/models/chat/completions`, `/link/v1/whoami`):** `apps/server/src/billing/link.ts`.
+   - **Decision models (`packages/agent/src/decide.ts`):** When `billable` and acting (`mode === "on"`), gated on `casamaModelsAllowed`.
+2. **Per-tool credit checks:**
+   - Confirmed `needCredits` / `hasCredits` already gate images, video, bot pictures, workspace pictures (`autonomy.ts`), spoken audio (`autonomy.ts`), paid data (`data.ts`), dictation & read-aloud (`worker/voice.ts`), and live/phone calls (`routes/voice.ts`, `routes/telephony.ts`).
+   - `web.search` on the server's chain is not billed to credits (`billable: false`, D-400).
+   - Managed Composio app calls (`kind: "app_calls"` in `packages/agent/src/run.ts`) recorded billable ledger rows without checking `needCredits` first; Phase 1 adds `await needCredits(db, ctx.orgId, cloudCharge(COMPOSIO_CALL_USD))` before `adapter.callTool` when `billApps` is true.
+3. **`openai_compatible` and safe fetch:**
+   - `AiSdkGateway`, `listCredentialModels`, `testCredential`, and `openAiEmbedder` now use `safeFetch` whenever `billing` is enabled (and `createCredential` checks `assertSafeUrl(body.base_url)` on Cloud), so `openai_compatible` can be safely offered on Cloud without private-address SSRF.
+4. **Memory search without an embedding key:**
+   - Confirmed in `packages/agent/src/memory.ts`: when `embedderFor` returns `null`, `public.search_memories(botId, query, null, limit)` runs Postgres full-text keyword search (`tsv @@ websearch_to_tsquery`) plus pinned memories, and `MemoryService.write` stores `embedding = null` with normalized text deduplication.
+5. **What a shipped app shows:**
+   - Confirmed in `client/lib/features/settings/model_keys_screen.dart` and `error_details.dart`: widening `key_providers.cloud` in `GET /v1/config` makes shipped apps show all chat providers in the add-key form, and `own_provider_required` renders its plain-text fallback message in the chat notice bubble; once the user adds a chat key, the server's automatic pick runs their bots on that key's default model.
 
 ## 12. Not in this plan
 

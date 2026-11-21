@@ -13,6 +13,7 @@ import {
   AdminMailAddress,
   AdminMailReservedNames,
   AdminMargin,
+  AdminModelAccess,
   AdminOrg,
   AdminOverview,
   AdminPasskeyCheckRequest,
@@ -125,6 +126,29 @@ export const setAdminCloudModels = createRoute({
   summary: "Change the models Casama Cloud runs (owner only)",
   request: { body: jsonBody(CloudModels) },
   responses: { 200: jsonResponse("Updated", CloudModels), 401: e401, 403: e403 },
+});
+
+export const adminModelAccess = get(
+  "adminModelAccess",
+  "/v1/admin/model-access",
+  "Whether Cloud workspaces may use their own model providers and whether Casama's models are on per plan (owner only)",
+  AdminModelAccess,
+);
+
+export const setAdminModelAccess = createRoute({
+  operationId: "setAdminModelAccess",
+  method: "put",
+  path: "/v1/admin/model-access",
+  tags: ["admin"],
+  security,
+  summary: "Change own-provider access and the per-plan Casama models switch (owner only)",
+  request: { body: jsonBody(AdminModelAccess) },
+  responses: {
+    200: jsonResponse("Updated", AdminModelAccess),
+    400: problemResponses[400],
+    401: e401,
+    403: e403,
+  },
 });
 
 export const adminDecisions = get(

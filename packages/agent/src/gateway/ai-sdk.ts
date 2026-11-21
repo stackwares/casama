@@ -55,6 +55,7 @@ export function languageModel(m: ResolvedModel, fetchImpl?: typeof fetch): Langu
         apiKey: m.apiKey,
         baseURL: m.baseUrl,
         includeUsage: true,
+        fetch: fetchImpl,
       })(m.model);
     case "chatgpt":
       // ChatGPT plans use their own adapter (gateway/chatgpt.ts), never the AI SDK.
@@ -180,40 +181,64 @@ function toModelMessage(m: ChatMessage): ModelMessage {
   };
 }
 
-function classify(err: unknown): ModelCallError {
+function classify(err: unknown, model?: ResolvedModel): ModelCallError {
   if (err instanceof ModelCallError) return err;
+  const ownKey = model && !model.platformKey && model.provider !== "chatgpt";
+  const keyPrefix =
+    ownKey && model.credentialLabel
+      ? `Your key "${model.credentialLabel}" (${model.provider})`
+      : ownKey
+        ? `Your ${model.provider} key`
+        : null;
   if (APICallError.isInstance(err)) {
     const status = err.statusCode;
     const body =
       typeof err.responseBody === "string"
         ? err.responseBody
         : JSON.stringify(err.responseBody ?? "");
-    if (status === 403 && body.includes("openrouter_key_limit"))
+    if (status === 403 && body.includes("openrouter_key_limit") && !ownKey)
       return new ModelCallError(
         "Casama's model key hit its daily limit. Try again tomorrow, or add your own key.",
         { retryable: false, status, code: "openrouter_key_limit", cause: err },
       );
-    const retryable =
+    const defaultRetryable =
       status === undefined || status === 408 || status === 409 || status === 429 || status >= 500;
+    // When "If my provider fails, use Casama's models" (fallbackOnLimit) is on, auth and balance
+    // failures (401, 402, 403) on an own key also fall back to the next model in the chain (§3.2).
+    const retryable =
+      defaultRetryable ||
+      Boolean(
+        ownKey && model?.fallbackOnLimit && (status === 401 || status === 402 || status === 403),
+      );
     // The provider's own reason, so a failed run's Details say why instead of just "400".
     let reason = "";
     try {
       const m = (JSON.parse(body) as { error?: { message?: unknown } })?.error?.message;
       if (typeof m === "string") reason = m.replace(/\s+/g, " ").trim().slice(0, 200);
     } catch {}
-    return new ModelCallError(
-      `provider returned ${status ?? "no status"}${reason ? `: ${reason}` : ""}`,
-      {
-        retryable,
-        status,
-        cause: err,
-      },
-    );
+    const code =
+      ownKey && (status === 401 || status === 403)
+        ? "model_auth_failed"
+        : ownKey && (status === 402 || status === 429)
+          ? "own_provider_limit"
+          : undefined;
+    const message = keyPrefix
+      ? `${keyPrefix} returned ${status ?? "no status"}${reason ? `: ${reason}` : ""}`
+      : `provider returned ${status ?? "no status"}${reason ? `: ${reason}` : ""}`;
+    return new ModelCallError(message, {
+      retryable,
+      status,
+      code,
+      credentialId: model?.credentialId,
+      cause: err,
+    });
   }
   const name = (err as Error)?.name ?? "";
   if (name === "AbortError") return new ModelCallError("aborted", { retryable: false, cause: err });
-  return new ModelCallError((err as Error)?.message ?? "model call failed", {
+  const rawMsg = (err as Error)?.message ?? "model call failed";
+  return new ModelCallError(keyPrefix ? `${keyPrefix} failed: ${rawMsg}` : rawMsg, {
     retryable: true,
+    credentialId: model?.credentialId,
     cause: err,
   });
 }
@@ -223,23 +248,27 @@ export class AiSdkGateway implements ModelGateway {
   private readonly chatgpt: ChatGptOptions;
   private readonly platformRouting: OpenRouterRouting | undefined;
   private readonly platformChatRouting: OpenRouterRouting | undefined;
+  private readonly customFetch: typeof fetch | undefined;
   /**
    * `chatgpt` options are for ChatGPT plans (the fetch is overridable for tests).
    * `platformRouting` picks the providers for calls on the server's shared OpenRouter key (D-354);
    * a workspace's own OpenRouter key keeps the routing set on its OpenRouter account.
    * `platformChatRouting`, when set, replaces it for calls a person is waiting on, so live chat can
    * run on a faster provider while background work stays on the cheapest (D-355).
+   * `customFetch` guards `openai_compatible` base URLs on Casama Cloud (§8).
    */
   constructor(
     opts: {
       chatgpt?: ChatGptOptions;
       platformRouting?: OpenRouterRouting;
       platformChatRouting?: OpenRouterRouting;
+      customFetch?: typeof fetch;
     } = {},
   ) {
     this.chatgpt = opts.chatgpt ?? {};
     this.platformRouting = opts.platformRouting;
     this.platformChatRouting = opts.platformChatRouting;
+    this.customFetch = opts.customFetch;
   }
 
   async *stream(req: ModelRequest): AsyncIterable<GatewayEvent> {
@@ -268,7 +297,9 @@ export class AiSdkGateway implements ModelGateway {
               costPromise = cost;
             },
           })
-        : undefined;
+        : req.model.provider === "openai_compatible"
+          ? this.customFetch
+          : undefined;
     let result: ReturnType<typeof streamText>;
     try {
       result = streamText({
@@ -286,7 +317,7 @@ export class AiSdkGateway implements ModelGateway {
         maxRetries: 0,
       });
     } catch (err) {
-      throw classify(err);
+      throw classify(err, req.model);
     }
     try {
       for await (const part of result.fullStream) {
@@ -329,7 +360,7 @@ export class AiSdkGateway implements ModelGateway {
         }
       }
     } catch (err) {
-      throw classify(err);
+      throw classify(err, req.model);
     }
   }
 }

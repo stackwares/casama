@@ -60,6 +60,8 @@ class CreatedRoutine {
 
      this.browser,
 
+     this.waitingForModel,
+
     required  this.conversationId,
 
     required  this.createdAt,
@@ -289,6 +291,19 @@ class CreatedRoutine {
 
 
 
+      /// True when a scheduled run was skipped because Casama's models are off for this plan and no own provider is connected (docs/OWN-KEYS-PLAN.md §3.4)
+  @JsonKey(
+    
+    name: r'waiting_for_model',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final bool? waitingForModel;
+
+
+
   @JsonKey(
     
     name: r'conversation_id',
@@ -360,6 +375,7 @@ class CreatedRoutine {
       other.maxRuns == maxRuns &&
       other.runCount == runCount &&
       other.browser == browser &&
+      other.waitingForModel == waitingForModel &&
       other.conversationId == conversationId &&
       other.createdAt == createdAt &&
       other.webhookUrl == webhookUrl &&
@@ -385,6 +401,7 @@ class CreatedRoutine {
         (maxRuns == null ? 0 : maxRuns.hashCode) +
         runCount.hashCode +
         browser.hashCode +
+        waitingForModel.hashCode +
         (conversationId == null ? 0 : conversationId.hashCode) +
         createdAt.hashCode +
         webhookUrl.hashCode +

@@ -54,11 +54,13 @@ Leave out `--model` to use the server's default model for the key's provider. Se
 On a self-hosted server, bots think with your own model provider keys. Keys belong to one
 workspace, are stored encrypted, and are never shown again after you save them.
 
-On Casama Cloud this screen is called **Service keys** instead. It takes only your own keys for
-maps and paid data (Google Maps, Mapbox and Treg); models, voice, images and web search run on
-Casama's keys and are paid from your [credits](/guide/usage#credits).
+On Casama Cloud this screen is called **Models** (or **Service keys** when own model providers are
+off). Under **Who runs your bots**, workspace admins can keep **Casama** (included with your plan,
+using workspace [credits](/guide/usage#credits)) or switch the workspace default to **Your own
+provider** so bots run on your own API key at no credit cost. Individual bots can follow the
+workspace default, stay on Casama, or use a specific key.
 
-1. Go to **Settings** → **Model keys**.
+1. Go to **Settings** → **Model keys** (**Models** on Casama Cloud).
 2. Under **Add Key**, pick a **Provider**, give the key a **Label** and paste the **API key**.
    For your own server, also enter its **Base URL**, for example `http://localhost:11434/v1`.
 3. Select **Add Key**.

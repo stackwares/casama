@@ -252,6 +252,7 @@ const routineOut = (r: RoutineRow, allEvents = true) => ({
   max_runs: r.maxRuns,
   run_count: r.runCount,
   browser: (r.browser ?? "computer") as "computer",
+  waiting_for_model: Boolean(r.waitingForModel),
   conversation_id: r.conversationId,
   created_at: iso(r.createdAt),
 });
