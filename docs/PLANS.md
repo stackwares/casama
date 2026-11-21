@@ -33,7 +33,7 @@ same commit. Shipping details (deploys, app builds) move fast, so check them bef
 
 | Plan | Decisions | What's left |
 |---|---|---|
-| [SCREEN-CARD-PLAN](SCREEN-CARD-PLAN.md) | — | Approved 2026-11-21 with every default in §11. Phase 0 done (measurements, sample card driven in the web app). Phases 1 and 2 built 2026-11-21 (lighter screenshot route, show/hide rules, setting, analytics; states, menu, first-time line, group chats, call tile), web build 73 live; server fix 44b88cda (sharp at runtime) pushed, awaiting the next server deploy. Phase 3 undecided |
+| [SCREEN-CARD-PLAN](SCREEN-CARD-PLAN.md) | — | Approved 2026-11-21 with every default in §11. Phase 0 done (measurements, sample card driven in the web app). Phases 1 and 2 built 2026-11-21 (lighter screenshot route, show/hide rules, setting, analytics; states, menu, first-time line, group chats, call tile), live on server and web (73, then 74); checked on an Android emulator 2026-11-22, screen-reader fix e77b350a waits for the next builds. Phase 3 undecided |
 | [SETUP-SCREEN-PLAN](SETUP-SCREEN-PLAN.md) | D-309 | Built 2026-11-21: two-pane setup screen with the painted scene and a mascot per step; real progress on the parts download |
 | [BOT-EMAIL-NEXT-PLAN](BOT-EMAIL-NEXT-PLAN.md) | D-451 | Live 2026-11-20: server (`9cfc36a2`) and web app build 61; Cloudflare asked for 10,000 a day. Left: store builds; raise `MAIL_SEND_DAILY_MAX` when Cloudflare answers |
 | [BOT-EMAIL-PLAN](BOT-EMAIL-PLAN.md) | D-449 | Live 2026-11-20 (`87f520fd`): bots get `name@casama.app`, sending through Cloudflare Email Sending; 10/10 on mail-tester, Gmail inbox. Left: Outlook placement check |

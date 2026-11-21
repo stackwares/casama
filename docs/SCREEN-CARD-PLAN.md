@@ -21,10 +21,16 @@ stays undecided until the analytics come in.
 **Release (2026-11-21):** the server with Phase 1 is live (eb93602a), and the web app with
 Phases 1 and 2 is live as build 73. A live check on app.casama.ai at phone size found the
 production route answering 500: `sharp` was only a dev dependency, and the image installs with
-`--prod`. Fixed in 44b88cda (sharp is now a runtime dependency), pushed, **not deployed yet**,
-because that deploy also releases other sessions' billing and fare-watch work with 3 migrations.
-Until it ships, the card stays hidden, as it does for any failed picture. Native app builds wait
-for the next store release.
+`--prod`. Fixed in 44b88cda (sharp is now a runtime dependency), live since the 2026-11-22
+server deploy (dc09b211). Web build 74 carries the fetch guard.
+
+**Android check (2026-11-22):** a debug build against production on a Pixel 10 Pro XL emulator,
+signed in as the store review account. The card appeared top right while the bot browsed
+Wikipedia on the Team computer, its picture followed the pages, a tap opened Live view (connected,
+240 ms), and it hid when the reply ended. One bug found and fixed in e77b350a: the card's
+screen-reader node had merged into the full-screen layer, so TalkBack framed the whole chat and the
+close button was unreachable; it's now its own card-sized node, with Hide as an action. That fix
+ships with the next web and store builds. Native app builds wait for the next store release.
 
 Line numbers are from 2026-11-21. Re-find each one before editing.
 
