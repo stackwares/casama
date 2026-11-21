@@ -471,6 +471,33 @@ class _WhoRunsYourBotsSection extends ConsumerWidget {
       ref.invalidate(botsProvider);
     }
 
+    // Switching to your own provider needs a chat-capable key and a model. Say what's missing
+    // instead of ignoring the tap.
+    void chooseOwn() {
+      if (!admin) {
+        showMessage(context, l10n.whoRunsAdminOnly);
+        return;
+      }
+      if (chosenKey == null) {
+        showMessage(context, l10n.whoRunsOwnNeedsKey);
+        return;
+      }
+      final m = chosenModel.isNotEmpty
+          ? chosenModel
+          : (ref.read(backendProvider).defaultModelFor(chosenKey.provider.value) ?? '');
+      if (m.isEmpty) {
+        showMessage(context, l10n.whoRunsOwnNeedsModel);
+        return;
+      }
+      save(
+        WorkspaceModelDefault(
+          source_: WorkspaceModelDefaultSource_Enum.own,
+          credentialId: chosenKey.id,
+          model: m,
+        ),
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -483,25 +510,16 @@ class _WhoRunsYourBotsSection extends ConsumerWidget {
             children: [
               RadioGroup<WorkspaceModelDefaultSource_Enum>(
                 groupValue: source,
-                onChanged: !admin
-                    ? (_) {}
-                    : (v) {
+                onChanged: (v) {
                         if (v == null) return;
+                        if (!admin) {
+                          showMessage(context, l10n.whoRunsAdminOnly);
+                          return;
+                        }
                         if (v == WorkspaceModelDefaultSource_Enum.casama && casamaAvailable) {
                           save(WorkspaceModelDefault(source_: WorkspaceModelDefaultSource_Enum.casama));
-                        } else if (v == WorkspaceModelDefaultSource_Enum.own && chosenKey != null) {
-                          final m = chosenModel.isNotEmpty
-                              ? chosenModel
-                              : (ref.read(backendProvider).defaultModelFor(chosenKey.provider.value) ?? '');
-                          if (m.isNotEmpty) {
-                            save(
-                              WorkspaceModelDefault(
-                                source_: WorkspaceModelDefaultSource_Enum.own,
-                                credentialId: chosenKey.id,
-                                model: m,
-                              ),
-                            );
-                          }
+                        } else if (v == WorkspaceModelDefaultSource_Enum.own) {
+                          chooseOwn();
                         }
                       },
                 child: Column(
@@ -518,7 +536,7 @@ class _WhoRunsYourBotsSection extends ConsumerWidget {
                           value: WorkspaceModelDefaultSource_Enum.casama,
                         ),
                         onTap: !admin
-                            ? null
+                            ? () => showMessage(context, l10n.whoRunsAdminOnly)
                             : () => save(WorkspaceModelDefault(source_: WorkspaceModelDefaultSource_Enum.casama)),
                       ),
                     ListTile(
@@ -529,26 +547,15 @@ class _WhoRunsYourBotsSection extends ConsumerWidget {
                       trailing: const Radio<WorkspaceModelDefaultSource_Enum>(
                         value: WorkspaceModelDefaultSource_Enum.own,
                       ),
-                      onTap: !admin || chosenKey == null
-                          ? null
-                          : () {
-                              final m = chosenModel.isNotEmpty
-                                  ? chosenModel
-                                  : (ref.read(backendProvider).defaultModelFor(chosenKey.provider.value) ?? '');
-                              if (m.isNotEmpty) {
-                                save(
-                                  WorkspaceModelDefault(
-                                    source_: WorkspaceModelDefaultSource_Enum.own,
-                                    credentialId: chosenKey.id,
-                                    model: m,
-                                  ),
-                                );
-                              }
-                            },
+                      onTap: chooseOwn,
                     ),
                   ],
                 ),
               ),
+              if (!admin)
+                FormNote(l10n.whoRunsAdminOnly, icon: LucideIcons.lock)
+              else if (keys.isEmpty)
+                FormNote(l10n.whoRunsOwnNeedsKey, icon: LucideIcons.keyRound),
               if (source == WorkspaceModelDefaultSource_Enum.own && keys.isNotEmpty) ...[
                 DropdownButtonFormField<String>(
                   key: ValueKey('workspaceDefaultKey-${chosenKey?.id}'),

@@ -30518,6 +30518,24 @@ abstract class AppLocalizations {
   /// **'Billed directly by your provider; uses no Casama credits'**
   String get whoRunsOwnHelp;
 
+  /// No description provided for @whoRunsOwnNeedsKey.
+  ///
+  /// In en, this message translates to:
+  /// **'To use your own provider, add a chat key from it under Add a key below first.'**
+  String get whoRunsOwnNeedsKey;
+
+  /// No description provided for @whoRunsOwnNeedsModel.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a model for this key first.'**
+  String get whoRunsOwnNeedsModel;
+
+  /// No description provided for @whoRunsAdminOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Only workspace admins can change who runs your bots.'**
+  String get whoRunsAdminOnly;
+
   /// No description provided for @botModelSource.
   ///
   /// In en, this message translates to:

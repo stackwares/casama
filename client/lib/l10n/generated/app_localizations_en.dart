@@ -18881,6 +18881,17 @@ class AppLocalizationsEn extends AppLocalizations {
       'Billed directly by your provider; uses no Casama credits';
 
   @override
+  String get whoRunsOwnNeedsKey =>
+      'To use your own provider, add a chat key from it under Add a key below first.';
+
+  @override
+  String get whoRunsOwnNeedsModel => 'Pick a model for this key first.';
+
+  @override
+  String get whoRunsAdminOnly =>
+      'Only workspace admins can change who runs your bots.';
+
+  @override
   String get botModelSource => 'Model source';
 
   @override

@@ -186,4 +186,31 @@ void main() {
     expect(backend.orgModelDefault?.source_.value, 'own');
     expect(backend.orgModelDefault?.credentialId, 'cred');
   });
+
+  testWidgets('Your own provider without a key says to add one instead of doing nothing', (tester) async {
+    final backend = FakeBackend()
+      ..billingEnabled = true
+      ..ownProvidersValue = true
+      ..noKeys = true;
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          backendProvider.overrideWithValue(backend),
+          billingProvider.overrideWith((ref) async => backend.billing('org')),
+        ],
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const ModelKeysScreen(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    const hint = 'To use your own provider, add a chat key from it under Add a key below first.';
+    expect(find.text(hint), findsOneWidget);
+    await tester.tap(find.byKey(const Key('workspaceDefaultOwn')));
+    await tester.pump();
+    expect(find.text(hint), findsNWidgets(2));
+    expect(backend.orgModelDefault, isNull);
+  });
 }
