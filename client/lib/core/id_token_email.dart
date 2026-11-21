@@ -50,6 +50,8 @@ Future<T> withIdTokenEmail<T>(
   }
 }
 
-/// Apple's private relay addresses ("Hide My Email").
-bool isAppleRelayEmail(String email) =>
-    email.trim().toLowerCase().endsWith('@privaterelay.appleid.com');
+/// Apple's private relay addresses ("Hide My Email"): Sign in with Apple's and iCloud+'s.
+bool isAppleRelayEmail(String email) {
+  final lower = email.trim().toLowerCase();
+  return lower.endsWith('@privaterelay.appleid.com') || lower.endsWith('@private.icloud.com');
+}

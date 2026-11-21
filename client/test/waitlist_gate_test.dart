@@ -187,6 +187,7 @@ void main() {
     expect(emailInIdToken('not-a-token'), isNull);
     expect(emailInIdToken('a.%%%.c'), isNull);
     expect(isAppleRelayEmail('X@PrivateRelay.AppleID.com'), isTrue);
+    expect(isAppleRelayEmail(' X@Private.iCloud.com '), isTrue);
     expect(isAppleRelayEmail('ana@icloud.com'), isFalse);
   });
 
