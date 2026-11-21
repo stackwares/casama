@@ -7006,7 +7006,7 @@ quality and safety.
 - **Why not more:** Apple's three a year makes an ask in the first two minutes costly on iOS. Asking only happy people, or putting our own question before the sheet, breaks both stores' rules and stays out.
 - **Where it differs from the plan:** the "not typing" check became "no new run started" (the composer lives in the widget, not the controller). The event value is `firstReply`, matching the other moments, not `first_reply`.
 
-## D-461 Desktop releases are also listed on the source repo's Releases page (2026-11-21)
+## D-462 Desktop releases are also listed on the source repo's Releases page (2026-11-21)
 
 - **Decision (2026-11-21, Oliver: "in github i don't see the dmg releases only CLI"; deleting `casama-releases` was considered and declined):** `scripts/publish-desktop-release.sh` still publishes the installers and the update feeds to `stackwares/casama-releases` (D-159), and now also attaches the installers (not the feeds) to a `v<version>` release on `stackwares/casama` (`CASAMA_SOURCE_REPO`, empty to skip), so the project's own Releases page shows the apps next to the CLI.
 - **Why it was split in the first place:** the source repo was private, so its release files needed a sign-in. It has been public since D-406, so that reason is gone, but the feed address is baked into every installed app, so the feeds stay where they are.
