@@ -69,7 +69,9 @@ export const EnvSchema = z.object({
    * Edge Add-ons item's id. Outside
    * production any chrome-extension:// origin is allowed, as localhost is.
    */
-  CHROME_EXTENSION_IDS: z.string().default("kkfppfhkjnenffibmnkphnbejidkmbkj,danikigkoiofpcecjobopcgdflgcmchm"),
+  CHROME_EXTENSION_IDS: z
+    .string()
+    .default("kkfppfhkjnenffibmnkphnbejidkmbkj,danikigkoiofpcecjobopcgdflgcmchm"),
   /**
    * Casama for Firefox (D-323 Phase 5): allow any moz-extension:// origin. Firefox gives each
    * install its own random origin, so there's no id to list. Off keeps Firefox out.

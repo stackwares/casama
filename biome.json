@@ -23,6 +23,7 @@
       "!docs-site/public/errors.js",
       "!visuals",
       "!link-site/assets/brand",
+      "!link-site/assets/theme.js",
       "!infra/helm/**/templates",
       "!infra/compose/selfhost/kong.yml"
     ]
