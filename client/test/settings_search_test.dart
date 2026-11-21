@@ -37,6 +37,11 @@ void main() {
     expect(find.byKey(const Key('settingsAppearance')), findsOneWidget);
     expect(find.byKey(const Key('settingsQuietHours')), findsNothing);
 
+    // Full access (D-394) is a switch on the Workspace settings page.
+    await _type(tester, 'full access');
+    expect(find.byKey(const Key('settingsWorkspace')), findsOneWidget);
+    expect(find.byKey(const Key('settingsAppearance')), findsNothing);
+
     await _type(tester, 'password');
     expect(find.byKey(const Key('settingsAccount')), findsOneWidget);
     expect(find.byKey(const Key('settingsSecrets')), findsOneWidget);

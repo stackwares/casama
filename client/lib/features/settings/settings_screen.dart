@@ -685,7 +685,7 @@ Map<String, String> _settingsSearchWords(AppLocalizations l10n, {String? orgName
   orgName ?? l10n.workspace: 'workspace switch change team organization org role',
   l10n.aboutYou: 'profile name photo picture avatar pronouns about me reply style facts memory',
   l10n.people: 'members invite team users admins roles invite link code join remove',
-  l10n.workspaceSettings: 'workspace name icon logo encryption memory payments stripe card password managers bot to bot chrome extension gallery',
+  l10n.workspaceSettings: 'workspace name icon logo encryption memory payments stripe card password managers bot to bot chrome extension gallery full access permissions approvals ask bypass',
   l10n.settingsDomains: 'domain website custom dns buy connect sites',
   l10n.usage: 'cost spend spending money credits tokens limits',
   l10n.billing: 'plan subscription upgrade pro plus max payment invoice card pricing',
