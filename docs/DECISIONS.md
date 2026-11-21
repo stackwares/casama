@@ -7044,3 +7044,22 @@ minutes).
   `admin_confirmation_required` is answered by the dialog over the current screen, as for D-448's
   other owner actions outside the console, then retried once.
 - **Tests:** `apps/server/test/admin-security.test.ts`, `client/test/admin_security_test.dart`.
+
+## D-464 This Mac's own server: say when Docker is why it's down (2026-11-21)
+
+Found while testing the guided setup (D-309) in a real Mac debug run. With the server this app
+installed, the usual way it goes away is Docker being closed (after a restart, or quit from its
+menu), but the app said only "Can't reach your Casama server".
+
+- **The bar and the launch screen say so:** when the app's server is the one it installed here
+  (`localDockerDown` in `client/lib/features/selfhost/local_docker.dart`) and `docker info` doesn't
+  answer, the wording becomes "Docker isn't running, so your server is stopped", with **Open Docker**
+  on a Mac. The containers start again by themselves once Docker is up (`restart: unless-stopped`);
+  in the test the server answered about 7 seconds after Docker opened.
+- **What failed comes back by itself:** when the server answers again, the bar also refreshes the
+  computer panel (`computersProvider`), and a chat that failed to load opens again without its Try
+  Again.
+- **The parts download shows how far along it is** ("3 of 7 downloaded so far"), counted from
+  Compose's own "Image … Pulling/Pulled" lines (docs/SETUP-SCREEN-PLAN.md §3).
+- **Tests:** `client/test/local_docker_test.dart`, `client/test/chat_load_error_test.dart`,
+  `client/test/guided_setup_test.dart`.

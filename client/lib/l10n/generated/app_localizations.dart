@@ -15112,6 +15112,12 @@ abstract class AppLocalizations {
   /// **'The longest step'**
   String get setupServerStagePartsNote;
 
+  /// No description provided for @setupServerPartsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{done} of {total} downloaded so far'**
+  String setupServerPartsCount(int done, int total);
+
   /// No description provided for @setupServerStageStart.
   ///
   /// In en, this message translates to:
@@ -19946,6 +19952,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Only owners and admins of a workspace can link a server.'**
   String get linkServerNeedAdmin;
+
+  /// No description provided for @localDockerStopped.
+  ///
+  /// In en, this message translates to:
+  /// **'Docker isn\'t running, so your server is stopped'**
+  String get localDockerStopped;
+
+  /// No description provided for @localDockerStoppedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Casama server runs in Docker on this computer. Open Docker and Casama reconnects by itself once the server is back, which can take a minute.'**
+  String get localDockerStoppedBody;
 
   /// No description provided for @serverOfflineTitle.
   ///

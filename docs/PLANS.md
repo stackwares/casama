@@ -31,7 +31,7 @@ same commit. Shipping details (deploys, app builds) move fast, so check them bef
 
 | Plan | Decisions | What's left |
 |---|---|---|
-| [SETUP-SCREEN-PLAN](SETUP-SCREEN-PLAN.md) | D-309 | Approved 2026-11-21 and being built: two-pane setup screen with the painted scene and a mascot per step; real progress on the parts download |
+| [SETUP-SCREEN-PLAN](SETUP-SCREEN-PLAN.md) | D-309 | Built 2026-11-21: two-pane setup screen with the painted scene and a mascot per step; real progress on the parts download |
 | [BOT-EMAIL-NEXT-PLAN](BOT-EMAIL-NEXT-PLAN.md) | D-451 | Live 2026-11-20: server (`9cfc36a2`) and web app build 61; Cloudflare asked for 10,000 a day. Left: store builds; raise `MAIL_SEND_DAILY_MAX` when Cloudflare answers |
 | [BOT-EMAIL-PLAN](BOT-EMAIL-PLAN.md) | D-449 | Live 2026-11-20 (`87f520fd`): bots get `name@casama.app`, sending through Cloudflare Email Sending; 10/10 on mail-tester, Gmail inbox. Left: Outlook placement check |
 | [BOT-WIDGET-PLAN](BOT-WIDGET-PLAN.md) | D-455 | Phases 1–3 written and merged; build 59 (Android internal + Wear, TestFlight, Mac DMG) made 2026-11-20 but nothing run on a device. Left: Phase 0 device checks (the Apple push key in production, server deploy + migration `20270307100001`), then Live, the free layout and watches |

@@ -26,6 +26,7 @@ import '../../core/local_cache.dart';
 import '../../core/media_cache.dart';
 import '../../core/providers.dart';
 import '../../core/remote_config.dart';
+import '../../core/server_reachability.dart';
 import '../../core/voice.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
@@ -491,6 +492,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     if (widget.focusMessageId == null) _focusComposerSoon();
     DroppedFiles.take(_droppedFromApp);
     _lifecycle = AppLifecycleListener(onResume: _markShownRead);
+    serverReachability.addListener(_serverBack);
     _input.addListener(_saveDraftSoon);
     _listenToBot();
     // What this chat shows (a routine's result, a reply) is read once the chat is open, including
@@ -615,8 +617,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     runGuarded(context, () => ref.read(chatControllerProvider(widget.botId).notifier).send(uiActionSummary(action), uiAction: action.toJson()));
   }
 
+  /// The server answers again (it was restarting, or Docker on this computer was closed): a chat
+  /// that failed to load while it was away opens again by itself.
+  void _serverBack() {
+    if (!mounted || serverReachability.value != Reachability.ok) return;
+    final chat = ref.read(chatControllerProvider(widget.botId));
+    if (!chat.loadFailed) return;
+    unawaited(ref.read(chatControllerProvider(widget.botId).notifier).open(widget.conversationId ?? chat.conversationId));
+  }
+
   @override
   void dispose() {
+    serverReachability.removeListener(_serverBack);
     DroppedFiles.release(_droppedFromApp);
     _chatFocus.close(_focusedConversation);
     _lifecycle.dispose();

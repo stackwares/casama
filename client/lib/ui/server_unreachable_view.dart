@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:material_ui/material_ui.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../features/selfhost/local_docker.dart';
 import '../l10n/generated/app_localizations.dart';
 import 'bot_loader.dart';
 import 'glow_button.dart';
@@ -45,16 +46,35 @@ class ServerUnreachableView extends StatefulWidget {
 class _ServerUnreachableViewState extends State<ServerUnreachableView> {
   Timer? _tick;
 
+  /// The server is this computer's own and Docker isn't running (after a restart, Docker often
+  /// opens after Casama): say that, and offer to open it.
+  var _dockerDown = false;
+  var _opening = false;
+
   @override
   void initState() {
     super.initState();
     _syncTicker();
+    unawaited(_lookAtDocker());
   }
 
   @override
   void didUpdateWidget(ServerUnreachableView old) {
     super.didUpdateWidget(old);
     _syncTicker();
+    if (old.retrying && !widget.retrying) unawaited(_lookAtDocker());
+  }
+
+  Future<void> _lookAtDocker() async {
+    final down = await checkLocalDocker(widget.apiUrl);
+    if (mounted && down != _dockerDown) setState(() => _dockerDown = down);
+  }
+
+  Future<void> _openDocker() async {
+    setState(() => _opening = true);
+    await openDocker();
+    if (mounted) setState(() => _opening = false);
+    widget.onRetry();
   }
 
   /// Redraws once a second while a countdown is showing.
@@ -120,7 +140,11 @@ class _ServerUnreachableViewState extends State<ServerUnreachableView> {
         ),
         const SizedBox(height: 20),
         Text(
-          widget.serverOffline ? l10n.serverOfflineTitle : l10n.cannotReachServer,
+          _dockerDown
+              ? l10n.localDockerStopped
+              : widget.serverOffline
+              ? l10n.serverOfflineTitle
+              : l10n.cannotReachServer,
           key: const Key('startupUnreachableTitle'),
           textAlign: TextAlign.center,
           style: theme.textTheme.headlineSmall?.copyWith(
@@ -130,7 +154,11 @@ class _ServerUnreachableViewState extends State<ServerUnreachableView> {
         ),
         const SizedBox(height: 10),
         Text(
-          widget.serverOffline ? l10n.serverOfflineBody : l10n.serverUnreachableBody,
+          _dockerDown
+              ? l10n.localDockerStoppedBody
+              : widget.serverOffline
+              ? l10n.serverOfflineBody
+              : l10n.serverUnreachableBody,
           textAlign: TextAlign.center,
           style: theme.textTheme.bodyLarge?.copyWith(
             color: scheme.onSurfaceVariant,
@@ -144,6 +172,18 @@ class _ServerUnreachableViewState extends State<ServerUnreachableView> {
           onTap: widget.onChangeServer,
         ),
         const SizedBox(height: 28),
+        if (_dockerDown && canOpenDocker()) ...[
+          SizedBox(
+            width: double.infinity,
+            child: GlowButton.icon(
+              key: const Key('startupOpenDocker'),
+              onPressed: _opening || widget.retrying ? null : _openDocker,
+              icon: const Icon(LucideIcons.play, size: 18),
+              label: Text(l10n.setupDockerOpen),
+            ),
+          ),
+          const SizedBox(height: 10),
+        ],
         SizedBox(
           width: double.infinity,
           child: GlowButton.icon(

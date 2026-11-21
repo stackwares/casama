@@ -677,6 +677,12 @@ class _ServerStepState extends ConsumerState<ServerStep> {
   final _log = <String>[];
   var _part = 0;
   var _details = false;
+
+  /// The images the installer has started and finished pulling, from Compose's "Image … Pulling"
+  /// and "Image … Pulled" lines, so the longest part says how far along it is.
+  final _pulling = <String>{};
+  final _pulled = <String>{};
+  static final _imageLine = RegExp(r'^Image (\S+) (Pulling|Pulled)\b');
   double? _freeGb;
   StreamSubscription<LocalServerProgress>? _sub;
 
@@ -721,6 +727,8 @@ class _ServerStepState extends ConsumerState<ServerStep> {
     widget.onRunning(true);
     setState(() {
       _log.clear();
+      _pulling.clear();
+      _pulled.clear();
       _part = 0;
       _p = const LocalServerProgress(LocalServerStep.checking);
     });
@@ -731,6 +739,8 @@ class _ServerStepState extends ConsumerState<ServerStep> {
           _p = p;
           _part = _partOf(p);
           if (p.step == LocalServerStep.installing && p.detail != null) {
+            final m = _imageLine.firstMatch(p.detail!);
+            if (m != null) (m.group(2) == 'Pulled' ? _pulled : _pulling).add(m.group(1)!);
             _log.add(p.detail!);
             if (_log.length > 8) _log.removeAt(0);
           }
@@ -802,7 +812,11 @@ class _ServerStepState extends ConsumerState<ServerStep> {
                       ? context.appColors.positive
                       : (i == _part ? (failed ? scheme.error : scheme.primary) : scheme.outline),
                   title: label,
-                  subtitle: i == 2 && !done && _part <= 2 ? l10n.setupServerStagePartsNote : null,
+                  subtitle: i == 2 && !done && _part <= 2
+                      ? (_pulling.isEmpty
+                            ? l10n.setupServerStagePartsNote
+                            : l10n.setupServerPartsCount(_pulled.length, _pulling.union(_pulled).length))
+                      : null,
                 ),
             ],
           ),

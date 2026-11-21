@@ -1,8 +1,8 @@
 # Set Up Casama on This Mac: a better-looking setup screen: plan
 
-Status: **in progress** (Oliver, 2026-11-21: "write it and execute right away"). Builds on the
+Status: **built** 2026-11-21 (Oliver: "write it and execute right away"); checked in a real debug run on a Mac. Builds on the
 guided setup (D-309). Layout, scene, mascots and the skipped mark are built (checked in the debug Mac
-app); the parts counter (§3) is being built alongside.
+app); the parts counter (§3) is built too.
 
 ## Why
 

@@ -10,6 +10,7 @@ import '../l10n/generated/app_localizations.dart';
 import '../theme/app_tokens.dart';
 import '../core/link_browser.dart';
 import '../core/remote_content.dart';
+import '../features/selfhost/local_docker.dart';
 
 /// A bar over the top of the app while its server doesn't answer (D-296), with Try Again. It
 /// checks by itself every few seconds and when the app comes back to the front, and goes away,
@@ -31,6 +32,10 @@ class _ServerReachabilityBarState extends ConsumerState<ServerReachabilityBar> {
   Timer? _timer;
   AppLifecycleListener? _lifecycle;
   var _checking = false;
+
+  /// This computer's own server is down because Docker isn't running: the bar says so and
+  /// offers to open it.
+  var _dockerDown = false;
 
   @override
   void initState() {
@@ -61,15 +66,26 @@ class _ServerReachabilityBarState extends ConsumerState<ServerReachabilityBar> {
     if (now == Reachability.ok) {
       _timer?.cancel();
       _timer = null;
+      _dockerDown = false;
     } else {
       _timer ??= Timer.periodic(_every, (_) => unawaited(_check()));
+      unawaited(_lookAtDocker());
     }
     // Back: what's on screen came from the offline cache or failed to load; fetch it again.
     if (back) {
       ref.invalidate(organizationsProvider);
       ref.invalidate(botsProvider);
+      // The computer panel beside a chat failed too while the server was away.
+      ref.invalidate(computersProvider);
     }
     if (mounted) setState(() {});
+  }
+
+  Future<void> _lookAtDocker() async {
+    final down = await checkLocalDocker(ref.read(backendProvider).apiUrl);
+    if (mounted && down != _dockerDown && serverReachability.value != Reachability.ok) {
+      setState(() => _dockerDown = down);
+    }
   }
 
   Future<void> _check() async {
@@ -77,9 +93,15 @@ class _ServerReachabilityBarState extends ConsumerState<ServerReachabilityBar> {
     setState(() => _checking = true);
     try {
       await checkServer(ref.read(backendProvider).apiUrl);
+      if (serverReachability.value != Reachability.ok) await _lookAtDocker();
     } finally {
       if (mounted) setState(() => _checking = false);
     }
+  }
+
+  Future<void> _openDocker() async {
+    await openDocker();
+    await _check();
   }
 
   @override
@@ -123,7 +145,9 @@ class _ServerReachabilityBarState extends ConsumerState<ServerReachabilityBar> {
                           const SizedBox(width: AppSpace.sm),
                           Expanded(
                             child: Text(
-                              state == Reachability.serverOffline
+                              _dockerDown
+                                  ? l10n.localDockerStopped
+                                  : state == Reachability.serverOffline
                                   ? l10n.serverOfflineTitle
                                   : l10n.cannotReachServer,
                               maxLines: 2,
@@ -141,6 +165,13 @@ class _ServerReachabilityBarState extends ConsumerState<ServerReachabilityBar> {
                               onPressed: () => openWebLink(remoteUri('status', 'https://status.casama.ai')),
                               style: TextButton.styleFrom(foregroundColor: scheme.inversePrimary),
                               child: Text(l10n.serviceStatus),
+                            ),
+                          if (_dockerDown && canOpenDocker())
+                            TextButton(
+                              key: const Key('serverReachabilityOpenDocker'),
+                              onPressed: _checking ? null : _openDocker,
+                              style: TextButton.styleFrom(foregroundColor: scheme.inversePrimary),
+                              child: Text(l10n.setupDockerOpen),
                             ),
                           TextButton(
                             key: const Key('serverReachabilityRetry'),

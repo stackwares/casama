@@ -340,10 +340,21 @@ void main() {
     t.manager.run!.add(const LocalServerProgress(LocalServerStep.downloading, fraction: 0.5));
     await settle(tester);
     expect(tester.widget<LinearProgressIndicator>(find.byKey(const Key('setupServerBar'))).value, 0.5);
-    for (final line in ['==> Generating secrets', '==> Pulling Casama images (ghcr.io, abc)', '==> Starting the stack']) {
+    for (final line in [
+      '==> Generating secrets',
+      '==> Pulling Casama images (ghcr.io, abc)',
+      'Image ghcr.io/stackwares/casama/server:abc Pulling',
+      'Image ghcr.io/stackwares/casama/turn:abc Pulling',
+      'Image ghcr.io/stackwares/casama/turn:abc Pulled',
+    ]) {
       t.manager.run!.add(LocalServerProgress(LocalServerStep.installing, detail: line));
     }
     await settle(tester);
+    // The longest part says how far along it is, from Compose's own lines.
+    expect(find.text('1 of 2 downloaded so far'), findsOneWidget);
+    t.manager.run!.add(const LocalServerProgress(LocalServerStep.installing, detail: '==> Starting the stack'));
+    await settle(tester);
+    expect(find.text('1 of 2 downloaded so far'), findsNothing);
     expect(find.text('Keep Casama open until this finishes.'), findsOneWidget);
     // The installer's own lines stay out of sight until asked for.
     expect(find.byKey(const Key('setupLog')), findsNothing);

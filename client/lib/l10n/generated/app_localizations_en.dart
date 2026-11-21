@@ -9586,6 +9586,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get setupServerStagePartsNote => 'The longest step';
 
   @override
+  String setupServerPartsCount(int done, int total) {
+    return '$done of $total downloaded so far';
+  }
+
+  @override
   String get setupServerStageStart => 'Starting it';
 
   @override
@@ -12591,6 +12596,14 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get linkServerNeedAdmin =>
       'Only owners and admins of a workspace can link a server.';
+
+  @override
+  String get localDockerStopped =>
+      'Docker isn\'t running, so your server is stopped';
+
+  @override
+  String get localDockerStoppedBody =>
+      'Your Casama server runs in Docker on this computer. Open Docker and Casama reconnects by itself once the server is back, which can take a minute.';
 
   @override
   String get serverOfflineTitle => 'Your server is offline';
