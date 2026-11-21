@@ -63,9 +63,14 @@ Run from the repository root unless a line says otherwise. The full list is in
 - **Track every plan in `docs/PLANS.md`.** Add its row when you write the plan, and update the row and
   the plan's own status line in the same commit whenever its status changes (approved, built, shipped,
   dropped).
-- **No WebViews in the app.** Every screen is native Flutter. Plugin UI is data plus A2UI screens drawn
-  with the app's own component catalog; grow that catalog instead of embedding web content. Opening a
-  link in the system browser or in-app browser tab is fine.
+- **No WebViews in the app, with one exception.** Every screen is native Flutter. Plugin UI is data
+  plus A2UI screens drawn with the app's own component catalog; grow that catalog instead of embedding
+  web content. Opening a link in the system browser or in-app browser tab is fine. The one exception
+  (D-472): the phone browser (`client/lib/features/app_browser/`, `docs/PHONE-BROWSER-PLAN.md`) shows
+  other people's websites in a web area that a bot or the person uses as a browser. It never draws a
+  Casama screen or a plugin's screen, it is our own native code (no WebView package), and it is
+  compiled in only with `scripts/app-browser-switch.sh on`. Don't add a second web area or widen
+  this one.
 - **Paid services:** any change that adds or changes a paid dependency (a new vendor, a new usage kind,
   a price change) updates `docs/COSTS.md` in the same change and records real cost in `usage_ledger`.
 - **Cloud models:** Casama's OpenRouter key only accepts an allowlist of models (D-364). Changing a

@@ -78,5 +78,7 @@ responses. Format only the files you change (`dart format <files>`).
 - Import `package:material_ui/material_ui.dart` and `package:cupertino_ui/cupertino_ui.dart`, not
   Flutter's deprecated `material.dart` and `cupertino.dart`.
 - Every user-facing string goes in `lib/l10n/app_en.arb`.
-- The app stays fully native: no embedded web views.
+- The app stays fully native: no embedded web views. The one exception is the phone browser
+  (`lib/features/app_browser/`, D-472), a web area for other people's websites that a bot can drive;
+  it never draws the app's own screens and is compiled in only with `scripts/app-browser-switch.sh on`.
 - New screens use the shared page layout and form components in `lib/ui/`.
