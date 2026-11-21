@@ -1,7 +1,10 @@
 # The bot's screen in a floating card: plan
 
-Status: **not started** (written 2026-11-21). Waiting on Oliver's answers in §11 and his go-ahead.
-No code yet.
+Status: **approved** (2026-11-21). Oliver took every default in §11. Phase 0 in progress: the
+measurements are done (below §7) and the sample card is built behind the debug flag
+(`client/lib/ui/screen_tile.dart`, `client/lib/features/chat/widgets/screen_card.dart`, tests in
+`client/test/screen_card_test.dart`). Left: Oliver tries it on his phone, which needs his yes for a
+Flutter run.
 
 Line numbers are from 2026-11-21. Re-find each one before editing.
 
@@ -241,7 +244,35 @@ screen's existing tile tests still pass on the shared tile.
 
 Phases 1 and 2 need a server deploy and app builds to reach people. Each needs Oliver's yes.
 
+### Phase 0 measurements (2026-11-21)
+
+Throwaway containers from the local `computer-desktop:dev` and `computer-headless:dev` images,
+2 CPUs each, with the bot's browser on a Wikipedia article. Captured inside the computer, the way
+the server's route does it (`import` on the desktop, `agent-browser screenshot` headless).
+
+| | Desktop (1280×800) | Headless page (1280×577) |
+|---|---|---|
+| Today's PNG | 322 KB | 260 KB |
+| Time to capture | 129 ms | 97 ms |
+| JPEG 480 wide, quality 60 | 20 KB | 14 KB |
+| JPEG 336 wide, quality 60 | 10 KB | 8 KB |
+| Resize and encode | 31 ms | 20 ms |
+| Computer CPU, idle → one capture a second | 8% → 20% of a core | 12% → 17% of a core |
+| Bot's browser `snapshot`, alone → with captures | — | 526 ms → 550 ms (5% slower) |
+
+What this settles:
+
+- **Picture size:** 480 wide at quality 60. The card is at most 168 points, so 480 pixels is sharp on
+  a 3× phone. About 15–20 KB a picture, at most 55–75 MB an hour if every picture changes, and much
+  less in practice since unchanged screens answer 304. Today's PNG would be about 1 GB an hour.
+- **Rate:** one a second costs the computer about a tenth of a core and slows the bot's browser by
+  5%. Acceptable, and the shared capture keeps it at one a second however many people watch.
+- **Not yet measured:** the time over a real mobile network to Casama Cloud, and battery on a
+  phone. Both are checked on Oliver's phone in Phase 1.
+
 ## 11. Decisions for Oliver
+
+Answered 2026-11-21: every default below.
 
 | # | Question | Default |
 |---|---|---|

@@ -68,6 +68,7 @@ import 'widgets/chat_widgets.dart';
 import 'widgets/mentions.dart';
 import 'read_aloud.dart';
 import 'widgets/composer.dart';
+import 'widgets/screen_card.dart';
 import 'widgets/error_details.dart';
 import 'widgets/reply_usage.dart';
 import 'widgets/screen_held_actions.dart';
@@ -1583,6 +1584,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                           ),
                         ),
                       ),
+                      // The bot's screen in a corner (SCREEN-CARD-PLAN), for now only as a debug preview.
+                      if (screenCardPreview && !widget.group && (layout == LayoutSize.phone || layout == LayoutSize.tablet))
+                        Positioned.fill(child: ScreenCardPreview(botName: name, layout: layout)),
                     ],
                   ),
                 ),

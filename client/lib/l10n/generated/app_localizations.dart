@@ -3472,6 +3472,36 @@ abstract class AppLocalizations {
   /// **'Hide Screen'**
   String get callTileHide;
 
+  /// No description provided for @screenCardLive.
+  ///
+  /// In en, this message translates to:
+  /// **'live'**
+  String get screenCardLive;
+
+  /// No description provided for @screenCardLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'{bot}\'s screen, {state}'**
+  String screenCardLabel(String bot, String state);
+
+  /// No description provided for @screenCardOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open full screen'**
+  String get screenCardOpen;
+
+  /// No description provided for @screenCardYouHave.
+  ///
+  /// In en, this message translates to:
+  /// **'You have the screen'**
+  String get screenCardYouHave;
+
+  /// No description provided for @screenCardHeldBy.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} has the screen'**
+  String screenCardHeldBy(String name);
+
   /// No description provided for @callRecapTitle.
   ///
   /// In en, this message translates to:

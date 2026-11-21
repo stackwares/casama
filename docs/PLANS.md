@@ -26,7 +26,6 @@ same commit. Shipping details (deploys, app builds) move fast, so check them bef
 | [FLIGHT-SEARCH-PLAN](FLIGHT-SEARCH-PLAN.md) | 2026-11-21 | Oliver's go-ahead to build; the decisions are made (§2). Phase 0 needs a SerpApi account (free plan is enough to build; Starter $25/month before Cloud) |
 | [MEETING-BOT-PLAN](MEETING-BOT-PLAN.md) | 2026-11-21 | §14 decisions. The engine (Recall.ai or our own) is left open on purpose; Phase 0 tries both and needs a Recall trial key and test calls on Meet, Teams and Zoom (§17) |
 | [RETENTION-MESSAGING-PLAN](RETENTION-MESSAGING-PLAN.md) | 2026-11-20 | §14 decisions; then 1.0 release and Apple's access |
-| [SCREEN-CARD-PLAN](SCREEN-CARD-PLAN.md) | 2026-11-21 | §11 decisions and Oliver's go-ahead. A small floating card in a phone chat shows the bot's screen while it works on it; Phase 0 needs a Flutter run on his phone |
 | [SES-MIGRATION-PLAN](SES-MIGRATION-PLAN.md) | 2026-11-20 | §14 decisions; then an AWS account (Oliver) and AWS's sending review in Phase 0 |
 | [SIRI-AI-PLAN](SIRI-AI-PLAN.md) | 2026-11-20 | §13 decisions; then a debug build on the iPhone for Phase 0 |
 | [USAGE-LIMITS-PLAN](USAGE-LIMITS-PLAN.md) | 2026-11-20 | Oliver's go-ahead to build; the decisions are made (§2) |
@@ -35,6 +34,7 @@ same commit. Shipping details (deploys, app builds) move fast, so check them bef
 
 | Plan | Decisions | What's left |
 |---|---|---|
+| [SCREEN-CARD-PLAN](SCREEN-CARD-PLAN.md) | — | Approved 2026-11-21 with every default in §11. Phase 0: measurements done, sample card built behind `?previewScreenCard=1` / `PREVIEW_SCREEN_CARD`; left: Oliver tries it on his phone (needs his yes for a Flutter run), then Phase 1 |
 | [BUG-HUNT-PLAN](BUG-HUNT-PLAN.md) | — | Approved 2026-11-21 (builds B1–B4, push per batch). Running: web, macOS, iOS + watch, Android + Wear passes; log in the plan §9 |
 | [SETUP-SCREEN-PLAN](SETUP-SCREEN-PLAN.md) | D-309 | Built 2026-11-21: two-pane setup screen with the painted scene and a mascot per step; real progress on the parts download |
 | [BOT-EMAIL-NEXT-PLAN](BOT-EMAIL-NEXT-PLAN.md) | D-451 | Live 2026-11-20: server (`9cfc36a2`) and web app build 61; Cloudflare asked for 10,000 a day. Left: store builds; raise `MAIL_SEND_DAILY_MAX` when Cloudflare answers |

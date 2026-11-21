@@ -2194,6 +2194,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get callTileHide => 'Hide Screen';
 
   @override
+  String get screenCardLive => 'live';
+
+  @override
+  String screenCardLabel(String bot, String state) {
+    return '$bot\'s screen, $state';
+  }
+
+  @override
+  String get screenCardOpen => 'Open full screen';
+
+  @override
+  String get screenCardYouHave => 'You have the screen';
+
+  @override
+  String screenCardHeldBy(String name) {
+    return '$name has the screen';
+  }
+
+  @override
   String callRecapTitle(String length) {
     return 'Call · $length';
   }
