@@ -80,6 +80,7 @@ install gVisor, register it with Docker, set `SANDBOX_RUNTIME=runsc` in `infra/c
 | `COMPUTER_IMAGE_DESKTOP`  | `<CASAMA_REGISTRY>/computer-desktop:<CASAMA_VERSION>`  | Image for desktop computers.                                                 |
 | `COMPUTER_MEMORY_MB`      | `2048`                                  | Memory for each new computer.                                                |
 | `COMPUTER_CPUS`           | `1` (not passed by Compose)             | CPUs for each new computer.                                                  |
+| `COMPUTER_BURST_CPUS`     | `2`                                     | CPUs a computer may use while the machine has them free; when it's busy, each computer's share still follows its size. The browser starts about three times faster under gVisor with 2. |
 | `WARM_POOL_SIZE`          | `0`                                     | Started headless computers kept waiting. See [Scaling](/self-hosting/operations#scaling). |
 | `DOCKER_SOCKET`           | `/var/run/docker.sock`                  | The Docker socket the supervisor uses.                                       |
 | `EGRESS_CONTAINER`        | `casama-egress`                         | Container name of the egress proxy.                                          |
@@ -298,6 +299,7 @@ other way out. See [Live view away from the computer](/self-hosting/remote-acces
 | ------------------ | --------------------------------- | -------------------------------------------- |
 | Memory             | 2048 MB (swap capped the same)     | `COMPUTER_MEMORY_MB`                         |
 | CPUs               | 1                                 | `COMPUTER_CPUS` (add it to Compose)          |
+| CPUs while free    | 2                                 | `COMPUTER_BURST_CPUS`                        |
 | Processes          | 512                               | Fixed                                        |
 | `/tmp`             | 1 GB in memory                    | Fixed                                        |
 | Shared memory      | 512 MB                            | Fixed                                        |

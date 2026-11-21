@@ -933,6 +933,7 @@ pull` refuses to overwrite a changed file, so commit it on a local branch or re-
 | Name                   | Default         | What it does                                                                              |
 | ---------------------- | --------------- | ----------------------------------------------------------------------------------------- |
 | `COMPUTER_CPUS`        | `1`             | CPUs for each new computer.                                                               |
+| `COMPUTER_BURST_CPUS`  | `2`             | CPUs a computer may use while the machine has them free; its share of a busy machine still follows its size. |
 | `DEFAULT_PROVIDER`     | `docker`        | The provider for computers that ask for the default. See [Computer providers](/self-hosting/computers). |
 | `STREAM_IDLE_STOP_MS`  | `60000`         | How long the live view streamer keeps running after the last viewer leaves.               |
 | `OBJECT_STORE`, `S3_*` | Filesystem      | See [Object storage](#object-storage).                                                    |

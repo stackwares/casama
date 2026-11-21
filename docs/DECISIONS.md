@@ -7261,3 +7261,19 @@ only the last words of a help sentence. So:
   Not pinnable to widgets yet.
 - **Not done:** price watches (Phase 3), affiliate links (Phase 4); not deployed; no app build;
   `LIVE_SERPAPI_KEY` not on any server.
+
+## D-472 Computers burst to 2 CPUs while the machine is free; their share stays their size (2026-11-21)
+
+- **Problem:** the bot's browser took 24–36 s to start on prod computers (1.8 s on a laptop), on
+  every wake and after every takeover, so the first browser call after a wake often failed ("os
+  error 11": agent-browser's CLI stops waiting). Measured on the prod host with throwaway
+  containers, same image and limits: gVisor with 1 CPU 24–36 s; 2 CPUs about 10 s; runc 1 CPU 5.7 s.
+  The host has no KVM, so gVisor runs on systrap, where Chromium's many syscalls are slow.
+- **Ruled out:** Chromium flags (about 20 % at best, within noise), GPU, `/dev/shm`, fonts, the
+  profile's size, and gVisor's `--overlay2=root:memory` (no gain; the test runtime was removed).
+- **Decision:** `COMPUTER_BURST_CPUS` (Compose default 2) sets each computer's CPU cap
+  (`NanoCpus`) to at least that, while `CpuShares` follows its size, so on a busy machine computers
+  still split CPU by size. Billing and capacity counting stay on the size. A computer gets the new
+  cap on its next wake (sleep removes the container; wake creates a fresh one).
+- **Not done:** dropping gVisor (about 5× faster, but weaker isolation between workspaces) and
+  starting the browser at every wake (CPU spent on wakes that never use it).

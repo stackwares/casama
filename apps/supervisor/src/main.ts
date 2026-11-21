@@ -89,6 +89,7 @@ const provider: SandboxProvider | undefined =
         namePrefix: env.NAME_PREFIX ?? "casama",
         defaults: {
           cpus: env.COMPUTER_CPUS ? Number(env.COMPUTER_CPUS) : undefined,
+          burstCpus: env.COMPUTER_BURST_CPUS ? Number(env.COMPUTER_BURST_CPUS) : undefined,
           memoryMb: env.COMPUTER_MEMORY_MB ? Number(env.COMPUTER_MEMORY_MB) : undefined,
         },
         // Warm pool (D-148): started headless computers waiting to be claimed; 0 turns it off.
