@@ -30,7 +30,7 @@ open testing, Snap beta and so on. "Live" means anyone can install it from the s
 | Store | Platform | Account | Listing | Submitted | Testing | Live | Where it stands | Next step |
 |---|---|:-:|:-:|:-:|:-:|:-:|---|---|
 | **Web app** (app.casama.ai) | Browser | ➖ | ➖ | ✅ | ➖ | ✅ | Live | — |
-| **Direct download** (GitHub Releases) | macOS, Windows, Linux | ✅ | ✅ | ✅ | ➖ | ✅ | v0.1.0 released 2026-11-21 | Each release with its Mac App Store twin |
+| **Direct download** (GitHub Releases) | macOS | ✅ | ✅ | ✅ | ➖ | ✅ | v0.1.0 macOS DMG released 2026-11-21 on `stackwares/casama-releases` (Windows and Linux installers not uploaded yet) | Upload Windows and Linux v0.1.0 installers when built; each release with its Mac App Store twin |
 | **Google Play** (phone, tablet) | Android | ✅ | ✅ | ❌ | ✅ | ❌ | Internal testing 0.1.0 (67) available. Closed testing (Alpha) 0.1.0 (49) approved and published 2026-11-20 (Console: track active, "Last published on November 20"). Production: track Inactive, 0.1.0 (67) is a draft with 0 countries, never sent for review (Console checked 2026-11-21) | Production when Oliver says |
 | **Google Play** (Wear OS) | Wear OS | ✅ | ✅ | ❌ | ✅ | ❌ | Internal testing 0.1.0 (1000000067) available. `wear:production` 0.1.0 (1000000067) is a draft, never sent for review (no changes in review in the Console, 2026-11-21); `wear:beta` (open testing) empty. Wear has no closed track | Production with the phone release (AGENTS.md) |
 | **App Store** (iPhone, iPad, Watch inside) | iOS | ✅ | ✅ | ❌ | ✅ | ❌ | TestFlight internal ("Casama team") has 0.1.0 (67). External "Public Beta" group: 67 ⏳ in Beta App Review since 2026-11-20; public link https://testflight.apple.com/join/n21dCaRu works once approved. App Store version 1.0 still "Prepare for Submission" | App Review when Oliver says |
@@ -40,7 +40,7 @@ open testing, Snap beta and so on. "Live" means anyone can install it from the s
 | **Firefox Add-ons** (AMO) | Firefox | ✅ | ✅ | ✅ | ➖ | ⏳ | 0.1.0 in review since 2026-11-21 (`casama@casama.ai`) | Wait |
 | **Snap Store** | Linux | ✅ | 📝 | ❌ | ❌ | ❌ | Name `casama` approved 2026-11-18; classic confinement request not filed | File classic request, first upload |
 | **Microsoft Store** | Windows | ✅ | ✅ | ❌ | ❌ | ❌ | Account and listing set up in Partner Center (Oliver, 2026-11-21); no package uploaded. The Store build needs the Partner Center identity in `msix_config` (see "Microsoft Store" below) | Fill in the ids, build a Store MSIX, submit when Oliver says |
-| Homebrew Cask (`casama`) | macOS | ➖ | ❌ | ❌ | ➖ | ❌ | Planned; own tap first (0 stars, not "notable" yet) | See "Other Mac stores" |
+| **Homebrew Cask** (`stackwares/tap/casama`) | macOS | ✅ | ✅ | ✅ | ➖ | ✅ | Live on our own tap (`brew install --cask stackwares/tap/casama`, v0.1.0); official `Homebrew/homebrew-cask` planned once notable | Submit to `Homebrew/homebrew-cask` when notable |
 | MacUpdate, Softpedia, Uptodown, Softonic, Mac Informer | macOS | ❌ | ❌ | ❌ | ➖ | ❌ | Planned (free listings) | See "Other Mac stores" |
 | MacUpdater, Latest, Applite | macOS | ➖ | ➖ | ➖ | ➖ | ❌ | Nothing to submit: they read Homebrew or our Sparkle feed | Comes with the cask |
 | Setapp | macOS | ❌ | ❌ | ❌ | ➖ | ❌ | Maybe: needs its own build and a pricing decision | See "Other Mac stores" |
@@ -105,7 +105,7 @@ Notes on the Account and Listing marks:
 
 | Field | Value |
 |---|---|
-| Where | GitHub Releases on stackwares/casama; download page casama.ai/download, links in `GET_LINKS` (`site/gallery-link.js`) |
+| Where | GitHub Releases on `stackwares/casama-releases` (mirrored on `stackwares/casama`); download page casama.ai/download, links in `GET_LINKS` (`site/gallery-link.js`) |
 | Mac | Notarized DMG, `scripts/package-macos.sh`; always shipped with the Mac App Store build; installed into /Applications here |
 | Windows | MSIX + WinSparkle feed, `scripts/package-windows.ps1` (`MSIX_CERT`, `WINSPARKLE_KEY`) |
 | Linux | `scripts/package-linux.sh` bundle |

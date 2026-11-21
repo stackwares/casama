@@ -136,6 +136,11 @@ test("the web app and Google Play learn which page sent the visitor", async () =
     macDmg.headers.get("location"),
     "https://github.com/stackwares/casama-releases/releases/latest",
   );
+  const firefox = await call("/get/firefox");
+  assert.equal(
+    firefox.headers.get("location"),
+    "https://docs.casama.ai/guide/chrome#edge-and-firefox",
+  );
   assert.equal(withAttribution("https://example.com/x", "home"), "https://example.com/x");
   assert.equal(campaignFor({ site: "", page: "/" }), "home");
   assert.equal(campaignFor({ site: "", page: "/compare/notion.html" }), "compare-notion");

@@ -47,9 +47,11 @@ const WEB_APP = "https://app.casama.ai";
 const SITE = "https://casama.ai";
 const DOWNLOAD_PAGE = "https://casama.ai/download";
 
-// Where each download button goes (D-377). iOS and the sandboxed Mac build currently go to
-// TestFlight; Google Play and Firefox use the listings' official addresses. Mac, Windows and Linux
-// direct downloads go to the public GitHub Releases latest page.
+// Where each download button goes (D-377). Mac DMG goes to the latest GitHub release; iOS and the
+// sandboxed Mac build go to TestFlight; Google Play stays ready for production. Chrome Web Store
+// (kkfppfhkjnenffibmnkphnbejidkmbkj), Edge Add-ons (8bf15261-6f8c-40ad-a8e6-cf36378a68ab) and
+// Firefox AMO (casama@casama.ai, addons.mozilla.org/firefox/addon/casama/) are all in review, so
+// they go to the extension guide until approved.
 const APP_STORE = "https://apps.apple.com/app/id6833509960"; // "Casama AI": iPhone, iPad and Mac
 const TESTFLIGHT = "https://testflight.apple.com/join/n21dCaRu";
 const PLAY = "https://play.google.com/store/apps/details?id=ai.casama.app";
@@ -67,7 +69,7 @@ export const GET_LINKS = {
   "linux-arm64": RELEASES,
   chrome: EXTENSION_DOCS,
   edge: `${EXTENSION_DOCS}#edge-and-firefox`,
-  firefox: "https://addons.mozilla.org/firefox/addon/casama/",
+  firefox: `${EXTENSION_DOCS}#edge-and-firefox`,
   web: WEB_APP,
 };
 // Downloads that follow the desktop apps' update feeds, which scripts/publish-desktop-release.sh

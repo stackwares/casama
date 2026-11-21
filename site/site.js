@@ -103,10 +103,7 @@
   var picks = {
     iphone: ["/get/ios", "Get it on TestFlight"],
     ipad: ["/get/ios", "Get it on TestFlight"],
-    android: ["/get/android", "Get it on Google Play"],
-    mac: ["/get/mac-dmg", "Download for Mac"],
-    windows: ["/get/windows", "Download for Windows"],
-    linux: ["/get/linux", "Download for Linux"]
+    mac: ["/get/mac-dmg", "Download for Mac"]
   };
   var pick = document.querySelector("[data-get-pick]");
   if (pick && picks[platform]) {
