@@ -1,6 +1,6 @@
 # Bug hunt across every platform: plan
 
-Status: **Built** (2026-11-21). First pass done on web, macOS (shallow), iOS, iPad, Android, Fold, Wear OS, websites and the server; 24 fixes on `main`. Waiting on: a server deploy (Oliver's yes), the "Needs Oliver" items in `reports/bug-hunt-2026-11-21.md`, and a second pass for the macOS core path and Apple Watch screens.
+Status: **Built** (2026-11-21). Two rounds done; all open items decided and fixed except those listed as open in `reports/bug-hunt-2026-11-21.md`. Waiting on: a server deploy (3 new migrations) and app builds.
 
 ## 1. Goal
 
