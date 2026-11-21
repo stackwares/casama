@@ -1,6 +1,6 @@
 # Bug hunt across every platform: plan
 
-Status: **Built** (2026-11-21). Three rounds done; every open item decided (third round 2026-11-22, see `reports/bug-hunt-2026-11-21.md`). Waiting on: a server deploy (4 new migrations) and app builds.
+Status: **Built** (2026-11-21). Three rounds done; every open item decided (third round 2026-11-22, see `reports/bug-hunt-2026-11-21.md`). Server rounds 1–2 live with the deploy at `b36a29b5a`; waiting on: the next server deploy (device fix `368b3dbf3`) and app builds.
 
 ## 1. Goal
 
