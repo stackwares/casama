@@ -20,6 +20,7 @@ import '../../ui/glow_button.dart';
 import '../../ui/revealable.dart';
 import '../../core/remote_content.dart';
 import '../bots/model_picker.dart';
+import 'provider_picker.dart';
 
 /// Casama Cloud's shared OpenRouter key (D-186). The same id the server uses.
 const casamaCloudCredentialId = '00000000-0000-4000-8000-0000000000c1';
@@ -208,28 +209,6 @@ class _AddKeyFormState extends ConsumerState<AddKeyForm> {
     }
   }
 
-  DropdownMenuItem<ProviderId> _providerItem(
-    BuildContext context,
-    ProviderId p,
-  ) => DropdownMenuItem(
-    value: p,
-    child: Text.rich(
-      TextSpan(
-        text: providerLabel(p),
-        children: [
-          if (ref.read(backendProvider).keyProviders.hint(context, p) case final hint?)
-            TextSpan(
-              text: '  $hint',
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                fontSize: 13,
-              ),
-            ),
-        ],
-      ),
-    ),
-  );
-
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -260,45 +239,13 @@ class _AddKeyFormState extends ConsumerState<AddKeyForm> {
             ],
           ),
         ],
-        DropdownButtonFormField<ProviderId>(
-          isExpanded: true,
-          initialValue: _provider,
-          decoration: InputDecoration(
-            labelText: l10n.provider,
-            prefixIcon: const Icon(LucideIcons.network, size: 20),
-          ),
-          // Chat models first; voice, search, maps and the rest under a "More providers" heading (D-182).
-          items: only != null
-              ? [for (final p in only) _providerItem(context, p)]
-              : [
-            for (final p in groups.chat) _providerItem(context, p),
-            DropdownMenuItem<ProviderId>(
-              key: const Key('moreProviders'),
-              enabled: false,
-              child: Row(
-                children: [
-                  Text(
-                    l10n.moreProviders,
-                    style: context.textTheme.labelMedium?.copyWith(
-                      color: context.colorScheme.onSurfaceVariant,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(width: AppSpace.sm),
-                  const Expanded(child: Divider()),
-                ],
-              ),
-            ),
-            for (final p in groups.more) _providerItem(context, p),
-          ],
-          selectedItemBuilder: (context) => only != null
-              ? [for (final p in only) Text(providerLabel(p))]
-              : [
-            for (final p in groups.chat) Text(providerLabel(p)),
-            const SizedBox.shrink(),
-            for (final p in groups.more) Text(providerLabel(p)),
-          ],
-          onChanged: hapticOnChanged((v) => setState(() => _provider = v ?? _provider), haptic: HapticsHelper.selection),
+        // Chat models first as logo tiles; search, maps and the rest under "More providers" (D-182).
+        ProviderPicker(
+          primary: only == null ? groups.chat : [for (final p in only) if (groups.chat.contains(p)) p],
+          more: only == null ? groups.more : [for (final p in only) if (!groups.chat.contains(p)) p],
+          value: _provider,
+          hint: (p) => groups.hint(context, p),
+          onChanged: (v) => setState(() => _provider = v),
         ),
         TextField(
           controller: _label,

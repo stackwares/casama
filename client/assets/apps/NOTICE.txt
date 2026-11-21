@@ -1,7 +1,7 @@
 Brand logos, shown only to identify each app. Trademarks belong to their owners.
 
 - Simple Icons (https://simpleicons.org), CC0 1.0: most marks here.
-- Lobe Icons (https://github.com/lobehub/lobe-icons), MIT: exa.
+- Lobe Icons (https://github.com/lobehub/lobe-icons), MIT: exa, openai, openrouter, xai.
 - The vendor's own site icon, background removed where it had one: adapty (adapty.io), superwall
   (superwall.com), composio (composio.dev logo, wordmark removed).
 - Drawn for Casama after the vendor's mark, as single-colour shapes: monday, pipedream, context7,

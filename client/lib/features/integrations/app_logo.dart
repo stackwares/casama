@@ -12,13 +12,15 @@ import '../../theme/app_tokens.dart';
 import '../../core/app_marks.dart';
 import '../../core/media_cache.dart';
 
-/// Apps with a bundled brand mark (assets/apps, from Simple Icons, CC0).
+/// Apps and key providers with a bundled brand mark (assets/apps; sources in its NOTICE.txt).
 const _bundledLogos = {
   'adapty', 'airtable', 'asana', 'atlassian', 'box', 'cloudflare', 'composio', 'context7', 'exa', 'figma', //
   'github', 'gmail', 'google_calendar', 'google_contacts', 'google_docs', 'google_drive', 'google_sheets', //
   'google_slides', 'hubspot', 'huggingface', 'intercom', 'linear', 'mcp', 'monday', 'neon', 'notion', //
   'pipedream', 'posthog', 'revenuecat', 'sentry', 'slack', 'stripe', 'superwall', 'supabase', 'trustmrr', //
-  'vercel', 'webflow', 'zapier', 'zoho', 'zoho_mail', 'zoho_crm', 'zoho_desk', 'zoho_books', 'zoho_apps',
+  'vercel', 'webflow', 'zapier', 'zoho', 'zoho_mail', 'zoho_crm', 'zoho_desk', 'zoho_books', 'zoho_apps', //
+  // Model and service key providers (the add-key picker).
+  'openai', 'anthropic', 'google_gemini', 'xai', 'openrouter', 'brave', 'google_maps', 'mapbox',
 };
 
 /// Whether [appId] has a bundled mark (a connect button shows it, D-256).

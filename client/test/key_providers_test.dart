@@ -77,14 +77,12 @@ void main() {
       );
     await tester.pumpWidget(harness(backend, const ModelKeysScreen()));
     await tester.pumpAndSettle();
-    await tester.tap(find.byType(DropdownButtonFormField<ProviderId>));
-    await tester.pumpAndSettle();
-    double y(Finder f) => tester.getTopLeft(f.last).dy;
-    expect(
-      y(find.textContaining('Anthropic')) <
-          y(find.textContaining('OpenRouter')),
-      isTrue,
-    );
+    double x(Finder f) => tester.getTopLeft(f).dx;
+    double y(Finder f) => tester.getTopLeft(f).dy;
+    final anthropic = find.byKey(const Key('provider-anthropic'));
+    final openRouter = find.byKey(const Key('provider-openrouter'));
+    // The server's order: Anthropic's tile comes first (left of, or above, OpenRouter's).
+    expect(y(anthropic) < y(openRouter) || (y(anthropic) == y(openRouter) && x(anthropic) < x(openRouter)), isTrue);
     expect(find.textContaining('Claude models'), findsWidgets);
   });
 

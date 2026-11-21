@@ -41,26 +41,29 @@ void main() {
     expect(KeyProviders.fallback.more.last, ProviderId.openaiCompatible);
   });
 
-  testWidgets('add key: chat providers, then a "More providers" heading over the rest', (tester) async {
+  testWidgets('add key: chat providers as tiles, the rest folded under "More providers"', (tester) async {
     await setSize(tester, const Size(500, 1400));
     await tester.pumpWidget(harness(FakeBackend(), const ModelKeysScreen()));
     await tester.pumpAndSettle();
-    await tester.tap(find.byType(DropdownButtonFormField<ProviderId>));
-    await tester.pumpAndSettle();
     double y(Finder f) => tester.getTopLeft(f.last).dy;
-    final openRouter = y(find.textContaining('OpenRouter'));
-    final xai = y(find.text('xAI'));
-    final more = y(find.byKey(const Key('moreProviders')));
-    final brave = y(find.textContaining('Brave Search'));
-    final compatible = y(find.textContaining('OpenAI-compatible server'));
-    expect(openRouter < xai && xai < more && more < brave && brave < compatible, isTrue, reason: '$openRouter $xai $more $brave $compatible');
+    expect(find.byKey(const Key('provider-openrouter')), findsOneWidget);
+    expect(find.byKey(const Key('provider-xai')), findsOneWidget);
+    // Folded until opened.
+    expect(find.byKey(const Key('provider-brave_search')), findsNothing);
     expect(find.text('More providers'), findsOneWidget);
-
-    // The heading isn't a choice; a provider under it still works as before.
-    await tester.tap(find.byKey(const Key('moreProviders')), warnIfMissed: false);
+    await tester.tap(find.byKey(const Key('moreProviders')));
     await tester.pumpAndSettle();
-    expect(find.byKey(const Key('moreProviders')), findsOneWidget);
-    await tester.tap(find.textContaining('OpenAI-compatible server').last);
+    final openRouter = y(find.byKey(const Key('provider-openrouter')));
+    final xai = y(find.byKey(const Key('provider-xai')));
+    final more = y(find.byKey(const Key('moreProviders')));
+    final brave = y(find.byKey(const Key('provider-brave_search')));
+    final compatible = y(find.byKey(const Key('provider-openai_compatible')));
+    expect(openRouter <= xai && xai < more && more < brave && brave <= compatible, isTrue, reason: '$openRouter $xai $more $brave $compatible');
+
+    // Picking a provider under it changes the form.
+    await tester.ensureVisible(find.byKey(const Key('provider-openai_compatible')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('provider-openai_compatible')));
     await tester.pumpAndSettle();
     expect(find.text('Base URL'), findsOneWidget);
   });
@@ -256,11 +259,11 @@ void main() {
       await setSize(tester, const Size(375, 667));
       await tester.pumpWidget(harness(backend, const ModelKeysScreen()));
       await tester.pumpAndSettle();
-      await tester.ensureVisible(find.byType(DropdownButtonFormField<ProviderId>));
+      await tester.ensureVisible(find.byKey(const Key('moreProviders')));
       await tester.pumpAndSettle();
-      await tester.tap(find.byType(DropdownButtonFormField<ProviderId>));
+      await tester.tap(find.byKey(const Key('moreProviders')));
       await tester.pumpAndSettle();
-      expect(find.byKey(const Key('moreProviders')), findsOneWidget);
+      expect(find.byKey(const Key('provider-openai_compatible')), findsOneWidget);
     });
   });
 }
