@@ -78,6 +78,18 @@ for feed in appcast-macos.xml appcast-windows.xml; do
     -f content="$(base64 < "dist/$feed" | tr -d '\n')" ${sha:+-f sha="$sha"} > /dev/null
   echo "Updated $feed"
 done
+# Homebrew: bump the cask in our tap (stackwares/homebrew-tap) to this DMG. A failure only warns:
+# the feeds above are what installed apps read. Set CASAMA_TAP_REPO= (empty) to skip.
+tap_repo="${CASAMA_TAP_REPO-stackwares/homebrew-tap}"
+if [[ -n "$tap_repo" && -f "dist/Casama-$version-macos.dmg" ]]; then
+  (
+    sha=$(shasum -a 256 "dist/Casama-$version-macos.dmg" | awk '{print $1}')
+    fsha=$(gh api "repos/$tap_repo/contents/Casks/casama.rb" -q .sha 2>/dev/null || true)
+    b64=$(scripts/homebrew-cask.sh "$version" "$sha" | base64 | tr -d '\n')
+    gh api -X PUT "repos/$tap_repo/contents/Casks/casama.rb" -f message="casama $version" \
+      -f content="$b64" ${fsha:+-f sha="$fsha"} > /dev/null && echo "Updated Homebrew cask to $version"
+  ) || echo "Warning: could not bump the Homebrew cask; the update feeds are fine." >&2
+fi
 # Mirror the installers (not the feeds) onto the source repo's Releases page. A failure here leaves the
 # feeds above as they are, so it only warns.
 if [[ -n "$source_repo" && "$source_repo" != "$repo" ]]; then
