@@ -1664,6 +1664,14 @@ class ChatController extends Notifier<ChatState> {
     }
   }
 
+  /// A reply that finished answers the failure above it: after Try Again works, the "no model" or
+  /// "provider error" line no longer describes the chat (a reload already drops it). Group chats keep
+  /// them: another member's run finishing doesn't undo this member's failure.
+  void _dropSupersededFailures(List<ChatEntry> entries, String finishedRunId) {
+    if (group) return;
+    entries.removeWhere((x) => x is NoticeEntry && x.kind == NoticeKind.failed && x.refId != finishedRunId);
+  }
+
   NoticeEntry _failure(RunFailedEvent event) => NoticeEntry(
     kind: NoticeKind.failed,
     text: event.payload.message,
@@ -1871,12 +1879,14 @@ class ChatController extends Notifier<ChatState> {
           stillIdle: () => ref.mounted && state.activeRunId == null,
         ));
         entries.removeWhere((x) => x is MessageEntry && x.streaming);
+        _dropSupersededFailures(entries, e.runId);
         _finishStreaming(entries);
         state = state.copyWith(entries: entries, clearActiveRun: true);
         return;
       case RunCompletedItem():
         // Partial text from a model step that crashed and was re-run never completes; drop it.
         entries.removeWhere((x) => x is MessageEntry && x.streaming);
+        _dropSupersededFailures(entries, e.runId);
         _finishStreaming(entries);
         state = state.copyWith(entries: entries, clearActiveRun: true);
         return;

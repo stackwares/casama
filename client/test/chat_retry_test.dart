@@ -4,6 +4,7 @@ import 'package:casama/core/backend.dart';
 import 'package:casama/core/providers.dart';
 import 'package:casama/features/chat/chat_controller.dart';
 import 'package:casama/features/chat/chat_screen.dart';
+import 'package:casama_sdk/casama_sdk.dart' show RunEventItem;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
@@ -56,6 +57,31 @@ void main() {
     c.apply(_failed);
     await c.retry();
     expect(backend.sentUiActions, [answer, answer]);
+  });
+
+  test('a reply that finishes after Try Again clears the old failure line', () async {
+    final (container, _, c) = setUpChat();
+    await c.open(convId);
+    await c.send('hello');
+    c.apply(ev(1, 'run.failed', {'error_code': 'no_model_configured', 'message': 'This bot has no model.', 'retryable': false}));
+    List<NoticeEntry> failures() => container.read(chatControllerProvider(botId)).entries.whereType<NoticeEntry>().where((n) => n.kind == NoticeKind.failed).toList();
+    expect(failures(), hasLength(1));
+    await c.retry();
+    // The retry is a new run; its failure from before is still on screen while it works.
+    expect(failures(), hasLength(1));
+    const retryRun = '66666666-6666-4666-8666-666666666666';
+    c.apply(RunEventItem.fromJson({...eventJson(5, 'run.completed', {'final_message_id': 'a2'}), 'run_id': retryRun}));
+    expect(failures(), isEmpty);
+  });
+
+  test('the same run failing then completing keeps its own failure line', () async {
+    final (container, _, c) = setUpChat();
+    await c.open(convId);
+    await c.send('hello');
+    c.apply(_failed);
+    c.apply(ev(2, 'run.completed', {'final_message_id': 'x'}));
+    final n = container.read(chatControllerProvider(botId)).entries.whereType<NoticeEntry>().where((n) => n.kind == NoticeKind.failed);
+    expect(n, hasLength(1));
   });
 
   testWidgets('the Try Again under a failed run resends the files', (tester) async {
