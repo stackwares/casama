@@ -103,6 +103,21 @@ describe("sends that arrive together", () => {
       .admin`update public.runs set status = 'completed', ended_at = now() where conversation_id = ${chat}`;
   });
 
+  it("a message sent while an update's pickup run works joins it (D-478)", async () => {
+    const chat = await newChat(bot);
+    // A pickup run (D-402) has no message of the person's own: its task note is what it answers.
+    const [pickup] = await h.tdb.admin<{ id: string }[]>`
+      insert into public.runs (org_id, bot_id, conversation_id, created_by, trigger, status, budget)
+      values (${org}, ${bot}, ${chat}, ${ana.id}, 'chat', 'running',
+              ${h.tdb.admin.json({ task: "Pick up where you stopped", resumes: randomUUID() })})
+      returning id`;
+    const sent = await j(await send(chat, "are you still on it?"));
+    expect(sent).toMatchObject({ run_id: pickup!.id, joined: true });
+    expect(await runsIn(chat)).toHaveLength(1);
+    await h.tdb
+      .admin`update public.runs set status = 'completed', ended_at = now() where conversation_id = ${chat}`;
+  });
+
   it("a group send retried with the same key posts once and wakes each bot once", async () => {
     const lead = await newBot("Lead");
     const writer = await newBot("Writer");
