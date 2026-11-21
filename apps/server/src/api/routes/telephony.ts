@@ -297,10 +297,12 @@ export function registerTelephonyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps)
 export function attachTelephony(server: Server, deps: AppDeps) {
   const wss = new WebSocketServer({ noServer: true });
   server.on("upgrade", (req: IncomingMessage, socket: Duplex, head: Buffer) => {
-    const id = new URL(req.url ?? "/", "http://api").pathname.match(
-      /^\/telephony\/stream\/([0-9a-f-]{36})$/,
+    const path = new URL(req.url ?? "/", "http://api").pathname;
+    if (!path.startsWith("/telephony/stream/")) return;
+    const id = path.match(
+      /^\/telephony\/stream\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/,
     )?.[1];
-    if (!id) return;
+    if (!id) return void socket.destroy();
     wss.handleUpgrade(req, socket, head, (twilio) => bridge(deps, id, twilio));
   });
 }
@@ -327,103 +329,119 @@ function bridge(deps: AppDeps, id: string, twilio: WebSocket) {
   };
   twilio.on("close", () => close());
   twilio.on("error", () => close());
-  twilio.on("message", async (raw) => {
-    let m: {
-      event?: string;
-      streamSid?: string;
-      start?: { streamSid: string; callSid: string; customParameters?: Record<string, string> };
-      media?: { payload: string };
-    };
-    try {
-      m = JSON.parse(String(raw));
-    } catch {
-      return;
-    }
-    if (m.event === "start" && !started) {
-      started = true;
-      streamSid = m.start?.streamSid ?? m.streamSid ?? "";
-      const [call] = await db.execute<{
-        org_id: string;
-        bot_id: string;
-        user_id: string;
-        number: string;
-        purpose: string;
-        notes: string | null;
-        status: string;
-        token: string;
-      }>(sql`
+  // Nothing awaits a socket listener: an error inside it (a database blip, a bad id) would be an
+  // unhandled rejection, which exits the API. It ends this call instead.
+  const guard =
+    <A extends unknown[]>(fn: (...a: A) => Promise<void>) =>
+    (...a: A) =>
+      void fn(...a).catch((err: Error) => {
+        deps.logger.warn("phone stream failed", { call_id: id, error: err.message });
+        close(1011);
+      });
+  twilio.on(
+    "message",
+    guard(async (raw) => {
+      let m: {
+        event?: string;
+        streamSid?: string;
+        start?: { streamSid: string; callSid: string; customParameters?: Record<string, string> };
+        media?: { payload: string };
+      };
+      try {
+        m = JSON.parse(String(raw));
+      } catch {
+        return;
+      }
+      if (m.event === "start" && !started) {
+        started = true;
+        streamSid = m.start?.streamSid ?? m.streamSid ?? "";
+        const [call] = await db.execute<{
+          org_id: string;
+          bot_id: string;
+          user_id: string;
+          number: string;
+          purpose: string;
+          notes: string | null;
+          status: string;
+          token: string;
+        }>(sql`
         select c.org_id, c.bot_id, c.user_id, c.number, c.purpose, c.notes, c.status, c.stream_token_hash as token from public.outbound_calls c where c.id = ${id}::uuid`);
-      // The stream proves itself with the call's one-time token (sent as a TwiML parameter).
-      if (
-        !call ||
-        call.token !== hashStreamToken(m.start?.customParameters?.token ?? "") ||
-        !["ringing", "in_progress", "queued"].includes(call.status)
-      )
-        return close();
-      await db.execute(
-        sql`update public.outbound_calls set status = 'in_progress', started_at = coalesce(started_at, now()), stream_token_hash = 'used' where id = ${id}::uuid`,
-      );
-      const [who] = await db.execute<{ name: string; bot: string }>(sql`
+        // The stream proves itself with the call's one-time token (sent as a TwiML parameter).
+        if (
+          !call ||
+          call.token !== hashStreamToken(m.start?.customParameters?.token ?? "") ||
+          !["ringing", "in_progress", "queued"].includes(call.status)
+        )
+          return close();
+        await db.execute(
+          sql`update public.outbound_calls set status = 'in_progress', started_at = coalesce(started_at, now()), stream_token_hash = 'used' where id = ${id}::uuid`,
+        );
+        const [who] = await db.execute<{ name: string; bot: string }>(sql`
         select coalesce(p.display_name, split_part(u.email, '@', 1), 'the person') as name, b.name as bot
         from public.bots b, auth.users u left join public.profiles p on p.user_id = u.id where b.id = ${call.bot_id}::uuid and u.id = ${call.user_id}::uuid`);
-      // A call on the server's voice key needs credits, like an in-app call.
-      if (deps.billing && (await billsCalls(deps, call.org_id))) {
-        const [ent] = await db.execute<{ plan_code: string | null }>(sql`
+        // A call on the server's voice key needs credits, like an in-app call.
+        if (deps.billing && (await billsCalls(deps, call.org_id))) {
+          const [ent] = await db.execute<{ plan_code: string | null }>(sql`
           select plan_code from public.entitlements
           where org_id = ${call.org_id}::uuid order by created_at desc limit 1`);
-        if (!casamaModelsAllowed(ent?.plan_code ?? "free", true)) {
-          await db.execute(
-            sql`update public.outbound_calls set status = 'failed', error = 'voice_key_missing', ended_at = now() where id = ${id}::uuid`,
-          );
-          return close();
+          if (!casamaModelsAllowed(ent?.plan_code ?? "free", true)) {
+            await db.execute(
+              sql`update public.outbound_calls set status = 'failed', error = 'voice_key_missing', ended_at = now() where id = ${id}::uuid`,
+            );
+            return close();
+          }
+          if ((await deps.billing.balance(call.org_id)) <= 0) {
+            await db.execute(
+              sql`update public.outbound_calls set status = 'failed', error = 'out_of_credits', ended_at = now() where id = ${id}::uuid`,
+            );
+            return close();
+          }
         }
-        if ((await deps.billing.balance(call.org_id)) <= 0) {
-          await db.execute(
-            sql`update public.outbound_calls set status = 'failed', error = 'out_of_credits', ended_at = now() where id = ${id}::uuid`,
-          );
-          return close();
-        }
-      }
-      const s = await deps.workflows.voiceSession(
-        call.org_id,
-        call.bot_id,
-        callInstructions({
-          personName: who?.name ?? "the person",
-          botName: who?.bot ?? "the assistant",
-          purpose: call.purpose,
-          notes: call.notes,
-          number: call.number,
-        }),
-        true,
-      );
-      if (!s.ok) {
-        await db.execute(
-          sql`update public.outbound_calls set status = 'failed', error = ${s.error}, ended_at = now() where id = ${id}::uuid`,
+        const s = await deps.workflows.voiceSession(
+          call.org_id,
+          call.bot_id,
+          callInstructions({
+            personName: who?.name ?? "the person",
+            botName: who?.bot ?? "the assistant",
+            purpose: call.purpose,
+            notes: call.notes,
+            number: call.number,
+          }),
+          true,
         );
-        return close();
-      }
-      // Phone calls are Gemini Live (D-260).
-      ai = geminiBridge(deps, id, s, twilio, () => streamSid, close);
-      bridges.set(id, close);
-      const bridged = ai;
-      untrack = phoneCalls.add(async (code, reason) => {
-        const ended = new Promise((r) => bridged.once("close", r));
-        close(code, reason);
-        if (bridged.readyState !== WebSocket.CLOSED) await ended;
-        await Promise.allSettled([...saving]);
-      });
-    } else if (m.event === "media" && ai?.readyState === WebSocket.OPEN && m.media?.payload) {
-      // 8 kHz μ-law from the phone → 16 kHz PCM for Gemini.
-      const pcm = resamplePcm16(mulawToPcm16(Buffer.from(m.media.payload, "base64")), 8000, 16000);
-      ai.send(
-        JSON.stringify({
-          realtimeInput: {
-            audio: { data: pcm16ToBase64(pcm), mimeType: "audio/pcm;rate=16000" },
-          },
-        }),
-      );
-    } else if (m.event === "stop") close();
-  });
+        if (!s.ok) {
+          await db.execute(
+            sql`update public.outbound_calls set status = 'failed', error = ${s.error}, ended_at = now() where id = ${id}::uuid`,
+          );
+          return close();
+        }
+        // Phone calls are Gemini Live (D-260).
+        ai = geminiBridge(deps, id, s, twilio, () => streamSid, close);
+        bridges.set(id, close);
+        const bridged = ai;
+        untrack = phoneCalls.add(async (code, reason) => {
+          const ended = new Promise((r) => bridged.once("close", r));
+          close(code, reason);
+          if (bridged.readyState !== WebSocket.CLOSED) await ended;
+          await Promise.allSettled([...saving]);
+        });
+      } else if (m.event === "media" && ai?.readyState === WebSocket.OPEN && m.media?.payload) {
+        // 8 kHz μ-law from the phone → 16 kHz PCM for Gemini.
+        const pcm = resamplePcm16(
+          mulawToPcm16(Buffer.from(m.media.payload, "base64")),
+          8000,
+          16000,
+        );
+        ai.send(
+          JSON.stringify({
+            realtimeInput: {
+              audio: { data: pcm16ToBase64(pcm), mimeType: "audio/pcm;rate=16000" },
+            },
+          }),
+        );
+      } else if (m.event === "stop") close();
+    }),
+  );
 }
 
 /**
@@ -485,7 +503,15 @@ function geminiBridge(
     close();
   });
   ai.on("error", () => close());
-  ai.on("message", async (data) => {
+  ai.on(
+    "message",
+    (data) =>
+      void onMessage(data).catch((err: Error) => {
+        deps.logger.warn("phone stream failed", { call_id: id, error: err.message });
+        close();
+      }),
+  );
+  const onMessage = async (data: WebSocket.RawData) => {
     let e: {
       setupComplete?: unknown;
       usageMetadata?: unknown;
@@ -543,11 +569,12 @@ function geminiBridge(
       );
       // end_call: let the goodbye finish playing, then leave the stream (Twilio hangs up).
       if (call.name === "end_call")
-        setTimeout(async () => {
-          await flush();
-          close();
+        setTimeout(() => {
+          void flush()
+            .catch(() => {})
+            .finally(() => close());
         }, 2500);
     }
-  });
+  };
   return ai;
 }

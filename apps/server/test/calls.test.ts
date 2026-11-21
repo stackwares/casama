@@ -303,6 +303,33 @@ describe("calls for you", () => {
     expect(Number(usage!.quantity)).toBe(2);
   }, 90_000);
 
+  it("a bad or failing media stream closes the socket and never takes the API down", async () => {
+    const unhandled: unknown[] = [];
+    const onUnhandled = (e: unknown) => unhandled.push(e);
+    process.on("unhandledRejection", onUnhandled);
+    const db = h.deps.db as unknown as { execute: (...a: unknown[]) => Promise<unknown> };
+    const execute = db.execute;
+    try {
+      // Anyone can open the stream: a database error while it starts must just close it.
+      db.execute = () => Promise.reject(new Error("connection reset"));
+      const base = h.serverUrl!.replace("http", "ws");
+      const ws = new WebSocket(`${base}/telephony/stream/${crypto.randomUUID()}`);
+      await once(ws, "open");
+      ws.send(JSON.stringify({ event: "start", start: { streamSid: "MZ9", callSid: "CA9" } }));
+      await once(ws, "close");
+      db.execute = execute;
+      // An id that only looks like a uuid isn't a stream at all.
+      const dashes = new WebSocket(`${base}/telephony/stream/${"-".repeat(36)}`);
+      dashes.on("error", () => {});
+      await new Promise((r) => dashes.on("close", r));
+      await new Promise((r) => setTimeout(r, 50));
+      expect(unhandled).toEqual([]);
+    } finally {
+      db.execute = execute;
+      process.off("unhandledRejection", onUnhandled);
+    }
+  });
+
   it("refuses emergency, short, denied, personal and over-cap numbers", async () => {
     expect(numberProblem("911")).toMatch(/Emergency/);
     expect(numberProblem("+1911")).not.toBeNull();
