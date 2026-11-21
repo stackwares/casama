@@ -141,6 +141,11 @@ describe("pages", () => {
     expect((await pages.request(pathOf(link))).status).toBe(404);
     // No cookie, no page.
     expect((await pages.request(`/p/${pageId}`)).status).toBe(404);
+    // An id Postgres can't read as a uuid is a missing page, not a 500.
+    expect(
+      (await pages.request(`/p/${"-".repeat(36)}`, { headers: { cookie: "casama_page=x" } }))
+        .status,
+    ).toBe(404);
   });
 
   it("the cookie is scoped to its page and stops working when access goes", async () => {

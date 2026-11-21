@@ -115,6 +115,8 @@ describe("profile photo API", () => {
     expect(removed.photo_id).toBeNull();
     expect((await h.request(`/v1/photos/${again.photo_id}`)).status).toBe(404);
     expect((await h.request("/v1/photos/not-an-id")).status).toBe(404);
+    // Something shaped like a uuid that Postgres can't read is the caller's mistake, not a 500.
+    expect((await h.request(`/v1/photos/${"-".repeat(36)}`)).status).toBe(400);
   });
 
   it("copies the Google photo once, never after it was removed, and again on request", async () => {

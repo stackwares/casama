@@ -4,7 +4,7 @@
  * into a short page-scoped cookie; public pages use their revocable token.
  */
 import { hashPageToken, newPageToken } from "@casama/agent";
-import { type Database, withUserSession } from "@casama/db";
+import { type Database, pgErrorCode, withUserSession } from "@casama/db";
 import { PAGE_CSP_ASSETS, PAGE_CSP_COLLECT, PAGE_HEADERS, renderPage } from "@casama/domain";
 import { captureError } from "@casama/observability";
 import { sql } from "drizzle-orm";
@@ -47,6 +47,8 @@ export function createPagesApp(deps: {
   const app = new Hono();
 
   app.onError((err, c) => {
+    // A link id Postgres can't read as a uuid is just a link that doesn't exist.
+    if (pgErrorCode(err) === "22P02") return notFound();
     captureError(err, { service: "casama-pages", path: c.req.path });
     return c.text("Something went wrong", 500);
   });

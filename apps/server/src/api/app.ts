@@ -111,6 +111,9 @@ import { clientIp } from "./util.ts";
 export const PROVIDER_HOOKS =
   /^\/hooks\/(?:billing\/(?:dodo|revenuecat)|payments\/[0-9a-f-]{36}|registrar\/[^/]+|newsletter\/resend|mail(?:\/events)?)\/?$/;
 
+/** Postgres data exceptions caused by the request's own values (invalid text, too long, out of range, bad dates). */
+const BAD_INPUT_CODES = new Set(["22P02", "22001", "22003", "22007", "22008", "22021"]);
+
 export function createApp(deps: AppDeps) {
   const app = new OpenAPIHono<AppEnv>({
     defaultHook: (result) => {
@@ -243,6 +246,20 @@ export function createApp(deps: AppDeps) {
             ? "You own as many workspaces as you can."
             : "Your plan's limit is reached.",
         ),
+      );
+    }
+    // Input Postgres can't read (an id that only looks like a uuid, an out-of-range number, a
+    // too-long value): the request was wrong, so 400, not a 500 and an error report.
+    if (BAD_INPUT_CODES.has(pgErrorCode(err) ?? "")) {
+      deps.logger.warn("bad input reached the database", {
+        request_id: c.get("requestId"),
+        path: c.req.path,
+        error: pgErrorMessage(err),
+        code: pgErrorCode(err),
+      });
+      return problem(
+        c,
+        new ApiError(400, "bad_request", "The request has a value that isn't valid."),
       );
     }
     deps.logger.error("unhandled error", {
