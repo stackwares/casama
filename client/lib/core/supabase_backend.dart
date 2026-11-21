@@ -27,7 +27,9 @@ import 'backend.dart';
 import 'chatgpt_connect.dart';
 import '../features/widgets/widget_key_store.dart';
 import '../features/watch/watch_key_store.dart';
+import 'crash_reporter.dart' show isCrashNoise;
 import 'rate_limit.dart';
+import 'session_refresh.dart';
 import 'telemetry.dart';
 
 const _terminal = {'run.completed', 'run.failed', 'run.cancelled'};
@@ -43,7 +45,8 @@ class SupabaseBackend implements Backend {
       }
       if (e.event == sb.AuthChangeEvent.signedOut) _setNewPasswordNeeded(false);
       _handOverAppleBrowserToken(e);
-    });
+      // An offline refresh arrives as a stream error; Supabase tries again by itself.
+    }, onError: (Object _) {});
   }
 
   /// A browser sign-in with Apple came back with Apple's refresh token: hand it to the server, so
@@ -85,19 +88,40 @@ class SupabaseBackend implements Backend {
     final client = await CasamaClient.connect(
       apiUrl,
       config: config,
+      // supabase_flutter owns the session and refreshes it; the SDK never does (CallbackSessionStore).
       sessions: CallbackSessionStore(() async {
-        final s = supabase.auth.currentSession;
-        if (s == null) return null;
+        final current = supabase.auth.currentSession;
+        if (current == null) return null;
+        var s = current;
+        // Back from the background with an expired token, before Supabase's timer has run: refresh
+        // now rather than send a call that is sure to get a 401.
+        if (s.isExpired) {
+          try {
+            s = (await supabase.auth.refreshSession()).session ?? s;
+          } catch (_) {
+            s = supabase.auth.currentSession ?? s;
+          }
+        }
+        final exp = s.expiresAt;
         return AuthSession(
           accessToken: s.accessToken,
           refreshToken: s.refreshToken ?? '',
-          // supabase_flutter refreshes tokens itself; never ask the SDK to.
-          expiresAt: DateTime.now().add(const Duration(days: 1)),
+          expiresAt: exp == null ? DateTime.now() : DateTime.fromMillisecondsSinceEpoch(exp * 1000),
           userId: s.user.id,
           email: s.user.email,
         );
       }),
     );
+    // A 401 (the token ran out while the app slept) refreshes once and sends the call again; a
+    // refresh the server refuses signs out, so the app goes to sign-in.
+    client.api.dio.interceptors.add(SessionRefreshInterceptor(
+      client.api.dio,
+      refresh: () async => (await supabase.auth.refreshSession()).session?.accessToken,
+      signOut: () async {
+        if (supabase.auth.currentSession != null) await supabase.auth.signOut(scope: sb.SignOutScope.local);
+      },
+      isNetworkError: (e) => isCrashNoise(e) || e is! sb.AuthException,
+    ));
     // Every call says whether the server answers, for the bar over the app (D-296).
     watchReachability(client.api.dio, apiUrl);
     // A short "too many requests" is waited out and sent again once.
@@ -114,8 +138,10 @@ class SupabaseBackend implements Backend {
   // --- auth -----------------------------------------------------------------
 
   @override
-  Stream<bool> get signedInChanges =>
-      supabase.auth.onAuthStateChange.map((e) => e.session != null);
+  Stream<bool> get signedInChanges => supabase.auth.onAuthStateChange
+      // An offline refresh arrives as a stream error; Supabase tries again by itself.
+      .handleError((Object _) {}, test: (Object? e) => e != null && isCrashNoise(e))
+      .map((e) => e.session != null);
   @override
   bool get isSignedIn => supabase.auth.currentSession != null;
   @override

@@ -209,7 +209,9 @@ class CasamaClient {
   /// Returns the stored session, refreshing it when it is about to expire.
   Future<AuthSession?> currentSession() async {
     final session = await sessions.load();
-    if (session == null || !session.isExpired) return session;
+    // A CallbackSessionStore's auth library refreshes its own tokens: refreshing here too would
+    // spend its refresh token behind its back.
+    if (session == null || !session.isExpired || sessions is CallbackSessionStore) return session;
     final refreshed = await auth.refresh(session.refreshToken);
     await sessions.save(refreshed);
     return refreshed;
