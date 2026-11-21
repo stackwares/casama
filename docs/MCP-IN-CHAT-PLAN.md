@@ -1,8 +1,9 @@
 # MCP servers in chat: plan
 
-Status: **built** (2026-11-21, D-473). All six phases are done and tested; nothing is deployed and
-no app build has been made. What differs from the sections below is in "Status of the build" at the
-end and in D-473.
+Status: **built; server and web app live** (2026-11-22, D-473). The server and the web app (build
+74) are deployed, and the flow was checked live on the local stack. The Android, iOS and Mac builds
+are not made yet. What differs from the sections below is in "Status of the build" at the end and
+in D-473.
 
 Original status: not started (written 2026-11-21). Every decision is made (§3, Oliver: "decide all
 for me"), then "build all in one go".
@@ -164,4 +165,11 @@ Differences from the plan:
 - Two trust states, not three: the registry can't be looked up by address (§3 #9).
 - The limit counts servers marked unverified, whoever connected them.
 
-Left to do, each after Oliver's yes: push, server deploy, web app, then the app builds.
+Live check (2026-11-22, web app against the local stack): a bot offered Microsoft Learn's server,
+the sheet connected it without a sign-in, one of three tools was switched off, and the bot used
+the other two. Two fixes came out of it (cfdcc02f4): a gallery app offered by name and by address
+got two buttons, and the sheet said a sign-in was stored when there was none. They are pushed but
+not deployed.
+
+Left to do, each after Oliver's yes: a server and web app deploy for those two fixes, then the app
+builds.
