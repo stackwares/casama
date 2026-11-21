@@ -191,8 +191,10 @@ fun NowScreen(nav: NavHostController) {
         }
         if (!ambient) {
             item { NavRow(R.drawable.ic_bots, stringResource(R.string.watch_bots), spec) { nav.go(Routes.BOTS) } }
-            item { NavRow(R.drawable.ic_clock, stringResource(R.string.watch_up_next), spec) { nav.go(Routes.UP_NEXT) } }
-            if (g.brief != null && Logic.nowRows(g).none { it is Logic.NowRow.Brief }) {
+            if (rows.none { it is Logic.NowRow.UpNext }) {
+                item { NavRow(R.drawable.ic_clock, stringResource(R.string.watch_up_next), spec) { nav.go(Routes.UP_NEXT) } }
+            }
+            if (g.brief != null && rows.none { it is Logic.NowRow.Brief }) {
                 item { NavRow(R.drawable.ic_brief, stringResource(R.string.watch_brief), spec) { nav.go(Routes.BRIEF) } }
             }
             item { NavRow(R.drawable.ic_settings, stringResource(R.string.watch_settings), spec) { nav.go(Routes.SETTINGS) } }

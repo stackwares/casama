@@ -35,6 +35,7 @@ import androidx.wear.compose.navigation.SwipeDismissableNavHost
 import androidx.wear.compose.navigation.composable
 import androidx.wear.compose.navigation.rememberSwipeDismissableNavController
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.StateFlow
 
 /**
@@ -58,6 +59,16 @@ fun WearRoot(activity: MainActivity, ambientFlow: StateFlow<Boolean>) {
         ambient = ambient,
         hideWhenWristDown = switches.hideWhenWristDown,
     )
+
+    // Keep the glance fresh while the app stays open on the wrist (not in ambient mode).
+    LaunchedEffect(auth is Session.Auth.SignedIn, ambient) {
+        if (auth is Session.Auth.SignedIn && !ambient) {
+            while (true) {
+                delay(15_000)
+                session.refresh()
+            }
+        }
+    }
 
     CompositionLocalProvider(LocalAmbient provides ambient, LocalShowWords provides showWords) {
         // The system's clock on top of every screen (AppScaffold's TimeText, as Wear OS 3 to 6

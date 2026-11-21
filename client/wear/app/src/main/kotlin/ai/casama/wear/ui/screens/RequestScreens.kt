@@ -324,6 +324,7 @@ fun RequestScreen(nav: NavHostController, approvalId: String) {
                     onAllow = { answer(true) },
                     onConfirmTap = { confirming = true },
                     onFilled = { graph.haptics.click() },
+                    onIncomplete = { graph.haptics.click() },
                     modifier = Modifier.transformedHeight(this, spec),
                 )
             }

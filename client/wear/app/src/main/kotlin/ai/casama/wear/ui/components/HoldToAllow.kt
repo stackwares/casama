@@ -6,6 +6,7 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -17,8 +18,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -47,22 +51,26 @@ fun HoldToAllowButton(
     onAllow: () -> Unit,
     onConfirmTap: () -> Unit,
     onFilled: () -> Unit,
+    onIncomplete: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val progress = remember { Animatable(0f) }
+    var pressing by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val talkBack = touchExploration()
     val label = stringResource(R.string.watch_hold_to_allow)
     val hint = stringResource(R.string.watch_hold_hint)
+    val shape = RoundedCornerShape(26.dp)
     Box(
         modifier
             .fillMaxWidth()
             .heightIn(min = 52.dp)
-            .clip(RoundedCornerShape(26.dp))
+            .clip(shape)
             .background(CasamaColors.NeedsContainer)
+            .border(1.5.dp, CasamaColors.Needs.copy(alpha = if (pressing) 0.9f else 0.55f), shape)
             .semantics(mergeDescendants = true) {
                 role = Role.Button
-                contentDescription = "$label. $hint"
+                contentDescription = if (talkBack) "$label. $hint" else label
                 onClick(label) {
                     onConfirmTap()
                     true
@@ -74,10 +82,12 @@ fun HoldToAllowButton(
                     onPress = {
                         if (talkBack) return@detectTapGestures
                         var filled = false
+                        pressing = true
                         val fill = scope.launch {
                             // The fill is for looks. The hold itself is timed in real time: with
                             // "Remove animations" on the fill jumps to full at once, and a touch
                             // must still not allow.
+                            progress.snapTo(0.12f)
                             launch { progress.animateTo(1f, tween(durationMillis = HOLD_MS, easing = LinearEasing)) }
                             delay(HOLD_MS.toLong())
                             progress.snapTo(1f)
@@ -87,9 +97,11 @@ fun HoldToAllowButton(
                             onAllow()
                         }
                         tryAwaitRelease()
+                        pressing = false
                         if (!filled) {
                             fill.cancel()
-                            scope.launch { progress.animateTo(0f, tween(150)) }
+                            onIncomplete()
+                            scope.launch { progress.animateTo(0f, tween(180)) }
                         }
                     },
                 )

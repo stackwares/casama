@@ -58,16 +58,7 @@ fun SettingsScreen(nav: NavHostController) {
     val askBot = ai.casama.wear.core.Logic.askBot(glance.glance, graph.settings.lastAskBotId, self?.askBotId)
     var signingOut by remember { mutableStateOf(false) }
 
-    ListScreen(edgeButton = {
-        EdgeButton(
-            onClick = {
-                if (signingOut) return@EdgeButton
-                signingOut = true
-                scope.launch { session.signOut() }
-            },
-            colors = androidx.wear.compose.material3.ButtonDefaults.buttonColors(containerColor = CasamaColors.StopContainer, contentColor = CasamaColors.OnStopContainer),
-        ) { Text(stringResource(R.string.watch_sign_out)) }
-    }) { spec ->
+    ListScreen { spec ->
         item { Text(stringResource(R.string.watch_settings), style = MaterialTheme.typography.titleSmall) }
         item {
             Info(stringResource(R.string.watch_signed_in_as_label), signedIn?.person ?: self?.personName.orEmpty(), spec)
@@ -97,6 +88,23 @@ fun SettingsScreen(nav: NavHostController) {
                 Format.percent(c.usedShare)?.let { p ->
                     item { Info(stringResource(R.string.watch_credits), "$p%", spec) }
                 }
+            }
+        }
+        item {
+            FilledTonalButton(
+                onClick = {
+                    if (signingOut) return@FilledTonalButton
+                    signingOut = true
+                    scope.launch { session.signOut() }
+                },
+                colors = androidx.wear.compose.material3.ButtonDefaults.filledTonalButtonColors(
+                    containerColor = CasamaColors.StopContainer,
+                    contentColor = CasamaColors.OnStopContainer,
+                ),
+                modifier = Modifier.fillMaxWidth().transformedHeight(this, spec),
+                transformation = SurfaceTransformation(spec),
+            ) {
+                Text(stringResource(R.string.watch_sign_out), maxLines = 1)
             }
         }
     }
@@ -139,20 +147,17 @@ fun SignInScreen(auth: Session.Auth.SignedOut) {
 
     ListScreen(
         edgeButton = when (auth.step) {
-            is Session.SignIn.Code, Session.SignIn.GettingCode -> null
             Session.SignIn.CodeExpired, Session.SignIn.CodeFailed -> {
                 { EdgeButton(onClick = { session.startCode() }) { Text(stringResource(R.string.watch_new_code)) } }
             }
-            else -> {
-                { EdgeButton(onClick = { session.startCode() }) { Text(stringResource(R.string.watch_use_code), maxLines = 1) } }
-            }
+            else -> null
         },
     ) { spec ->
         item {
             Image(
                 painterResource(BotArt.sleepy),
                 contentDescription = null,
-                modifier = Modifier.size(40.dp),
+                modifier = Modifier.size(36.dp),
             )
         }
         reasonLine?.let { r -> item { Text(r, style = MaterialTheme.typography.bodySmall, color = CasamaColors.Secondary, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) } }
@@ -211,6 +216,22 @@ fun SignInScreen(auth: Session.Auth.SignedOut) {
             }
             Session.SignIn.CodeExpired -> item { Message(stringResource(R.string.watch_code_help), null) }
             Session.SignIn.CodeFailed -> item { Message(stringResource(R.string.watch_couldnt_reach), stringResource(R.string.watch_try_again)) }
+        }
+        when (auth.step) {
+            is Session.SignIn.Code, Session.SignIn.GettingCode, Session.SignIn.CodeExpired, Session.SignIn.CodeFailed -> Unit
+            else -> item {
+                FilledTonalButton(
+                    onClick = { session.startCode() },
+                    colors = androidx.wear.compose.material3.ButtonDefaults.filledTonalButtonColors(
+                        containerColor = CasamaColors.Orchid,
+                        contentColor = CasamaColors.OnOrchid,
+                    ),
+                    modifier = Modifier.fillMaxWidth().transformedHeight(this, spec),
+                    transformation = SurfaceTransformation(spec),
+                ) {
+                    Text(stringResource(R.string.watch_use_code), maxLines = 1)
+                }
+            }
         }
     }
 }

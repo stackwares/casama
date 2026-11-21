@@ -4,7 +4,7 @@ Run date: 2026-11-21. Build: `scripts/package-wear.sh debug -PdefaultServer=http
 Emulator: `Casama_Wear_Small_Round` (384x384, density 320, Android 17 / API 36/37) on `emulator-5554`.
 Backend: local Supabase on :54321 / :54322, local API on :8787 (pid 83723) and worker (pid 86406) started with `node` against local environment.
 Account: `wear-debug@example.com` ("Wear Debug" workspace `2bbf119f-6176-423d-9b87-aefab4bfb8f5`). Credentials saved in Vaultwarden item `08313813-0108-4e60-b563-df00a8a82262`.
-Status: **Findings recorded only; no code fixes made during this run (to be fixed in the next run).** Screenshots are stored in `/tmp/wear-debug/`.
+Status: **fixed F1, F2, F3, F4, F5, F6, F7, F8**. Screenshots are stored in `/tmp/wear-debug/`.
 
 ---
 

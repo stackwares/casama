@@ -38,9 +38,12 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
@@ -250,7 +253,7 @@ fun AskScreen(nav: NavHostController, botId: String?, listen: Boolean, conversat
 
     when (val s = stage) {
         Stage.Listening -> Listening(bot, recorder) { recorder.stop() }
-        Stage.Sending -> Message(stringResource(R.string.watch_sending), null)
+        Stage.Sending -> Message(stringResource(R.string.watch_sending), null, modifier = Modifier.fillMaxSize())
         is Stage.Heard -> Heard(
             asked = s.asked,
             onUndo = {
@@ -265,7 +268,7 @@ fun AskScreen(nav: NavHostController, botId: String?, listen: Boolean, conversat
             },
         )
         Stage.Kept -> DoneScreen(stringResource(R.string.watch_kept_offline), null) { nav.popBackStack() }
-        Stage.OutOfCredits -> Message(stringResource(R.string.watch_out_of_credits), null)
+        Stage.OutOfCredits -> Message(stringResource(R.string.watch_out_of_credits), null, modifier = Modifier.fillMaxSize())
         else -> ListScreen(
             edgeButton = if (dictation && bot != null) {
                 {
@@ -337,18 +340,19 @@ private fun Listening(bot: GlanceBot?, recorder: Recorder, onStop: () -> Unit) {
     val label = stringResource(R.string.watch_listening)
     Box(
         Modifier
-            .fillMaxWidth()
+            .fillMaxSize()
+            .padding(top = 22.dp, bottom = 8.dp)
             .semantics { contentDescription = label },
         contentAlignment = Alignment.Center,
     ) {
-        androidx.compose.foundation.layout.Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Box(contentAlignment = Alignment.Center) {
-                Ring(color = CasamaColors.Orchid, size = 96.dp, sweep = 0.25f + 0.75f * level, spinning = false)
-                BotFace(bot?.name.orEmpty(), bot?.avatar, 56.dp)
+                Ring(color = CasamaColors.Orchid, size = 76.dp, sweep = 0.25f + 0.75f * level, spinning = false)
+                BotFace(bot?.name.orEmpty(), bot?.avatar, 44.dp)
             }
-            Spacer(Modifier.height(8.dp))
-            Text(label, style = MaterialTheme.typography.titleSmall, color = CasamaColors.Orchid)
             Spacer(Modifier.height(6.dp))
+            Text(label, style = MaterialTheme.typography.titleSmall, color = CasamaColors.Orchid)
+            Spacer(Modifier.height(4.dp))
             FilledTonalButton(onClick = onStop, label = { Text(stringResource(R.string.watch_tap_to_stop), maxLines = 1) })
         }
     }
@@ -502,41 +506,43 @@ fun WorkingScreen(nav: NavHostController, runId: String) {
         },
     ) { _ ->
         item {
-            Box(contentAlignment = Alignment.Center) {
-                Ring(
-                    color = when (phase) {
-                        RunPhase.PROBLEM -> CasamaColors.Stop
-                        RunPhase.NEEDS_OK, RunPhase.TAKE_OVER -> CasamaColors.Needs
-                        else -> CasamaColors.Working
-                    },
-                    size = 64.dp,
-                    sweep = if (phase.live) 0.3f else 1f,
-                    spinning = phase == RunPhase.WORKING,
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Ring(
+                        color = when (phase) {
+                            RunPhase.PROBLEM -> CasamaColors.Stop
+                            RunPhase.NEEDS_OK, RunPhase.TAKE_OVER -> CasamaColors.Needs
+                            else -> CasamaColors.Working
+                        },
+                        size = 48.dp,
+                        sweep = if (phase.live) 0.3f else 1f,
+                        spinning = phase == RunPhase.WORKING,
+                    )
+                    BotFace(bot, avatar, 32.dp)
+                }
+                Spacer(Modifier.height(4.dp))
+                val title = when (phase) {
+                    RunPhase.FINISHED -> stringResource(R.string.watch_finished)
+                    RunPhase.PROBLEM -> stringResource(R.string.watch_couldnt_finish)
+                    RunPhase.STOPPED -> stringResource(R.string.watch_stopped)
+                    RunPhase.NEEDS_OK -> stringResource(R.string.watch_needs_ok)
+                    RunPhase.TAKE_OVER -> stringResource(R.string.watch_take_over)
+                    RunPhase.WORKING -> stringResource(R.string.watch_is_working, bot)
+                }
+                Text(title, style = MaterialTheme.typography.titleSmall, textAlign = TextAlign.Center, maxLines = 1, modifier = Modifier.fillMaxWidth())
+                if (step.isNotBlank() && phase.live) {
+                    Words(step, maxLines = 2, style = MaterialTheme.typography.bodySmall, color = CasamaColors.Secondary, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+                }
+                val parts = listOfNotNull(
+                    steps.takeIf { it > 0 }?.let { stringResource(R.string.watch_step_count, it.toString()) },
+                    started?.let { runningClock(it, r?.endedAt, running = phase.live) },
                 )
-                BotFace(bot, avatar, 40.dp)
-            }
-        }
-        item {
-            val title = when (phase) {
-                RunPhase.FINISHED -> stringResource(R.string.watch_finished)
-                RunPhase.PROBLEM -> stringResource(R.string.watch_couldnt_finish)
-                RunPhase.STOPPED -> stringResource(R.string.watch_stopped)
-                RunPhase.NEEDS_OK -> stringResource(R.string.watch_needs_ok)
-                RunPhase.TAKE_OVER -> stringResource(R.string.watch_take_over)
-                RunPhase.WORKING -> stringResource(R.string.watch_is_working, bot)
-            }
-            Text(title, style = MaterialTheme.typography.titleSmall, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
-        }
-        if (step.isNotBlank() && phase.live) {
-            item { Words(step, maxLines = 3, style = MaterialTheme.typography.bodyMedium, color = CasamaColors.Secondary, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) }
-        }
-        item {
-            val parts = listOfNotNull(
-                steps.takeIf { it > 0 }?.let { stringResource(R.string.watch_step_count, it.toString()) },
-                started?.let { runningClock(it, r?.endedAt, running = phase.live) },
-            )
-            if (parts.isNotEmpty()) {
-                Text(parts.joinToString(" · "), style = MaterialTheme.typography.bodySmall, color = CasamaColors.Secondary, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+                if (parts.isNotEmpty()) {
+                    Text(parts.joinToString(" · "), style = MaterialTheme.typography.labelSmall, color = CasamaColors.Secondary, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+                }
             }
         }
         if (phase == RunPhase.TAKE_OVER || phase == RunPhase.PROBLEM) {

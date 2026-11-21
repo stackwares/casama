@@ -19,9 +19,12 @@ import ai.casama.wear.ui.theme.CasamaColors
 import ai.casama.wear.voice.Speaker
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
@@ -96,7 +99,7 @@ fun ChatScreen(nav: NavHostController, botId: String, conversationId: String?, r
 
     val c = chat
     if (c == null) {
-        Message(if (offline) stringResource(R.string.watch_couldnt_reach) else stringResource(R.string.watch_chat), null)
+        Message(if (offline) stringResource(R.string.watch_couldnt_reach) else stringResource(R.string.watch_chat), null, modifier = Modifier.fillMaxSize())
         return
     }
     val lastReply = c.messages.lastOrNull { !it.fromUser }
@@ -266,6 +269,7 @@ fun UpNextScreen(nav: NavHostController) {
                     }
                     Words(r.name, maxLines = 2, style = MaterialTheme.typography.titleSmall)
                     if (failed == r.id) Text(stringResource(R.string.watch_couldnt_reach), color = CasamaColors.Stop, style = MaterialTheme.typography.bodySmall)
+                    Spacer(Modifier.height(4.dp))
                     FilledTonalButton(
                         onClick = {
                             if (r.id in started) return@FilledTonalButton
@@ -285,8 +289,13 @@ fun UpNextScreen(nav: NavHostController) {
                             }
                         },
                         enabled = r.enabled,
-                        modifier = Modifier.fillMaxWidth(),
-                        icon = { Icon(painterResource(R.drawable.ic_play), contentDescription = null, modifier = Modifier.size(16.dp)) },
+                        colors = ButtonDefaults.filledTonalButtonColors(
+                            containerColor = CasamaColors.Tone,
+                            contentColor = CasamaColors.OnTone,
+                        ),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                        modifier = Modifier.fillMaxWidth().height(36.dp),
+                        icon = { Icon(painterResource(R.drawable.ic_play), contentDescription = null, modifier = Modifier.size(15.dp)) },
                         label = { Text(stringResource(if (r.id in started) R.string.watch_started else R.string.watch_run_now), maxLines = 1) },
                     )
                 }
@@ -311,6 +320,10 @@ fun BriefScreen(readAloud: Boolean) {
     LaunchedEffect(text) {
         if (readAloud && !text.isNullOrBlank()) speaker.speak(session, null, text, serverVoice = false)
     }
+    fun toggleSpeak() {
+        if (text.isNullOrBlank()) return
+        if (speaking) speaker.stop() else scope.launch { speaker.speak(session, null, text, serverVoice = false) }
+    }
     ListScreen { spec ->
         item { Text(stringResource(R.string.watch_brief), style = MaterialTheme.typography.titleSmall) }
         if (brief == null || text.isNullOrBlank()) {
@@ -323,21 +336,28 @@ fun BriefScreen(readAloud: Boolean) {
             return@ListScreen
         }
         item {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                BotFace(brief.bot, brief.botAvatar, 22.dp)
-                Spacer(Modifier.width(6.dp))
-                Text(brief.at?.let { clockTime(it) } ?: brief.bot, style = MaterialTheme.typography.labelSmall, color = CasamaColors.Secondary)
-            }
-        }
-        item { Words(text, maxLines = 20, style = MaterialTheme.typography.bodyMedium) }
-        item {
             FilledTonalButton(
-                onClick = { if (speaking) speaker.stop() else scope.launch { speaker.speak(session, null, text, serverVoice = false) } },
+                onClick = { toggleSpeak() },
                 modifier = Modifier.fillMaxWidth().transformedHeight(this, spec),
                 transformation = SurfaceTransformation(spec),
                 icon = { Icon(painterResource(if (speaking) R.drawable.ic_stop else R.drawable.ic_speaker), contentDescription = null, modifier = Modifier.size(18.dp)) },
                 label = { Text(stringResource(if (speaking) R.string.watch_stop_reading else R.string.watch_read_aloud), maxLines = 1) },
             )
+        }
+        item {
+            Card(
+                onClick = { toggleSpeak() },
+                modifier = Modifier.fillMaxWidth().transformedHeight(this, spec),
+                transformation = SurfaceTransformation(spec),
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    BotFace(brief.bot, brief.botAvatar, 22.dp)
+                    Spacer(Modifier.width(6.dp))
+                    Text(brief.at?.let { clockTime(it) } ?: brief.bot, style = MaterialTheme.typography.labelSmall, color = CasamaColors.Secondary)
+                }
+                Spacer(Modifier.height(4.dp))
+                Words(text, maxLines = 20, style = MaterialTheme.typography.bodyMedium)
+            }
         }
         brief.nextAt?.let { next ->
             item { Text(stringResource(R.string.watch_brief_at, clockTime(next)), style = MaterialTheme.typography.bodySmall, color = CasamaColors.Secondary, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) }
