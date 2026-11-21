@@ -192,7 +192,7 @@ export function suite(name: string, engine: BrowserType) {
       const facts = async (needle: string) => {
         const a = await call(page, "probe", { ref: refOf(text, needle) });
         expect(a.ok, JSON.stringify(a)).toBe(true);
-        return (a as Answer & { facts: Record<string, never> }).facts;
+        return (a as Answer & { facts: { role: string; name: string } }).facts;
       };
       const click = async (needle: string) => clickVerdict(await facts(needle)).kind;
       const field = async (needle: string) => fieldVerdict(await facts(needle)).kind;

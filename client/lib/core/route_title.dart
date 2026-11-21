@@ -180,6 +180,7 @@ String tabTitleFor(String? fullPath, AppLocalizations l10n, {String? botName}) {
     '/settings/computers' => l10n.computers,
     '/settings/companion' => l10n.useThisComputer,
     '/settings/devices' => l10n.deviceConnections,
+    '/settings/phone-browser' || '/phone-browser' => l10n.appBrowserTitle,
     '/settings/permissions' || '/permissions' => l10n.permissionsScreenTitle,
     '/settings/fold' => l10n.foldScreenTitle,
     '/settings/admin' => l10n.adminConsole,
