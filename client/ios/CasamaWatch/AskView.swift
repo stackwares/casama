@@ -344,6 +344,7 @@ struct AskView: View {
           try? await Task.sleep(nanoseconds: 2_500_000_000)
           guard !Task.isCancelled else { return }
           if let run = asked.runId {
+            model.askedRunBots[run] = botId
             model.replaceTop(with: .run(run))
           } else {
             model.replaceTop(with: .chat(bot: botId, conversation: asked.conversationId))

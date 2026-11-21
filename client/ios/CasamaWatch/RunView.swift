@@ -166,8 +166,10 @@ struct RunView: View {
   var body: some View {
     let run = follower.run
     let phase = run?.phase ?? seed?.phase ?? .working
-    let bot = run?.bot ?? seed?.bot ?? ""
-    let avatar = run?.botAvatar ?? seed?.botAvatar ?? ""
+    // A run just asked from this watch: neither the glance nor the stream knows it yet.
+    let asked = model.askedRunBots[runId].flatMap { model.glance?.bot($0) }
+    let bot = PhoneRoutes.first(run?.bot, seed?.bot, asked?.name, else: "")
+    let avatar = PhoneRoutes.first(run?.botAvatar, seed?.botAvatar, asked?.avatar, else: "")
     let live = follower.reachable && model.online
 
     ScrollView {

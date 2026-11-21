@@ -134,6 +134,9 @@ final class AppModel: ObservableObject {
   /// The last call reached the server. Off, screens drop the live colours and say how old they are.
   @Published var online = true
   @Published var path: [Screen] = []
+  /// The bot each run started from this watch belongs to, so its screen names the bot before the
+  /// glance or the run's stream knows the run.
+  var askedRunBots: [String: String] = [:]
   @Published var flash: Flash?
   @Published var welcome: String?
   @Published var queue: [QueuedAsk] = []
