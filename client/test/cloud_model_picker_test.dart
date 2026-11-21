@@ -213,4 +213,36 @@ void main() {
     expect(find.text(hint), findsNWidgets(2));
     expect(backend.orgModelDefault, isNull);
   });
+
+  testWidgets('Your own provider with only an Anthropic key shows the model picker to finish the switch',
+      (tester) async {
+    final backend = _AnthropicOnlyBackend()
+      ..billingEnabled = true
+      ..ownProvidersValue = true;
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          backendProvider.overrideWithValue(backend),
+          billingProvider.overrideWith((ref) async => backend.billing('org')),
+        ],
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const ModelKeysScreen(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('workspaceDefaultModel-anthropic')), findsNothing);
+    await tester.tap(find.byKey(const Key('workspaceDefaultOwn')));
+    await tester.pump();
+    expect(find.text('Pick a model for this key below to switch.'), findsOneWidget);
+    expect(find.byKey(const Key('workspaceDefaultModel-anthropic')), findsOneWidget);
+    expect(backend.orgModelDefault, isNull);
+  });
+}
+
+class _AnthropicOnlyBackend extends FakeBackend {
+  @override
+  Future<List<Credential>> credentials(String orgId) async => [_key('anthropic', ProviderId.anthropic)];
 }

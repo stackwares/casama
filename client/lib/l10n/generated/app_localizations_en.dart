@@ -18885,7 +18885,8 @@ class AppLocalizationsEn extends AppLocalizations {
       'To use your own provider, add a chat key from it under Add a key below first.';
 
   @override
-  String get whoRunsOwnNeedsModel => 'Pick a model for this key first.';
+  String get whoRunsOwnNeedsModel =>
+      'Pick a model for this key below to switch.';
 
   @override
   String get whoRunsAdminOnly =>

@@ -440,13 +440,25 @@ class ModelKeysScreen extends ConsumerWidget {
 }
 
 /// Workspace default for who runs bots on Casama Cloud when own providers are enabled.
-class _WhoRunsYourBotsSection extends ConsumerWidget {
+class _WhoRunsYourBotsSection extends ConsumerStatefulWidget {
   const _WhoRunsYourBotsSection({required this.org, required this.billing});
   final OrganizationWithRole org;
   final BillingSummary? billing;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_WhoRunsYourBotsSection> createState() => _WhoRunsYourBotsSectionState();
+}
+
+class _WhoRunsYourBotsSectionState extends ConsumerState<_WhoRunsYourBotsSection> {
+  // Set while an admin is switching to their own provider (or to another key) but that key has no
+  // default model: the key and model pickers show, and picking a model saves the switch.
+  bool _pickingOwn = false;
+  String? _pendingKeyId;
+
+  @override
+  Widget build(BuildContext context) {
+    final org = widget.org;
+    final billing = widget.billing;
     final l10n = context.l10n;
     final keys = (ref.watch(credentialsProvider).value ?? const <Credential>[])
         .where((k) => k.id != casamaCloudCredentialId && chatKeyProviders(ref).contains(k.provider))
@@ -457,9 +469,13 @@ class _WhoRunsYourBotsSection extends ConsumerWidget {
     final source = !casamaAvailable
         ? WorkspaceModelDefaultSource_Enum.own
         : (current?.source_ ?? WorkspaceModelDefaultSource_Enum.casama);
-    final chosenKey = keys.where((k) => k.id == current?.credentialId).firstOrNull ?? keys.firstOrNull;
-    final chosenModel = current?.model ??
+    final pendingKey = keys.where((k) => k.id == _pendingKeyId).firstOrNull;
+    final savedKey = keys.where((k) => k.id == current?.credentialId).firstOrNull;
+    final chosenKey = pendingKey ?? savedKey ?? keys.firstOrNull;
+    // The saved model only belongs to the saved key; another key starts from its provider's default.
+    final chosenModel = (chosenKey != null && chosenKey.id == current?.credentialId ? current?.model : null) ??
         (chosenKey == null ? '' : (ref.watch(backendProvider).defaultModelFor(chosenKey.provider.value) ?? ''));
+    final showPickers = (source == WorkspaceModelDefaultSource_Enum.own || _pickingOwn) && keys.isNotEmpty;
 
     Future<void> save(WorkspaceModelDefault next) async {
       if (!admin) return;
@@ -469,6 +485,12 @@ class _WhoRunsYourBotsSection extends ConsumerWidget {
       );
       ref.invalidate(organizationsProvider);
       ref.invalidate(botsProvider);
+      if (mounted) {
+        setState(() {
+          _pickingOwn = false;
+          _pendingKeyId = null;
+        });
+      }
     }
 
     // Switching to your own provider needs a chat-capable key and a model. Say what's missing
@@ -486,6 +508,8 @@ class _WhoRunsYourBotsSection extends ConsumerWidget {
           ? chosenModel
           : (ref.read(backendProvider).defaultModelFor(chosenKey.provider.value) ?? '');
       if (m.isEmpty) {
+        // No default model for this provider: show the pickers so a model can be chosen.
+        setState(() => _pickingOwn = true);
         showMessage(context, l10n.whoRunsOwnNeedsModel);
         return;
       }
@@ -556,7 +580,7 @@ class _WhoRunsYourBotsSection extends ConsumerWidget {
                 FormNote(l10n.whoRunsAdminOnly, icon: LucideIcons.lock)
               else if (keys.isEmpty)
                 FormNote(l10n.whoRunsOwnNeedsKey, icon: LucideIcons.keyRound),
-              if (source == WorkspaceModelDefaultSource_Enum.own && keys.isNotEmpty) ...[
+              if (showPickers) ...[
                 DropdownButtonFormField<String>(
                   key: ValueKey('workspaceDefaultKey-${chosenKey?.id}'),
                   isExpanded: true,
@@ -581,7 +605,8 @@ class _WhoRunsYourBotsSection extends ConsumerWidget {
                       : hapticOnChanged((id) {
                           if (id == null) return;
                           final k = keys.firstWhere((x) => x.id == id);
-                          final m = ref.read(backendProvider).defaultModelFor(k.provider.value) ?? chosenModel;
+                          // Never carry the old key's model over to a different provider.
+                          final m = ref.read(backendProvider).defaultModelFor(k.provider.value) ?? '';
                           if (m.isNotEmpty) {
                             save(
                               WorkspaceModelDefault(
@@ -590,22 +615,33 @@ class _WhoRunsYourBotsSection extends ConsumerWidget {
                                 model: m,
                               ),
                             );
+                          } else {
+                            setState(() {
+                              _pickingOwn = true;
+                              _pendingKeyId = k.id;
+                            });
+                            showMessage(context, l10n.whoRunsOwnNeedsModel);
                           }
                         }, haptic: HapticsHelper.selection),
                 ),
-                ModelPickerField(
-                  credentialId: chosenKey?.id,
-                  value: chosenModel,
-                  onChanged: (m) {
-                    if (!admin || chosenKey == null || m.isEmpty) return;
-                    save(
-                      WorkspaceModelDefault(
-                        source_: WorkspaceModelDefaultSource_Enum.own,
-                        credentialId: chosenKey.id,
-                        model: m,
-                      ),
-                    );
-                  },
+                // Non-admins see the model but can't open the list (a pick would be thrown away).
+                IgnorePointer(
+                  ignoring: !admin,
+                  child: ModelPickerField(
+                    key: ValueKey('workspaceDefaultModel-${chosenKey?.id}'),
+                    credentialId: chosenKey?.id,
+                    value: chosenModel,
+                    onChanged: (m) {
+                      if (!admin || chosenKey == null || m.isEmpty) return;
+                      save(
+                        WorkspaceModelDefault(
+                          source_: WorkspaceModelDefaultSource_Enum.own,
+                          credentialId: chosenKey.id,
+                          model: m,
+                        ),
+                      );
+                    },
+                  ),
                 ),
               ],
             ],

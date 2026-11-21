@@ -6245,7 +6245,7 @@
   "whoRunsOwn": "Your own provider",
   "whoRunsOwnHelp": "Billed directly by your provider; uses no Casama credits",
   "whoRunsOwnNeedsKey": "To use your own provider, add a chat key from it under Add a key below first.",
-  "whoRunsOwnNeedsModel": "Pick a model for this key first.",
+  "whoRunsOwnNeedsModel": "Pick a model for this key below to switch.",
   "whoRunsAdminOnly": "Only workspace admins can change who runs your bots.",
   "botModelSource": "Model source",
   "botModelSourceWorkspace": "Workspace default",

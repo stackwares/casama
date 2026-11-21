@@ -30527,7 +30527,7 @@ abstract class AppLocalizations {
   /// No description provided for @whoRunsOwnNeedsModel.
   ///
   /// In en, this message translates to:
-  /// **'Pick a model for this key first.'**
+  /// **'Pick a model for this key below to switch.'**
   String get whoRunsOwnNeedsModel;
 
   /// No description provided for @whoRunsAdminOnly.
