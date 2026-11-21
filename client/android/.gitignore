@@ -18,3 +18,6 @@ key.properties
 # Crashlytics mapping file id, written by scripts/package-android.sh for each official build (D-416).
 app/src/main/res/values/crashlytics_mapping_id.xml
 app/src/main/assets/sentry-debug-meta.properties
+
+# Written by scripts/app-browser-switch.sh: compiles the phone browser in (docs/PHONE-BROWSER-PLAN.md).
+app-browser.on

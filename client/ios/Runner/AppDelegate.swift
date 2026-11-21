@@ -10,6 +10,9 @@ import UIKit
 import UserNotifications
 import flutter_callkit_incoming
 import native_geofence
+#if CASAMA_APP_BROWSER
+import WebKit
+#endif
 
 @main
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate, PKPushRegistryDelegate {
@@ -103,6 +106,13 @@ import native_geofence
     if let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "CasamaSignInSheet") {
       SignInSheet.shared.attach(registrar.messenger())
     }
+    // The browser a bot can use on this phone (docs/PHONE-BROWSER-PLAN.md): only in builds with
+    // the CASAMA_APP_BROWSER flag (Flutter/AppBrowser.xcconfig, scripts/app-browser-switch.sh).
+    #if CASAMA_APP_BROWSER
+    if let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "CasamaAppBrowser") {
+      AppBrowser.shared.attach(registrar)
+    }
+    #endif
     if let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "CasamaIsland") {
       IslandActivities.shared.attach(registrar.messenger())
     }
@@ -803,3 +813,297 @@ final class DropBridge: NSObject, UIDropInteractionDelegate {
     }
   }
 }
+
+// MARK: - The phone browser (docs/PHONE-BROWSER-PLAN.md): one WKWebView a bot can drive while the
+// person watches. The contract with Dart is client/lib/features/app_browser/PROTOCOL.md §3.
+//
+// - Its own data store, so its cookies and storage are apart from everything else (iOS 17+).
+// - The page script (assets/app_browser/page_agent.js) runs in its own content world, in every
+//   frame, from document start; commands go to it with callAsyncJavaScript in that world.
+// - Dart decides every main-frame navigation before it loads, and again where it lands.
+// - Script-made clicks only: iOS has no public way to send a real touch into a web view.
+
+#if CASAMA_APP_BROWSER
+final class AppBrowser: NSObject, WKNavigationDelegate, WKUIDelegate, FlutterPlatformViewFactory, UIGestureRecognizerDelegate {
+  static let shared = AppBrowser()
+  /// A fixed id for the bots' own cookie jar.
+  private static let store = UUID(uuidString: "6B0F4C1E-5C0A-4A7E-9C2B-CA5A3A0B0751")!
+  private var channel: FlutterMethodChannel?
+  private var registrar: FlutterPluginRegistrar?
+  private var web: WKWebView?
+  private weak var holder: UIView?
+  private var dialog: ((Bool, String?) -> Void)?
+
+  private var world: WKContentWorld { WKContentWorld.world(name: "casama") }
+
+  func attach(_ registrar: FlutterPluginRegistrar) {
+    self.registrar = registrar
+    let channel = FlutterMethodChannel(name: "casama/app_browser", binaryMessenger: registrar.messenger())
+    channel.setMethodCallHandler { [weak self] call, result in self?.handle(call, result) }
+    self.channel = channel
+    registrar.register(self, withId: "casama/app_browser_view")
+  }
+
+  private var unsupported: String? {
+    if #available(iOS 17.0, *) { return nil }
+    return "needs_ios_17"
+  }
+
+  private func handle(_ call: FlutterMethodCall, _ result: @escaping FlutterResult) {
+    let args = call.arguments as? [String: Any] ?? [:]
+    switch call.method {
+    case "supported":
+      result(["supported": unsupported == nil, "reason": unsupported as Any, "realTaps": false])
+    case "load":
+      guard let raw = args["url"] as? String, let url = URL(string: raw) else {
+        return result(FlutterError(code: "bad_args", message: "url", details: nil))
+      }
+      guard let w = view() else { return result(FlutterError(code: "unsupported", message: unsupported, details: nil)) }
+      approved.insert(raw)
+      w.load(URLRequest(url: url))
+      result(nil)
+    case "command":
+      command(args["json"] as? String ?? "{}", timeoutMs: args["timeout_ms"] as? Int ?? 30_000, result)
+    case "screenshot":
+      guard let w = web else { return result(FlutterError(code: "no_page", message: "No page is open", details: nil)) }
+      let quality = CGFloat(min(95, max(30, args["quality"] as? Int ?? 70))) / 100
+      let config = WKSnapshotConfiguration()
+      // Half size is plenty for a model and for the small card.
+      config.snapshotWidth = NSNumber(value: Double(max(1, w.bounds.width / 2)))
+      w.takeSnapshot(with: config) { image, error in
+        guard let data = image?.jpegData(compressionQuality: quality) else {
+          return result(FlutterError(code: "failed", message: error?.localizedDescription, details: nil))
+        }
+        result(["data": data.base64EncodedString()])
+      }
+    case "url":
+      result([
+        "url": web?.url?.absoluteString ?? "about:blank",
+        "title": web?.title ?? "",
+        "loading": web?.isLoading ?? false,
+        "canGoBack": web?.canGoBack ?? false,
+        "canGoForward": web?.canGoForward ?? false,
+      ])
+    case "back": web?.goBack(); result(nil)
+    case "forward": web?.goForward(); result(nil)
+    case "reload": web?.reload(); result(nil)
+    case "stop": web?.stopLoading(); result(nil)
+    case "answerDialog":
+      let done = dialog
+      dialog = nil
+      done?(args["accept"] as? Bool ?? false, args["text"] as? String)
+      result(nil)
+    case "clearData":
+      clearData(args["host"] as? String) { result(nil) }
+    case "dispose":
+      dispose()
+      result(nil)
+    default:
+      // "tap" included: there are no real taps on iOS (supported says realTaps false).
+      result(FlutterMethodNotImplemented)
+    }
+  }
+
+  /// The one web view, made on first use. Nil before iOS 17.
+  private func view() -> WKWebView? {
+    if let web = web { return web }
+    guard #available(iOS 17.0, *), let registrar = registrar else { return nil }
+    let config = WKWebViewConfiguration()
+    config.websiteDataStore = WKWebsiteDataStore(forIdentifier: AppBrowser.store)
+    config.mediaTypesRequiringUserActionForPlayback = .all
+    config.preferences.javaScriptCanOpenWindowsAutomatically = false
+    let key = registrar.lookupKey(forAsset: "assets/app_browser/page_agent.js")
+    if let path = Bundle.main.path(forResource: key, ofType: nil), let source = try? String(contentsOfFile: path, encoding: .utf8) {
+      config.userContentController.addUserScript(
+        WKUserScript(source: source, injectionTime: .atDocumentStart, forMainFrameOnly: false, in: world))
+    }
+    let w = WKWebView(frame: holder?.bounds ?? .zero, configuration: config)
+    w.navigationDelegate = self
+    w.uiDelegate = self
+    w.allowsBackForwardNavigationGestures = true
+    #if DEBUG
+    if #available(iOS 16.4, *) { w.isInspectable = true }
+    #endif
+    // Says when a real finger touches the page (so the bot pauses); it never takes the touch.
+    let touch = TouchWatcher(target: self, action: #selector(touched))
+    touch.cancelsTouchesInView = false
+    touch.delaysTouchesBegan = false
+    touch.delaysTouchesEnded = false
+    touch.delegate = self
+    w.addGestureRecognizer(touch)
+    web = w
+    if let holder = holder { put(w, into: holder) }
+    return w
+  }
+
+  @objc private func touched() {}
+
+  func gestureRecognizer(_ g: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith other: UIGestureRecognizer) -> Bool { true }
+
+  fileprivate func fingerDown() { channel?.invokeMethod("userTouched", arguments: nil) }
+
+  private func put(_ w: UIView, into holder: UIView) {
+    w.removeFromSuperview()
+    w.frame = holder.bounds
+    w.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+    holder.addSubview(w)
+  }
+
+  // MARK: Page script
+
+  private func command(_ json: String, timeoutMs: Int, _ result: @escaping FlutterResult) {
+    guard let w = web else {
+      return result("{\"ok\":false,\"code\":\"error\",\"message\":\"No page is open\"}")
+    }
+    var answered = false
+    let finish: (String) -> Void = { text in
+      if answered { return }
+      answered = true
+      result(text)
+    }
+    DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(timeoutMs)) {
+      finish("{\"ok\":false,\"code\":\"error\",\"message\":\"The page didn't answer in time\"}")
+    }
+    let body = "const a = globalThis.__casamaPageAgent; if (!a) return JSON.stringify({ok:false,code:'error',message:'The page is not ready yet'}); return JSON.stringify(await a.handle(JSON.parse(cmd)));"
+    w.callAsyncJavaScript(body, arguments: ["cmd": json], in: nil, in: world) { outcome in
+      switch outcome {
+      case .success(let value):
+        finish(value as? String ?? "{\"ok\":false,\"code\":\"error\",\"message\":\"The page gave no answer\"}")
+      case .failure(let error):
+        let message = error.localizedDescription.replacingOccurrences(of: "\\", with: " ").replacingOccurrences(of: "\"", with: "'")
+        finish("{\"ok\":false,\"code\":\"error\",\"message\":\"\(message)\"}")
+      }
+    }
+  }
+
+  // MARK: Navigation
+
+  /// Addresses Dart already allowed, each good for one load.
+  private var approved = Set<String>()
+
+  private func ask(_ method: String, _ args: [String: Any], _ done: @escaping (Bool) -> Void) {
+    guard let channel = channel else { return done(false) }
+    channel.invokeMethod(method, arguments: args) { answer in done((answer as? Bool) == true) }
+  }
+
+  func webView(_ webView: WKWebView, decidePolicyFor action: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+    // Frames inside a page follow the page; only the page's own address is decided.
+    guard action.targetFrame?.isMainFrame ?? true, let url = action.request.url else { return decisionHandler(.allow) }
+    let raw = url.absoluteString
+    if raw == "about:blank" || approved.remove(raw) != nil { return decisionHandler(.allow) }
+    let user = action.navigationType == .linkActivated || action.navigationType == .formSubmitted
+    ask("navigate", ["url": raw, "redirect": action.navigationType == .other, "user": user]) { ok in
+      decisionHandler(ok ? .allow : .cancel)
+    }
+  }
+
+  /// A link that wants a new window loads in this one: there is one page.
+  func webView(_ webView: WKWebView, createWebViewWith configuration: WKWebViewConfiguration, for action: WKNavigationAction, windowFeatures: WKWindowFeatures) -> WKWebView? {
+    if action.targetFrame == nil { webView.load(action.request) }
+    return nil
+  }
+
+  func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
+    channel?.invokeMethod("pageStarted", arguments: ["url": webView.url?.absoluteString ?? ""])
+  }
+
+  func webView(_ webView: WKWebView, didCommit navigation: WKNavigation!) {
+    let raw = webView.url?.absoluteString ?? ""
+    if raw.isEmpty || raw == "about:blank" { return }
+    // Where the page really landed, after redirects.
+    ask("landed", ["url": raw]) { ok in
+      if !ok, let blank = URL(string: "about:blank") {
+        webView.stopLoading()
+        webView.load(URLRequest(url: blank))
+      }
+    }
+  }
+
+  func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+    channel?.invokeMethod("pageFinished", arguments: ["url": webView.url?.absoluteString ?? "", "title": webView.title ?? ""])
+  }
+
+  func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {
+    channel?.invokeMethod("gone", arguments: ["reason": "killed"])
+  }
+
+  // MARK: Dialogs (Dart answers with answerDialog, or dismisses after 30 seconds)
+
+  private func hold(_ kind: String, _ message: String, _ done: @escaping (Bool, String?) -> Void) {
+    dialog?(false, nil)
+    var finished = false
+    let once: (Bool, String?) -> Void = { accept, text in
+      if finished { return }
+      finished = true
+      done(accept, text)
+    }
+    dialog = once
+    channel?.invokeMethod("dialog", arguments: ["kind": kind, "message": message])
+    // The backstop: a completion handler that is never called crashes the web view.
+    DispatchQueue.main.asyncAfter(deadline: .now() + 60) { once(false, nil) }
+  }
+
+  func webView(_ webView: WKWebView, runJavaScriptAlertPanelWithMessage message: String, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping () -> Void) {
+    hold("alert", message) { _, _ in completionHandler() }
+  }
+
+  func webView(_ webView: WKWebView, runJavaScriptConfirmPanelWithMessage message: String, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping (Bool) -> Void) {
+    hold("confirm", message) { accept, _ in completionHandler(accept) }
+  }
+
+  func webView(_ webView: WKWebView, runJavaScriptTextInputPanelWithPrompt prompt: String, defaultText: String?, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping (String?) -> Void) {
+    hold("prompt", prompt) { accept, text in completionHandler(accept ? (text ?? "") : nil) }
+  }
+
+  // MARK: Data
+
+  private func clearData(_ host: String?, _ done: @escaping () -> Void) {
+    guard #available(iOS 17.0, *) else { return done() }
+    let store = WKWebsiteDataStore(forIdentifier: AppBrowser.store)
+    let types = WKWebsiteDataStore.allWebsiteDataTypes()
+    guard let host = host else {
+      return store.removeData(ofTypes: types, modifiedSince: .distantPast, completionHandler: done)
+    }
+    store.fetchDataRecords(ofTypes: types) { records in
+      let mine = records.filter { host == $0.displayName || host.hasSuffix("." + $0.displayName) || $0.displayName.hasSuffix("." + host) }
+      store.removeData(ofTypes: types, for: mine, completionHandler: done)
+    }
+  }
+
+  private func dispose() {
+    dialog?(false, nil)
+    dialog = nil
+    approved.removeAll()
+    web?.stopLoading()
+    web?.removeFromSuperview()
+    web = nil
+  }
+
+  // MARK: The view
+
+  func create(withFrame frame: CGRect, viewIdentifier viewId: Int64, arguments args: Any?) -> FlutterPlatformView {
+    let box = AppBrowserBox(frame: frame)
+    holder = box.container
+    if let w = view() { put(w, into: box.container) }
+    return box
+  }
+}
+
+/// The frame a screen shows the page in. The page outlives it: the web view moves to the next one.
+private final class AppBrowserBox: NSObject, FlutterPlatformView {
+  let container: UIView
+  init(frame: CGRect) {
+    container = UIView(frame: frame)
+    container.clipsToBounds = true
+  }
+  func view() -> UIView { container }
+}
+
+/// Notices a finger going down on the page, then steps aside so the page gets the touch.
+private final class TouchWatcher: UIGestureRecognizer {
+  override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent) {
+    AppBrowser.shared.fingerDown()
+    state = .failed
+  }
+}
+#endif

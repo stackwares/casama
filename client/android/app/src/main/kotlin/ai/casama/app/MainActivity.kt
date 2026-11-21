@@ -65,6 +65,9 @@ class MainActivity : FlutterFragmentActivity() {
             .setMethodCallHandler { call, result -> WidgetChannel.handle(applicationContext, call, result) }
         // Wear OS (D-410): signing a watch in, workspace switches and sign-out (WATCH-PROTOCOL §3).
         WearBridge.attach(MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "casama/watch"), this)
+        // The browser a bot can use on this phone (docs/PHONE-BROWSER-PLAN.md). A stub unless the
+        // build switch is on.
+        AppBrowserBridge.attach(flutterEngine, this)
         // The island on Android (D-324, Phase 5): the app's feed drawn as live notifications.
         val island = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "casama/island")
         LiveRun.channel = island

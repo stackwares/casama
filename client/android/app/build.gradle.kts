@@ -14,8 +14,19 @@ val keyProperties = Properties().apply {
     if (file.exists()) file.inputStream().use { load(it) }
 }
 
+// The browser inside the phone app (docs/PHONE-BROWSER-PLAN.md) is compiled in only when asked for:
+// CASAMA_APP_BROWSER=1 in the environment, or the marker file scripts/app-browser-switch.sh writes.
+// Without it the app has a stub bridge and no WebView code or library.
+val appBrowser = System.getenv("CASAMA_APP_BROWSER") == "1" || rootProject.file("app-browser.on").exists()
+
 android {
     namespace = "ai.casama.app"
+
+    sourceSets {
+        getByName("main") {
+            kotlin.srcDir(if (appBrowser) "src/appBrowser/kotlin" else "src/noAppBrowser/kotlin")
+        }
+    }
     // Some plugins (receive_sharing_intent, permission_handler) need API 37 to compile against.
     compileSdk = 37
     ndkVersion = flutter.ndkVersion
@@ -112,4 +123,7 @@ dependencies {
     implementation("androidx.work:work-runtime-ktx:2.11.2")
     // The Wear OS link (WearBridge.kt, D-410): Data Layer messages with the watch app.
     implementation("com.google.android.gms:play-services-wearable:20.0.1")
+    // The phone browser's WebView (AppBrowserBridge.kt): profiles and isolated script worlds need
+    // 1.16 or later. Only in builds with the switch on.
+    if (appBrowser) implementation("androidx.webkit:webkit:1.18.0")
 }
