@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
 import {
+  basePlanTier,
   casamaModelsAllowed,
   checkModelAccess,
   DEFAULT_MODEL_ACCESS,
@@ -117,5 +118,33 @@ describe("model-access", () => {
     expect(emergencyErr.message).toBe(
       "Casama's models are paused. Add your own model key in Settings to keep chatting.",
     );
+  });
+});
+
+describe("plan codes with a billing period (D-465 audit)", () => {
+  const access = {
+    own_providers: true,
+    casama_models: {
+      default: "off" as const,
+      plans: { plus: "on" as const, max_weekly: "off" as const },
+    },
+    note: null,
+  };
+  it("a yearly or weekly plan follows its base tier", () => {
+    expect(casamaModelsAllowed("plus_yearly", true, access)).toBe(true);
+    expect(casamaModelsAllowed("plus_weekly", true, access)).toBe(true);
+    expect(basePlanTier("pro_yearly")).toBe("pro");
+  });
+  it("an exact code wins over its base tier", () => {
+    expect(
+      casamaModelsAllowed("max_weekly", true, {
+        ...access,
+        casama_models: { default: "on", plans: { max: "on", max_weekly: "off" } },
+      }),
+    ).toBe(false);
+  });
+  it("offers an upgrade only to a real paid tier", () => {
+    expect(upgradeGivesCasamaModels("free", access)).toBe(true);
+    expect(upgradeGivesCasamaModels("plus_yearly", access)).toBe(false);
   });
 });

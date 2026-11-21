@@ -15,6 +15,12 @@ export interface FallbackOptions {
   idleTimeoutMs?: number;
   sleep?: (ms: number) => Promise<void>;
   onAttempt?: (info: { model: string; attempt: number; error?: string; err?: unknown }) => void;
+  /**
+   * Called as each attempt starts, with the index of its entry in `chain`. Billing follows the
+   * entry that is answering, never a model-id lookup: the own key and Casama's key can name the
+   * same model (D-465).
+   */
+  onStart?: (info: { model: string; attempt: number; chainIndex: number }) => void;
 }
 
 /**
@@ -38,7 +44,10 @@ export function withFallback(
     let lastError: unknown;
     for (let i = 0; i < attempts.length; i++) {
       const model = attempts[i] as ResolvedModel;
+      // A single-model chain is tried twice: both attempts are its entry 0.
+      const chainIndex = chain.length === 1 ? 0 : i;
       if (i > 0) await sleep(backoff * 2 ** (i - 1));
+      opts.onStart?.({ model: model.model, attempt: i, chainIndex });
       const ctrl = new AbortController();
       const onAbort = () => ctrl.abort(req.abortSignal?.reason);
       req.abortSignal?.addEventListener("abort", onAbort, { once: true });
@@ -60,7 +69,8 @@ export function withFallback(
             continue;
           }
           produced = true;
-          yield ev;
+          // The finish event names the chain entry that answered, for billing (D-465).
+          yield ev.type === "finish" ? { ...ev, chainIndex } : ev;
           arm(idle);
         }
         opts.onAttempt?.({ model: model.model, attempt: i });

@@ -117,16 +117,33 @@ export async function loadRemoteSettings(db: Exec, warn?: (msg: string, e: unkno
   }
 }
 
-/** Loads the settings now and every minute. Returns a stop function. */
+/**
+ * Loads the settings now and every minute. Returns a stop function whose `ready` settles when the
+ * first load has finished (or failed), at most [firstLoadMs] later. Await it before serving or
+ * running work: until then the built-in defaults apply (own providers off, every plan on
+ * Casama's models), which would run and bill recovered runs the wrong way (D-465).
+ */
 export function startRemoteSettings(
   db: Exec,
   logger?: { warn(msg: string, data?: Record<string, unknown>): void },
+  firstLoadMs = 15_000,
 ) {
   const warn = (msg: string, e: unknown) => logger?.warn(msg, { error: (e as Error).message });
-  void loadRemoteSettings(db, warn);
+  const first = loadRemoteSettings(db, warn).catch((e) => warn("remote settings not loaded", e));
   const timer = setInterval(() => void loadRemoteSettings(db, warn), EVERY_MS);
   timer.unref?.();
-  return () => clearInterval(timer);
+  let wait: ReturnType<typeof setTimeout> | undefined;
+  const ready = Promise.race([
+    first,
+    new Promise<void>((resolve) => {
+      wait = setTimeout(() => {
+        logger?.warn("remote settings: first load still running, starting with defaults", {});
+        resolve();
+      }, firstLoadMs);
+      wait.unref?.();
+    }),
+  ]).finally(() => clearTimeout(wait));
+  return Object.assign(() => clearInterval(timer), { ready });
 }
 
 // ---------------------------------------------------------------- prompts (#8)

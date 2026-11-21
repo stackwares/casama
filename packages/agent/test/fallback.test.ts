@@ -96,3 +96,34 @@ describe("withFallback idle timeout", () => {
     expect(text).toBe("ab");
   });
 });
+
+describe("withFallback names the chain entry that answered (D-465)", () => {
+  it("reports the Casama fallback's index even when both entries name the same model", async () => {
+    const { ModelCallError } = await import("../src/gateway/types.ts");
+    const own: ResolvedModel = { ...model, credentialId: "own-key" };
+    const casama: ResolvedModel = { ...model, credentialId: "casama-key" };
+    const gateway: ModelGateway = {
+      async *stream(req): AsyncIterable<GatewayEvent> {
+        // The own key is out of balance; Casama's key answers with the same model id.
+        if (req.model.credentialId === "own-key")
+          throw new ModelCallError("402 out of credits", { retryable: true });
+        yield { type: "text", text: "hi" };
+        yield {
+          type: "finish",
+          finishReason: "stop",
+          usage: { inputTokens: 1, outputTokens: 1 },
+          model: model.model,
+        } as GatewayEvent;
+      },
+    };
+    const starts: number[] = [];
+    let answered: number | undefined;
+    for await (const ev of withFallback(gateway, [own, casama], {
+      sleep: async () => {},
+      onStart: (a) => starts.push(a.chainIndex),
+    })({ system: [], messages: [] }))
+      if (ev.type === "finish") answered = ev.chainIndex;
+    expect(starts).toEqual([0, 1]);
+    expect(answered).toBe(1);
+  });
+});

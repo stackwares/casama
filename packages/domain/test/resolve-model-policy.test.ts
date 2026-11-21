@@ -346,4 +346,100 @@ describe("resolveModelPolicy", () => {
       expect(withFallbackWhenOff.policy.fallbacks).toBeUndefined();
     }
   });
+
+  describe("a bot's own key that can't run (D-465 audit)", () => {
+    const broken = (fallback_on_limit: boolean) => [
+      { id: K_OR, provider: "openrouter", status: "needs_reconnect", fallback_on_limit },
+      { id: K_OAI, provider: "openai", status: "ok" },
+    ];
+
+    it("runs the bot's own fallback key before anything else", () => {
+      const res = resolveModelPolicy({
+        billingEnabled: true,
+        hasPlatformKey: true,
+        planCode: "pro",
+        botPolicy: {
+          source: "own",
+          primary: { credential_id: K_OR, model: "deepseek/deepseek-v4.1-flash-1017" },
+          fallbacks: [{ credential_id: K_OAI, model: "gpt-6-luna" }],
+        },
+        credentials: broken(false),
+        access: ALL_ON,
+      });
+      expect(res.ok).toBe(true);
+      if (!res.ok) return;
+      expect(res.policy.primary.credential_id).toBe(K_OAI);
+      expect(res.onCasamaKey).toBe(false);
+    });
+
+    it("keeps the broken key instead of quietly spending Casama credits", () => {
+      const res = resolveModelPolicy({
+        billingEnabled: true,
+        hasPlatformKey: true,
+        planCode: "pro",
+        botPolicy: {
+          source: "own",
+          primary: { credential_id: K_OR, model: "deepseek/deepseek-v4.1-flash-1017" },
+        },
+        credentials: broken(false),
+        access: ALL_ON,
+      });
+      expect(res.ok).toBe(true);
+      if (!res.ok) return;
+      expect(res.policy.primary.credential_id).toBe(K_OR);
+      expect(res.onCasamaKey).toBe(false);
+      expect(res.policy.fallbacks ?? []).toEqual([]);
+    });
+
+    it("lets Casama's models stand in when the owner turned that on", () => {
+      const res = resolveModelPolicy({
+        billingEnabled: true,
+        hasPlatformKey: true,
+        planCode: "pro",
+        botPolicy: {
+          source: "own",
+          primary: { credential_id: K_OR, model: "deepseek/deepseek-v4.1-flash-1017" },
+        },
+        credentials: broken(true),
+        access: ALL_ON,
+      });
+      expect(res.ok).toBe(true);
+      if (!res.ok) return;
+      expect(res.onCasamaKey).toBe(true);
+    });
+
+    it("ignores a model_default whose model isn't a string", () => {
+      const res = resolveModelPolicy({
+        billingEnabled: true,
+        hasPlatformKey: true,
+        planCode: "pro",
+        botPolicy: {},
+        workspaceDefault: {
+          source: "own",
+          credential_id: K_OAI,
+          model: 123 as unknown as string,
+        },
+        credentials: [{ id: K_OAI, provider: "openai", status: "ok" }],
+        access: ALL_ON,
+      });
+      expect(res.ok).toBe(true);
+      if (!res.ok) return;
+      expect(res.policy.primary.credential_id).toBe(K_OAI);
+      expect(typeof res.policy.primary.model).toBe("string");
+    });
+  });
+
+  it("self-hosted with no key at all says no model, not a plan limit", () => {
+    const res = resolveModelPolicy({
+      billingEnabled: false,
+      hasPlatformKey: false,
+      planCode: "selfhost",
+      botPolicy: {},
+      credentials: [],
+      access: ALL_ON,
+    });
+    expect(res.ok).toBe(false);
+    if (res.ok) return;
+    expect(res.code).toBe("no_model_configured");
+  });
 });

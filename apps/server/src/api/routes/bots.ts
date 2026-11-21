@@ -393,8 +393,10 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
           actingUserId: claims.sub,
           modelOverrides: modelOverrides(deps.env),
         });
+        // Nobody picked a key for this bot, so it follows the workspace default. Without the
+        // source the stored own key would read as the bot's own pick and pin it (D-465).
         modelPolicy = resolved.ok
-          ? resolved.policy
+          ? { ...resolved.policy, source: "workspace" }
           : deps.env.CLOUD_MODEL_UPSTREAM_KEY
             ? cloudRunPolicy(assigned)
             : lockCloudPolicy(body.model_policy ?? {}, locked);
@@ -1386,6 +1388,12 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     }
     if (!orgId) throw new ApiError(409, "slug_taken", "Could not create your space; try again");
     if (deps.billing?.enabled) await deps.billing.recompute(orgId);
+    // The plan recompute() just gave the workspace: Casama's models can be off for it (D-465).
+    const [ent] = deps.env.BILLING_ENABLED
+      ? await db.execute<{ plan_code: string | null }>(sql`
+          select plan_code from public.entitlements where org_id = ${orgId}::uuid
+          order by created_at desc limit 1`)
+      : [];
     // A new person gets what a new bot gets: its empty chat, with apps to connect and starter
     // requests. There is no scripted welcome chat any more.
     const w = await startWelcome(db, {
@@ -1395,7 +1403,7 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       modelOverrides: modelOverrides(deps.env),
       platformModel:
         Boolean(deps.env.CLOUD_MODEL_UPSTREAM_KEY) &&
-        (!deps.env.BILLING_ENABLED || casamaModelsAllowed("free", true)),
+        (!deps.env.BILLING_ENABLED || casamaModelsAllowed(ent?.plan_code ?? "free", true)),
     });
     track(db, {
       event: "workspace_created",
@@ -1618,6 +1626,17 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       throw new ApiError(400, "validation_failed", "base_url is required for openai_compatible", {
         errors: [{ path: "base_url", message: "Required" }],
       });
+    }
+    // On Casama Cloud only a self-hosted OpenAI-compatible server takes a base URL: any other
+    // provider talks to its own public API, and a custom URL there is just a way to reach
+    // internal addresses from Casama's servers (D-465).
+    if (deps.env.BILLING_ENABLED && body.base_url && body.provider !== "openai_compatible") {
+      throw new ApiError(
+        400,
+        "validation_failed",
+        "A base URL is only allowed for an OpenAI-compatible server",
+        { errors: [{ path: "base_url", message: "Not allowed for this provider" }] },
+      );
     }
     if (deps.env.BILLING_ENABLED && body.base_url) {
       let host = "";

@@ -177,6 +177,7 @@ export class CredentialResolver {
       model: choice.model,
       apiKey: row.key ?? undefined,
       ...this.viaGateway(row.provider, row.base_url),
+      ...(row.base_url ? { customBaseUrl: true } : {}),
       credentialId: choice.credential_id,
       credentialLabel: row.label,
       reasoningEffort,
@@ -326,6 +327,7 @@ export class CredentialResolver {
         model: "text-embedding-3-small",
         apiKey: row.key,
         baseUrl: row.base_url ?? undefined,
+        ...(row.base_url ? { customBaseUrl: true } : {}),
         credentialId: row.id,
       };
     }
@@ -335,6 +337,7 @@ export class CredentialResolver {
       model: row.embedding_model as string,
       apiKey: row.key || "local",
       baseUrl: row.base_url,
+      customBaseUrl: true,
       credentialId: row.id,
     };
   }

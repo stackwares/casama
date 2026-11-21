@@ -195,7 +195,7 @@ export async function extractMemories(
   model: ResolvedModel,
   transcript: ChatMessage[],
   known: string[],
-): Promise<{ memories: ExtractedMemory[]; usage: Usage; model: string }> {
+): Promise<{ memories: ExtractedMemory[]; usage: Usage; model: string; chainIndex?: number }> {
   const text = memoryTranscript(transcript);
   const r = await collect(
     gateway.stream({
@@ -210,5 +210,10 @@ export async function extractMemories(
       maxOutputTokens: 600,
     }),
   );
-  return { memories: parseExtraction(r.text), usage: r.usage, model: r.model || model.model };
+  return {
+    memories: parseExtraction(r.text),
+    usage: r.usage,
+    model: r.model || model.model,
+    chainIndex: r.chainIndex,
+  };
 }

@@ -32,7 +32,22 @@ const ACCESS_KEYS = ["own_providers", "casama_models", "note"] as const;
 const CASAMA_KEYS = ["default", "plans"] as const;
 const PLAN_CODE = /^[a-z0-9_]{1,40}$/;
 const MAX_NOTE_LENGTH = 500;
-const KNOWN_PAID_PLANS = ["starter", "pro", "max"] as const;
+/** The paid tiers in `public.plans` (each also sold as `<tier>_yearly` and `<tier>_weekly`). */
+const KNOWN_PAID_PLANS = ["plus", "pro", "max"] as const;
+/** Billing-period suffixes on plan codes (`plus_yearly`, `pro_weekly`, …). */
+const PERIOD_SUFFIX = /_(?:weekly|monthly|yearly|annual|annually|week|month|year)$/;
+
+/** Lower-cased plan code, `free` when empty. */
+function normalizePlanCode(planCode: string | null | undefined): string {
+  return (planCode?.trim() ? planCode.trim() : "free").toLowerCase();
+}
+
+/** The base tier of a plan code: `plus_yearly` → `plus`, `max_weekly` → `max`, `pro` → `pro`. */
+export function basePlanTier(planCode: string | null | undefined): string {
+  const code = normalizePlanCode(planCode);
+  const base = code.replace(PERIOD_SUFFIX, "");
+  return base || code;
+}
 
 const isRecord = (v: unknown): v is Record<string, unknown> =>
   typeof v === "object" && v !== null && !Array.isArray(v);
@@ -158,8 +173,10 @@ export function casamaModelsAllowed(
   access: ModelAccess = current,
 ): boolean {
   if (!billingEnabled) return true;
-  const code = (planCode?.trim() ? planCode.trim() : "free").toLowerCase();
-  const specific = access.casama_models.plans[code];
+  const code = normalizePlanCode(planCode);
+  // An exact code (`pro_weekly`) wins over its base tier (`pro`), which wins over the default.
+  const specific =
+    access.casama_models.plans[code] ?? access.casama_models.plans[basePlanTier(code)];
   const state = specific ?? access.casama_models.default;
   return state === "on";
 }
@@ -171,13 +188,17 @@ export function upgradeGivesCasamaModels(
   planCode: string | null | undefined,
   access: ModelAccess = current,
 ): boolean {
-  const code = (planCode?.trim() ? planCode.trim() : "free").toLowerCase();
+  const code = normalizePlanCode(planCode);
   if (casamaModelsAllowed(code, true, access)) return false;
+  const tier = basePlanTier(code);
   for (const paid of KNOWN_PAID_PLANS) {
-    if (paid !== code && casamaModelsAllowed(paid, true, access)) return true;
+    if (paid !== tier && casamaModelsAllowed(paid, true, access)) return true;
   }
   for (const [other, state] of Object.entries(access.casama_models.plans)) {
-    if (other !== code && state === "on") return true;
+    if (state !== "on" || other === code || basePlanTier(other) === tier) continue;
+    // Free is never an upgrade.
+    if (basePlanTier(other) === "free") continue;
+    return true;
   }
   return false;
 }

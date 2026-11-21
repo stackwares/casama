@@ -13,7 +13,12 @@ import {
 } from "@casama/agent";
 import type { Database } from "@casama/db";
 import { contentKeys } from "@casama/db";
-import { CHAT_PROVIDERS, casamaModelsAllowed, nextRunAt } from "@casama/domain";
+import {
+  CHAT_PROVIDERS,
+  casamaModelsAllowed,
+  nextRunAt,
+  ownProvidersAllowed,
+} from "@casama/domain";
 import { sql } from "drizzle-orm";
 
 interface RoutineRow {
@@ -212,11 +217,16 @@ export async function claimDueRoutines(
                   where org_id = ${r.org_id}::uuid
                     and status = 'ok'
                     and provider = any(${`{${CHAT_PROVIDERS.join(",")}}`}::text[])
+                    -- A ChatGPT plan runs only for its owner: a teammate's plan can't run this
+                    -- routine, so it mustn't wake it (it would fail and notify every time).
+                    and (provider <> 'chatgpt' or owner_user_id = ${r.created_by}::uuid)
                 ) as ok`),
             ]);
             const planCode = ent?.plan_code ?? "free";
             const billingOn = planCode !== "selfhost";
-            if (casamaModelsAllowed(planCode, billingOn) || ownChat?.ok) {
+            // An own key only counts while own providers are allowed on this server (D-465).
+            const ownUsable = Boolean(ownChat?.ok) && ownProvidersAllowed(billingOn);
+            if (casamaModelsAllowed(planCode, billingOn) || ownUsable) {
               waitingForModel = false;
               await tx.execute(
                 sql`update public.routines set waiting_for_model = false where id = ${r.id}::uuid`,

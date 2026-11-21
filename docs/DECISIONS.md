@@ -7096,3 +7096,38 @@ Implemented `docs/OWN-KEYS-PLAN.md` (Phases 0–4).
   `gateway/ai-sdk.ts`).
 - **Tests:** `packages/domain/test/model-access.test.ts`,
   `packages/domain/test/resolve-model-policy.test.ts`, `apps/server/test/own-keys.test.ts`.
+
+## D-466 Own model providers: audit fixes for billing, custom URLs and the bot's own key (2026-11-21)
+
+An audit of D-465 after it went live found Casama's key could pay for runs nobody was charged for,
+and a custom base URL could reach internal addresses. Fixed:
+
+- **Billing follows the key that answered.** `withFallback` tags each finish event with the index of
+  the chain entry that served it (`chainIndex`), and `onPlatformKey` reads that entry's credential.
+  An own key and Casama's key can name the same model id, so the model alone can't tell them apart.
+- **Casama's key as a fallback passes Casama's checks.** When a run's primary is an own key and
+  "use Casama's models if my provider fails" puts Casama's key in the chain, `spend()` checks credits
+  and the daily cap for that fallback too. If they fail, the run keeps going on the own key alone,
+  without the fallback, instead of being refused.
+- **Custom base URLs on Cloud.** Only `openai_compatible` keys take a base URL on a billed server
+  (`createCredential` refuses others). Any model whose base URL came from a workspace key
+  (`ResolvedModel.customBaseUrl`) goes through the safe fetch, and every provider now receives it
+  (OpenAI, Anthropic, Google and xAI didn't).
+- **A bot's own key that can't run** (needs reconnect, plan usage off, a teammate's ChatGPT plan)
+  tries the bot's own fallback keys, then the workspace's own default. Casama's models stand in only
+  when the key's owner turned that on; otherwise the run keeps the key and reports its own error, as
+  before D-465. Self-hosted again skips a teammate's plan to the bot's fallback key, and a server with
+  no key says `no_model_configured`, not a plan limit.
+- **Plan codes:** `casamaModelsAllowed` matches `plus_yearly`, `max_weekly` and so on by base tier;
+  an exact code still wins. `upgradeGivesCasamaModels` lists the real tiers (plus, pro, max).
+- **Startup:** API and worker wait (up to 15 s) for the first `model_access` load before serving or
+  recovering runs, so recovered runs aren't billed with the defaults.
+- **Smaller:** shadow decisions respect the per-plan switch; check-ins on Casama's key may use its
+  assigned background model; routines only wake for a key that can run them; an OpenAI-compatible
+  key keeps its own embedding model on Cloud; the welcome bot checks the workspace's real plan; a
+  malformed `model_default` is ignored instead of crashing runs or the app's workspace parse; new
+  bots made without a key choice store `source: "workspace"` (the app sends that when the key
+  wasn't touched) instead of pinning the first key.
+- **App:** "Who runs your bots" became two picture cards with key chips and explains what's missing
+  instead of ignoring a tap; keys with no default model can be picked; ChatGPT plans aren't offered
+  as the workspace default (they only run for their owner); the add-key provider list is logo tiles.

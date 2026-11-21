@@ -294,6 +294,8 @@ if (env.MODE === "api") {
   // Models, prices and guard sites from Admin (D-373, D-374): loaded now and every minute.
   const stopRemoteSettings = startRemoteSettings(handle.db, logger);
   stoppers.push(async () => stopRemoteSettings());
+  // Model access (own keys, Casama's models per plan) must be loaded before the first request.
+  await stopRemoteSettings.ready;
   // Check-in and setup prompts from the gallery (D-374), every 15 minutes.
   const stopPrompts = startGalleryPrompts(env, logger);
   stoppers.push(async () => stopPrompts());
@@ -365,6 +367,8 @@ if (env.MODE === "api") {
   // Models and prices from Admin (D-373): the worker bills runs, calls and media with them.
   const stopRemoteSettings = startRemoteSettings(galleryDb.db, logger);
   stoppers.push(async () => stopRemoteSettings());
+  // Model access must be loaded before DBOS recovers or starts any run (D-465).
+  await stopRemoteSettings.ready;
   // Check-in and setup prompts from the gallery (D-374): the worker runs the briefs and scans.
   const stopPrompts = startGalleryPrompts(env, logger);
   stoppers.push(async () => stopPrompts());

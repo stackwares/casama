@@ -112,6 +112,13 @@ export type ResolveModelPolicyResult =
           note: null;
           actions: Array<"connect">;
         }
+      | {
+          /** Self-hosted: no key on the server and none on the bot (not a plan limit). */
+          code: "no_model_configured";
+          message: string;
+          note: null;
+          actions: Array<"connect">;
+        }
     ));
 
 const CHAT_SET = new Set<string>([...KEY_PROVIDERS.runs_chat, "chatgpt"]);
@@ -150,6 +157,9 @@ function checkCredential(
   return { ok: true, cred };
 }
 
+/** A trimmed string, or "" for anything else (model_default can be written raw via /rest/v1). */
+const str = (v: unknown): string => (typeof v === "string" ? v.trim() : "");
+
 /**
  * Resolves the effective `ModelPolicy` for a run, background completion, check-in verdict, or bot
  * creation/update.
@@ -176,7 +186,10 @@ export function resolveModelPolicy(input: ResolveModelPolicyInput): ResolveModel
     }
     return {
       ...(rawBot.source ? { source: rawBot.source } : {}),
-      primary: { credential_id: PLATFORM_OPENROUTER_CREDENTIAL_ID, model: lockedModel },
+      primary: {
+        credential_id: PLATFORM_OPENROUTER_CREDENTIAL_ID,
+        model: lockedModel,
+      },
     };
   };
 
@@ -238,11 +251,10 @@ export function resolveModelPolicy(input: ResolveModelPolicyInput): ResolveModel
       );
       if (check.ok) {
         const model =
-          input.workspaceDefault.model?.trim() ||
+          str(input.workspaceDefault.model) ||
           defaultModelForProvider(check.cred.provider, input.modelOverrides);
-        const cheap = input.workspaceDefault.cheap_model?.trim()
-          ? { credential_id: check.cred.id, model: input.workspaceDefault.cheap_model.trim() }
-          : undefined;
+        const cheapModel = str(input.workspaceDefault.cheap_model);
+        const cheap = cheapModel ? { credential_id: check.cred.id, model: cheapModel } : undefined;
         return {
           ok: true,
           policy: buildOwnPolicy(
@@ -269,6 +281,25 @@ export function resolveModelPolicy(input: ResolveModelPolicyInput): ResolveModel
       if (primaryCred?.provider === "chatgpt") {
         const check = checkCredential(primaryCred, input.actingUserId);
         if (!check.ok && check.reason === "not_yours") {
+          // As before D-465: the bot's own fallback key runs before the server's shared key.
+          const fallbacks = locked.fallbacks ?? [];
+          const usable = fallbacks.findIndex(
+            (f) => checkCredential(byId.get(f.credential_id), input.actingUserId).ok,
+          );
+          if (usable >= 0) {
+            const next = fallbacks[usable] as PolicyModelChoice;
+            const rest = fallbacks.filter((_, i) => i !== usable);
+            return {
+              ok: true,
+              policy: {
+                ...(locked as BotModelPolicy),
+                primary: next,
+                ...(rest.length ? { fallbacks: rest } : { fallbacks: undefined }),
+              } as BotModelPolicy & { primary: PolicyModelChoice },
+              onCasamaKey: next.credential_id === PLATFORM_OPENROUTER_CREDENTIAL_ID,
+              resolvedFrom: "bot",
+            };
+          }
           if (shared) {
             return {
               ok: true,
@@ -303,9 +334,13 @@ export function resolveModelPolicy(input: ResolveModelPolicyInput): ResolveModel
         resolvedFrom: "casama",
       };
     }
+    // A self-hosted server has no plans: this is a missing key, not "not on this plan".
     return {
       ok: false,
-      ...ownProviderRequiredError({ planCode: input.planCode, access }),
+      code: "no_model_configured",
+      message: "This bot has no model. Add a model key and pick a model in the bot settings.",
+      note: null,
+      actions: ["connect"],
     };
   }
 
@@ -328,6 +363,9 @@ export function resolveModelPolicy(input: ResolveModelPolicyInput): ResolveModel
   }
 
   let sawChatGptNotYours = false;
+  // Set when the bot's own key exists but can't run and Casama's models may not stand in for it:
+  // the workspace's own default may still take over (it costs Casama nothing), Casama's key won't.
+  let keepBotKey: ResolveModelPolicyResult | null = null;
 
   // Level 1: The bot's own choice (§3.1).
   // Existing Cloud bots have Casama's key saved and no `source`, so they follow the workspace.
@@ -356,7 +394,7 @@ export function resolveModelPolicy(input: ResolveModelPolicyInput): ResolveModel
     const check = checkCredential(byId.get(rawBot.primary.credential_id), input.actingUserId);
     if (check.ok) {
       const model =
-        rawBot.primary.model?.trim() ||
+        str(rawBot.primary.model) ||
         defaultModelForProvider(check.cred.provider, input.modelOverrides);
       return {
         ok: true,
@@ -372,13 +410,74 @@ export function resolveModelPolicy(input: ResolveModelPolicyInput): ResolveModel
       };
     }
     if (check.reason === "not_yours") sawChatGptNotYours = true;
-    // Key was deleted or belongs to another user's ChatGPT plan: move to level 2.
+    const botCred = byId.get(rawBot.primary.credential_id);
+    if (botCred && CHAT_SET.has(botCred.provider)) {
+      // The key still exists but can't run now (needs reconnect, plan usage off, a teammate's
+      // ChatGPT plan). The bot's own fallback keys come first, as before D-465.
+      const fallbacks = rawBot.fallbacks ?? [];
+      for (let i = 0; i < fallbacks.length; i++) {
+        const f = fallbacks[i] as PolicyModelChoice;
+        if (f.credential_id === PLATFORM_OPENROUTER_CREDENTIAL_ID) continue;
+        const fc = checkCredential(byId.get(f.credential_id), input.actingUserId);
+        if (!fc.ok) continue;
+        return {
+          ok: true,
+          policy: buildOwnPolicy(
+            fc.cred,
+            {
+              ...f,
+              credential_id: fc.cred.id,
+              model:
+                str(f.model) || defaultModelForProvider(fc.cred.provider, input.modelOverrides),
+            },
+            undefined,
+            fallbacks.filter((_, j) => j !== i),
+            rawBot.source ?? "own",
+          ),
+          onCasamaKey: false,
+          resolvedFrom: "bot",
+        };
+      }
+      // Casama's models only stand in when the owner turned that on for this key; never quietly
+      // spend credits otherwise (D-465).
+      if (!botCred.fallback_on_limit || !casamaAllowed) {
+        if (check.reason === "not_yours") {
+          keepBotKey = {
+            ok: false,
+            code: "chatgpt_plan_not_yours",
+            message:
+              "This bot uses a teammate's personal ChatGPT plan. Connect your own ChatGPT plan or add an API key in Settings.",
+            note: null,
+            actions: ["connect"],
+          };
+        } else {
+          // Keep the key: the run reports its own error (reconnect, plan usage off) as before.
+          keepBotKey = {
+            ok: true,
+            policy: {
+              ...rawBot,
+              source: rawBot.source ?? "own",
+              primary: {
+                ...rawBot.primary,
+                model:
+                  str(rawBot.primary.model) ||
+                  defaultModelForProvider(botCred.provider, input.modelOverrides),
+              },
+              fallbacks: undefined,
+            } as BotModelPolicy & { primary: PolicyModelChoice },
+            onCasamaKey: false,
+            resolvedFrom: "bot",
+          };
+        }
+      }
+    }
+    // Key was deleted, or can't run now: move to level 2.
   }
 
   // Level 2: The workspace default (§3.1).
   const ws = input.workspaceDefault;
   if (ws?.source === "casama") {
-    if (casamaAllowed) {
+    if (casamaAllowed && !keepBotKey) {
       return {
         ok: true,
         policy: casamaPolicy(),
@@ -390,10 +489,9 @@ export function resolveModelPolicy(input: ResolveModelPolicyInput): ResolveModel
     const check = checkCredential(byId.get(ws.credential_id), input.actingUserId);
     if (check.ok) {
       const model =
-        ws.model?.trim() || defaultModelForProvider(check.cred.provider, input.modelOverrides);
-      const cheap = ws.cheap_model?.trim()
-        ? { credential_id: check.cred.id, model: ws.cheap_model.trim() }
-        : undefined;
+        str(ws.model) || defaultModelForProvider(check.cred.provider, input.modelOverrides);
+      const cheapModel = str(ws.cheap_model);
+      const cheap = cheapModel ? { credential_id: check.cred.id, model: cheapModel } : undefined;
       return {
         ok: true,
         policy: buildOwnPolicy(
@@ -409,6 +507,9 @@ export function resolveModelPolicy(input: ResolveModelPolicyInput): ResolveModel
     }
     if (check.reason === "not_yours") sawChatGptNotYours = true;
   }
+
+  // The bot's own key can't run and Casama may not stand in: report that key's own problem.
+  if (keepBotKey) return keepBotKey;
 
   // Level 3: Casama's models, if allowed for the plan (§3.1, §3.3).
   if (casamaAllowed) {

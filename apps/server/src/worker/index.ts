@@ -371,7 +371,10 @@ export async function startWorker(opts: WorkerOptions) {
     if (mode === "none") return null;
     if (mode === "hash") return hashEmbedder();
     const cred = await credentials.embeddingCredential(orgId);
-    if (cred && opts.billing) cred.model = (await getCloudModels(db)).embedding;
+    // Casama's assigned embedding model is for OpenAI keys; an OpenAI-compatible server keeps the
+    // embedding model its owner named (D-271).
+    if (cred && opts.billing && cred.provider === "openai")
+      cred.model = (await getCloudModels(db)).embedding;
     if (cred) return openAiEmbedder(cred, billingOn ? fetchOut : undefined);
     // No OpenAI key of their own: the shared OpenRouter key, on OpenAI's text-embedding-3-small
     // (1536 dimensions, like every stored vector; $0.02 per million tokens) (D-194).

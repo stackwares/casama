@@ -29,15 +29,33 @@ import {
 export function languageModel(m: ResolvedModel, fetchImpl?: typeof fetch): LanguageModel {
   switch (m.provider) {
     case "openai":
-      return createOpenAI({ apiKey: m.apiKey, baseURL: m.baseUrl, headers: m.headers })(m.model);
+      return createOpenAI({
+        apiKey: m.apiKey,
+        baseURL: m.baseUrl,
+        headers: m.headers,
+        fetch: fetchImpl,
+      })(m.model);
     case "anthropic":
-      return createAnthropic({ apiKey: m.apiKey, baseURL: m.baseUrl, headers: m.headers })(m.model);
+      return createAnthropic({
+        apiKey: m.apiKey,
+        baseURL: m.baseUrl,
+        headers: m.headers,
+        fetch: fetchImpl,
+      })(m.model);
     case "google":
-      return createGoogleGenerativeAI({ apiKey: m.apiKey, baseURL: m.baseUrl, headers: m.headers })(
-        m.model,
-      );
+      return createGoogleGenerativeAI({
+        apiKey: m.apiKey,
+        baseURL: m.baseUrl,
+        headers: m.headers,
+        fetch: fetchImpl,
+      })(m.model);
     case "xai":
-      return createXai({ apiKey: m.apiKey, baseURL: m.baseUrl, headers: m.headers })(m.model);
+      return createXai({
+        apiKey: m.apiKey,
+        baseURL: m.baseUrl,
+        headers: m.headers,
+        fetch: fetchImpl,
+      })(m.model);
     case "openrouter":
       return createOpenAICompatible({
         name: "openrouter",
@@ -255,7 +273,7 @@ export class AiSdkGateway implements ModelGateway {
    * a workspace's own OpenRouter key keeps the routing set on its OpenRouter account.
    * `platformChatRouting`, when set, replaces it for calls a person is waiting on, so live chat can
    * run on a faster provider while background work stays on the cheapest (D-355).
-   * `customFetch` guards `openai_compatible` base URLs on Casama Cloud (§8).
+   * `customFetch` guards base URLs from a workspace's own keys on Casama Cloud (§8, D-465).
    */
   constructor(
     opts: {
@@ -284,9 +302,16 @@ export class AiSdkGateway implements ModelGateway {
       });
     }
     let costPromise = Promise.resolve<number | undefined>(undefined);
+    // A base URL from the workspace's own key (any provider, not only openai_compatible) goes
+    // through the safe fetch on Casama Cloud, which refuses private and internal addresses.
+    const guarded =
+      req.model.customBaseUrl || req.model.provider === "openai_compatible"
+        ? this.customFetch
+        : undefined;
     const fetchImpl =
       req.model.provider === "openrouter"
         ? openRouterFetch({
+            fetchImpl: guarded,
             user: req.model.platformKey ? req.model.openRouterUser : undefined,
             denyDataCollection: req.model.platformKey === true,
             routing: req.model.platformKey
@@ -297,9 +322,7 @@ export class AiSdkGateway implements ModelGateway {
               costPromise = cost;
             },
           })
-        : req.model.provider === "openai_compatible"
-          ? this.customFetch
-          : undefined;
+        : guarded;
     let result: ReturnType<typeof streamText>;
     try {
       result = streamText({

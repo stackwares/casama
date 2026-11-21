@@ -53,9 +53,11 @@ const orgOut = (o: {
       md && (md.source === "casama" || md.source === "own")
         ? {
             source: md.source,
-            ...(md.credential_id !== undefined ? { credential_id: md.credential_id } : {}),
-            ...(md.model !== undefined ? { model: md.model } : {}),
-            ...(md.cheap_model !== undefined ? { cheap_model: md.cheap_model } : {}),
+            // The column can be written raw through /rest/v1: send only well-formed strings, so a
+            // bad value can't break the apps' parse of the workspace (D-465).
+            ...(typeof md.credential_id === "string" ? { credential_id: md.credential_id } : {}),
+            ...(typeof md.model === "string" ? { model: md.model } : {}),
+            ...(typeof md.cheap_model === "string" ? { cheap_model: md.cheap_model } : {}),
           }
         : null,
     created_at: iso(o.createdAt),

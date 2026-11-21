@@ -36,6 +36,11 @@ export interface ResolvedModel {
   platformKey?: boolean;
   /** Sent as OpenRouter's `user`, so one workspace can't get the whole account blocked. */
   openRouterUser?: string;
+  /**
+   * The base URL came from the workspace's own key settings (not Casama's AI Gateway), so on
+   * Casama Cloud its requests go through the safe fetch that refuses private addresses.
+   */
+  customBaseUrl?: boolean;
 }
 
 export type ChatMessage =
@@ -93,6 +98,11 @@ export type GatewayEvent =
       model: string;
       /** Set by adapters whose usage is billed elsewhere (a ChatGPT plan costs Casama nothing). */
       provider?: ProviderId;
+      /**
+       * Set by withFallback: the index in its chain of the entry that answered. Whether the call
+       * ran on Casama's key is read from that entry's credential, not from the model id (D-465).
+       */
+      chainIndex?: number;
     };
 
 export interface ModelRequest {
@@ -150,6 +160,7 @@ export async function collect(stream: AsyncIterable<GatewayEvent>) {
   let finishReason = "stop";
   let model = "";
   let provider: ProviderId | undefined;
+  let chainIndex: number | undefined;
   for await (const ev of stream) {
     if (ev.type === "text") text += ev.text;
     else if (ev.type === "tool_call") toolCalls.push(ev.call);
@@ -158,7 +169,8 @@ export async function collect(stream: AsyncIterable<GatewayEvent>) {
       finishReason = ev.finishReason;
       model = ev.model;
       provider = ev.provider;
+      chainIndex = ev.chainIndex;
     }
   }
-  return { text, toolCalls, usage, finishReason, model, provider };
+  return { text, toolCalls, usage, finishReason, model, provider, chainIndex };
 }

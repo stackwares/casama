@@ -2905,6 +2905,13 @@ async function spend(
     !cloudModelAllowed(
       { billing: billCloudModels, plan: row?.plan_code, locked: cloudLocked },
       primary.model,
+    ) &&
+    // Check-ins on Casama's key run on its assigned background model (resolveBotPolicy).
+    !(
+      info.routine &&
+      (info.routine.kind === "brief" || info.routine.kind === "scan") &&
+      info.policy.cheap?.credential_id === PLATFORM_OPENROUTER_CREDENTIAL_ID &&
+      primary.model === info.policy.cheap.model
     )
   )
     return {
@@ -2912,26 +2919,48 @@ async function spend(
       code: "cloud_model_not_allowed" as const,
       message: "That model isn't included on Casama's key. Add your own key to choose a model.",
     };
-  return checkBudget({
-    runCost: Number(row?.run_cost ?? 0),
-    perRunLimit: info.perRunLimit,
-    botToday: Number(row?.bot_today ?? 0),
-    dailyLimit: info.dailyLimit,
-    orgPeriod: Number(row?.org_period ?? 0),
-    quotaLimit: caps.length ? Math.min(...caps) : null,
-    // A run whose primary model is on the workspace's own provider runs at cost 0 to Casama and
-    // is not gated by credits or cloud_daily_usd at run start (docs/OWN-KEYS-PLAN.md §3.1). Paid
-    // tools still check credits when called.
-    credits: onPlatform && gate ? Number(row?.credits ?? 0) : null,
-    unbilledUsd: onPlatform && gate ? Number(row?.unbilled ?? 0) : 0,
-    reserveUsd: onPlatform && gate && primary ? cloudCallReserveUsd(primary.model) : undefined,
-    // The daily cap covers spend on the server's keys; own-provider runs aren't stopped by it.
-    cloudToday: billCloudModels ? Number(row?.cloud_today ?? 0) : 0,
-    cloudDailyCap:
-      onPlatform && billCloudModels
-        ? cloudModelDailyCap(row?.plan_code, limits.cloud_daily_usd)
-        : null,
-  });
+  const budget = (platform: boolean, model: string | undefined) =>
+    checkBudget({
+      runCost: Number(row?.run_cost ?? 0),
+      perRunLimit: info.perRunLimit,
+      botToday: Number(row?.bot_today ?? 0),
+      dailyLimit: info.dailyLimit,
+      orgPeriod: Number(row?.org_period ?? 0),
+      quotaLimit: caps.length ? Math.min(...caps) : null,
+      // A run whose primary model is on the workspace's own provider runs at cost 0 to Casama and
+      // is not gated by credits or cloud_daily_usd at run start (docs/OWN-KEYS-PLAN.md §3.1). Paid
+      // tools still check credits when called.
+      credits: platform && gate ? Number(row?.credits ?? 0) : null,
+      unbilledUsd: platform && gate ? Number(row?.unbilled ?? 0) : 0,
+      reserveUsd: platform && gate && model ? cloudCallReserveUsd(model) : undefined,
+      // The daily cap covers spend on the server's keys; own-provider runs aren't stopped by it.
+      cloudToday: billCloudModels ? Number(row?.cloud_today ?? 0) : 0,
+      cloudDailyCap:
+        platform && billCloudModels
+          ? cloudModelDailyCap(row?.plan_code, limits.cloud_daily_usd)
+          : null,
+    });
+  const verdict = budget(onPlatform, primary?.model);
+  // An own key with "use Casama's models if my provider fails" can still land on Casama's key.
+  // That fallback spends credits like any Casama run, so it passes the same checks; when it
+  // doesn't, the run keeps going on the own key alone, without the fallback (D-465).
+  const platformFallback = onPlatform
+    ? undefined
+    : info.policy.fallbacks?.find((f) => f.credential_id === PLATFORM_OPENROUTER_CREDENTIAL_ID);
+  if (
+    verdict.ok &&
+    billCloudModels &&
+    platformFallback &&
+    !budget(true, platformFallback.model).ok
+  ) {
+    info.policy = {
+      ...info.policy,
+      fallbacks: info.policy.fallbacks?.filter(
+        (f) => f.credential_id !== PLATFORM_OPENROUTER_CREDENTIAL_ID,
+      ),
+    };
+  }
+  return verdict;
 }
 
 /** The checks a run passes before it starts: a model, a live bot and workspace, and room in its
@@ -3105,12 +3134,19 @@ function usageCost(
   };
 }
 
-/** Records usage in the ledger and on the run, and emits running totals. */
-function onPlatformKey(chain: ResolvedModel[], model: string) {
-  return (
-    (chain.find((m) => m.model === model) ?? chain[0])?.credentialId ===
-    PLATFORM_OPENROUTER_CREDENTIAL_ID
-  );
+/**
+ * Whether a call ran on Casama's key. [chainIndex] is the chain entry that answered (withFallback's
+ * finish event): an own key and Casama's key can name the same model id, so the model alone can't
+ * tell them apart (D-465). The model lookup is only for callers without an index.
+ */
+function onPlatformKey(chain: ResolvedModel[], model: string, chainIndex?: number) {
+  return servedBy(chain, model, chainIndex)?.credentialId === PLATFORM_OPENROUTER_CREDENTIAL_ID;
+}
+
+/** The chain entry that answered a call. */
+function servedBy(chain: ResolvedModel[], model: string, chainIndex?: number) {
+  if (chainIndex !== undefined && chain[chainIndex]) return chain[chainIndex];
+  return chain.find((m) => m.model === model) ?? chain[0];
 }
 
 /** Keeps the tool groups a conversation's runs used (lazy-tools.ts), most recent first. */
@@ -3164,8 +3200,12 @@ async function recordUsage(
   });
 }
 
-const providerOf = (given: ProviderId | undefined, model: string, chain: ResolvedModel[]) =>
-  given ?? chain.find((m) => m.model === model)?.provider ?? chain[0]?.provider;
+const providerOf = (
+  given: ProviderId | undefined,
+  model: string,
+  chain: ResolvedModel[],
+  chainIndex?: number,
+) => given ?? servedBy(chain, model, chainIndex)?.provider;
 
 /**
  * A ChatGPT plan error during a model attempt: an invalid sign-in marks the credential (its owner
@@ -3244,8 +3284,8 @@ async function verifyReply(
     usedModel,
     r.usage,
     await busFn(),
-    providerOf(r.provider, usedModel, chain),
-    deps.billCloudModels === true && onPlatformKey(chain, usedModel),
+    providerOf(r.provider, usedModel, chain, r.chainIndex),
+    deps.billCloudModels === true && onPlatformKey(chain, usedModel, r.chainIndex),
   );
   const start = r.text.indexOf("{");
   const end = r.text.lastIndexOf("}");
@@ -3366,7 +3406,7 @@ async function modelStepOnce(
    * request isn't charged).
    */
   const recordPartial = async (wasCancelled: boolean) => {
-    const billable = deps.billCloudModels === true && onPlatformKey(chain, model);
+    const billable = deps.billCloudModels === true && onPlatformKey(chain, model, servedIndex);
     if (usageReported) {
       await recordUsage(deps.db, info, model, usage, bus, provider, billable);
       return;
@@ -3383,6 +3423,8 @@ async function modelStepOnce(
   };
   let model = chain[0]?.model ?? "unknown";
   let provider: ProviderId | undefined = chain[0]?.provider;
+  // The chain entry answering now: billing follows its credential, not the model id (D-465).
+  let servedIndex: number | undefined;
   // One span per model step: model, tokens, cost, failovers; never prompt or reply text (D-107).
   const span = startRunChildSpan(info.runId, `chat ${model}`, {
     "gen_ai.operation.name": "chat",
@@ -3397,6 +3439,11 @@ async function modelStepOnce(
   try {
     const stream = withFallback(deps.gateway, chain, {
       ...deps.fallback,
+      onStart: (a) => {
+        servedIndex = a.chainIndex;
+        model = chain[a.chainIndex]?.model ?? model;
+        provider = chain[a.chainIndex]?.provider ?? provider;
+      },
       onAttempt: (a) => {
         if (a.error) failovers++;
         if (lf && a.error) {
@@ -3453,7 +3500,8 @@ async function modelStepOnce(
         usageReported = true;
         finishReason = ev.finishReason;
         model = ev.model || model;
-        provider = ev.provider ?? chain.find((m) => m.model === model)?.provider ?? provider;
+        if (ev.chainIndex !== undefined) servedIndex = ev.chainIndex;
+        provider = ev.provider ?? servedBy(chain, model, servedIndex)?.provider ?? provider;
       }
     }
   } catch (err) {
@@ -3525,7 +3573,7 @@ async function modelStepOnce(
     usage,
     bus,
     provider,
-    deps.billCloudModels === true && onPlatformKey(chain, model),
+    deps.billCloudModels === true && onPlatformKey(chain, model, servedIndex),
   );
   return {
     cancelled: false as const,
@@ -3989,8 +4037,8 @@ async function compact(
     usedModel,
     r.usage,
     bus,
-    providerOf(r.provider, usedModel, chain),
-    deps.billCloudModels === true && onPlatformKey(chain, usedModel),
+    providerOf(r.provider, usedModel, chain, r.chainIndex),
+    deps.billCloudModels === true && onPlatformKey(chain, usedModel, r.chainIndex),
   );
   return summary;
 }
@@ -4525,8 +4573,8 @@ async function extractStep(
     r.model,
     r.usage,
     bus,
-    providerOf(undefined, r.model, chain),
-    deps.billCloudModels === true && onPlatformKey(chain, r.model),
+    providerOf(undefined, r.model, chain, r.chainIndex),
+    deps.billCloudModels === true && onPlatformKey(chain, r.model, r.chainIndex),
   );
   return r.memories.length;
 }
@@ -4570,8 +4618,9 @@ async function learnStep(
           out.model || cheap.model,
           out.usage,
           bus,
-          providerOf(undefined, out.model || cheap.model, chain),
-          deps.billCloudModels === true && onPlatformKey(chain, out.model || cheap.model),
+          providerOf(undefined, out.model || cheap.model, chain, out.chainIndex),
+          deps.billCloudModels === true &&
+            onPlatformKey(chain, out.model || cheap.model, out.chainIndex),
         );
         return out.text;
       },
@@ -5596,8 +5645,8 @@ export async function backgroundComplete(
     }),
   );
   const model = out.model || first.model;
-  const provider = providerOf(undefined, model, chain);
-  const billable = deps.billCloudModels === true && onPlatformKey(chain, model);
+  const provider = providerOf(undefined, model, chain, out.chainIndex);
+  const billable = deps.billCloudModels === true && onPlatformKey(chain, model, out.chainIndex);
   const cost = usageCost(model, out.usage, provider, billable);
   const meta = JSON.stringify({ ...cost.metaObject, purpose: input.purpose });
   await db.execute(sql`
