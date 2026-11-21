@@ -1,6 +1,6 @@
 # Bug hunt across every platform: plan
 
-Status: **Built** (2026-11-21). Two rounds done; all open items decided and fixed except those listed as open in `reports/bug-hunt-2026-11-21.md`. Waiting on: a server deploy (3 new migrations) and app builds.
+Status: **Built** (2026-11-21). Two rounds done; all open items decided and fixed except those listed as open in `reports/bug-hunt-2026-11-21.md`. Waiting on: a server deploy (4 new migrations) and app builds.
 
 ## 1. Goal
 
