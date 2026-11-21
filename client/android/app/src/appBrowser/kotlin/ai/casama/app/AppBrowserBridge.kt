@@ -179,7 +179,11 @@ object AppBrowserBridge {
 
     private fun pageScript(ctx: Context): String {
         val key = FlutterInjector.instance().flutterLoader().getLookupKeyForAsset("assets/app_browser/page_agent.js")
-        return ctx.assets.open(key).bufferedReader().use { it.readText() }
+        val source = ctx.assets.open(key).bufferedReader().use { it.readText() }
+        // A secret the frames of one page share, so only our script (never the page's) can connect
+        // a frame's part of the script to the top one. New for every web view.
+        val secret = java.util.UUID.randomUUID().toString()
+        return "globalThis.__casamaPageAgentConfig={secret:\"$secret\"};\n$source"
     }
 
     private fun put(w: View, into: FrameLayout) {

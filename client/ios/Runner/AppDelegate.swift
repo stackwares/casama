@@ -914,8 +914,11 @@ final class AppBrowser: NSObject, WKNavigationDelegate, WKUIDelegate, FlutterPla
     config.preferences.javaScriptCanOpenWindowsAutomatically = false
     let key = registrar.lookupKey(forAsset: "assets/app_browser/page_agent.js")
     if let path = Bundle.main.path(forResource: key, ofType: nil), let source = try? String(contentsOfFile: path, encoding: .utf8) {
+      // A secret the frames of one page share, so only our script (never the page's) can connect
+      // a frame's part of the script to the top one. New for every web view.
+      let secret = "globalThis.__casamaPageAgentConfig={secret:\"\(UUID().uuidString)\"};\n"
       config.userContentController.addUserScript(
-        WKUserScript(source: source, injectionTime: .atDocumentStart, forMainFrameOnly: false, in: world))
+        WKUserScript(source: secret + source, injectionTime: .atDocumentStart, forMainFrameOnly: false, in: world))
     }
     let w = WKWebView(frame: holder?.bounds ?? .zero, configuration: config)
     w.navigationDelegate = self

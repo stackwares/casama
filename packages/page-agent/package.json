@@ -1,0 +1,20 @@
+{
+  "name": "@casama/page-agent",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "AGPL-3.0-only",
+  "description": "The script the phone app's browser runs in each page so a bot can read and act on it (docs/PHONE-BROWSER-PLAN.md §8.3).",
+  "scripts": {
+    "build": "node scripts/build.ts",
+    "check": "node scripts/build.ts --check",
+    "typecheck": "tsc --noEmit",
+    "lint": "biome check .",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "playwright": "1.65.1",
+    "vite": "8.3.6"
+  }
+}
