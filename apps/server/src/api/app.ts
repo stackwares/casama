@@ -9,6 +9,7 @@ import { SandboxError } from "@casama/sandbox";
 import { OpenAPIHono } from "@hono/zod-openapi";
 import { Scalar } from "@scalar/hono-api-reference";
 import { sql } from "drizzle-orm";
+import type { Context } from "hono";
 import { cors } from "hono/cors";
 import { HTTPException } from "hono/http-exception";
 import { registerCasamaLinkRoutes } from "../billing/link.ts";
@@ -110,6 +111,10 @@ import { clientIp } from "./util.ts";
  */
 export const PROVIDER_HOOKS =
   /^\/hooks\/(?:billing\/(?:dodo|revenuecat)|payments\/[0-9a-f-]{36}|registrar\/[^/]+|newsletter\/resend|mail(?:\/events)?)\/?$/;
+
+/** Taps with a rate budget of their own: answering a request card (chat or gallery) and stopping a run. */
+export const OWN_BUDGET_TAPS =
+  /^\/v1\/(?:approvals\/[0-9a-f-]{36}\/decision|gallery-approvals\/[0-9a-f-]{36}\/decision|runs\/[0-9a-f-]{36}\/cancel)\/?$/i;
 
 /** Postgres data exceptions caused by the request's own values (invalid text, too long, out of range, bad dates). */
 const BAD_INPUT_CODES = new Set(["22P02", "22001", "22003", "22007", "22008", "22021"]);
@@ -428,17 +433,28 @@ export function createApp(deps: AppDeps) {
       "content-type": "text/plain; version=0.0.4",
     });
   });
-  app.use(
-    "/v1/*",
-    rateLimit({
-      perMinute: deps.env.RATE_LIMIT_PER_MINUTE,
-      trustedIpHeader: deps.env.TRUSTED_CLIENT_IP_HEADER,
-      // A watch counts apart from its person's phone (it has its own 60 a minute too).
-      key: (c) => {
-        const watch = c.get("watchKey" as never) as { id: string } | undefined;
-        return watch ? `watch:${watch.id}` : undefined;
-      },
-    }),
+  // A watch counts apart from its person's phone (it has its own 60 a minute too).
+  const watchBudgetKey = (c: Context) => {
+    const watch = c.get("watchKey" as never) as { id: string } | undefined;
+    return watch ? `watch:${watch.id}` : undefined;
+  };
+  const generalLimit = rateLimit({
+    perMinute: deps.env.RATE_LIMIT_PER_MINUTE,
+    trustedIpHeader: deps.env.TRUSTED_CLIENT_IP_HEADER,
+    key: watchBudgetKey,
+  });
+  // Answering a request card and stopping a run are taps a person makes on purpose, and a run
+  // waits on them: they count in a budget of their own, so the app's background polling can't
+  // use it up and turn an Approve into a 429.
+  const tapLimit = rateLimit({
+    perMinute: deps.env.RATE_LIMIT_PER_MINUTE,
+    trustedIpHeader: deps.env.TRUSTED_CLIENT_IP_HEADER,
+    key: watchBudgetKey,
+  });
+  app.use("/v1/*", (c, next) =>
+    c.req.method === "POST" && OWN_BUDGET_TAPS.test(c.req.path)
+      ? tapLimit(c, next)
+      : generalLimit(c, next),
   );
   // Signed provider webhooks (Dodo and RevenueCat billing, Stripe Issuing, the domain registrar)
   // arrive in bursts from a few provider addresses and check their own signatures, and a 429 on a

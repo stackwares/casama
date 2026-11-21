@@ -21,6 +21,7 @@ SnackBar toastSnackBar(
   SnackBarAction? action,
   Duration? duration,
   Key? key,
+  Widget Function(TextStyle? style)? live,
 }) {
   final theme = Theme.of(context);
   final style = toastStyle(context, kind);
@@ -59,6 +60,7 @@ SnackBar toastSnackBar(
       textStyle:
           theme.snackBarTheme.contentTextStyle ?? theme.textTheme.bodyMedium,
       copyText: copyText,
+      live: live,
     ),
   );
 }
@@ -118,6 +120,7 @@ class _ToastContent extends StatelessWidget {
     required this.done,
     required this.textStyle,
     this.copyText,
+    this.live,
   });
 
   final String message;
@@ -126,6 +129,9 @@ class _ToastContent extends StatelessWidget {
   final Color done;
   final TextStyle? textStyle;
   final String? copyText;
+
+  /// Draws the message instead of [message] when it changes while shown (a countdown).
+  final Widget Function(TextStyle? style)? live;
 
   @override
   Widget build(BuildContext context) {
@@ -140,7 +146,8 @@ class _ToastContent extends StatelessWidget {
         Expanded(
           child: Padding(
             padding: const EdgeInsets.only(top: 2),
-            child: Text(message, style: textStyle?.copyWith(height: 1.35)),
+            child: live?.call(textStyle?.copyWith(height: 1.35)) ??
+                Text(message, style: textStyle?.copyWith(height: 1.35)),
           ),
         ),
         if (copyText != null) ...[

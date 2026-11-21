@@ -154,6 +154,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authTooManyTries => 'Too many tries. Wait a minute and try again.';
 
   @override
+  String tooManyRequestsWait(int seconds) {
+    String _temp0 = intl.Intl.pluralLogic(
+      seconds,
+      locale: localeName,
+      other: '$seconds seconds',
+      one: '1 second',
+    );
+    return 'Too many requests at once. Try again in $_temp0.';
+  }
+
+  @override
+  String get tooManyRequestsReady => 'You can try again now.';
+
+  @override
   String get authAccountExists =>
       'There\'s already an account with this email. Sign in instead.';
 

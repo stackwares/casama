@@ -27,6 +27,7 @@ import 'backend.dart';
 import 'chatgpt_connect.dart';
 import '../features/widgets/widget_key_store.dart';
 import '../features/watch/watch_key_store.dart';
+import 'rate_limit.dart';
 import 'telemetry.dart';
 
 const _terminal = {'run.completed', 'run.failed', 'run.cancelled'};
@@ -99,6 +100,8 @@ class SupabaseBackend implements Backend {
     );
     // Every call says whether the server answers, for the bar over the app (D-296).
     watchReachability(client.api.dio, apiUrl);
+    // A short "too many requests" is waited out and sent again once.
+    client.api.dio.interceptors.add(RateLimitRetryInterceptor(client.api.dio));
     AdminSecurity.accessToken = () => supabase.auth.currentSession?.accessToken;
     client.api.dio.interceptors.add(AdminSecurityInterceptor(
       client.api.dio,

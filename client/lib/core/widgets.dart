@@ -20,6 +20,7 @@ import 'analytics.dart';
 import 'telemetry.dart';
 import '../ui/effects.dart';
 import 'review_prompt.dart';
+import 'rate_limit.dart';
 
 extension L10nContext on BuildContext {
   AppLocalizations get l10n => AppLocalizations.of(this);
@@ -52,6 +53,8 @@ String _authErrorText(BuildContext context, sb.AuthException e) {
 String errorText(BuildContext context, Object error) {
   if (error is sb.AuthException) return _authErrorText(context, error);
   if (error is sb.PostgrestException && error.code == 'PT402') return error.message;
+  final wait = retryAfterOf(error);
+  if (wait != null) return context.l10n.tooManyRequestsWait(wait.inSeconds < 1 ? 1 : wait.inSeconds);
   final problem = problemOf(error);
   if (problem != null) return problem.detail ?? problem.title;
   if (error is DioException) {
@@ -87,6 +90,22 @@ void showError(BuildContext context, Object error, [StackTrace? stackTrace]) {
   ReviewPrompt.errorThisSession = true;
   _reportShown(error);
   final message = errorText(context, error);
+  final wait = retryAfterOf(error);
+  if (wait != null) {
+    // Too many requests: say when the next try will work, counting down while the toast is up.
+    final until = DateTime.now().add(wait);
+    final shown = wait + const Duration(seconds: 2);
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.showSnackBar(toastSnackBar(
+      context,
+      message,
+      kind: ToastKind.warning,
+      copyText: _errorCopyText(message, error),
+      duration: shown < const Duration(seconds: 6) ? const Duration(seconds: 6) : shown > const Duration(seconds: 65) ? const Duration(seconds: 65) : shown,
+      live: (style) => RateLimitCountdown(until: until, style: style),
+    ));
+    return;
+  }
   showToast(context, message, kind: ToastKind.error, copyText: _errorCopyText(message, error));
 
   // Filter out expected user/network issues:

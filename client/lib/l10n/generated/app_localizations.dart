@@ -352,6 +352,18 @@ abstract class AppLocalizations {
   /// **'Too many tries. Wait a minute and try again.'**
   String get authTooManyTries;
 
+  /// No description provided for @tooManyRequestsWait.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many requests at once. Try again in {seconds, plural, =1{1 second} other{{seconds} seconds}}.'**
+  String tooManyRequestsWait(int seconds);
+
+  /// No description provided for @tooManyRequestsReady.
+  ///
+  /// In en, this message translates to:
+  /// **'You can try again now.'**
+  String get tooManyRequestsReady;
+
   /// No description provided for @authAccountExists.
   ///
   /// In en, this message translates to:
