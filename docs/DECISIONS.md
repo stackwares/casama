@@ -7326,6 +7326,10 @@ only the last words of a help sentence. So:
 - **Cost:** one idle headless container, about 15 MiB and no CPU while it waits; it refills after
   each claim and every minute. Backups of the old `.env` are in `/root/.env.bak-*` on the server.
 - **Self-hosting:** defaults unchanged (`WARM_POOL_SIZE` 0, `COMPUTER_MEMORY_MB` 2048).
+- **Checked on prod (2026-11-21):** a throwaway headless computer was ready in 0.4 s from the pool
+  against 4.8 s cold, and the pool refilled within about 4 s. A real headless wake that claimed it
+  took 5.7 s end to end (the same computer took 11.9 s before), now mostly the snapshot restore.
+  Computers set to the desktop profile still start cold.
 
 ## D-473 Bots offer any MCP server in a chat, and the person connects it there (2026-11-21)
 
