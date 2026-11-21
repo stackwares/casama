@@ -29,6 +29,11 @@ Rules that apply to every row:
 | Edge Add-ons | Edge | Submitted 0.1.0 on 2026-11-21, in review (about 7 business days) | Wait |
 | Firefox Add-ons (AMO) | Firefox | Submitted 0.1.0 on 2026-11-21, pending review (`casama@casama.ai`) | Wait |
 | Snap Store | Linux | Name `casama` approved 2026-11-18; classic confinement request not filed | File classic request, first upload |
+| Flathub (Flatpak) | Linux | **Planned** | See "Other Linux stores" |
+| AUR (`casama-bin`) | Arch Linux | **Planned** | See "Other Linux stores" |
+| AppImage (+ AppImageHub) | Linux | **Maybe** | See "Other Linux stores" |
+| Own apt / dnf repository (.deb, .rpm) | Debian, Ubuntu, Fedora | **Maybe** | See "Other Linux stores" |
+| Fedora COPR, nixpkgs, Ubuntu PPA, elementary AppCenter | Linux | **Not now** | See "Other Linux stores" |
 | Microsoft Store | Windows | MSIX packaging exists (`scripts/package-windows.ps1`); no listing | Decide; reserve the name |
 | Web app | Browser | Live at app.casama.ai | n/a |
 | Samsung Galaxy Store | Android | **Planned** | See "Other Android stores" |
@@ -96,8 +101,35 @@ Both Chrome and Edge ids must be in the server's `CHROME_EXTENSION_IDS` and in
 | Field | Value |
 |---|---|
 | Name | `casama` (approved 2026-11-18) |
-| Package | `snap/snapcraft.yaml`, `scripts/package-snap.sh` (classic confinement, D-392) |
-| Status | Classic request on forum.snapcraft.io not filed; nothing uploaded |
+| Package | `snap/snapcraft.yaml` (base core24, grade stable), `scripts/package-snap.sh` (classic confinement, D-392: the computer companion, Docker and quick ask need the host) |
+| CI | `.github/workflows/desktop.yml` builds the `.snap` next to the Linux tarball as an artifact (x64 and arm64) |
+| Upload | `snapcraft upload --release=<channel> dist/casama_*.snap`; Snapcraft login in Vaultwarden once made |
+| Status | Classic request on forum.snapcraft.io not filed (a classic snap can't be published until Canonical approves it, usually a week or two); nothing uploaded |
+
+## Other Linux stores
+
+Where Linux users find apps: Ubuntu's App Center shows the Snap Store; GNOME Software, KDE Discover,
+Pop!_Shop, Linux Mint and Fedora show Flathub. Snap plus Flathub covers almost every desktop. The
+rest are for people who install from the terminal.
+
+All of them repackage the same Flutter bundle `scripts/package-linux.sh` already makes
+(`casama-<version>-linux-<arch>.tar.gz`), so most are packaging work, not app work. Flathub is the
+exception: its sandbox can't reach the host the way the snap's classic confinement does.
+
+| # | Store | Reach | What it takes | Effort |
+|---|---|---|---|---|
+| 1 | **Flathub** | Default store on Fedora, Mint, Pop!_OS, elementary, Steam Deck; shown in GNOME Software and KDE Discover | A manifest `ai.casama.app.yml` in a pull request to `flathub/flathub`, plus AppStream metainfo (`ai.casama.app.metainfo.xml`: description, screenshots, release notes, OARS rating). It may use our prebuilt tarball from GitHub Releases instead of building from source. Flathub's reviewers refuse broad host access (`--talk-name=org.freedesktop.Flatpak`, the Docker socket, `--filesystem=host`), so the Flatpak build turns those features off the way the Mac App Store build does: a `CASAMA_DISTRIBUTION=flatpak` value. Verified-publisher badge: a token at `https://casama.ai/.well-known/org.flathub.VerifiedApps.txt`. Free | Medium |
+| 2 | **AUR** (`casama-bin`) | Arch, Manjaro, EndeavourOS | A `PKGBUILD` that downloads the release tarball and checks its sha256, and a `.desktop` file. An AUR account with an SSH key (vault). Each release bumps `pkgver` and the checksum, which CI can do. Free | Small |
+| 3 | **AppImage** (+ AppImageHub) | Any distro, no install | Wrap the bundle with `appimagetool`, attach to GitHub Releases next to the tarball; AppImageHub listing is a pull request to `AppImage/appimage.github.io`. Can self-update with zsync. Free | Small |
+| 4 | **Own apt and dnf repository** | Debian, Ubuntu, Fedora users who want `apt upgrade` updates | Build `.deb` and `.rpm` from the bundle (`nfpm` or `fpm`), sign with a repository GPG key (vault), host on R2 behind `pkg.casama.ai`, or on Cloudsmith's free open-source plan. Install instructions on casama.ai/download | Medium |
+| — | Fedora COPR | Fedora | Builds from source in Fedora's own build system; a Flutter build there is hard. Flathub reaches Fedora anyway | Not now |
+| — | nixpkgs | NixOS | Community usually packages popular apps itself; a pull request to nixpkgs is possible later | Not now |
+| — | Ubuntu PPA | Ubuntu | Launchpad builds from source only, with no network during the build; doesn't fit Flutter. The snap covers Ubuntu | Not now |
+| — | elementary AppCenter | elementary OS | Curated, wants apps made for elementary's own design; Flathub reaches elementary users anyway | Not now |
+
+Next steps for Linux, in order: file the snap's classic request and make the first upload (Oliver's
+yes); then AUR and AppImage (small, packaging only); then Flathub, which needs the `flatpak`
+distribution value in the app and its own small plan.
 
 ## Other Android stores
 
