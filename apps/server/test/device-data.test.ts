@@ -216,6 +216,13 @@ describe("device connections", () => {
       }),
     );
     expect(g.items).toMatchObject([{ bot_id: botId, bot_name: "Pal", kind: "calendar" }]);
+    // Show on my widgets shares the table but never reaches the device list: apps can't read the kind.
+    await h.tdb.admin`insert into public.device_grants (user_id, bot_id, kind)
+      values (${owner.id}, ${botId}, 'widgets')`;
+    const all = await j(
+      await h.request("/v1/device-grants?all_kinds=true", { token: owner.token }),
+    );
+    expect(all.items.map((x: { kind: string }) => x.kind)).toEqual(["calendar"]);
 
     // The phone answers the fresh-read request while the run waits.
     const runId = await start(owner, "What's on tomorrow?");

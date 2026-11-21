@@ -79,6 +79,9 @@ export function registerDeviceDataRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps
     }>(sql`
       select g.bot_id, b.name as bot_name, g.kind, g.created_at from public.device_grants g join public.bots b on b.id = g.bot_id
       where g.user_id = ${userId}::uuid ${botId ? sql`and g.bot_id = ${botId}::uuid` : sql``}
+        -- Show on my widgets lives in the same table but isn't a device kind: the canvas API lists it, and
+        -- app builds that meet a kind they don't know fail the whole list (Device connections never loads).
+        and g.kind <> 'widgets'
         ${allKinds ? sql`` : sql`and g.kind <> all(${`{${[...BROWSER_KINDS].join(",")}}`}::text[])`}
       order by b.name, g.kind`);
     return rows.map((g) => ({ ...g, kind: g.kind as "calendar", created_at: iso(g.created_at) }));
