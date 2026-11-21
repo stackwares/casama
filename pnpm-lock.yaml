@@ -266,6 +266,9 @@ importers:
       postgres:
         specifier: ^4.1.0
         version: 4.1.0
+      sharp:
+        specifier: 0.34.5
+        version: 0.34.5
       superjson:
         specifier: 2.2.6
         version: 2.2.6
@@ -282,9 +285,6 @@ importers:
       '@types/ws':
         specifier: ^8.18.2
         version: 8.18.2
-      sharp:
-        specifier: 0.34.5
-        version: 0.34.5
 
   apps/supervisor:
     dependencies:

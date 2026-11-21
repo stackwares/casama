@@ -414,4 +414,16 @@ void main() {
     expect(scale.duration, Duration.zero);
     expect(_visible(tester), isTrue);
   });
+
+  testWidgets('an unexpected error fetching a picture keeps it asking', (tester) async {
+    await _pumpCard(tester);
+    _fake.onScreenPicture = (_, _) => throw StateError('boom');
+    _set(_running([_step('a'), _step('b')]));
+    await _settle(tester);
+    expect(_fake.screenPictureCalls.length, 1);
+    await tester.pump(const Duration(seconds: 1));
+    await _settle(tester);
+    expect(_fake.screenPictureCalls.length, 2);
+    expect(_visible(tester), isFalse);
+  });
 }

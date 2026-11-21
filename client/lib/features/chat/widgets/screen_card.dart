@@ -413,7 +413,13 @@ class _ScreenCardState extends ConsumerState<ScreenCard> with WidgetsBindingObse
   Future<void> _fetch() async {
     final id = _computer;
     if (!_polling || id == null || !mounted) return;
-    final pic = await ref.read(backendProvider).screenPicture(id, width: _pixelWidth, etag: _etag);
+    ScreenPicture pic;
+    try {
+      pic = await ref.read(backendProvider).screenPicture(id, width: _pixelWidth, etag: _etag);
+    } catch (_) {
+      // Anything unexpected counts as a failed picture, so the next one is still asked for.
+      pic = const ScreenPicture(ScreenPictureStatus.failed);
+    }
     if (!mounted || !_polling || id != _computer) return;
     switch (pic.status) {
       case ScreenPictureStatus.fresh:
