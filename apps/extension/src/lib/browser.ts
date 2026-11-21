@@ -35,8 +35,8 @@ export const FEATURES = {
   readingList: !IS_FIREFOX,
   /** E1: the web app hands the extension a sign-in (`externally_connectable`). */
   webAppSignIn: !IS_FIREFOX,
-  /** Google and Apple sign-in (identity.launchWebAuthFlow); servers allow Chrome's redirect address only so far. */
-  providerSignIn: !IS_FIREFOX,
+  /** Google and Apple sign-in (identity.launchWebAuthFlow); Chrome, Edge and Firefox redirect addresses are allowed. */
+  providerSignIn: true,
   /** D2: Approve and Deny buttons on notifications (Firefox shows no buttons). */
   notificationButtons: !IS_FIREFOX,
   /**

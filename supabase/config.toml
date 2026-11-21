@@ -164,8 +164,8 @@ site_url = "http://127.0.0.1:3000"
 # external_url = ""
 # A list of *exact* URLs that auth providers are permitted to redirect to post authentication.
 # The apps (casama://), the web app on this machine (any port) and on casama.ai.
-# The last one is Casama for Chrome's Google and Apple sign-in (D-323; chrome.identity's redirect for the extension id in apps/extension/src/manifest.ts).
-additional_redirect_urls = ["casama://app/login-callback", "http://localhost:*", "http://localhost:*/**", "http://127.0.0.1:*", "http://127.0.0.1:*/**", "https://casama.ai", "https://casama.ai/**", "https://*.casama.ai", "https://*.casama.ai/**", "https://kkfppfhkjnenffibmnkphnbejidkmbkj.chromiumapp.org/**", "https://danikigkoiofpcecjobopcgdflgcmchm.chromiumapp.org/**"]
+# The last ones are Casama for Chrome, Edge, and Firefox's Google and Apple sign-in (D-323; identity.getRedirectURL for the extension ids in apps/extension/src/manifest.ts).
+additional_redirect_urls = ["casama://app/login-callback", "http://localhost:*", "http://localhost:*/**", "http://127.0.0.1:*", "http://127.0.0.1:*/**", "https://casama.ai", "https://casama.ai/**", "https://*.casama.ai", "https://*.casama.ai/**", "https://kkfppfhkjnenffibmnkphnbejidkmbkj.chromiumapp.org/**", "https://danikigkoiofpcecjobopcgdflgcmchm.chromiumapp.org/**", "https://1f9e1e8654d4cd9789431e57d539c81d7233a083.extensions.allizom.org/**"]
 # How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604,800 (1 week).
 jwt_expiry = 3600
 # JWT issuer URL. If not set, defaults to auth.external_url.

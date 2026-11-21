@@ -170,8 +170,8 @@ export function buildManifest(
 }
 
 /** What Firefox can't do, so its build doesn't ask for it (plan §13). */
-// identity: provider sign-in waits until servers allow Firefox's redirect address (plan §19).
-const NOT_IN_FIREFOX = new Set(["sidePanel", "offscreen", "gcm", "identity"]);
+// Permissions in PERMISSIONS that Firefox either lacks or doesn't implement in the same way.
+const NOT_IN_FIREFOX = new Set(["sidePanel", "offscreen", "gcm"]);
 
 /**
  * Firefox's manifest. Same pages and scripts; the sidebar instead of the side panel, a background

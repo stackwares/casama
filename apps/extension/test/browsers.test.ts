@@ -56,6 +56,7 @@ describe("Firefox's manifest", () => {
   it("asks for nothing Act, the device or Chrome-only APIs need", () => {
     for (const p of ["debugger", "tabGroups", "tabCapture", "sidePanel", "offscreen", "gcm"])
       expect(m.permissions).not.toContain(p);
+    expect(m.permissions).toContain("identity");
     expect(m.optional_permissions).toEqual(["tabs", "bookmarks"]);
     expect(m.host_permissions).toBeUndefined();
     expect(m.optional_host_permissions).toEqual(["https://*/*", "http://*/*"]);
