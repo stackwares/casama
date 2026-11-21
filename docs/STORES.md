@@ -31,8 +31,8 @@ open testing, Snap beta and so on. "Live" means anyone can install it from the s
 |---|---|:-:|:-:|:-:|:-:|:-:|---|---|
 | **Web app** (app.casama.ai) | Browser | ➖ | ➖ | ✅ | ➖ | ✅ | Live | — |
 | **Direct download** (GitHub Releases) | macOS, Windows, Linux | ✅ | ✅ | ✅ | ➖ | ✅ | v0.1.0 released 2026-11-21 | Each release with its Mac App Store twin |
-| **Google Play** (phone, tablet) | Android | ✅ | ✅ | ❌ | ✅ | ❌ | Internal testing 0.1.0 (67) available. Closed testing (Alpha) 0.1.0 (49), promoted 2026-11-20, ⏳ under Play review (the API can't show approval; check the Console). Production 0.1.0 (67) saved as a draft, not sent | Production when Oliver says |
-| **Google Play** (Wear OS) | Wear OS | ✅ | ✅ | ❌ | ✅ | ❌ | Internal testing 0.1.0 (1000000067) available. `wear:production` 0.1.0 (1000000067) saved as a draft, not sent; `wear:beta` (open testing) empty. Wear has no closed track | Production with the phone release (AGENTS.md) |
+| **Google Play** (phone, tablet) | Android | ✅ | ✅ | ❌ | ✅ | ❌ | Internal testing 0.1.0 (67) available. Closed testing (Alpha) 0.1.0 (49) approved and published 2026-11-20 (Console: track active, "Last published on November 20"). Production: track Inactive, 0.1.0 (67) is a draft with 0 countries, never sent for review (Console checked 2026-11-21) | Production when Oliver says |
+| **Google Play** (Wear OS) | Wear OS | ✅ | ✅ | ❌ | ✅ | ❌ | Internal testing 0.1.0 (1000000067) available. `wear:production` 0.1.0 (1000000067) is a draft, never sent for review (no changes in review in the Console, 2026-11-21); `wear:beta` (open testing) empty. Wear has no closed track | Production with the phone release (AGENTS.md) |
 | **App Store** (iPhone, iPad, Watch inside) | iOS | ✅ | ✅ | ❌ | ✅ | ❌ | TestFlight internal ("Casama team") has 0.1.0 (67). External "Public Beta" group: 67 ⏳ in Beta App Review since 2026-11-20; public link https://testflight.apple.com/join/n21dCaRu works once approved. App Store version 1.0 still "Prepare for Submission" | App Review when Oliver says |
 | **Mac App Store** | macOS | ✅ | ✅ | ❌ | ✅ | ❌ | Same as iOS: TestFlight internal has 0.1.0 (67); "Public Beta" 67 ⏳ in Beta App Review since 2026-11-20 (same link). Mac version 1.0 "Prepare for Submission" | Ships together with the direct DMG |
 | **Chrome Web Store** | Chrome, Brave, Arc, Vivaldi, Opera | ✅ | ✅ | ✅ | ➖ | ⏳ | 0.1.0 in review since 2026-11-21 (id `kkfppfhkjnenffibmnkphnbejidkmbkj`) | Wait |
@@ -84,7 +84,7 @@ Notes on the Account and Listing marks:
 | Testers | Email list "Casama team" + "License Testers" |
 | CLI | `gplay` (profile play-publisher); skills `publish-gplay`, `gplay-populate-iap-info` |
 | Build | `scripts/package-android.sh` + `scripts/package-wear.sh` (Wear goes with every Play release) |
-| Status (checked with `gplay`, 2026-11-21) | internal 0.1.0 (67) completed; alpha (closed testing) 0.1.0 (49) completed, promoted from internal 2026-11-20, under review; production 0.1.0 (67) draft; wear:internal 0.1.0 (1000000067) completed; wear:production 0.1.0 (1000000067) draft; beta and wear:beta empty. Managed publishing off, so Alpha reaches testers on approval. Until the app is published, Play only allows drafts outside internal testing |
+| Status (checked with `gplay`, 2026-11-21) | internal 0.1.0 (67) completed; alpha (closed testing) 0.1.0 (49) completed, promoted from internal 2026-11-20, approved and published 2026-11-20; production 0.1.0 (67) draft; wear:internal 0.1.0 (1000000067) completed; wear:production 0.1.0 (1000000067) draft; beta and wear:beta empty. Managed publishing off, so Alpha reaches testers on approval. Until the app is published, Play only allows drafts outside internal testing |
 
 ### App Store and Mac App Store
 
