@@ -6,7 +6,7 @@
   var node = document.getElementById("page-data");
   var data = {};
   try { data = node ? JSON.parse(node.textContent) : {}; } catch (e) { data = {}; }
-  var dark = matchMedia("(prefers-color-scheme: dark)").matches;
+  var dark = document.documentElement.getAttribute("data-theme") === "dark";
   var looks = {};
   (data.looks || []).forEach(function (i) { looks[i.type + "/" + i.id] = i; });
 

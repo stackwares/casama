@@ -939,3 +939,19 @@ legend {
 .lost .btn {
   margin-top: 32px;
 }
+
+/* Theme switch (assets/theme.js): System -> Light -> Dark. */
+.theme-toggle { flex: none; display: inline-grid; place-items: center; width: 40px; height: 40px; padding: 0; border: 1px solid var(--line); border-radius: 999px; background: transparent; color: var(--ink); cursor: pointer; transition: background-color .15s ease, border-color .15s ease; }
+.theme-toggle svg { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+@media (hover: hover) { .theme-toggle:hover { background: var(--accent-soft); border-color: transparent; } }
+.theme-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.theme-toggle--end { margin-left: auto; }
+.header-inner > .theme-toggle + .btn { margin-left: -16px; } /* 12px from the switch, inside the header's 28px gap */
+@media (max-width: 760px) {
+  .header-inner > .theme-toggle { margin-left: auto; }
+}
+@media (max-width: 420px) {
+  .header-inner { gap: 8px; }
+  .header-inner > .theme-toggle { width: 36px; height: 36px; }
+  .header-inner > .theme-toggle + .btn { margin-left: 0; padding-left: 14px; padding-right: 14px; }
+}

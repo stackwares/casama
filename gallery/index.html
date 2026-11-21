@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<script src="/assets/theme.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Casama Gallery</title>
 <meta name="description" content="Themes, color schemes, wallpapers and skills for Casama, free and open source. See each one as it looks in the app, then open it in Casama.">
@@ -27,7 +28,6 @@
 <script>
   // Old item links (#theme/lagoon) moved to their own pages (/i/theme/lagoon/).
   (function (m) { if (m) location.replace("/i/" + m[1] + "/" + m[2] + "/"); })(/^#(theme|scheme|wallpaper|skill|app|bot|routine|plugin|set)\/([a-z0-9][a-z0-9-]{0,62})$/.exec(location.hash));
-  document.documentElement.setAttribute("data-theme", matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
 </script>
 </head>
 <body>

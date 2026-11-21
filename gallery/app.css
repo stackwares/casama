@@ -436,3 +436,15 @@ h1 { margin: 0; font-size: clamp(36px, 4vw, 48px); line-height: 1.05; }
 .foot-news button { flex: none; min-height: 40px; padding: 0 18px; border: 0; border-radius: 999px; background: var(--accent); color: var(--accent-ink); font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
 .foot-news-hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
 @media (max-width: 420px) { .foot-news-row { flex-direction: column; } }
+
+/* Theme switch (assets/theme.js): System -> Light -> Dark. */
+.theme-toggle { flex: none; display: inline-grid; place-items: center; width: 40px; height: 40px; padding: 0; border: 1px solid var(--border); border-radius: 999px; background: transparent; color: var(--text); cursor: pointer; transition: background-color .15s ease, border-color .15s ease; }
+.theme-toggle svg { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+@media (hover: hover) { .theme-toggle:hover { background: var(--accent-soft); border-color: transparent; } }
+.theme-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.theme-toggle--end { margin-left: auto; }
+/* Phones: room for the theme switch. The logo keeps its mark (and its "Casama home" label). */
+@media (max-width: 480px) {
+  .bar-nav { gap: 10px; }
+  .logo > span:not([data-casama-mark]) { display: none; }
+}

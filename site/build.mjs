@@ -720,6 +720,7 @@ function render(page) {
 <html lang="en">
 <head>
   <meta charset="utf-8">
+  <script src="/assets/theme.js"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   ${CSP}
   <title>${esc(meta.title)}</title>

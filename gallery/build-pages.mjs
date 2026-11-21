@@ -139,6 +139,7 @@ function shell({ title, description, path, image, imageAlt, body, data, noindex,
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<script src="/assets/theme.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${esc(title)}</title>
 <meta name="description" content="${esc(description)}">
@@ -165,7 +166,7 @@ ${noindex ? '<meta name="robots" content="noindex">\n' : ""}<meta property="og:t
 <link rel="stylesheet" href="/gallery.css">
 <link rel="stylesheet" href="/app.css">
 <link rel="stylesheet" href="/page.css">
-${ld ? `<script type="application/ld+json">${JSON.stringify(ld).replace(/</g, "\\u003c")}</script>\n` : ""}<script>document.documentElement.setAttribute("data-theme", matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");</script>
+${ld ? `<script type="application/ld+json">${JSON.stringify(ld).replace(/</g, "\\u003c")}</script>\n` : ""}
 </head>
 <body>
 <a class="skip" href="#main">Skip to the content</a>

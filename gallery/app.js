@@ -18,10 +18,13 @@
   var state = {
     items: null, sets: [], stats: {}, failed: false, type: null, q: params.get("q") || "",
     filter: { topic: "", free: false, self: false, computer: false },
-    dark: matchMedia("(prefers-color-scheme: dark)").matches, open: null,
+    dark: document.documentElement.getAttribute("data-theme") === "dark", open: null,
   };
-  function applyChrome() { document.documentElement.setAttribute("data-theme", state.dark ? "dark" : "light"); }
-  applyChrome();
+  // The page theme comes from assets/theme.js (System, Light or Dark, from the header switch).
+  function applyChrome() {
+    if (window.CasamaTheme) window.CasamaTheme.set(state.dark ? "dark" : "light");
+    else document.documentElement.setAttribute("data-theme", state.dark ? "dark" : "light");
+  }
   var $ = function (id) { return document.getElementById(id); };
   var content = $("content");
   var dialog = $("detail");
@@ -719,6 +722,13 @@
     b.addEventListener("click", function () { state.filter[b.dataset.filter] = !state.filter[b.dataset.filter]; render(); });
   });
   if ($("clear-filters")) $("clear-filters").addEventListener("click", clearFilters);
+  document.addEventListener("casama-theme", function (e) {
+    var dark = e.detail.mode === "dark";
+    if (dark === state.dark) return;
+    state.dark = dark;
+    document.querySelectorAll(".toolbar .seg button").forEach(function (x) { x.setAttribute("aria-pressed", String((x.dataset.mode === "dark") === dark)); });
+    render();
+  });
   document.querySelectorAll(".toolbar .seg button").forEach(function (b) {
     b.setAttribute("aria-pressed", String((b.dataset.mode === "dark") === state.dark));
     b.addEventListener("click", function () {
