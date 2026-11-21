@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -103,3 +104,39 @@ Future<String> takeSharedText() async {
   }
 }
 
+
+/// The files the iOS share extension copied into the App Group (`shared_files`: a JSON list of
+/// `{path, name, mime}`), as attachments. Anything unreadable is left out.
+@visibleForTesting
+List<SharedAttachment> parseSharedFiles(String? json) {
+  if (json == null || json.isEmpty) return const [];
+  try {
+    final list = jsonDecode(json);
+    if (list is! List) return const [];
+    return [
+      for (final f in list)
+        if (f is Map && f['path'] is String && (f['path'] as String).isNotEmpty)
+          SharedAttachment(
+            name: f['name'] is String && (f['name'] as String).isNotEmpty ? f['name'] as String : (f['path'] as String).split('/').last,
+            mimeType: f['mime'] is String ? f['mime'] as String : null,
+            read: () => XFile(f['path'] as String).readAsBytes(),
+          ),
+    ];
+  } catch (_) {
+    return const [];
+  }
+}
+
+/// Reads (and clears) the files the iOS share extension left in the App Group. The copies stay
+/// until the next share replaces them, so a retry can still read them.
+Future<List<SharedAttachment>> takeSharedFiles() async {
+  if (!_ios) return const [];
+  try {
+    await HomeWidget.setAppGroupId(appGroupId);
+    final json = await HomeWidget.getWidgetData<String>('shared_files');
+    await HomeWidget.saveWidgetData<String>('shared_files', null);
+    return parseSharedFiles(json);
+  } catch (_) {
+    return const [];
+  }
+}
