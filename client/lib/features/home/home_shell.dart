@@ -1004,11 +1004,14 @@ class _Rail extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
     final tt = context.textTheme;
+    // A phone on its side is too short for labelled places plus the switcher, search and avatar:
+    // the rail overflowed by about 20 px. There the places show as icons only.
+    final short = MediaQuery.sizeOf(context).height < 560;
     return NavigationRail(
       backgroundColor: Colors.transparent,
       selectedIndex: index < 0 ? null : index,
       onDestinationSelected: onSelected,
-      labelType: NavigationRailLabelType.all,
+      labelType: short ? NavigationRailLabelType.none : NavigationRailLabelType.all,
       indicatorColor: scheme.primary.withValues(alpha: 0.16),
       selectedIconTheme: IconThemeData(color: scheme.primary),
       unselectedIconTheme: IconThemeData(color: scheme.onSurfaceVariant),

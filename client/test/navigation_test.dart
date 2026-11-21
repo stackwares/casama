@@ -127,6 +127,14 @@ void main() {
     expect(tester.widget<NavigationRail>(find.byType(NavigationRail)).selectedIndex, isNull);
   });
 
+  testWidgets('a phone on its side gets the rail without labels, so it fits the short height', (tester) async {
+    // iPhone 18 Pro in landscape: 874 x 402. With labels the rail overflowed by 22 px.
+    await _pumpApp(tester, const Size(874, 402));
+    final rail = tester.widget<NavigationRail>(find.byType(NavigationRail));
+    expect(rail.labelType, NavigationRailLabelType.none);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('wide windows list Needs you and Casama over the chats, Library, Tasks and the person under them', (tester) async {
     await _pumpApp(tester, const Size(1600, 1000));
     expect(find.byKey(const Key('sidebar-needs-you')), findsOneWidget);
