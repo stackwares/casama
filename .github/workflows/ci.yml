@@ -46,6 +46,8 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
       - run: pnpm typecheck
+      # page-agent's tests run the phone browser's page script in real Chromium and WebKit.
+      - run: pnpm --filter @casama/page-agent exec playwright install --with-deps chromium webkit
       - run: pnpm test
         env:
           SKIP_DOCKER_TESTS: "1"
