@@ -33,6 +33,7 @@ same commit. Shipping details (deploys, app builds) move fast, so check them bef
 
 | Plan | Decisions | What's left |
 |---|---|---|
+| [BUG-HUNT-PLAN](BUG-HUNT-PLAN.md) | — | Approved 2026-11-21 (builds B1–B4, push per batch). Running: web, macOS, iOS + watch, Android + Wear passes; log in the plan §9 |
 | [SETUP-SCREEN-PLAN](SETUP-SCREEN-PLAN.md) | D-309 | Built 2026-11-21: two-pane setup screen with the painted scene and a mascot per step; real progress on the parts download |
 | [BOT-EMAIL-NEXT-PLAN](BOT-EMAIL-NEXT-PLAN.md) | D-451 | Live 2026-11-20: server (`9cfc36a2`) and web app build 61; Cloudflare asked for 10,000 a day. Left: store builds; raise `MAIL_SEND_DAILY_MAX` when Cloudflare answers |
 | [BOT-EMAIL-PLAN](BOT-EMAIL-PLAN.md) | D-449 | Live 2026-11-20 (`87f520fd`): bots get `name@casama.app`, sending through Cloudflare Email Sending; 10/10 on mail-tester, Gmail inbox. Left: Outlook placement check |
