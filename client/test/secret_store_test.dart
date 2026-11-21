@@ -25,6 +25,9 @@ void main() {
     expect(find.textContaining('Infisical · proj-1 · prod'), findsOneWidget);
     await tester.tap(find.byKey(const Key('secretStore')));
     await tester.pumpAndSettle();
+    // The dialog's height is capped, so the button may sit below the fold.
+    await tester.ensureVisible(find.byKey(const Key('secretStoreVault')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('secretStoreVault')));
     await tester.pumpAndSettle();
     expect(find.textContaining("This server's vault"), findsOneWidget);

@@ -30,8 +30,13 @@ void main() {
     await tester.enterText(find.byKey(const Key('routineInstructions')), 'Brief me on who I meet');
     await tester.tap(find.text('Meetings'));
     await tester.pumpAndSettle();
+    // The dialog's height is capped, so scroll each control into view before tapping it.
+    await tester.ensureVisible(find.byKey(const Key('routineOutsideGuests')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('routineOutsideGuests')));
     await tester.pump();
+    await tester.ensureVisible(find.byKey(const Key('createRoutine')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('createRoutine')));
     await tester.pumpAndSettle();
     final c = backend.createdCalendar!;

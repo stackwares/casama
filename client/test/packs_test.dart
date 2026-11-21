@@ -350,9 +350,16 @@ void main() {
     // It reaches further: nothing happens until the person says yes.
     expect(tester.widget<ButtonStyleButton>(find.byKey(const Key('packUpdateConfirm'))).onPressed, isNull);
 
+    // The dialog's height is capped, so scroll each control into view before tapping it.
+    await tester.ensureVisible(find.byKey(const Key('packTheirs-bot:planner')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('packTheirs-bot:planner')));
+    await tester.ensureVisible(find.byKey(const Key('packConfirmReach')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('packConfirmReach')));
     await tester.pump();
+    await tester.ensureVisible(find.byKey(const Key('packUpdateConfirm')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('packUpdateConfirm')));
     await tester.pumpAndSettle();
     expect(backend.packActions.last, 'update:pack-1:${'2' * 40}:theirs=bot:planner:reach=true:secrets=');

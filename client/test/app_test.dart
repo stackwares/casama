@@ -687,8 +687,9 @@ void main() {
     expect(find.byType(ChatScreen), findsOneWidget);
     expect(find.text('Team computer'), findsOneWidget);
     expect(find.text('Asleep'), findsOneWidget);
-    // Asleep: the button wakes it.
-    expect(find.text('Wake up'), findsOneWidget);
+    // Asleep: the header button wakes it, and so does the asleep Screen tab.
+    expect(find.descendant(of: find.byKey(const Key('computerStart')), matching: find.text('Wake up')), findsOneWidget);
+    expect(find.byKey(const Key('headlessWake')), findsOneWidget);
 
     // The computer panel is resized by dragging its left edge.
     double panelWidth() => tester.getSize(find.byType(ComputerScreen)).width;
