@@ -493,6 +493,12 @@ class _SearchViewState extends ConsumerState<SearchView> {
       _setQuery('');
       return KeyEventResult.handled;
     }
+    // Nothing typed: Escape closes the palette. Left to the field, the first press only took focus
+    // out of it (web), and a second press was needed.
+    if (key == LogicalKeyboardKey.escape && widget.inSheet) {
+      unawaited(Navigator.of(context).maybePop());
+      return KeyEventResult.handled;
+    }
     final n = _rows.length;
     if (n == 0 || (key != LogicalKeyboardKey.arrowDown && key != LogicalKeyboardKey.arrowUp)) return KeyEventResult.ignored;
     setState(() {

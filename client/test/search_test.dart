@@ -235,6 +235,31 @@ void main() {
     expect(find.text('GO TO'), findsOneWidget);
   });
 
+  testWidgets('Escape with nothing typed closes the palette in one press', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    await setSize(tester, const Size(1200, 900));
+    await tester.pumpWidget(ProviderScope(
+      overrides: [backendProvider.overrideWithValue(FakeBackend())],
+      child: MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Builder(
+          builder: (context) => TextButton(onPressed: () => showWorkspaceSearch(context), child: const Text('open')),
+        ),
+      ),
+    ));
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    expect(find.text('GO TO'), findsOneWidget);
+    await type(tester, 'invoice');
+    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+    await tester.pumpAndSettle();
+    expect(find.text('GO TO'), findsOneWidget);
+    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+    await tester.pumpAndSettle();
+    expect(find.text('GO TO'), findsNothing);
+  });
+
   testWidgets('a memory search result opens that memory', (tester) async {
     await setSize(tester, const Size(500, 900));
     final router = GoRouter(
