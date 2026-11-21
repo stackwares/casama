@@ -76,3 +76,18 @@ it("owners of a workspace whose credits fell under $1 are told once a week", asy
     { org_id: freeOrg!.id, balance: expect.stringMatching(/^0\.2/), owner_id: user.id },
   ]);
 });
+
+it("a give-back (a hold released, a failed run waived) isn't a top-up for the low-credit rule", async () => {
+  const user = await createAuthUser(tdb.admin, "low-giveback@example.com");
+  const [org] = await tdb.admin<{ id: string }[]>`
+    insert into public.organizations (name, slug) values ('Give back', 'low-giveback') returning id`;
+  await tdb.admin`insert into public.memberships (org_id, user_id, role) values (${org!.id}, ${user.id}, 'owner')`;
+  await tdb.admin`select public.credit_apply(${org!.id}::uuid, 10, 'grant', 'monthly:test', 'Pro')`;
+  await tdb.admin`insert into public.usage_ledger (org_id, kind, quantity, cost_usd, billable) values (${org!.id}, 'tokens_in', 1, 0.01, true)`;
+  await tdb.admin`select public.credit_apply(${org!.id}::uuid, -9.2, 'usage', 'spent', 'Usage')`;
+  // A hold larger than its usage comes back as a small positive usage entry: $0.81 is still low.
+  await tdb.admin`select public.credit_apply(${org!.id}::uuid, 0.01, 'usage', 'hold-back', 'Usage')`;
+  expect((await lowCreditWorkspaces(h.db)).filter((l) => l.org_id === org!.id)).toEqual([
+    { org_id: org!.id, balance: expect.stringMatching(/^0\.81/), owner_id: user.id },
+  ]);
+});

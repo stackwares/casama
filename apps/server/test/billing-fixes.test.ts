@@ -5,6 +5,7 @@
 import { randomUUID } from "node:crypto";
 import { sql } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { sweepAccountEmails } from "../src/services/account-emails.ts";
 import { billingEnv, type FakeBilling, startFakeBilling } from "./fake-billing.ts";
 import { type Harness, j, startHarness } from "./helpers.ts";
 
@@ -258,5 +259,28 @@ describe("billing fixes (bug hunt 2026-11-21)", () => {
     // Delivered again, it gives nothing more.
     await rcHook("REFUND_REVERSED", refund);
     expect(await credits(orgId)).toBeCloseTo(before - 0.5, 6);
+  });
+
+  it("the low-credits email follows the push's rule: a new $1 Free grant isn't low after a cent", async () => {
+    const orgId = await newOrg("Low credits email");
+    const usage = async (usd: number) => {
+      await h.handle.db.execute(sql`
+        insert into public.usage_ledger (org_id, kind, quantity, cost_usd, billable, billed_at)
+        values (${orgId}::uuid, 'tokens_in', 1, ${usd}, true, now())`);
+      await h.deps.billing?.credit(orgId, -usd, "usage", `usage-${orgId}-${usd}`);
+    };
+    const queued = async () =>
+      (
+        await h.handle.db.execute<{ n: number }>(sql`
+          select count(*)::int as n from public.email_outbox
+          where org_id = ${orgId}::uuid and kind = 'credits_low'`)
+      )[0]?.n;
+    await usage(0.01);
+    await sweepAccountEmails(h.handle.db, { billing: true });
+    expect(await queued()).toBe(0);
+    // Under a quarter of the grant left: now it's low.
+    await usage(0.8);
+    await sweepAccountEmails(h.handle.db, { billing: true });
+    expect(await queued()).toBe(1);
   });
 });

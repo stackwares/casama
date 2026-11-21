@@ -10,7 +10,7 @@
  * - tips and news (welcome series): to the person, only while profiles.email_tips is on, only
  *   when EMAIL_POSTAL_ADDRESS is set, and with a one-click unsubscribe link.
  */
-import { LOW_CREDIT_USD } from "@casama/agent";
+import { lowCreditLimit } from "@casama/agent";
 import type { Database } from "@casama/db";
 import {
   checkEmailCopy,
@@ -883,7 +883,8 @@ export async function sweepAccountEmails(db: Database, opts: { billing: boolean;
       select bal.org_id, bal.balance::text as balance,
              (select max(seq)::text from public.credit_ledger t where t.org_id = bal.org_id and t.delta > 0) as last_topup
       from bal
-      where bal.balance < ${LOW_CREDIT_USD}
+      -- Out of credits (<= 0) has its own email; low follows the push's rule (lowCreditLimit).
+      where (bal.balance <= 0 or bal.balance < ${lowCreditLimit(sql`bal.org_id`)})
         and exists (select 1 from public.usage_ledger u where u.org_id = bal.org_id and u.billable
                     and u.created_at > ${now.toISOString()}::timestamptz - interval '1 day')`);
     for (const c of credits) {
