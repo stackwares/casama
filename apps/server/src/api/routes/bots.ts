@@ -86,6 +86,15 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 export function previewText(text: string): string {
   const plain = text
     .replace(/```[^\n]*\n?/g, " ")
+    // A table: its |---|---| rule goes, and each row reads as its cells.
+    .replace(/^[ \t]*\|?([ \t]*:?-{3,}:?[ \t]*\|)+[ \t]*:?-*:?[ \t]*$/gm, "")
+    .replace(/^[ \t]*\|(.*)\|[ \t]*$/gm, (_, row: string) =>
+      row
+        .split("|")
+        .map((cell) => cell.trim())
+        .filter(Boolean)
+        .join(" · "),
+    )
     .replace(/!\[([^\]]*)\]\([^)]*\)/g, "$1")
     .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
     .replace(/^\s{0,3}(#{1,6}|>|[-*+]|\d+\.)\s+/gm, "")
