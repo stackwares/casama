@@ -1564,25 +1564,30 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       let pending = Promise.resolve();
       let wake: (() => void) | undefined;
       const flush = () => {
-        pending = pending.then(async () => {
-          for (;;) {
-            const rows = await fetchAfter(last);
-            for (const row of rows) {
-              await stream.writeSSE({
-                event: "run_event",
-                id: String(row.seq),
-                data: JSON.stringify(eventOut(row)),
-              });
-              last = row.seq;
-              if (TERMINAL_EVENTS.has(row.type)) finished = true;
+        // One failed read (a database blip) must not break every later flush.
+        pending = pending
+          .catch(() => {})
+          .then(async () => {
+            for (;;) {
+              const rows = await fetchAfter(last);
+              for (const row of rows) {
+                await stream.writeSSE({
+                  event: "run_event",
+                  id: String(row.seq),
+                  data: JSON.stringify(eventOut(row)),
+                });
+                last = row.seq;
+                if (TERMINAL_EVENTS.has(row.type)) finished = true;
+              }
+              if (rows.length < limit) break;
             }
-            if (rows.length < limit) break;
-          }
-          if (finished) wake?.();
-        });
+            if (finished) wake?.();
+          });
         return pending;
       };
-      const unsubscribe = deps.hub.subscribe(id, () => void flush());
+      // Nothing awaits a flush started by a notification: a rejection there would be unhandled and
+      // exit the process. The next flush (tick or notification) retries the read.
+      const unsubscribe = deps.hub.subscribe(id, () => void flush().catch(() => {}));
       stream.onAbort(() => {
         finished = true;
         wake?.();
@@ -1597,7 +1602,19 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
           });
           if (!finished) await stream.writeSSE({ event: "ping", data: "{}" });
           // Safety net if a notification was missed.
-          await flush();
+          await flush().catch(() => {});
+          // And if the run ended without its terminal event, don't keep the client waiting forever.
+          if (!finished) {
+            const [now] = await db
+              .execute<{ status: string }>(
+                sql`select status from public.runs where id = ${id}::uuid`,
+              )
+              .catch(() => []);
+            if (now && TERMINAL_STATUS.has(now.status)) {
+              await flush().catch(() => {});
+              finished = true;
+            }
+          }
         }
       } finally {
         unsubscribe();

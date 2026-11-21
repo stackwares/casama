@@ -309,6 +309,55 @@ describe("bots and chat", () => {
     ).toBe("Hello! How can I help?");
   });
 
+  it("keeps streaming when a database read fails mid-stream (no unhandled rejection)", async () => {
+    const conv = await j(
+      await call("/v1/conversations", {
+        method: "POST",
+        token: owner.token,
+        json: { bot_id: botId },
+      }),
+    );
+    const sent = await j(
+      await call(`/v1/conversations/${conv.id}/messages`, {
+        method: "POST",
+        token: owner.token,
+        json: { text: "count slow please" },
+      }),
+    );
+    const unhandled: unknown[] = [];
+    const onUnhandled = (e: unknown) => unhandled.push(e);
+    process.on("unhandledRejection", onUnhandled);
+    const db = h.deps.db as unknown as { execute: (...a: unknown[]) => Promise<unknown> };
+    const execute = db.execute;
+    try {
+      const res = await h.request(`/v1/runs/${sent.run_id}/events?after_seq=0`, {
+        token: owner.token,
+        headers: { accept: "text/event-stream" },
+      });
+      const body = res.text();
+      await new Promise((r) => setTimeout(r, 300));
+      // A database blip: event reads fail while new events keep arriving.
+      db.execute = function (this: unknown, ...a: unknown[]) {
+        if (JSON.stringify(a).includes("from public.run_events"))
+          return Promise.reject(new Error("connection reset"));
+        return execute.apply(this, a);
+      };
+      await new Promise((r) => setTimeout(r, 700));
+      db.execute = execute;
+      const text = await body;
+      const types = text
+        .split("\n")
+        .filter((l) => l.startsWith("data: "))
+        .map((l) => JSON.parse(l.slice(6)).type)
+        .filter(Boolean);
+      expect(types.at(-1)).toBe("run.completed");
+      expect(unhandled).toEqual([]);
+    } finally {
+      db.execute = execute;
+      process.off("unhandledRejection", onUnhandled);
+    }
+  });
+
   it("cancels a running run", async () => {
     const conv = await j(
       await call("/v1/conversations", {
