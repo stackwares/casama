@@ -7438,3 +7438,19 @@ only the last words of a help sentence. So:
   page script and site lists ship as assets in every build; a site that opens on the phone by
   itself doesn't say "on this phone" on its tool row. Nothing is deployed and the stage is Off.
 
+## D-477 App behaviour fixed in the bug hunt's second pass (2026-11-21)
+
+- **Attachments:** a file that fails to upload (no computer hours, computer off) keeps the message in
+  the composer with the failed chip and the reason; it goes without the file only after "Send
+  without it". The computer-hours error the bot sees says app attachments live on that computer, so
+  the bot no longer offers to read a new attachment "without the computer".
+- **Sessions:** the app passes Supabase's real token expiry to the SDK (no more "now + 1 day"), the
+  SDK never refreshes a token another auth library owns, and a 401 from the Casama API refreshes
+  once and retries once; a refresh the server refuses signs out to the sign-in screen. Offline
+  refresh failures (`AuthRetryableFetchException`) are dropped by every crash reporter.
+- **Calls:** the microphone is checked before `/v1/voice/session`, so a denied mic starts nothing.
+- **Bot profile:** Back with unsaved edits asks "Discard changes?" (Keep editing / Discard).
+- **Watches:** a typed ask is confirmed as "Sent"; "Heard" stays for voice.
+- **iOS share extension:** shared pictures and files are copied into the App Group container and
+  attached in quick ask as files (was: only their names, as text).
+- **Billing:** the "Upgrade to Pro" banner opens the paywall on Pro.
