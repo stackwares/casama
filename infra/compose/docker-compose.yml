@@ -299,7 +299,27 @@ x-casama: &casama
     LANGFUSE_SECRET_KEY: ${LANGFUSE_SECRET_KEY:-}
     OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
     UPDATE_CHECK_URL: ${UPDATE_CHECK_URL:-}
-    # "Compare on Aviasales" under Fares cards (D-471): an https affiliate link with {url}. Empty: off.
+    # Live data cards (D-458, D-471; docs/RICH-CARDS-PLAN.md, FLIGHT-SEARCH-PLAN.md). Each default is
+    # the server's own: an empty number would read as 0 and an empty switch wouldn't start.
+    LIVE_DATA: ${LIVE_DATA:-on}
+    LIVE_OPEN_METEO: ${LIVE_OPEN_METEO:-auto}
+    LIVE_OPEN_METEO_KEY: ${LIVE_OPEN_METEO_KEY:-}
+    LIVE_UNOFFICIAL: ${LIVE_UNOFFICIAL:-auto}
+    LIVE_COINGECKO_KEY: ${LIVE_COINGECKO_KEY:-}
+    LIVE_FINNHUB_KEY: ${LIVE_FINNHUB_KEY:-}
+    LIVE_AVIATIONSTACK_KEY: ${LIVE_AVIATIONSTACK_KEY:-}
+    LIVE_17TRACK_KEY: ${LIVE_17TRACK_KEY:-}
+    LIVE_TMDB_KEY: ${LIVE_TMDB_KEY:-}
+    LIVE_FARES: ${LIVE_FARES:-auto}
+    LIVE_FARES_ORDER: ${LIVE_FARES_ORDER:-}
+    LIVE_KIWI_MCP_URL: ${LIVE_KIWI_MCP_URL:-https://mcp.kiwi.com}
+    LIVE_SERPAPI_KEY: ${LIVE_SERPAPI_KEY:-}
+    LIVE_SERPAPI_MONTHLY_CAP: ${LIVE_SERPAPI_MONTHLY_CAP:-225}
+    LIVE_SERPAPI_COST_USD: ${LIVE_SERPAPI_COST_USD:-0.025}
+    LIVE_FARES_GOOGLE_PRICE_USD: ${LIVE_FARES_GOOGLE_PRICE_USD:-0.05}
+    LIVE_FARES_AFFILIATE_URL: ${LIVE_FARES_AFFILIATE_URL:-}
+    LIVE_FARES_AFFILIATE_HOSTS: ${LIVE_FARES_AFFILIATE_HOSTS:-}
+    # "Compare on Aviasales" under Fares cards: an https affiliate link with {url}. Empty: off.
     LIVE_FARES_COMPARE_URL: ${LIVE_FARES_COMPARE_URL:-}
 
 services:
