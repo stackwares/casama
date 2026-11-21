@@ -94,6 +94,36 @@ void main() {
     await tester.pumpWidget(const SizedBox());
   });
 
+  testWidgets('a Fares card sorts, filters and shows every option on the device', (tester) async {
+    await show(tester, [
+      {'id': 'root', ...Map<String, Object?>.from(live['fares_kiwi']! as Map)},
+    ], size: const Size(390, 2400));
+    _noErrors(tester);
+    expect(find.text('Manila → Tokyo'), findsOneWidget);
+    expect(find.text('from ₱17,772'), findsOneWidget);
+    // Three options until Show all; every one has a Book button.
+    expect(find.textContaining('Book'), findsNWidgets(3));
+    await tester.tap(find.byKey(const Key('faresMore')));
+    await tester.pump();
+    expect(find.textContaining('Book'), findsNWidgets(6));
+    await tester.tap(find.byKey(const Key('faresSort-fastest')));
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('faresDirect')));
+    await tester.pump();
+    _noErrors(tester);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('a Google Fares card says the return is picked on Google', (tester) async {
+    await show(tester, [
+      {'id': 'root', ...Map<String, Object?>.from(live['fares_google']! as Map)},
+    ], size: const Size(390, 2400));
+    _noErrors(tester);
+    expect(find.text('See all on Google Flights'), findsOneWidget);
+    expect(find.textContaining('Usually ₱13,000–₱29,500'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+  });
+
   testWidgets('a Carousel swipes between cards', (tester) async {
     await show(tester, [
       {'id': 'root', 'component': 'Carousel', 'children': ['a', 'b']},

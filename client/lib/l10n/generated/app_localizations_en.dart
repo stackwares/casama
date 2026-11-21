@@ -18035,6 +18035,115 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cardFlightScheduled => 'On schedule';
 
   @override
+  String get cardFaresBest => 'Best';
+
+  @override
+  String get cardFaresCheapest => 'Cheapest';
+
+  @override
+  String get cardFaresFastest => 'Fastest';
+
+  @override
+  String get cardFaresDirectOnly => 'Direct only';
+
+  @override
+  String get cardFaresDirect => 'Direct';
+
+  @override
+  String cardFaresStops(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n stops',
+      one: '1 stop',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get cardFaresBook => 'Book';
+
+  @override
+  String cardFaresFromPrice(String price) {
+    return 'from $price';
+  }
+
+  @override
+  String cardFaresTravellers(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n travellers',
+      one: '1 traveller',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String cardFaresNights(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n nights',
+      one: '1 night',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get cardFaresEconomy => 'Economy';
+
+  @override
+  String get cardFaresPremium => 'Premium economy';
+
+  @override
+  String get cardFaresBusiness => 'Business';
+
+  @override
+  String get cardFaresFirst => 'First';
+
+  @override
+  String cardFaresTypical(String low, String high) {
+    return 'Usually $low–$high for this trip';
+  }
+
+  @override
+  String get cardFaresLevelLow => 'Low now';
+
+  @override
+  String get cardFaresLevelTypical => 'Typical now';
+
+  @override
+  String get cardFaresLevelHigh => 'High now';
+
+  @override
+  String cardFaresShowAll(int n) {
+    return 'Show all $n';
+  }
+
+  @override
+  String get cardFaresShowFewer => 'Show fewer';
+
+  @override
+  String get cardFaresNoDirect => 'No direct flights in this search.';
+
+  @override
+  String get cardFaresOutboundOnly =>
+      'Prices are for the whole trip; pick the return flight on Google Flights.';
+
+  @override
+  String get cardFaresSeeAll => 'See all on Google Flights';
+
+  @override
+  String get cardFaresCheck =>
+      'Prices are for all travellers and are checked again on the booking site.';
+
+  @override
+  String cardFaresBags(int cabin, int checked) {
+    return '$cabin cabin, $checked checked bags';
+  }
+
+  @override
   String get cardFromBot => 'Written by the bot; it may be wrong';
 
   @override

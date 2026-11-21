@@ -29120,6 +29120,156 @@ abstract class AppLocalizations {
   /// **'On schedule'**
   String get cardFlightScheduled;
 
+  /// No description provided for @cardFaresBest.
+  ///
+  /// In en, this message translates to:
+  /// **'Best'**
+  String get cardFaresBest;
+
+  /// No description provided for @cardFaresCheapest.
+  ///
+  /// In en, this message translates to:
+  /// **'Cheapest'**
+  String get cardFaresCheapest;
+
+  /// No description provided for @cardFaresFastest.
+  ///
+  /// In en, this message translates to:
+  /// **'Fastest'**
+  String get cardFaresFastest;
+
+  /// No description provided for @cardFaresDirectOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Direct only'**
+  String get cardFaresDirectOnly;
+
+  /// No description provided for @cardFaresDirect.
+  ///
+  /// In en, this message translates to:
+  /// **'Direct'**
+  String get cardFaresDirect;
+
+  /// No description provided for @cardFaresStops.
+  ///
+  /// In en, this message translates to:
+  /// **'{n, plural, =1{1 stop} other{{n} stops}}'**
+  String cardFaresStops(int n);
+
+  /// No description provided for @cardFaresBook.
+  ///
+  /// In en, this message translates to:
+  /// **'Book'**
+  String get cardFaresBook;
+
+  /// No description provided for @cardFaresFromPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'from {price}'**
+  String cardFaresFromPrice(String price);
+
+  /// No description provided for @cardFaresTravellers.
+  ///
+  /// In en, this message translates to:
+  /// **'{n, plural, =1{1 traveller} other{{n} travellers}}'**
+  String cardFaresTravellers(int n);
+
+  /// No description provided for @cardFaresNights.
+  ///
+  /// In en, this message translates to:
+  /// **'{n, plural, =1{1 night} other{{n} nights}}'**
+  String cardFaresNights(int n);
+
+  /// No description provided for @cardFaresEconomy.
+  ///
+  /// In en, this message translates to:
+  /// **'Economy'**
+  String get cardFaresEconomy;
+
+  /// No description provided for @cardFaresPremium.
+  ///
+  /// In en, this message translates to:
+  /// **'Premium economy'**
+  String get cardFaresPremium;
+
+  /// No description provided for @cardFaresBusiness.
+  ///
+  /// In en, this message translates to:
+  /// **'Business'**
+  String get cardFaresBusiness;
+
+  /// No description provided for @cardFaresFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'First'**
+  String get cardFaresFirst;
+
+  /// No description provided for @cardFaresTypical.
+  ///
+  /// In en, this message translates to:
+  /// **'Usually {low}–{high} for this trip'**
+  String cardFaresTypical(String low, String high);
+
+  /// No description provided for @cardFaresLevelLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Low now'**
+  String get cardFaresLevelLow;
+
+  /// No description provided for @cardFaresLevelTypical.
+  ///
+  /// In en, this message translates to:
+  /// **'Typical now'**
+  String get cardFaresLevelTypical;
+
+  /// No description provided for @cardFaresLevelHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'High now'**
+  String get cardFaresLevelHigh;
+
+  /// No description provided for @cardFaresShowAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Show all {n}'**
+  String cardFaresShowAll(int n);
+
+  /// No description provided for @cardFaresShowFewer.
+  ///
+  /// In en, this message translates to:
+  /// **'Show fewer'**
+  String get cardFaresShowFewer;
+
+  /// No description provided for @cardFaresNoDirect.
+  ///
+  /// In en, this message translates to:
+  /// **'No direct flights in this search.'**
+  String get cardFaresNoDirect;
+
+  /// No description provided for @cardFaresOutboundOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Prices are for the whole trip; pick the return flight on Google Flights.'**
+  String get cardFaresOutboundOnly;
+
+  /// No description provided for @cardFaresSeeAll.
+  ///
+  /// In en, this message translates to:
+  /// **'See all on Google Flights'**
+  String get cardFaresSeeAll;
+
+  /// No description provided for @cardFaresCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'Prices are for all travellers and are checked again on the booking site.'**
+  String get cardFaresCheck;
+
+  /// No description provided for @cardFaresBags.
+  ///
+  /// In en, this message translates to:
+  /// **'{cabin} cabin, {checked} checked bags'**
+  String cardFaresBags(int cabin, int checked);
+
   /// No description provided for @cardFromBot.
   ///
   /// In en, this message translates to:

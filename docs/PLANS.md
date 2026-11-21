@@ -34,7 +34,7 @@ same commit. Shipping details (deploys, app builds) move fast, so check them bef
 
 | Plan | Decisions | What's left |
 |---|---|---|
-| [FLIGHT-SEARCH-PLAN](FLIGHT-SEARCH-PLAN.md) | D-471 | Approved 2026-11-21 ("just build the fall backs"). Phases 0–1 built: Kiwi.com → Google Flights chain, `live.fares`, $0.05 Google charge, limits. Left: Phase 2 native card, Phase 3 price watches, Kiwi's written OK and SerpApi Starter before Cloud relies on it |
+| [FLIGHT-SEARCH-PLAN](FLIGHT-SEARCH-PLAN.md) | D-471 | Approved 2026-11-21 ("just build the fall backs"). Phases 0–2 built: Kiwi.com → Google Flights chain, `live.fares`, $0.05 Google charge, limits, native Fares card. Left: Phase 3 price watches and Phase 4 affiliate links (Oliver's go-ahead), Kiwi's written OK and SerpApi Starter before Cloud relies on Google, deploy and app builds |
 | [PHONE-BROWSER-PLAN](PHONE-BROWSER-PLAN.md) | §13 as written | Approved 2026-11-21 ("start building all now in 1 go"). Building on branch `phone-browser`; phases 0–3 in code, Phase 4 (switching on) follows its bars. Flutter runs on phones, deploys and stage switches wait for Oliver's yes (§16) |
 | [SCREEN-CARD-PLAN](SCREEN-CARD-PLAN.md) | — | Approved 2026-11-21 with every default in §11. Phase 0 done (measurements, sample card driven in the web app). Next: Phase 1 (lighter screenshot route, show/hide rules, setting, analytics) |
 | [BUG-HUNT-PLAN](BUG-HUNT-PLAN.md) | — | Approved 2026-11-21 (builds B1–B4, push per batch). Running: web, macOS, iOS + watch, Android + Wear passes; log in the plan §9 |

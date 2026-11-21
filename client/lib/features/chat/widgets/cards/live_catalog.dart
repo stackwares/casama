@@ -1,6 +1,7 @@
 import 'package:a2ui_flutter/a2ui_flutter.dart';
 
 import 'live_composed.dart';
+import 'live_fares.dart';
 import 'live_money.dart';
 import 'live_time.dart';
 import 'live_tools.dart';
@@ -26,6 +27,7 @@ final liveComponents = <ComponentImplementation>[
   scoreComponent,
   standingsComponent,
   flightComponent,
+  faresComponent,
   parcelComponent,
   summaryComponent,
   definitionComponent,

@@ -7253,5 +7253,11 @@ only the last words of a help sentence. So:
   and `apps/server/test/live-fares.test.ts` (env → config, meter limits, credits, ledger rows).
   `packages/agent/scripts/fares-smoke.ts` made one real Kiwi search (15 fares, ~4 s) and one real
   Google search (11 fares, ~2.5 s) on 2026-11-21.
-- **Not done:** the app's native Fares card (Phase 2), price watches (Phase 3), affiliate links
-  (Phase 4); not deployed; `LIVE_SERPAPI_KEY` not on any server.
+- **App card (Phase 2):** `client/lib/features/chat/widgets/cards/live_fares.dart`: route, dates,
+  travellers and cabin, "from" price, Google's usual range, Best/Cheapest/Fastest and Direct only
+  sorted on the device, three options then Show all, each with times (+1 for next day), stops and
+  airports, bags (Kiwi), and Book (the system or in-app browser, D-352). Google cards say the return
+  is picked on Google Flights. Older apps leave the card out; the bot's sentence still answers.
+  Not pinnable to widgets yet.
+- **Not done:** price watches (Phase 3), affiliate links (Phase 4); not deployed; no app build;
+  `LIVE_SERPAPI_KEY` not on any server.
