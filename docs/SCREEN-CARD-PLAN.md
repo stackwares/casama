@@ -10,7 +10,13 @@ reload, close and return. **Phase 1 built** (2026-11-21, not deployed): the ligh
 bot's chat on phones and tablets with the §4 rules (`ScreenCard` in `screen_card.dart`,
 `client/test/screen_card_rules_test.dart`), the setting and the three analytics events. Still to do
 for Phase 1: the check on Oliver's phone (network time, battery, the computer still sleeping on
-time), which needs a server deploy and a Flutter run, each with his yes. Then Phase 2.
+time), which needs a server deploy and a Flutter run, each with his yes. **Phase 2 built**
+(2026-11-21, not deployed): Needs you signals once (light haptic, one pulse, the only screen
+reader announcement); a held screen keeps its last picture, paused, with no fetching and no
+"moved on" clock; the first-time line; the long-press menu; the three-closes toast; group chats
+follow the bot on its screen with its face and name; Reduce Motion only fades; the call's tile
+uses the lighter picture. Each state rendered in light and dark at phone and tablet widths. Phase 3
+stays undecided until the analytics come in.
 
 Line numbers are from 2026-11-21. Re-find each one before editing.
 
@@ -264,6 +270,21 @@ Oliver left these to the builder:
   stays hidden, and the last picture dims at 8 seconds and goes at 20, as for any failed fetch.
 - **Back from the live view,** the card checks again after 400 ms, since covering a page doesn't
   rebuild it.
+
+### Phase 2 choices (2026-11-21)
+
+- **Motion:** the card grows out of its own corner with a short slide toward the header, not a
+  morph out of the monitor button: that button's place changes with the layout and the topic
+  chips. With Reduce Motion on it only fades.
+- **The call's tile keeps its own look** ("Live view" label, the large pane beside a call) and
+  shares the lighter picture: a small JPEG sent only when the screen changed. Unlike the chat's
+  card it may wake the computer (`wake: true`), since the bot asked to show its screen.
+- **The call bubble** is drawn above every page, so a card on the same side already sits under it.
+- **"Mia has the screen"** needs the holder's name in the lease event, which the app doesn't get
+  today; the card says "You have the screen" for any person holding it. A server change for later.
+- **Two panes** (folding phones) aren't a phone or tablet layout, so they never show the card.
+- **Analytics:** `screen_card_hidden` gains `how: menu`; turning it off from the three-closes
+  toast counts as `setting`.
 
 ### Phase 0 measurements (2026-11-21)
 

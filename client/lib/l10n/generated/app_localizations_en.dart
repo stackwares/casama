@@ -2227,6 +2227,36 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get screenCardMore => 'More options';
+
+  @override
+  String screenCardIntro(String bot) {
+    return '$bot\'s screen. Tap to watch, drag to move.';
+  }
+
+  @override
+  String get screenCardHideForNow => 'Hide for Now';
+
+  @override
+  String get screenCardDontShow => 'Don\'t Show Automatically';
+
+  @override
+  String get screenCardTurnedOff =>
+      'The screen card is off. Turn it back on in Settings.';
+
+  @override
+  String get screenCardOfferOff =>
+      'Hiding the screen card a lot? You can turn it off.';
+
+  @override
+  String get screenCardTurnOff => 'Turn Off';
+
+  @override
+  String screenCardNeedsYou(String bot) {
+    return '$bot needs you on the screen';
+  }
+
+  @override
   String callRecapTitle(String length) {
     return 'Call · $length';
   }

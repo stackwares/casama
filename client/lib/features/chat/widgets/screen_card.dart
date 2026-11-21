@@ -1,12 +1,17 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/analytics.dart';
 import '../../../core/backend.dart';
+import '../../../core/haptics.dart';
 import '../../../core/providers.dart';
+import '../../../core/widgets.dart';
+import '../../../theme/app_colors.dart';
 import '../../../theme/app_tokens.dart';
 import '../../../ui/shell_layout.dart';
 import '../../../ui/screen_tile.dart';
@@ -41,6 +46,7 @@ class ScreenWork {
     required this.takeoverComputer,
     required this.held,
     required this.failed,
+    this.bot,
   });
 
   /// Which reply this is: the id of the person's last message ('' before any).
@@ -60,6 +66,9 @@ class ScreenWork {
   /// The reply ended in a failure or was stopped.
   final bool failed;
 
+  /// Which bot took the newest screen step, when the chat says (group chats).
+  final String? bot;
+
   @override
   bool operator ==(Object other) =>
       other is ScreenWork &&
@@ -69,10 +78,11 @@ class ScreenWork {
       setEquals(other.runningSteps, runningSteps) &&
       other.takeoverComputer == takeoverComputer &&
       other.held == held &&
-      other.failed == failed;
+      other.failed == failed &&
+      other.bot == bot;
 
   @override
-  int get hashCode => Object.hash(reply, running, steps, Object.hashAllUnordered(runningSteps), takeoverComputer, held, failed);
+  int get hashCode => Object.hash(reply, running, steps, Object.hashAllUnordered(runningSteps), takeoverComputer, held, failed, bot);
 
   static ScreenWork of(ChatState c) {
     var reply = '';
@@ -81,6 +91,7 @@ class ScreenWork {
     String? takeover;
     bool? held;
     var failed = false;
+    String? bot;
     for (var i = c.entries.length - 1; i >= 0; i--) {
       final e = c.entries[i];
       if (e is MessageEntry && e.role == 'user') {
@@ -89,6 +100,7 @@ class ScreenWork {
       }
       if (e is ToolEntry && isScreenTool(e.tool)) {
         steps++;
+        bot ??= e.botId;
         if (e.status == ToolStatus.running) runningSteps.add(e.callId);
       } else if (e is TakeoverEntry && e.outcome == null) {
         takeover ??= e.computerId;
@@ -106,6 +118,7 @@ class ScreenWork {
       takeoverComputer: takeover,
       held: held ?? false,
       failed: failed,
+      bot: bot,
     );
   }
 }
@@ -121,6 +134,9 @@ class ScreenCard extends ConsumerStatefulWidget {
     required this.computerId,
     required this.layout,
     required this.onOpen,
+    this.computerFor,
+    this.faceFor,
+    this.nameFor,
   });
   final String botId;
   final String botName;
@@ -129,6 +145,11 @@ class ScreenCard extends ConsumerStatefulWidget {
   final String? computerId;
   final LayoutSize layout;
   final void Function(String computerId) onOpen;
+
+  /// Group chats: the computer of the bot taking screen steps, and its face for the card.
+  final String? Function(String botId)? computerFor;
+  final Widget Function(String botId)? faceFor;
+  final String Function(String botId)? nameFor;
 
   @override
   ConsumerState<ScreenCard> createState() => _ScreenCardState();
@@ -152,6 +173,9 @@ abstract final class ScreenCardTimes {
 
   /// The pause between one picture arriving and asking for the next.
   static const between = Duration(seconds: 1);
+
+  /// How long the first-time line stays.
+  static const intro = Duration(seconds: 4);
 }
 
 class _ScreenCardState extends ConsumerState<ScreenCard> with WidgetsBindingObserver {
@@ -180,6 +204,16 @@ class _ScreenCardState extends ConsumerState<ScreenCard> with WidgetsBindingObse
   Timer? _goneTimer;
   Timer? _next;
   Timer? _back;
+  Timer? _introTimer;
+
+  /// Needs you was signalled (haptic, pulse, announcement) for this reply and computer.
+  String? _signalled;
+  var _pulse = 0;
+  var _intro = false;
+  var _introChecked = false;
+
+  static const _introKey = 'screenCard.introSeen';
+  static const _closesKey = 'screenCard.closesInARow';
 
   @override
   void initState() {
@@ -192,7 +226,7 @@ class _ScreenCardState extends ConsumerState<ScreenCard> with WidgetsBindingObse
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    for (final t in [_longLook, _movedOnTimer, _minShown, _doneTimer, _staleTimer, _goneTimer, _next, _back]) {
+    for (final t in [_longLook, _movedOnTimer, _minShown, _doneTimer, _staleTimer, _goneTimer, _next, _back, _introTimer]) {
       t?.cancel();
     }
     super.dispose();
@@ -205,11 +239,36 @@ class _ScreenCardState extends ConsumerState<ScreenCard> with WidgetsBindingObse
     _update();
   }
 
-  String? get _computer => _work?.takeoverComputer ?? widget.computerId;
+  /// Who the card is about: the bot taking the screen steps in a group chat.
+  String get _botName {
+    final bot = _work?.bot, name = widget.nameFor;
+    return name != null && bot != null ? name(bot) : widget.botName;
+  }
+
+  String? get _computer {
+    final w = _work;
+    if (w?.takeoverComputer != null) return w!.takeoverComputer;
+    final bot = w?.bot, pick = widget.computerFor;
+    if (pick != null && bot != null) return pick(bot);
+    return widget.computerId;
+  }
 
   /// The chat changed: new steps, a finished reply, a takeover.
   void _onWork(ScreenWork? prev, ScreenWork next) {
     _work = next;
+    // While someone holds the screen the bot waits: that's not moving on. Handed back, the
+    // pictures start again, and so do the clocks.
+    if (next.held) {
+      _movedOnTimer?.cancel();
+      _movedOn = false;
+    } else if (prev?.held ?? false) {
+      _freshPicture();
+      _restartMovedOn();
+    }
+    // A reply the card showed through without being closed: the closes in a row start over.
+    if ((prev?.running ?? false) && !next.running && _shownReply == next.reply && _closedReply != next.reply) {
+      unawaited(_setCloses(0));
+    }
     if (prev?.reply != next.reply) {
       // A new reply starts afresh: closing it hid only the last one.
       _lookedLong = false;
@@ -219,14 +278,7 @@ class _ScreenCardState extends ConsumerState<ScreenCard> with WidgetsBindingObse
       _longLook?.cancel();
     }
     final active = next.runningSteps.isNotEmpty || next.steps > (prev?.reply == next.reply ? prev!.steps : 0);
-    if (active) {
-      _movedOn = false;
-      _movedOnTimer?.cancel();
-      _movedOnTimer = Timer(ScreenCardTimes.movedOn, () {
-        _movedOn = true;
-        _update();
-      });
-    }
+    if (active && !next.held) _restartMovedOn();
     if (next.runningSteps.isNotEmpty && !_lookedLong && (_longLook == null || !_longLook!.isActive)) {
       _longLook = Timer(ScreenCardTimes.longLook, () {
         if (_work?.runningSteps.isNotEmpty ?? false) _lookedLong = true;
@@ -243,6 +295,15 @@ class _ScreenCardState extends ConsumerState<ScreenCard> with WidgetsBindingObse
       });
     }
     _update();
+  }
+
+  void _restartMovedOn() {
+    _movedOn = false;
+    _movedOnTimer?.cancel();
+    _movedOnTimer = Timer(ScreenCardTimes.movedOn, () {
+      _movedOn = true;
+      _update();
+    });
   }
 
   /// Whether the chat calls for the card right now (SCREEN-CARD-PLAN §4), pictures aside.
@@ -273,13 +334,22 @@ class _ScreenCardState extends ConsumerState<ScreenCard> with WidgetsBindingObse
       _etag = null;
       _pictureOf = id;
     }
-    if (wanted && !_polling) {
+    // Someone holds the screen: the last picture stays, paused (§5), and nothing is fetched.
+    final held = _work?.held ?? false;
+    final fetch = wanted && !(held && _picture != null);
+    if (fetch && !_polling) {
       _polling = true;
       unawaited(_fetch());
     }
-    if (!wanted) {
+    if (!fetch) {
       _polling = false;
       _next?.cancel();
+    }
+    if (held) {
+      _staleTimer?.cancel();
+      _goneTimer?.cancel();
+      _stale = false;
+      _pictureGone = false;
     }
     final show = wanted && _picture != null && !_pictureGone;
     // Once shown, it stays its minimum time unless the reply ended, it was closed or the page left.
@@ -297,11 +367,47 @@ class _ScreenCardState extends ConsumerState<ScreenCard> with WidgetsBindingObse
           _shownReply = _work?.reply;
           Analytics.log('screen_card_shown', {'trigger': _work?.takeoverComputer != null ? 'takeover' : 'screen_step'});
         }
+        unawaited(_maybeIntro());
       }
       setState(() => _shown = next);
     } else {
       setState(() {});
     }
+    _signalNeedsYou();
+  }
+
+  /// The card turned amber: one light haptic, one pulse, and the only thing a screen reader hears
+  /// from it (§5, §6).
+  void _signalNeedsYou() {
+    final w = _work;
+    final take = w?.takeoverComputer;
+    if (!_shown || take == null) return;
+    final key = '${w!.reply}:$take';
+    if (_signalled == key) return;
+    _signalled = key;
+    unawaited(HapticsHelper.light());
+    setState(() => _pulse++);
+    unawaited(
+      SemanticsService.sendAnnouncement(View.of(context), context.l10n.screenCardNeedsYou(_botName), Directionality.of(context)),
+    );
+  }
+
+  /// The first time the card ever shows on this device: one line under it for four seconds.
+  Future<void> _maybeIntro() async {
+    if (_introChecked) return;
+    _introChecked = true;
+    try {
+      final p = await SharedPreferences.getInstance();
+      if (p.getBool(_introKey) ?? false) return;
+      await p.setBool(_introKey, true);
+    } catch (_) {
+      return;
+    }
+    if (!mounted) return;
+    setState(() => _intro = true);
+    _introTimer = Timer(ScreenCardTimes.intro, () {
+      if (mounted) setState(() => _intro = false);
+    });
   }
 
   Future<void> _fetch() async {
@@ -377,10 +483,73 @@ class _ScreenCardState extends ConsumerState<ScreenCard> with WidgetsBindingObse
     _back = Timer(const Duration(milliseconds: 400), _update);
   }
 
-  void _close() {
-    Analytics.log('screen_card_hidden', {'how': 'close'});
+  void _close({String how = 'close'}) {
+    Analytics.log('screen_card_hidden', {'how': how});
     _closedReply = _work?.reply;
+    _intro = false;
     _update();
+    unawaited(_countClose());
+  }
+
+  Future<void> _setCloses(int n) async {
+    try {
+      await (await SharedPreferences.getInstance()).setInt(_closesKey, n);
+    } catch (_) {
+      // Not kept: the offer may come a little later or sooner.
+    }
+  }
+
+  /// Closed on three replies in a row: one toast offers to turn it off, saying where it comes back.
+  Future<void> _countClose() async {
+    int n;
+    try {
+      n = ((await SharedPreferences.getInstance()).getInt(_closesKey) ?? 0) + 1;
+    } catch (_) {
+      return;
+    }
+    await _setCloses(n >= 3 ? 0 : n);
+    if (n < 3 || !mounted) return;
+    final l10n = context.l10n;
+    showToast(
+      context,
+      l10n.screenCardOfferOff,
+      duration: const Duration(seconds: 8),
+      action: SnackBarAction(key: const Key('screenCardTurnOff'), label: l10n.screenCardTurnOff, onPressed: () => _turnOff('setting')),
+    );
+  }
+
+  void _turnOff(String how) {
+    Analytics.log('screen_card_hidden', {'how': how});
+    unawaited(ref.read(showScreenCardProvider.notifier).set(false));
+    if (mounted) showToast(context, context.l10n.screenCardTurnedOff, replace: true);
+  }
+
+  /// Long press (§6): open, hide for this reply, or stop showing it.
+  Future<void> _menu(BuildContext tile) async {
+    final box = tile.findRenderObject() as RenderBox?;
+    final overlay = Overlay.of(context).context.findRenderObject() as RenderBox?;
+    if (box == null || overlay == null) return;
+    unawaited(HapticsHelper.selection());
+    final l10n = context.l10n;
+    final rect = box.localToGlobal(Offset.zero, ancestor: overlay) & box.size;
+    final picked = await showMenu<String>(
+      context: context,
+      position: RelativeRect.fromRect(rect, Offset.zero & overlay.size),
+      items: [
+        PopupMenuItem(key: const Key('screenCardMenuOpen'), value: 'open', child: Text(l10n.screenCardOpen)),
+        PopupMenuItem(key: const Key('screenCardMenuHide'), value: 'hide', child: Text(l10n.screenCardHideForNow)),
+        PopupMenuItem(key: const Key('screenCardMenuOff'), value: 'off', child: Text(l10n.screenCardDontShow)),
+      ],
+    );
+    if (!mounted) return;
+    switch (picked) {
+      case 'open':
+        _open();
+      case 'hide':
+        _close(how: 'menu');
+      case 'off':
+        _turnOff('menu');
+    }
   }
 
   @override
@@ -396,32 +565,55 @@ class _ScreenCardState extends ConsumerState<ScreenCard> with WidgetsBindingObse
   @override
   Widget build(BuildContext context) {
     final picture = _picture;
+    final corner = ref.watch(screenCardCornerProvider);
+    final reduce = MediaQuery.disableAnimationsOf(context);
+    final bot = _work?.bot;
+    final face = widget.faceFor != null && bot != null ? widget.faceFor!(bot) : null;
     return LayoutBuilder(
       builder: (context, box) {
         final width = screenCardWidth(box.maxWidth, widget.layout);
         return ScreenTileCorner(
           width: width,
-          child: AnimatedScale(
-            scale: _shown ? 1 : 0.2,
-            alignment: Alignment.topRight,
+          caption: _intro && _shown ? _Intro(text: context.l10n.screenCardIntro(_botName), right: corner.x > 0) : null,
+          // It grows out of its corner, toward the header (§3). With Reduce Motion on, it only fades.
+          child: AnimatedSlide(
+            offset: _shown || reduce ? Offset.zero : Offset(0, corner.y < 0 ? -0.15 : 0.15),
             duration: AppMotion.of(context, AppMotion.duration),
             curve: AppMotion.curve,
-            child: AnimatedOpacity(
-              opacity: _shown ? 1 : 0,
-              duration: AppMotion.of(context, AppMotion.fast),
-              child: IgnorePointer(
-                ignoring: !_shown,
-                child: ExcludeSemantics(
-                  excluding: !_shown,
-                  child: ScreenTile(
-                    key: const Key('screenCard'),
-                    picture: picture == null
-                        ? null
-                        : Image.memory(picture, fit: BoxFit.cover, alignment: Alignment.topCenter, gaplessPlayback: true),
-                    state: _state,
-                    botName: widget.botName,
-                    onTap: _open,
-                    onClose: _close,
+            child: AnimatedScale(
+              scale: _shown || reduce ? 1 : 0.2,
+              alignment: Alignment(corner.x, corner.y),
+              duration: AppMotion.of(context, AppMotion.duration),
+              curve: AppMotion.curve,
+              child: AnimatedOpacity(
+                opacity: _shown ? 1 : 0,
+                duration: AppMotion.fast,
+                child: IgnorePointer(
+                  ignoring: !_shown,
+                  child: ExcludeSemantics(
+                    excluding: !_shown,
+                    // One pulse when it turns amber.
+                    child: TweenAnimationBuilder<double>(
+                      key: ValueKey(_pulse),
+                      tween: Tween(begin: _pulse == 0 || reduce ? 1 : 1.08, end: 1),
+                      duration: const Duration(milliseconds: 420),
+                      curve: Curves.easeOutBack,
+                      builder: (context, scale, child) => Transform.scale(scale: scale, child: child),
+                      child: Builder(
+                        builder: (tile) => ScreenTile(
+                          key: const Key('screenCard'),
+                          picture: picture == null
+                              ? null
+                              : Image.memory(picture, fit: BoxFit.cover, alignment: Alignment.topCenter, gaplessPlayback: true),
+                          state: _state,
+                          botName: _botName,
+                          face: face,
+                          onTap: _open,
+                          onClose: _close,
+                          onLongPress: () => unawaited(_menu(tile)),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -429,6 +621,28 @@ class _ScreenCardState extends ConsumerState<ScreenCard> with WidgetsBindingObse
           ),
         );
       },
+    );
+  }
+}
+
+/// "Ava's screen. Tap to watch, drag to move." beside the card the first time (§3).
+class _Intro extends StatelessWidget {
+  const _Intro({required this.text, required this.right});
+  final String text;
+  final bool right;
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: right ? Alignment.centerRight : Alignment.centerLeft,
+      child: DecoratedBox(
+        key: const Key('screenCardIntro'),
+        decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.72), borderRadius: BorderRadius.circular(8)),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          child: Text(text, style: context.textTheme.labelSmall?.copyWith(color: Colors.white)),
+        ),
+      ),
     );
   }
 }

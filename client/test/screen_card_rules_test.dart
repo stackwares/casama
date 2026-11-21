@@ -52,7 +52,7 @@ late FakeBackend _fake;
 late ProviderContainer _container;
 final _opened = <String>[];
 
-Future<void> _pumpCard(WidgetTester tester, {ChatState? state}) async {
+Future<void> _pumpCard(WidgetTester tester, {ChatState? state, bool group = false}) async {
   _Chat.initial = state ?? const ChatState();
   _container = ProviderContainer(overrides: [backendProvider.overrideWithValue(_fake), chatControllerProvider.overrideWith2(_Chat.new)]);
   addTearDown(_container.dispose);
@@ -67,7 +67,16 @@ Future<void> _pumpCard(WidgetTester tester, {ChatState? state}) async {
           body: SizedBox(
             width: 390,
             height: 700,
-            child: ScreenCard(botId: _bot, botName: 'Ava', computerId: 'pc-1', layout: LayoutSize.phone, onOpen: _opened.add),
+            child: ScreenCard(
+              botId: _bot,
+              botName: group ? 'Trip team' : 'Ava',
+              computerId: 'pc-1',
+              layout: LayoutSize.phone,
+              onOpen: _opened.add,
+              computerFor: group ? (id) => 'pc-$id' : null,
+              faceFor: group ? (id) => SizedBox(key: Key('face-$id'), width: 18, height: 18) : null,
+              nameFor: group ? (id) => id == 'mia' ? 'Mia' : 'Ava' : null,
+            ),
           ),
         ),
       ),
@@ -246,5 +255,163 @@ void main() {
     await _settle(tester);
     expect(_visible(tester), isFalse);
     expect(_fake.screenPictureCalls, isNotEmpty);
+  });
+
+  // Phase 2 (SCREEN-CARD-PLAN §3, §5, §6).
+
+  testWidgets('a held screen keeps its last picture, paused: no fetching, no dimming, no hiding', (tester) async {
+    await _pumpCard(tester);
+    _set(_running([_step('a'), _step('b')]));
+    await _settle(tester);
+    _set(_running([_step('a'), _step('b'), const NoticeEntry(kind: NoticeKind.userControl, text: '', refId: 'pc-1')]));
+    await _settle(tester);
+    expect(_state(tester), ScreenTileState.held);
+    expect(find.text('You have the screen'), findsOneWidget);
+    final calls = _fake.screenPictureCalls.length;
+    for (var i = 0; i < 25; i++) {
+      await tester.pump(const Duration(seconds: 1));
+    }
+    expect(_fake.screenPictureCalls.length, calls);
+    expect(_visible(tester), isTrue);
+    expect(_state(tester), ScreenTileState.held);
+
+    // Handed back: pictures again.
+    _set(
+      _running([
+        _step('a'),
+        _step('b'),
+        const NoticeEntry(kind: NoticeKind.userControl, text: '', refId: 'pc-1'),
+        const NoticeEntry(kind: NoticeKind.botControl, text: '', refId: 'pc-1'),
+      ]),
+    );
+    await _settle(tester);
+    expect(_state(tester), ScreenTileState.watching);
+    expect(_fake.screenPictureCalls.length, greaterThan(calls));
+  });
+
+  testWidgets('needs you is announced to screen readers once, and nothing else is', (tester) async {
+    await _pumpCard(tester);
+    _set(_running([_step('a'), _step('b')]));
+    await _settle(tester);
+    await tester.pump(const Duration(seconds: 2));
+    expect(tester.takeAnnouncements(), isEmpty);
+    _set(_running([_step('a'), _step('b'), const TakeoverEntry(computerId: 'pc-1', reason: 'sign in')]));
+    await _settle(tester);
+    expect(_state(tester), ScreenTileState.needsYou);
+    final said = tester.takeAnnouncements();
+    expect(said.map((a) => a.message), ['Ava needs you on the screen']);
+    await tester.pump(const Duration(seconds: 2));
+    await _settle(tester);
+    expect(tester.takeAnnouncements(), isEmpty);
+    await tester.pump(const Duration(seconds: 1));
+  });
+
+  testWidgets('the first time ever, a line says what it is for four seconds; never again', (tester) async {
+    await _pumpCard(tester);
+    _set(_running([_step('a'), _step('b')]));
+    await _settle(tester);
+    await _settle(tester);
+    expect(find.text("Ava's screen. Tap to watch, drag to move."), findsOneWidget);
+    await tester.pump(const Duration(seconds: 4));
+    await _settle(tester);
+    expect(find.byKey(const Key('screenCardIntro')), findsNothing);
+
+    // A new chat on the same device: no line.
+    await tester.pumpWidget(const SizedBox());
+    await _pumpCard(tester);
+    _set(_running([_step('a'), _step('b')]));
+    await _settle(tester);
+    await _settle(tester);
+    expect(_visible(tester), isTrue);
+    expect(find.byKey(const Key('screenCardIntro')), findsNothing);
+  });
+
+  testWidgets('closed on three replies in a row: a toast offers to turn it off', (tester) async {
+    await _pumpCard(tester);
+    for (var r = 1; r <= 3; r++) {
+      final ask = MessageEntry(id: 'u$r', role: 'user', text: 'go');
+      _set(ChatState(entries: [ask, _step('a$r'), _step('b$r')], activeRunId: 'run-$r'));
+      await _settle(tester);
+      expect(_visible(tester), isTrue, reason: 'reply $r');
+      await tester.tap(find.byKey(const Key('screenTileClose')));
+      await _settle(tester);
+      await _settle(tester);
+      if (r < 3) expect(find.text('Hiding the screen card a lot? You can turn it off.'), findsNothing);
+    }
+    expect(find.text('Hiding the screen card a lot? You can turn it off.'), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 600)); // the toast slides in
+    await tester.tap(find.text('Turn Off'));
+    await _settle(tester);
+    expect(_container.read(showScreenCardProvider), isFalse);
+    await tester.pump(const Duration(seconds: 10));
+  });
+
+  testWidgets('a reply watched to the end starts the closes over', (tester) async {
+    SharedPreferences.setMockInitialValues({'screenCard.closesInARow': 2});
+    await _pumpCard(tester);
+    _set(_running([_step('a'), _step('b')]));
+    await _settle(tester);
+    _set(_ended([_step('a'), _step('b')]));
+    await _settle(tester);
+    expect((await SharedPreferences.getInstance()).getInt('screenCard.closesInARow'), 0);
+    await tester.pump(const Duration(seconds: 7));
+  });
+
+  testWidgets('long press: Hide for Now hides this reply; Don\'t Show Automatically turns it off', (tester) async {
+    await _pumpCard(tester);
+    _set(_running([_step('a'), _step('b')]));
+    await _settle(tester);
+    await tester.longPress(find.byKey(const Key('screenCard')));
+    await tester.pumpAndSettle();
+    expect(find.text('Open full screen'), findsOneWidget);
+    await tester.tap(find.text('Hide for Now'));
+    await tester.pumpAndSettle();
+    expect(_visible(tester), isFalse);
+    expect(_container.read(showScreenCardProvider), isTrue);
+
+    const ask2 = MessageEntry(id: 'u2', role: 'user', text: 'next');
+    _set(ChatState(entries: [ask2, _step('x'), _step('y')], activeRunId: 'run-2'));
+    await _settle(tester);
+    expect(_visible(tester), isTrue);
+    await tester.longPress(find.byKey(const Key('screenCard')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text("Don't Show Automatically"));
+    await tester.pumpAndSettle();
+    expect(_container.read(showScreenCardProvider), isFalse);
+    expect(_visible(tester), isFalse);
+    expect(find.text('The screen card is off. Turn it back on in Settings.'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 10));
+  });
+
+  testWidgets('a group chat follows the bot on its screen, with its face and name', (tester) async {
+    await _pumpCard(tester, group: true);
+    _set(
+      _running([
+        const ToolEntry(callId: 'a', tool: 'browser.open', args: {}, status: ToolStatus.done, botId: 'mia'),
+        const ToolEntry(callId: 'b', tool: 'browser.click', args: {}, status: ToolStatus.done, botId: 'mia'),
+      ]),
+    );
+    await _settle(tester);
+    expect(_visible(tester), isTrue);
+    expect(_fake.screenPictureCalls.last, 'pc-mia');
+    expect(find.byKey(const Key('face-mia')), findsOneWidget);
+    expect(tester.widget<ScreenTile>(find.byKey(const Key('screenCard'))).botName, 'Mia');
+    await tester.tap(find.byKey(const Key('screenCard')));
+    expect(_opened, ['pc-mia']);
+    await tester.pump(const Duration(seconds: 1));
+  });
+
+  testWidgets('with Reduce Motion on, it only fades', (tester) async {
+    tester.platformDispatcher.accessibilityFeaturesTestValue = const FakeAccessibilityFeatures(disableAnimations: true);
+    addTearDown(tester.platformDispatcher.clearAccessibilityFeaturesTestValue);
+    await _pumpCard(tester);
+    _set(_running([_step('a'), _step('b')]));
+    await _settle(tester);
+    final scale = tester.widget<AnimatedScale>(
+      find.ancestor(of: find.byKey(const Key('screenCard')), matching: find.byType(AnimatedScale)).first,
+    );
+    expect(scale.scale, 1);
+    expect(scale.duration, Duration.zero);
+    expect(_visible(tester), isTrue);
   });
 }

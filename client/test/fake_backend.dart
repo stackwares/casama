@@ -7502,7 +7502,7 @@ class FakeBackend implements Backend {
   ScreenPicture Function(String computerId, String? etag)? onScreenPicture;
   final screenPictureCalls = <String>[];
   @override
-  Future<ScreenPicture> screenPicture(String computerId, {int width = 480, String? etag}) async {
+  Future<ScreenPicture> screenPicture(String computerId, {int width = 480, String? etag, bool wake = false}) async {
     screenPictureCalls.add(computerId);
     return onScreenPicture?.call(computerId, etag) ??
         (screen == null ? const ScreenPicture(ScreenPictureStatus.asleep) : ScreenPicture(ScreenPictureStatus.fresh, bytes: screen, etag: '"s-1"'));

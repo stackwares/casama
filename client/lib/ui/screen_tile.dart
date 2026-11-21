@@ -36,6 +36,8 @@ class ScreenTile extends StatelessWidget {
     required this.onTap,
     required this.onClose,
     this.heldBy,
+    this.onLongPress,
+    this.face,
     this.aspectRatio = 16 / 10,
   });
 
@@ -50,6 +52,12 @@ class ScreenTile extends StatelessWidget {
   final String? heldBy;
   final VoidCallback onTap;
   final VoidCallback onClose;
+
+  /// Long press: the card's menu (SCREEN-CARD-PLAN §6).
+  final VoidCallback? onLongPress;
+
+  /// Group chats: the working bot's face, in the bottom left (§3).
+  final Widget? face;
   final double aspectRatio;
 
   @override
@@ -70,6 +78,7 @@ class ScreenTile extends StatelessWidget {
       button: true,
       label: l10n.screenCardLabel(botName, label ?? l10n.screenCardLive),
       onTapHint: l10n.screenCardOpen,
+      onLongPressHint: onLongPress == null ? null : l10n.screenCardMore,
       excludeSemantics: true,
       child: AnimatedContainer(
         duration: duration,
@@ -94,6 +103,7 @@ class ScreenTile extends StatelessWidget {
           clipBehavior: Clip.antiAlias,
           child: InkWell(
             onTap: onTap,
+            onLongPress: onLongPress,
             child: AspectRatio(
               aspectRatio: aspectRatio,
               child: Stack(
@@ -109,14 +119,16 @@ class ScreenTile extends StatelessWidget {
                     const Center(
                       child: SizedBox.square(dimension: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)),
                     ),
-                  if (label != null)
+                  if (label != null || face != null)
                     Positioned(
                       left: 6,
                       bottom: 6,
                       right: 6,
-                      child: Align(
-                        alignment: Alignment.centerLeft,
-                        child: _Label(text: label, amber: needsYou),
+                      child: Row(
+                        children: [
+                          if (face != null) ...[face!, const SizedBox(width: 4)],
+                          if (label != null) Flexible(child: _Label(text: label, amber: needsYou)),
+                        ],
                       ),
                     ),
                   Positioned(
@@ -241,10 +253,15 @@ class ScreenTileCorner extends ConsumerStatefulWidget {
     required this.width,
     this.aspectRatio = 16 / 10,
     this.insets = const EdgeInsets.all(AppSpace.sm),
+    this.caption,
   });
   final Widget child;
   final double width;
   final double aspectRatio;
+
+  /// A line beside the card, under it in a top corner and over it in a bottom one (the first-time
+  /// hint, SCREEN-CARD-PLAN §3). It takes no touches.
+  final Widget? caption;
 
   /// Room to keep clear on each side.
   final EdgeInsets insets;
@@ -292,6 +309,14 @@ class _ScreenTileCornerState extends ConsumerState<ScreenTileCorner> {
                 child: widget.child,
               ),
             ),
+            if (widget.caption != null && _drag == null)
+              Positioned(
+                left: pos.dx,
+                width: w,
+                top: corner.y < 0 ? pos.dy + h + 6 : null,
+                bottom: corner.y < 0 ? null : box.maxHeight - pos.dy + 6,
+                child: IgnorePointer(child: widget.caption!),
+              ),
           ],
         );
       },

@@ -3263,10 +3263,10 @@ abstract class Backend {
   /// headless computer with no page open); null when it could not be fetched.
   Future<Uint8List?> screenshot(String computerId);
 
-  /// The screen card's picture (SCREEN-CARD-PLAN): a small JPEG [width] wide that never wakes the
-  /// computer or counts as using it. Pass the last [etag] to get [ScreenPictureStatus.unchanged]
-  /// instead of the same picture again.
-  Future<ScreenPicture> screenPicture(String computerId, {int width = 480, String? etag});
+  /// The screen card's picture (SCREEN-CARD-PLAN): a small JPEG [width] wide that doesn't wake the
+  /// computer or count as using it, unless [wake] (the call's tile, which the bot asked for). Pass
+  /// the last [etag] to get [ScreenPictureStatus.unchanged] instead of the same picture again.
+  Future<ScreenPicture> screenPicture(String computerId, {int width = 480, String? etag, bool wake = false});
   Future<(Uri, Map<String, String>)> terminal(
     String computerId, {
     int cols,

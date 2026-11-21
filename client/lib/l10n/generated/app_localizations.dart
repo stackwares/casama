@@ -3514,6 +3514,54 @@ abstract class AppLocalizations {
   /// **'{name} has the screen'**
   String screenCardHeldBy(String name);
 
+  /// No description provided for @screenCardMore.
+  ///
+  /// In en, this message translates to:
+  /// **'More options'**
+  String get screenCardMore;
+
+  /// No description provided for @screenCardIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'{bot}\'s screen. Tap to watch, drag to move.'**
+  String screenCardIntro(String bot);
+
+  /// No description provided for @screenCardHideForNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide for Now'**
+  String get screenCardHideForNow;
+
+  /// No description provided for @screenCardDontShow.
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t Show Automatically'**
+  String get screenCardDontShow;
+
+  /// No description provided for @screenCardTurnedOff.
+  ///
+  /// In en, this message translates to:
+  /// **'The screen card is off. Turn it back on in Settings.'**
+  String get screenCardTurnedOff;
+
+  /// No description provided for @screenCardOfferOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Hiding the screen card a lot? You can turn it off.'**
+  String get screenCardOfferOff;
+
+  /// No description provided for @screenCardTurnOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn Off'**
+  String get screenCardTurnOff;
+
+  /// No description provided for @screenCardNeedsYou.
+  ///
+  /// In en, this message translates to:
+  /// **'{bot} needs you on the screen'**
+  String screenCardNeedsYou(String bot);
+
   /// No description provided for @callRecapTitle.
   ///
   /// In en, this message translates to:

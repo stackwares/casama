@@ -1238,11 +1238,11 @@
     {
       "name": "screen_card_hidden",
       "by": ["client"],
-      "description": "The person hid the screen card for the reply, or turned it off.",
+      "description": "The person hid the screen card for the reply (the close button or its menu), or turned it off (its menu, the three-closes toast or the setting).",
       "properties": {
         "how": {
           "type": "string",
-          "values": ["close", "setting"]
+          "values": ["close", "menu", "setting"]
         }
       },
       "funnels": []

@@ -6866,13 +6866,13 @@ class SupabaseBackend implements Backend {
   }
 
   @override
-  Future<ScreenPicture> screenPicture(String computerId, {int width = 480, String? etag}) async {
+  Future<ScreenPicture> screenPicture(String computerId, {int width = 480, String? etag, bool wake = false}) async {
     try {
       final res = await api.computers.computerScreenshot(
         id: computerId,
         format: 'jpeg',
         width: width,
-        wake: 'false',
+        wake: wake ? 'true' : 'false',
         headers: {'If-None-Match': ?etag},
       );
       final bytes = res.data;
