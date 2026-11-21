@@ -35,7 +35,7 @@ same commit. Shipping details (deploys, app builds) move fast, so check them bef
 
 | Plan | Decisions | What's left |
 |---|---|---|
-| [SCREEN-CARD-PLAN](SCREEN-CARD-PLAN.md) | — | Approved 2026-11-21 with every default in §11. Phase 0: measurements done, sample card built behind `?previewScreenCard=1` / `PREVIEW_SCREEN_CARD`; left: Oliver tries it on his phone (needs his yes for a Flutter run), then Phase 1 |
+| [SCREEN-CARD-PLAN](SCREEN-CARD-PLAN.md) | — | Approved 2026-11-21 with every default in §11. Phase 0 done (measurements, sample card driven in the web app). Next: Phase 1 (lighter screenshot route, show/hide rules, setting, analytics) |
 | [BUG-HUNT-PLAN](BUG-HUNT-PLAN.md) | — | Approved 2026-11-21 (builds B1–B4, push per batch). Running: web, macOS, iOS + watch, Android + Wear passes; log in the plan §9 |
 | [SETUP-SCREEN-PLAN](SETUP-SCREEN-PLAN.md) | D-309 | Built 2026-11-21: two-pane setup screen with the painted scene and a mascot per step; real progress on the parts download |
 | [BOT-EMAIL-NEXT-PLAN](BOT-EMAIL-NEXT-PLAN.md) | D-451 | Live 2026-11-20: server (`9cfc36a2`) and web app build 61; Cloudflare asked for 10,000 a day. Left: store builds; raise `MAIL_SEND_DAILY_MAX` when Cloudflare answers |

@@ -1,10 +1,10 @@
 # The bot's screen in a floating card: plan
 
-Status: **approved** (2026-11-21). Oliver took every default in §11. Phase 0 in progress: the
-measurements are done (below §7) and the sample card is built behind the debug flag
-(`client/lib/ui/screen_tile.dart`, `client/lib/features/chat/widgets/screen_card.dart`, tests in
-`client/test/screen_card_test.dart`). Left: Oliver tries it on his phone, which needs his yes for a
-Flutter run.
+Status: **approved** (2026-11-21). Oliver took every default in §11. **Phase 0 done** (2026-11-21):
+measurements below §7; the sample card (`client/lib/ui/screen_tile.dart`,
+`client/lib/features/chat/widgets/screen_card.dart`, `client/test/screen_card_test.dart`) was driven
+in the web app at iPhone 14 Pro Max size: every state, tap, drag to a corner, the corner kept after a
+reload, close and return. Next: Phase 1.
 
 Line numbers are from 2026-11-21. Re-find each one before editing.
 
@@ -267,6 +267,9 @@ What this settles:
   less in practice since unchanged screens answer 304. Today's PNG would be about 1 GB an hour.
 - **Rate:** one a second costs the computer about a tenth of a core and slows the bot's browser by
   5%. Acceptable, and the shared capture keeps it at one a second however many people watch.
+- **Corners, tried in the web app:** the top right covers the least. The bottom corners sit on the
+  newest reply and its cost line, right where a person reads while the bot works, so top right stays
+  the default.
 - **Not yet measured:** the time over a real mobile network to Casama Cloud, and battery on a
   phone. Both are checked on Oliver's phone in Phase 1.
 
