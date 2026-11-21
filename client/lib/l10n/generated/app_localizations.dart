@@ -11914,6 +11914,24 @@ abstract class AppLocalizations {
   /// **'Discard'**
   String get discard;
 
+  /// Asked on Back from an edit screen with unsaved changes.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard changes?'**
+  String get discardChangesTitle;
+
+  /// No description provided for @discardChangesBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your edits haven\'t been saved.'**
+  String get discardChangesBody;
+
+  /// No description provided for @keepEditing.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep editing'**
+  String get keepEditing;
+
   /// No description provided for @teachTask.
   ///
   /// In en, this message translates to:

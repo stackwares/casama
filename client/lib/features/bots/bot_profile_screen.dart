@@ -244,7 +244,24 @@ class _BotProfileScreenState extends ConsumerState<BotProfileScreen> {
     final label = context.textTheme.labelLarge?.copyWith(
       color: scheme.onSurfaceVariant,
     );
-    return SubPage(
+    // Back with unsaved edits asks first, so a name or persona isn't lost to a stray swipe.
+    return PopScope(
+      canPop: !dirty || _busy,
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop) return;
+        final nav = Navigator.of(context);
+        final discard = await showConfirm(
+          context: context,
+          title: l10n.discardChangesTitle,
+          message: l10n.discardChangesBody,
+          confirmLabel: l10n.discard,
+          cancelLabel: l10n.keepEditing,
+          destructive: true,
+          confirmKey: const Key('botProfileDiscard'),
+        );
+        if (discard && mounted) nav.pop();
+      },
+      child: SubPage(
       title: l10n.botProfile,
       actions: [
         // Words, so it stays in the title row on a folding phone's side strip (D-411).
@@ -845,6 +862,7 @@ class _BotProfileScreenState extends ConsumerState<BotProfileScreen> {
           ],
         ),
       ],
+      ),
     );
   }
 }

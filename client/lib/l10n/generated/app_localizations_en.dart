@@ -7481,6 +7481,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get discard => 'Discard';
 
   @override
+  String get discardChangesTitle => 'Discard changes?';
+
+  @override
+  String get discardChangesBody => 'Your edits haven\'t been saved.';
+
+  @override
+  String get keepEditing => 'Keep editing';
+
+  @override
   String get teachTask => 'Teach a task';
 
   @override

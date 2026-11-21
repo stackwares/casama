@@ -211,6 +211,47 @@ void main() {
     expect(find.text('Saved.'), findsOneWidget);
   });
 
+  testWidgets('Back with unsaved edits asks first: Keep editing stays, Discard leaves', (tester) async {
+    await setSize(tester, const Size(430, 3200));
+    final router = GoRouter(
+      initialLocation: '/bots',
+      routes: [
+        GoRoute(
+          path: '/bots',
+          builder: (_, _) => const Scaffold(body: Text('bots list')),
+          routes: [GoRoute(path: ':botId/settings', builder: (_, s) => BotProfileScreen(botId: s.pathParameters['botId']!))],
+        ),
+      ],
+    );
+    await tester.pumpWidget(_profileApp(FakeBackend(), router));
+    await tester.pumpAndSettle();
+    unawaited(router.push('/bots/$botId/settings'));
+    await tester.pumpAndSettle();
+    // No edits: Back just leaves.
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    expect(find.text('bots list'), findsOneWidget);
+
+    unawaited(router.push('/bots/$botId/settings'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.widgetWithText(TextField, 'Bot name'), 'Ada Lovelace');
+    await tester.pump();
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    expect(find.text('Discard changes?'), findsOneWidget);
+    await tester.tap(find.text('Keep editing'));
+    await tester.pumpAndSettle();
+    expect(find.byType(BotProfileScreen), findsOneWidget);
+    expect(find.widgetWithText(TextField, 'Ada Lovelace'), findsOneWidget);
+
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('botProfileDiscard')));
+    await tester.pumpAndSettle();
+    expect(find.byType(BotProfileScreen), findsNothing);
+    expect(find.text('bots list'), findsOneWidget);
+  });
+
   testWidgets('the chat header has call, new chat and a … menu with conversations and the bot profile', (tester) async {
     await setSize(tester, const Size(430, 932));
     await tester.pumpWidget(harness(FakeBackend(), const ChatScreen(botId: botId, conversationId: convId)));
