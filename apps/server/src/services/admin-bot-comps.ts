@@ -169,4 +169,24 @@ export function registerAdminCompTools(
       };
     },
   });
+
+  registry.register({
+    ...base,
+    name: "admin.compCodes.disable",
+    description:
+      "Instance admin: stop a gift code from being redeemed (by code id from admin.comps.list; match it by its hint or note), or with enable: true let it be redeemed again. Free plans already redeemed with it keep running. The owner approves first.",
+    schema: z.object({ code_id: z.uuid(), enable: z.boolean().optional() }),
+    async execute(args, ctx) {
+      const by = (await guard(deps, ctx, "admin.compCodes.disable", true)) as string;
+      const disabled = args.enable !== true;
+      const code = await run(() => service().updateCode(by, args.code_id, { disabled }));
+      await audit(deps, ctx, "admin.compCodes.disable", by, { code_id: code.id, disabled });
+      const what = `Gift code ${code.hint} (${code.plan_code}, used ${code.redeemed_count}/${code.max_redemptions})`;
+      return {
+        content: disabled
+          ? `${what} is disabled: nobody can redeem it now. Free plans already redeemed keep running.`
+          : `${what} can be redeemed again.`,
+      };
+    },
+  });
 }

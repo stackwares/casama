@@ -253,8 +253,8 @@ undoing one. They follow the same rules as Admin → Resets, and the saved-reset
 owner who approved.
 
 For free plans (Casama Cloud) the bot can, without asking, list the switch, running free plans and
-gift codes. Giving a plan, making one longer, ending one and making a gift code each show an
-approval card first. A new gift code appears once, in the result inside the owner's own chat.
+gift codes. Giving a plan, making one longer, ending one, making a gift code and disabling or
+re-enabling one each show an approval card first. A new gift code appears once, in the result inside the owner's own chat.
 
 ## Limit who can sign up
 

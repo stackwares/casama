@@ -234,6 +234,36 @@ describe("admin bot free plans", () => {
     expect(n?.n).toBe(1);
   });
 
+  it("disables a gift code only with the owner's yes, and can enable it again", async () => {
+    const [code] = await h.tdb.admin<{ id: string }[]>`
+      select id from public.comp_codes order by created_at desc limit 1`;
+    const disabledAt = async () => {
+      const [r] = await h.tdb.admin<{ disabled_at: Date | null }[]>`
+        select disabled_at from public.comp_codes where id = ${code!.id}`;
+      return r?.disabled_at ?? null;
+    };
+    calls.disable = { name: "admin.compCodes.disable", args: () => ({ code_id: code!.id }) };
+    await chat("disable it");
+    decide = approveAs(stranger.id);
+    await chat("disable it");
+    expect(await disabledAt()).toBeNull();
+
+    decide = approveAs(owner.id);
+    const r = await chat("disable it");
+    expect(r.failed).toBeUndefined();
+    expect(await disabledAt()).not.toBeNull();
+    const [audit] = await h.tdb.admin<{ n: number }[]>`
+      select count(*)::int as n from public.audit_log where action = 'admin_bot.compCodes.disable'`;
+    expect(audit?.n).toBe(1);
+
+    calls.enable = {
+      name: "admin.compCodes.disable",
+      args: () => ({ code_id: code!.id, enable: true }),
+    };
+    await chat("enable it");
+    expect(await disabledAt()).toBeNull();
+  });
+
   it("outside the owner's admin chat: nothing changes", async () => {
     decide = approveAs(owner.id);
     await chat("grant one", { group: true });
