@@ -148,6 +148,7 @@ html {
 }
 /* Styles below set display on buttons and rows; the hidden attribute still wins. */
 [hidden] {
+  /* biome-ignore lint/complexity/noImportantStyles: hidden attribute must override component display */
   display: none !important;
 }
 body {
@@ -363,8 +364,8 @@ input[type="file"] {
 .card > :last-child {
   margin-bottom: 0;
 }
-.card > h2 + p,
-.card > h2 + .muted {
+.card > :where(h2) + p,
+.card > :where(h2) + .muted {
   margin-top: 2px;
 }
 .row {
@@ -593,7 +594,9 @@ details[open] > summary::before {
   *,
   *::before,
   *::after {
+    /* biome-ignore lint/complexity/noImportantStyles: reduced-motion override */
     transition-duration: 0ms !important;
+    /* biome-ignore lint/complexity/noImportantStyles: reduced-motion override */
     animation-duration: 0ms !important;
   }
 }

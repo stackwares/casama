@@ -25,6 +25,7 @@ import { hostOf, type SitePolicy, siteDecision } from "../../lib/act/sites.ts";
 import type { Ref } from "../../lib/act/snapshot.ts";
 import { guardAdditions } from "../../lib/guard-sites.ts";
 import { getSettings } from "../../lib/settings.ts";
+import { getLocal } from "../../lib/store.ts";
 import { ask, denyFor } from "./ask.ts";
 import * as cdp from "./cdp.ts";
 import { forgetOverlay, hideOverlay, type OverlayEvent, showOverlay } from "./overlay.ts";
@@ -357,19 +358,30 @@ export function installRunner() {
 // --- Checks -----------------------------------------------------------------------------------
 
 async function localRules(job: Job) {
-  const [m, s, extraHosts] = await Promise.all([getManaged(), getSettings(), guardAdditions()]);
+  const [m, s, extraHosts, local] = await Promise.all([
+    getManaged(),
+    getSettings(),
+    guardAdditions(),
+    getLocal(),
+  ]);
   return {
     managedBlocked: m.BlockedSites,
     managedAllowed: m.AllowedSites,
     neverList: s.neverList,
     once: job.once,
     extraHosts,
+    ownUrls: local.accounts.flatMap((a) => [a.server, a.authUrl]),
   };
 }
 
 /** Whether the bot may work on [url]; asks the person when the site needs it. */
 async function siteGate(job: Job, url: string, policy: SitePolicy): Promise<BrowserResult | null> {
-  const d = siteDecision(url, policy, await localRules(job));
+  const rules = await localRules(job);
+  const d = siteDecision(
+    url,
+    { ...policy, own_urls: [...policy.own_urls, ...rules.ownUrls] },
+    rules,
+  );
   if (d.kind === "allowed") return null;
   if (d.kind === "refused") return fail("refused", `${d.host}: ${d.reason}`);
   if (job.watcher)

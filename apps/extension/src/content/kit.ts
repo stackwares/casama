@@ -339,7 +339,7 @@ declare const __CASAMA_TARGET__: string;
         field.getAttribute("data-casama-field") || `f${Math.random().toString(36).slice(2, 10)}`;
       field.setAttribute("data-casama-field", id);
       const text = (
-        field.isContentEditable ? field.innerText : (field as HTMLTextAreaElement).value
+        field.isContentEditable ? (field.textContent ?? "") : (field as HTMLTextAreaElement).value
       ).slice(0, 8000);
       void send({ type: "kit:write", mode: m, fieldId: id, text });
     };
@@ -364,7 +364,7 @@ declare const __CASAMA_TARGET__: string;
           menu = div("menu", "write-menu");
           const empty = !(
             field?.isContentEditable
-              ? field.innerText
+              ? field.textContent
               : (field as HTMLTextAreaElement | null)?.value
           )?.trim();
           menu.append(

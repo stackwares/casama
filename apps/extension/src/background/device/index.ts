@@ -32,7 +32,7 @@ import { guardAdditions } from "../../lib/guard-sites.ts";
 import { activeTab, NoAccessError, readTab } from "../../lib/page.ts";
 import { accessToken, clientFor } from "../../lib/session.ts";
 import { getSettings } from "../../lib/settings.ts";
-import { type Account, activeAccount, getLocal } from "../../lib/store.ts";
+import { type Account, activeAccount, getLocal, withLock } from "../../lib/store.ts";
 
 export interface BrowserDevice {
   accountId: string;
@@ -97,58 +97,60 @@ const anyOn = (d: BrowserDevice) => d.tab || d.history || d.triggers || d.activi
  * Turns kinds on or off for [account] and tells the server. With everything off the device source
  * is deleted (and with it whatever it stored, which for a browser is only the activity recap).
  */
-export async function setBrowserDevice(
+export function setBrowserDevice(
   account: Account,
   patch: BrowserDevicePatch,
 ): Promise<BrowserDevice | null> {
-  const before = await getBrowserDevice();
-  // Another account's device: take it off that account's server first, so nothing is left there.
-  if (before && before.accountId !== account.id) {
-    const prev = await accountOf(before);
-    if (prev && before.sourceId)
-      await clientFor(prev)
-        .DELETE("/v1/device-sources/{key}", { params: { path: { key: before.key } } })
-        .catch(() => {});
-  }
-  const d: BrowserDevice =
-    before && before.accountId === account.id
-      ? { ...before, ...patch }
-      : {
-          accountId: account.id,
-          key: `browser-${crypto.randomUUID()}`,
-          sourceId: null,
-          name: deviceName(),
-          tab: false,
-          history: false,
-          triggers: false,
-          activity: false,
-          privateModel: false,
-          ...patch,
-        };
-  const api = clientFor(account);
-  if (!anyOn(d)) {
-    if (d.sourceId)
-      await api
-        .DELETE("/v1/device-sources/{key}", { params: { path: { key: d.key } } })
-        .catch(() => {});
-    await chrome.storage.local.remove("activityBuckets");
-    // "Private models only" also covers the panel, so it outlives the kinds.
-    if (d.privateModel) await chrome.storage.local.set({ [KEY]: { ...d, sourceId: null } });
-    else await chrome.storage.local.remove(KEY);
+  return withLock("device", async () => {
+    const before = await getBrowserDevice();
+    // Another account's device: take it off that account's server first, so nothing is left there.
+    if (before && before.accountId !== account.id) {
+      const prev = await accountOf(before);
+      if (prev && before.sourceId)
+        await clientFor(prev)
+          .DELETE("/v1/device-sources/{key}", { params: { path: { key: before.key } } })
+          .catch(() => {});
+    }
+    const d: BrowserDevice =
+      before && before.accountId === account.id
+        ? { ...before, ...patch }
+        : {
+            accountId: account.id,
+            key: `browser-${crypto.randomUUID()}`,
+            sourceId: null,
+            name: deviceName(),
+            tab: false,
+            history: false,
+            triggers: false,
+            activity: false,
+            privateModel: false,
+            ...patch,
+          };
+    const api = clientFor(account);
+    if (!anyOn(d)) {
+      if (d.sourceId)
+        await api
+          .DELETE("/v1/device-sources/{key}", { params: { path: { key: d.key } } })
+          .catch(() => {});
+      await chrome.storage.local.remove("activityBuckets");
+      // "Private models only" also covers the panel, so it outlives the kinds.
+      if (d.privateModel) await chrome.storage.local.set({ [KEY]: { ...d, sourceId: null } });
+      else await chrome.storage.local.remove(KEY);
+      await syncDevice();
+      return d.privateModel ? { ...d, sourceId: null } : null;
+    }
+    const saved = await api.unwrap(
+      api.PUT("/v1/device-sources/{key}", {
+        params: { path: { key: d.key } },
+        body: { name: d.name, platform: "web", kinds: kindsOf(d) },
+      }),
+    );
+    d.sourceId = saved.id;
+    await chrome.storage.local.set({ [KEY]: d });
+    if (!d.activity) await chrome.storage.local.remove("activityBuckets");
     await syncDevice();
-    return d.privateModel ? { ...d, sourceId: null } : null;
-  }
-  const saved = await api.unwrap(
-    api.PUT("/v1/device-sources/{key}", {
-      params: { path: { key: d.key } },
-      body: { name: d.name, platform: "web", kinds: kindsOf(d) },
-    }),
-  );
-  d.sourceId = saved.id;
-  await chrome.storage.local.set({ [KEY]: d });
-  if (!d.activity) await chrome.storage.local.remove("activityBuckets");
-  await syncDevice();
-  return d;
+    return d;
+  });
 }
 
 // --- Requests --------------------------------------------------------------------------------

@@ -227,10 +227,11 @@ export async function signInWithProvider(serverInput: string, provider: string):
     );
   }
   const url = new URL(back ?? redirect);
-  const params = new URLSearchParams(url.search || url.hash.slice(1));
-  const err = params.get("error_description") ?? params.get("error");
+  const hashParams = new URLSearchParams(url.hash.slice(1));
+  const param = (k: string) => url.searchParams.get(k) ?? hashParams.get(k);
+  const err = param("error_description") ?? param("error");
   if (err) throw new InputError(err.replace(/\+/g, " "));
-  const code = params.get("code");
+  const code = param("code");
   if (!code) throw new InputError("Sign-in didn't finish. Try again.");
   const session = await exchangeCode(svc, code, verifier, authReaching(svc));
   return saveSession(server, svc, session, { activate: true });

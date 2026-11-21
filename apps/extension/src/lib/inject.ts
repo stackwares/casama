@@ -69,7 +69,7 @@ export function pickElement(hint: string): Promise<Picked | null> {
       ev.stopPropagation();
       if (!target) return done(null);
       const el = target as HTMLElement;
-      const text = (el.innerText || el.textContent || "").replace(/[ \t]+/g, " ").trim();
+      const text = (el.textContent || "").replace(/[ \t]+/g, " ").trim();
       const tag = el.tagName.toLowerCase();
       const first = text.replace(/\s+/g, " ").slice(0, 60).trim();
       const kind =
@@ -85,7 +85,7 @@ export function pickElement(hint: string): Promise<Picked | null> {
       // A watcher finds the part again by the steady words just before it (a label or heading),
       // not by its own text, which is what changes (a price).
       const flat = (s: string) => s.replace(/\s+/g, " ");
-      const page = flat(document.body.innerText || "");
+      const page = flat(document.body.textContent || "");
       const own = flat(text).trim();
       const at = own ? page.indexOf(own.slice(0, 60)) : -1;
       let anchor = first;
@@ -126,7 +126,14 @@ export function pickElement(hint: string): Promise<Picked | null> {
 export async function translatePage(
   target: string,
 ): Promise<{ done: number } | "unavailable" | "same"> {
-  const T = (globalThis as { Translator?: any }).Translator;
+  interface BrowserTranslator {
+    availability(o: { sourceLanguage: string; targetLanguage: string }): Promise<string>;
+    create(o: {
+      sourceLanguage: string;
+      targetLanguage: string;
+    }): Promise<{ translate(s: string): Promise<string> }>;
+  }
+  const T = (globalThis as { Translator?: BrowserTranslator }).Translator;
   if (!T) return "unavailable";
   const source = (document.documentElement.lang || "en").split("-")[0]!.toLowerCase();
   if (source === target) return "same";
@@ -182,7 +189,7 @@ export function focusedField(): { id: string; text: string } | "secret" | null {
   if (!editable) return null;
   const id = el.getAttribute("data-casama-field") || `f${Math.random().toString(36).slice(2, 10)}`;
   el.setAttribute("data-casama-field", id);
-  const text = el.isContentEditable ? el.innerText : (el as HTMLInputElement).value;
+  const text = el.isContentEditable ? (el.textContent ?? "") : (el as HTMLInputElement).value;
   return { id, text: text.slice(0, 8000) };
 }
 
@@ -198,7 +205,7 @@ export function insertIntoField(id: string, text: string): boolean {
     const sel = getSelection();
     sel?.selectAllChildren(el);
     // execCommand keeps the page's own undo and its editors (Gmail) in step.
-    if (!document.execCommand("insertText", false, text)) el.innerText = text;
+    if (!document.execCommand("insertText", false, text)) el.textContent = text;
   } else {
     const input = el as HTMLInputElement | HTMLTextAreaElement;
     const proto = Object.getPrototypeOf(input);

@@ -54,7 +54,22 @@ export class LiveEvents {
       interrupted: false,
       setup: false,
     };
-    let m: Record<string, any>;
+    interface LiveFrame {
+      setupComplete?: unknown;
+      usageMetadata?: {
+        promptTokensDetails?: { modality: string; tokenCount: number }[];
+        responseTokensDetails?: { modality: string; tokenCount: number }[];
+      };
+      serverContent?: {
+        inputTranscription?: { text?: string };
+        outputTranscription?: { text?: string };
+        modelTurn?: { parts?: { inlineData?: { data?: string } }[] };
+        interrupted?: boolean;
+        turnComplete?: boolean;
+      };
+      toolCall?: { functionCalls?: Record<string, unknown>[] };
+    }
+    let m: LiveFrame;
     try {
       m = JSON.parse(raw);
     } catch {

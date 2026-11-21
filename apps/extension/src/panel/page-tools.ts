@@ -98,11 +98,14 @@ export async function sendFile(here: Here, bot: Bot, linkUrl: string, from?: chr
   const blob = await res.blob();
   if (blob.size > 100 * 1024 * 1024)
     throw new Error("Files sent to a computer are limited to 100 MB.");
-  const name =
-    decodeURIComponent(new URL(res.url || linkUrl).pathname.split("/").pop() || "download").replace(
-      /[^\w.\- ]+/g,
-      "_",
-    ) || "download";
+  const rawName = new URL(res.url || linkUrl).pathname.split("/").pop() || "download";
+  let decodedName = rawName;
+  try {
+    decodedName = decodeURIComponent(rawName);
+  } catch {
+    // Keep raw segment when percent-encoding is malformed.
+  }
+  const name = decodedName.replace(/[^\w.\- ]+/g, "_") || "download";
   const token = await accessToken(here.account.id);
   const put = await fetch(
     `${here.account.server}/v1/computers/${computerId}/files?path=${encodeURIComponent(`Downloads/${name}`)}`,

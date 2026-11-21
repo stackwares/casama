@@ -122,7 +122,14 @@ export class Captures {
       const res = await fetch(url, { signal: T() });
       if (!res.ok) throw new Error(`The image couldn't be loaded (${res.status}).`);
       const blob = await res.blob();
-      const name = decodeURIComponent(new URL(url).pathname.split("/").pop() || "image") || "image";
+      const raw = new URL(url).pathname.split("/").pop() || "image";
+      let decoded = raw;
+      try {
+        decoded = decodeURIComponent(raw);
+      } catch {
+        // Keep raw segment when percent-encoding is malformed.
+      }
+      const name = decoded || "image";
       return this.run(
         this.library(name, new Uint8Array(await blob.arrayBuffer()), blob.type || "image/png"),
         "Image saved to the Library.",

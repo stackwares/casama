@@ -77,8 +77,8 @@ export function startCaptions(bannerText: string): CaptionsState {
           block.querySelector(
             '[class*="name" i], img[alt] + div, [data-self-name]',
           ) as HTMLElement | null
-        )?.innerText ?? "";
-      const words = (block as HTMLElement).innerText.replace(name, "").trim();
+        )?.textContent ?? "";
+      const words = ((block as HTMLElement).textContent ?? "").replace(name, "").trim();
       if (!words) continue;
       const i = seen.get(block);
       if (i === undefined) {

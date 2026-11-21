@@ -418,7 +418,9 @@ export async function download(tabId: number, url: string, max: number) {
       let bin = ""; for (let i = 0; i < buf.length; i += 0x8000) bin += String.fromCharCode.apply(null, buf.subarray(i, i + 0x8000));
       const cd = res.headers.get("content-disposition") || "";
       const m = /filename\\*?=(?:UTF-8'')?"?([^";]+)"?/i.exec(cd);
-      const name = decodeURIComponent((m && m[1]) || new URL(res.url).pathname.split("/").pop() || "download");
+      const raw = (m && m[1]) || new URL(res.url).pathname.split("/").pop() || "download";
+      let name = raw;
+      try { name = decodeURIComponent(raw); } catch {}
       return { name, media_type: (res.headers.get("content-type") || "application/octet-stream").split(";")[0], data: btoa(bin) };
     })()`,
     120_000,

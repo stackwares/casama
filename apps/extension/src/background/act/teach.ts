@@ -134,9 +134,10 @@ export async function startTeach(tabId: number, botId: string): Promise<TeachSta
   if (current) throw new Error("A recording is already running.");
   // Through the debugger: chrome.tabs leaves the address empty without host access.
   const url = (await cdp.targetInfo(tabId)).url;
+  const ownUrls = (await getLocal()).accounts.flatMap((a) => [a.server, a.authUrl]);
   const d0 = siteDecision(
     url,
-    { blocked_sites: [], allowed_sites: [], allowed_kinds: [], own_urls: [] },
+    { blocked_sites: [], allowed_sites: [], allowed_kinds: [], own_urls: ownUrls },
     { extraHosts: await guardAdditions() },
   );
   if (d0.kind === "refused") throw new Error(d0.reason);
@@ -151,20 +152,20 @@ export async function startTeach(tabId: number, botId: string): Promise<TeachSta
   // One step at a time: the server numbers steps in the order they arrive.
   queue = Promise.resolve();
   const add = (step: Record<string, unknown>) => {
-    if (!current) return queue;
-    current.steps++;
-    void publish();
+    const c = current;
+    if (!c) return queue;
     queue = queue
-      .then(() =>
-        client.POST("/v1/teach/{id}/steps", {
-          params: { path: { id: session.id } },
-          body: step as never,
-        }),
-      )
-      .then(
-        () => {},
-        () => {},
-      );
+      .then(async () => {
+        await client.unwrap(
+          client.POST("/v1/teach/{id}/steps", {
+            params: { path: { id: session.id } },
+            body: step as never,
+          }),
+        );
+        c.steps++;
+        if (current === c) await publish();
+      })
+      .catch(() => {});
     return queue;
   };
   let first = true;

@@ -380,6 +380,7 @@ export class ChatView {
   async load() {
     const s = await getSettings();
     this.chips = { ...s.chips };
+    const tabReady = this.tabChanged();
     try {
       this.bots = (
         await this.here.api.unwrap(
@@ -406,7 +407,7 @@ export class ChatView {
     const last = s.lastBot[this.key()];
     this.topBots.replaceChildren(...this.bots.map((b) => h("option", { value: b.id }, b.name)));
     await this.pickBot(this.bots.find((b) => b.id === last)?.id ?? this.bots[0]!.id);
-    await this.tabChanged();
+    await tabReady;
   }
 
   private async pickBot(id: string) {
@@ -483,7 +484,10 @@ export class ChatView {
       ).items;
     } catch (e) {
       if (this.convId === conv)
-        this.thread.replaceChildren(errorBox(e, () => void this.loadThread()));
+        this.thread.replaceChildren(
+          errorBox(e, () => void this.loadThread()),
+          this.live,
+        );
       return;
     }
     const sent = await sentRecords();
@@ -779,6 +783,7 @@ export class ChatView {
     this.extras = this.extras.filter((x) => x.kind === "tab");
     this.drawChips();
     void this.drawPageBefore();
+    if (document.activeElement === this.input) await this.refreshContext();
   }
 
   /** Reads the open tab, because the person is asking about it: once per page unless [fresh]. */
@@ -898,7 +903,14 @@ export class ChatView {
       const res = await fetch(url, { signal: T() });
       if (!res.ok) throw new Error(`The image couldn't be loaded (${res.status}).`);
       const blob = await res.blob();
-      const name = decodeURIComponent(new URL(url).pathname.split("/").pop() || "image") || "image";
+      const raw = new URL(url).pathname.split("/").pop() || "image";
+      let decoded = raw;
+      try {
+        decoded = decodeURIComponent(raw);
+      } catch {
+        // Keep the raw segment when percent-encoding is malformed.
+      }
+      const name = decoded || "image";
       this.addAttachment(blob, name);
     } catch (e) {
       toast(message(e));

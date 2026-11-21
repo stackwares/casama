@@ -32,6 +32,7 @@ interface TabState {
 }
 
 const TABS = new Map<number, TabState>();
+const detaching = new Set<number>();
 type DetachHandler = (tabId: number, reason: string) => void;
 const detachHandlers = new Set<DetachHandler>();
 
@@ -62,8 +63,17 @@ export async function attach(tabId: number): Promise<void> {
 }
 
 export async function detach(tabId: number): Promise<void> {
-  if (!TABS.delete(tabId)) return;
-  await chrome.debugger.detach({ tabId }).catch(() => {});
+  const had = TABS.delete(tabId);
+  if (!had) {
+    const all = await chrome.debugger.getTargets().catch(() => []);
+    if (!all.some((x) => x.tabId === tabId && x.attached)) return;
+  }
+  detaching.add(tabId);
+  try {
+    await chrome.debugger.detach({ tabId }).catch(() => {});
+  } finally {
+    detaching.delete(tabId);
+  }
 }
 
 export async function send<T = Record<string, unknown>>(
@@ -120,8 +130,17 @@ const textOf = (args: Array<{ value?: unknown; description?: string }> | undefin
  * can't click. Detaches and tells the handlers it was the person.
  */
 export async function simulateCancel(tabId: number) {
-  if (!TABS.delete(tabId)) return false;
-  await chrome.debugger.detach({ tabId }).catch(() => {});
+  const had = TABS.delete(tabId);
+  if (!had) {
+    const all = await chrome.debugger.getTargets().catch(() => []);
+    if (!all.some((x) => x.tabId === tabId && x.attached)) return false;
+  }
+  detaching.add(tabId);
+  try {
+    await chrome.debugger.detach({ tabId }).catch(() => {});
+  } finally {
+    detaching.delete(tabId);
+  }
   for (const h of detachHandlers) h(tabId, "canceled_by_user");
   return true;
 }
@@ -131,6 +150,19 @@ let installed = false;
 export function installCdp() {
   if (installed) return;
   installed = true;
+  void chrome.debugger
+    ?.getTargets?.()
+    .then((all) => {
+      for (const t of all)
+        if (t.attached && t.tabId !== undefined && !TABS.has(t.tabId))
+          TABS.set(t.tabId, {
+            console: [],
+            network: new Map(),
+            dialog: null,
+            listeners: new Set(),
+          });
+    })
+    .catch(() => {});
   chrome.debugger.onEvent.addListener((source, method, params) => {
     const tabId = source.tabId;
     if (tabId === undefined) return;
@@ -200,7 +232,9 @@ export function installCdp() {
   });
   chrome.debugger.onDetach.addListener((source, reason) => {
     const tabId = source.tabId;
-    if (tabId === undefined || !TABS.delete(tabId)) return;
+    if (tabId === undefined) return;
+    TABS.delete(tabId);
+    if (detaching.has(tabId)) return;
     for (const h of detachHandlers) h(tabId, reason);
   });
 }

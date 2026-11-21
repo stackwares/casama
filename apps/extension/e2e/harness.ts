@@ -129,7 +129,11 @@ export class TestAccount {
     const code = await json<{ pair_url: string }>(
       await this.api("/v1/auth/pairing-codes", { method: "POST" }),
     );
-    return code.pair_url;
+    const u = new URL(code.pair_url);
+    const params = new URLSearchParams(u.hash.replace(/^#/, ""));
+    params.set("s", API);
+    u.hash = params.toString();
+    return u.toString();
   }
 
   /** The six-digit code an email would carry, made without sending one. */
