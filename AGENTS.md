@@ -32,6 +32,11 @@ Breaking one of these does real damage. The sections below explain each one.
   extension stores, Snap, other Android stores): `docs/STORES.md`. Read it before any store work.
   Whenever a listing changes (account made, submitted, approved, rejected, new version live, store
   added or dropped), update its row and the "Status as of" date in the same commit.
+- **Download page follows the stores.** When a listing gets a new link (a store goes live, a
+  TestFlight or beta link appears, a release URL changes), update the website's download page in the
+  same task: `site/download.html`, the `/get/*` redirects in the site worker, and
+  `scripts/site-worker.test.mjs`. Then check the redirects, and deploy the web only after the user's
+  yes (see "Production").
 
 ## Everyday commands
 
