@@ -133,3 +133,31 @@ describe("message branches", () => {
     ).toBe(400);
   });
 });
+
+describe("an edit whose run can't be started (D-478)", () => {
+  it("fails the run with run.failed on its stream instead of a silent 202", async () => {
+    const t = await thread();
+    const mine = t.find((m) => m.role === "user")!;
+    const startRun = h.deps.workflows.startRun;
+    h.deps.workflows.startRun = async () => {
+      throw new Error("queue down");
+    };
+    try {
+      const res = await h.request(`/v1/conversations/${convId}/messages/${mine.id}/edit`, {
+        method: "POST",
+        token: owner.token,
+        json: { text: "edited while the queue is down" },
+      });
+      expect(res.status).toBe(500);
+    } finally {
+      h.deps.workflows.startRun = startRun;
+    }
+    const [run] = await h.tdb.admin<{ id: string; status: string }[]>`
+      select r.id, r.status from public.runs r where r.conversation_id = ${convId}
+      order by r.created_at desc limit 1`;
+    expect(run?.status).toBe("failed");
+    const events = await h.tdb.admin<{ type: string }[]>`
+      select type from public.run_events where run_id = ${run?.id as string}`;
+    expect(events.map((e) => e.type)).toContain("run.failed");
+  });
+});

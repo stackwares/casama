@@ -935,6 +935,9 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     const { id, message_id } = c.req.valid("param");
     const { text, apps: pickedApps } = c.req.valid("json");
     const created = await withUserSession(db, claims, async (tx) => {
+      // The same lock a send takes (D-413, D-478): an edit and a send at the same moment both saw
+      // no run working and each started one.
+      await lockChat(tx, id);
       const [m] = await tx.execute<{
         org_id: string;
         bot_id: string;
@@ -984,16 +987,29 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     });
     try {
       await deps.workflows.startRun(created.runId);
-    } catch {
-      await db.execute(sql`update public.runs set status = 'failed', ended_at = now(),
-        error = ${JSON.stringify({ code: "enqueue_failed", message: "The run could not be started." })}::jsonb
-        where id = ${created.runId}::uuid`);
+    } catch (err) {
+      // Not a silent 202 for a run that will never answer (D-478): it fails, says so on its
+      // stream, and the request fails too.
+      await failUnstartedRun(created.runId);
+      throw err;
     }
     return c.json(
       { message_id: created.messageId, run_id: created.runId, conversation_id: id },
       202,
     );
   });
+
+  /** A run whose start couldn't be queued: failed, with run.failed on its stream. */
+  const failUnstartedRun = async (runId: string) => {
+    const error = { code: "enqueue_failed", message: "The run could not be started." };
+    const [failed] = await db.execute<{ id: string }>(sql`
+      update public.runs set status = 'failed', ended_at = now(), error = ${JSON.stringify(error)}::jsonb
+      where id = ${runId}::uuid and status not in ('completed', 'failed', 'cancelled') returning id`);
+    if (failed)
+      await new EventBus(db)
+        .append(runId, "run.failed", { error_code: error.code, message: error.message })
+        .catch(() => {});
+  };
 
   app.openapi(routes.switchBranch, async (c) => {
     const claims = requireClaims(c.get("claims"));
@@ -1330,9 +1346,7 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       try {
         await deps.workflows.startRun(created.runId);
       } catch (err) {
-        await db.execute(sql`update public.runs set status = 'failed', ended_at = now(),
-          error = ${JSON.stringify({ code: "enqueue_failed", message: "The run could not be started." })}::jsonb
-          where id = ${created.runId}::uuid`);
+        await failUnstartedRun(created.runId);
         throw err;
       }
       return c.json(
