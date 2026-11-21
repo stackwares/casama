@@ -13,6 +13,8 @@ abstract class _$McpAuthRequestInfoCWProxy {
 
   McpAuthRequestInfo redirectHost(String redirectHost);
 
+  McpAuthRequestInfo knownApp(bool knownApp);
+
   McpAuthRequestInfo expiresAt(DateTime expiresAt);
 
   /// Creates a new instance with the provided field values.
@@ -27,6 +29,7 @@ abstract class _$McpAuthRequestInfoCWProxy {
     String id,
     String clientName,
     String redirectHost,
+    bool knownApp,
     DateTime expiresAt,
   });
 }
@@ -50,6 +53,9 @@ class _$McpAuthRequestInfoCWProxyImpl implements _$McpAuthRequestInfoCWProxy {
       call(redirectHost: redirectHost);
 
   @override
+  McpAuthRequestInfo knownApp(bool knownApp) => call(knownApp: knownApp);
+
+  @override
   McpAuthRequestInfo expiresAt(DateTime expiresAt) =>
       call(expiresAt: expiresAt);
 
@@ -66,6 +72,7 @@ class _$McpAuthRequestInfoCWProxyImpl implements _$McpAuthRequestInfoCWProxy {
     Object? id = const $CopyWithPlaceholder(),
     Object? clientName = const $CopyWithPlaceholder(),
     Object? redirectHost = const $CopyWithPlaceholder(),
+    Object? knownApp = const $CopyWithPlaceholder(),
     Object? expiresAt = const $CopyWithPlaceholder(),
   }) {
     return McpAuthRequestInfo(
@@ -83,6 +90,10 @@ class _$McpAuthRequestInfoCWProxyImpl implements _$McpAuthRequestInfoCWProxy {
           ? _value.redirectHost
           // ignore: cast_nullable_to_non_nullable
           : redirectHost as String,
+      knownApp: knownApp == const $CopyWithPlaceholder() || knownApp == null
+          ? _value.knownApp
+          // ignore: cast_nullable_to_non_nullable
+          : knownApp as bool,
       expiresAt: expiresAt == const $CopyWithPlaceholder() || expiresAt == null
           ? _value.expiresAt
           // ignore: cast_nullable_to_non_nullable
@@ -114,6 +125,7 @@ McpAuthRequestInfo _$McpAuthRequestInfoFromJson(Map<String, dynamic> json) =>
             'id',
             'client_name',
             'redirect_host',
+            'known_app',
             'expires_at',
           ],
         );
@@ -121,6 +133,7 @@ McpAuthRequestInfo _$McpAuthRequestInfoFromJson(Map<String, dynamic> json) =>
           id: $checkedConvert('id', (v) => v as String),
           clientName: $checkedConvert('client_name', (v) => v as String),
           redirectHost: $checkedConvert('redirect_host', (v) => v as String),
+          knownApp: $checkedConvert('known_app', (v) => v as bool),
           expiresAt: $checkedConvert(
             'expires_at',
             (v) => DateTime.parse(v as String),
@@ -131,6 +144,7 @@ McpAuthRequestInfo _$McpAuthRequestInfoFromJson(Map<String, dynamic> json) =>
       fieldKeyMap: const {
         'clientName': 'client_name',
         'redirectHost': 'redirect_host',
+        'knownApp': 'known_app',
         'expiresAt': 'expires_at',
       },
     );
@@ -140,5 +154,6 @@ Map<String, dynamic> _$McpAuthRequestInfoToJson(McpAuthRequestInfo instance) =>
       'id': instance.id,
       'client_name': instance.clientName,
       'redirect_host': instance.redirectHost,
+      'known_app': instance.knownApp,
       'expires_at': instance.expiresAt.toIso8601String(),
     };

@@ -597,12 +597,14 @@ class FakeBackend implements Backend {
   BotRevision? restored;
   final mcpActions = <String>[];
   bool mcpApprovals = false;
+  bool mcpKnownApp = false;
   @override
   Future<McpAuthRequestInfo> mcpAuthRequest(String id) async =>
       McpAuthRequestInfo(
         id: id,
         clientName: 'Phone AI',
-        redirectHost: 'ai.example',
+        redirectHost: mcpKnownApp ? 'claude.ai' : 'ai.example',
+        knownApp: mcpKnownApp,
         expiresAt: DateTime(2030),
       );
   @override

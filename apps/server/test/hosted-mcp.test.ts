@@ -145,6 +145,23 @@ describe("hosted MCP", () => {
     });
   });
 
+  it("refuses registrations posing as a well-known app or with an unsafe redirect", async () => {
+    const register = (client_name: string, redirect_uris: string[]) =>
+      fetch(`${base}/oauth/register`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ client_name, redirect_uris }),
+      });
+    const fake = await register("Claude", ["https://evil.example/cb"]);
+    expect(fake.status).toBe(400);
+    expect(await fake.json()).toMatchObject({ error: "invalid_client_metadata" });
+    const file = await register("Notes", ["file:///tmp/x"]);
+    expect(file.status).toBe(400);
+    expect(await file.json()).toMatchObject({ error: "invalid_redirect_uri" });
+    const real = await register("Claude", ["https://claude.ai/api/mcp/auth_callback"]);
+    expect(real.status).toBe(201);
+  });
+
   it("completes OAuth with dynamic registration, PKCE and in-app consent for one workspace", async () => {
     const reg = (await (
       await fetch(`${base}/oauth/register`, {
@@ -167,7 +184,11 @@ describe("hosted MCP", () => {
     const info = await j(
       await h.request(`/v1/oauth/requests/${requestId}`, { token: owner.token }),
     );
-    expect(info).toMatchObject({ client_name: "Phone AI", redirect_host: "ai.example" });
+    expect(info).toMatchObject({
+      client_name: "Phone AI",
+      redirect_host: "ai.example",
+      known_app: false,
+    });
     const consent = await j(
       await h.request(`/v1/oauth/requests/${requestId}/consent`, {
         method: "POST",
@@ -312,8 +333,8 @@ describe("hosted MCP", () => {
     const member = await h.user("mcp-member@example.com");
     await h.tdb
       .admin`insert into public.memberships (org_id, user_id, role) values (${orgId}, ${member.id}, 'member')`;
-    const mine = await oauthConnect(owner.token, orgId, "Claude");
-    const theirs = await oauthConnect(member.token, orgId, "Gemini CLI");
+    const mine = await oauthConnect(owner.token, orgId, "Desk AI");
+    const theirs = await oauthConnect(member.token, orgId, "Terminal AI");
     const list = async (t: string) =>
       (await j(await h.request(`/v1/orgs/${orgId}/mcp-connections`, { token: t }))).items as Array<{
         client_id: string;
@@ -323,9 +344,11 @@ describe("hosted MCP", () => {
       }>;
     // Admins see everyone's; members only their own.
     const all = await list(owner.token);
-    expect(all.map((x) => x.client_name)).toEqual(expect.arrayContaining(["Claude", "Gemini CLI"]));
+    expect(all.map((x) => x.client_name)).toEqual(
+      expect.arrayContaining(["Desk AI", "Terminal AI"]),
+    );
     expect(all.find((x) => x.client_id === mine.clientId)?.mine).toBe(true);
-    expect((await list(member.token)).map((x) => x.client_name)).toEqual(["Gemini CLI"]);
+    expect((await list(member.token)).map((x) => x.client_name)).toEqual(["Terminal AI"]);
     // A member can't disconnect someone else's app.
     const denied = await h.request(
       `/v1/orgs/${orgId}/mcp-connections/${mine.clientId}?user_id=${owner.id}`,

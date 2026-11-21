@@ -15660,6 +15660,7 @@ export interface components {
             id: string;
             client_name: string;
             redirect_host: string;
+            known_app: boolean;
             /** Format: date-time */
             expires_at: string;
         };

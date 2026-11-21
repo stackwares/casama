@@ -88,8 +88,9 @@ class _McpConsentScreenState extends ConsumerState<McpConsentScreen> {
                     l10n.connectAiAppAsk(snap.data!.clientName),
                     style: context.textTheme.titleMedium,
                   ),
+                  _ConsentDestination(info: snap.data!),
                   Text(
-                    l10n.connectAiAppHelp(snap.data!.redirectHost),
+                    l10n.connectAiAppHelpShort,
                     style: TextStyle(
                       color: context.colorScheme.onSurfaceVariant,
                     ),
@@ -127,6 +128,70 @@ class _McpConsentScreenState extends ConsumerState<McpConsentScreen> {
                 ],
               ),
             ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Where the code goes after Allow, on its own line so it can't be missed. An app that sends
+/// people anywhere but a well-known AI app or their own device gets a warning: anyone can register
+/// an app and give it any name (security report 2026-11-20).
+class _ConsentDestination extends StatelessWidget {
+  const _ConsentDestination({required this.info});
+  final McpAuthRequestInfo info;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final scheme = context.colorScheme;
+    final warn = context.appColors.warning;
+    final known = info.knownApp;
+    final tint = known ? scheme.primary : warn;
+    return Container(
+      key: Key(known ? 'mcpKnownApp' : 'mcpUnknownApp'),
+      padding: const EdgeInsets.all(AppSpace.md),
+      decoration: BoxDecoration(
+        color: tint.withValues(alpha: 0.08),
+        borderRadius: AppRadius.tileAll,
+        border: Border.all(color: tint.withValues(alpha: 0.35)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        spacing: AppSpace.sm,
+        children: [
+          Icon(
+            known ? LucideIcons.shieldCheck : LucideIcons.triangleAlert,
+            size: 20,
+            color: tint,
+          ),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              spacing: 2,
+              children: [
+                Text(
+                  l10n.connectAiAppSendsTo,
+                  style: context.textTheme.labelMedium?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+                SelectableText(
+                  info.redirectHost,
+                  style: context.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                if (!known) ...[
+                  const SizedBox(height: AppSpace.xxs),
+                  Text(
+                    l10n.connectAiAppUnknown,
+                    style: context.textTheme.bodySmall?.copyWith(height: 1.35),
+                  ),
+                ],
+              ],
+            ),
+          ),
         ],
       ),
     );

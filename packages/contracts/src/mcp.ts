@@ -40,7 +40,15 @@ export const CreateMcpKeyRequest = z
   .openapi("CreateMcpKeyRequest");
 
 export const McpAuthRequestInfo = z
-  .object({ id: Uuid, client_name: z.string(), redirect_host: z.string(), expires_at: ts })
+  .object({
+    id: Uuid,
+    client_name: z.string(),
+    redirect_host: z.string(),
+    // False when the app sends people somewhere other than a well-known AI app or their own device:
+    // the consent screen warns.
+    known_app: z.boolean(),
+    expires_at: ts,
+  })
   .openapi("McpAuthRequestInfo");
 
 export const McpConsentRequest = z

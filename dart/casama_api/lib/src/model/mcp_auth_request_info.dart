@@ -26,6 +26,8 @@ class McpAuthRequestInfo {
 
     required  this.redirectHost,
 
+    required  this.knownApp,
+
     required  this.expiresAt,
   });
 
@@ -67,6 +69,18 @@ class McpAuthRequestInfo {
 
   @JsonKey(
     
+    name: r'known_app',
+    required: true,
+    includeIfNull: false,
+  )
+
+
+  final bool knownApp;
+
+
+
+  @JsonKey(
+    
     name: r'expires_at',
     required: true,
     includeIfNull: false,
@@ -84,6 +98,7 @@ class McpAuthRequestInfo {
       other.id == id &&
       other.clientName == clientName &&
       other.redirectHost == redirectHost &&
+      other.knownApp == knownApp &&
       other.expiresAt == expiresAt;
 
     @override
@@ -91,6 +106,7 @@ class McpAuthRequestInfo {
         id.hashCode +
         clientName.hashCode +
         redirectHost.hashCode +
+        knownApp.hashCode +
         expiresAt.hashCode;
 
   factory McpAuthRequestInfo.fromJson(Map<String, dynamic> json) => _$McpAuthRequestInfoFromJson(json);

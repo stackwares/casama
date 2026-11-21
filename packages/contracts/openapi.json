@@ -26296,6 +26296,9 @@
           "redirect_host": {
             "type": "string"
           },
+          "known_app": {
+            "type": "boolean"
+          },
           "expires_at": {
             "type": "string",
             "format": "date-time"
@@ -26305,6 +26308,7 @@
           "id",
           "client_name",
           "redirect_host",
+          "known_app",
           "expires_at"
         ]
       },

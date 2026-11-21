@@ -7107,9 +7107,15 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String connectAiAppHelp(String host) {
-    return 'It can list your bots, ask them to do things and read results in the workspace you pick, as you. Your bots\' approvals and rules still apply. You\'ll go back to $host.';
-  }
+  String get connectAiAppHelpShort =>
+      'It can list your bots, ask them to do things and read results in the workspace you pick, as you. Your bots\' approvals and rules still apply.';
+
+  @override
+  String get connectAiAppSendsTo => 'After you allow, you go back to';
+
+  @override
+  String get connectAiAppUnknown =>
+      'Casama doesn\'t recognize this address. Anyone can give an app any name, so only allow it if you started this connection yourself and trust this site.';
 
   @override
   String get connectAiAppDone => 'Done. You can go back to the AI app.';

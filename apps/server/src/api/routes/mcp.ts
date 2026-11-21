@@ -25,6 +25,7 @@ import { sql } from "drizzle-orm";
 import { cors } from "hono/cors";
 import { SupportDocs } from "../../services/support-docs.ts";
 import { ApiError } from "../errors.ts";
+import { impersonatesKnownApp, isKnownRedirect, redirectProblem } from "../mcp-redirects.ts";
 import { rateLimit } from "../middleware/rate-limit.ts";
 import type { AppDeps, AppEnv } from "../types.ts";
 import { iso } from "../util.ts";
@@ -225,6 +226,12 @@ export function registerMcpRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     }),
   );
 
+  // Where the person goes back to: the host, or the scheme for an app's own (cursor://).
+  const redirectHost = (uri: string) => {
+    const u = new URL(uri);
+    return u.host || `${u.protocol}//`;
+  };
+
   const oauthError = (
     c: { json: (b: unknown, s: 400 | 401) => Response },
     error: string,
@@ -240,30 +247,26 @@ export function registerMcpRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     const uris = Array.isArray(body?.redirect_uris)
       ? body.redirect_uris.filter((u): u is string => typeof u === "string")
       : [];
-    const valid =
-      uris.length > 0 &&
-      uris.length <= 10 &&
-      uris.every((u) => {
-        try {
-          const p = new URL(u);
-          return (
-            p.protocol === "https:" ||
-            p.hostname === "localhost" ||
-            p.hostname === "127.0.0.1" ||
-            !["http:", "javascript:", "data:"].includes(p.protocol)
-          );
-        } catch {
-          return false;
-        }
-      });
-    if (!valid)
+    if (uris.length === 0 || uris.length > 10)
       return oauthError(
         c,
         "invalid_redirect_uri",
-        "Give one to ten redirect_uris (https, or localhost)",
+        "Give one to ten redirect_uris (https, localhost or your app's own scheme)",
+      );
+    for (const u of uris) {
+      const problem = redirectProblem(u);
+      if (problem) return oauthError(c, "invalid_redirect_uri", `${u.slice(0, 200)} ${problem}`);
+    }
+    const name =
+      (typeof body?.client_name === "string" ? body.client_name.trim().slice(0, 200) : "") ||
+      "AI app";
+    if (impersonatesKnownApp(name, uris))
+      return oauthError(
+        c,
+        "invalid_client_metadata",
+        "That app name belongs to a well-known app, and these redirect_uris aren't its own",
       );
     const clientId = `kcl_${randomBytes(16).toString("hex")}`;
-    const name = (body?.client_name ?? "AI app").slice(0, 200) || "AI app";
     await db.execute(sql`
       insert into public.mcp_clients (client_id, name, redirect_uris)
       values (${clientId}, ${name}, array(select jsonb_array_elements_text(${JSON.stringify(uris)}::jsonb)))`);
@@ -393,7 +396,8 @@ export function registerMcpRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       {
         id: r.id,
         client_name: r.name,
-        redirect_host: new URL(r.redirect_uri).host,
+        redirect_host: redirectHost(r.redirect_uri),
+        known_app: isKnownRedirect(r.redirect_uri),
         expires_at: iso(r.expires_at),
       },
       200,

@@ -16,11 +16,24 @@ void main() {
     await tester.pumpWidget(harness(backend, const McpConsentScreen(requestId: 'r1')));
     await tester.pumpAndSettle();
     expect(find.text('Phone AI wants to use Casama'), findsOneWidget);
+    // An app Casama doesn't recognize: where it sends people stands out, with a warning.
+    expect(find.byKey(const Key('mcpUnknownApp')), findsOneWidget);
+    expect(find.text('ai.example'), findsOneWidget);
     // Opened from a link with nothing behind it: it can still be left.
     expect(find.byTooltip('Back'), findsOneWidget);
     await tester.tap(find.byKey(const Key('mcpAllow')));
     await tester.pumpAndSettle();
     expect(backend.mcpActions, ['allow:$orgId']);
+  });
+
+  testWidgets('a well-known AI app gets no warning', (tester) async {
+    await setSize(tester, const Size(900, 1000));
+    final backend = FakeBackend()..mcpKnownApp = true;
+    await tester.pumpWidget(harness(backend, const McpConsentScreen(requestId: 'r1')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('mcpKnownApp')), findsOneWidget);
+    expect(find.byKey(const Key('mcpUnknownApp')), findsNothing);
+    expect(find.text('claude.ai'), findsOneWidget);
   });
 
   testWidgets('workspace settings show the MCP address, keys and the approvals switch', (tester) async {

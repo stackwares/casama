@@ -1116,6 +1116,22 @@ export async function cleanupIdempotencyKeys(db: Database) {
   return rows[0]?.n ?? 0;
 }
 
+/** Hourly housekeeping: an MCP app with no tokens a week after registering is deleted. */
+export async function pruneUnusedMcpClients(db: Database) {
+  const rows = await db.execute<{ n: number }>(sql`
+    with d as (
+      delete from public.mcp_clients c
+      where c.created_at < now() - interval '7 days'
+        and not exists (select 1 from public.mcp_tokens t where t.client_id = c.client_id)
+        and not exists (
+          select 1 from public.mcp_auth_requests r
+          where r.client_id = c.client_id and r.expires_at > now()
+        )
+      returning 1
+    ) select count(*)::int as n from d`);
+  return rows[0]?.n ?? 0;
+}
+
 export const maintenanceWorkflow = DBOS.registerWorkflow(
   async (_scheduledAt: Date, _context: unknown) => {
     await DBOS.runStep(
@@ -1236,6 +1252,10 @@ export const maintenanceWorkflow = DBOS.registerWorkflow(
       },
       { name: "domains-lifecycle" },
     ).catch(captureStep("domains-lifecycle", 0));
+    // Hosted MCP: apps registered over open registration that nobody connected within a week.
+    await DBOS.runStep(() => pruneUnusedMcpClients(rt().db).catch(captureStep("mcp-clients", 0)), {
+      name: "mcp-clients",
+    });
   },
   { name: "maintenance" },
 );

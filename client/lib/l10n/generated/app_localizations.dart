@@ -11350,11 +11350,23 @@ abstract class AppLocalizations {
   /// **'{app} wants to use Casama'**
   String connectAiAppAsk(String app);
 
-  /// No description provided for @connectAiAppHelp.
+  /// No description provided for @connectAiAppHelpShort.
   ///
   /// In en, this message translates to:
-  /// **'It can list your bots, ask them to do things and read results in the workspace you pick, as you. Your bots\' approvals and rules still apply. You\'ll go back to {host}.'**
-  String connectAiAppHelp(String host);
+  /// **'It can list your bots, ask them to do things and read results in the workspace you pick, as you. Your bots\' approvals and rules still apply.'**
+  String get connectAiAppHelpShort;
+
+  /// No description provided for @connectAiAppSendsTo.
+  ///
+  /// In en, this message translates to:
+  /// **'After you allow, you go back to'**
+  String get connectAiAppSendsTo;
+
+  /// No description provided for @connectAiAppUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Casama doesn\'t recognize this address. Anyone can give an app any name, so only allow it if you started this connection yourself and trust this site.'**
+  String get connectAiAppUnknown;
 
   /// No description provided for @connectAiAppDone.
   ///

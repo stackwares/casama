@@ -7131,3 +7131,24 @@ and a custom base URL could reach internal addresses. Fixed:
 - **App:** "Who runs your bots" became two picture cards with key chips and explains what's missing
   instead of ignoring a tap; keys with no default model can be picked; ChatGPT plans aren't offered
   as the workspace default (they only run for their owner); the add-key provider list is logo tiles.
+
+## D-467 Hosted MCP: open registration stays, consent gets honest (2026-11-21)
+
+An independent researcher reported that anyone can register an OAuth client at
+`api.casama.ai/oauth/register` without signing in. That is intended: MCP clients (Claude, ChatGPT,
+Cursor, VS Code) register themselves, as the MCP spec expects. Registering grants nothing on its
+own: a token still needs PKCE (S256), an exact redirect match and a signed-in member's Allow in the
+app. All ten clients in production were probes; none got a token. The real risk was consent
+phishing, where an app named "Claude" sends the code to an attacker's site and the destination was
+only the last words of a help sentence. So:
+
+- **Redirects** (`apps/server/src/api/mcp-redirects.ts`): https anywhere, http only to
+  localhost/127.0.0.1/[::1], or an app's own scheme (`cursor://`, `com.example.app:`). `file:`,
+  `blob:`, `about:`, `vbscript:`, `intent:` and the like are refused, and so are credentials in the
+  address and `#fragments`.
+- **Reserved names:** a client whose name claims a well-known app (Claude, ChatGPT, OpenAI, Cursor,
+  Gemini, Copilot, Casama, …) must send every redirect to that kind of place (a known AI app's host,
+  loopback, or a known desktop app scheme), or registration fails with `invalid_client_metadata`.
+- **Consent screen:** `known_app` on the auth request. The destination has its own line; an app
+  Casama doesn't recognize gets a warning to allow it only if you started the connection yourself.
+- **Clean-up:** the hourly maintenance deletes clients a week old with no tokens and no open request.
