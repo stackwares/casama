@@ -1,6 +1,9 @@
 # Other Android stores: plan
 
-Status: **Not started** (written 2026-11-21; waiting on Oliver's §7 decisions and go-ahead).
+Status: **Phases 1 and 2 built, not yet built as an APK** (2026-11-21). Oliver asked to start on the
+other Android stores, so the code and scripts went ahead on the recommended answers to §7 (stores 1–3,
+per-ABI APKs, `galaxy` on web checkout). Nothing is built, uploaded or submitted: the first APK build,
+every store account and every submission still need Oliver's yes. Phase 3 is waiting on him.
 
 ## 0. Goal
 
@@ -47,7 +50,7 @@ Extend `CASAMA_DISTRIBUTION` (`client/lib/core/distribution.dart`) for Android:
 `kDistribution` currently defaults to `'direct'` (used by desktop direct downloads and `flutter run` in local dev).
 On Android:
 - When `kDistribution == 'direct'` (local `flutter test` / `flutter run` without `--dart-define`) or `kDistribution == 'play'`, treat it as **Google Play** (`isGooglePlayBuild == true`) so existing tests (`billing_test.dart`, `comps_test.dart`) and default `package-android.sh` (AAB for Play) keep their exact behavior without needing extra flags.
-- `scripts/package-android.sh` should accept `--distribution <play|apk|galaxy|...>` (defaulting to `play` for `appbundle` and `apk` when building `apk` unless overridden) and pass `--dart-define=CASAMA_DISTRIBUTION=...`.
+- `scripts/package-android.sh` accepts `--distribution <play|apk|galaxy>` and passes `--dart-define=CASAMA_DISTRIBUTION=...`. It defaults to `play` for every target, including `apk`, so an APK made for a device check keeps Play billing; store APKs ask for `--distribution apk` or `galaxy`. Any other value is refused.
 
 ### 2.3 Billing, StorePurchases, and Telemetry
 
@@ -80,13 +83,13 @@ On Android:
 
 ## 4. Phased rollout
 
-### Phase 1: Code & unit tests (`CASAMA_DISTRIBUTION` for Android)
+### Phase 1: Code & unit tests (`CASAMA_DISTRIBUTION` for Android) — built 2026-11-21
 1. Update [`client/lib/core/distribution.dart`](../client/lib/core/distribution.dart), [`client/lib/core/billing.dart`](../client/lib/core/billing.dart), [`client/lib/core/review_prompt.dart`](../client/lib/core/review_prompt.dart), and [`client/lib/core/telemetry.dart`](../client/lib/core/telemetry.dart).
 2. Add/update unit tests in `client/test/billing_test.dart`, `client/test/comps_test.dart`, and `client/test/review_prompt_test.dart` (if present, or a new test) covering `play`, `apk`, and `galaxy`.
 3. Update [`client/README.md`](../client/README.md) documenting the new `CASAMA_DISTRIBUTION` values.
 - **Done when:** `cd client && flutter analyze && flutter test test/billing_test.dart test/comps_test.dart` pass.
 
-### Phase 2: Build & release scripts (GitHub Releases APK + Obtainium)
+### Phase 2: Build & release scripts (GitHub Releases APK + Obtainium) — scripts built 2026-11-21; the download-page link waits for a real APK
 1. Update [`scripts/package-android.sh`](../scripts/package-android.sh) to accept `--distribution <name>` (default `play` for `appbundle`, `apk` for `apk`), copy built APKs into `dist/` with versioned names (e.g., `dist/casama-<version>-android-arm64-v8a.apk`, `dist/casama-<version>-android-universal.apk`).
 2. Update [`scripts/publish-desktop-release.sh`](../scripts/publish-desktop-release.sh) (or add an Android APK glob) so `dist/casama-$version-android-*.apk` files are attached to the GitHub release on `stackwares/casama-releases` and `stackwares/casama`.
 3. Update [`site/gallery-link.js`](../site/gallery-link.js) (`GET_LINKS`) and `site/download.html` if desired to expose an `android-apk` direct download link alongside `android` (Play).
@@ -99,6 +102,25 @@ On Android:
 4. **Aptoide / APKPure / Uptodown:** Oliver creates free developer accounts (saved in Vaultwarden); upload the signed `apk` build.
 
 ---
+
+## 4a. Google services check (2026-11-21)
+
+Checked what happens on a phone without Google Play services (Huawei, Fire, de-Googled ROMs) and on
+sideloaded installs. The app already copes; no code change was needed beyond billing:
+
+| Piece | Without Play services |
+|---|---|
+| Firebase start-up (`Firebase.initializeApp` in `push.dart`, `crashlytics.dart`, `analytics_sinks.dart`) | Every call is inside `try`/`catch`; the app keeps running |
+| Push (FCM token, permission) | `getToken` and `requestPermission` are caught, so no token is registered; no pushes, call rings or approval alerts arrive. Chat and the in-app inbox still work when open. Real fix is HMS or ADM (the later `huawei` / `amazon` distributions) |
+| Google sign-in | `googleSheetUnavailable()` treats a `PlatformException` as "Google's sheet isn't available" and offers the browser sign-in; email and passkeys work |
+| Wear OS bridge (`WearBridge.kt`) | Checks `GoogleApiAvailability.isGooglePlayServicesAvailable` first and does nothing otherwise |
+| Firebase App Check | Not used by the Android client; sign-up uses the server's proof-of-work puzzle (`/v1/signup/challenge`) |
+| Purchases | Not started on `apk`/`galaxy`: `defaultStore` returns `NoStore`, so RevenueCat's Play Billing client never runs; the paywall uses Dodo web checkout |
+| Store review prompt | Off on `apk`/`galaxy` (it opens Google Play) |
+
+Galaxy phones and most devices that get the APK have Play services, so push and Google sign-in work
+there as on Play. Still to confirm on a real build: install the `apk` build on an emulator image
+without Google APIs and check the app opens, the paywall shows web checkout and sign-in works.
 
 ## 5. Verification
 

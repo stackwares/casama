@@ -111,4 +111,19 @@ void main() {
     await Telemetry.captureException(err, StackTrace.current);
     await Telemetry.captureException(err, StackTrace.current);
   });
+  test('distribution names tell Play, APK and Galaxy Store builds apart', () {
+    String name(TargetPlatform platform, String distribution, {bool isWeb = false}) =>
+        Telemetry.distributionNameFor(isWeb: isWeb, platform: platform, distribution: distribution);
+
+    expect(name(TargetPlatform.android, 'direct'), 'google_play');
+    expect(name(TargetPlatform.android, 'play'), 'google_play');
+    expect(name(TargetPlatform.android, 'apk'), 'android_apk');
+    expect(name(TargetPlatform.android, 'galaxy'), 'galaxy_store');
+    expect(name(TargetPlatform.android, 'foss'), 'fdroid');
+    expect(name(TargetPlatform.iOS, 'direct'), 'app_store');
+    expect(name(TargetPlatform.macOS, 'appstore'), 'mac_app_store');
+    expect(name(TargetPlatform.macOS, 'direct'), 'direct');
+    expect(name(TargetPlatform.windows, 'direct'), 'direct');
+    expect(name(TargetPlatform.android, 'play', isWeb: true), 'web');
+  });
 }

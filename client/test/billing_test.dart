@@ -193,8 +193,14 @@ void main() {
       expect(purchaseChannels(platform: TargetPlatform.iOS, isWeb: false, storefront: 'USA'),
           [PurchaseChannel.appStore, PurchaseChannel.web]);
     });
-    test('Android uses Google Play; web and desktop use web checkout', () {
+    test('Android uses Google Play for play/direct; apk and galaxy use web checkout', () {
       expect(purchaseChannels(platform: TargetPlatform.android, isWeb: false, storefront: 'USA'), [PurchaseChannel.googlePlay]);
+      expect(purchaseChannels(platform: TargetPlatform.android, isWeb: false, distribution: 'play'), [PurchaseChannel.googlePlay]);
+      expect(purchaseChannels(platform: TargetPlatform.android, isWeb: false, distribution: 'apk'), [PurchaseChannel.web]);
+      expect(purchaseChannels(platform: TargetPlatform.android, isWeb: false, distribution: 'galaxy'), [PurchaseChannel.web]);
+      expect(defaultStore(() => null, platform: TargetPlatform.android, isWeb: false, distribution: 'play'), isA<RevenueCatStore>());
+      expect(defaultStore(() => null, platform: TargetPlatform.android, isWeb: false, distribution: 'apk'), isA<NoStore>());
+      expect(defaultStore(() => null, platform: TargetPlatform.android, isWeb: false, distribution: 'galaxy'), isA<NoStore>());
       expect(purchaseChannels(platform: TargetPlatform.macOS, isWeb: false), [PurchaseChannel.web]);
       expect(purchaseChannels(platform: TargetPlatform.windows, isWeb: false), [PurchaseChannel.web]);
       expect(purchaseChannels(platform: TargetPlatform.iOS, isWeb: true), [PurchaseChannel.web]);

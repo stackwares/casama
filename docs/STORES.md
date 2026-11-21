@@ -49,8 +49,8 @@ open testing, Snap beta and so on. "Live" means anyone can install it from the s
 | AppImage (+ AppImageHub) | Linux | ➖ | ❌ | ❌ | ➖ | ❌ | Maybe | See "Other Linux stores" |
 | Own apt / dnf repository (.deb, .rpm) | Debian, Ubuntu, Fedora | ➖ | ❌ | ❌ | ➖ | ❌ | Maybe | See "Other Linux stores" |
 | Fedora COPR, nixpkgs, Ubuntu PPA, elementary AppCenter | Linux | ➖ | ➖ | ➖ | ➖ | ➖ | Not now | See "Other Linux stores" |
-| GitHub Releases APK (+ Obtainium, IzzyOnDroid) | Android | ✅ | ❌ | ❌ | ➖ | ❌ | Planned | See "Other Android stores" |
-| Samsung Galaxy Store | Android | ❌ | ❌ | ❌ | ❌ | ❌ | Planned | See "Other Android stores" |
+| GitHub Releases APK (+ Obtainium, IzzyOnDroid) | Android | ✅ | ❌ | ❌ | ➖ | ❌ | Code and scripts ready (2026-11-21); no APK built yet | First `--distribution apk` build (needs Oliver's yes), then attach to the GitHub release |
+| Samsung Galaxy Store | Android | ❌ | ❌ | ❌ | ❌ | ❌ | Code ready (`--distribution galaxy`, web checkout); no account | Oliver makes the Seller Portal account and confirms Samsung allows web checkout |
 | Aptoide, APKPure, Uptodown | Android | ❌ | ❌ | ❌ | ➖ | ❌ | Maybe | See "Other Android stores" |
 | Amazon Appstore | Fire tablets only | ❌ | ❌ | ❌ | ❌ | ❌ | Maybe | See "Other Android stores" |
 | Huawei AppGallery | Android without Google | ❌ | ❌ | ❌ | ❌ | ❌ | Later | See "Other Android stores" |
@@ -227,8 +227,11 @@ Then `purchaseChannels()` picks billing per distribution instead of per platform
 | `apk` (GitHub, Aptoide, APKPure, Uptodown) | Web checkout (Dodo), as on desktop: no store fee, no store rule against it | FCM where Play services exist | Yes where available |
 | `foss` (F-Droid) | Web checkout | None, or UnifiedPush | Hide |
 
-That change is a code change with tests; it should get its own plan doc (`docs/ANDROID-STORES-PLAN.md`)
-before any of the stores below that need it.
+**Built 2026-11-21** (plan: `docs/ANDROID-STORES-PLAN.md`): `play`, `apk` and `galaxy` work in
+`client/lib/core/distribution.dart`, billing, review prompt and telemetry, with tests. Build one with
+`scripts/package-android.sh apk --distribution apk` (or `galaxy`); it writes
+`dist/casama-<version>-android-<abi>.apk`, and `scripts/publish-desktop-release.sh` attaches those to
+the GitHub release. `amazon`, `huawei` and `foss` are not built. No APK has been built or uploaded yet.
 
 ### The stores, in the order we recommend
 
@@ -247,8 +250,8 @@ Southeast Asia. Revisit after the stores above.
 
 ### Next steps
 
-1. Oliver picks which stores to add (recommended now: 1, 2 and 3).
-2. Write `docs/ANDROID-STORES-PLAN.md` for the `CASAMA_DISTRIBUTION` change and get it approved.
+1. ~~Oliver picks which stores to add~~ Started on 1, 2 and 3 (2026-11-21).
+2. ~~Plan and `CASAMA_DISTRIBUTION` change~~ Built; first APK build needs Oliver's yes (Flutter build).
 3. Oliver creates each store account (store accounts need him); save logins in Vaultwarden as
    "Casama · <store> developer account".
 4. Fill the row below for each store as it goes.

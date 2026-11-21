@@ -89,6 +89,22 @@ void main() {
       giftCodesAllowed(platform: TargetPlatform.android, isWeb: false),
       isFalse,
     );
+    expect(
+      giftCodesAllowed(
+        platform: TargetPlatform.android,
+        isWeb: false,
+        distribution: 'apk',
+      ),
+      isTrue,
+    );
+    expect(
+      giftCodesAllowed(
+        platform: TargetPlatform.android,
+        isWeb: false,
+        distribution: 'galaxy',
+      ),
+      isTrue,
+    );
   });
 
   testWidgets(

@@ -18,21 +18,27 @@ import '../l10n/generated/app_localizations.dart';
 enum PurchaseChannel { web, appStore, googlePlay }
 
 /// Store rules (SPEC "Monetization"): digital subscriptions bought in the iOS app use Apple in-app
-/// purchase, and a link to web checkout is shown only on the US storefront. Android uses Google Play
-/// billing. Web and desktop use Dodo checkout. Re-check store rules every quarter.
+/// purchase, and a link to web checkout is shown only on the US storefront. Google Play Android
+/// builds use Google Play billing; direct APK and Galaxy Store Android builds, web, and desktop
+/// use Dodo checkout. Re-check store rules every quarter.
 List<PurchaseChannel> purchaseChannels({
   required TargetPlatform platform,
   required bool isWeb,
   String? storefront,
+  @visibleForTesting String? distribution,
 }) {
   if (isWeb) return const [PurchaseChannel.web];
   switch (platform) {
     case TargetPlatform.iOS:
       final us = storefront == 'USA' || storefront == 'US';
       return us ? const [PurchaseChannel.appStore, PurchaseChannel.web] : const [PurchaseChannel.appStore];
-    // No web checkout link on Android, not even in the US: that needs Google's external content
-    // links program (its fee, reporting and API), which we decided against on 2026-11-14.
+    // No web checkout link on Google Play Android, not even in the US: that needs Google's external
+    // content links program (its fee, reporting and API), which we decided against on 2026-11-14.
+    // Non-Play Android distributions (`apk`, `galaxy`, `foss`) use Dodo web checkout directly.
     case TargetPlatform.android:
+      if (androidUsesWebBilling(distribution ?? kDistribution)) {
+        return const [PurchaseChannel.web];
+      }
       return const [PurchaseChannel.googlePlay];
     // The Mac App Store build buys through StoreKit, with the same storefront rule as iOS.
     case TargetPlatform.macOS when isMacAppStoreBuild:
@@ -45,13 +51,18 @@ List<PurchaseChannel> purchaseChannels({
 
 /// Gift codes for free plans (docs/COMP-PLANS-PLAN.md) unlock a paid plan, which App Store
 /// guideline 3.1.1 and Google Play's payments policy don't allow inside a store app (not even with
-/// the US storefront's web links). Only the web app and the direct-download desktop builds take
-/// them; the store apps never show a code field or mention codes. A plan granted by email works
-/// everywhere, since nothing is unlocked in the app.
-bool giftCodesAllowed({required TargetPlatform platform, required bool isWeb}) {
+/// the US storefront's web links). Only the web app, direct-download desktop builds, and non-Play
+/// Android builds that use web checkout take them; Play and App Store apps never show a code field
+/// or mention codes. A plan granted by email works everywhere, since nothing is unlocked in the app.
+bool giftCodesAllowed({
+  required TargetPlatform platform,
+  required bool isWeb,
+  @visibleForTesting String? distribution,
+}) {
   if (isWeb) return true;
   return switch (platform) {
     TargetPlatform.macOS => !isMacAppStoreBuild,
+    TargetPlatform.android => androidUsesWebBilling(distribution ?? kDistribution),
     TargetPlatform.windows || TargetPlatform.linux => true,
     _ => false,
   };
@@ -358,12 +369,21 @@ String ownedSignature({
       latestExpiration ?? '',
     ].join('|');
 
-StorePurchases defaultStore(String? Function() currentOrg) {
-  if (kIsWeb) return const NoStore();
-  return switch (defaultTargetPlatform) {
+StorePurchases defaultStore(
+  String? Function() currentOrg, {
+  @visibleForTesting TargetPlatform? platform,
+  @visibleForTesting bool? isWeb,
+  @visibleForTesting String? distribution,
+}) {
+  if (isWeb ?? kIsWeb) return const NoStore();
+  final target = platform ?? defaultTargetPlatform;
+  final dist = distribution ?? kDistribution;
+  return switch (target) {
     TargetPlatform.iOS => RevenueCatStore('app_store', kRevenueCatAppleKey, currentOrg),
-    TargetPlatform.android => RevenueCatStore('google_play', kRevenueCatGoogleKey, currentOrg),
-    TargetPlatform.macOS when isMacAppStoreBuild => RevenueCatStore('app_store', kRevenueCatAppleKey, currentOrg),
+    TargetPlatform.android when androidDistribution(dist) == 'play' =>
+      RevenueCatStore('google_play', kRevenueCatGoogleKey, currentOrg),
+    TargetPlatform.macOS when dist == 'appstore' =>
+      RevenueCatStore('app_store', kRevenueCatAppleKey, currentOrg),
     _ => const NoStore(),
   };
 }

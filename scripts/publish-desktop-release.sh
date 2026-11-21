@@ -6,6 +6,9 @@
 #
 # Run after the packaging scripts have filled dist/ for this version: package-macos.sh (DMG +
 # appcast-macos.xml), package-windows.ps1 (MSIX + appcast-windows.xml), package-linux.sh (tar.gz).
+# Android APKs built with `package-android.sh apk --distribution apk`
+# (casama-<version>-android-<abi>.apk) are attached too: they're for Obtainium, IzzyOnDroid and people
+# who install from GitHub, and carry no update feed.
 # Publishing makes the release public and every installed app offers it, so this asks first.
 #
 #   NOTES_FILE    release notes (Markdown); default: a one-line note
@@ -30,7 +33,8 @@ gh repo view "$repo" --json visibility -q .visibility 2>/dev/null | grep -qx PUB
   { echo "$repo must exist and be public (apps download updates without signing in)." >&2; exit 1; }
 files=()
 for f in dist/Casama-"$version"-macos.dmg dist/appcast-macos.xml dist/*"$version"*.msix dist/appcast-windows.xml \
-  dist/casama-"$version"-linux-x64.tar.gz dist/casama-"$version"-linux-arm64.tar.gz dist/casama-"$version"-windows-x64.zip; do
+  dist/casama-"$version"-linux-x64.tar.gz dist/casama-"$version"-linux-arm64.tar.gz dist/casama-"$version"-windows-x64.zip \
+  dist/casama-"$version"-android-*.apk; do
   [[ -f "$f" ]] && files+=("$f")
 done
 (( ${#files[@]} )) || { echo "Nothing in dist/ for $version. Run the packaging scripts first." >&2; exit 1; }

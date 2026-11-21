@@ -5,7 +5,6 @@ import 'package:flutter/widgets.dart';
 import 'package:posthog_flutter/posthog_flutter.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
-import 'billing.dart' show defaultStore, RevenueCatStore;
 import 'config.dart';
 import 'crash_reporter.dart';
 import 'crashlytics.dart';
@@ -165,15 +164,37 @@ class Telemetry {
     };
   }
 
-  /// How this build is distributed: app_store | google_play | mac_app_store | direct | web.
-  static String get distributionName {
-    if (kIsWeb) return 'web';
-    if (isMacAppStoreBuild) return 'mac_app_store';
-    final store = defaultStore(() => null);
-    if (store is RevenueCatStore) {
-      return store.source; // 'app_store' or 'google_play'
+  /// How this build is distributed: app_store | google_play | mac_app_store | android_apk |
+  /// galaxy_store | direct | web.
+  static String get distributionName => distributionNameFor(
+    isWeb: kIsWeb,
+    platform: defaultTargetPlatform,
+    distribution: kDistribution,
+  );
+
+  @visibleForTesting
+  static String distributionNameFor({
+    required bool isWeb,
+    required TargetPlatform platform,
+    required String distribution,
+  }) {
+    if (isWeb) return 'web';
+    if (platform == TargetPlatform.iOS) return 'app_store';
+    if (platform == TargetPlatform.macOS) {
+      return distribution == 'appstore' ? 'mac_app_store' : 'direct';
     }
-    return kDistribution == 'appstore' ? 'app_store' : 'direct';
+    if (platform == TargetPlatform.android) {
+      return switch (androidDistribution(distribution)) {
+        'play' => 'google_play',
+        'apk' => 'android_apk',
+        'galaxy' => 'galaxy_store',
+        'amazon' => 'amazon_appstore',
+        'huawei' => 'huawei_appgallery',
+        'foss' => 'fdroid',
+        final other => other,
+      };
+    }
+    return 'direct';
   }
 
   /// Client product events (ANALYTICS-PLAN §6). Anything else is dropped before it leaves the device.

@@ -142,11 +142,21 @@ class ReviewPrompt {
   /// Set when an error message shows; this session doesn't ask after that.
   static bool errorThisSession = false;
 
-  static bool get _platformSupported =>
-      !kIsWeb &&
-      (defaultTargetPlatform == TargetPlatform.iOS ||
-          defaultTargetPlatform == TargetPlatform.android ||
-          isMacAppStoreBuild);
+  @visibleForTesting
+  static bool platformSupported({
+    TargetPlatform? platform,
+    bool? isWeb,
+    String? distribution,
+  }) {
+    if (isWeb ?? kIsWeb) return false;
+    final target = platform ?? defaultTargetPlatform;
+    final dist = distribution ?? kDistribution;
+    return target == TargetPlatform.iOS ||
+        (target == TargetPlatform.android && androidDistribution(dist) == 'play') ||
+        (target == TargetPlatform.macOS && dist == 'appstore');
+  }
+
+  static bool get _platformSupported => platformSupported();
 
   /// Casama AI's App Store id (iPhone, iPad and Mac); the Play listing needs none.
   static const appStoreId = '6833509960';

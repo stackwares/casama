@@ -210,4 +210,23 @@ void main() {
       expect(asked, 1);
     });
   });
+  group('which builds can ask for a store review', () {
+    bool supported(TargetPlatform platform, String distribution, {bool isWeb = false}) =>
+        ReviewPrompt.platformSupported(platform: platform, isWeb: isWeb, distribution: distribution);
+
+    test('Google Play (and the default build) on Android, iOS and the Mac App Store ask', () {
+      expect(supported(TargetPlatform.android, 'play'), isTrue);
+      expect(supported(TargetPlatform.android, 'direct'), isTrue);
+      expect(supported(TargetPlatform.iOS, 'direct'), isTrue);
+      expect(supported(TargetPlatform.macOS, 'appstore'), isTrue);
+    });
+
+    test('APK, Galaxy Store, web and desktop downloads never ask', () {
+      expect(supported(TargetPlatform.android, 'apk'), isFalse);
+      expect(supported(TargetPlatform.android, 'galaxy'), isFalse);
+      expect(supported(TargetPlatform.android, 'play', isWeb: true), isFalse);
+      expect(supported(TargetPlatform.macOS, 'direct'), isFalse);
+      expect(supported(TargetPlatform.windows, 'direct'), isFalse);
+    });
+  });
 }
