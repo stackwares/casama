@@ -40,10 +40,28 @@ describe("billing fixes (bug hunt 2026-11-21)", () => {
     return Number(p?.c);
   };
 
+  const dodoHook = async (type: string, data: Record<string, unknown>) => {
+    const w = f.dodo.webhook(type, data);
+    return hook("dodo", w.body, w.headers);
+  };
+  const buyPackOnWeb = async (orgId: string) => {
+    const res = await h.request(`/v1/orgs/${orgId}/billing/checkout`, {
+      method: "POST",
+      token: owner.token,
+      json: { pack_code: "credits_10" },
+    });
+    expect(res.status).toBe(200);
+    const { url } = await j(res);
+    return f.dodo.complete((url as string).split("/pay/")[1] as string);
+  };
+
   beforeAll(async () => {
     f = await startFakeBilling();
     h = await startHarness({ env: billingEnv(f) });
     await h.handle.db.execute(sql`update public.billing_settings set max_owned_workspaces = 100`);
+    await h.handle.db.execute(
+      sql`update public.credit_packs set dodo_product_id = 'pdt_pack_10' where code = 'credits_10'`,
+    );
     owner = await h.user("fixes-owner@example.com");
   }, 180_000);
   afterAll(async () => {
@@ -75,5 +93,54 @@ describe("billing fixes (bug hunt 2026-11-21)", () => {
     const extra = (await monthlyCredits("max_yearly")) - (await monthlyCredits("pro_yearly"));
     expect(extra).toBeGreaterThan(0);
     expect(topUp).toBeCloseTo(extra * share, 1);
+  });
+
+  it("a partial refund of a web credit pack takes back its share, never more than is left", async () => {
+    const orgId = await newOrg("Partial pack refund");
+    await h.handle.db.execute(
+      sql`update public.entitlements set plan_code = 'pro' where org_id = ${orgId}::uuid`,
+    );
+    const start = await credits(orgId);
+    const p = await buyPackOnWeb(orgId);
+    await dodoHook("payment.succeeded", { payload_type: "Payment", payment_id: p.paymentId });
+    expect(await credits(orgId)).toBeCloseTo(start + 10, 6);
+    const pay = f.dodo.payments.get(p.paymentId) as NonNullable<
+      ReturnType<typeof f.dodo.payments.get>
+    >;
+    pay.total_amount = 1500;
+    // A third of the price back: $3.33 of the $10, rounded down in the customer's favour.
+    pay.refunds = [{ refund_id: "pr_1", amount: 500, status: "succeeded", is_partial: true }];
+    await dodoHook("refund.succeeded", {
+      payload_type: "Refund",
+      refund_id: "pr_1",
+      payment_id: p.paymentId,
+      is_partial: true,
+    });
+    expect(await credits(orgId)).toBeCloseTo(start + 6.67, 6);
+    // The month's credits are untouched: the pack's own credits paid for the refund.
+    const [month] = await h.handle.db.execute<{ remaining: string }>(sql`
+      select coalesce(sum(remaining), 0)::text as remaining from public.credit_lots
+      where org_id = ${orgId}::uuid and reason = 'grant'`);
+    expect(Number(month?.remaining)).toBeCloseTo(start, 6);
+    // Most of the pack is spent, then another half of the price comes back: only what's left of
+    // the pack goes, and the balance doesn't go below zero.
+    await h.deps.billing?.credit(orgId, -(start + 5), "usage", `spend-${orgId}`);
+    expect(await credits(orgId)).toBeCloseTo(1.67, 6);
+    pay.refunds.push({ refund_id: "pr_2", amount: 750, status: "succeeded", is_partial: true });
+    await dodoHook("refund.succeeded", {
+      payload_type: "Refund",
+      refund_id: "pr_2",
+      payment_id: p.paymentId,
+      is_partial: true,
+    });
+    expect(await credits(orgId)).toBeCloseTo(0, 6);
+    // The same refund delivered again takes nothing more.
+    await dodoHook("refund.succeeded", {
+      payload_type: "Refund",
+      refund_id: "pr_2",
+      payment_id: p.paymentId,
+      is_partial: true,
+    });
+    expect(await credits(orgId)).toBeCloseTo(0, 6);
   });
 });

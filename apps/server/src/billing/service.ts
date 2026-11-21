@@ -444,7 +444,7 @@ export class BillingService {
   private async applyRefund(
     provider: BillingProvider,
     paymentId: string,
-    ev: { dispute?: boolean; partial?: boolean } = {},
+    ev: { dispute?: boolean; partial?: boolean; refundId?: string } = {},
   ) {
     if (!provider.fetchPayment) return;
     const p = await provider.fetchPayment(paymentId);
@@ -467,8 +467,7 @@ export class BillingService {
       await this.applySnapshot(snap, { refund: ev.dispute === true || (full && current) });
     }
     const credits = await this.packCredits(p.productIds);
-    if (credits > 0 && p.orgId)
-      await this.credit(p.orgId, -credits, "refund", `dodo:${paymentId}`, "Credit pack refunded");
+    if (credits > 0 && p.orgId) await this.refundWebPack(p.orgId, paymentId, credits, ev, p);
     if (p.orgId && getProductAnalytics().enabled)
       track(this.db, {
         event: "refund_issued",
@@ -476,6 +475,82 @@ export class BillingService {
         uuid: deterministicUuid("refund", "dodo", paymentId),
         properties: { store: "dodo", kind: credits > 0 ? "credit_pack" : "subscription" },
       });
+  }
+
+  /**
+   * Takes back what a refund of a web credit pack returned (bug hunt 2026-11-21). A full refund
+   * takes the pack back, as before (the balance may go below zero). A partial one takes the same
+   * share of the pack's credits, rounded down to the cent in the customer's favour, and only from
+   * what's left of the pack itself: credits already spent aren't taken, and the balance never goes
+   * below zero. Refunds add up: each takes what the payment's refunds so far call for, less what
+   * earlier refunds of it already took.
+   */
+  private async refundWebPack(
+    orgId: string,
+    paymentId: string,
+    credits: number,
+    ev: { partial?: boolean; refundId?: string },
+    p: { totalAmount?: number | null; refundedAmount?: number | null },
+  ) {
+    const known = p.totalAmount != null && p.refundedAmount != null && p.totalAmount > 0;
+    const full =
+      !ev.partial && (!known || (p.refundedAmount as number) >= (p.totalAmount as number));
+    // A partial refund without amounts can't be sized: take nothing rather than guess.
+    if (!full && !known) {
+      this.opts.logger?.warn("partial pack refund without amounts", { payment_id: paymentId });
+      return;
+    }
+    const target = full
+      ? credits
+      : Math.min(
+          credits,
+          Math.floor(
+            ((credits * (p.refundedAmount as number)) / (p.totalAmount as number)) * 100 + 1e-9,
+          ) / 100,
+        );
+    const ref = `dodo:${paymentId}`;
+    const [taken] = await this.db.execute<{ usd: string }>(sql`
+      select coalesce(-sum(delta), 0)::text as usd from public.credit_ledger
+      where org_id = ${orgId}::uuid and reason = 'refund' and (reference = ${ref} or reference like ${`${ref}:%`})`);
+    const take = Math.round((target - Number(taken?.usd ?? 0)) * 1e6) / 1e6;
+    if (take <= 0) return;
+    if (full) {
+      await this.credit(orgId, -take, "refund", ref, "Credit pack refunded");
+      return;
+    }
+    const partRef = `${ref}:${ev.refundId ?? "partial"}`;
+    await this.db.transaction(async (tx) => {
+      await tx.execute(sql`select id from public.organizations where id = ${orgId}::uuid for update`);
+      const [seen] = await tx.execute<{ n: number }>(sql`
+        select count(*)::int as n from public.credit_ledger
+        where org_id = ${orgId}::uuid and reason = 'refund' and reference = ${partRef}`);
+      if (seen?.n) return;
+      const [bal] = await tx.execute<{ b: string }>(sql`
+        select coalesce((select balance_after from public.credit_ledger where org_id = ${orgId}::uuid order by seq desc limit 1), 0)::text as b`);
+      const lots = await tx.execute<{ id: string; remaining: string }>(sql`
+        select id, remaining::text from public.credit_lots
+        where org_id = ${orgId}::uuid and reason = 'purchase' and reference = ${ref} and remaining > 0
+          and (expires_at is null or expires_at > now())
+        for update`);
+      const left = lots.reduce((sum, l) => sum + Number(l.remaining), 0);
+      let amount = Math.min(take, left, Math.max(0, Number(bal?.b ?? 0)));
+      amount = Math.round(amount * 1e6) / 1e6;
+      if (amount <= 0) return;
+      // Straight from the pack's own lot: credit_apply's debit would spend the month's credits.
+      let rest = amount;
+      for (const l of lots) {
+        if (rest <= 0) break;
+        const x = Math.min(Number(l.remaining), rest);
+        await tx.execute(
+          sql`update public.credit_lots set remaining = remaining - ${x} where id = ${l.id}::uuid`,
+        );
+        rest -= x;
+      }
+      await tx.execute(sql`
+        insert into public.credit_ledger (org_id, delta, reason, reference, note, balance_after)
+        values (${orgId}::uuid, ${-amount}, 'refund', ${partRef}, 'Credit pack partly refunded',
+          ${Number(bal?.b ?? 0) - amount})`);
+    });
   }
 
   private async packCredits(productIds: string[]) {
