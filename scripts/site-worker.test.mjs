@@ -128,7 +128,14 @@ test("the web app and Google Play learn which page sent the visitor", async () =
   assert.equal(referrer, "utm_source=casama.ai&utm_medium=website&utm_campaign=direct");
 
   const ios = await call("/get/ios");
-  assert.equal(ios.headers.get("location"), "https://apps.apple.com/app/id6833509960");
+  assert.equal(ios.headers.get("location"), "https://testflight.apple.com/join/n21dCaRu");
+  const mac = await call("/get/mac");
+  assert.equal(mac.headers.get("location"), "https://testflight.apple.com/join/n21dCaRu");
+  const macDmg = await call("/get/mac-dmg");
+  assert.equal(
+    macDmg.headers.get("location"),
+    "https://github.com/stackwares/casama-releases/releases/latest",
+  );
   assert.equal(withAttribution("https://example.com/x", "home"), "https://example.com/x");
   assert.equal(campaignFor({ site: "", page: "/" }), "home");
   assert.equal(campaignFor({ site: "", page: "/compare/notion.html" }), "compare-notion");

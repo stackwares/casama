@@ -47,21 +47,20 @@ const WEB_APP = "https://app.casama.ai";
 const SITE = "https://casama.ai";
 const DOWNLOAD_PAGE = "https://casama.ai/download";
 
-// Where each download button goes (D-377). The App Store, Google Play and Firefox addresses are
-// the listings' official ones (live once each listing is public). The Chrome Web Store and Edge
-// items don't have ids yet, and no Windows or Linux build is published, so those point at the
-// extension guide and the releases page: swap in the real address here when each one exists.
+// Where each download button goes (D-377). iOS and the sandboxed Mac build currently go to
+// TestFlight; Google Play and Firefox use the listings' official addresses. Mac, Windows and Linux
+// direct downloads go to the public GitHub Releases latest page.
 const APP_STORE = "https://apps.apple.com/app/id6833509960"; // "Casama AI": iPhone, iPad and Mac
+const TESTFLIGHT = "https://testflight.apple.com/join/n21dCaRu";
 const PLAY = "https://play.google.com/store/apps/details?id=ai.casama.app";
 const RELEASES_REPO = "stackwares/casama-releases";
 const RELEASES = `https://github.com/${RELEASES_REPO}/releases/latest`;
 const EXTENSION_DOCS = "https://docs.casama.ai/guide/chrome";
 export const GET_LINKS = {
-  ios: APP_STORE,
+  ios: TESTFLIGHT,
   android: PLAY,
-  mac: `${APP_STORE}?platform=mac`,
-  // The newest build comes from the update feed (FEEDS); this one is used when the feed can't be read.
-  "mac-dmg": `https://github.com/${RELEASES_REPO}/releases/download/v0.1.0/Casama-0.1.0-macos.dmg`,
+  mac: TESTFLIGHT,
+  "mac-dmg": RELEASES,
   windows: RELEASES,
   "windows-zip": RELEASES,
   linux: RELEASES,
@@ -74,7 +73,6 @@ export const GET_LINKS = {
 // Downloads that follow the desktop apps' update feeds, which scripts/publish-desktop-release.sh
 // moves to every new release, so these links never need editing after a release.
 const FEEDS = {
-  "mac-dmg": `https://raw.githubusercontent.com/${RELEASES_REPO}/main/appcast-macos.xml`,
   windows: `https://raw.githubusercontent.com/${RELEASES_REPO}/main/appcast-windows.xml`,
 };
 // "Start free" on casama.ai goes to /get/start. Phones and tablets go to their app store once this is

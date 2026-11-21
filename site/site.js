@@ -101,8 +101,8 @@
     return "";
   })();
   var picks = {
-    iphone: ["/get/ios", "Download on the App Store"],
-    ipad: ["/get/ios", "Download on the App Store"],
+    iphone: ["/get/ios", "Get it on TestFlight"],
+    ipad: ["/get/ios", "Get it on TestFlight"],
     android: ["/get/android", "Get it on Google Play"],
     mac: ["/get/mac-dmg", "Download for Mac"],
     windows: ["/get/windows", "Download for Windows"],
