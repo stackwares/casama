@@ -58,7 +58,10 @@ void main() {
       ..storedNotifications = [
         NotificationView(id: 'a', kind: 'approval_request', title: '', body: '', createdAt: DateTime.now(), botId: botId),
         NotificationView(id: 'r', kind: 'routine_result', title: '', body: '', link: '/bots/$botId/chat?c=c1', createdAt: DateTime.now(), botId: botId),
-        NotificationView(id: 'o', kind: 'routine_result', title: '', body: '', createdAt: DateTime.now(), botId: 'other'),
+        NotificationView(id: 'o', kind: 'routine_result', title: '', body: '', link: '/bots/other/chat', createdAt: DateTime.now(), botId: 'other'),
+        // Opens in the inbox, not in Ada's chat: opening the chat can't clear it, so it isn't
+        // on her badge (it kept the badge on while her chat was open).
+        NotificationView(id: 's', kind: 'suggestion', title: '', body: '', link: '/inbox?tab=0', createdAt: DateTime.now(), botId: botId),
       ];
     final container = ProviderContainer(overrides: [backendProvider.overrideWithValue(backend)]);
     addTearDown(container.dispose);
@@ -80,5 +83,8 @@ void main() {
     await container.read(notificationsProvider.notifier).markBotChatRead(botId);
     expect(container.read(botBadgeProvider(botId)), 1);
     expect(container.read(botBadgeProvider('other')), 1);
+    // The suggestion still waits in the inbox.
+    expect(container.read(notificationsProvider).value!.firstWhere((n) => n.id == 's').readAt, isNull);
+    expect(container.read(inboxBadgeProvider), 3);
   });
 }

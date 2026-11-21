@@ -454,11 +454,16 @@ final inboxBadgeProvider = Provider<int>((ref) {
 });
 
 /// What waits for the person from one bot: its pending approvals and takeovers, and its unread
-/// notifications (shown as a count next to the bot in the sidebar).
+/// notifications in its chat (shown as a count next to the bot in the sidebar). Only what opening
+/// the chat marks read ([NotificationsNotifier.markBotChatRead]) counts: a notice that opens
+/// somewhere else (a suggestion in the inbox, the bot's email) stays in the inbox badge. Before, it
+/// kept the bot's badge on while its chat was open, with nothing there to clear it.
 final botBadgeProvider = Provider.family<int, String>((ref, botId) {
   final approvals = (ref.watch(approvalsProvider).value ?? const <Approval>[]).where((a) => a.botId == botId).length;
   final takeovers = (ref.watch(takeoversProvider).value ?? const <TakeoverRequest>[]).where((t) => t.botId == botId).length;
-  final unread = (ref.watch(notificationsProvider).value ?? const <NotificationView>[]).where((n) => n.readAt == null && !n.isRequest && n.botId == botId).length;
+  final unread = (ref.watch(notificationsProvider).value ?? const <NotificationView>[])
+      .where((n) => n.readAt == null && !n.isRequest && n.botId == botId && (n.link?.startsWith('/bots/$botId/chat') ?? false))
+      .length;
   return approvals + takeovers + unread;
 });
 
