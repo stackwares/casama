@@ -5884,6 +5884,30 @@ abstract class AppLocalizations {
   /// **'Couldn\'t upload {name}'**
   String uploadFailed(String name);
 
+  /// A file picked for a chat message didn't upload; reason is the server's or network's own words.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t attach {name}: {reason}'**
+  String attachFailed(String name, String reason);
+
+  /// No description provided for @attachFailedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t attach {name}'**
+  String attachFailedTitle(String name);
+
+  /// No description provided for @sendWithoutIt.
+  ///
+  /// In en, this message translates to:
+  /// **'Send without it'**
+  String get sendWithoutIt;
+
+  /// No description provided for @sendWithoutThem.
+  ///
+  /// In en, this message translates to:
+  /// **'Send without them'**
+  String get sendWithoutThem;
+
   /// No description provided for @removeAttachment.
   ///
   /// In en, this message translates to:

@@ -398,6 +398,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final try_ = ++item.attempt;
     item
       ..failed = false
+      ..error = null
       ..ref = null;
     // The chat shows the picture from the device right away, and never downloads it back.
     unawaited(MediaCache.write(MediaCache.keyFor(item.computerId, item.apiPath), item.bytes));
@@ -409,12 +410,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         item.ref = item.plannedRef;
         if (mounted) setState(() {});
         return true;
-      } catch (_) {
+      } catch (e) {
         if (try_ != item.attempt) return false;
         item.failed = true;
         if (mounted) {
+          // Why, in the server's words: no computer hours left, the computer is off, too big.
+          item.error = errorText(context, e);
           setState(() {});
-          showFailure(context, context.l10n.uploadFailed(item.name));
+          showFailure(context, context.l10n.attachFailed(item.name, item.error!));
         }
         return false;
       }
@@ -787,7 +790,22 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   Future<void> _send([String? text]) async {
     final message = text ?? _input.text;
-    // Files that failed stay out until retried; the rest go with the message, finished or not.
+    // A file that failed to upload never drops out silently: the message stays in the box with the
+    // failed chip, and goes only when the person picks Send without it (or retries the file).
+    final failed = text == null ? [for (final p in _pending) if (p.failed) p] : const <_Pending>[];
+    if (failed.isNotEmpty) {
+      final names = failed.map((p) => p.name).join(', ');
+      final without = await showConfirm(
+        context: context,
+        title: context.l10n.attachFailedTitle(names),
+        message: failed.first.error,
+        confirmLabel: failed.length == 1 ? context.l10n.sendWithoutIt : context.l10n.sendWithoutThem,
+        confirmKey: const Key('sendWithoutFailed'),
+      );
+      if (!without || !mounted) return;
+      setState(() => _pending.removeWhere(failed.contains));
+    }
+    // The rest go with the message, finished or not.
     final items = text == null ? [for (final p in _pending) if (!p.failed) p] : const <_Pending>[];
     final attachments = [for (final p in items) p.plannedRef];
     if (message.trim().isEmpty && attachments.isEmpty) return;
@@ -2410,6 +2428,9 @@ class _Pending {
   AttachmentRef? ref;
   var failed = false;
 
+  /// Why the last upload failed, for the person.
+  String? error;
+
   /// The current upload: true when it is on the computer.
   Future<bool>? upload;
   var attempt = 0;
@@ -2497,7 +2518,7 @@ class _PendingChip extends StatelessWidget {
                 borderRadius: BorderRadius.circular(AppRadius.row),
                 onTap: onRetry,
                 child: Tooltip(
-                  message: context.l10n.retryUpload,
+                  message: item.error == null ? context.l10n.retryUpload : '${context.l10n.retryUpload}: ${item.error}',
                   child: Icon(LucideIcons.rotateCw, size: 20, color: scheme.error),
                 ),
               ),

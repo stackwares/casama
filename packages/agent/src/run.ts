@@ -40,6 +40,14 @@ import {
 import { captureError, type Logger } from "@casama/observability";
 import { runCompletedMilestones, track } from "./analytics.ts";
 
+/**
+ * Said to the bot with the computer-hours error. Files the person attaches in the app are saved on
+ * the computer, so while it can't start they can't attach anything; files already in the chat
+ * still work with the tools that need no computer.
+ */
+export const NO_COMPUTER_FILES_NOTE =
+  "Files the person attaches in the app are saved on this computer, so they can't attach new files until it can start again: don't ask them to attach one. Files already in the chat (media: ids) still work with documents.read, documents.pdf, media.image.edit and the other tools that need no computer.";
+
 /** Refusal codes that mean a plan or credit limit, not a setup problem (they start the paywall funnel). */
 const LIMIT_CODES = new Set([
   "out_of_credits",
@@ -3741,8 +3749,13 @@ async function toolStep(
               "out_of_credits",
               "The workspace is out of credits. Add credits or change plans in Billing.",
             );
+          // For the bot: files attached in the app are saved on this computer, so never tell the
+          // person to attach one "without the computer" while it can't start (bug hunt 2026-11-21).
           if ((err as Error).message === "computer_hours_exceeded")
-            throw new ToolError("computer_hours_exceeded", computerHoursMessage());
+            throw new ToolError(
+              "computer_hours_exceeded",
+              `${computerHoursMessage()} ${NO_COMPUTER_FILES_NOTE}`,
+            );
           // After a downgrade, and when the server is full (D-248).
           if ((err as Error).message === "plan_limit")
             throw new ToolError(

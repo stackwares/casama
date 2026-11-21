@@ -3784,6 +3784,22 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String attachFailed(String name, String reason) {
+    return 'Couldn\'t attach $name: $reason';
+  }
+
+  @override
+  String attachFailedTitle(String name) {
+    return 'Couldn\'t attach $name';
+  }
+
+  @override
+  String get sendWithoutIt => 'Send without it';
+
+  @override
+  String get sendWithoutThem => 'Send without them';
+
+  @override
   String get removeAttachment => 'Remove';
 
   @override
