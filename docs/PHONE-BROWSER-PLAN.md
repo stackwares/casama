@@ -9,7 +9,7 @@ branch `phone-browser`. Nothing is deployed, no phone build has been made, and t
 
 | Part | Where | Checked how |
 |---|---|---|
-| Stage setting, pairing, the internal route's checks, step rules on the server, block counting, `where: "phone"`, the signed-in-site pick, the per-turn hint | `packages/domain/src/app-browser*.ts`, `browser-blocks.ts`, `browser-risk.ts`; `packages/agent/src/user-browser.ts`, `tools/browser.ts`; `apps/server/src/api/routes/local.ts`, `services/app-browser.ts`; migration `20270313100001_app_browser.sql` | Server, agent and domain tests against a fake phone |
+| Stage setting, pairing, the internal route's checks, step rules on the server, block counting, `where: "phone"`, the signed-in-site pick, the per-turn hint | `packages/domain/src/app-browser*.ts`, `browser-blocks.ts`, `browser-risk.ts`; `packages/agent/src/user-browser.ts`, `tools/browser.ts`; `apps/server/src/api/routes/local.ts`, `services/app-browser.ts`; migration `20270319100001_app_browser.sql` | Server, agent and domain tests against a fake phone |
 | The page script | `packages/page-agent`, shipped as `client/assets/app_browser/page_agent.js` | 38 tests in Chromium and WebKit, including the server's step rules judging the facts it reads |
 | The app: socket, session, site rules, settings and consent, browser view, asks, chat card, workspace switch, owner's stage panel | `client/lib/features/app_browser/` | Flutter tests with a fake web area; the site rules match all 198 shared cases |
 | The native web area | `client/ios/Runner/AppDelegate.swift` (`AppBrowser`), `client/android/app/src/appBrowser/` | **Never compiled or run.** The Swift parses. A build needs Oliver's yes |
@@ -495,7 +495,7 @@ Made as Oliver asked. Say which to change; the rest stand.
 | # | What | Why it waits |
 |---|---|---|
 | 1 | Say yes to merging `phone-browser` into main and pushing | Your call when it lands |
-| 2 | Deploy the server (migration `20270313100001_app_browser.sql`). The stage stays Off, so nothing changes for anyone; block counting starts | A production deploy |
+| 2 | Deploy the server (migration `20270319100001_app_browser.sql`). The stage stays Off, so nothing changes for anyone; block counting starts | A production deploy |
 | 3 | Yes to a Flutter run on your iPhone and on an Android phone, with `scripts/app-browser-switch.sh on` and `--dart-define=CASAMA_APP_BROWSER=true`. This is the first time the Swift and Kotlin compile; expect fixes | Builds need your yes |
 | 4 | Try the 20 sites on each phone and fill in Phase 0's table. Answers wanted: do Android's taps count as real, do iPhone's script clicks work on enough sites, does a picture work with the app lock on, which of Google, Apple and Microsoft sign-ins work | Real phones are the proof |
 | 5 | Name the Stage 1 testers and say yes to Stage 1 (the admin bot proposes it, or Admin → Phone Browser) | A production change |

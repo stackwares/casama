@@ -31,6 +31,18 @@ import {
 } from "./cards.ts";
 import { type LiveCache, LiveDataError, type LiveHttp } from "./core.ts";
 import {
+  FARE_PROVIDERS,
+  type FareProviderId,
+  type FaresAffiliate,
+  type FaresBilling,
+  type FaresDeps,
+  type FaresMeter,
+  fareQuery,
+  faresCard,
+  searchFares,
+  withAffiliate,
+} from "./fares.ts";
+import {
   anyQuote,
   CHART_RANGES,
   type ChartRange,
@@ -72,6 +84,16 @@ export interface LiveConfig {
   aviationstackKey?: string;
   seventeenTrackKey?: string;
   tmdbKey?: string;
+  /** Flight fares (docs/FLIGHT-SEARCH-PLAN.md): Kiwi.com's MCP server, free and keyless. */
+  kiwiMcpUrl?: string;
+  /** Google Flights through SerpApi: paid per search, used only by a run that may pay for it. */
+  serpapiKey?: string;
+  /** The fares chain, in order (default Kiwi, then Google Flights). */
+  faresOrder?: FareProviderId[];
+  /** Charging for Google Flights searches on the server's key (the tool's meter). */
+  faresBilling?: FaresBilling;
+  /** Affiliate booking links (FLIGHT-SEARCH-PLAN Phase 4): a template and the hosts it wraps. */
+  faresAffiliate?: FaresAffiliate;
 }
 
 /** What the engine knows about the person a run acts for. */
@@ -109,12 +131,15 @@ export type LiveTool =
   | "film"
   | "sports"
   | "flight"
+  | "fares"
   | "parcel";
 
 export class LiveEngine {
   readonly http: LiveHttp;
   readonly cache: LiveCache;
   readonly config: LiveConfig;
+  /** Tests swap the fare providers. */
+  fareProviders?: FaresDeps["providers"];
   constructor(http: LiveHttp, cache: LiveCache, config: LiveConfig) {
     this.http = http;
     this.cache = cache;
@@ -161,6 +186,7 @@ export class LiveEngine {
     if (stocksAvailable(this.markets)) all.push("markets");
     if (this.config.unofficial) all.push("sports");
     if (this.config.aviationstackKey) all.push("flight");
+    if (this.config.kiwiMcpUrl || this.config.serpapiKey) all.push("fares");
     if (this.config.seventeenTrackKey) all.push("parcel");
     if (this.config.tmdbKey) all.push("film");
     if (!this.config.openMeteo) return all.filter((t) => t !== "air");
@@ -212,7 +238,7 @@ export class LiveEngine {
     tool: LiveTool,
     args: Record<string, unknown>,
     person: LivePerson,
-    opts: { force?: boolean } = {},
+    opts: { force?: boolean; meter?: FaresMeter } = {},
   ): Promise<LiveResult> {
     const r = await this.runRaw(tool, args, person, opts);
     // The card carries its own words: Copy as text, screen readers and older apps' fallbacks.
@@ -224,7 +250,7 @@ export class LiveEngine {
     tool: LiveTool,
     args: Record<string, unknown>,
     person: LivePerson,
-    opts: { force?: boolean },
+    opts: { force?: boolean; meter?: FaresMeter },
   ): Promise<LiveResult> {
     if (!this.available().includes(tool))
       throw new LiveDataError("no_provider", `${tool} data isn't set up on this server.`);
@@ -573,6 +599,40 @@ export class LiveEngine {
           resolved: { flight: args.flight, date: args.date },
           personal: true,
           minRefresh: 30,
+        };
+      }
+      case "fares": {
+        const q = fareQuery(args, person);
+        const a = await searchFares(
+          {
+            http: this.http,
+            cache: this.cache,
+            order: this.config.faresOrder?.length ? this.config.faresOrder : FARE_PROVIDERS,
+            kiwiUrl: this.config.kiwiMcpUrl,
+            serpapiKey: this.config.serpapiKey,
+            providers: this.fareProviders,
+          },
+          q,
+          { force, meter: opts.meter, preferGoogle: args.compare_google === true },
+        );
+        return {
+          built: withAffiliate(faresCard(q, a), this.config.faresAffiliate),
+          // A refresh repeats the same trip; the places stay as the person named them.
+          resolved: {
+            from: args.from,
+            to: args.to,
+            depart: q.depart,
+            ...(q.ret ? { return: q.ret } : {}),
+            ...(q.nights ? { nights: q.nights } : {}),
+            adults: q.adults,
+            children: q.children,
+            infants: q.infants,
+            cabin: q.cabin,
+            ...(q.maxStops !== undefined ? { max_stops: q.maxStops } : {}),
+            sort: q.sort,
+            currency: q.currency,
+          },
+          minRefresh: 300,
         };
       }
       case "parcel": {

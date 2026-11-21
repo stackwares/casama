@@ -611,6 +611,8 @@ services:
       COMPUTER_IMAGE_HEADLESS: ${CASAMA_REGISTRY:-casama}/computer-headless:${CASAMA_VERSION:-local}
       COMPUTER_IMAGE_DESKTOP: ${CASAMA_REGISTRY:-casama}/computer-desktop:${CASAMA_VERSION:-local}
       COMPUTER_MEMORY_MB: ${COMPUTER_MEMORY_MB:-2048}
+      # CPUs a computer may use while the machine has them free (its share stays at its size).
+      COMPUTER_BURST_CPUS: ${COMPUTER_BURST_CPUS:-2}
       WARM_POOL_SIZE: ${WARM_POOL_SIZE:-0}
       OBJECT_STORE_DIR: /data/objects
       TURN_CONTAINER: ${CASAMA_CONTAINER_PREFIX:-casama}-turn

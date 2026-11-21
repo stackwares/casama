@@ -1,0 +1,480 @@
+{
+  "query": "Manila → Tokyo on 12/03/2027, returning 19/03/2027, 1 adult",
+  "currency": "PHP",
+  "passengers": {
+    "adults": 1,
+    "children": 0,
+    "infants": 0
+  },
+  "resultsCount": 15,
+  "itineraries": [
+    {
+      "id": "1edb209f51990000c784cd36_0|209f1edb51a000006540ef10_0",
+      "tripType": "return",
+      "price": 17772,
+      "priceFormatted": "17772 PHP",
+      "totalDurationSeconds": 36000,
+      "bookingUrl": "https://kiwi.com/u/bmms6tpzpg",
+      "imageId": "tokyo_jp",
+      "baggage": {
+        "personalItem": 1,
+        "cabinBag": 1,
+        "checkedBag": 0
+      },
+      "outbound": {
+        "from": "MNL",
+        "to": "NRT",
+        "departureTime": "2027-03-12T12:15:00",
+        "arrivalTime": "2027-03-12T17:45:00",
+        "durationSeconds": 16200,
+        "stops": 0,
+        "route": [
+          "MNL",
+          "NRT"
+        ],
+        "cabinClass": "Economy",
+        "segments": [
+          {
+            "from": "MNL",
+            "to": "NRT",
+            "fromCity": "Manila",
+            "toCity": "Tokyo",
+            "fromName": "Ninoy Aquino International",
+            "toName": "Narita International",
+            "fromCountry": "Philippines",
+            "toCountry": "Japan",
+            "departureTime": "2027-03-12T12:15:00",
+            "arrivalTime": "2027-03-12T17:45:00",
+            "durationSeconds": 16200,
+            "carrier": "5J",
+            "carrierName": "Cebu Pacific",
+            "flightNumber": "5J5056",
+            "cabinClass": "Economy"
+          }
+        ]
+      },
+      "inbound": {
+        "from": "NRT",
+        "to": "MNL",
+        "departureTime": "2027-03-19T19:00:00",
+        "arrivalTime": "2027-03-19T23:30:00",
+        "durationSeconds": 19800,
+        "stops": 0,
+        "route": [
+          "NRT",
+          "MNL"
+        ],
+        "cabinClass": "Economy",
+        "segments": [
+          {
+            "from": "NRT",
+            "to": "MNL",
+            "fromCity": "Tokyo",
+            "toCity": "Manila",
+            "fromName": "Narita International",
+            "toName": "Ninoy Aquino International",
+            "fromCountry": "Japan",
+            "toCountry": "Philippines",
+            "departureTime": "2027-03-19T19:00:00",
+            "arrivalTime": "2027-03-19T23:30:00",
+            "durationSeconds": 19800,
+            "carrier": "GK",
+            "carrierName": "Jetstar Japan",
+            "flightNumber": "GK41",
+            "cabinClass": "Economy"
+          }
+        ]
+      }
+    },
+    {
+      "id": "1edb209f51990000298aac1a_0|209f1edb51a000006540ef10_0",
+      "tripType": "return",
+      "price": 18297,
+      "priceFormatted": "18297 PHP",
+      "totalDurationSeconds": 35400,
+      "bookingUrl": "https://kiwi.com/u/r88t3ch65s",
+      "imageId": "tokyo_jp",
+      "baggage": {
+        "personalItem": 1,
+        "cabinBag": 1,
+        "checkedBag": 0
+      },
+      "outbound": {
+        "from": "MNL",
+        "to": "NRT",
+        "departureTime": "2027-03-12T06:15:00",
+        "arrivalTime": "2027-03-12T11:35:00",
+        "durationSeconds": 15600,
+        "stops": 0,
+        "route": [
+          "MNL",
+          "NRT"
+        ],
+        "cabinClass": "Economy",
+        "segments": [
+          {
+            "from": "MNL",
+            "to": "NRT",
+            "fromCity": "Manila",
+            "toCity": "Tokyo",
+            "fromName": "Ninoy Aquino International",
+            "toName": "Narita International",
+            "fromCountry": "Philippines",
+            "toCountry": "Japan",
+            "departureTime": "2027-03-12T06:15:00",
+            "arrivalTime": "2027-03-12T11:35:00",
+            "durationSeconds": 15600,
+            "carrier": "5J",
+            "carrierName": "Cebu Pacific",
+            "flightNumber": "5J5054",
+            "cabinClass": "Economy"
+          }
+        ]
+      },
+      "inbound": {
+        "from": "NRT",
+        "to": "MNL",
+        "departureTime": "2027-03-19T19:00:00",
+        "arrivalTime": "2027-03-19T23:30:00",
+        "durationSeconds": 19800,
+        "stops": 0,
+        "route": [
+          "NRT",
+          "MNL"
+        ],
+        "cabinClass": "Economy",
+        "segments": [
+          {
+            "from": "NRT",
+            "to": "MNL",
+            "fromCity": "Tokyo",
+            "toCity": "Manila",
+            "fromName": "Narita International",
+            "toName": "Ninoy Aquino International",
+            "fromCountry": "Japan",
+            "toCountry": "Philippines",
+            "departureTime": "2027-03-19T19:00:00",
+            "arrivalTime": "2027-03-19T23:30:00",
+            "durationSeconds": 19800,
+            "carrier": "GK",
+            "carrierName": "Jetstar Japan",
+            "flightNumber": "GK41",
+            "cabinClass": "Economy"
+          }
+        ]
+      }
+    },
+    {
+      "id": "1edb209f51990000117781f8_0|209f1edb51a000006540ef10_0",
+      "tripType": "return",
+      "price": 19120,
+      "priceFormatted": "19120 PHP",
+      "totalDurationSeconds": 35400,
+      "bookingUrl": "https://kiwi.com/u/5vvfpghyy7",
+      "imageId": "tokyo_jp",
+      "baggage": {
+        "personalItem": 1,
+        "cabinBag": 1,
+        "checkedBag": 0
+      },
+      "outbound": {
+        "from": "MNL",
+        "to": "NRT",
+        "departureTime": "2027-03-12T00:50:00",
+        "arrivalTime": "2027-03-12T06:10:00",
+        "durationSeconds": 15600,
+        "stops": 0,
+        "route": [
+          "MNL",
+          "NRT"
+        ],
+        "cabinClass": "Economy",
+        "segments": [
+          {
+            "from": "MNL",
+            "to": "NRT",
+            "fromCity": "Manila",
+            "toCity": "Tokyo",
+            "fromName": "Ninoy Aquino International",
+            "toName": "Narita International",
+            "fromCountry": "Philippines",
+            "toCountry": "Japan",
+            "departureTime": "2027-03-12T00:50:00",
+            "arrivalTime": "2027-03-12T06:10:00",
+            "durationSeconds": 15600,
+            "carrier": "GK",
+            "carrierName": "Jetstar Japan",
+            "flightNumber": "GK40",
+            "cabinClass": "Economy"
+          }
+        ]
+      },
+      "inbound": {
+        "from": "NRT",
+        "to": "MNL",
+        "departureTime": "2027-03-19T19:00:00",
+        "arrivalTime": "2027-03-19T23:30:00",
+        "durationSeconds": 19800,
+        "stops": 0,
+        "route": [
+          "NRT",
+          "MNL"
+        ],
+        "cabinClass": "Economy",
+        "segments": [
+          {
+            "from": "NRT",
+            "to": "MNL",
+            "fromCity": "Tokyo",
+            "toCity": "Manila",
+            "fromName": "Narita International",
+            "toName": "Ninoy Aquino International",
+            "fromCountry": "Japan",
+            "toCountry": "Philippines",
+            "departureTime": "2027-03-19T19:00:00",
+            "arrivalTime": "2027-03-19T23:30:00",
+            "durationSeconds": 19800,
+            "carrier": "GK",
+            "carrierName": "Jetstar Japan",
+            "flightNumber": "GK41",
+            "cabinClass": "Economy"
+          }
+        ]
+      }
+    },
+    {
+      "id": "1edb209f51990000c784cd36_0|209f1edb51a00000803add29_0",
+      "tripType": "return",
+      "price": 20275,
+      "priceFormatted": "20275 PHP",
+      "totalDurationSeconds": 35400,
+      "bookingUrl": "https://kiwi.com/u/cub6k7mjrw",
+      "imageId": "tokyo_jp",
+      "baggage": {
+        "personalItem": 1,
+        "cabinBag": 1,
+        "checkedBag": 0
+      },
+      "outbound": {
+        "from": "MNL",
+        "to": "NRT",
+        "departureTime": "2027-03-12T12:15:00",
+        "arrivalTime": "2027-03-12T17:45:00",
+        "durationSeconds": 16200,
+        "stops": 0,
+        "route": [
+          "MNL",
+          "NRT"
+        ],
+        "cabinClass": "Economy",
+        "segments": [
+          {
+            "from": "MNL",
+            "to": "NRT",
+            "fromCity": "Manila",
+            "toCity": "Tokyo",
+            "fromName": "Ninoy Aquino International",
+            "toName": "Narita International",
+            "fromCountry": "Philippines",
+            "toCountry": "Japan",
+            "departureTime": "2027-03-12T12:15:00",
+            "arrivalTime": "2027-03-12T17:45:00",
+            "durationSeconds": 16200,
+            "carrier": "5J",
+            "carrierName": "Cebu Pacific",
+            "flightNumber": "5J5056",
+            "cabinClass": "Economy"
+          }
+        ]
+      },
+      "inbound": {
+        "from": "NRT",
+        "to": "MNL",
+        "departureTime": "2027-03-19T09:20:00",
+        "arrivalTime": "2027-03-19T13:40:00",
+        "durationSeconds": 19200,
+        "stops": 0,
+        "route": [
+          "NRT",
+          "MNL"
+        ],
+        "cabinClass": "Economy",
+        "segments": [
+          {
+            "from": "NRT",
+            "to": "MNL",
+            "fromCity": "Tokyo",
+            "toCity": "Manila",
+            "fromName": "Narita International",
+            "toName": "Ninoy Aquino International",
+            "fromCountry": "Japan",
+            "toCountry": "Philippines",
+            "departureTime": "2027-03-19T09:20:00",
+            "arrivalTime": "2027-03-19T13:40:00",
+            "durationSeconds": 19200,
+            "carrier": "PR",
+            "carrierName": "Philippine Airlines",
+            "flightNumber": "PR431",
+            "cabinClass": "Economy"
+          }
+        ]
+      }
+    },
+    {
+      "id": "1edb209f51990000c784cd36_0|209f1edb51a0000097fa645a_0",
+      "tripType": "return",
+      "price": 20275,
+      "priceFormatted": "20275 PHP",
+      "totalDurationSeconds": 35700,
+      "bookingUrl": "https://kiwi.com/u/xnyywsdwnb",
+      "imageId": "tokyo_jp",
+      "baggage": {
+        "personalItem": 1,
+        "cabinBag": 1,
+        "checkedBag": 0
+      },
+      "outbound": {
+        "from": "MNL",
+        "to": "NRT",
+        "departureTime": "2027-03-12T12:15:00",
+        "arrivalTime": "2027-03-12T17:45:00",
+        "durationSeconds": 16200,
+        "stops": 0,
+        "route": [
+          "MNL",
+          "NRT"
+        ],
+        "cabinClass": "Economy",
+        "segments": [
+          {
+            "from": "MNL",
+            "to": "NRT",
+            "fromCity": "Manila",
+            "toCity": "Tokyo",
+            "fromName": "Ninoy Aquino International",
+            "toName": "Narita International",
+            "fromCountry": "Philippines",
+            "toCountry": "Japan",
+            "departureTime": "2027-03-12T12:15:00",
+            "arrivalTime": "2027-03-12T17:45:00",
+            "durationSeconds": 16200,
+            "carrier": "5J",
+            "carrierName": "Cebu Pacific",
+            "flightNumber": "5J5056",
+            "cabinClass": "Economy"
+          }
+        ]
+      },
+      "inbound": {
+        "from": "NRT",
+        "to": "MNL",
+        "departureTime": "2027-03-19T21:35:00",
+        "arrivalTime": "2027-03-20T02:00:00",
+        "durationSeconds": 19500,
+        "stops": 0,
+        "route": [
+          "NRT",
+          "MNL"
+        ],
+        "cabinClass": "Economy",
+        "segments": [
+          {
+            "from": "NRT",
+            "to": "MNL",
+            "fromCity": "Tokyo",
+            "toCity": "Manila",
+            "fromName": "Narita International",
+            "toName": "Ninoy Aquino International",
+            "fromCountry": "Japan",
+            "toCountry": "Philippines",
+            "departureTime": "2027-03-19T21:35:00",
+            "arrivalTime": "2027-03-20T02:00:00",
+            "durationSeconds": 19500,
+            "carrier": "PR",
+            "carrierName": "Philippine Airlines",
+            "flightNumber": "PR429",
+            "cabinClass": "Economy"
+          }
+        ]
+      }
+    },
+    {
+      "id": "1edb209f51990000298aac1a_0|209f1edb51a00000803add29_0",
+      "tripType": "return",
+      "price": 20478,
+      "priceFormatted": "20478 PHP",
+      "totalDurationSeconds": 34800,
+      "bookingUrl": "https://kiwi.com/u/nmpwqr7rg9",
+      "imageId": "tokyo_jp",
+      "baggage": {
+        "personalItem": 1,
+        "cabinBag": 1,
+        "checkedBag": 0
+      },
+      "outbound": {
+        "from": "MNL",
+        "to": "NRT",
+        "departureTime": "2027-03-12T06:15:00",
+        "arrivalTime": "2027-03-12T11:35:00",
+        "durationSeconds": 15600,
+        "stops": 0,
+        "route": [
+          "MNL",
+          "NRT"
+        ],
+        "cabinClass": "Economy",
+        "segments": [
+          {
+            "from": "MNL",
+            "to": "NRT",
+            "fromCity": "Manila",
+            "toCity": "Tokyo",
+            "fromName": "Ninoy Aquino International",
+            "toName": "Narita International",
+            "fromCountry": "Philippines",
+            "toCountry": "Japan",
+            "departureTime": "2027-03-12T06:15:00",
+            "arrivalTime": "2027-03-12T11:35:00",
+            "durationSeconds": 15600,
+            "carrier": "5J",
+            "carrierName": "Cebu Pacific",
+            "flightNumber": "5J5054",
+            "cabinClass": "Economy"
+          }
+        ]
+      },
+      "inbound": {
+        "from": "NRT",
+        "to": "MNL",
+        "departureTime": "2027-03-19T09:20:00",
+        "arrivalTime": "2027-03-19T13:40:00",
+        "durationSeconds": 19200,
+        "stops": 0,
+        "route": [
+          "NRT",
+          "MNL"
+        ],
+        "cabinClass": "Economy",
+        "segments": [
+          {
+            "from": "NRT",
+            "to": "MNL",
+            "fromCity": "Tokyo",
+            "toCity": "Manila",
+            "fromName": "Narita International",
+            "toName": "Ninoy Aquino International",
+            "fromCountry": "Japan",
+            "toCountry": "Philippines",
+            "departureTime": "2027-03-19T09:20:00",
+            "arrivalTime": "2027-03-19T13:40:00",
+            "durationSeconds": 19200,
+            "carrier": "PR",
+            "carrierName": "Philippine Airlines",
+            "flightNumber": "PR431",
+            "cabinClass": "Economy"
+          }
+        ]
+      }
+    }
+  ]
+}

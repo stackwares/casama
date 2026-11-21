@@ -901,6 +901,7 @@ export const creditLedger = pgTable("credit_ledger", {
 	note: text(),
 	balanceAfter: numeric("balance_after", { precision: 14, scale:  6 }).notNull(),
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	sandbox: boolean().default(false).notNull(),
 }, (table) => [
 	index("credit_ledger_org_seq_idx").using("btree", table.orgId.asc().nullsLast().op("int8_ops"), table.seq.desc().nullsFirst().op("int8_ops")),
 	uniqueIndex("credit_ledger_purchase_once").using("btree", table.reference.asc().nullsLast().op("text_ops")).where(sql`(reason = 'purchase'::text)`),

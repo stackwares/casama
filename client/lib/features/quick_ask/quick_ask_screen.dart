@@ -47,7 +47,7 @@ class _QuickAskScreenState extends ConsumerState<QuickAskScreen> {
   var _withSelection = true, _withWindow = true, _withTab = true;
   Uint8List? _shot;
 
-  /// Files shared in from another app (Android share; Fix 15), sent as attachments.
+  /// Files shared in from another app (Android share, Fix 15; the iOS share extension), sent as attachments.
   List<SharedAttachment> _files = const [];
 
   @override
@@ -62,6 +62,10 @@ class _QuickAskScreenState extends ConsumerState<QuickAskScreen> {
       takeSharedText().then((t) {
         // setState: Send is enabled from the text, and stayed greyed out until a key was typed.
         if (mounted && t.isNotEmpty) setState(() => _text.text = t);
+      });
+      // Pictures and files shared on iOS arrive as files, not their names.
+      takeSharedFiles().then((f) {
+        if (mounted && f.isNotEmpty) setState(() => _files = [..._files, ...f]);
       });
     }
   }

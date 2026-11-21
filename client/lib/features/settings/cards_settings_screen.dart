@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../../core/analytics.dart';
 import '../../core/link_browser.dart';
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
@@ -12,6 +13,7 @@ import '../../theme/app_tokens.dart';
 import '../../ui/app_card.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/page.dart';
+import '../chat/widgets/cards/live_fares.dart';
 import '../chat/widgets/cards/live_kit.dart';
 
 /// Settings → Cards (docs/RICH-CARDS-PLAN.md §4.6): the home city bots use when you ask without a
@@ -164,6 +166,11 @@ class _CardsSettingsScreenState extends ConsumerState<CardsSettingsScreen> {
             ),
           ),
         ),
+        SectionHeader(title: l.cardsFareWatches),
+        AppCard(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpace.md, vertical: AppSpace.xs),
+          child: _FareWatches(),
+        ),
         SectionHeader(title: l.cardsSources),
         AppCard(
           padding: const EdgeInsets.symmetric(horizontal: AppSpace.md, vertical: AppSpace.xs),
@@ -204,4 +211,52 @@ const _sources = [
   ('Open Library', 'Books', 'https://openlibrary.org/'),
   ('Nager.Date', 'Public holidays', 'https://date.nager.at/'),
   ('ESPN', 'Scores and standings', 'https://www.espn.com/'),
+  ('Kiwi.com', 'Flight fares', 'https://www.kiwi.com/'),
+  ('Google Flights (through SerpApi)', 'Flight fares when Kiwi.com has none', 'https://www.google.com/travel/flights'),
 ];
+
+/// Settings → Cards → Price watches (FLIGHT-SEARCH-PLAN §9): each active watch with Stop.
+class _FareWatches extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = context.l10n;
+    final watches = ref.watch(fareWatchesProvider).value ?? const [];
+    if (watches.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: AppSpace.xs),
+        child: Text(l.cardsFareWatchesNone, style: context.textTheme.bodySmall?.copyWith(color: context.colorScheme.onSurfaceVariant)),
+      );
+    }
+    return Column(
+      children: [
+        for (final w in watches)
+          ListTile(
+            key: Key('cardsFareWatch-${w['card_id']}'),
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(LucideIcons.bellRing, size: 20),
+            title: Text('${w['route'] ?? ''}'),
+            subtitle: Text(l.cardsFareWatchLine(
+              w['last_price'] is num ? fmtFare(context, w['last_price']! as num, w['currency'] as String?) : '—',
+              switch (DateTime.tryParse('${w['ends_at']}')) {
+                final d? => MaterialLocalizations.of(context).formatShortMonthDay(d.toLocal()),
+                null => '',
+              },
+            )),
+            trailing: TextButton(
+              onPressed: () async {
+                final messenger = ScaffoldMessenger.maybeOf(context);
+                try {
+                  await ref.read(backendProvider).unwatchFares('${w['card_id']}');
+                  Analytics.log('fare_watch_stopped', {'where': 'settings'});
+                } catch (_) {
+                  messenger?.showSnackBar(SnackBar(content: Text(l.cardFaresWatchFailed)));
+                }
+                ref.invalidate(fareWatchesProvider);
+              },
+              child: Text(l.cardFaresWatchStop),
+            ),
+          ),
+      ],
+    );
+  }
+}

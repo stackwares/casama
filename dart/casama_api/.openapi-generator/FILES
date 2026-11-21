@@ -429,6 +429,8 @@ lib/src/model/email_preferences.dart
 lib/src/model/encryption_status.dart
 lib/src/model/export_pack_request.dart
 lib/src/model/export_pack_request_look.dart
+lib/src/model/fare_watch.dart
+lib/src/model/fare_watch_list.dart
 lib/src/model/file_search_result.dart
 lib/src/model/for_you.dart
 lib/src/model/for_you_approval.dart
@@ -1073,6 +1075,7 @@ lib/src/model/watch_code.dart
 lib/src/model/watch_code_claim.dart
 lib/src/model/watch_code_info.dart
 lib/src/model/watch_code_request.dart
+lib/src/model/watch_fares.dart
 lib/src/model/watch_handoff.dart
 lib/src/model/watch_handoff_sent.dart
 lib/src/model/watch_key.dart

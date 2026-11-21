@@ -96,8 +96,8 @@ private sealed interface Stage {
     data object Choose : Stage
     data object Listening : Stage
     data object Sending : Stage
-    /** What the server heard, with a moment to Undo before it moves on. */
-    data class Heard(val asked: WatchAsked) : Stage
+    /** What the server heard (or got typed), with a moment to Undo before it moves on. */
+    data class Heard(val asked: WatchAsked, val typed: Boolean = false) : Stage
     /** Offline: saved, it sends when the watch is back online. */
     data object Kept : Stage
     data object Silent : Stage
@@ -166,7 +166,7 @@ fun AskScreen(nav: NavHostController, botId: String?, listen: Boolean, conversat
                 val asked = session.call { ask(body, item.id) }
                 audioFile?.delete()
                 asked.runId?.let { OngoingRun.startedOnWatch(it) }
-                Stage.Heard(asked)
+                Stage.Heard(asked, typed = audio == null)
             } catch (_: ApiError.Offline) {
                 graph.outbox.keep(item)
                 Stage.Kept
@@ -256,6 +256,7 @@ fun AskScreen(nav: NavHostController, botId: String?, listen: Boolean, conversat
         Stage.Sending -> Message(stringResource(R.string.watch_sending), null, modifier = Modifier.fillMaxSize())
         is Stage.Heard -> Heard(
             asked = s.asked,
+            typed = s.typed,
             onUndo = {
                 scope.launch {
                     s.asked.runId?.let { id -> runCatching { session.call { cancelRun(id, "w-undo-$id") } } }
@@ -358,9 +359,12 @@ private fun Listening(bot: GlanceBot?, recorder: Recorder, onStop: () -> Unit) {
     }
 }
 
-/** Heard: the words the server got, Undo for four seconds, then on to the run. */
+/**
+ * Heard: the words the server got, Undo for four seconds, then on to the run. A typed ask says
+ * "Sent", since nothing was heard.
+ */
 @Composable
-private fun Heard(asked: WatchAsked, onUndo: () -> Unit, onNext: () -> Unit) {
+private fun Heard(asked: WatchAsked, typed: Boolean, onUndo: () -> Unit, onNext: () -> Unit) {
     var undone by remember { mutableStateOf(false) }
     LaunchedEffect(asked) {
         delay(4_000)
@@ -369,7 +373,7 @@ private fun Heard(asked: WatchAsked, onUndo: () -> Unit, onNext: () -> Unit) {
     ListScreen(edgeButton = {
         EdgeButton(onClick = { undone = true; onUndo() }) { Text(stringResource(R.string.watch_undo)) }
     }) { _ ->
-        item { Eyebrow(stringResource(R.string.watch_heard), CasamaColors.Orchid) }
+        item { Eyebrow(stringResource(if (typed) R.string.watch_reply_sent else R.string.watch_heard), CasamaColors.Orchid) }
         item {
             Words("“${asked.heard}”", maxLines = 4, style = MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
         }

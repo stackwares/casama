@@ -27,6 +27,7 @@ import 'backend.dart';
 import 'chatgpt_connect.dart';
 import '../features/widgets/widget_key_store.dart';
 import '../features/watch/watch_key_store.dart';
+import 'rate_limit.dart';
 import 'telemetry.dart';
 
 const _terminal = {'run.completed', 'run.failed', 'run.cancelled'};
@@ -99,6 +100,8 @@ class SupabaseBackend implements Backend {
     );
     // Every call says whether the server answers, for the bar over the app (D-296).
     watchReachability(client.api.dio, apiUrl);
+    // A short "too many requests" is waited out and sent again once.
+    client.api.dio.interceptors.add(RateLimitRetryInterceptor(client.api.dio));
     AdminSecurity.accessToken = () => supabase.auth.currentSession?.accessToken;
     client.api.dio.interceptors.add(AdminSecurityInterceptor(
       client.api.dio,
@@ -4986,6 +4989,33 @@ class SupabaseBackend implements Backend {
   }
 
   @override
+  Future<Map<String, Object?>> watchFares(String cardId, {double? below}) async {
+    try {
+      final res = await api.api.dio.post<Map<String, dynamic>>(
+        '/v1/live-cards/$cardId/watch',
+        data: {'below': ?below},
+        options: _json,
+      );
+      return Map<String, Object?>.from(res.data!);
+    } on DioException catch (e) {
+      final body = e.response?.data;
+      if (body is Map && body['code'] == 'too_many_watches') throw const FareWatchFull();
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> unwatchFares(String cardId) async {
+    await api.api.dio.delete<Object?>('/v1/live-cards/$cardId/watch', options: Options(headers: authHeaders));
+  }
+
+  @override
+  Future<List<Map<String, Object?>>> fareWatches() async {
+    final res = await api.api.dio.get<Map<String, dynamic>>('/v1/me/fare-watches', options: Options(headers: authHeaders));
+    return [for (final w in (res.data?['items'] as List? ?? const [])) Map<String, Object?>.from(w as Map)];
+  }
+
+  @override
   Future<Map<String, Object?>> cardPrefs() async {
     final res = await api.api.dio.get<Map<String, dynamic>>('/v1/me/card-prefs', options: Options(headers: authHeaders));
     return Map<String, Object?>.from(res.data ?? const {});
@@ -6918,6 +6948,34 @@ class SupabaseBackend implements Backend {
       return null;
     } catch (_) {
       return null;
+    }
+  }
+
+  @override
+  Future<ScreenPicture> screenPicture(String computerId, {int width = 480, String? etag, bool wake = false}) async {
+    try {
+      final res = await api.computers.computerScreenshot(
+        id: computerId,
+        format: 'jpeg',
+        width: width,
+        wake: wake ? 'true' : 'false',
+        headers: {'If-None-Match': ?etag},
+      );
+      final bytes = res.data;
+      if (bytes == null || bytes.isEmpty) return const ScreenPicture(ScreenPictureStatus.failed);
+      return ScreenPicture(ScreenPictureStatus.fresh, bytes: bytes, etag: res.headers.value('etag'));
+    } on DioException catch (e) {
+      final r = e.response;
+      if (r?.statusCode == 304) return ScreenPicture(ScreenPictureStatus.unchanged, etag: etag);
+      if (r?.statusCode == 409) {
+        final data = r?.data;
+        // A binary response type: the error body arrives as bytes.
+        final text = data is List<int> ? utf8.decode(data, allowMalformed: true) : '$data';
+        return ScreenPicture(text.contains('computer_asleep') ? ScreenPictureStatus.asleep : ScreenPictureStatus.nothing);
+      }
+      return const ScreenPicture(ScreenPictureStatus.failed);
+    } catch (_) {
+      return const ScreenPicture(ScreenPictureStatus.failed);
     }
   }
 

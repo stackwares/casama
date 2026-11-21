@@ -14,6 +14,7 @@ import 'package:material_ui/material_ui.dart';
 
 import 'active_call_test.dart' show CallsConnector;
 import 'fake_backend.dart';
+import 'fake_voice.dart' show FakeCallConnector;
 
 class FakeCallSystem implements CallSystem {
   final log = <String>[];
@@ -125,6 +126,22 @@ void main() {
     expect(interruptions.log.last, 'finish');
     c.dispose();
     expect(system.log.where((l) => l == 'end'), hasLength(1));
+  });
+
+  test('a denied microphone starts no session on the server and no phone call', () async {
+    final backend = FakeBackend();
+    final system = FakeCallSystem();
+    final c = CallController(
+      backend: backend,
+      connector: FakeCallConnector()..mic = false,
+      botId: botId,
+      requestedConversationId: convId,
+      system: system,
+    );
+    await c.connect();
+    expect(backend.voiceSessions, 0);
+    expect(c.error, isA<StateError>());
+    expect(c.liveCallId, isNull);
   });
 
   test('an answered ring tells the phone which call it is', () async {

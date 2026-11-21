@@ -1,6 +1,6 @@
 # Bug hunt across every platform: plan
 
-Status: **In progress** (written and approved 2026-11-21: builds B1–B4 approved, fixes pushed to `origin/main` in batches).
+Status: **Built** (2026-11-21). First pass done on web, macOS (shallow), iOS, iPad, Android, Fold, Wear OS, websites and the server; 24 fixes on `main`. Waiting on: a server deploy (Oliver's yes), the "Needs Oliver" items in `reports/bug-hunt-2026-11-21.md`, and a second pass for the macOS core path and Apple Watch screens.
 
 ## 1. Goal
 
@@ -163,4 +163,29 @@ Too big, risky, or a product question: log it in §9 as "Needs Oliver" and keep 
 
 | # | Platform | Area | Bug | Status | Commit |
 |---|---|---|---|---|---|
-| | | | | | |
+| 1 | Local DB | worker | `public.user_last_active` missing locally, every routine claim failed | Fixed locally (function re-created) | n/a |
+| 2 | Web | chat list | Sidebar preview showed raw table markdown | Fixed | 975d17307 |
+| 3 | All clients | providers | 4xx errors retried for ~40 s behind a skeleton (bot inbox, cached errors) | Fixed | ba545258f |
+| 4 | All | calls | Live relay socket left open after mic denied | Fixed | 23edc4b6e |
+| 5 | Web | Cmd+K | First Escape didn't close an empty search | Fixed | 5486ce40f |
+| 6 | All | settings | setState/ref after await without mounted check (Privacy, Cards) | Fixed | fcd8d0a89 |
+| 7 | iOS/Android | chat | Code block label and copy button covered the first line | Fixed | 0e0472359 |
+| 8 | Server | agent | Stop on an OpenRouter reply crashed the worker | Fixed | 7bda19da1 |
+| 9 | iOS | home | Side rail overflowed 22 px in landscape | Fixed | 5a6ce23fd batch |
+| 10 | iOS | board | Open the Bot's Thread opened the main chat, not the ticket's | Fixed | 5a6ce23fd |
+| 11 | iOS | share | Quick ask from share sheet: Send disabled, no back arrow | Fixed | 2a521eeab |
+| 12 | iPad | home | Computer panel under the status bar in landscape | Fixed | d0432bc1e |
+| 13 | Android | home | System back on Library/Tasks closed the app | Fixed | be8c1750a |
+| 14 | Wear OS | chat | Old replies showed only a clock time | Fixed | 48c5fdf93 |
+| 15 | Server | security | `casama_migrations` had no RLS; anon key could edit it (prod too) | Fixed in migrate scripts; prod needs deploy | e2017e573 |
+| 16 | Server | streaming | DB blip in run events stream exited the API; missing final event left Thinking forever | Fixed | 83c16bf33 |
+| 17 | Server | calls | Unauthenticated `/telephony/stream` message could crash the API | Fixed | b77799fe6 |
+| 18 | Server | errors | ~30 routes returned 500 for non-uuid ids | Fixed (400/404) | fcb9e5a61 |
+| 19 | Server | runs | Stop didn't stop remaining tool calls of the same turn | Fixed | 233d6f693 |
+| 20 | Server | billing | Starting a free trial ended a comp | Fixed | ace422393 |
+| 21 | Server | billing | Daily total had no floor at 0 after a saved reset | Fixed | 9e3618920 |
+| 22 | Server | worker | Routine claim failure logged no DB reason | Fixed | 1f4109629 |
+| 23 | Server | privacy | `POST /v1/me/blocks` returned the other person's full email | Fixed (masked) | 5365c8249 |
+| 24 | Repo | lint | `pnpm lint` failed (8 errors) | Fixed | b276971a0 |
+
+Open items ("Needs Oliver", not fixed): see `reports/bug-hunt-2026-11-21.md`.

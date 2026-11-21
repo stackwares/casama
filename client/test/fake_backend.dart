@@ -892,6 +892,41 @@ class FakeBackend implements Backend {
   @override
   Future<void> reportLiveCard(String id) async => liveCardActions.add('report:$id');
 
+  /// Price watches by card id.
+  final fareWatchList = <Map<String, Object?>>[];
+
+  bool watchFull = false;
+
+  @override
+  Future<Map<String, Object?>> watchFares(String cardId, {double? below}) async {
+    if (watchFull) throw const FareWatchFull();
+    liveCardActions.add('watch:$cardId:${below ?? ''}');
+    final w = <String, Object?>{
+      'id': 'w-$cardId',
+      'card_id': cardId,
+      'route': 'Manila → Tokyo · Mar 12–Mar 19',
+      'below': below,
+      'currency': 'PHP',
+      'first_price': 10200,
+      'last_price': 10200,
+      'ends_at': '2027-01-20T08:00:00Z',
+      'created_at': '2026-11-21T08:00:00Z',
+    };
+    fareWatchList
+      ..removeWhere((x) => x['card_id'] == cardId)
+      ..add(w);
+    return w;
+  }
+
+  @override
+  Future<void> unwatchFares(String cardId) async {
+    liveCardActions.add('unwatch:$cardId');
+    fareWatchList.removeWhere((x) => x['card_id'] == cardId);
+  }
+
+  @override
+  Future<List<Map<String, Object?>>> fareWatches() async => List.of(fareWatchList);
+
   @override
   Future<Map<String, Object?>> cardPrefs() async => cardPrefsValue;
 
@@ -7632,6 +7667,16 @@ class FakeBackend implements Backend {
   Uint8List? screen;
   @override
   Future<Uint8List?> screenshot(String computerId) async => screen;
+
+  /// What [screenPicture] answers (the screen card), and every call it got.
+  ScreenPicture Function(String computerId, String? etag)? onScreenPicture;
+  final screenPictureCalls = <String>[];
+  @override
+  Future<ScreenPicture> screenPicture(String computerId, {int width = 480, String? etag, bool wake = false}) async {
+    screenPictureCalls.add(computerId);
+    return onScreenPicture?.call(computerId, etag) ??
+        (screen == null ? const ScreenPicture(ScreenPictureStatus.asleep) : ScreenPicture(ScreenPictureStatus.fresh, bytes: screen, etag: '"s-1"'));
+  }
   @override
   Future<(Uri, Map<String, String>)> terminal(
     String computerId, {

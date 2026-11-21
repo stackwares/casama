@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../../core/backend.dart';
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
@@ -44,6 +45,7 @@ class CallLiveTile extends ConsumerStatefulWidget {
 class _CallLiveTileState extends ConsumerState<CallLiveTile>
     with WidgetsBindingObserver {
   Uint8List? _shot;
+  String? _etag;
   Timer? _poll;
   var _busy = false;
 
@@ -59,6 +61,7 @@ class _CallLiveTileState extends ConsumerState<CallLiveTile>
     super.didUpdateWidget(old);
     if (old.computerId != widget.computerId) {
       _shot = null;
+      _etag = null;
       _start();
     }
   }
@@ -86,8 +89,23 @@ class _CallLiveTileState extends ConsumerState<CallLiveTile>
     if (_busy) return;
     _busy = true;
     try {
-      final png = await ref.read(backendProvider).screenshot(widget.computerId);
-      if (mounted && png != null && png.isNotEmpty) setState(() => _shot = png);
+      // The small JPEG the chat's screen card uses (SCREEN-CARD-PLAN), sent only when the screen
+      // changed. It may wake the computer: the bot asked to show it.
+      final dpr = MediaQuery.maybeDevicePixelRatioOf(context) ?? 2;
+      final pic = await ref
+          .read(backendProvider)
+          .screenPicture(
+            widget.computerId,
+            width: ((widget.large ? 640 : 140) * dpr).round().clamp(160, 1280),
+            etag: _etag,
+            wake: true,
+          );
+      if (mounted && pic.status == ScreenPictureStatus.fresh && pic.bytes != null && pic.bytes!.isNotEmpty) {
+        setState(() {
+          _shot = pic.bytes;
+          _etag = pic.etag;
+        });
+      }
     } catch (_) {
       // Asleep or unreachable for a moment: keep the last picture.
     } finally {

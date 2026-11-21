@@ -166,7 +166,7 @@ class CrashlyticsReporter {
     required String Function(String) scrub,
     String? reason,
   }) async {
-    if (!collecting) return;
+    if (!collecting || isCrashNoise(error)) return;
     try {
       await _sink!.recordError(
         ScrubbedError('${error.runtimeType}: ${scrub(error.toString())}'),

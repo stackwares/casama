@@ -19,6 +19,7 @@ card says where its numbers came from and when, and keeps itself up to date whil
 | Earthquakes, typhoons and storms | A map and list, nearest first |
 | A word, a person, a place or a thing | A dictionary card (with pronunciation) or an encyclopedia summary |
 | A book | Its cover, author, year and rating |
+| Flight prices ("cheapest flight Manila to Tokyo March 12–19") | A fares card with real prices, airlines, times and stops; sort by cheapest, fastest or direct, and **Book** opens the booking page |
 | Scores and standings (NBA, EPL, LaLiga, F1 and more) | Today's games with live scores, or the table |
 | A recipe, product, film or event link | A card from the page's own data: a recipe's real ingredients scale with the servings you pick |
 
@@ -39,6 +40,20 @@ Your daily morning brief starts with one.
 - **⋯ menu:** pin the card to your widgets (it keeps updating there by itself), copy it as text,
   share it as a picture, or report wrong data.
 
+**Flight fares** come from Kiwi.com first and from Google Flights when Kiwi has nothing. A Kiwi
+search is free. On Casama Cloud, a Google Flights search that finds fares costs **$0.05 of
+credits** and shows in the reply's usage; each plan has a few a day (Free 3, Plus 20, Pro 50, Max
+100). Fares are checked again on the booking site before you pay, and Casama doesn't sell tickets.
+
+**Watch a price:** tap **Watch price** on a fares card, or ask the bot to watch it. You can set a
+price to wait for, or leave it empty for any big drop (10% or more). Casama checks the trip every few
+hours, for free, and sends you a notification when the price drops, at most once a day. A watch
+stops after the departure date or in 60 days; stop it sooner on the card or in **Settings > Cards**.
+A workspace can watch 5 fares at a time.
+
+Some booking links may be affiliate links. When they are, the card says Casama may earn a commission;
+the price you pay is the same.
+
 Prices from stock markets are delayed by about 15 minutes, and cards say so. Nothing on a card is
 financial advice, and no card buys or sells anything.
 
@@ -55,7 +70,7 @@ Open **Settings > Cards**:
 ## Privacy
 
 When a card is made or refreshed, the data service gets only what is looked up: a place rounded to
-about a kilometre, a ticker, a currency, a word. It never gets your name, account or chat. See
+about a kilometre, a ticker, a currency, a word, or a trip (places, dates, how many travellers). It never gets your name, account or chat. See
 [Privacy and security](/guide/privacy).
 
 ## Self-hosting
@@ -63,3 +78,10 @@ about a kilometre, a ticker, a currency, a word. It never gets your name, accoun
 Live cards work with no keys: weather, rates, crypto, earthquakes, storms, holidays and reference
 come from free public services. Servers that bill people need their own keys for a few of them,
 because some free services are for non-commercial use only. See `LIVE_*` in `.env.example`.
+
+Flight fares work with no key through Kiwi.com's MCP server. To add Google Flights, set
+`LIVE_SERPAPI_KEY` (a SerpApi key) and keep `LIVE_SERPAPI_MONTHLY_CAP` under your SerpApi plan;
+`LIVE_FARES=off` turns fares off. Price watches need nothing extra; they use Kiwi.com only. To earn
+from bookings, set `LIVE_FARES_AFFILIATE_URL` to your affiliate network's link with `{url}` where the
+booking page goes (`LIVE_FARES_AFFILIATE_HOSTS` lists the booking sites it applies to, default
+`kiwi.com`).

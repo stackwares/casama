@@ -154,6 +154,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authTooManyTries => 'Too many tries. Wait a minute and try again.';
 
   @override
+  String tooManyRequestsWait(int seconds) {
+    String _temp0 = intl.Intl.pluralLogic(
+      seconds,
+      locale: localeName,
+      other: '$seconds seconds',
+      one: '1 second',
+    );
+    return 'Too many requests at once. Try again in $_temp0.';
+  }
+
+  @override
+  String get tooManyRequestsReady => 'You can try again now.';
+
+  @override
   String get authAccountExists =>
       'There\'s already an account with this email. Sign in instead.';
 
@@ -2210,6 +2224,36 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String screenCardHeldBy(String name) {
     return '$name has the screen';
+  }
+
+  @override
+  String get screenCardMore => 'More options';
+
+  @override
+  String screenCardIntro(String bot) {
+    return '$bot\'s screen. Tap to watch, drag to move.';
+  }
+
+  @override
+  String get screenCardHideForNow => 'Hide for Now';
+
+  @override
+  String get screenCardDontShow => 'Don\'t Show Automatically';
+
+  @override
+  String get screenCardTurnedOff =>
+      'The screen card is off. Turn it back on in Settings.';
+
+  @override
+  String get screenCardOfferOff =>
+      'Hiding the screen card a lot? You can turn it off.';
+
+  @override
+  String get screenCardTurnOff => 'Turn Off';
+
+  @override
+  String screenCardNeedsYou(String bot) {
+    return '$bot needs you on the screen';
   }
 
   @override
@@ -10054,6 +10098,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get showBotStepsHelp => 'Commands and technical errors in every chat.';
+
+  @override
+  String get showScreenCard => 'Show the bot\'s screen while it works';
+
+  @override
+  String get showScreenCardHelp =>
+      'A small live card in the chat. Tap it to watch full screen.';
 
   @override
   String get showReplyUsage => 'Show usage on replies';
@@ -18033,6 +18084,178 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cardFlightScheduled => 'On schedule';
+
+  @override
+  String get cardFaresBest => 'Best';
+
+  @override
+  String get cardFaresCheapest => 'Cheapest';
+
+  @override
+  String get cardFaresFastest => 'Fastest';
+
+  @override
+  String get cardFaresDirectOnly => 'Direct only';
+
+  @override
+  String get cardFaresDirect => 'Direct';
+
+  @override
+  String cardFaresStops(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n stops',
+      one: '1 stop',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get cardFaresBook => 'Book';
+
+  @override
+  String cardFaresFromPrice(String price) {
+    return 'from $price';
+  }
+
+  @override
+  String cardFaresTravellers(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n travellers',
+      one: '1 traveller',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String cardFaresNights(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n nights',
+      one: '1 night',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get cardFaresEconomy => 'Economy';
+
+  @override
+  String get cardFaresPremium => 'Premium economy';
+
+  @override
+  String get cardFaresBusiness => 'Business';
+
+  @override
+  String get cardFaresFirst => 'First';
+
+  @override
+  String cardFaresTypical(String low, String high) {
+    return 'Usually $low–$high for this trip';
+  }
+
+  @override
+  String get cardFaresLevelLow => 'Low now';
+
+  @override
+  String get cardFaresLevelTypical => 'Typical now';
+
+  @override
+  String get cardFaresLevelHigh => 'High now';
+
+  @override
+  String cardFaresShowAll(int n) {
+    return 'Show all $n';
+  }
+
+  @override
+  String get cardFaresShowFewer => 'Show fewer';
+
+  @override
+  String get cardFaresNoDirect => 'No direct flights in this search.';
+
+  @override
+  String get cardFaresOutboundOnly =>
+      'Prices are for the whole trip; pick the return flight on Google Flights.';
+
+  @override
+  String get cardFaresSeeAll => 'See all on Google Flights';
+
+  @override
+  String get cardFaresCheck =>
+      'Prices are for all travellers and are checked again on the booking site.';
+
+  @override
+  String cardFaresBags(int cabin, int checked) {
+    return '$cabin cabin, $checked checked bags';
+  }
+
+  @override
+  String get cardFaresAffiliate =>
+      'Casama may earn a commission when you book through these links. It doesn\'t change the price.';
+
+  @override
+  String get cardFaresWatch => 'Watch price';
+
+  @override
+  String cardFaresWatching(String date) {
+    return 'Watching · ends $date';
+  }
+
+  @override
+  String cardFaresWatchingBelow(String price, String date) {
+    return 'Watching for $price or less · ends $date';
+  }
+
+  @override
+  String get cardFaresWatchStop => 'Stop';
+
+  @override
+  String get cardFaresWatchTitle => 'Watch this price';
+
+  @override
+  String get cardFaresWatchBody =>
+      'Casama checks this trip every few hours and sends you a notification when the price drops. It stops after the departure date or in 60 days.';
+
+  @override
+  String get cardFaresWatchTarget => 'Tell me when it\'s under (optional)';
+
+  @override
+  String get cardFaresWatchAnyDrop => 'Leave empty for any big drop';
+
+  @override
+  String get cardFaresWatchStart => 'Watch';
+
+  @override
+  String get cardFaresWatchStarted =>
+      'Watching this price. You\'ll get a notification when it drops.';
+
+  @override
+  String get cardFaresWatchStopped => 'Stopped watching this price.';
+
+  @override
+  String get cardFaresWatchFull =>
+      'You\'re already watching 5 fares. Stop one in Settings → Cards first.';
+
+  @override
+  String get cardFaresWatchFailed =>
+      'Couldn\'t change the price watch. Try again.';
+
+  @override
+  String get cardsFareWatches => 'Price watches';
+
+  @override
+  String get cardsFareWatchesNone =>
+      'No price watches. Tap Watch price on a flight fares card to get a notification when it drops.';
+
+  @override
+  String cardsFareWatchLine(String price, String date) {
+    return 'Now $price · ends $date';
+  }
 
   @override
   String get cardFromBot => 'Written by the bot; it may be wrong';

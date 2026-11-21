@@ -196,7 +196,18 @@ export class RevenueCatProvider implements BillingProvider {
         )
       : [];
     if (!ids.size) return { ...base, kind: "ignored" };
-    return { ...base, kind: "customers", customerIds: [...ids], refundStoreIds };
+    const str = (x: unknown) => (typeof x === "string" && x.length > 0 ? x : null);
+    const transactionId = str(ev.transaction_id) ?? str(ev.original_transaction_id);
+    const expires = Number(ev.expiration_at_ms);
+    return {
+      ...base,
+      kind: "customers",
+      customerIds: [...ids],
+      refundStoreIds,
+      refundTransactionId: refund ? transactionId : null,
+      refundPeriodEnd: refund && Number.isFinite(expires) && expires > 0 ? new Date(expires) : null,
+      reversedTransactionIds: type === "REFUND_REVERSED" && transactionId ? [transactionId] : [],
+    };
   }
 
   private async snapshot(s: RcSubscription): Promise<SubscriptionSnapshot | null> {
@@ -249,6 +260,7 @@ export class RevenueCatProvider implements BillingProvider {
         id: p.id,
         productId: await this.storeProductId(p.product_id),
         status: p.status === "refunded" ? "refunded" : "owned",
+        sandbox: p.environment?.toLowerCase() === "sandbox",
       });
     }
     return { subscriptions, purchases };

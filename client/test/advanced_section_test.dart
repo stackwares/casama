@@ -64,7 +64,7 @@ void main() {
 
   testWidgets('Settings keeps secrets, computers and devices under Advanced, everyday options outside', (tester) async {
     SharedPreferences.setMockInitialValues({});
-    await setSize(tester, const Size(430, 2800));
+    await setSize(tester, const Size(430, 3200));
     await tester.pumpWidget(harness(FakeBackend(), const SettingsScreen()));
     await tester.pumpAndSettle();
     for (final everyday in ['Model keys', 'Skills', 'People', 'Quiet hours', 'Appearance']) {

@@ -2268,5 +2268,394 @@
       "staleAfter": "2026-11-20T13:22:45.465Z"
     },
     "summary": "2026-27 English Premier League: 1. Arsenal 27 pts, 2. Brighton & Hove Albion 22 pts, 3. Manchester City 21 pts, 4. Liverpool 18 pts, 5. Chelsea 16 pts, 6. Everton 16 pts"
+  },
+  "fares_kiwi": {
+    "component": "Fares",
+    "from": {
+      "label": "Manila",
+      "codes": ["MNL"],
+      "country": "PH"
+    },
+    "to": {
+      "label": "Tokyo",
+      "codes": ["HND", "NRT"],
+      "country": "JP"
+    },
+    "depart": "2027-03-12",
+    "return": "2027-03-19",
+    "travellers": {
+      "adults": 1,
+      "children": 0,
+      "infants": 0
+    },
+    "cabin": "economy",
+    "currency": "PHP",
+    "sort": "best",
+    "roundTrip": true,
+    "cheapest": 17772,
+    "fastest": 580,
+    "options": [
+      {
+        "id": "936904caeed7",
+        "price": 17772,
+        "airlines": ["Cebu Pacific", "Jetstar Japan"],
+        "minutes": 600,
+        "out": {
+          "from": "MNL",
+          "to": "NRT",
+          "depart": "2027-03-12T12:15",
+          "arrive": "2027-03-12T17:45",
+          "minutes": 270,
+          "stops": 0,
+          "via": [],
+          "airlines": ["Cebu Pacific"],
+          "flights": ["5J5056"]
+        },
+        "back": {
+          "from": "NRT",
+          "to": "MNL",
+          "depart": "2027-03-19T19:00",
+          "arrive": "2027-03-19T23:30",
+          "minutes": 330,
+          "stops": 0,
+          "via": [],
+          "airlines": ["Jetstar Japan"],
+          "flights": ["GK41"]
+        },
+        "bags": {
+          "cabin": 1,
+          "checked": 0
+        },
+        "link": "https://kiwi.com/u/bmms6tpzpg"
+      },
+      {
+        "id": "5f0c601c44ec",
+        "price": 18297,
+        "airlines": ["Cebu Pacific", "Jetstar Japan"],
+        "minutes": 590,
+        "out": {
+          "from": "MNL",
+          "to": "NRT",
+          "depart": "2027-03-12T06:15",
+          "arrive": "2027-03-12T11:35",
+          "minutes": 260,
+          "stops": 0,
+          "via": [],
+          "airlines": ["Cebu Pacific"],
+          "flights": ["5J5054"]
+        },
+        "back": {
+          "from": "NRT",
+          "to": "MNL",
+          "depart": "2027-03-19T19:00",
+          "arrive": "2027-03-19T23:30",
+          "minutes": 330,
+          "stops": 0,
+          "via": [],
+          "airlines": ["Jetstar Japan"],
+          "flights": ["GK41"]
+        },
+        "bags": {
+          "cabin": 1,
+          "checked": 0
+        },
+        "link": "https://kiwi.com/u/r88t3ch65s"
+      },
+      {
+        "id": "d0a0813810fb",
+        "price": 19120,
+        "airlines": ["Jetstar Japan"],
+        "minutes": 590,
+        "out": {
+          "from": "MNL",
+          "to": "NRT",
+          "depart": "2027-03-12T00:50",
+          "arrive": "2027-03-12T06:10",
+          "minutes": 260,
+          "stops": 0,
+          "via": [],
+          "airlines": ["Jetstar Japan"],
+          "flights": ["GK40"]
+        },
+        "back": {
+          "from": "NRT",
+          "to": "MNL",
+          "depart": "2027-03-19T19:00",
+          "arrive": "2027-03-19T23:30",
+          "minutes": 330,
+          "stops": 0,
+          "via": [],
+          "airlines": ["Jetstar Japan"],
+          "flights": ["GK41"]
+        },
+        "bags": {
+          "cabin": 1,
+          "checked": 0
+        },
+        "link": "https://kiwi.com/u/5vvfpghyy7"
+      },
+      {
+        "id": "3a45027f78f7",
+        "price": 20275,
+        "airlines": ["Cebu Pacific", "Philippine Airlines"],
+        "minutes": 590,
+        "out": {
+          "from": "MNL",
+          "to": "NRT",
+          "depart": "2027-03-12T12:15",
+          "arrive": "2027-03-12T17:45",
+          "minutes": 270,
+          "stops": 0,
+          "via": [],
+          "airlines": ["Cebu Pacific"],
+          "flights": ["5J5056"]
+        },
+        "back": {
+          "from": "NRT",
+          "to": "MNL",
+          "depart": "2027-03-19T09:20",
+          "arrive": "2027-03-19T13:40",
+          "minutes": 320,
+          "stops": 0,
+          "via": [],
+          "airlines": ["Philippine Airlines"],
+          "flights": ["PR431"]
+        },
+        "bags": {
+          "cabin": 1,
+          "checked": 0
+        },
+        "link": "https://kiwi.com/u/cub6k7mjrw"
+      },
+      {
+        "id": "cd29d4037fe9",
+        "price": 20275,
+        "airlines": ["Cebu Pacific", "Philippine Airlines"],
+        "minutes": 595,
+        "out": {
+          "from": "MNL",
+          "to": "NRT",
+          "depart": "2027-03-12T12:15",
+          "arrive": "2027-03-12T17:45",
+          "minutes": 270,
+          "stops": 0,
+          "via": [],
+          "airlines": ["Cebu Pacific"],
+          "flights": ["5J5056"]
+        },
+        "back": {
+          "from": "NRT",
+          "to": "MNL",
+          "depart": "2027-03-19T21:35",
+          "arrive": "2027-03-20T02:00",
+          "minutes": 325,
+          "stops": 0,
+          "via": [],
+          "airlines": ["Philippine Airlines"],
+          "flights": ["PR429"]
+        },
+        "bags": {
+          "cabin": 1,
+          "checked": 0
+        },
+        "link": "https://kiwi.com/u/xnyywsdwnb"
+      },
+      {
+        "id": "349649e039d6",
+        "price": 20478,
+        "airlines": ["Cebu Pacific", "Philippine Airlines"],
+        "minutes": 580,
+        "out": {
+          "from": "MNL",
+          "to": "NRT",
+          "depart": "2027-03-12T06:15",
+          "arrive": "2027-03-12T11:35",
+          "minutes": 260,
+          "stops": 0,
+          "via": [],
+          "airlines": ["Cebu Pacific"],
+          "flights": ["5J5054"]
+        },
+        "back": {
+          "from": "NRT",
+          "to": "MNL",
+          "depart": "2027-03-19T09:20",
+          "arrive": "2027-03-19T13:40",
+          "minutes": 320,
+          "stops": 0,
+          "via": [],
+          "airlines": ["Philippine Airlines"],
+          "flights": ["PR431"]
+        },
+        "bags": {
+          "cabin": 1,
+          "checked": 0
+        },
+        "link": "https://kiwi.com/u/nmpwqr7rg9"
+      }
+    ],
+    "live": {
+      "source": {
+        "id": "kiwi",
+        "name": "Kiwi.com",
+        "url": "https://www.kiwi.com/"
+      },
+      "fetchedAt": "2026-11-21T11:30:00.000Z",
+      "staleAfter": "2026-11-21T12:00:00.000Z"
+    },
+    "summary": "Fares Manila \u2192 Tokyo, Mar 12 \u2013 Mar 19, 1 traveller, economy (Kiwi.com, return-trip totals in PHP):\n1. \u20b117,772 Cebu Pacific + Jetstar Japan, MNL 12:15 \u2192 NRT 17:45, direct, 4h 30m; back NRT 19:00 \u2192 MNL 23:30, direct, 5h 30m\n2. \u20b118,297 Cebu Pacific + Jetstar Japan, MNL 06:15 \u2192 NRT 11:35, direct, 4h 20m; back NRT 19:00 \u2192 MNL 23:30, direct, 5h 30m\n3. \u20b119,120 Jetstar Japan, MNL 00:50 \u2192 NRT 06:10, direct, 4h 20m; back NRT 19:00 \u2192 MNL 23:30, direct, 5h 30m\n4. \u20b120,275 Cebu Pacific + Philippine Airlines, MNL 12:15 \u2192 NRT 17:45, direct, 4h 30m; back NRT 09:20 \u2192 MNL 13:40, direct, 5h 20m\n5. \u20b120,275 Cebu Pa"
+  },
+  "fares_google": {
+    "component": "Fares",
+    "from": {
+      "label": "Manila",
+      "codes": ["MNL"],
+      "country": "PH"
+    },
+    "to": {
+      "label": "Tokyo",
+      "codes": ["HND", "NRT"],
+      "country": "JP"
+    },
+    "depart": "2027-03-12",
+    "return": "2027-03-19",
+    "travellers": {
+      "adults": 1,
+      "children": 0,
+      "infants": 0
+    },
+    "cabin": "economy",
+    "currency": "PHP",
+    "sort": "cheapest",
+    "roundTrip": true,
+    "outboundOnly": true,
+    "cheapest": 16057,
+    "fastest": 245,
+    "options": [
+      {
+        "id": "4b3bd2ccfcdc",
+        "price": 16057,
+        "airlines": ["Jetstar"],
+        "minutes": 260,
+        "out": {
+          "from": "MNL",
+          "to": "NRT",
+          "depart": "2027-03-12T00:50",
+          "arrive": "2027-03-12T06:10",
+          "minutes": 260,
+          "stops": 0,
+          "via": [],
+          "airlines": ["Jetstar"],
+          "flights": ["GK 40"]
+        },
+        "link": "https://www.google.com/travel/flights?hl=en&gl=ph&curr=PHP&tfs=CBwQAhonEgoyMDI3LTAzLTEyagcIARIDTU5McgcIARIDSE5EcgcIARIDTlJUGicSCjIwMjctMDMtMTlqBwgBEgNITkRqBwgBEgNOUlRyBwgBEgNNTkxAAUgBcAGYAQE&tfu=EgIIAQ"
+      },
+      {
+        "id": "cc574392b00b",
+        "price": 16192,
+        "airlines": ["Cebu Pacific"],
+        "minutes": 270,
+        "out": {
+          "from": "MNL",
+          "to": "NRT",
+          "depart": "2027-03-12T12:15",
+          "arrive": "2027-03-12T17:45",
+          "minutes": 270,
+          "stops": 0,
+          "via": [],
+          "airlines": ["Cebu Pacific"],
+          "flights": ["5J 5056"]
+        },
+        "link": "https://www.google.com/travel/flights?hl=en&gl=ph&curr=PHP&tfs=CBwQAhonEgoyMDI3LTAzLTEyagcIARIDTU5McgcIARIDSE5EcgcIARIDTlJUGicSCjIwMjctMDMtMTlqBwgBEgNITkRqBwgBEgNOUlRyBwgBEgNNTkxAAUgBcAGYAQE&tfu=EgIIAQ"
+      },
+      {
+        "id": "90deb6fded87",
+        "price": 16403,
+        "airlines": ["Cebu Pacific"],
+        "minutes": 260,
+        "out": {
+          "from": "MNL",
+          "to": "NRT",
+          "depart": "2027-03-12T06:15",
+          "arrive": "2027-03-12T11:35",
+          "minutes": 260,
+          "stops": 0,
+          "via": [],
+          "airlines": ["Cebu Pacific"],
+          "flights": ["5J 5054"]
+        },
+        "link": "https://www.google.com/travel/flights?hl=en&gl=ph&curr=PHP&tfs=CBwQAhonEgoyMDI3LTAzLTEyagcIARIDTU5McgcIARIDSE5EcgcIARIDTlJUGicSCjIwMjctMDMtMTlqBwgBEgNITkRqBwgBEgNOUlRyBwgBEgNNTkxAAUgBcAGYAQE&tfu=EgIIAQ"
+      },
+      {
+        "id": "0ff7caae184c",
+        "price": 17959,
+        "airlines": ["Philippine Airlines"],
+        "minutes": 245,
+        "out": {
+          "from": "MNL",
+          "to": "NRT",
+          "depart": "2027-03-12T15:25",
+          "arrive": "2027-03-12T20:30",
+          "minutes": 245,
+          "stops": 0,
+          "via": [],
+          "airlines": ["Philippine Airlines"],
+          "flights": ["PR 432"]
+        },
+        "link": "https://www.google.com/travel/flights?hl=en&gl=ph&curr=PHP&tfs=CBwQAhonEgoyMDI3LTAzLTEyagcIARIDTU5McgcIARIDSE5EcgcIARIDTlJUGicSCjIwMjctMDMtMTlqBwgBEgNITkRqBwgBEgNOUlRyBwgBEgNNTkxAAUgBcAGYAQE&tfu=EgIIAQ"
+      },
+      {
+        "id": "1af3d20de2ef",
+        "price": 17959,
+        "airlines": ["Philippine Airlines"],
+        "minutes": 250,
+        "out": {
+          "from": "MNL",
+          "to": "NRT",
+          "depart": "2027-03-12T07:40",
+          "arrive": "2027-03-12T12:50",
+          "minutes": 250,
+          "stops": 0,
+          "via": [],
+          "airlines": ["Philippine Airlines"],
+          "flights": ["PR 428"]
+        },
+        "link": "https://www.google.com/travel/flights?hl=en&gl=ph&curr=PHP&tfs=CBwQAhonEgoyMDI3LTAzLTEyagcIARIDTU5McgcIARIDSE5EcgcIARIDTlJUGicSCjIwMjctMDMtMTlqBwgBEgNITkRqBwgBEgNOUlRyBwgBEgNNTkxAAUgBcAGYAQE&tfu=EgIIAQ"
+      },
+      {
+        "id": "70f88bf7d419",
+        "price": 23708,
+        "airlines": ["Philippine Airlines"],
+        "minutes": 245,
+        "out": {
+          "from": "MNL",
+          "to": "HND",
+          "depart": "2027-03-12T19:10",
+          "arrive": "2027-03-13T00:15",
+          "minutes": 245,
+          "stops": 0,
+          "via": [],
+          "airlines": ["Philippine Airlines"],
+          "flights": ["PR 424"]
+        },
+        "link": "https://www.google.com/travel/flights?hl=en&gl=ph&curr=PHP&tfs=CBwQAhonEgoyMDI3LTAzLTEyagcIARIDTU5McgcIARIDSE5EcgcIARIDTlJUGicSCjIwMjctMDMtMTlqBwgBEgNITkRqBwgBEgNOUlRyBwgBEgNNTkxAAUgBcAGYAQE&tfu=EgIIAQ"
+      }
+    ],
+    "typical": {
+      "low": 13000,
+      "high": 29500,
+      "level": "typical"
+    },
+    "searchUrl": "https://www.google.com/travel/flights?hl=en&gl=ph&curr=PHP&tfs=CBwQAhonEgoyMDI3LTAzLTEyagcIARIDTU5McgcIARIDSE5EcgcIARIDTlJUGicSCjIwMjctMDMtMTlqBwgBEgNITkRqBwgBEgNOUlRyBwgBEgNNTkxAAUgBcAGYAQE&tfu=EgIIAQ",
+    "live": {
+      "source": {
+        "id": "serpapi",
+        "name": "Google Flights",
+        "url": "https://www.google.com/travel/flights"
+      },
+      "fetchedAt": "2026-11-21T11:30:00.000Z",
+      "staleAfter": "2026-11-21T12:00:00.000Z"
+    },
+    "summary": "Fares Manila \u2192 Tokyo, Mar 12 \u2013 Mar 19, 1 traveller, economy (Google Flights, return-trip totals in PHP; return flights are picked on Google's page):\n1. \u20b116,057 Jetstar, MNL 00:50 \u2192 NRT 06:10, direct, 4h 20m\n2. \u20b116,192 Cebu Pacific, MNL 12:15 \u2192 NRT 17:45, direct, 4h 30m\n3. \u20b116,403 Cebu Pacific, MNL 06:15 \u2192 NRT 11:35, direct, 4h 20m\n4. \u20b117,959 Philippine Airlines, MNL 15:25 \u2192 NRT 20:30, direct, 4h 05m\n5. \u20b117,959 Philippine Airlines, MNL 07:40 \u2192 NRT 12:50, direct, 4h 10m\nTypical \u20b113,000\u2013\u20b129,500 (Google): today's prices are typical."
   }
 }

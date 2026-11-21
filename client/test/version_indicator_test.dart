@@ -18,7 +18,7 @@ void main() {
       return null;
     });
     addTearDown(() => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(SystemChannels.platform, null));
-    await setSize(tester, const Size(430, 3800));
+    await setSize(tester, const Size(430, 4200));
     await tester.pumpWidget(harness(FakeBackend(), const SettingsScreen()));
     await tester.pumpAndSettle();
     // "Casama", not the package name, and the build number in brackets.

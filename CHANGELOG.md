@@ -9,6 +9,17 @@ The server, apps, CLI, SDK and MCP server share one version number.
 
 ## [Unreleased]
 
+- Flight fares (D-471): bots answer flight-price questions with a **Fares** card of real prices,
+  airlines, times and stops, and booking links, instead of searching the web. Kiwi.com's free MCP
+  server answers first; Google Flights (SerpApi) is the fallback, at $0.05 of credits per search that
+  finds fares on Casama Cloud, a few a day per plan, inside a server-wide monthly cap. Refreshes
+  never use Google. Self-hosted servers get Kiwi with no key and Google with `LIVE_SERPAPI_KEY`.
+  **Watch price** on a Fares card (or asking the bot to watch it) checks the trip every 6 hours with
+  free providers only and sends a notification when the fare drops, at most once a day, until the
+  departure date or 60 days; up to 5 watches per workspace, listed in Settings → Cards. Servers can
+  set `LIVE_FARES_AFFILIATE_URL` to wrap Kiwi.com booking links in an affiliate link; the card then
+  says Casama may earn a commission.
+
 - Free plans (D-461): Casama Cloud can give a workspace Plus, Pro or Max free for up to 12 months,
   by email or with a gift code (`G-XXXXX-XXXXX`, or a casama.ai/g/ link). Billing shows **Free from
   Casama** and the end date, with **Keep Pro** in the last week and one reminder. Codes are redeemed

@@ -1,9 +1,13 @@
 import 'package:casama/core/analytics.dart';
+import 'package:casama/core/crash_reporter.dart';
 import 'package:casama/core/crashlytics.dart';
 import 'package:casama/core/telemetry.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart'
+    show AuthApiException, AuthRetryableFetchException, AuthUnknownException;
 
 class _FakeSink implements CrashlyticsSink {
   final calls = <String>[];
@@ -114,6 +118,26 @@ void main() {
       expect(sink.errors.single, startsWith('StateError: '));
       expect(sink.errors.single, isNot(contains('someone@example.com')));
       expect(sink.errors.single, isNot(contains('sk-abcdefghijklmnop')));
+    });
+
+    test('offline session refreshes are noise; other auth errors still report', () async {
+      final sink = _FakeSink();
+      await CrashlyticsReporter.startWith(sink, consent: true);
+      final offline = AuthRetryableFetchException(message: 'Failed host lookup');
+      final unknownNetwork = AuthUnknownException(message: 'x', originalError: http.ClientException('Connection reset'));
+      expect(isCrashNoise(offline), isTrue);
+      expect(isCrashNoise(unknownNetwork), isTrue);
+      expect(isCrashNoise(const AuthApiException('Invalid Refresh Token', statusCode: '400')), isFalse);
+      expect(isCrashNoise(AuthUnknownException(message: 'x', originalError: StateError('bug'))), isFalse);
+      expect(isCrashNoise(StateError('x')), isFalse);
+      expect(isCrashNoiseEvent({r'$exception_list': [{'type': 'AuthRetryableFetchException'}]}), isTrue);
+      expect(isCrashNoiseEvent({r'$exception_type': 'AuthRetryableFetchException'}), isTrue);
+      expect(isCrashNoiseEvent({r'$exception_list': [{'type': 'AuthApiException'}]}), isFalse);
+      await CrashlyticsReporter.record(offline, null, scrub: scrub);
+      await CrashlyticsReporter.record(unknownNetwork, null, scrub: scrub);
+      expect(sink.errors, isEmpty);
+      await CrashlyticsReporter.record(const AuthApiException('Invalid Refresh Token', statusCode: '400'), null, scrub: scrub);
+      expect(sink.errors, hasLength(1));
     });
 
     test('turning it off later stops reports and deletes the unsent ones; on again resumes', () async {

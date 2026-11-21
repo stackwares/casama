@@ -51,6 +51,10 @@ import androidx.wear.compose.material3.Icon
 import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.Text
 import java.util.Date
+import java.text.SimpleDateFormat
+import java.time.ZoneId
+import ai.casama.wear.core.Format
+import androidx.compose.ui.platform.LocalConfiguration
 import kotlinx.coroutines.delay
 
 /** A bot's face: its mascot, or its initials tile drawn as bot_avatar.dart draws it (§6.9). */
@@ -131,6 +135,21 @@ fun AsOf(savedAt: Long?, offline: Boolean, modifier: Modifier = Modifier) {
 fun clockTime(at: Long): String {
     val context = LocalContext.current
     return remember(at) { DateFormat.getTimeFormat(context).format(Date(at)) }
+}
+
+/**
+ * A time that has passed: the clock time today, the weekday within the last week ("Tue"), else
+ * the date ("Nov 12"). A bare "8:36" for something days old reads as this morning.
+ */
+@Composable
+fun pastTime(at: Long): String {
+    val days = Format.dayOffset(System.currentTimeMillis(), at, ZoneId.systemDefault())
+    if (days >= 0) return clockTime(at)
+    val locale = LocalConfiguration.current.locales[0]
+    return remember(at, days, locale) {
+        val skeleton = if (days >= -6) "EEE" else "MMMd"
+        SimpleDateFormat(DateFormat.getBestDateTimePattern(locale, skeleton), locale).format(Date(at))
+    }
 }
 
 /** A clock that runs from [start] ("2:14"), ticking each second; still when [running] is false. */

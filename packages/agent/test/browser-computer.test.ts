@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { CLOSE_PLAIN_BROWSER, plainBrowserCommand } from "../src/run.ts";
 import { registerBrowserTools } from "../src/tools/browser.ts";
 import { ToolRegistry } from "../src/tools/registry.ts";
 
@@ -69,5 +70,19 @@ describe("browser on the bot's computer", () => {
     const c = computerWith([{ code: 1, out: "✗ net::ERR_NAME_NOT_RESOLVED" }]);
     await expect(c.open("https://nowhere.invalid")).rejects.toThrow(/ERR_NAME_NOT_RESOLVED/);
     expect(c.ran.filter((r) => r.startsWith("agent-browser open"))).toHaveLength(1);
+  });
+});
+
+describe("takeover browser", () => {
+  it("opens the page in the plain desktop browser after closing the bot's own", () => {
+    const cmd = plainBrowserCommand("https://accounts.google.com/?q=it's");
+    expect(cmd.indexOf("agent-browser close")).toBeLessThan(cmd.indexOf("casama-open-browser"));
+    expect(cmd).toContain("setsid -f casama-open-browser --class=casama-takeover");
+    expect(cmd).toContain("'https://accounts.google.com/?q=it'\\''s'");
+    expect(cmd).not.toContain("agent-browser open");
+  });
+
+  it("closes only that browser on hand-back, not the shell running the command", () => {
+    expect(CLOSE_PLAIN_BROWSER).toContain('pkill -TERM -f -- "--class=[c]asama-takeover"');
   });
 });

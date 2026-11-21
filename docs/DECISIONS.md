@@ -7186,3 +7186,143 @@ only the last words of a help sentence. So:
 - **Browser on the computer:** commands that are safe to repeat (open, snapshot, read, url, tabs)
   try once more when the daemon doesn't answer, instead of failing back to the model; an `open` whose
   page never fires `load` reports the page as open and still loading.
+
+## D-470 A takeover gives the person a plain browser, so Google lets them sign in (2026-11-21)
+
+- **Problem:** Google's sign-in refused the takeover browser ("This browser or app may not be
+  secure"). The takeover reopened the page with `agent-browser open`: Chromium driven over the
+  DevTools protocol (`--remote-debugging-port`), which Google detects.
+- **Takeover:** `prepareTakeoverDesktop` closes agent-browser's browser, waits until nothing uses the
+  profile, and starts the desktop's plain Chromium (`casama-open-browser`, no debugging port) on the
+  same `~/.browser-profile`, detached with `setsid -f`, marked `--class=casama-takeover`.
+- **Hand-back:** before the bot carries on, the run closes that browser (SIGTERM, so cookies are
+  written) and waits for the profile to be free, then tells the bot to open the page again. Its own
+  browser starts on the same profile, still signed in. Checked in a desktop container: the cookie
+  survives the switch both ways.
+- **Matching:** `pgrep`/`pkill` use `--class=[c]asama-takeover` so they don't match the shell that
+  runs them.
+- **Still possible:** Google may ask for extra verification from a datacenter address, or end the
+  session later if it notices the automated browser; the person's own Chrome (Casama for Chrome)
+  stays the surest path for Google.
+
+## D-471 Flight fares: Kiwi.com first, Google Flights as a paid fallback, one Fares card (2026-11-21)
+
+- **Problem:** asked for flight prices, bots ran `web.search` and `web.fetch` on travel sites, which
+  render with scripts or block bots: vague or stale answers for 3–10k tokens. `live.flight`
+  (aviationstack) only tracks a known flight's status.
+- **Decision (docs/FLIGHT-SEARCH-PLAN.md, Oliver 2026-11-21: "you decide for me", then "just build
+  the fall backs" without buying a SerpApi plan):**
+  - **`live.fares`**, a live-data tool like the others (lazy `live` group, shared cache, refresh
+    without the model), showing a new **Fares** data card (`packages/domain` `DATA_CARDS`). The model
+    gets about 150 tokens: five lines and, from Google, the typical price range.
+  - **The chain** (`packages/agent/src/live-data/fares.ts`, `LIVE_FARES_ORDER`, default
+    `kiwi,serpapi`): Kiwi.com's hosted MCP server (`search-flight`, Streamable HTTP through the
+    egress guard, no key; it takes codes like `HND,NRT` or names) answers first. Google Flights
+    through SerpApi (`engine=google_flights`) runs when Kiwi fails or finds nothing, or first when
+    the person asks to compare (`compare_google`). Google is skipped for month searches (it needs
+    exact dates) and whenever there's no meter, so refreshes, widgets and (later) watches never use
+    it. A provider that errors rests for a minute.
+  - **Round trips on Google cost one search:** Google returns outbound legs with a round-trip
+    price; instead of a second call per option (`departure_token`, `booking_token`), Book opens
+    Google's own results page (`google_flights_url`). The card says return flights are picked there.
+  - **Charging** (`faresMeter` in `live-data/tools.ts`): one `usage_ledger` row kind `data_calls`
+    (the existing paid-data kind, so no migration and no new kind for older apps) per real Google
+    search: `cost_usd` $0.05 (`LIVE_FARES_GOOGLE_PRICE_USD`) and `billable` only when it found fares
+    and billing is on, `upstream_cost_usd` `LIVE_SERPAPI_COST_USD` (0.025). Before a search: the
+    server-wide `LIVE_SERPAPI_MONTHLY_CAP` (default 225, from `live_data_daily` provider
+    `fares-serpapi`), the plan's daily searches (Free 3, Plus 20, Pro 50, Max 100; entitlement
+    `fares_google_daily` overrides) and `needCredits`. Any of those says no → only Kiwi, and the
+    model is told why. Failed calls are never charged.
+  - **Airports** (`live-data/airports.ts`): a bundled OurAirports extract (public domain, 4,007
+    airports with scheduled service, `scripts/airports-extract.mjs`) plus a table of cities with
+    several airports (Tokyo HND/NRT, London ×6, New York ×3…). Kiwi resolves names itself; Google needs
+    codes. "here" uses the home city's nearest large airports. Currency follows the departure
+    country unless the person names one.
+  - **Links** are kept only on the provider's own hosts (kiwi.com, google.com), https only.
+- **Changed from the plan:** the price is an env setting, not `billing_settings`; no workspace
+  SerpApi key yet (it needs a new `ProviderId`, which breaks older apps' key lists, D-384); live
+  tools aren't in the voice-call list, so `live.fares` isn't either; no `live_data_calls` kind
+  (`data_calls` already exists for paid data).
+- **Terms (Phase 0, 2026-11-21):** Kiwi's MCP page has no terms of its own; its website Terms of Use
+  forbid "any commercial use of the Website" (Art. 2.6.7) and don't mention the MCP server. SerpApi's
+  terms are silent on showing results to end users; the free plan isn't marked non-commercial. Ask
+  Kiwi in writing before Casama Cloud relies on it; until then `LIVE_FARES_ORDER=serpapi` is the
+  switch, and self-hosted servers keep Kiwi.
+- **Tests:** `packages/agent/test/live-fares.test.ts` (airports, arguments, both providers from
+  recorded answers in `test/fixtures/fares`, the chain with meter and cache, the card, the engine)
+  and `apps/server/test/live-fares.test.ts` (env → config, meter limits, credits, ledger rows).
+  `packages/agent/scripts/fares-smoke.ts` made one real Kiwi search (15 fares, ~4 s) and one real
+  Google search (11 fares, ~2.5 s) on 2026-11-21.
+- **App card (Phase 2):** `client/lib/features/chat/widgets/cards/live_fares.dart`: route, dates,
+  travellers and cabin, "from" price, Google's usual range, Best/Cheapest/Fastest and Direct only
+  sorted on the device, three options then Show all, each with times (+1 for next day), stops and
+  airports, bags (Kiwi), and Book (the system or in-app browser, D-352). Google cards say the return
+  is picked on Google Flights. Older apps leave the card out; the bot's sentence still answers.
+  Not pinnable to widgets yet.
+- **Price watches (Phase 3, Oliver: "go build all in 1 go"):** a new table `fare_watches`
+  (migration `20270314100001`, RLS: a person reads only their own; the server writes) instead of
+  watch fields on pins, because a watch is one person's while a card belongs to the chat, and
+  watches need no widget. Started with **Watch price** on the card (optional target price) or by the
+  bot (`live.fares` with `watch: {below?}`); at most 5 active per workspace, one per card and person.
+  The worker checks due watches every 5 minutes next to pinned cards (`sweepFareWatches` in
+  `live-data/watches.ts`): each watch every 6 hours ± 30 minutes, through the card's own refresh, so
+  it uses free providers only (no meter → Google is skipped) and the shared cache. A push (kind
+  `fare_drop`, the Routines notification group, plain text) when the price is at or under the target
+  and lower than the last push, or 10% under the last push (or the first price); at most one a day.
+  A watch ends after the departure day (or month) or 60 days, whichever is first. Settings → Cards
+  lists active watches with Stop. Routes: `POST/DELETE /v1/live-cards/{id}/watch`,
+  `GET /v1/me/fare-watches`.
+- **Affiliate links (Phase 4):** `LIVE_FARES_AFFILIATE_URL` is the affiliate network's https link
+  with `{url}` where the booking page goes (URL-encoded); booking links on
+  `LIVE_FARES_AFFILIATE_HOSTS` (default `kiwi.com`) are wrapped on the server when the card is built,
+  the card gets `affiliate: true`, and the app shows "Casama may earn a commission…". A template, not
+  a marker, so another network or brand can be used without code. Unset = plain links. Google
+  Flights links are never wrapped.
+- **Travelpayouts (2026-11-21):** account made with Google as stackwares@gmail.com (no password),
+  marker 809513, project "Casama" (id 604625, https://casama.ai). Their Drive script was skipped: no
+  third-party ad script on casama.ai. Kiwi.com (programme 111, 3%, 30-day cookie, web only) and
+  Aviasales (programme 100) are open to the account with no approval. **Kiwi.com only has ready-made
+  links** (its home pages): `tp.media/click?...&custom_url=` and `tp.media/r?...&u=` both land on
+  kiwi.com's home page, and the Kiwi MCP's booking links (`kiwi.com/u/…`) already carry Kiwi's own
+  `affilid=kiwi-mcp`. So wrapping Kiwi booking links would lose the person's trip:
+  `LIVE_FARES_AFFILIATE_URL` stays unset. Aviasales deep links do work
+  (`https://tp.media/r?marker=809513&trs=604625&p=4114&u={url}` keeps an aviasales.com search URL and
+  adds the marker); a "compare on Aviasales" link per Fares card would be a small follow-up, not
+  built. Payouts need a payout method that only Oliver can enter.
+- **Tests (Phases 3–4):** `packages/agent/test/live-fare-watches.test.ts` (end dates, spread, push
+  rules, words), `apps/server/test/fare-watches.test.ts` (start from the card and from the bot, one
+  push on a drop and none again that day, five per workspace, Stop, the end date, Fares only),
+  `supabase/tests/fare_watches_rls.test.sql`, affiliate cases in both `live-fares` tests, and the
+  watch, Settings and disclosure cases in `client/test/live_cards_test.dart`.
+- **Not done:** not deployed; no app build; `LIVE_SERPAPI_KEY` and `LIVE_FARES_AFFILIATE_URL` not on
+  any server; Travelpayouts payout method not set.
+
+## D-472 Computers burst to 2 CPUs while the machine is free; their share stays their size (2026-11-21)
+
+- **Problem:** the bot's browser took 24–36 s to start on prod computers (1.8 s on a laptop), on
+  every wake and after every takeover, so the first browser call after a wake often failed ("os
+  error 11": agent-browser's CLI stops waiting). Measured on the prod host with throwaway
+  containers, same image and limits: gVisor with 1 CPU 24–36 s; 2 CPUs about 10 s; runc 1 CPU 5.7 s.
+  The host has no KVM, so gVisor runs on systrap, where Chromium's many syscalls are slow.
+- **Ruled out:** Chromium flags (about 20 % at best, within noise), GPU, `/dev/shm`, fonts, the
+  profile's size, and gVisor's `--overlay2=root:memory` (no gain; the test runtime was removed).
+- **Decision:** `COMPUTER_BURST_CPUS` (Compose default 2) sets each computer's CPU cap
+  (`NanoCpus`) to at least that, while `CpuShares` follows its size, so on a busy machine computers
+  still split CPU by size. Billing and capacity counting stay on the size. A computer gets the new
+  cap on its next wake (sleep removes the container; wake creates a fresh one).
+- **Not done:** dropping gVisor (about 5× faster, but weaker isolation between workspaces) and
+  starting the browser at every wake (CPU spent on wakes that never use it).
+
+## D-475 Prod keeps one warm computer, sized like the usual plan, for wakes to claim (2026-11-21)
+
+- **Why:** a bot's first computer tool waits for the wake: 7.2 s median, 15.5 s p90, 27.7 s max
+  over 100 wakes in a week (`computer.state` starting → running), before the browser's own start.
+  The warm pool (D-148) was off in prod.
+- **Change (prod `.env` only):** `WARM_POOL_SIZE=1`, and `COMPUTER_MEMORY_MB=1024` so pool
+  members match the size nearly every computer wakes at (1 CPU, 1 GiB); a wake only claims a member
+  of the default size, and Compose's default was 2048, so no wake could have claimed one. A wake now
+  takes the started member (no network, container or computerd start) and only restores its saved
+  files; desktop wakes and other sizes start as before.
+- **Cost:** one idle headless container, about 15 MiB and no CPU while it waits; it refills after
+  each claim and every minute. Backups of the old `.env` are in `/root/.env.bak-*` on the server.
+- **Self-hosting:** defaults unchanged (`WARM_POOL_SIZE` 0, `COMPUTER_MEMORY_MB` 2048).

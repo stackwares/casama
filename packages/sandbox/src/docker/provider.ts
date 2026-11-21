@@ -56,7 +56,18 @@ export interface DockerProviderOptions {
   egress: { containerName: string; proxyPort: number; control: EgressControl };
   /** Name of the supervisor's own container; it joins each computer network to reach computerd. */
   supervisorContainer?: string;
-  defaults?: { cpus?: number; memoryMb?: number; pids?: number; tmpMb?: number; shmMb?: number };
+  defaults?: {
+    cpus?: number;
+    /**
+     * CPUs a computer may use while the machine has them free (D-472); its share when the machine
+     * is busy still follows `cpus`. Chromium starts about three times faster under gVisor with 2.
+     */
+    burstCpus?: number;
+    memoryMb?: number;
+    pids?: number;
+    tmpMb?: number;
+    shmMb?: number;
+  };
   /** Prefix for container, network and volume names (lets tests run side by side). */
   namePrefix?: string;
   /**
@@ -377,6 +388,8 @@ export class DockerProvider implements SandboxProvider {
       ...Object.fromEntries(Object.entries(this.opts.defaults ?? {}).filter(([, v]) => v != null)),
     };
     const cpus = spec.size?.cpus ?? def.cpus;
+    // The cap may go above the size; CpuShares keeps each computer's share of a busy machine to it.
+    const cpuCap = Math.max(cpus, this.opts.defaults?.burstCpus ?? cpus);
     const memoryMb = spec.size?.memoryMb ?? def.memoryMb;
     const env = {
       ...spec.env,
@@ -413,7 +426,8 @@ export class DockerProvider implements SandboxProvider {
         Mounts: [{ Type: "volume", Source: n.volume, Target: "/home/casama" }],
         Tmpfs: { "/tmp": `rw,nosuid,nodev,size=${def.tmpMb}m` },
         ShmSize: def.shmMb * 1024 * 1024,
-        NanoCpus: Math.round(cpus * 1e9),
+        NanoCpus: Math.round(cpuCap * 1e9),
+        CpuShares: Math.max(2, Math.round(1024 * cpus)),
         Memory: memoryMb * 1024 * 1024,
         MemorySwap: memoryMb * 1024 * 1024,
         PidsLimit: def.pids,

@@ -157,6 +157,11 @@ class FakeCall implements VoiceCall {
 class FakeCallConnector implements VoiceCallConnector {
   final call = FakeCall();
   VoiceSession? session;
+
+  /// False: the person said no to the microphone.
+  var mic = true;
+  @override
+  Future<bool> micAllowed() async => mic;
   @override
   Future<VoiceCall> connect(VoiceSession s) async {
     session = s;

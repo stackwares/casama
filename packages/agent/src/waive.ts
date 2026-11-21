@@ -4,7 +4,7 @@
  * stopped at a limit, looped, or were stopped by the person are charged as before.
  */
 import type { Database } from "@casama/db";
-import { sql } from "drizzle-orm";
+import { type SQL, sql } from "drizzle-orm";
 
 /** Failure codes that are never the person's doing. */
 export const WAIVED_FAILURES = new Set([
@@ -49,6 +49,18 @@ export async function waiveFailedRun(db: Database, runId: string): Promise<numbe
 export const LOW_CREDIT_USD = 1;
 
 /**
+ * The balance under which a workspace's credits are running low: $1, or a quarter of the balance
+ * its last top-up (a grant, a purchase, a reset, an adjustment) left, whichever is lower, so a new
+ * $1 Free grant isn't "low" after its first cent. Give-backs (a hold released, a failed run
+ * waived) aren't top-ups: they'd make a nearly spent balance look full. The push and the email
+ * use this one rule (bug hunt 2026-11-21).
+ */
+export const lowCreditLimit = (orgId: SQL) => sql`least(${LOW_CREDIT_USD}::numeric, coalesce((
+    select t.balance_after * 0.25 from public.credit_ledger t
+    where t.org_id = ${orgId} and t.delta > 0 and t.reason not in ('usage', 'refund')
+    order by t.seq desc limit 1), ${LOW_CREDIT_USD}::numeric))`;
+
+/**
  * Workspaces using Casama's paid credits whose balance fell under LOW_CREDIT_USD (and above zero,
  * where running out has its own message), each owner told at most once a week. Returns who to tell.
  */
@@ -56,16 +68,12 @@ export async function lowCreditWorkspaces(db: Database) {
   return db.execute<{ org_id: string; balance: string; owner_id: string }>(sql`
     with bal as (
       select distinct on (l.org_id) l.org_id, l.balance_after as balance
-      from public.credit_ledger l order by l.org_id, l.seq desc),
-    added as (
-      select distinct on (l.org_id) l.org_id, l.balance_after as peak
-      from public.credit_ledger l where l.delta > 0 order by l.org_id, l.seq desc)
+      from public.credit_ledger l order by l.org_id, l.seq desc)
     select bal.org_id, bal.balance::text as balance, m.user_id as owner_id
     from bal
-    left join added on added.org_id = bal.org_id
     join public.memberships m on m.org_id = bal.org_id and m.role = 'owner'
     where bal.balance > 0
-      and bal.balance < least(${LOW_CREDIT_USD}::numeric, coalesce(added.peak * 0.25, ${LOW_CREDIT_USD}::numeric))
+      and bal.balance < ${lowCreditLimit(sql`bal.org_id`)}
       and exists (select 1 from public.usage_ledger u where u.org_id = bal.org_id and u.billable
                   and u.created_at > now() - interval '1 day')
       and not exists (select 1 from public.notifications n where n.org_id = bal.org_id

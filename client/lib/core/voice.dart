@@ -276,6 +276,10 @@ double pcmLevel(Uint8List pcm, [int start = 0, int? end]) {
 
 abstract class VoiceCallConnector {
   Future<VoiceCall> connect(VoiceSession session);
+
+  /// Whether the microphone may be used, asking the person the first time. Checked before the
+  /// call's session is started, so a denied microphone starts nothing on the server.
+  Future<bool> micAllowed();
 }
 
 /// True while chat dictation holds the microphone so the wake word can pause.
@@ -291,6 +295,19 @@ final speechPlayerProvider = Provider<SpeechPlayer>((ref) => JustAudioPlayer());
 class RealtimeVoiceConnector implements VoiceCallConnector {
   @override
   Future<VoiceCall> connect(VoiceSession session) => GeminiLiveCall.open(session);
+
+  @override
+  Future<bool> micAllowed() async {
+    final r = AudioRecorder();
+    try {
+      return await r.hasPermission();
+    } catch (_) {
+      // A platform without the check: the call's own microphone start decides.
+      return true;
+    } finally {
+      unawaited(r.dispose());
+    }
+  }
 }
 
 final voiceCallConnectorProvider = Provider<VoiceCallConnector>((ref) => RealtimeVoiceConnector());

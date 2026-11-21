@@ -27,6 +27,7 @@ const BY_KIND: Record<string, PushGroup> = {
   mail_new_sender: "routines",
   mail_mailbox_full: "account",
   mail_auto_paused: "account",
+  fare_drop: "routines",
 };
 
 export function pushGroup(kind: string): PushGroup {

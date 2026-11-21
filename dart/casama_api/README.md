@@ -217,12 +217,15 @@ Class | Method | HTTP request | Description
 [*BrowserApi*](doc/BrowserApi.md) | [**updatePageCommand**](doc/BrowserApi.md#updatepagecommand) | **PATCH** /v1/me/page-commands/{id} | 
 [*CardsApi*](doc/CardsApi.md) | [**getCardPrefs**](doc/CardsApi.md#getcardprefs) | **GET** /v1/me/card-prefs | The person&#39;s home city and units for cards
 [*CardsApi*](doc/CardsApi.md) | [**getLiveCards**](doc/CardsApi.md#getlivecards) | **GET** /v1/live-cards | The latest data of the live cards on screen (up to 20 ids, comma separated)
+[*CardsApi*](doc/CardsApi.md) | [**listFareWatches**](doc/CardsApi.md#listfarewatches) | **GET** /v1/me/fare-watches | The person&#39;s active price watches
 [*CardsApi*](doc/CardsApi.md) | [**pinLiveCard**](doc/CardsApi.md#pinlivecard) | **POST** /v1/live-cards/{id}/pin | Pin a card to the person&#39;s widgets: a Canvas the server keeps fresh without the bot (the bot&#39;s widget permission applies)
 [*CardsApi*](doc/CardsApi.md) | [**refreshLiveCard**](doc/CardsApi.md#refreshlivecard) | **POST** /v1/live-cards/{id}/refresh | Fetch a card&#39;s data again (through the shared cache), or another of its views. No model call; a failed fetch returns the last card marked stale with the reason
 [*CardsApi*](doc/CardsApi.md) | [**reportLiveCard**](doc/CardsApi.md#reportlivecard) | **POST** /v1/live-cards/{id}/report | Report wrong data on a card (its provider and data are kept, no words)
 [*CardsApi*](doc/CardsApi.md) | [**searchPlaces**](doc/CardsApi.md#searchplaces) | **GET** /v1/places | Cities matching a name, for picking a home city
 [*CardsApi*](doc/CardsApi.md) | [**unpinLiveCard**](doc/CardsApi.md#unpinlivecard) | **DELETE** /v1/live-cards/{id}/pin | Take a pinned card off the widgets
+[*CardsApi*](doc/CardsApi.md) | [**unwatchLiveCard**](doc/CardsApi.md#unwatchlivecard) | **DELETE** /v1/live-cards/{id}/watch | Stop watching a Fares card&#39;s price
 [*CardsApi*](doc/CardsApi.md) | [**updateCardPrefs**](doc/CardsApi.md#updatecardprefs) | **PUT** /v1/me/card-prefs | Set the person&#39;s home city (a city, never a street) and units for cards
+[*CardsApi*](doc/CardsApi.md) | [**watchLiveCard**](doc/CardsApi.md#watchlivecard) | **POST** /v1/live-cards/{id}/watch | Watch a Fares card&#39;s price: the server checks it every few hours (free providers only) and pushes when it drops. Up to 5 watches per workspace
 [*CasamaLinkApi*](doc/CasamaLinkApi.md) | [**approveLinkSignIn**](doc/CasamaLinkApi.md#approvelinksignin) | **POST** /v1/orgs/{id}/link/sign-ins/approve | Link the server that shows this code to the workspace (admins)
 [*CasamaLinkApi*](doc/CasamaLinkApi.md) | [**getLinkSignIn**](doc/CasamaLinkApi.md#getlinksignin) | **GET** /v1/link/sign-ins/{user_code} | The server a link code belongs to, shown before approving
 [*CasamaLinkApi*](doc/CasamaLinkApi.md) | [**listLinkServers**](doc/CasamaLinkApi.md#listlinkservers) | **GET** /v1/orgs/{id}/link/servers | Servers linked to the workspace and their addresses (admins)
@@ -1045,6 +1048,8 @@ Class | Method | HTTP request | Description
  - [EncryptionStatus](doc/EncryptionStatus.md)
  - [ExportPackRequest](doc/ExportPackRequest.md)
  - [ExportPackRequestLook](doc/ExportPackRequestLook.md)
+ - [FareWatch](doc/FareWatch.md)
+ - [FareWatchList](doc/FareWatchList.md)
  - [FileSearchResult](doc/FileSearchResult.md)
  - [ForYou](doc/ForYou.md)
  - [ForYouApproval](doc/ForYouApproval.md)
@@ -1689,6 +1694,7 @@ Class | Method | HTTP request | Description
  - [WatchCodeClaim](doc/WatchCodeClaim.md)
  - [WatchCodeInfo](doc/WatchCodeInfo.md)
  - [WatchCodeRequest](doc/WatchCodeRequest.md)
+ - [WatchFares](doc/WatchFares.md)
  - [WatchHandoff](doc/WatchHandoff.md)
  - [WatchHandoffSent](doc/WatchHandoffSent.md)
  - [WatchKey](doc/WatchKey.md)

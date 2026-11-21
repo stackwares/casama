@@ -73,3 +73,28 @@ export const UpdateCardPrefs = z
 export const PlaceList = z.object({ items: z.array(PlaceOut) }).openapi("PlaceList");
 
 export const PinLiveCard = z.object({ units: CardUnits.optional() }).openapi("PinLiveCard");
+
+/** A price watch on a Fares card (docs/FLIGHT-SEARCH-PLAN.md §9): the person's own. */
+export const FareWatch = z
+  .object({
+    id: Uuid,
+    card_id: Uuid,
+    bot_id: Uuid.nullable(),
+    /** "Manila → Tokyo · Mar 12–19". */
+    route: z.string(),
+    /** The price that sends a push when the fare is at or under it; null means "any good drop". */
+    below: z.number().nullable(),
+    currency: z.string(),
+    first_price: z.number().nullable(),
+    last_price: z.number().nullable(),
+    last_checked_at: ts.nullable(),
+    ends_at: ts,
+    created_at: ts,
+  })
+  .openapi("FareWatch");
+
+export const FareWatchList = z.object({ items: z.array(FareWatch) }).openapi("FareWatchList");
+
+export const WatchFares = z
+  .object({ below: z.number().positive().max(10_000_000).nullable().optional() })
+  .openapi("WatchFares");

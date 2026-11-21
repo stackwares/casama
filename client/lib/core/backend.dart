@@ -1393,6 +1393,31 @@ class AdminWaitlist {
   final WaitlistLastBatch? lastBatch;
 }
 
+/// What [Backend.screenPicture] got.
+enum ScreenPictureStatus {
+  /// A new picture, in [ScreenPicture.bytes].
+  fresh,
+
+  /// The same as the picture with the ETag that was sent.
+  unchanged,
+
+  /// The computer sleeps; it wasn't woken.
+  asleep,
+
+  /// Awake, but nothing to show (a headless computer with no page open).
+  nothing,
+
+  /// Couldn't be fetched this time.
+  failed,
+}
+
+class ScreenPicture {
+  const ScreenPicture(this.status, {this.bytes, this.etag});
+  final ScreenPictureStatus status;
+  final Uint8List? bytes;
+  final String? etag;
+}
+
 abstract class Backend {
   // Auth
   Stream<bool> get signedInChanges;
@@ -2641,6 +2666,15 @@ abstract class Backend {
   /// Reports wrong data on a card (no words are sent).
   Future<void> reportLiveCard(String id);
 
+  /// Watches a Fares card's price (FLIGHT-SEARCH-PLAN §9): a push when it drops (to [below], if
+  /// given). Answers the watch `{id, card_id, route, below, currency, last_price, ends_at, ...}`.
+  Future<Map<String, Object?>> watchFares(String cardId, {double? below});
+
+  Future<void> unwatchFares(String cardId);
+
+  /// The person's active price watches.
+  Future<List<Map<String, Object?>>> fareWatches();
+
   /// The person's home city and units for cards: `{home_place, units}`.
   Future<Map<String, Object?>> cardPrefs();
 
@@ -3268,6 +3302,11 @@ abstract class Backend {
   /// What's on the computer's screen as a PNG. Empty bytes when there is nothing to show (a
   /// headless computer with no page open); null when it could not be fetched.
   Future<Uint8List?> screenshot(String computerId);
+
+  /// The screen card's picture (SCREEN-CARD-PLAN): a small JPEG [width] wide that doesn't wake the
+  /// computer or count as using it, unless [wake] (the call's tile, which the bot asked for). Pass
+  /// the last [etag] to get [ScreenPictureStatus.unchanged] instead of the same picture again.
+  Future<ScreenPicture> screenPicture(String computerId, {int width = 480, String? etag, bool wake = false});
   Future<(Uri, Map<String, String>)> terminal(
     String computerId, {
     int cols,
@@ -3327,3 +3366,7 @@ class UsageFilter {
   String toString() => 'UsageFilter(bot: $botId, model: $model, source: $source, user: $userId)';
 }
 
+/// The workspace already has the most price watches it may (FLIGHT-SEARCH-PLAN §9).
+class FareWatchFull implements Exception {
+  const FareWatchFull();
+}

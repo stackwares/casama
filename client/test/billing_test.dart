@@ -214,6 +214,22 @@ void main() {
     expect(find.byKey(const Key('plan-pro')), findsNothing);
   });
 
+  testWidgets('the Upgrade to Pro banner opens the paywall on Pro, not the default Plus', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    await setSize(tester, const Size(900, 1800));
+    final backend = FakeBackend()
+      ..billingEnabled = true
+      ..catalogPlans = pricingPlans();
+    await tester.pumpWidget(app(backend, opened: <String>[]));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('openPaywall')));
+    await settle(tester);
+    expect(find.descendant(of: find.byKey(const Key('paywallBuy')), matching: find.text('Get Pro')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('paywallBuy')));
+    await settle(tester);
+    expect(backend.checkouts, ['pro']);
+  });
+
   testWidgets('desktop and web: web checkout, credit packs, usage and Casama Link servers and keys', (tester) async {
     SharedPreferences.setMockInitialValues({});
     await setSize(tester, const Size(900, 1800));

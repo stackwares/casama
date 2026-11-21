@@ -1212,6 +1212,42 @@
       "funnels": []
     },
     {
+      "name": "screen_card_shown",
+      "by": ["client"],
+      "description": "The bot's screen appeared in a small card in its chat (SCREEN-CARD-PLAN).",
+      "properties": {
+        "trigger": {
+          "type": "string",
+          "values": ["screen_step", "takeover"]
+        }
+      },
+      "funnels": []
+    },
+    {
+      "name": "screen_card_opened",
+      "by": ["client"],
+      "description": "The screen card was tapped to open the full live view.",
+      "properties": {
+        "state": {
+          "type": "string",
+          "values": ["watching", "needs_you", "held", "done", "stale"]
+        }
+      },
+      "funnels": []
+    },
+    {
+      "name": "screen_card_hidden",
+      "by": ["client"],
+      "description": "The person hid the screen card for the reply (the close button or its menu), or turned it off (its menu, the three-closes toast or the setting).",
+      "properties": {
+        "how": {
+          "type": "string",
+          "values": ["close", "menu", "setting"]
+        }
+      },
+      "funnels": []
+    },
+    {
       "name": "companion_paired",
       "by": ["client"],
       "description": "This computer was paired.",
@@ -2126,6 +2162,7 @@
             "Storm",
             "Flight",
             "Parcel",
+            "Fares",
             "Score",
             "Standings",
             "WorldClock",
@@ -2171,6 +2208,7 @@
             "film",
             "sports",
             "flight",
+            "fares",
             "parcel",
             "dashboard",
             "page"
@@ -2203,6 +2241,7 @@
             "Storm",
             "Flight",
             "Parcel",
+            "Fares",
             "Score",
             "Standings",
             "WorldClock",
@@ -2240,6 +2279,24 @@
       "funnels": []
     },
     {
+      "name": "fare_watch_started",
+      "by": ["client"],
+      "description": "The person started a price watch on a Fares card (FLIGHT-SEARCH-PLAN §9).",
+      "properties": {
+        "target": { "type": "boolean", "description": "Whether they set a target price" }
+      },
+      "funnels": []
+    },
+    {
+      "name": "fare_watch_stopped",
+      "by": ["client"],
+      "description": "The person stopped a price watch, on the card or in Settings → Cards.",
+      "properties": {
+        "where": { "type": "string", "values": ["card", "settings"] }
+      },
+      "funnels": []
+    },
+    {
       "name": "card_pinned",
       "by": ["client"],
       "description": "A live card was pinned to the person's widgets (RICH-CARDS-PLAN §4.5).",
@@ -2260,6 +2317,7 @@
             "Storm",
             "Flight",
             "Parcel",
+            "Fares",
             "Score",
             "Standings",
             "WorldClock",
@@ -2312,6 +2370,7 @@
             "Storm",
             "Flight",
             "Parcel",
+            "Fares",
             "Score",
             "Standings",
             "WorldClock",
@@ -2361,6 +2420,7 @@
             "Storm",
             "Flight",
             "Parcel",
+            "Fares",
             "Score",
             "Standings",
             "WorldClock",
@@ -2414,6 +2474,7 @@
             "Storm",
             "Flight",
             "Parcel",
+            "Fares",
             "Score",
             "Standings",
             "WorldClock",

@@ -316,7 +316,7 @@ export class LimitResets {
     const period = await this.context(this.db, org).catch(() => null);
     const [uses] = period
       ? await this.db.execute<{ n: string }>(
-          sql`select count(*)::text as n from public.limit_resets where org_id=${org}::uuid and period_key=${period.key} and used_at is not null`,
+          sql`select count(*)::text as n from public.limit_resets where org_id=${org}::uuid and period_key=${period.key} and used_at is not null and undone_at is null`,
         )
       : [];
     return rows.map((r) => {
@@ -412,7 +412,7 @@ export class LimitResets {
         );
       const period = await this.context(tx, org);
       const [uses] = await tx.execute<{ n: string }>(
-        sql`select count(*)::text as n from public.limit_resets where org_id=${org}::uuid and period_key=${period.key} and used_at is not null`,
+        sql`select count(*)::text as n from public.limit_resets where org_id=${org}::uuid and period_key=${period.key} and used_at is not null and undone_at is null`,
       );
       if (Number(uses?.n) >= settings.per_period)
         fail("The reset allowance for this period is used");
@@ -503,6 +503,13 @@ export class LimitResets {
         await tx.execute(
           sql`update public.limit_resets set undone_at=now(),daily_offset_usd=0,computer_offset_seconds=0 where id=${id}::uuid`,
         );
+        // The campaign's budget gets back what was taken back; what the workspace already spent
+        // was really handed out and stays counted. The period's allowance comes back too: an
+        // undone reset no longer counts toward the resets a period allows (bug hunt 2026-11-21).
+        if (amount > 0)
+          await tx.execute(
+            sql`update public.limit_reset_campaigns set refilled_usd=greatest(0,refilled_usd-${amount}) where id=${r.campaign_id}::uuid`,
+          );
         await event(tx, actor, "undone", r.campaign_id, r.org_id, id, r, {
           taken_back_usd: amount,
         });

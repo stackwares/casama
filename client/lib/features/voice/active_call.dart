@@ -398,6 +398,11 @@ class CallController extends ChangeNotifier {
 
   Future<void> connect() async {
     try {
+      // No microphone, no call: checked before the session, which would open a call record (and a
+      // "Voice call" topic) on the server for a call that can't happen.
+      if (!await connector.micAllowed()) {
+        throw StateError('Microphone permission denied');
+      }
       final session = await backend.voiceSession(
         botId,
         conversationId: requestedConversationId,

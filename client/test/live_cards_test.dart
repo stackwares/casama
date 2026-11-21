@@ -7,6 +7,7 @@ import 'dart:io';
 import 'package:casama/core/backend.dart';
 import 'package:casama/features/chat/chat_screen.dart';
 import 'package:casama/features/chat/widgets/cards/live_tools.dart' show convertUnit;
+import 'package:casama/features/settings/cards_settings_screen.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -91,6 +92,104 @@ void main() {
     _noErrors(tester);
     expect(find.text('Morning brief'), findsOneWidget);
     expect(find.text('San Francisco'), findsWidgets);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('a Fares card sorts, filters and shows every option on the device', (tester) async {
+    await show(tester, [
+      {'id': 'root', ...Map<String, Object?>.from(live['fares_kiwi']! as Map)},
+    ], size: const Size(390, 2400));
+    _noErrors(tester);
+    expect(find.text('Manila → Tokyo'), findsOneWidget);
+    expect(find.text('from ₱17,772'), findsOneWidget);
+    // Three options until Show all; every one has a Book button.
+    expect(find.textContaining('Book'), findsNWidgets(3));
+    await tester.tap(find.byKey(const Key('faresMore')));
+    await tester.pump();
+    expect(find.textContaining('Book'), findsNWidgets(6));
+    await tester.tap(find.byKey(const Key('faresSort-fastest')));
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('faresDirect')));
+    await tester.pump();
+    _noErrors(tester);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('a Fares card watches its price and stops', (tester) async {
+    const ref = '00000000-0000-0000-0000-0000000000f1';
+    final card = Map<String, Object?>.from(live['fares_kiwi']! as Map);
+    card['live'] = {...Map<String, Object?>.from(card['live']! as Map), 'ref': ref};
+    final backend = await show(tester, [
+      {'id': 'root', ...card},
+    ], size: const Size(390, 2400));
+    backend.onRefreshLiveCard = (id, view) => {'id': id, 'card': card, 'error': null, 'pinned': false};
+    await tester.ensureVisible(find.byKey(const Key('faresWatch')));
+    await tester.tap(find.byKey(const Key('faresWatch')));
+    await tester.pumpAndSettle();
+    expect(find.text('Watch this price'), findsOneWidget);
+    await tester.enterText(find.byKey(const Key('faresWatchTarget')), '15000');
+    await tester.tap(find.byKey(const Key('faresWatchStart')));
+    await tester.pumpAndSettle();
+    expect(backend.liveCardActions, contains('watch:$ref:15000.0'));
+    expect(find.textContaining('Watching for ₱15,000 or less'), findsOneWidget);
+    _noErrors(tester);
+    await tester.tap(find.byKey(const Key('faresWatchStop')));
+    await tester.pumpAndSettle();
+    expect(backend.liveCardActions, contains('unwatch:$ref'));
+    expect(find.byKey(const Key('faresWatch')), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('a Fares card with affiliate links says so', (tester) async {
+    final card = Map<String, Object?>.from(live['fares_kiwi']! as Map)..['affiliate'] = true;
+    await show(tester, [
+      {'id': 'root', ...card},
+    ], size: const Size(390, 2400));
+    _noErrors(tester);
+    expect(find.byKey(const Key('faresAffiliate')), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('a full workspace hears it can watch no more', (tester) async {
+    const ref = '00000000-0000-0000-0000-0000000000f2';
+    final card = Map<String, Object?>.from(live['fares_kiwi']! as Map);
+    card['live'] = {...Map<String, Object?>.from(card['live']! as Map), 'ref': ref};
+    final backend = await show(tester, [
+      {'id': 'root', ...card},
+    ], size: const Size(390, 2400));
+    backend.watchFull = true;
+    await tester.ensureVisible(find.byKey(const Key('faresWatch')));
+    await tester.tap(find.byKey(const Key('faresWatch')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('faresWatchStart')));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('already watching 5 fares'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('Settings → Cards lists price watches and stops one', (tester) async {
+    await setSize(tester, const Size(390, 2400));
+    final backend = FakeBackend();
+    await backend.watchFares('card-1', below: 9000);
+    await tester.pumpWidget(harness(backend, const CardsSettingsScreen()));
+    await tester.pumpAndSettle();
+    expect(find.text('Manila → Tokyo · Mar 12–Mar 19'), findsOneWidget);
+    expect(find.textContaining('Now ₱10,200'), findsOneWidget);
+    await tester.ensureVisible(find.byKey(const Key('cardsFareWatch-card-1')));
+    await tester.tap(find.descendant(of: find.byKey(const Key('cardsFareWatch-card-1')), matching: find.text('Stop')));
+    await tester.pumpAndSettle();
+    expect(backend.liveCardActions, contains('unwatch:card-1'));
+    expect(find.textContaining('No price watches'), findsOneWidget);
+    _noErrors(tester);
+  });
+
+  testWidgets('a Google Fares card says the return is picked on Google', (tester) async {
+    await show(tester, [
+      {'id': 'root', ...Map<String, Object?>.from(live['fares_google']! as Map)},
+    ], size: const Size(390, 2400));
+    _noErrors(tester);
+    expect(find.text('See all on Google Flights'), findsOneWidget);
+    expect(find.textContaining('Usually ₱13,000–₱29,500'), findsOneWidget);
     await tester.pumpWidget(const SizedBox());
   });
 

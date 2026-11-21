@@ -2017,7 +2017,12 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
             return { status: "cancelled" };
           }
           const content = await step(`takeover-done-${i}-${call.callId}`, async () => {
-            const text = await finishTakeover(db, info.runId, started.id, bus);
+            const closed = await closeTakeoverBrowser(deps, started.computerId);
+            const text =
+              (await finishTakeover(db, info.runId, started.id, bus)) +
+              (closed
+                ? " The browser they used is closed now; what they signed in to is kept, so open the page again with browser.open to carry on."
+                : "");
             await completeToolEvent(deps, info, call, text, bus);
             return text;
           });
@@ -5209,19 +5214,64 @@ async function prepareTakeoverDesktop(
     // It was running the headless image: restart it on the desktop profile set above.
     if (t.restart) await computers.stop(t.computerId).catch(() => {});
     const handle = await computers.ensureRunning(t.computerId);
-    if (t.url) {
-      // Reopen it in a visible window (desktop computers run the browser headed).
-      const quoted = `'${t.url.replace(/'/g, "'\\''")}'`;
-      await collectExec(
-        handle.exec(`agent-browser close >/dev/null 2>&1; agent-browser open ${quoted}`, {
-          timeoutMs: 60_000,
-        }),
-      ).catch(() => {});
-    }
+    if (t.url)
+      // Reopen it in a plain browser window on the same profile (D-470).
+      await collectExec(handle.exec(plainBrowserCommand(t.url), { timeoutMs: 60_000 })).catch(
+        () => {},
+      );
   } catch {
     // The live view starts the computer itself when the person opens it.
   }
   return true;
+}
+
+/** Marks the plain browser a takeover opens, so hand-back closes that one and nothing else. */
+const TAKEOVER_BROWSER_CLASS = "casama-takeover";
+/** Matches that browser but not the shell running pgrep/pkill, whose own command line has the text. */
+const TAKEOVER_BROWSER_MATCH = '"--class=[c]asama-takeover"';
+/** Waits up to 10 s for the bot's profile to be free (no browser process still using it). */
+const WAIT_PROFILE_FREE =
+  'for _ in $(seq 40); do pgrep -f -- "--user-data-dir=${AGENT_BROWSER_PROFILE:-$HOME/.browser-profile}" >/dev/null || break; sleep 0.25; done';
+
+/**
+ * Google and other sign-in pages refuse a browser under automation ("This browser or app may not be
+ * secure"): agent-browser drives Chromium with --enable-automation and navigator.webdriver set. So a
+ * takeover closes it and opens the page in the desktop's plain Chromium on the same profile; what
+ * the person signs in to stays in the profile for the bot (D-470).
+ */
+export function plainBrowserCommand(url: string) {
+  const quoted = `'${url.replace(/'/g, "'\\''")}'`;
+  return [
+    "agent-browser close >/dev/null 2>&1",
+    WAIT_PROFILE_FREE,
+    `setsid -f casama-open-browser --class=${TAKEOVER_BROWSER_CLASS} ${quoted} >/dev/null 2>&1 </dev/null`,
+  ].join("; ");
+}
+
+/** Closes the takeover's plain browser (saving its cookies) so agent-browser can use the profile. */
+export const CLOSE_PLAIN_BROWSER = [
+  `pkill -TERM -f -- ${TAKEOVER_BROWSER_MATCH} || true`,
+  WAIT_PROFILE_FREE,
+].join("; ");
+
+async function closeTakeoverBrowser(deps: RunDeps, computerId: string): Promise<boolean> {
+  const computers = deps.computers;
+  if (!computers) return false;
+  try {
+    const row = await computers.byId(computerId).catch(() => null);
+    if (!row || !["running", "idle"].includes(row.state)) return false;
+    const handle = await computers.ensureRunning(computerId);
+    const r = await collectExec(
+      handle.exec(`pgrep -f -- ${TAKEOVER_BROWSER_MATCH} >/dev/null && echo open`, {
+        timeoutMs: 10_000,
+      }),
+    );
+    if (!r.stdout.includes("open")) return false;
+    await collectExec(handle.exec(CLOSE_PLAIN_BROWSER, { timeoutMs: 20_000 }));
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 /** The browser's current page, if the computer is running and the browser has one open. */

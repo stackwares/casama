@@ -1586,9 +1586,23 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                           ),
                         ),
                       ),
-                      // The bot's screen in a corner (SCREEN-CARD-PLAN), for now only as a debug preview.
-                      if (screenCardPreview && !widget.group && (layout == LayoutSize.phone || layout == LayoutSize.tablet))
-                        Positioned.fill(child: ScreenCardPreview(botName: name, layout: layout)),
+                      // The bot's screen in a corner while it works on it (SCREEN-CARD-PLAN).
+                      if (layout == LayoutSize.phone || layout == LayoutSize.tablet)
+                        Positioned.fill(
+                          child: screenCardPreview && !widget.group
+                              ? ScreenCardPreview(botName: name, layout: layout)
+                              : ScreenCard(
+                                  botId: widget.botId,
+                                  botName: name,
+                                  computerId: computer?.id,
+                                  layout: layout,
+                                  onOpen: (id) => context.pushOnce('/computer/live?c=$id'),
+                                  // A group: the card follows whichever bot is on its screen, with its face.
+                                  computerFor: widget.group ? (id) => _groupComputer(id) : null,
+                                  faceFor: widget.group ? (id) => _groupFace(id) : null,
+                                  nameFor: widget.group ? (id) => _groupBot(id)?.name ?? name : null,
+                                ),
+                        ),
                       // A bot working in this phone's browser from this chat (docs/PHONE-BROWSER-PLAN.md §4).
                       if (kAppBrowserCode && !widget.group && (layout == LayoutSize.phone || layout == LayoutSize.tablet))
                         Positioned.fill(child: AppBrowserChatOverlay(conversationId: chat.conversationId, layout: layout)),
@@ -1680,6 +1694,19 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   /// File links and attachments open from the bot's computer; on desktop and the web, files
   /// dropped anywhere on the chat are attached.
+  Bot? _groupBot(String id) => (ref.read(botsProvider).value ?? const <Bot>[]).where((b) => b.id == id).firstOrNull;
+
+  String? _groupComputer(String botId) =>
+      computerForBot(ref.read(computersProvider).value ?? const [], botId, defaultComputerId: _groupBot(botId)?.defaultComputerId)?.id;
+
+  Widget _groupFace(String botId) {
+    final b = _groupBot(botId);
+    return DecoratedBox(
+      decoration: const BoxDecoration(shape: BoxShape.circle, border: Border.fromBorderSide(BorderSide(color: Colors.white, width: 1.5))),
+      child: BotAvatar(name: (b?.name.isEmpty ?? true) ? '?' : b!.name, avatar: b?.avatarUrl, size: 18),
+    );
+  }
+
   Widget _wrapFiles(Computer? computer, Widget child) {
     Widget body = FileLinkScope(
       computerId: computer?.id,

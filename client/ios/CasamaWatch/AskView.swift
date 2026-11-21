@@ -130,7 +130,7 @@ struct AskView: View {
   enum Stage: Equatable {
     case ready
     case sending
-    case heard(String, runId: String?, conversationId: String)
+    case heard(String, runId: String?, conversationId: String, typed: Bool = false)
     case kept
     case problem(String)
   }
@@ -165,9 +165,10 @@ struct AskView: View {
             ProgressView().frame(width: 18, height: 18)
             Text(WatchL10n.sending).font(.watchCaption)
           }
-        case .heard(let text, let runId, _):
+        case .heard(let text, let runId, _, let typed):
           VStack(alignment: .leading, spacing: 4) {
-            Eyebrow(text: WatchL10n.heard, color: WatchTheme.secondary)
+            // A typed ask says "Sent": nothing was heard.
+            Eyebrow(text: typed ? WatchL10n.replySent : WatchL10n.heard, color: WatchTheme.secondary)
             PrivateText(text, font: .watchBody, lines: 4)
             Button(WatchL10n.undo) { undo(runId: runId) }
               .buttonStyle(PillStyle(tone: .plain, small: true))
@@ -338,7 +339,7 @@ struct AskView: View {
         model.online = true
         Haptic.done()
         let heard = asked.heard.isEmpty ? (text ?? "") : asked.heard
-        stage = .heard(heard, runId: asked.runId, conversationId: asked.conversationId)
+        stage = .heard(heard, runId: asked.runId, conversationId: asked.conversationId, typed: audio == nil)
         moveOn = Task {
           try? await Task.sleep(nanoseconds: 2_500_000_000)
           guard !Task.isCancelled else { return }

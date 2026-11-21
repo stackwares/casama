@@ -29557,6 +29557,92 @@
         "additionalProperties": {},
         "description": "The card's component, with its `live` block"
       },
+      "FareWatchList": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FareWatch"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "FareWatch": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "card_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "bot_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "route": {
+            "type": "string"
+          },
+          "below": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "currency": {
+            "type": "string"
+          },
+          "first_price": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "last_price": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "last_checked_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "ends_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "card_id",
+          "bot_id",
+          "route",
+          "below",
+          "currency",
+          "first_price",
+          "last_price",
+          "last_checked_at",
+          "ends_at",
+          "created_at"
+        ]
+      },
       "PinnedLiveCard": {
         "type": "object",
         "properties": {
@@ -29776,6 +29862,19 @@
                 ]
               }
             }
+          }
+        }
+      },
+      "WatchFares": {
+        "type": "object",
+        "properties": {
+          "below": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "exclusiveMinimum": 0,
+            "maximum": 10000000
           }
         }
       },
@@ -39027,6 +39126,7 @@
           }
         ],
         "summary": "PNG of the desktop, or of the bot's browser page on headless computers",
+        "description": "Without query parameters: a full-size PNG, waking the computer if it sleeps. The screen card (SCREEN-CARD-PLAN) asks for a small JPEG instead (`format=jpeg`, `width`), with `wake=false` so a sleeping computer answers 409 `computer_asleep` and is neither woken nor counted as used. Each answer carries an ETag; send it back as If-None-Match and an unchanged screen answers 304. A computer is captured at most once a second, shared by everyone watching it.",
         "parameters": [
           {
             "schema": {
@@ -39036,19 +39136,62 @@
             "required": true,
             "name": "id",
             "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "png",
+                "jpeg"
+              ]
+            },
+            "required": false,
+            "name": "format",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 160,
+              "maximum": 1280
+            },
+            "required": false,
+            "name": "width",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ]
+            },
+            "required": false,
+            "name": "wake",
+            "in": "query"
           }
         ],
         "responses": {
           "200": {
-            "description": "PNG image",
+            "description": "PNG or JPEG image",
             "content": {
               "image/png": {
                 "schema": {
                   "type": "string",
                   "format": "binary"
                 }
+              },
+              "image/jpeg": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
               }
             }
+          },
+          "304": {
+            "description": "The screen is unchanged since the ETag sent in If-None-Match"
           },
           "401": {
             "description": "Not authenticated",
@@ -72345,6 +72488,42 @@
         }
       }
     },
+    "/v1/me/fare-watches": {
+      "get": {
+        "operationId": "listFareWatches",
+        "tags": [
+          "cards"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "The person's active price watches",
+        "responses": {
+          "200": {
+            "description": "Watches",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FareWatchList"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/live-cards/{id}/pin": {
       "post": {
         "operationId": "pinLiveCard",
@@ -72704,6 +72883,156 @@
           },
           "429": {
             "description": "Rate limited",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/live-cards/{id}/watch": {
+      "delete": {
+        "operationId": "unwatchLiveCard",
+        "tags": [
+          "cards"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Stop watching a Fares card's price",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Stopped",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "ok"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "watchLiveCard",
+        "tags": [
+          "cards"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Watch a Fares card's price: the server checks it every few hours (free providers only) and pushes when it drops. Up to 5 watches per workspace",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WatchFares"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Watching",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FareWatch"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
             "content": {
               "application/problem+json": {
                 "schema": {

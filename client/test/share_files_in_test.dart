@@ -34,6 +34,18 @@ void main() {
     expect(files.first.mimeType, 'image/jpeg');
   });
 
+  test('iOS: files the share extension copied to the App Group become attachments', () {
+    final files = parseSharedFiles(
+      '[{"path":"/group/shared/a/IMG_0042.heic","name":"IMG_0042.heic","mime":"image/heic"},'
+      '{"path":"/group/shared/b/report.pdf"},{"name":"no path"}]',
+    );
+    expect(files.map((f) => f.name), ['IMG_0042.heic', 'report.pdf']);
+    expect(files.first.mimeType, 'image/heic');
+    expect(files.last.mimeType, isNull);
+    expect(parseSharedFiles(null), isEmpty);
+    expect(parseSharedFiles('not json'), isEmpty);
+  });
+
   testWidgets(
     'quick ask uploads a shared photo to the bot computer and sends it',
     (tester) async {

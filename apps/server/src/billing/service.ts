@@ -167,11 +167,16 @@ export class BillingService {
         if (!(await domains?.refund(ev.paymentId)))
           await this.applyRefund(provider, ev.paymentId, ev);
       } else if (ev.kind === "customers") {
-        const refunded = new Set<string>();
+        const refunded = new Map<string, StoreRefund>();
         for (const storeId of ev.refundStoreIds) {
           const id = await provider.findSubscription?.(storeId);
-          if (id) refunded.add(id);
+          if (id && !refunded.has(id))
+            refunded.set(id, {
+              transactionId: ev.refundTransactionId ?? storeId,
+              periodEnd: ev.refundPeriodEnd ?? null,
+            });
         }
+        for (const tx of ev.reversedTransactionIds ?? []) await this.reverseStoreRefund(tx);
         for (const id of ev.customerIds) await this.syncStoreCustomer(id, { refunded });
       }
       await this.db.execute(
@@ -206,7 +211,15 @@ export class BillingService {
   }
 
   /** Stores the provider's view of a subscription and recomputes the workspace's entitlement. */
-  async applySnapshot(snap: SubscriptionSnapshot, opts: { orgId?: string; refund?: boolean } = {}) {
+  async applySnapshot(
+    snap: SubscriptionSnapshot,
+    opts: {
+      orgId?: string;
+      refund?: boolean;
+      /** The store transaction a refund was for: recorded in store_refunds with what it took. */
+      refundTransaction?: string;
+    } = {},
+  ) {
     const [existing] = await this.db.execute<{
       org_id: string;
       status: SubscriptionStatus;
@@ -274,6 +287,7 @@ export class BillingService {
     // A refunded period doesn't keep the credits it brought (D-248): every paid grant since the
     // period started (for a yearly plan, each month's), plan-change top-ups included. Once per
     // subscription and period; it may leave the balance below zero, which stops paid usage.
+    let clawed = 0;
     if (opts.refund) {
       const end = periodEnd ?? new Date();
       const start = periodStart(end, plan.interval);
@@ -282,15 +296,27 @@ export class BillingService {
         where org_id = ${orgId}::uuid and delta > 0 and ((reason = 'grant' and reference like 'monthly:%' and reference not like '%:free' and reference not like '%:comp') or reason = 'reset')
           and created_at >= ${start.toISOString()}::timestamptz`);
       const granted = Number(g?.granted ?? 0);
-      if (granted > 0)
+      const ref = `refund-grant:${snap.source}:${snap.externalId}:${end.toISOString().slice(0, 10)}`;
+      const [had] = await this.db.execute<{ n: number }>(sql`
+        select count(*)::int as n from public.credit_ledger
+        where org_id = ${orgId}::uuid and reason = 'refund' and reference = ${ref}`);
+      if (granted > 0 && !had?.n) {
         await this.credit(
           orgId,
           -granted,
           "refund",
-          `refund-grant:${snap.source}:${snap.externalId}:${end.toISOString().slice(0, 10)}`,
+          ref,
           `${plan.name} refunded: its credits for that period come back out`,
         );
+        clawed = granted;
+      }
     }
+    if (opts.refundTransaction)
+      await this.db.execute(sql`
+        insert into public.store_refunds (org_id, subscription_id, transaction_id, current_period, clawed_usd)
+        select ${orgId}::uuid, s.id, ${opts.refundTransaction}, ${opts.refund === true}, ${clawed}
+        from public.subscriptions s where s.source = ${snap.source} and s.external_id = ${snap.externalId}
+        on conflict (subscription_id, transaction_id) do nothing`);
     return this.recompute(orgId);
   }
 
@@ -444,7 +470,7 @@ export class BillingService {
   private async applyRefund(
     provider: BillingProvider,
     paymentId: string,
-    ev: { dispute?: boolean; partial?: boolean } = {},
+    ev: { dispute?: boolean; partial?: boolean; refundId?: string } = {},
   ) {
     if (!provider.fetchPayment) return;
     const p = await provider.fetchPayment(paymentId);
@@ -467,8 +493,7 @@ export class BillingService {
       await this.applySnapshot(snap, { refund: ev.dispute === true || (full && current) });
     }
     const credits = await this.packCredits(p.productIds);
-    if (credits > 0 && p.orgId)
-      await this.credit(p.orgId, -credits, "refund", `dodo:${paymentId}`, "Credit pack refunded");
+    if (credits > 0 && p.orgId) await this.refundWebPack(p.orgId, paymentId, credits, ev, p);
     if (p.orgId && getProductAnalytics().enabled)
       track(this.db, {
         event: "refund_issued",
@@ -476,6 +501,84 @@ export class BillingService {
         uuid: deterministicUuid("refund", "dodo", paymentId),
         properties: { store: "dodo", kind: credits > 0 ? "credit_pack" : "subscription" },
       });
+  }
+
+  /**
+   * Takes back what a refund of a web credit pack returned (bug hunt 2026-11-21). A full refund
+   * takes the pack back, as before (the balance may go below zero). A partial one takes the same
+   * share of the pack's credits, rounded down to the cent in the customer's favour, and only from
+   * what's left of the pack itself: credits already spent aren't taken, and the balance never goes
+   * below zero. Refunds add up: each takes what the payment's refunds so far call for, less what
+   * earlier refunds of it already took.
+   */
+  private async refundWebPack(
+    orgId: string,
+    paymentId: string,
+    credits: number,
+    ev: { partial?: boolean; refundId?: string },
+    p: { totalAmount?: number | null; refundedAmount?: number | null },
+  ) {
+    const known = p.totalAmount != null && p.refundedAmount != null && p.totalAmount > 0;
+    const full =
+      !ev.partial && (!known || (p.refundedAmount as number) >= (p.totalAmount as number));
+    // A partial refund without amounts can't be sized: take nothing rather than guess.
+    if (!full && !known) {
+      this.opts.logger?.warn("partial pack refund without amounts", { payment_id: paymentId });
+      return;
+    }
+    const target = full
+      ? credits
+      : Math.min(
+          credits,
+          Math.floor(
+            ((credits * (p.refundedAmount as number)) / (p.totalAmount as number)) * 100 + 1e-9,
+          ) / 100,
+        );
+    const ref = `dodo:${paymentId}`;
+    const [taken] = await this.db.execute<{ usd: string }>(sql`
+      select coalesce(-sum(delta), 0)::text as usd from public.credit_ledger
+      where org_id = ${orgId}::uuid and reason = 'refund' and (reference = ${ref} or reference like ${`${ref}:%`})`);
+    const take = Math.round((target - Number(taken?.usd ?? 0)) * 1e6) / 1e6;
+    if (take <= 0) return;
+    if (full) {
+      await this.credit(orgId, -take, "refund", ref, "Credit pack refunded");
+      return;
+    }
+    const partRef = `${ref}:${ev.refundId ?? "partial"}`;
+    await this.db.transaction(async (tx) => {
+      await tx.execute(
+        sql`select id from public.organizations where id = ${orgId}::uuid for update`,
+      );
+      const [seen] = await tx.execute<{ n: number }>(sql`
+        select count(*)::int as n from public.credit_ledger
+        where org_id = ${orgId}::uuid and reason = 'refund' and reference = ${partRef}`);
+      if (seen?.n) return;
+      const [bal] = await tx.execute<{ b: string }>(sql`
+        select coalesce((select balance_after from public.credit_ledger where org_id = ${orgId}::uuid order by seq desc limit 1), 0)::text as b`);
+      const lots = await tx.execute<{ id: string; remaining: string }>(sql`
+        select id, remaining::text from public.credit_lots
+        where org_id = ${orgId}::uuid and reason = 'purchase' and reference = ${ref} and remaining > 0
+          and (expires_at is null or expires_at > now())
+        for update`);
+      const left = lots.reduce((sum, l) => sum + Number(l.remaining), 0);
+      let amount = Math.min(take, left, Math.max(0, Number(bal?.b ?? 0)));
+      amount = Math.round(amount * 1e6) / 1e6;
+      if (amount <= 0) return;
+      // Straight from the pack's own lot: credit_apply's debit would spend the month's credits.
+      let rest = amount;
+      for (const l of lots) {
+        if (rest <= 0) break;
+        const x = Math.min(Number(l.remaining), rest);
+        await tx.execute(
+          sql`update public.credit_lots set remaining = remaining - ${x} where id = ${l.id}::uuid`,
+        );
+        rest -= x;
+      }
+      await tx.execute(sql`
+        insert into public.credit_ledger (org_id, delta, reason, reference, note, balance_after)
+        values (${orgId}::uuid, ${-amount}, 'refund', ${partRef}, 'Credit pack partly refunded',
+          ${Number(bal?.b ?? 0) - amount})`);
+    });
   }
 
   private async packCredits(productIds: string[]) {
@@ -494,7 +597,7 @@ export class BillingService {
    * Purchases RevenueCat lists under this workspace that are already linked to another workspace
    * are left alone and returned in `inUse`.
    */
-  async syncStoreCustomer(orgId: string, opts: { refunded?: Set<string> } = {}) {
+  async syncStoreCustomer(orgId: string, opts: { refunded?: Map<string, StoreRefund> } = {}) {
     const result = {
       found: [] as Array<{ source: string; productId: string }>,
       inUse: [] as string[],
@@ -509,7 +612,24 @@ export class BillingService {
     const customer = await rc.storeCustomer(orgId);
     for (const snap of customer.subscriptions) {
       try {
-        await this.applySnapshot(snap, { orgId, refund: opts.refunded?.has(snap.externalId) });
+        // A refund takes the period back only when it's for the transaction that paid for the
+        // current period; an older renewal's refund is recorded and takes nothing (bug hunt
+        // 2026-11-21). A transaction whose refund is already on record isn't applied twice, so
+        // a repeated report can't take the period back again after REFUND_REVERSED.
+        const r = opts.refunded?.get(snap.externalId);
+        const seen = r
+          ? await this.db.execute<{ n: number }>(sql`
+              select count(*)::int as n from public.store_refunds sr
+              join public.subscriptions s on s.id = sr.subscription_id
+              where s.source = ${snap.source} and s.external_id = ${snap.externalId}
+                and sr.transaction_id = ${r.transactionId}`)
+          : [];
+        const fresh = !!r && !seen[0]?.n;
+        await this.applySnapshot(snap, {
+          orgId,
+          refund: fresh && refundIsCurrent(r?.periodEnd ?? null, snap.currentPeriodEnd),
+          refundTransaction: fresh ? r?.transactionId : undefined,
+        });
         result.found.push({ source: snap.source, productId: snap.productId });
       } catch (err) {
         if (err instanceof BillingError && err.code === "purchase_in_use") {
@@ -534,6 +654,7 @@ export class BillingService {
       const reference = `revenuecat:${p.id}`;
       if (p.status === "refunded") {
         await this.applyPackRefund([reference]);
+        if (p.sandbox) await this.markSandboxPack(orgId, reference);
         continue;
       }
       // A purchase credits one workspace once, whichever workspace reports it first.
@@ -544,10 +665,65 @@ export class BillingService {
         continue;
       }
       await this.credit(orgId, Number(pack.credits_usd), "purchase", reference, pack.name);
+      if (p.sandbox) await this.markSandboxPack(orgId, reference);
       result.found.push({ source: p.source, productId: p.productId });
     }
     if (!customer.subscriptions.length) await this.recompute(orgId);
     return result;
+  }
+
+  /**
+   * The store reversed a refund (RevenueCat REFUND_REVERSED, bug hunt 2026-11-21): gives back
+   * exactly the credits that refund took, once, and lifts the refund from the period it ended, so
+   * the re-read that follows restores the plan from the store's own status.
+   */
+  async reverseStoreRefund(transactionId: string) {
+    const rows = await this.db.execute<{
+      id: string;
+      org_id: string;
+      subscription_id: string;
+      current_period: boolean;
+      clawed_usd: string;
+      external_id: string;
+    }>(sql`
+      update public.store_refunds sr set reversed_at = now()
+      from public.subscriptions s
+      where s.id = sr.subscription_id and sr.transaction_id = ${transactionId} and sr.reversed_at is null
+      returning sr.id, sr.org_id, sr.subscription_id, sr.current_period, sr.clawed_usd::text, s.external_id`);
+    for (const r of rows) {
+      const back = Number(r.clawed_usd);
+      if (back > 0)
+        await this.credit(
+          r.org_id,
+          back,
+          "refund",
+          `refund-reversed:${r.id}`,
+          "Refund reversed: its credits come back",
+        );
+      if (!r.current_period) continue;
+      const snap = await this.provider("revenuecat").fetchSubscription(r.external_id);
+      await this.db.execute(sql`
+        update public.subscriptions set status = ${snap.status}, refunded_through = null, updated_at = now()
+        where id = ${r.subscription_id}::uuid and status = 'refunded'`);
+      await this.applySnapshot(snap, { orgId: r.org_id });
+    }
+  }
+
+  /**
+   * A store pack bought with a sandbox account (bug hunt 2026-11-21): its credits still arrive, so
+   * App Review sees the purchase work, but they lapse 7 days after they were credited and its
+   * ledger rows are marked sandbox for reports. Every re-read applies it again, so it holds even
+   * if a crash came between crediting and marking.
+   */
+  private async markSandboxPack(orgId: string, reference: string) {
+    await this.db.execute(sql`
+      update public.credit_ledger set sandbox = true
+      where org_id = ${orgId}::uuid and reason in ('purchase', 'refund') and reference = ${reference}
+        and not sandbox`);
+    await this.db.execute(sql`
+      update public.credit_lots set expires_at = created_at + interval '7 days'
+      where org_id = ${orgId}::uuid and reason = 'purchase' and reference = ${reference}
+        and expires_at is distinct from created_at + interval '7 days'`);
   }
 
   /**
@@ -707,9 +883,18 @@ export class BillingService {
         // credits are too: the share of the period left. Before, upgrading the day before renewal
         // paid a day's difference for the whole month's extra credits, and downgrading back kept
         // them (billing audit 2026-11-17). Starting to pay (from Free or a trial) tops up in full.
+        // A yearly plan grants credits every month of the year, so its share is of this grant
+        // month, not of the year (bug hunt 2026-11-21).
         if (amount > 0 && done?.paid_before && best?.current_period_end && !trial && !comp) {
-          const days = plan.interval === "year" ? 365 : plan.interval === "week" ? 7 : 30;
-          const left = (new Date(best.current_period_end).getTime() - Date.now()) / 86_400_000;
+          const periodEnd = new Date(best.current_period_end);
+          const { start, end } = grantPeriod(periodEnd, plan.interval);
+          const days =
+            plan.interval === "year"
+              ? (end.getTime() - start.getTime()) / 86_400_000
+              : plan.interval === "week"
+                ? 7
+                : 30;
+          const left = (end.getTime() - Date.now()) / 86_400_000;
           const share = Math.min(1, Math.max(0, left / days));
           amount = Math.round(amount * share * 100) / 100;
           note = `${plan.name} ${plan.interval === "week" ? "weekly" : "monthly"} credits (the rest of this period)`;
@@ -1294,6 +1479,44 @@ export class BillingService {
     }
     return { slept };
   }
+}
+
+/** What the server knows about a store refund from its webhook. */
+export interface StoreRefund {
+  transactionId: string;
+  /** When the period the refunded transaction paid for ended; null when the event didn't say. */
+  periodEnd: Date | null;
+}
+
+/**
+ * Whether a refunded transaction paid for the current period: its period ends no earlier than
+ * two days before the current one (renewals are charged around the boundary). Unknown dates count
+ * as current, as before: RevenueCat's refund events always carry the transaction's expiry.
+ */
+export function refundIsCurrent(refundEnd: Date | null, currentEnd: Date | null) {
+  if (!refundEnd || !currentEnd) return true;
+  return refundEnd.getTime() >= currentEnd.getTime() - 2 * 86_400_000;
+}
+
+/**
+ * The grant period credits are given for right now: the paid period itself, except that a yearly
+ * plan grants each month of its year (public.grant_month), so it's the month of the year we're in.
+ */
+export function grantPeriod(
+  periodEnd: Date,
+  interval: string,
+  now = new Date(),
+): { start: Date; end: Date } {
+  const start = periodStart(periodEnd, interval);
+  if (interval !== "year") return { start, end: periodEnd };
+  const monthStart = (n: number) => {
+    const d = new Date(start);
+    d.setUTCMonth(d.getUTCMonth() + n);
+    return d;
+  };
+  for (let n = 1; n <= 12; n++)
+    if (monthStart(n) > now) return { start: monthStart(n - 1), end: monthStart(n) };
+  return { start: monthStart(11), end: periodEnd };
 }
 
 /** When a paid period ending at [end] started, for a plan billed every [interval]. */

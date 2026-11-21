@@ -352,6 +352,18 @@ abstract class AppLocalizations {
   /// **'Too many tries. Wait a minute and try again.'**
   String get authTooManyTries;
 
+  /// No description provided for @tooManyRequestsWait.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many requests at once. Try again in {seconds, plural, =1{1 second} other{{seconds} seconds}}.'**
+  String tooManyRequestsWait(int seconds);
+
+  /// No description provided for @tooManyRequestsReady.
+  ///
+  /// In en, this message translates to:
+  /// **'You can try again now.'**
+  String get tooManyRequestsReady;
+
   /// No description provided for @authAccountExists.
   ///
   /// In en, this message translates to:
@@ -3501,6 +3513,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{name} has the screen'**
   String screenCardHeldBy(String name);
+
+  /// No description provided for @screenCardMore.
+  ///
+  /// In en, this message translates to:
+  /// **'More options'**
+  String get screenCardMore;
+
+  /// No description provided for @screenCardIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'{bot}\'s screen. Tap to watch, drag to move.'**
+  String screenCardIntro(String bot);
+
+  /// No description provided for @screenCardHideForNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide for Now'**
+  String get screenCardHideForNow;
+
+  /// No description provided for @screenCardDontShow.
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t Show Automatically'**
+  String get screenCardDontShow;
+
+  /// No description provided for @screenCardTurnedOff.
+  ///
+  /// In en, this message translates to:
+  /// **'The screen card is off. Turn it back on in Settings.'**
+  String get screenCardTurnedOff;
+
+  /// No description provided for @screenCardOfferOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Hiding the screen card a lot? You can turn it off.'**
+  String get screenCardOfferOff;
+
+  /// No description provided for @screenCardTurnOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn Off'**
+  String get screenCardTurnOff;
+
+  /// No description provided for @screenCardNeedsYou.
+  ///
+  /// In en, this message translates to:
+  /// **'{bot} needs you on the screen'**
+  String screenCardNeedsYou(String bot);
 
   /// No description provided for @callRecapTitle.
   ///
@@ -15885,6 +15945,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Commands and technical errors in every chat.'**
   String get showBotStepsHelp;
+
+  /// No description provided for @showScreenCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Show the bot\'s screen while it works'**
+  String get showScreenCard;
+
+  /// No description provided for @showScreenCardHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'A small live card in the chat. Tap it to watch full screen.'**
+  String get showScreenCardHelp;
 
   /// No description provided for @showReplyUsage.
   ///
@@ -29119,6 +29191,258 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'On schedule'**
   String get cardFlightScheduled;
+
+  /// No description provided for @cardFaresBest.
+  ///
+  /// In en, this message translates to:
+  /// **'Best'**
+  String get cardFaresBest;
+
+  /// No description provided for @cardFaresCheapest.
+  ///
+  /// In en, this message translates to:
+  /// **'Cheapest'**
+  String get cardFaresCheapest;
+
+  /// No description provided for @cardFaresFastest.
+  ///
+  /// In en, this message translates to:
+  /// **'Fastest'**
+  String get cardFaresFastest;
+
+  /// No description provided for @cardFaresDirectOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Direct only'**
+  String get cardFaresDirectOnly;
+
+  /// No description provided for @cardFaresDirect.
+  ///
+  /// In en, this message translates to:
+  /// **'Direct'**
+  String get cardFaresDirect;
+
+  /// No description provided for @cardFaresStops.
+  ///
+  /// In en, this message translates to:
+  /// **'{n, plural, =1{1 stop} other{{n} stops}}'**
+  String cardFaresStops(int n);
+
+  /// No description provided for @cardFaresBook.
+  ///
+  /// In en, this message translates to:
+  /// **'Book'**
+  String get cardFaresBook;
+
+  /// No description provided for @cardFaresFromPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'from {price}'**
+  String cardFaresFromPrice(String price);
+
+  /// No description provided for @cardFaresTravellers.
+  ///
+  /// In en, this message translates to:
+  /// **'{n, plural, =1{1 traveller} other{{n} travellers}}'**
+  String cardFaresTravellers(int n);
+
+  /// No description provided for @cardFaresNights.
+  ///
+  /// In en, this message translates to:
+  /// **'{n, plural, =1{1 night} other{{n} nights}}'**
+  String cardFaresNights(int n);
+
+  /// No description provided for @cardFaresEconomy.
+  ///
+  /// In en, this message translates to:
+  /// **'Economy'**
+  String get cardFaresEconomy;
+
+  /// No description provided for @cardFaresPremium.
+  ///
+  /// In en, this message translates to:
+  /// **'Premium economy'**
+  String get cardFaresPremium;
+
+  /// No description provided for @cardFaresBusiness.
+  ///
+  /// In en, this message translates to:
+  /// **'Business'**
+  String get cardFaresBusiness;
+
+  /// No description provided for @cardFaresFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'First'**
+  String get cardFaresFirst;
+
+  /// No description provided for @cardFaresTypical.
+  ///
+  /// In en, this message translates to:
+  /// **'Usually {low}–{high} for this trip'**
+  String cardFaresTypical(String low, String high);
+
+  /// No description provided for @cardFaresLevelLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Low now'**
+  String get cardFaresLevelLow;
+
+  /// No description provided for @cardFaresLevelTypical.
+  ///
+  /// In en, this message translates to:
+  /// **'Typical now'**
+  String get cardFaresLevelTypical;
+
+  /// No description provided for @cardFaresLevelHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'High now'**
+  String get cardFaresLevelHigh;
+
+  /// No description provided for @cardFaresShowAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Show all {n}'**
+  String cardFaresShowAll(int n);
+
+  /// No description provided for @cardFaresShowFewer.
+  ///
+  /// In en, this message translates to:
+  /// **'Show fewer'**
+  String get cardFaresShowFewer;
+
+  /// No description provided for @cardFaresNoDirect.
+  ///
+  /// In en, this message translates to:
+  /// **'No direct flights in this search.'**
+  String get cardFaresNoDirect;
+
+  /// No description provided for @cardFaresOutboundOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Prices are for the whole trip; pick the return flight on Google Flights.'**
+  String get cardFaresOutboundOnly;
+
+  /// No description provided for @cardFaresSeeAll.
+  ///
+  /// In en, this message translates to:
+  /// **'See all on Google Flights'**
+  String get cardFaresSeeAll;
+
+  /// No description provided for @cardFaresCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'Prices are for all travellers and are checked again on the booking site.'**
+  String get cardFaresCheck;
+
+  /// No description provided for @cardFaresBags.
+  ///
+  /// In en, this message translates to:
+  /// **'{cabin} cabin, {checked} checked bags'**
+  String cardFaresBags(int cabin, int checked);
+
+  /// No description provided for @cardFaresAffiliate.
+  ///
+  /// In en, this message translates to:
+  /// **'Casama may earn a commission when you book through these links. It doesn\'t change the price.'**
+  String get cardFaresAffiliate;
+
+  /// No description provided for @cardFaresWatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Watch price'**
+  String get cardFaresWatch;
+
+  /// No description provided for @cardFaresWatching.
+  ///
+  /// In en, this message translates to:
+  /// **'Watching · ends {date}'**
+  String cardFaresWatching(String date);
+
+  /// No description provided for @cardFaresWatchingBelow.
+  ///
+  /// In en, this message translates to:
+  /// **'Watching for {price} or less · ends {date}'**
+  String cardFaresWatchingBelow(String price, String date);
+
+  /// No description provided for @cardFaresWatchStop.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop'**
+  String get cardFaresWatchStop;
+
+  /// No description provided for @cardFaresWatchTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Watch this price'**
+  String get cardFaresWatchTitle;
+
+  /// No description provided for @cardFaresWatchBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Casama checks this trip every few hours and sends you a notification when the price drops. It stops after the departure date or in 60 days.'**
+  String get cardFaresWatchBody;
+
+  /// No description provided for @cardFaresWatchTarget.
+  ///
+  /// In en, this message translates to:
+  /// **'Tell me when it\'s under (optional)'**
+  String get cardFaresWatchTarget;
+
+  /// No description provided for @cardFaresWatchAnyDrop.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave empty for any big drop'**
+  String get cardFaresWatchAnyDrop;
+
+  /// No description provided for @cardFaresWatchStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Watch'**
+  String get cardFaresWatchStart;
+
+  /// No description provided for @cardFaresWatchStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Watching this price. You\'ll get a notification when it drops.'**
+  String get cardFaresWatchStarted;
+
+  /// No description provided for @cardFaresWatchStopped.
+  ///
+  /// In en, this message translates to:
+  /// **'Stopped watching this price.'**
+  String get cardFaresWatchStopped;
+
+  /// No description provided for @cardFaresWatchFull.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re already watching 5 fares. Stop one in Settings → Cards first.'**
+  String get cardFaresWatchFull;
+
+  /// No description provided for @cardFaresWatchFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t change the price watch. Try again.'**
+  String get cardFaresWatchFailed;
+
+  /// No description provided for @cardsFareWatches.
+  ///
+  /// In en, this message translates to:
+  /// **'Price watches'**
+  String get cardsFareWatches;
+
+  /// No description provided for @cardsFareWatchesNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No price watches. Tap Watch price on a flight fares card to get a notification when it drops.'**
+  String get cardsFareWatchesNone;
+
+  /// No description provided for @cardsFareWatchLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Now {price} · ends {date}'**
+  String cardsFareWatchLine(String price, String date);
 
   /// No description provided for @cardFromBot.
   ///

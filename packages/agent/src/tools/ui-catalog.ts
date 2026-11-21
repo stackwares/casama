@@ -72,6 +72,7 @@ export const UI_REFERENCE: Record<UiComponent, string> = {
   Quake: LIVE_ONLY("live.quakes"),
   Storm: LIVE_ONLY("live.storms"),
   Flight: LIVE_ONLY("live.flight"),
+  Fares: LIVE_ONLY("live.fares"),
   Parcel: LIVE_ONLY("live.parcel"),
   Score: LIVE_ONLY("live.sports"),
   Standings: LIVE_ONLY('live.sports with view "standings"'),

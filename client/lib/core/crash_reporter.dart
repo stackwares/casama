@@ -1,6 +1,10 @@
+import 'dart:async';
 import 'dart:convert';
 
+import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart'
+    show AuthRetryableFetchException, AuthUnknownException;
 
 /// The crash reporters an app can run. Exactly one runs at a time (D-417): two native crash
 /// handlers (Sentry and Crashlytics) fight over signals on iOS and Android, and two dashboards
@@ -98,4 +102,29 @@ class CrashReporters {
       );
     } catch (_) {}
   }
+}
+
+/// Errors no crash reporter should get: Supabase's session refresh failing because the device is
+/// offline or the network dropped (`AuthRetryableFetchException`, or an unknown auth error whose
+/// cause is a network one). Every offline person throws these from the background refresh timer,
+/// and Supabase retries by itself. Other auth errors (a refused token, a bad grant) still report.
+bool isCrashNoise(Object error) =>
+    error is AuthRetryableFetchException ||
+    (error is AuthUnknownException && _isNetworkError(error.originalError));
+
+bool _isNetworkError(Object? e) =>
+    e is http.ClientException || e is TimeoutException || e is AuthRetryableFetchException;
+
+/// The exception type names [isCrashNoise] drops, for reporters that only see an event's text
+/// (PostHog's `$exception_list` and Sentry's exception list carry the Dart type's name).
+const crashNoiseTypes = {'AuthRetryableFetchException'};
+
+/// Whether a PostHog `$exception` event's properties describe [crashNoiseTypes] only.
+bool isCrashNoiseEvent(Map<String, Object?>? properties) {
+  if (properties == null) return false;
+  if (crashNoiseTypes.contains(properties[r'$exception_type'])) return true;
+  final list = properties[r'$exception_list'];
+  if (list is! List || list.isEmpty) return false;
+  final first = list.first;
+  return first is Map && crashNoiseTypes.contains(first['type']);
 }

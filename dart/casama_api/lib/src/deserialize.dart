@@ -344,6 +344,8 @@ import 'package:casama_api/src/model/email_preferences.dart';
 import 'package:casama_api/src/model/encryption_status.dart';
 import 'package:casama_api/src/model/export_pack_request.dart';
 import 'package:casama_api/src/model/export_pack_request_look.dart';
+import 'package:casama_api/src/model/fare_watch.dart';
+import 'package:casama_api/src/model/fare_watch_list.dart';
 import 'package:casama_api/src/model/file_search_result.dart';
 import 'package:casama_api/src/model/for_you.dart';
 import 'package:casama_api/src/model/for_you_approval.dart';
@@ -959,6 +961,7 @@ import 'package:casama_api/src/model/watch_code.dart';
 import 'package:casama_api/src/model/watch_code_claim.dart';
 import 'package:casama_api/src/model/watch_code_info.dart';
 import 'package:casama_api/src/model/watch_code_request.dart';
+import 'package:casama_api/src/model/watch_fares.dart';
 import 'package:casama_api/src/model/watch_handoff.dart';
 import 'package:casama_api/src/model/watch_handoff_sent.dart';
 import 'package:casama_api/src/model/watch_key.dart';
@@ -1731,6 +1734,10 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return ExportPackRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ExportPackRequestLook':
           return ExportPackRequestLook.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'FareWatch':
+          return FareWatch.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'FareWatchList':
+          return FareWatchList.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'FileSearchResult':
           return FileSearchResult.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ForYou':
@@ -3048,6 +3055,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return WatchCodeInfo.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'WatchCodeRequest':
           return WatchCodeRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'WatchFares':
+          return WatchFares.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'WatchHandoff':
           return WatchHandoff.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'WatchHandoffSent':
