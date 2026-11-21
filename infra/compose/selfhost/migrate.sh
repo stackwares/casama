@@ -14,6 +14,9 @@ for i in $(seq 1 120); do
   sleep 2
 done
 $PSQL -c "create table if not exists public.casama_migrations (name text primary key, applied_at timestamptz not null default now())"
+# PostgREST serves the public schema with the anon key: without RLS anyone could read, add or
+# delete rows here and make the next upgrade skip or re-run migrations.
+$PSQL -c "alter table public.casama_migrations enable row level security"
 for f in $(ls /migrations/*.sql | sort); do
   name=$(basename "$f")
   if [ -z "$($PSQL -c "select 1 from public.casama_migrations where name = '$name'")" ]; then
