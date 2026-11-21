@@ -25,9 +25,9 @@ Rules that apply to every row:
 | App Store (iPhone, iPad, Watch inside) | iOS | Listing, privacy, IAPs ready; never sent for review | First review when Oliver says |
 | Mac App Store | macOS | Same record as iOS; profiles regenerated 2026-11-19 | Ships together with the direct DMG |
 | Direct download (GitHub Releases) | macOS, Windows, Linux | `scripts/publish-desktop-release.sh` | Each release with its Mac App Store twin |
-| Chrome Web Store | Chrome, Brave, Arc, Vivaldi, Opera | Item created, id `kkfppfhkjnenffibmnkphnbejidkmbkj` | Check review state in the dashboard |
+| Chrome Web Store | Chrome, Brave, Arc, Vivaldi, Opera | Submitted 0.1.0 on 2026-11-21, pending review (id `kkfppfhkjnenffibmnkphnbejidkmbkj`) | Wait |
 | Edge Add-ons | Edge | Submitted 0.1.0 on 2026-11-21, in review (about 7 business days) | Wait |
-| Firefox Add-ons (AMO) | Firefox | Listing kit ready (`apps/extension/store/firefox/`), not uploaded | Submit after Chrome/Edge settle |
+| Firefox Add-ons (AMO) | Firefox | Submitted 0.1.0 on 2026-11-21, pending review (`casama@casama.ai`) | Wait |
 | Snap Store | Linux | Name `casama` approved 2026-11-18; classic confinement request not filed | File classic request, first upload |
 | Microsoft Store | Windows | MSIX packaging exists (`scripts/package-windows.ps1`); no listing | Decide; reserve the name |
 | Web app | Browser | Live at app.casama.ai | n/a |
@@ -84,9 +84,9 @@ Rules that apply to every row:
 
 | Store | Ids | Notes |
 |---|---|---|
-| Chrome Web Store | Item `kkfppfhkjnenffibmnkphnbejidkmbkj` | Listing `apps/extension/store/listing.md`; reviewer login in vault "Chrome Web Store reviewer" |
+| Chrome Web Store | Item `kkfppfhkjnenffibmnkphnbejidkmbkj` | Listing `apps/extension/store/listing.md`; reviewer login in vault "Chrome Web Store reviewer"; submitted 0.1.0 (pending review) |
 | Edge Add-ons | Product `8bf15261-6f8c-40ad-a8e6-cf36378a68ab`, Store `0RDCKCP6QHRC`, CRX `danikigkoiofpcecjobopcgdflgcmchm` | Same zip as Chrome; listing `apps/extension/store/edge/listing.md`; Oliver's Partner Center account |
-| Firefox AMO | id `casama@casama.ai` | Own build (`scripts/build-extension.sh firefox`); not submitted |
+| Firefox AMO | id `casama@casama.ai` (slug `casama`, version 6740612) | Own build (`scripts/build-extension.sh firefox`); source zip verified reproducible; submitted 0.1.0 (pending review) |
 
 Both Chrome and Edge ids must be in the server's `CHROME_EXTENSION_IDS` and in
 `chromeExtensionIds` (`client/lib/core/chrome_extension.dart`). Both are.
