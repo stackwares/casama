@@ -4,6 +4,8 @@
 import 'dart:typed_data';
 
 import 'package:casama/features/chat/chat_screen.dart';
+// The picker's file type hands back an XFile; cross_file comes with file_picker.
+// ignore: depend_on_referenced_packages
 import 'package:cross_file/cross_file.dart';
 import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
