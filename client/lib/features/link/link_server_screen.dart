@@ -153,6 +153,8 @@ class _LinkServerScreenState extends ConsumerState<LinkServerScreen> {
 
     return SubPage(
       title: l10n.linkServerTitle,
+      // Opened from a server's link, so often with nothing behind it to go back to.
+      backFallback: '/bots',
       children: [
         if (request == null) ...[
           TextField(

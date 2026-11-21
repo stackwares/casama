@@ -528,6 +528,21 @@ void main() {
       },
     );
 
+    testWidgets('opened from a link with nothing behind it, it can still be left', (
+      tester,
+    ) async {
+      await setSize(tester, const Size(1300, 1000));
+      final backend = FakeBackend();
+      final went = <String>[];
+      await tester.pumpWidget(
+        routed(backend, const LinkServerScreen(), went: went),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Back'));
+      await tester.pumpAndSettle();
+      expect(went, ['/bots']);
+    });
+
     testWidgets('only owners and admins can link', (tester) async {
       await setSize(tester, const Size(500, 1100));
       final backend = FakeBackend()..orgRole = OrgRole.member;

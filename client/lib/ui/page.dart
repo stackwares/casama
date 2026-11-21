@@ -20,7 +20,7 @@ double pageSide(double width, {double maxWidth = kPageMaxWidth}) => AppSpace.gut
 /// A secondary screen (a Settings page, a bot's memory): the shell header over a centered column,
 /// with the same width, gutters and bottom inset as Settings.
 class SubPage extends StatelessWidget {
-  const SubPage({super.key, required this.title, this.subtitle, this.actions = const [], this.children, this.body, this.maxWidth = kPageMaxWidth, this.bottom})
+  const SubPage({super.key, required this.title, this.subtitle, this.actions = const [], this.children, this.body, this.maxWidth = kPageMaxWidth, this.bottom, this.backFallback})
     : assert(children != null || body != null, 'give children or a body');
 
   final String title;
@@ -35,10 +35,14 @@ class SubPage extends StatelessWidget {
   final double maxWidth;
   final PreferredSizeWidget? bottom;
 
+  /// Where the back arrow goes when there is no page to pop, as on a page opened from a link. Set,
+  /// the back arrow always shows, so the page can always be left.
+  final String? backFallback;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: ShellHeader(title: title, subtitle: subtitle, actions: actions, bottom: bottom),
+      appBar: ShellHeader(title: title, subtitle: subtitle, actions: actions, bottom: bottom, showBack: backFallback != null ? true : null, phoneFallback: backFallback),
       body: body ?? PageColumn(maxWidth: maxWidth, children: children!),
     );
   }
