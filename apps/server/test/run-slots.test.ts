@@ -72,6 +72,34 @@ describe("RunSlots", () => {
     expect(slots.counts).toEqual({ working: 1, waiting: 0 });
   });
 
+  it("a stopped run leaves the line without taking a slot (D-478)", async () => {
+    const slots = new RunSlots(1, 0);
+    await slots.acquire("a");
+    const stop = new AbortController();
+    const queued = slots.acquire("b", stop.signal);
+    let next = false;
+    void slots.acquire("c").then(() => {
+      next = true;
+    });
+    await tick();
+    expect(slots.counts).toEqual({ working: 1, waiting: 2 });
+    stop.abort();
+    await expect(queued).rejects.toThrow(RunSlots.ABORTED);
+    expect(slots.counts).toEqual({ working: 1, waiting: 1 });
+    // The run behind it goes next, and nothing was held for the stopped one.
+    slots.release("a");
+    await tick();
+    expect(next).toBe(true);
+    expect(slots.counts).toEqual({ working: 1, waiting: 0 });
+    // Stopped before it asked, and stopping after it started, take nothing either.
+    await expect(slots.acquire("d", AbortSignal.abort())).rejects.toThrow(RunSlots.ABORTED);
+    slots.release("c");
+    const late = new AbortController();
+    await slots.acquire("e", late.signal);
+    late.abort();
+    expect(slots.counts).toEqual({ working: 1, waiting: 0 });
+  });
+
   it("takes its slot again even when the wait fails", async () => {
     const slots = new RunSlots(1, 1);
     await slots.acquire("a");

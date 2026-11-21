@@ -5,6 +5,7 @@ import {
   type ChatGptConfig,
   type ComputerService,
   CredentialResolver,
+  cancelBeforeStart,
   checkCalendarTriggers,
   checkWatchers,
   collect,
@@ -75,6 +76,7 @@ import {
   startRoutineForMessage,
 } from "./routines.ts";
 import { keyQueuedRuns, runPartitionKey } from "./run-queue.ts";
+import { RunSlots } from "./run-slots.ts";
 import { type VoiceRuntime, voiceSession, voiceSpeak, voiceTranscribe } from "./voice.ts";
 
 export const QUEUES = {
@@ -113,7 +115,7 @@ let runtime:
       billing?: import("../billing/service.ts").BillingService;
       telemetry?: { url: string; version: string };
       /** How many runs work at once (D-413); without it every started run works. */
-      slots?: import("./run-slots.ts").RunSlots;
+      slots?: RunSlots;
       /** Fixture mode: the model picker uses Casama's short list instead of calling providers. */
       offlineModels?: boolean;
       /** ChatGPT plan sign-in endpoints (tests point them at a fake OpenAI). */
@@ -276,6 +278,9 @@ export function openStepOutput(value: unknown): unknown {
   return superjson.parse(contentKeys.open(sealed) as string);
 }
 
+/** How often a run waiting for a working slot looks for a stop request. */
+export const SLOT_STOP_POLL_MS = 1000;
+
 async function runAgentDurably(runId: string) {
   // Read outside a step: a run's workspace and parent never change, so replays see the same.
   let row: Promise<{ org_id: string; child: boolean } | null> | undefined;
@@ -295,7 +300,30 @@ async function runAgentDurably(runId: string) {
   const workspace = slots && known && !known.child ? known.org_id : null;
   const waiting = <T>(wait: () => Promise<T>) =>
     slots && workspace ? slots.idle(workspace, wait) : wait();
-  if (slots && workspace) await slots.acquire(workspace);
+  if (slots && workspace) {
+    // Stop on a queued run (D-478): while it waits for a slot, a stop request takes it out of the
+    // line and ends it, instead of waiting for a slot just to notice it was stopped.
+    const stop = new AbortController();
+    const watch = setInterval(() => {
+      rt()
+        .db.execute<{ stopped: boolean }>(
+          sql`select cancel_requested_at is not null or status = 'cancelled' as stopped
+              from public.runs where id = ${runId}::uuid`,
+        )
+        .then((r) => {
+          if (r[0]?.stopped) stop.abort();
+        })
+        .catch(() => {});
+    }, SLOT_STOP_POLL_MS);
+    try {
+      await slots.acquire(workspace, stop.signal);
+    } catch (err) {
+      if ((err as Error).message !== RunSlots.ABORTED) throw err;
+      return cancelBeforeStart(rt().db, runId);
+    } finally {
+      clearInterval(watch);
+    }
+  }
   try {
     return await runAgentSteps(runId, orgOf, waiting);
   } finally {

@@ -18,6 +18,9 @@ export class RunSlots {
   private readonly byWorkspace = new Map<string, number>();
   private readonly waiting: Array<{ workspace: string; start: () => void }> = [];
 
+  /** The error an aborted [acquire] rejects with. */
+  static readonly ABORTED = "run_slot_wait_aborted";
+
   private readonly total: number;
   private readonly perWorkspace: number;
 
@@ -39,14 +42,35 @@ export class RunSlots {
     this.byWorkspace.set(workspace, (this.byWorkspace.get(workspace) ?? 0) + 1);
   }
 
-  /** Resolves once a slot is free for [workspace]; first come, first served. */
-  acquire(workspace: string): Promise<void> {
+  /**
+   * Resolves once a slot is free for [workspace]; first come, first served. [signal] takes a
+   * waiting caller out of the line (Stop on a queued run): the promise rejects with
+   * [RunSlots.ABORTED] and no slot is held.
+   */
+  acquire(workspace: string, signal?: AbortSignal): Promise<void> {
+    if (signal?.aborted) return Promise.reject(new Error(RunSlots.ABORTED));
     // Nobody ahead who could also start: otherwise a newcomer would jump the line.
     if (this.free(workspace) && !this.waiting.some((w) => this.free(w.workspace))) {
       this.take(workspace);
       return Promise.resolve();
     }
-    return new Promise((resolve) => this.waiting.push({ workspace, start: resolve }));
+    return new Promise((resolve, reject) => {
+      const entry = {
+        workspace,
+        start: () => {
+          signal?.removeEventListener("abort", onAbort);
+          resolve();
+        },
+      };
+      const onAbort = () => {
+        const i = this.waiting.indexOf(entry);
+        if (i < 0) return; // Already started.
+        this.waiting.splice(i, 1);
+        reject(new Error(RunSlots.ABORTED));
+      };
+      signal?.addEventListener("abort", onAbort, { once: true });
+      this.waiting.push(entry);
+    });
   }
 
   release(workspace: string) {

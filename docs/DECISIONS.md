@@ -7482,3 +7482,18 @@ Oliver ("you decide everything").
 - **Webhook bodies are capped:** 1 MB on `/hooks/*`, 25 MB for git sync (GitHub's own cap), and
   inbound mail keeps its own limits; over the cap is 413 `payload_too_large`.
 - **Not changed:** Casama Link's daily cap counts only Link spend, as intended.
+
+## D-478 Bug hunt run fixes: Stop while queued, pickup joins, edits locked, stale runs, call topics, ticket prompts (2026-11-21)
+
+Open items 13–19 from `reports/bug-hunt-2026-11-21.md` (16 is the client's), decided by the
+coordinator for Oliver.
+
+- **Stop on a run waiting for a working slot ends it at once.** `RunSlots.acquire` takes an abort
+  signal; while a run waits for a slot its workflow looks for a stop request every second and, on
+  one, leaves the line and ends the run as cancelled (`cancelBeforeStart`) without starting it.
+- **A message sent while an update's pickup run (D-402) works joins that run,** like a message
+  sent during any chat run, instead of starting a second run alongside it. A pickup run has no
+  message of the person's own (it answers its task note) and looks for new messages the same way.
+- **Editing a message takes the chat lock** a send takes (D-413). A run whose start can't be
+  queued, after a send or an edit, fails with `run.failed` on its stream and the request fails;
+  an edit used to answer 202 for a run that would never reply.

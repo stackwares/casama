@@ -4781,6 +4781,18 @@ async function finishFailed(
   }
 }
 
+/**
+ * A run stopped while it waited for a working slot (D-478): it ends as cancelled without starting
+ * any of its work. Idempotent, so a replayed workflow can call it again.
+ */
+export async function cancelBeforeStart(db: Database, runId: string): Promise<{ status: string }> {
+  const info = await loadRun(db, runId);
+  if (!info) return { status: "missing" };
+  if (TERMINAL.has(info.status)) return { status: info.status };
+  await finishCancelled(db, info, async () => new EventBus(db, new Redactor()));
+  return { status: "cancelled" };
+}
+
 async function finishCancelled(db: Database, info: RunInfo, busFn: () => Promise<EventBus>) {
   const [run] = await db.execute<{ cancelled_by: string | null }>(
     sql`select cancelled_by from public.runs where id = ${info.runId}::uuid`,
