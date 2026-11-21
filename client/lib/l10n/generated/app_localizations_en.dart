@@ -9503,6 +9503,24 @@ class AppLocalizationsEn extends AppLocalizations {
       'This Docker has no Compose v2. Docker Desktop includes it; on Linux, install the docker-compose-plugin package.';
 
   @override
+  String get setupStepSkipped => 'Skipped';
+
+  @override
+  String get setupArtDocker => 'First, the box your server lives in.';
+
+  @override
+  String get setupArtServer => 'Building your home. This is the long part.';
+
+  @override
+  String get setupArtAccount => 'Your server is running!';
+
+  @override
+  String get setupArtModel => 'Now give it a brain.';
+
+  @override
+  String get setupArtPhone => 'Last step: bring it with you.';
+
+  @override
   String get setupDockerSlowTitle => 'Taking a while?';
 
   @override

@@ -31,6 +31,7 @@ import '../settings/model_keys_screen.dart';
 import 'docker_check.dart';
 import 'guided_setup.dart';
 import 'local_server.dart';
+import 'setup_art.dart';
 
 /// The steps of the guided setup, in the order the page shows them.
 enum SetupStage { docker, server, account, model, phone }
@@ -201,58 +202,94 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
         onSkip: () => _skip('phone', null),
       ),
     };
+    final title = Text(
+      _onMac ? l10n.setupTitleMac : l10n.setupTitle,
+      textAlign: TextAlign.center,
+      style: context.textTheme.titleMedium?.copyWith(
+        fontWeight: FontWeight.w700,
+        color: context.colorScheme.onSurfaceVariant,
+      ),
+    );
+    final header = Padding(
+      padding: const EdgeInsets.fromLTRB(AppSpace.xl, AppSpace.sm, AppSpace.xs, 0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          IconButton(
+            key: const Key('setupClose'),
+            tooltip: l10n.close,
+            onPressed: _leave,
+            icon: const Icon(LucideIcons.x),
+          ),
+        ],
+      ),
+    );
+    final step = AnimatedSwitcher(
+      duration: AppMotion.of(context, AppMotion.fast),
+      child: KeyedSubtree(key: ValueKey(stage), child: body),
+    );
     return Scaffold(
       key: const Key('setupScreen'),
       body: SafeArea(
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(AppSpace.xl, AppSpace.sm, AppSpace.xs, 0),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      _onMac ? l10n.setupTitleMac : l10n.setupTitle,
-                      style: context.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
-                    ),
-                  ),
-                  IconButton(
-                    key: const Key('setupClose'),
-                    tooltip: l10n.close,
-                    onPressed: _leave,
-                    icon: const Icon(LucideIcons.x),
-                  ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpace.md, vertical: AppSpace.md),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 560),
-                child: _Steps(at: stage),
-              ),
-            ),
-            Expanded(
-              child: SingleChildScrollView(
+        child: LayoutBuilder(
+          builder: (context, box) {
+            final wide = box.maxWidth >= setupWideWidth;
+            // The bar and the step, a little way down a tall window. Pinned, not centred, so the bar
+            // stays put while the step below it grows or shrinks; it scrolls when it doesn't fit.
+            final content = LayoutBuilder(
+              builder: (context, area) => SingleChildScrollView(
                 keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
                 padding: EdgeInsets.fromLTRB(
                   AppSpace.xl,
-                  AppSpace.sm,
+                  wide ? (area.maxHeight * 0.08).clamp(AppSpace.sm, 80.0) : AppSpace.sm,
                   AppSpace.xl,
                   BottomPadding.of(context, minimum: AppSpace.xl),
                 ),
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 480),
-                    child: AnimatedSwitcher(
-                      duration: AppMotion.of(context, AppMotion.fast),
-                      child: KeyedSubtree(key: ValueKey(stage), child: body),
+                child: Align(
+                  alignment: Alignment.topCenter,
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 520),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          title,
+                          const SizedBox(height: AppSpace.lg),
+                          _Steps(
+                            at: stage,
+                            skipped: {
+                              if (GuidedSetup.skipped.value.contains('ai')) SetupStage.model.index,
+                              if (GuidedSetup.skipped.value.contains('phone')) SetupStage.phone.index,
+                            },
+                          ),
+                          const SizedBox(height: AppSpace.xxl),
+                          step,
+                        ],
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-          ],
+            );
+            if (!wide) return Column(children: [header, Expanded(child: content)]);
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  flex: 9,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(AppSpace.md, AppSpace.md, 0, AppSpace.md),
+                    child: SetupArtPane(stage: stage),
+                  ),
+                ),
+                Expanded(
+                  flex: 11,
+                  child: Column(children: [header, Expanded(child: content)]),
+                ),
+              ],
+            );
+          },
         ),
       ),
     );
@@ -261,8 +298,11 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
 
 /// The five steps across the top: done ones ticked, the current one filled.
 class _Steps extends StatelessWidget {
-  const _Steps({required this.at});
+  const _Steps({required this.at, this.skipped = const {}});
   final SetupStage? at;
+
+  /// Steps passed over with Skip for Now: a muted dash, not a tick.
+  final Set<int> skipped;
 
   @override
   Widget build(BuildContext context) {
@@ -283,6 +323,7 @@ class _Steps extends StatelessWidget {
           Expanded(
             child: Semantics(
               selected: i == current,
+              value: i < current && skipped.contains(i) ? l10n.setupStepSkipped : null,
               child: Column(
                 spacing: AppSpace.xxs,
                 children: [
@@ -298,10 +339,12 @@ class _Steps extends StatelessWidget {
                         alignment: Alignment.center,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: i <= current ? scheme.primary : Colors.transparent,
+                          color: i <= current && !(i < current && skipped.contains(i)) ? scheme.primary : Colors.transparent,
                           border: Border.all(color: i <= current ? scheme.primary : scheme.outlineVariant, width: 2),
                         ),
-                        child: i < current
+                        child: i < current && skipped.contains(i)
+                            ? Icon(LucideIcons.minus, key: Key('setupStepSkipped-$i'), size: 15, color: scheme.primary)
+                            : i < current
                             ? Icon(LucideIcons.check, size: 15, color: scheme.onPrimary)
                             : Text(
                                 '${i + 1}',

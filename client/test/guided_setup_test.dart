@@ -307,6 +307,23 @@ void main() {
     expect(urls.single.fragment, 'docker-is-not-running-or-this-user-cannot-use-it');
   });
 
+  onMac('wide windows get the painted scene and a bot per step; narrow ones neither', (tester) async {
+    final backend = FakeBackend()..signedIn = false;
+    await open(tester, backend, docker: DockerState.notRunning);
+    expect(find.byKey(const Key('setupArtPane')), findsOneWidget);
+    expect(find.byKey(const Key('splashScene')), findsOneWidget);
+    expect(find.text('First, the box your server lives in.'), findsOneWidget);
+    expect(find.bySemanticsLabel('Thinker'), findsWidgets);
+
+    await setSize(tester, const Size(600, 1000));
+    await settle(tester);
+    expect(find.byKey(const Key('setupArtPane')), findsNothing);
+    expect(find.byKey(const Key('splashScene')), findsNothing);
+    expect(find.bySemanticsLabel('Thinker'), findsNothing, reason: "it would stack on the step's own icon");
+    expect(find.text('Docker needs to be running'), findsOneWidget);
+    await leave(tester);
+  });
+
   onMac('with Docker ready: one click downloads, starts and connects to the server', (tester) async {
     final backend = FakeBackend()..signedIn = false;
     String? switched;
@@ -393,6 +410,7 @@ void main() {
 
     // The phone: an address first, approved in the browser.
     expect(find.text('Connect your phone'), findsOneWidget);
+    expect(find.byKey(const Key('setupStepSkipped-3')), findsOneWidget, reason: 'a skipped step is a dash, not a tick');
     await tester.tap(find.byKey(const Key('setupPhoneTurnOn')));
     await settle(tester);
     expect(t.setup.onCalls, 1);

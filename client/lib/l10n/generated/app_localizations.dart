@@ -14968,6 +14968,42 @@ abstract class AppLocalizations {
   /// **'This Docker has no Compose v2. Docker Desktop includes it; on Linux, install the docker-compose-plugin package.'**
   String get setupDockerComposeBody;
 
+  /// No description provided for @setupStepSkipped.
+  ///
+  /// In en, this message translates to:
+  /// **'Skipped'**
+  String get setupStepSkipped;
+
+  /// No description provided for @setupArtDocker.
+  ///
+  /// In en, this message translates to:
+  /// **'First, the box your server lives in.'**
+  String get setupArtDocker;
+
+  /// No description provided for @setupArtServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Building your home. This is the long part.'**
+  String get setupArtServer;
+
+  /// No description provided for @setupArtAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Your server is running!'**
+  String get setupArtAccount;
+
+  /// No description provided for @setupArtModel.
+  ///
+  /// In en, this message translates to:
+  /// **'Now give it a brain.'**
+  String get setupArtModel;
+
+  /// No description provided for @setupArtPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Last step: bring it with you.'**
+  String get setupArtPhone;
+
   /// No description provided for @setupDockerSlowTitle.
   ///
   /// In en, this message translates to:
