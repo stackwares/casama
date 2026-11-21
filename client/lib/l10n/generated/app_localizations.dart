@@ -30518,6 +30518,30 @@ abstract class AppLocalizations {
   /// **'Billed directly by your provider; uses no Casama credits'**
   String get whoRunsOwnHelp;
 
+  /// No description provided for @whoRunsCasamaShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Casama\'s models, included with your plan'**
+  String get whoRunsCasamaShort;
+
+  /// No description provided for @whoRunsCasamaCost.
+  ///
+  /// In en, this message translates to:
+  /// **'Uses credits'**
+  String get whoRunsCasamaCost;
+
+  /// No description provided for @whoRunsOwnShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Your keys, billed by your provider'**
+  String get whoRunsOwnShort;
+
+  /// No description provided for @whoRunsOwnCost.
+  ///
+  /// In en, this message translates to:
+  /// **'No Casama credits'**
+  String get whoRunsOwnCost;
+
   /// No description provided for @whoRunsOwnNeedsKey.
   ///
   /// In en, this message translates to:

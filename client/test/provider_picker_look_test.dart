@@ -6,6 +6,7 @@ import 'dart:io';
 
 import 'package:casama/app.dart';
 import 'package:casama/core/providers.dart';
+import 'package:casama/core/billing.dart';
 import 'package:casama/features/home/home_shell.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -53,6 +54,49 @@ void main() {
       await tester.ensureVisible(find.byKey(const Key('moreProviders')));
       await settle();
       await shot(tester, dir, 'picker_more_${dark ? 'dark' : 'light'}');
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump(const Duration(minutes: 1));
+      tester.takeException();
+    }, skip: dir == null);
+  }
+
+  for (final dark in [false, true]) {
+    testWidgets('pictures: who runs your bots ${dark ? 'dark' : 'light'}', (tester) async {
+      await loadAppFonts();
+      SharedPreferences.setMockInitialValues({'theme_mode': dark ? 'dark' : 'light'});
+      tester.platformDispatcher.platformBrightnessTestValue = dark ? Brightness.dark : Brightness.light;
+      addTearDown(tester.platformDispatcher.clearPlatformBrightnessTestValue);
+      tester.view.physicalSize = const Size(390 * 3, 1100 * 3);
+      tester.view.devicePixelRatio = 3;
+      addTearDown(tester.view.reset);
+      final backend = FakeBackend()
+        ..billingEnabled = true
+        ..ownProvidersValue = true;
+      await tester.pumpWidget(
+        ShotFrame(
+          child: ProviderScope(
+            overrides: [
+              backendProvider.overrideWithValue(backend),
+              billingProvider.overrideWith((ref) async => backend.billing('org')),
+            ],
+            child: const CasamaApp(),
+          ),
+        ),
+      );
+      Future<void> settle() async {
+        for (var i = 0; i < 20; i++) {
+          await tester.pump(const Duration(milliseconds: 100));
+        }
+        tester.takeException();
+      }
+
+      await settle();
+      GoRouter.of(tester.element(find.byType(HomeShell))).go('/settings/keys');
+      await settle();
+      await shot(tester, dir!, 'who_runs_${dark ? 'dark' : 'light'}');
+      await tester.tap(find.byKey(const Key('workspaceDefaultOwn')));
+      await settle();
+      await shot(tester, dir, 'who_runs_own_${dark ? 'dark' : 'light'}');
       await tester.pumpWidget(const SizedBox());
       await tester.pump(const Duration(minutes: 1));
       tester.takeException();

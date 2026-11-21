@@ -18881,6 +18881,18 @@ class AppLocalizationsEn extends AppLocalizations {
       'Billed directly by your provider; uses no Casama credits';
 
   @override
+  String get whoRunsCasamaShort => 'Casama\'s models, included with your plan';
+
+  @override
+  String get whoRunsCasamaCost => 'Uses credits';
+
+  @override
+  String get whoRunsOwnShort => 'Your keys, billed by your provider';
+
+  @override
+  String get whoRunsOwnCost => 'No Casama credits';
+
+  @override
   String get whoRunsOwnNeedsKey =>
       'To use your own provider, add a chat key from it under Add a key below first.';
 

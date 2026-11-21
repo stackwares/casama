@@ -9,7 +9,6 @@ import '../../core/display_text.dart';
 import '../../core/billing.dart';
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
-import '../../core/haptics.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
 import '../../ui/adaptive_modal.dart';
@@ -21,6 +20,7 @@ import '../../ui/revealable.dart';
 import '../../core/remote_content.dart';
 import '../bots/model_picker.dart';
 import 'provider_picker.dart';
+import 'who_runs_choice.dart';
 
 /// Casama Cloud's shared OpenRouter key (D-186). The same id the server uses.
 const casamaCloudCredentialId = '00000000-0000-4000-8000-0000000000c1';
@@ -473,126 +473,85 @@ class _WhoRunsYourBotsSectionState extends ConsumerState<_WhoRunsYourBotsSection
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         SectionHeader(title: l10n.whoRunsYourBots),
-        AppCard(
-          padding: const EdgeInsets.all(AppSpace.lg),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            spacing: AppSpace.md,
-            children: [
-              RadioGroup<WorkspaceModelDefaultSource_Enum>(
-                groupValue: source,
-                onChanged: (v) {
-                        if (v == null) return;
-                        if (!admin) {
-                          showMessage(context, l10n.whoRunsAdminOnly);
-                          return;
-                        }
-                        if (v == WorkspaceModelDefaultSource_Enum.casama && casamaAvailable) {
-                          save(WorkspaceModelDefault(source_: WorkspaceModelDefaultSource_Enum.casama));
-                        } else if (v == WorkspaceModelDefaultSource_Enum.own) {
-                          chooseOwn();
-                        }
-                      },
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  spacing: AppSpace.xs,
-                  children: [
-                    if (casamaAvailable)
-                      ListTile(
-                        key: const Key('workspaceDefaultCasama'),
-                        contentPadding: EdgeInsets.zero,
-                        title: Text(l10n.whoRunsCasama),
-                        subtitle: Text(l10n.whoRunsCasamaHelp),
-                        trailing: const Radio<WorkspaceModelDefaultSource_Enum>(
-                          value: WorkspaceModelDefaultSource_Enum.casama,
-                        ),
-                        onTap: !admin
-                            ? () => showMessage(context, l10n.whoRunsAdminOnly)
-                            : () => save(WorkspaceModelDefault(source_: WorkspaceModelDefaultSource_Enum.casama)),
+        // The two choices are cards themselves, so they sit on the page, not inside another card.
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          spacing: AppSpace.md,
+          children: [
+            WhoRunsChoice(
+              ownSelected: source == WorkspaceModelDefaultSource_Enum.own || _pickingOwn,
+              casamaAvailable: casamaAvailable,
+              ownProviders: [for (final k in keys) k.provider],
+              onCasama: () {
+                if (!admin) {
+                  showMessage(context, l10n.whoRunsAdminOnly);
+                  return;
+                }
+                if (source == WorkspaceModelDefaultSource_Enum.casama) {
+                  // Backing out of a half-made switch to an own provider.
+                  setState(() {
+                    _pickingOwn = false;
+                    _pendingKeyId = null;
+                  });
+                  return;
+                }
+                save(WorkspaceModelDefault(source_: WorkspaceModelDefaultSource_Enum.casama));
+              },
+              onOwn: () {
+                if (source == WorkspaceModelDefaultSource_Enum.own) return;
+                chooseOwn();
+              },
+            ),
+            if (!admin)
+              FormNote(l10n.whoRunsAdminOnly, icon: LucideIcons.lock)
+            else if (keys.isEmpty)
+              FormNote(l10n.whoRunsOwnNeedsKey, icon: LucideIcons.keyRound),
+            if (showPickers) ...[
+              OwnKeyChips(
+                keys: keys,
+                selectedId: chosenKey?.id,
+                enabled: admin,
+                onSelected: (k) {
+                  // Never carry the old key's model over to a different provider.
+                  final m = ref.read(backendProvider).defaultModelFor(k.provider.value) ?? '';
+                  if (m.isNotEmpty) {
+                    save(
+                      WorkspaceModelDefault(
+                        source_: WorkspaceModelDefaultSource_Enum.own,
+                        credentialId: k.id,
+                        model: m,
                       ),
-                    ListTile(
-                      key: const Key('workspaceDefaultOwn'),
-                      contentPadding: EdgeInsets.zero,
-                      title: Text(l10n.whoRunsOwn),
-                      subtitle: Text(l10n.whoRunsOwnHelp),
-                      trailing: const Radio<WorkspaceModelDefaultSource_Enum>(
-                        value: WorkspaceModelDefaultSource_Enum.own,
+                    );
+                  } else {
+                    setState(() {
+                      _pickingOwn = true;
+                      _pendingKeyId = k.id;
+                    });
+                    showMessage(context, l10n.whoRunsOwnNeedsModel);
+                  }
+                },
+              ),
+              // Non-admins see the model but can't open the list (a pick would be thrown away).
+              IgnorePointer(
+                ignoring: !admin,
+                child: ModelPickerField(
+                  key: ValueKey('workspaceDefaultModel-${chosenKey?.id}'),
+                  credentialId: chosenKey?.id,
+                  value: chosenModel,
+                  onChanged: (m) {
+                    if (!admin || chosenKey == null || m.isEmpty) return;
+                    save(
+                      WorkspaceModelDefault(
+                        source_: WorkspaceModelDefaultSource_Enum.own,
+                        credentialId: chosenKey.id,
+                        model: m,
                       ),
-                      onTap: chooseOwn,
-                    ),
-                  ],
+                    );
+                  },
                 ),
               ),
-              if (!admin)
-                FormNote(l10n.whoRunsAdminOnly, icon: LucideIcons.lock)
-              else if (keys.isEmpty)
-                FormNote(l10n.whoRunsOwnNeedsKey, icon: LucideIcons.keyRound),
-              if (showPickers) ...[
-                DropdownButtonFormField<String>(
-                  key: ValueKey('workspaceDefaultKey-${chosenKey?.id}'),
-                  isExpanded: true,
-                  initialValue: chosenKey?.id,
-                  decoration: InputDecoration(
-                    labelText: l10n.modelKey,
-                    prefixIcon: const Icon(LucideIcons.keyRound, size: 20),
-                  ),
-                  items: [
-                    for (final k in keys)
-                      DropdownMenuItem(
-                        value: k.id,
-                        child: Text(
-                          '${k.label} · ${providerLabel(k.provider)}',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                  ],
-                  onChanged: !admin
-                      ? null
-                      : hapticOnChanged((id) {
-                          if (id == null) return;
-                          final k = keys.firstWhere((x) => x.id == id);
-                          // Never carry the old key's model over to a different provider.
-                          final m = ref.read(backendProvider).defaultModelFor(k.provider.value) ?? '';
-                          if (m.isNotEmpty) {
-                            save(
-                              WorkspaceModelDefault(
-                                source_: WorkspaceModelDefaultSource_Enum.own,
-                                credentialId: k.id,
-                                model: m,
-                              ),
-                            );
-                          } else {
-                            setState(() {
-                              _pickingOwn = true;
-                              _pendingKeyId = k.id;
-                            });
-                            showMessage(context, l10n.whoRunsOwnNeedsModel);
-                          }
-                        }, haptic: HapticsHelper.selection),
-                ),
-                // Non-admins see the model but can't open the list (a pick would be thrown away).
-                IgnorePointer(
-                  ignoring: !admin,
-                  child: ModelPickerField(
-                    key: ValueKey('workspaceDefaultModel-${chosenKey?.id}'),
-                    credentialId: chosenKey?.id,
-                    value: chosenModel,
-                    onChanged: (m) {
-                      if (!admin || chosenKey == null || m.isEmpty) return;
-                      save(
-                        WorkspaceModelDefault(
-                          source_: WorkspaceModelDefaultSource_Enum.own,
-                          credentialId: chosenKey.id,
-                          model: m,
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ],
             ],
-          ),
+          ],
         ),
       ],
     );
