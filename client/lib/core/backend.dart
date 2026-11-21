@@ -2184,6 +2184,26 @@ abstract class Backend {
     bool returnToApp = false,
   });
   Future<ConnectFlowStatus> connectStatus(String flowId);
+
+  /// How an MCP server at an address lets people in: nothing, a browser sign-in or a key (D-473).
+  Future<ProbeServerResponse> probeServer(String orgId, String url);
+
+  /// Connects an MCP server by address (D-473): done at once, or a sign-in to open. [botId] is
+  /// the bot whose card it came from; it gets the connection.
+  Future<ConnectAppResponse> connectServer(
+    String orgId, {
+    required String url,
+    required String name,
+    required String method,
+    String? apiKey,
+    String? authHeader,
+    bool privateUrl = false,
+    String? botId,
+    bool returnToApp = false,
+  });
+
+  /// Lets a bot use only these tools of a connection it has.
+  Future<void> setBotIntegrationTools(String botId, String integrationId, List<String> tools);
   Future<void> deleteIntegration(String integrationId);
   Future<Integration> setToolRisks(
     String integrationId,

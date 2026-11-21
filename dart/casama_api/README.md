@@ -408,6 +408,7 @@ Class | Method | HTTP request | Description
 [*IntegrationsApi*](doc/IntegrationsApi.md) | [**attachIntegration**](doc/IntegrationsApi.md#attachintegration) | **POST** /v1/bots/{id}/integrations | Let a bot use an integration&#39;s tools (optionally only some)
 [*IntegrationsApi*](doc/IntegrationsApi.md) | [**connectApp**](doc/IntegrationsApi.md#connectapp) | **POST** /v1/apps/connect | Connect a built-in app: with an API key at once, or start an OAuth sign-in
 [*IntegrationsApi*](doc/IntegrationsApi.md) | [**connectProviderApp**](doc/IntegrationsApi.md#connectproviderapp) | **POST** /v1/integrations/{id}/provider/connect | Add an app to a Composio or Pipedream connection and start signing in to it
+[*IntegrationsApi*](doc/IntegrationsApi.md) | [**connectServer**](doc/IntegrationsApi.md#connectserver) | **POST** /v1/apps/connect-server | Connect an MCP server by address: at once, with a key, or start a browser sign-in
 [*IntegrationsApi*](doc/IntegrationsApi.md) | [**connectStatus**](doc/IntegrationsApi.md#connectstatus) | **GET** /v1/apps/connect/{id} | Whether an OAuth sign-in has finished
 [*IntegrationsApi*](doc/IntegrationsApi.md) | [**createIntegration**](doc/IntegrationsApi.md#createintegration) | **POST** /v1/integrations | Add an MCP server, OpenAPI source, Composio or Pipedream Connect
 [*IntegrationsApi*](doc/IntegrationsApi.md) | [**deleteIntegration**](doc/IntegrationsApi.md#deleteintegration) | **DELETE** /v1/integrations/{id} | Disconnect: removes it from every bot and deletes its stored credential
@@ -415,6 +416,7 @@ Class | Method | HTTP request | Description
 [*IntegrationsApi*](doc/IntegrationsApi.md) | [**listIntegrations**](doc/IntegrationsApi.md#listintegrations) | **GET** /v1/integrations | 
 [*IntegrationsApi*](doc/IntegrationsApi.md) | [**listProviderAccounts**](doc/IntegrationsApi.md#listprovideraccounts) | **GET** /v1/integrations/{id}/provider/accounts | Accounts signed in through a Composio or Pipedream connection
 [*IntegrationsApi*](doc/IntegrationsApi.md) | [**listProviderApps**](doc/IntegrationsApi.md#listproviderapps) | **GET** /v1/integrations/{id}/provider/apps | Search a Composio or Pipedream connection&#39;s app directory
+[*IntegrationsApi*](doc/IntegrationsApi.md) | [**probeServer**](doc/IntegrationsApi.md#probeserver) | **POST** /v1/apps/probe | How an MCP server at an address lets people in: nothing, a browser sign-in, or a key
 [*IntegrationsApi*](doc/IntegrationsApi.md) | [**testIntegration**](doc/IntegrationsApi.md#testintegration) | **POST** /v1/integrations/{id}/test | List tools to prove the connection works (refreshes the tool cache)
 [*IntegrationsApi*](doc/IntegrationsApi.md) | [**updateIntegration**](doc/IntegrationsApi.md#updateintegration) | **PATCH** /v1/integrations/{id} | 
 [*KnowledgeApi*](doc/KnowledgeApi.md) | [**createKnowledgeSource**](doc/KnowledgeApi.md#createknowledgesource) | **POST** /v1/knowledge-sources | Add files, a website, a GitHub repository or documents from a connection; the worker reads it within a minute
@@ -901,6 +903,7 @@ Class | Method | HTTP request | Description
  - [ConnectDomainResult](doc/ConnectDomainResult.md)
  - [ConnectDomainResultClaim](doc/ConnectDomainResultClaim.md)
  - [ConnectFlowStatus](doc/ConnectFlowStatus.md)
+ - [ConnectServerRequest](doc/ConnectServerRequest.md)
  - [ConnectionSettings](doc/ConnectionSettings.md)
  - [ContentAuthor](doc/ContentAuthor.md)
  - [ContentReport](doc/ContentReport.md)
@@ -1339,6 +1342,8 @@ Class | Method | HTTP request | Description
  - [PortalRequest](doc/PortalRequest.md)
  - [PreviewPackRequest](doc/PreviewPackRequest.md)
  - [PreviewPluginRequest](doc/PreviewPluginRequest.md)
+ - [ProbeServerRequest](doc/ProbeServerRequest.md)
+ - [ProbeServerResponse](doc/ProbeServerResponse.md)
  - [Problem](doc/Problem.md)
  - [ProblemErrorsInner](doc/ProblemErrorsInner.md)
  - [ProfileSpace](doc/ProfileSpace.md)

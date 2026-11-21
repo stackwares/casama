@@ -81,6 +81,46 @@ export const ConnectAppRequest = z
   })
   .openapi("ConnectAppRequest");
 
+/** An MCP server that isn't in the catalog, offered by a bot in a chat or typed by the person (D-473). */
+export const ProbeServerRequest = z
+  .object({ org_id: Uuid, url: z.string().min(1).max(2000) })
+  .openapi("ProbeServerRequest");
+
+export const ProbeServerResponse = z
+  .object({
+    /** How the server lets people in: nothing, a browser sign-in, or a key. */
+    auth: z.enum(["none", "oauth", "key"]),
+    host: z.string(),
+    /** Where the browser sign-in happens, when it isn't the server's own host. */
+    sign_in_host: z.string().optional(),
+    /** False when this API can't take a browser sign-in back (plain http, or no way to register). */
+    oauth_available: z.boolean().optional(),
+    /** The catalog app at this address, if any: connect that instead. */
+    app_id: z.string().optional(),
+  })
+  .openapi("ProbeServerResponse");
+
+export const ConnectServerRequest = z
+  .object({
+    org_id: Uuid,
+    url: z.string().min(1).max(2000),
+    /** Shown to people; the connection's own name is made from it. */
+    name: z.string().min(1).max(60),
+    method: z.enum(["oauth", "api_key", "none"]),
+    api_key: z.string().min(1).max(10_000).optional(),
+    /** The header the key goes in (default Authorization, sent as Bearer). */
+    auth_header: z
+      .string()
+      .regex(/^[A-Za-z0-9-]{1,60}$/)
+      .optional(),
+    /** The person typed an address that holds its own key: keep it in Vault, not in the config. */
+    private_url: z.boolean().optional(),
+    /** The bot whose card this came from; it gets the connection. */
+    bot_id: Uuid.optional(),
+    return_to_app: z.boolean().optional(),
+  })
+  .openapi("ConnectServerRequest");
+
 export const ConnectAppResponse = z
   .object({
     status: z.enum(["connected", "authorize", "error"]),

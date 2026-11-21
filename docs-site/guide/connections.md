@@ -39,6 +39,30 @@ in as above. Bots never sign in for you, and no admin has to enable an app first
 - Apps the workspace already has get no button. The bot uses them, or adds them to itself, instead.
 - The card can offer apps from the gallery too.
 
+### Apps that aren't in the catalog
+
+A bot can also offer an app Casama doesn't have built in, when that app has an MCP server. It looks
+the server up in the public MCP registry, or uses an address you give it, and shows the same card
+with a **Connect** button.
+
+1. Tap **Connect**. The sheet shows the server's address and says Casama hasn't checked it.
+2. Sign in, paste a key, or just connect. Casama asks the server which one it needs, so you don't
+   have to know. A server that signs in with the browser also takes a key: tap **Use a key
+   instead**.
+3. Switch off any tools you don't want that bot to use, then tap **Done**.
+
+The connection belongs to the workspace and shows in **Settings** → **Integrations** as **Added in
+chat by** that bot. Only that bot gets it at first.
+
+- Only connect a server you trust. Anyone can run one and list it in the public registry.
+- Its tools always count as at least medium risk, whatever the server says about them, so your
+  approval settings apply.
+- When the address holds its own key, the bot leaves the address off the card and you type it in
+  the sheet. It's stored encrypted and never appears in the chat.
+- A server that runs on your own computer opens the add form on that computer, filled in. See
+  [Your own computer](/guide/companion).
+- Only owners and admins can connect a server, as with apps.
+
 ### Mention an app with `@`
 
 Type `@` in any chat to point a bot straight at a connected app — for example, *"Check `@Gmail` for
@@ -373,6 +397,9 @@ build one, see [Building plugins](/develop/plugins).
   yet. Buying data calls through Casama Cloud credits isn't offered.
 - Apps from the gallery can't use Google's sign-in, a sign-in client registered by the server's
   owner, or Composio. Those apps are built in.
+- A workspace holds up to 25 servers added from chats. Remove one to add another.
+- A server offered in a chat that signs in with the browser has to let new apps register themselves
+  (most do). One that doesn't connects with a key.
 - Bitwarden Secrets Manager isn't supported. Use named secrets for key-value secrets.
 - In the app, a secret is available to every bot in the workspace. Limiting a secret to certain
   bots is possible through the API only.

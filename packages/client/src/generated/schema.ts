@@ -4408,6 +4408,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/apps/connect-server": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Connect an MCP server by address: at once, with a key, or start a browser sign-in */
+        post: operations["connectServer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/apps/connect/{id}": {
         parameters: {
             query?: never;
@@ -4487,6 +4504,23 @@ export interface paths {
         get: operations["listProviderApps"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/probe": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** How an MCP server at an address lets people in: nothing, a browser sign-in, or a key */
+        post: operations["probeServer"];
         delete?: never;
         options?: never;
         head?: never;
@@ -10994,6 +11028,9 @@ export interface components {
             /** @enum {string|null} */
             auth?: "oauth" | "api_key" | "none" | null;
             bot_ids?: string[];
+            /** Format: uuid */
+            added_by_bot?: string | null;
+            unverified?: boolean;
             risk_overrides?: {
                 [key: string]: components["schemas"]["Risk"];
             };
@@ -13085,6 +13122,20 @@ export interface components {
             app: string;
             return_to_app?: boolean;
         };
+        ConnectServerRequest: {
+            /** Format: uuid */
+            org_id: string;
+            url: string;
+            name: string;
+            /** @enum {string} */
+            method: "oauth" | "api_key" | "none";
+            api_key?: string;
+            auth_header?: string;
+            private_url?: boolean;
+            /** Format: uuid */
+            bot_id?: string;
+            return_to_app?: boolean;
+        };
         ConnectFlowStatus: {
             /** @enum {string} */
             status: "pending" | "connected" | "error" | "expired";
@@ -13147,6 +13198,19 @@ export interface components {
             name: string;
             description: string;
             logo: string | null;
+        };
+        ProbeServerResponse: {
+            /** @enum {string} */
+            auth: "none" | "oauth" | "key";
+            host: string;
+            sign_in_host?: string;
+            oauth_available?: boolean;
+            app_id?: string;
+        };
+        ProbeServerRequest: {
+            /** Format: uuid */
+            org_id: string;
+            url: string;
         };
         UpdateIntegrationRequest: {
             risk_overrides?: {
@@ -33045,6 +33109,66 @@ export interface operations {
             };
         };
     };
+    connectServer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConnectServerRequest"];
+            };
+        };
+        responses: {
+            /** @description Connected, or a sign-in to open */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConnectAppResponse"];
+                };
+            };
+            /** @description Validation failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     connectStatus: {
         parameters: {
             query?: never;
@@ -33312,6 +33436,57 @@ export interface operations {
             };
             /** @description Not found */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    probeServer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProbeServerRequest"];
+            };
+        };
+        responses: {
+            /** @description What the server asked for */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProbeServerResponse"];
+                };
+            };
+            /** @description Validation failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };

@@ -8959,6 +8959,16 @@
               "format": "uuid"
             }
           },
+          "added_by_bot": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "unverified": {
+            "type": "boolean"
+          },
           "risk_overrides": {
             "type": "object",
             "additionalProperties": {
@@ -16216,6 +16226,58 @@
           "app"
         ]
       },
+      "ConnectServerRequest": {
+        "type": "object",
+        "properties": {
+          "org_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "url": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 60
+          },
+          "method": {
+            "type": "string",
+            "enum": [
+              "oauth",
+              "api_key",
+              "none"
+            ]
+          },
+          "api_key": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 10000
+          },
+          "auth_header": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9-]{1,60}$"
+          },
+          "private_url": {
+            "type": "boolean"
+          },
+          "bot_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "return_to_app": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "org_id",
+          "url",
+          "name",
+          "method"
+        ]
+      },
       "ConnectFlowStatus": {
         "type": "object",
         "properties": {
@@ -16473,6 +16535,53 @@
           "name",
           "description",
           "logo"
+        ]
+      },
+      "ProbeServerResponse": {
+        "type": "object",
+        "properties": {
+          "auth": {
+            "type": "string",
+            "enum": [
+              "none",
+              "oauth",
+              "key"
+            ]
+          },
+          "host": {
+            "type": "string"
+          },
+          "sign_in_host": {
+            "type": "string"
+          },
+          "oauth_available": {
+            "type": "boolean"
+          },
+          "app_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "auth",
+          "host"
+        ]
+      },
+      "ProbeServerRequest": {
+        "type": "object",
+        "properties": {
+          "org_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "url": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          }
+        },
+        "required": [
+          "org_id",
+          "url"
         ]
       },
       "UpdateIntegrationRequest": {
@@ -54022,6 +54131,82 @@
         }
       }
     },
+    "/v1/apps/connect-server": {
+      "post": {
+        "operationId": "connectServer",
+        "tags": [
+          "integrations"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Connect an MCP server by address: at once, with a key, or start a browser sign-in",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConnectServerRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Connected, or a sign-in to open",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConnectAppResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/apps/connect/{id}": {
       "get": {
         "operationId": "connectStatus",
@@ -54409,6 +54594,72 @@
           },
           "404": {
             "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/apps/probe": {
+      "post": {
+        "operationId": "probeServer",
+        "tags": [
+          "integrations"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "How an MCP server at an address lets people in: nothing, a browser sign-in, or a key",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProbeServerRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "What the server asked for",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProbeServerResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
             "content": {
               "application/problem+json": {
                 "schema": {

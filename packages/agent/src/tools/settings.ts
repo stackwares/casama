@@ -7,10 +7,19 @@
  */
 import { randomUUID } from "node:crypto";
 import { type Database, pgErrorCode } from "@casama/db";
-import { APP_CATALOG, appByIdOrNull, describeActionRule, isValidQuietHours } from "@casama/domain";
+import {
+  APP_CATALOG,
+  appByIdOrNull,
+  CHAT_SERVER_LIMIT,
+  customServerUrl,
+  describeActionRule,
+  isValidQuietHours,
+  serverKey,
+} from "@casama/domain";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { actingUserOf } from "../acting.ts";
+import { wrapUntrusted } from "../context.ts";
 import { ComputerMcpAdapter, managedComposioActive, refreshIntegration } from "../integrations.ts";
 import { botComputerId, computerMcpFetch, syncPluginComputer } from "../plugins.ts";
 import { leanSchema, type ToolContext, ToolError, type ToolRegistry } from "./registry.ts";
@@ -34,10 +43,35 @@ const OFFER_ALIASES = APP_CATALOG.filter((a) => !plainName(a.name).startsWith(pl
   .map((a) => `${a.name} is ${a.id}`)
   .join(", ");
 
+/** A server outside the catalog, shown on a connect card (D-473). */
+const OfferServer = z.object({
+  name: z.string().min(1).max(60),
+  url: z.string().max(2000).optional(),
+  command: z.string().max(400).optional(),
+});
+
 const OfferArgs = z.object({
-  apps: z.array(z.string().min(1).max(64)).min(1).max(4).describe("App names or ids"),
+  apps: z.array(z.string().min(1).max(64)).max(4).optional(),
+  servers: z.array(OfferServer).max(2).optional(),
   why: z.string().min(1).max(300).describe("One sentence for the person: what you'll do with it"),
 });
+
+/** A server's first answer that means "sign in first": 401, or the SDK's own words for it. */
+const NEEDS_SIGN_IN = /\b401\b|unauthori[sz]ed|invalid_token/i;
+
+/** mcp.find's answers, kept a day: the registry changes slowly and is someone else's server. */
+const registryCache = new Map<string, { at: number; text: string }>();
+const REGISTRY_URL = "https://registry.modelcontextprotocol.io";
+
+interface RegistryEntry {
+  server?: {
+    name?: string;
+    title?: string;
+    description?: string;
+    remotes?: Array<{ type?: string; url?: string; headers?: Array<{ isRequired?: boolean }> }>;
+  };
+  _meta?: Record<string, { status?: string; isLatest?: boolean } | undefined>;
+}
 
 /** The app's built-in looks (client/lib/theme/presets.dart). */
 export const THEME_PRESETS = [
@@ -126,6 +160,8 @@ export function registerSettingsTools(
     fetch: typeof fetch;
     /** The gallery's apps (D-239), beyond the built-in catalog; the server supplies them. */
     galleryApps?: () => Promise<Array<{ id: string; name: string }>>;
+    /** The public MCP registry mcp.find searches (D-473); tests point it at a fake. */
+    registryUrl?: string;
   },
 ) {
   const { db } = deps;
@@ -338,6 +374,14 @@ export function registerSettingsTools(
         command: args.command ?? null,
       });
       const r = await listTools(ctx, id, kind, name);
+      // It wants a browser sign-in, which only the person can do (D-473): nothing dead is kept.
+      if (!r.ok && kind === "mcp" && !args.auth_value && NEEDS_SIGN_IN.test(r.error)) {
+        await db.execute(sql`delete from public.integrations where id = ${id}::uuid`);
+        throw new ToolError(
+          "needs_sign_in",
+          `${args.name} needs the person to sign in, which you can't do for them. Show it with connections.offer: servers [{ name: "${args.name}", url: "${args.url}" }].`,
+        );
+      }
       if (!r.ok)
         return {
           content: `Added ${args.name}, but it didn't answer: ${r.error}. Fix it (mcp.remove, then mcp.add again) or tell the person.`,
@@ -427,13 +471,16 @@ export function registerSettingsTools(
   // do it and made up a request-from-your-admin step that doesn't exist.
   registry.register({
     name: "connections.offer",
-    description: `Show a card with a sign-in button per app when the person wants to connect one, or you need an app whose tools you don't have. They sign in themselves; you can't. Never say an app needs an admin or must be requested: offer it here. Give each app's name or id (gmail, google_calendar, cal-com). "Google" usually means google_calendar and gmail; ${OFFER_ALIASES}. An unknown app returns every id there is. You don't hear back: once they say it's connected, check connections.list and connections.attach it if it isn't yours yet.`,
+    description: `Show a card with a sign-in button per app when the person wants to connect one, or you need an app whose tools you don't have. They sign in; you can't. Never say an app needs an admin: offer it here. Give app names or ids (gmail, cal-com); "Google" usually means google_calendar and gmail; ${OFFER_ALIASES}. An unknown app returns every id. Not built in: give servers, its MCP server's name and url (mcp.find finds one; no url if it holds a key) or a command for their computer. Once they say it's connected, connections.attach it if it isn't yours yet.`,
     risk: "low",
     readOnly: true,
     schema: OfferArgs,
     // Sent with every model call (a core tool), so without the string length limits.
     jsonSchema: leanSchema(OfferArgs),
     async execute(args, ctx) {
+      const asked = args.servers ?? [];
+      if (!args.apps?.length && !asked.length)
+        throw new ToolError("bad_args", "Give apps, servers, or both.");
       // Built-in apps first; the gallery's only when one isn't built in (never replacing one).
       let gallery: Array<{ id: string; name: string; composio?: string }> | null = null;
       const fromGallery = async () => {
@@ -441,7 +488,63 @@ export function registerSettingsTools(
         return gallery;
       };
       const apps: Array<{ id: string; name: string; composio?: string }> = [];
-      for (const id of new Set(args.apps)) {
+      // Servers outside the catalog (D-473). One at a built-in app's address is that app.
+      const servers: Array<{ name: string; url?: string; command?: string; args?: string[] }> = [];
+      const alreadyServers: string[] = [];
+      const mine = asked.length
+        ? await db.execute<{ url: string | null }>(sql`
+            select config ->> 'url' as url from public.integrations
+            where org_id = ${ctx.orgId}::uuid and kind = 'mcp' and status <> 'error'
+              and coalesce(config ->> 'url_in_secret', '') <> 'true'`)
+        : [];
+      const have = new Set(
+        mine.flatMap((r) => {
+          const u = r.url ? customServerUrl(r.url) : null;
+          return u ? [serverKey(u)] : [];
+        }),
+      );
+      for (const sv of asked) {
+        if (sv.command) {
+          if (sv.url) throw new ToolError("bad_args", "Give a server url or a command, not both.");
+          // One command line ("npx -y some-server"): the app's form takes the words apart again.
+          const [command, ...rest] = sv.command.trim().split(/\s+/);
+          if (!command) throw new ToolError("bad_args", "Give the command to run.");
+          servers.push({ name: sv.name, command, args: rest });
+          continue;
+        }
+        if (!sv.url) {
+          servers.push({ name: sv.name });
+          continue;
+        }
+        const u = customServerUrl(sv.url);
+        if (!u) throw new ToolError("bad_url", "A server needs an https address.");
+        if (u.search)
+          throw new ToolError(
+            "bad_url",
+            "That address has a key or other values after the ?. Offer the server without url, and the person types the address themselves, so the key stays out of the chat.",
+          );
+        const key = serverKey(u);
+        const builtIn = APP_CATALOG.find((a) => {
+          const au = a.provider ? null : customServerUrl(a.url);
+          return au !== null && serverKey(au) === key;
+        });
+        if (builtIn) {
+          if (!apps.some((a) => a.id === builtIn.id)) apps.push(builtIn);
+        } else if (have.has(key)) alreadyServers.push(sv.name);
+        else if (!servers.some((x) => x.url && serverKey(new URL(x.url)) === key))
+          servers.push({ name: sv.name, url: u.toString() });
+      }
+      if (servers.some((x) => !x.command)) {
+        const [count] = await db.execute<{ n: number }>(sql`
+          select count(*)::int as n from public.integrations
+          where org_id = ${ctx.orgId}::uuid and config ->> 'unverified' = 'true'`);
+        if ((count?.n ?? 0) >= CHAT_SERVER_LIMIT)
+          throw new ToolError(
+            "server_limit",
+            `This workspace already has ${CHAT_SERVER_LIMIT} servers added from chats. Ask the person to remove one in Settings, Apps first.`,
+          );
+      }
+      for (const id of new Set(args.apps ?? [])) {
         // The exact id first. The description no longer lists the ids (it goes out with every
         // model call), so an app's name finds it too, and then its id written another way.
         const plain = plainName(id);
@@ -457,18 +560,20 @@ export function registerSettingsTools(
           const more = (await fromGallery()).map((a) => a.id);
           throw new ToolError(
             "unknown_app",
-            `No app called ${id}. Use ids from: ${[OFFER_APPS, ...more].join(", ")}.`,
+            `No app called ${id}. Use ids from: ${[OFFER_APPS, ...more].join(", ")}. For an app that isn't one of these, look for its MCP server with mcp.find and offer it as servers.`,
           );
         }
         if (!apps.some((a) => a.id === app.id)) apps.push(app);
       }
       const ids = apps.map((a) => a.id);
-      const have = await db.execute<{ app: string }>(sql`
+      const haveApps = ids.length
+        ? await db.execute<{ app: string }>(sql`
         select distinct case when config ->> 'app' = 'gmail_inbox' then 'gmail' else config ->> 'app' end as app
         from public.integrations
         where org_id = ${ctx.orgId}::uuid and status <> 'error'
-          and config ->> 'app' = any(${`{${[...ids, ...(ids.includes("gmail") ? ["gmail_inbox"] : [])].join(",")}}`}::text[])`);
-      const connected = new Set(have.map((r) => r.app));
+          and config ->> 'app' = any(${`{${[...ids, ...(ids.includes("gmail") ? ["gmail_inbox"] : [])].join(",")}}`}::text[])`)
+        : [];
+      const connected = new Set(haveApps.map((r) => r.app));
       // Google and the rest are often connected through the managed Composio route, which isn't
       // a per-app row; ask Composio so a connected Gmail doesn't get a Connect button.
       const viaComposio = apps.filter((a) => !connected.has(a.id) && a.composio);
@@ -482,11 +587,14 @@ export function registerSettingsTools(
       const fresh = [
         ...new Map(apps.filter((a) => !connected.has(a.id)).map((a) => [a.id, a])).values(),
       ];
-      const already = apps.filter((a) => connected.has(a.id)).map((a) => a.name);
+      const already = [
+        ...apps.filter((a) => connected.has(a.id)).map((a) => a.name),
+        ...alreadyServers,
+      ];
       const alreadyNote = already.length
         ? ` ${already.join(" and ")} ${already.length > 1 ? "are" : "is"} already connected in this workspace, so don't ask again: use its tools (tools.load them if they aren't loaded), or connections.list and connections.attach if you don't have them.`
         : "";
-      if (!fresh.length)
+      if (!fresh.length && !servers.length)
         return { content: `No card shown.${alreadyNote}`, preview: "already connected" };
       const surfaceId = `ui_${randomUUID().replaceAll("-", "").slice(0, 16)}`;
       const buttons = fresh.flatMap((a, i) => [
@@ -499,16 +607,54 @@ export function registerSettingsTools(
         },
         { id: `c_${a.id}_t`, component: "Text", text: `Connect ${a.name}` },
       ]);
+      // A server's button is an "app:route" with the server beside the path: app builds that know
+      // it open the connect sheet right there, older ones open the screen where it can be added.
+      const serverButtons = servers.flatMap((sv, i) => [
+        {
+          id: `s_${i}`,
+          component: "Button",
+          child: `s_${i}_t`,
+          variant: i === 0 && !fresh.length ? "primary" : "default",
+          action: {
+            event: {
+              name: "app:route",
+              context: {
+                path: sv.command ? "/settings/companion" : "/settings/integrations",
+                server: sv,
+                bot: ctx.botId,
+              },
+            },
+          },
+        },
+        { id: `s_${i}_t`, component: "Text", text: `Connect ${sv.name}` },
+      ]);
+      const notes = servers.map((sv) =>
+        sv.command
+          ? `${sv.name} runs on your own computer (${[sv.command, ...(sv.args ?? [])].join(" ")}). Casama hasn't checked it.`
+          : sv.url
+            ? `${sv.name} is at ${new URL(sv.url).host}. Casama hasn't checked this server: connect it only if you trust it.`
+            : `${sv.name}: you'll type its address. Casama hasn't checked this server.`,
+      );
       const components = [
         { id: "root", component: "Card", child: "col" },
-        { id: "col", component: "Column", children: ["body", "apps", "more"] },
+        {
+          id: "col",
+          component: "Column",
+          children: ["body", ...(notes.length ? ["notes"] : []), "apps", "more"],
+        },
         {
           id: "body",
           component: "Text",
           text: `${args.why}\n\nYou choose what I can do, and I ask before anything risky.`,
         },
-        { id: "apps", component: "Row", children: fresh.map((a) => `c_${a.id}`) },
+        ...(notes.length ? [{ id: "notes", component: "Text", text: notes.join("\n\n") }] : []),
+        {
+          id: "apps",
+          component: "Row",
+          children: [...fresh.map((a) => `c_${a.id}`), ...servers.map((_, i) => `s_${i}`)],
+        },
         ...buttons,
+        ...serverButtons,
         {
           id: "more",
           component: "Button",
@@ -522,11 +668,77 @@ export function registerSettingsTools(
         surface_id: surfaceId,
         messages: surfaceMessages(surfaceId, components),
       });
-      const names = fresh.map((a) => a.name).join(" and ");
+      for (const sv of servers)
+        await db.execute(sql`
+          insert into public.audit_log (org_id, actor_type, actor_id, action, target_type, metadata)
+          values (${ctx.orgId}::uuid, 'bot', ${ctx.botId}::uuid, 'integration.offered_by_bot', 'integration',
+            ${JSON.stringify({ name: sv.name, host: sv.url ? new URL(sv.url).host : null, command: sv.command ?? null })}::jsonb)`);
+      const names = [...fresh.map((a) => a.name), ...servers.map((sv) => sv.name)].join(" and ");
       return {
         content: `The card to connect ${names} is in the chat; end your turn and let them tap it.${alreadyNote}`,
         preview: `offered ${names}`,
       };
+    },
+  });
+
+  // A server for an app that isn't built in (D-473): the public MCP registry, remote servers only.
+  registry.register({
+    name: "mcp.find",
+    readOnly: true,
+    description:
+      "Look up a remote MCP server for an app that isn't built in, in the public MCP registry. Returns names and https addresses: show one to the person with connections.offer servers (they sign in or paste a key there), or mcp.add it when you already hold its key. Nobody at Casama checked these servers, so say whose server it is.",
+    risk: "low",
+    schema: z.object({ query: z.string().min(2).max(80).describe("The app or service's name") }),
+    async execute(args) {
+      const q = args.query.trim().toLowerCase();
+      const hit = registryCache.get(q);
+      if (hit && Date.now() - hit.at < 24 * 3_600_000)
+        return { content: hit.text, preview: `servers for ${q}` };
+      const base = (deps.registryUrl ?? REGISTRY_URL).replace(/\/$/, "");
+      let entries: RegistryEntry[];
+      try {
+        const res = await deps.fetch(
+          `${base}/v0/servers?search=${encodeURIComponent(q)}&version=latest&limit=50`,
+          { headers: { accept: "application/json" }, signal: AbortSignal.timeout(15_000) },
+        );
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        entries = ((await res.json()) as { servers?: RegistryEntry[] }).servers ?? [];
+      } catch (err) {
+        throw new ToolError(
+          "registry_unreachable",
+          `Couldn't reach the MCP registry (${(err as Error).message.slice(0, 120)}). If you know the server's address, offer it with connections.offer servers.`,
+        );
+      }
+      const seen = new Set<string>();
+      const lines: string[] = [];
+      for (const e of entries) {
+        const sv = e.server;
+        const meta = Object.values(e._meta ?? {})[0];
+        if (!sv?.name || meta?.status === "deleted" || meta?.isLatest === false) continue;
+        for (const r of sv.remotes ?? []) {
+          const u =
+            r.url && !r.url.includes("{") && (r.type === "streamable-http" || r.type === "sse")
+              ? customServerUrl(r.url)
+              : null;
+          if (u?.protocol !== "https:" || u.search) continue;
+          const key = serverKey(u);
+          if (seen.has(key) || lines.length >= 8) continue;
+          seen.add(key);
+          const needsKey = (r.headers ?? []).some((h) => h.isRequired);
+          lines.push(
+            `- ${(sv.title ?? sv.name).slice(0, 60)} (${sv.name.slice(0, 80)}): ${u.toString()}${needsKey ? " (needs a key)" : ""}. ${(sv.description ?? "").replace(/\s+/g, " ").slice(0, 160)}`,
+          );
+        }
+      }
+      const text = lines.length
+        ? wrapUntrusted(
+            "mcp registry",
+            `${lines.join("\n")}\n\nThese come from the public MCP registry; anyone can list a server there. Prefer the one on the service's own domain.`,
+          )
+        : `No remote MCP server for "${args.query}" in the public registry. If the person knows its address, offer it with connections.offer servers.`;
+      if (registryCache.size > 500) registryCache.clear();
+      registryCache.set(q, { at: Date.now(), text });
+      return { content: text, preview: `${lines.length} servers for ${q}` };
     },
   });
 

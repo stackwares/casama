@@ -5375,6 +5375,64 @@ class FakeBackend implements Backend {
     );
   }
 
+  /// What probeServer answers (D-473), and what connectServer and setBotIntegrationTools were asked.
+  ProbeServerResponse serverProbe = ProbeServerResponse(auth: ProbeServerResponseAuthEnum.none, host: 'mcp.example.com');
+  final serverConnects = <({String url, String name, String method, String? apiKey, bool privateUrl, String? botId})>[];
+  final toolLimits = <String, List<String>>{};
+  @override
+  Future<ProbeServerResponse> probeServer(String orgId, String url) async => serverProbe;
+
+  Integration _server(String name, String method, String? botId) {
+    final i = Integration(
+      id: 'srv-$name',
+      orgId: orgId,
+      kind: IntegrationKind.mcp,
+      name: name.toLowerCase().replaceAll(' ', '_'),
+      status: IntegrationStatusEnum.ok,
+      error: null,
+      tools: [
+        IntegrationToolsInner(name: 'read_things', description: 'Reads', risk: Risk.medium),
+        IntegrationToolsInner(name: 'delete_things', description: 'Deletes', risk: Risk.high),
+      ],
+      toolsCachedAt: DateTime.now(),
+      createdAt: DateTime.now(),
+      botIds: [?botId],
+      addedByBot: botId,
+      unverified: true,
+      riskOverrides: const {},
+    );
+    integrationList.removeWhere((x) => x.id == i.id);
+    integrationList.add(i);
+    return i;
+  }
+
+  @override
+  Future<ConnectAppResponse> connectServer(
+    String orgId, {
+    required String url,
+    required String name,
+    required String method,
+    String? apiKey,
+    String? authHeader,
+    bool privateUrl = false,
+    String? botId,
+    bool returnToApp = false,
+  }) async {
+    serverConnects.add((url: url, name: name, method: method, apiKey: apiKey, privateUrl: privateUrl, botId: botId));
+    if (method == 'oauth') {
+      return ConnectAppResponse(
+        status: ConnectAppResponseStatusEnum.authorize,
+        authorizeUrl: 'https://auth.example.com/authorize',
+        flowId: 'flow-server:$name',
+      );
+    }
+    return ConnectAppResponse(status: ConnectAppResponseStatusEnum.connected, integration: _server(name, method, botId));
+  }
+
+  @override
+  Future<void> setBotIntegrationTools(String botId, String integrationId, List<String> tools) async =>
+      toolLimits[integrationId] = tools;
+
   @override
   Future<void> deleteIntegration(String integrationId) async {
     deleted.add(integrationId);

@@ -16,12 +16,15 @@ import 'package:casama_api/src/model/attach_integration_request.dart';
 import 'package:casama_api/src/model/connect_app_request.dart';
 import 'package:casama_api/src/model/connect_app_response.dart';
 import 'package:casama_api/src/model/connect_flow_status.dart';
+import 'package:casama_api/src/model/connect_server_request.dart';
 import 'package:casama_api/src/model/create_integration_request.dart';
 import 'package:casama_api/src/model/integration.dart';
 import 'package:casama_api/src/model/integration_list.dart';
 import 'package:casama_api/src/model/integration_test_result.dart';
 import 'package:casama_api/src/model/mcp_question.dart';
 import 'package:casama_api/src/model/ok.dart';
+import 'package:casama_api/src/model/probe_server_request.dart';
+import 'package:casama_api/src/model/probe_server_response.dart';
 import 'package:casama_api/src/model/provider_account_list.dart';
 import 'package:casama_api/src/model/provider_app_list.dart';
 import 'package:casama_api/src/model/provider_connect_request.dart';
@@ -413,6 +416,102 @@ _responseData = rawData == null ? null : deserialize<ProviderConnectResponse, Pr
     }
 
     return Response<ProviderConnectResponse>(
+      data: _responseData,
+      headers: _response.headers,
+      isRedirect: _response.isRedirect,
+      requestOptions: _response.requestOptions,
+      redirects: _response.redirects,
+      statusCode: _response.statusCode,
+      statusMessage: _response.statusMessage,
+      extra: _response.extra,
+    );
+  }
+
+  /// Connect an MCP server by address: at once, with a key, or start a browser sign-in
+  /// 
+  ///
+  /// Parameters:
+  /// * [connectServerRequest] 
+  /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
+  /// * [headers] - Can be used to add additional headers to the request
+  /// * [extras] - Can be used to add flags to the request
+  /// * [validateStatus] - A [ValidateStatus] callback that can be used to determine request success based on the HTTP status of the response
+  /// * [onSendProgress] - A [ProgressCallback] that can be used to get the send progress
+  /// * [onReceiveProgress] - A [ProgressCallback] that can be used to get the receive progress
+  ///
+  /// Returns a [Future] containing a [Response] with a [ConnectAppResponse] as data
+  /// Throws [DioException] if API call or serialization fails
+  Future<Response<ConnectAppResponse>> connectServer({ 
+    required ConnectServerRequest connectServerRequest,
+    CancelToken? cancelToken,
+    Map<String, dynamic>? headers,
+    Map<String, dynamic>? extra,
+    ValidateStatus? validateStatus,
+    ProgressCallback? onSendProgress,
+    ProgressCallback? onReceiveProgress,
+  }) async {
+    final _path = r'/v1/apps/connect-server';
+    final _options = Options(
+      method: r'POST',
+      headers: <String, dynamic>{
+        ...?headers,
+      },
+      extra: <String, dynamic>{
+        'secure': <Map<String, String>>[
+          {
+            'type': 'http',
+            'scheme': 'bearer',
+            'name': 'bearerAuth',
+          },
+        ],
+        ...?extra,
+      },
+      contentType: 'application/json',
+      validateStatus: validateStatus,
+    );
+
+    dynamic _bodyData;
+
+    try {
+_bodyData=jsonEncode(connectServerRequest);
+    } catch(error, stackTrace) {
+      throw DioException(
+         requestOptions: _options.compose(
+          _dio.options,
+          _path,
+        ),
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    final _response = await _dio.request<Object>(
+      _path,
+      data: _bodyData,
+      options: _options,
+      cancelToken: cancelToken,
+      onSendProgress: onSendProgress,
+      onReceiveProgress: onReceiveProgress,
+    );
+
+    ConnectAppResponse? _responseData;
+
+    try {
+final rawData = _response.data;
+_responseData = rawData == null ? null : deserialize<ConnectAppResponse, ConnectAppResponse>(rawData, 'ConnectAppResponse', growable: true);
+
+    } catch (error, stackTrace) {
+      throw DioException(
+        requestOptions: _response.requestOptions,
+        response: _response,
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    return Response<ConnectAppResponse>(
       data: _responseData,
       headers: _response.headers,
       isRedirect: _response.isRedirect,
@@ -997,6 +1096,102 @@ _responseData = rawData == null ? null : deserialize<ProviderAppList, ProviderAp
     }
 
     return Response<ProviderAppList>(
+      data: _responseData,
+      headers: _response.headers,
+      isRedirect: _response.isRedirect,
+      requestOptions: _response.requestOptions,
+      redirects: _response.redirects,
+      statusCode: _response.statusCode,
+      statusMessage: _response.statusMessage,
+      extra: _response.extra,
+    );
+  }
+
+  /// How an MCP server at an address lets people in: nothing, a browser sign-in, or a key
+  /// 
+  ///
+  /// Parameters:
+  /// * [probeServerRequest] 
+  /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
+  /// * [headers] - Can be used to add additional headers to the request
+  /// * [extras] - Can be used to add flags to the request
+  /// * [validateStatus] - A [ValidateStatus] callback that can be used to determine request success based on the HTTP status of the response
+  /// * [onSendProgress] - A [ProgressCallback] that can be used to get the send progress
+  /// * [onReceiveProgress] - A [ProgressCallback] that can be used to get the receive progress
+  ///
+  /// Returns a [Future] containing a [Response] with a [ProbeServerResponse] as data
+  /// Throws [DioException] if API call or serialization fails
+  Future<Response<ProbeServerResponse>> probeServer({ 
+    required ProbeServerRequest probeServerRequest,
+    CancelToken? cancelToken,
+    Map<String, dynamic>? headers,
+    Map<String, dynamic>? extra,
+    ValidateStatus? validateStatus,
+    ProgressCallback? onSendProgress,
+    ProgressCallback? onReceiveProgress,
+  }) async {
+    final _path = r'/v1/apps/probe';
+    final _options = Options(
+      method: r'POST',
+      headers: <String, dynamic>{
+        ...?headers,
+      },
+      extra: <String, dynamic>{
+        'secure': <Map<String, String>>[
+          {
+            'type': 'http',
+            'scheme': 'bearer',
+            'name': 'bearerAuth',
+          },
+        ],
+        ...?extra,
+      },
+      contentType: 'application/json',
+      validateStatus: validateStatus,
+    );
+
+    dynamic _bodyData;
+
+    try {
+_bodyData=jsonEncode(probeServerRequest);
+    } catch(error, stackTrace) {
+      throw DioException(
+         requestOptions: _options.compose(
+          _dio.options,
+          _path,
+        ),
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    final _response = await _dio.request<Object>(
+      _path,
+      data: _bodyData,
+      options: _options,
+      cancelToken: cancelToken,
+      onSendProgress: onSendProgress,
+      onReceiveProgress: onReceiveProgress,
+    );
+
+    ProbeServerResponse? _responseData;
+
+    try {
+final rawData = _response.data;
+_responseData = rawData == null ? null : deserialize<ProbeServerResponse, ProbeServerResponse>(rawData, 'ProbeServerResponse', growable: true);
+
+    } catch (error, stackTrace) {
+      throw DioException(
+        requestOptions: _response.requestOptions,
+        response: _response,
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    return Response<ProbeServerResponse>(
       data: _responseData,
       headers: _response.headers,
       isRedirect: _response.isRedirect,

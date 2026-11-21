@@ -326,6 +326,34 @@ class _CompanionSkeleton extends StatelessWidget {
   }
 }
 
+/// A bot offered a server that runs on the person's own computer (D-473): opens the add form with
+/// its name and command filled in, for the person to check and save. False when this device can't
+/// run one, or isn't set up to (the caller then says where to add it).
+Future<bool> addOfferedLocalServer(
+  BuildContext context,
+  WidgetRef ref, {
+  required String label,
+  required String command,
+  List<String> args = const [],
+}) async {
+  if (!ref.read(companionProvider).supported) return false;
+  final device = await ref.read(companionControllerProvider.future).catchError((_) => null);
+  if (device == null || !capsOf(device).contains('mcp') || !context.mounted) return false;
+  final servers = await ref.read(localMcpServersProvider.future).catchError((_) => const <LocalMcpConfig>[]);
+  if (!context.mounted) return false;
+  final added = await showAdaptiveSheet<LocalMcpConfig>(
+    context: context,
+    builder: (_) => _LocalMcpForm(
+      device: device,
+      taken: {for (final s in servers) s.key},
+      prefill: LocalMcpConfig(key: '', label: label, kind: 'stdio', command: command, args: args),
+    ),
+  );
+  if (added == null || !context.mounted) return true;
+  await runGuarded(context, () => ref.read(companionControllerProvider.notifier).saveMcpServers([...servers, added]));
+  return true;
+}
+
 class _LocalMcpSection extends ConsumerStatefulWidget {
   const _LocalMcpSection({required this.device, required this.enabled});
   final LocalDevice device;
@@ -490,12 +518,15 @@ class _LocalMcpSectionState extends ConsumerState<_LocalMcpSection> {
 
 /// Adds or edits a local MCP server: a command, or an address with how it signs in (D-363).
 class _LocalMcpForm extends StatefulWidget {
-  const _LocalMcpForm({required this.device, required this.taken, this.initial});
+  const _LocalMcpForm({required this.device, required this.taken, this.initial, this.prefill});
   final LocalDevice device;
   final Set<String> taken;
 
   /// The server being edited; null when adding one.
   final LocalMcpConfig? initial;
+
+  /// A new server's fields to start from (one a bot offered, D-473); the person checks and saves.
+  final LocalMcpConfig? prefill;
 
   @override
   State<_LocalMcpForm> createState() => _LocalMcpFormState();
@@ -517,7 +548,7 @@ class _LocalMcpFormState extends State<_LocalMcpForm> {
   @override
   void initState() {
     super.initState();
-    final i = widget.initial;
+    final i = widget.initial ?? widget.prefill;
     if (i == null) return;
     _label.text = i.label;
     _kind = i.kind;

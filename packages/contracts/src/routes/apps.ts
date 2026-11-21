@@ -4,6 +4,9 @@ import {
   ConnectAppRequest,
   ConnectAppResponse,
   ConnectFlowStatus,
+  ConnectServerRequest,
+  ProbeServerRequest,
+  ProbeServerResponse,
   ProviderAccount,
   ProviderApp,
   ProviderConnectRequest,
@@ -42,6 +45,39 @@ export const connectApp = createRoute({
   security,
   summary: "Connect a built-in app: with an API key at once, or start an OAuth sign-in",
   request: { body: jsonBody(ConnectAppRequest) },
+  responses: {
+    200: jsonResponse("Connected, or a sign-in to open", ConnectAppResponse),
+    400: e400,
+    401: e401,
+    403: e403,
+    404: e404,
+  },
+});
+
+export const probeServer = createRoute({
+  operationId: "probeServer",
+  method: "post",
+  path: "/v1/apps/probe",
+  tags: ["integrations"],
+  security,
+  summary: "How an MCP server at an address lets people in: nothing, a browser sign-in, or a key",
+  request: { body: jsonBody(ProbeServerRequest) },
+  responses: {
+    200: jsonResponse("What the server asked for", ProbeServerResponse),
+    400: e400,
+    401: e401,
+    403: e403,
+  },
+});
+
+export const connectServer = createRoute({
+  operationId: "connectServer",
+  method: "post",
+  path: "/v1/apps/connect-server",
+  tags: ["integrations"],
+  security,
+  summary: "Connect an MCP server by address: at once, with a key, or start a browser sign-in",
+  request: { body: jsonBody(ConnectServerRequest) },
   responses: {
     200: jsonResponse("Connected, or a sign-in to open", ConnectAppResponse),
     400: e400,

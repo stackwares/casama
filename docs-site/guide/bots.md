@@ -385,6 +385,7 @@ it more careful or quieter happens straight away.
 | A bot can | How it asks |
 | --- | --- |
 | Add an MCP server for itself: a remote one by its https address, or one it runs on its own computer with a command such as `npx -y some-mcp-server` | Always asks |
+| Offer an app that isn't built in, by its MCP server (it can look one up in the public MCP registry) | Shows a card with **Connect**. You sign in or paste a key there. See [Apps that aren't in the catalog](/guide/connections#apps-that-aren-t-in-the-catalog) |
 | Start using one of the workspace's connections, optionally only some of its tools | Always asks |
 | Suggest a plugin | Shows a card that opens the plugin's install screen, where you review it and enter any keys |
 | Suggest a new look for the app (a theme, colors, fonts, light or dark) | Shows a card. **Apply** changes the look on that device only, with **Undo** |

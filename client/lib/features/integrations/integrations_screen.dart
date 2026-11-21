@@ -767,6 +767,13 @@ class _Connected extends ConsumerWidget {
   }
 }
 
+/// The name of the bot that added this connection from a chat, when one did and it's still here.
+String? _addedBy(WidgetRef ref, Integration i) {
+  final id = i.addedByBot;
+  if (id == null) return null;
+  return (ref.watch(botsProvider).value ?? const <Bot>[]).where((b) => b.id == id).firstOrNull?.name;
+}
+
 class _ConnectionCard extends ConsumerWidget {
   const _ConnectionCard({required this.integration});
   final Integration integration;
@@ -801,6 +808,8 @@ class _ConnectionCard extends ConsumerWidget {
           : [
               if (i.tools.isNotEmpty) l10n.toolCount(i.tools.length),
               l10n.usedByBots(users.length),
+              // A bot brought it in from a chat (D-473): say which.
+              if (_addedBy(ref, i) case final String bot) l10n.addedInChatBy(bot),
             ].join(' · '),
       error: error,
       users: users,

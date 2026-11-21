@@ -7327,6 +7327,58 @@ only the last words of a help sentence. So:
   each claim and every minute. Backups of the old `.env` are in `/root/.env.bak-*` on the server.
 - **Self-hosting:** defaults unchanged (`WARM_POOL_SIZE` 0, `COMPUTER_MEMORY_MB` 2048).
 
+## D-473 Bots offer any MCP server in a chat, and the person connects it there (2026-11-21)
+
+- **Problem:** `connections.offer` (D-259) only knew the catalog and the gallery, and `mcp.add`
+  (D-242) only took a key. A bot asked to "connect my Linear-like tool" for an app Casama doesn't
+  have could only send the person to Settings, and a server that signs in with the browser ended up
+  added but dead. Plan: `docs/MCP-IN-CHAT-PLAN.md` (Oliver: "decide all for me", then "build all in
+  one go").
+- **The card:** `connections.offer` takes `servers` (up to 2, beside `apps`): a name and an https
+  address, a name alone (the person types the address), or a name and a command for the person's
+  own computer. It stays the one core tool. The card names the host and says Casama hasn't checked
+  the server. An address with a `?` in it is refused, so a key never lands in the chat; one at a
+  built-in app's address becomes that app's usual button; one the workspace has gets no card.
+- **Old app builds:** the server can't tell which app build it is talking to, so a server's button
+  is an `app:route` to Settings → Integrations (or Use this computer) with `server` and `bot`
+  beside the path. Builds that know it open the connect sheet in the chat; older ones open the
+  screen where the server can be added by hand. No dead button, no release ordering.
+- **The API:** `POST /v1/apps/probe` sends the server an `initialize` without credentials: an
+  answer means no sign-in, a 401 or 403 with OAuth metadata means a browser sign-in, any other 401
+  or 403 means a key. `POST /v1/apps/connect-server` connects it (`oauth`, `api_key` with an
+  optional header name, or `none`) and gives it to the offering bot. Two routes of their own, not
+  new fields on `/v1/apps/connect`, so the existing request doesn't change shape. Both are for
+  owners and admins, like apps. The probe is limited to 20 a minute per person.
+- **Sign-in:** the catalog's flow, moved into `startOAuth`: discovery, PKCE, the same
+  `/oauth/callback`, tokens in Vault, the same refresh. A flow row's `app_id` is `custom` (no
+  migration). The client is Casama's client document where the server reads those and the API is
+  public, else it registers itself. The sign-in may be on another host; the sheet names it first.
+- **What is stored:** an `mcp` integration with `config.unverified`, `config.label` and
+  `config.added_in_chat_by`. A typed address, or one with a query, is the Vault secret
+  (`url_in_secret`, as for Zoho, D-346); the config keeps only its origin. A server that fails its
+  first check is deleted, not left behind.
+- **Risk:** an unverified server's tools are never low risk: `readOnlyHint` is its own word and
+  nobody checked it (`McpAdapter`). Full access (D-394) doesn't skip the tap; nothing connects
+  without it. A workspace holds 25 unverified servers.
+- **Tools:** after connecting, the sheet lists the tools with a switch each; switching some off
+  saves the bot's tool allowlist, switching all off detaches it.
+- **Trust label, simpler than planned:** the plan had three sources (catalog, public registry,
+  unknown). The registry can't be searched by address and anyone can list a server there, so there
+  are two: a built-in or gallery app, or "not checked by Casama".
+- **`mcp.add`:** a remote server that answers 401 without a key is removed again and the bot is
+  told to offer it with `connections.offer` instead.
+- **`mcp.find`:** searches the public MCP registry (`registry.modelcontextprotocol.io`, free, so no
+  `docs/COSTS.md` change) for remote https servers, eight at most, cached a day, wrapped as
+  untrusted text. Not a core tool; the `mcp` group's line in the lazy index says what it is for.
+- **Own computer:** a card with a command opens the add-local-server form on a computer that runs
+  local servers (D-096), filled in for the person to check and save. Elsewhere the app says where
+  to add it.
+- **Not done:** members connecting servers without an admin, a per-workspace allowlist of servers,
+  and a card label for servers found in the registry.
+- **Tests:** `apps/server/test/apps.test.ts` (probe, the three ways in, a private address, the
+  limit, admins only), `apps/server/test/bot-settings.test.ts` (the card, `mcp.add`, `mcp.find`),
+  `client/test/connect_server_test.dart` (the sheet, tool switches, the typed address, own computer).
+
 ## D-476 A browser inside the phone app that a bot can drive, built and kept off (2026-11-21)
 
 - **Asked by Oliver:** "drive our own platform-native in-app webview instead of from a bot's

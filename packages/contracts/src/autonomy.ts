@@ -161,6 +161,10 @@ export const Integration = z
     auth: z.enum(["oauth", "api_key", "none"]).nullable().optional(),
     /** Bots that may use it. */
     bot_ids: z.array(Uuid).optional(),
+    /** The bot that offered it in a chat or added it for itself, if one did (D-473). */
+    added_by_bot: Uuid.nullable().optional(),
+    /** A server outside the catalog that nobody at Casama checked (D-473). */
+    unverified: z.boolean().optional(),
     /** Admin overrides of a tool's risk (low runs freely, high always asks). */
     risk_overrides: z.record(z.string(), Risk).optional(),
     /** local_mcp: the computer it runs on and the person who owns it (D-096). */

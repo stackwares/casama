@@ -3,6 +3,7 @@ import { once } from "node:events";
 import { createServer, type IncomingMessage, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
 import { registerSettingsTools, ToolRegistry } from "@casama/agent";
+import { APP_CATALOG } from "@casama/domain";
 import type { ExecChunk, McpServerSpec } from "@casama/sandbox";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
@@ -79,6 +80,53 @@ beforeAll(async () => {
       await server.connect(transport);
       return transport.handleRequest(req, res, raw ? JSON.parse(raw) : undefined);
     }
+    // A server that wants a browser sign-in, and the public MCP registry (D-473).
+    if (path === "/locked")
+      return res
+        .writeHead(401, { "content-type": "application/json" })
+        .end(JSON.stringify({ error: "invalid_token" }));
+    if (path === "/registry/v0/servers")
+      return res.writeHead(200, { "content-type": "application/json" }).end(
+        JSON.stringify({
+          servers: [
+            {
+              server: {
+                name: "app.acme/crm",
+                title: "Acme CRM",
+                description: "Deals and contacts.",
+                remotes: [
+                  { type: "streamable-http", url: "https://mcp.acme.example/mcp" },
+                  { type: "streamable-http", url: "https://mcp.acme.example/mcp?key={key}" },
+                  { type: "stdio", url: "https://nope.example" },
+                ],
+              },
+              _meta: { official: { status: "active", isLatest: true } },
+            },
+            {
+              server: {
+                name: "app.acme/crm",
+                remotes: [{ type: "streamable-http", url: "https://old.acme.example/mcp" }],
+              },
+              _meta: { official: { status: "active", isLatest: false } },
+            },
+            {
+              server: {
+                name: "io.keyed/acme",
+                description: "Needs a key",
+                remotes: [
+                  {
+                    type: "sse",
+                    url: "https://keyed.example/sse",
+                    headers: [{ isRequired: true }],
+                  },
+                  { type: "streamable-http", url: "http://plain.example/mcp" },
+                ],
+              },
+              _meta: { official: { status: "active", isLatest: true } },
+            },
+          ],
+        }),
+      );
     res.writeHead(404).end();
   }).listen(0, "127.0.0.1");
   await once(services, "listening");
@@ -127,6 +175,7 @@ beforeAll(async () => {
     db: h.handle.db,
     fetch: fakeFetch,
     galleryApps: async () => [{ id: "cal-com", name: "Cal.com" }],
+    registryUrl: "https://mcp.test/registry",
   });
 }, 60_000);
 afterAll(async () => {
@@ -285,6 +334,110 @@ describe("bot settings tools", () => {
     expect(again.content).toMatch(/No card shown. Google Calendar is already connected/);
     expect(events).toHaveLength(0);
     await h.tdb.admin`delete from public.integrations where org_id = ${orgId} and name = 'gcal'`;
+  });
+
+  it("offers a server that isn't built in, with its host and no key in the chat (D-473)", async () => {
+    events.length = 0;
+    const r = await call("connections.offer", {
+      servers: [{ name: "Acme CRM", url: "https://mcp.acme.example/mcp/" }],
+      why: "So I can read your deals",
+    });
+    expect(r.content).toMatch(/connect Acme CRM is in the chat/);
+    const [shown] = events;
+    const ui = JSON.stringify(shown?.payload.messages);
+    // An "app:route": app builds from before this open Settings, Apps instead of a dead button.
+    expect(ui).toContain(
+      `"name":"app:route","context":{"path":"/settings/integrations","server":{"name":"Acme CRM","url":"https://mcp.acme.example/mcp/"},"bot":"${botId}"}`,
+    );
+    expect(ui).toContain("Acme CRM is at mcp.acme.example. Casama hasn't checked this server");
+    const [log] = await h.tdb.admin<{ metadata: { host: string } }[]>`
+      select metadata from public.audit_log where org_id = ${orgId} and action = 'integration.offered_by_bot'`;
+    expect(log?.metadata.host).toBe("mcp.acme.example");
+
+    // A key in the address never reaches the chat; without an address the person types it.
+    await expect(
+      call("connections.offer", {
+        servers: [{ name: "Zed", url: "https://zed.example/mcp?key=abc" }],
+        why: "x",
+      }),
+    ).rejects.toThrow(/Offer the server without url/);
+    await expect(
+      call("connections.offer", {
+        servers: [{ name: "Zed", url: "http://zed.example/mcp" }],
+        why: "x",
+      }),
+    ).rejects.toThrow(/https/);
+    await expect(call("connections.offer", { why: "x" })).rejects.toThrow(/apps, servers, or both/);
+    events.length = 0;
+    await call("connections.offer", { servers: [{ name: "Zed" }], why: "x" });
+    expect(JSON.stringify(events[0]?.payload.messages)).toContain(
+      `"server":{"name":"Zed"},"bot":"${botId}"`,
+    );
+
+    // A built-in app's own address is that app, with its usual button.
+    const builtIn = APP_CATALOG.find((a) => !a.provider && a.url.startsWith("https://"))!;
+    events.length = 0;
+    await call("connections.offer", {
+      servers: [{ name: "Whatever", url: builtIn.url }],
+      why: "x",
+    });
+    expect(JSON.stringify(events[0]?.payload.messages)).toContain(
+      `"name":"app:connect","context":{"app":"${builtIn.id}"}`,
+    );
+
+    // A server on the person's own computer goes to that screen.
+    events.length = 0;
+    await call("connections.offer", {
+      servers: [{ name: "Files", command: "npx -y files-mcp" }],
+      why: "x",
+    });
+    expect(JSON.stringify(events[0]?.payload.messages)).toContain(
+      '"path":"/settings/companion","server":{"name":"Files","command":"npx","args":["-y","files-mcp"]}',
+    );
+
+    // One the workspace already has gets no card.
+    await h.tdb.admin`
+      insert into public.integrations (org_id, kind, name, config) values (${orgId}, 'mcp', 'acme_crm', '{"url":"https://MCP.acme.example/mcp","unverified":true}')`;
+    events.length = 0;
+    const again = await call("connections.offer", {
+      servers: [{ name: "Acme CRM", url: "https://mcp.acme.example/mcp" }],
+      why: "x",
+    });
+    expect(again.content).toMatch(/No card shown. Acme CRM is already connected/);
+    expect(events).toHaveLength(0);
+
+    // 25 servers from chats is the most a workspace holds.
+    await h.tdb.admin`
+      insert into public.integrations (org_id, kind, name, config)
+      select ${orgId}, 'mcp', 'filler_' || n, '{"url":"https://filler.example/mcp","unverified":true}'::jsonb
+      from generate_series(1, 24) n`;
+    await expect(
+      call("connections.offer", {
+        servers: [{ name: "One more", url: "https://more.example/mcp" }],
+        why: "x",
+      }),
+    ).rejects.toThrow(/already has 25 servers/);
+    await h.tdb
+      .admin`delete from public.integrations where org_id = ${orgId} and config ->> 'unverified' = 'true'`;
+  });
+
+  it("mcp.add points to the card when a server wants a sign-in, and keeps nothing (D-473)", async () => {
+    await expect(
+      call("mcp.add", { name: "locked", url: "https://mcp.test/locked", why: "x" }),
+    ).rejects.toThrow(/needs the person to sign in.*connections\.offer/);
+    const rows = await h.tdb.admin`
+      select 1 from public.integrations where org_id = ${orgId} and name like 'locked%'`;
+    expect(rows).toHaveLength(0);
+  });
+
+  it("mcp.find lists remote https servers from the public registry (D-473)", async () => {
+    const r = await call("mcp.find", { query: "Acme" });
+    expect(r.content).toContain("- Acme CRM (app.acme/crm): https://mcp.acme.example/mcp. Deals");
+    expect(r.content).toContain("https://keyed.example/sse (needs a key)");
+    // Not the old version, the address with a key in it, the stdio one or the plain-http one.
+    expect(r.content).not.toMatch(/old\.acme|\{key\}|nope\.example|plain\.example/);
+    expect(r.content).toContain('<untrusted source="mcp registry">');
+    expect(def("mcp.find").readOnly).toBe(true);
   });
 
   it("sees Gmail connected through managed Composio and shows no card for it", async () => {

@@ -114,8 +114,11 @@ export class McpAdapter implements IntegrationAdapter {
   private readonly url: string;
   private readonly headers: Record<string, string>;
   private readonly fetchImpl: typeof fetch;
+  /** A server nobody checked (D-473): what it says about its own tools can't lower their risk. */
+  private readonly unverified: boolean;
 
   constructor(rec: IntegrationRecord, ctx: AdapterContext) {
+    this.unverified = rec.config.unverified === true;
     // A server URL with its key in it (Zoho MCP) is the secret itself, with no auth header.
     const urlInSecret = rec.config.url_in_secret === true;
     const url = urlInSecret ? rec.secret : str(rec.config.url);
@@ -166,11 +169,12 @@ export class McpAdapter implements IntegrationAdapter {
           name: t.name,
           description: t.description ?? t.name,
           inputSchema: (t.inputSchema as Record<string, unknown>) ?? { type: "object" },
-          risk: t.annotations?.readOnlyHint
-            ? "low"
-            : t.annotations?.destructiveHint
-              ? "high"
-              : "medium",
+          risk:
+            t.annotations?.readOnlyHint && !this.unverified
+              ? "low"
+              : t.annotations?.destructiveHint
+                ? "high"
+                : "medium",
         });
       }
       cursor = r.nextCursor;

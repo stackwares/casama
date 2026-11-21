@@ -3292,6 +3292,64 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String serverNotChecked(String host) {
+    return 'Casama hasn\'t checked this server. Connect it only if you trust $host.';
+  }
+
+  @override
+  String get serverNotCheckedShort =>
+      'Casama hasn\'t checked this server. Connect it only if you trust who runs it.';
+
+  @override
+  String get serverAddressLabel => 'Server address';
+
+  @override
+  String get serverAddressHelp =>
+      'Paste the server\'s address. If it has a key in it, the key is stored encrypted and stays out of the chat.';
+
+  @override
+  String get serverChecking => 'Checking the server…';
+
+  @override
+  String serverSignInOn(String host) {
+    return 'You\'ll sign in on $host.';
+  }
+
+  @override
+  String get serverUseKey => 'Use a key instead';
+
+  @override
+  String get serverUseSignIn => 'Sign in instead';
+
+  @override
+  String serverSignInUnavailable(String name) {
+    return '$name can\'t take a browser sign-in from this Casama server. Use a key.';
+  }
+
+  @override
+  String get serverNoSignIn => 'This server works without signing in.';
+
+  @override
+  String get serverHeaderLabel => 'Header name (optional)';
+
+  @override
+  String get serverToolsTitle => 'Tools it can use';
+
+  @override
+  String get serverToolsHelp =>
+      'Switch off any you don\'t want. Bots still ask before risky steps.';
+
+  @override
+  String addedInChatBy(String bot) {
+    return 'Added in chat by $bot';
+  }
+
+  @override
+  String serverNeedsThisComputer(String name) {
+    return '$name runs on your own computer. Open Casama on that computer and turn on Use this computer to add it.';
+  }
+
+  @override
   String get connectAppsTitle => 'Connect your apps';
 
   @override

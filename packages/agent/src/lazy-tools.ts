@@ -37,6 +37,7 @@ const GROUP_PURPOSE: Record<string, string> = {
   gallery:
     "ready-made skills, routines, bots, apps, plugins and looks to offer before building one yourself; turn good work into a skill draft",
   library: "find and change things you made before",
+  mcp: "an app that isn't built in: find its MCP server, add one you hold a key for, remove one",
   device:
     "the person's own phone or computer: calendar, contacts, health (sleep, steps, heart rate), places, reminders; read them or ask for access",
   widget:

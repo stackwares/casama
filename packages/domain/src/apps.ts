@@ -52,6 +52,43 @@ export function appServerUrl(value: string, hosts: string[]): URL | null {
   return hosts.some((h) => host === h || host.endsWith(`.${h}`)) ? u : null;
 }
 
+/** The app id kept on a sign-in for a server that isn't in the catalog (D-473). */
+export const CUSTOM_APP = "custom";
+/** How many servers bots may bring into one workspace from chats (D-473). */
+export const CHAT_SERVER_LIMIT = 25;
+
+/**
+ * The address of an MCP server outside the catalog (D-473), or null: https only (http on this
+ * machine, for tests and local development) and no user or password in it.
+ */
+export function customServerUrl(value: string): URL | null {
+  let u: URL;
+  try {
+    u = new URL(value.trim());
+  } catch {
+    return null;
+  }
+  const local = u.hostname === "127.0.0.1" || u.hostname === "localhost";
+  if (u.protocol !== "https:" && !(local && u.protocol === "http:")) return null;
+  if (u.username || u.password || !u.hostname) return null;
+  u.hash = "";
+  return u;
+}
+
+/** Two addresses of the same server: host and path, whatever the case or a closing slash. */
+export const serverKey = (u: URL) =>
+  `${u.host.toLowerCase()}${u.pathname.replace(/\/+$/, "")}`.toLowerCase();
+
+/** A connection name made from what people call the server: "Acme CRM" is acme_crm. */
+export function serverSlug(label: string): string {
+  const s = label
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "")
+    .slice(0, 30);
+  return /^[a-z]/.test(s) ? s : `server_${s}`.replace(/_+$/, "").slice(0, 30);
+}
+
 /** Zoho's data centres: each serves MCP servers on its own zohomcp domain. */
 const ZOHO_MCP_HOSTS = [
   "zohomcp.com",

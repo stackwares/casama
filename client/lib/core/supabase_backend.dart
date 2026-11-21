@@ -3668,6 +3668,54 @@ class SupabaseBackend implements Backend {
       (await api.integrations.connectStatus(id: flowId)).data!;
 
   @override
+  Future<ProbeServerResponse> probeServer(String orgId, String url) async =>
+      (await api.integrations.probeServer(
+        probeServerRequest: ProbeServerRequest(orgId: orgId, url: url),
+      )).data!;
+
+  @override
+  Future<ConnectAppResponse> connectServer(
+    String orgId, {
+    required String url,
+    required String name,
+    required String method,
+    String? apiKey,
+    String? authHeader,
+    bool privateUrl = false,
+    String? botId,
+    bool returnToApp = false,
+  }) async => (await api.integrations.connectServer(
+    connectServerRequest: ConnectServerRequest(
+      orgId: orgId,
+      url: url,
+      name: name,
+      method: ConnectServerRequestMethodEnum.values.firstWhere(
+        (m) => m.value == method,
+      ),
+      apiKey: apiKey,
+      authHeader: authHeader,
+      privateUrl: privateUrl ? true : null,
+      botId: botId,
+      returnToApp: returnToApp ? true : null,
+    ),
+  )).data!;
+
+  @override
+  Future<void> setBotIntegrationTools(
+    String botId,
+    String integrationId,
+    List<String> tools,
+  ) async {
+    await api.integrations.attachIntegration(
+      id: botId,
+      attachIntegrationRequest: AttachIntegrationRequest(
+        integrationId: integrationId,
+        toolAllowlist: tools,
+      ),
+    );
+  }
+
+  @override
   Future<void> deleteIntegration(String integrationId) async =>
       api.integrations.deleteIntegration(id: integrationId);
 
