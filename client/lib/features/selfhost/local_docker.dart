@@ -20,8 +20,9 @@ Future<bool> localDockerDown(
     final own = Uri.parse(local.url);
     if (using == null ||
         using.port != own.port ||
-        !RemoteAccessSettings.isLoopback(using.host))
+        !RemoteAccessSettings.isLoopback(using.host)) {
       return false;
+    }
     return await (docker ?? DockerCheck()).state() != DockerState.ready;
   } catch (_) {
     return false;
