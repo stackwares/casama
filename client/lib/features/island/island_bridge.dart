@@ -16,7 +16,7 @@ import '../../core/shortcuts.dart' show askPath;
 import '../../l10n/generated/app_localizations.dart';
 import '../app_lock/app_lock.dart';
 import '../companion/desktop_shell.dart';
-import '../inbox/for_you.dart' show forYouProvider;
+import '../inbox/for_you.dart' show forYouProvider, needsYouCountProvider;
 import '../widgets/widget_settings.dart';
 import '../voice/active_call.dart';
 import '../voice/call_system.dart';
@@ -133,7 +133,9 @@ final islandStateProvider = Provider<Map<String, Object?>>((ref) {
     // The tracker has heard from the server since launch: a Live Activity for a run it doesn't
     // list can end.
     'synced': ref.watch(islandSyncedProvider),
-    'inbox': ref.watch(inboxBadgeProvider),
+    // Labelled "Needs you" in the notch and menu bar, so the same count as the sidebar's Needs you
+    // (approvals, takeovers, suggestions), not unread updates as well.
+    'inbox': ref.watch(needsYouCountProvider),
     'bots': [
       for (final b in bots) {'id': b.id, 'name': b.name},
     ],

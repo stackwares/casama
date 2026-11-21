@@ -1345,7 +1345,7 @@ struct AskBar: View {
       )
       .frame(height: 20)
       if model.inbox > 0 {
-        Button { controller.openLink("/inbox") } label: {
+        Button { controller.openLink("/inbox?tab=0") } label: {
           Text("\(model.label("needs_you")) \(model.inbox)")
             .font(.system(size: 11, weight: .semibold))
             .lineLimit(1)

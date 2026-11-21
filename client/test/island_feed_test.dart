@@ -10,6 +10,7 @@ import 'package:casama/core/push.dart';
 import 'package:casama/features/chat/chat_controller.dart';
 import 'package:casama/features/companion/companion.dart';
 import 'package:casama/features/companion/desktop_shell.dart';
+import 'package:casama/features/inbox/for_you.dart' show needsYouCountProvider;
 import 'package:casama/features/island/island_bridge.dart';
 import 'package:casama/features/island/island_feed.dart';
 import 'package:casama/features/island/island_call.dart';
@@ -1039,6 +1040,19 @@ void main() {
       expect(run.fromChat, isFalse, reason: 'no chat reports it: it follows its own record');
       expect(s.c.read(islandAskBotProvider), botId, reason: 'the next ask goes to the same bot');
       expect(s.c.read(islandFeedProvider).map((i) => i.runId), contains(runId));
+    });
+
+    test('"Needs you" in the notch and menu bar counts what the sidebar does, not unread updates', () async {
+      final s = setUpBridge();
+      s.backend.storedNotifications = [
+        NotificationView(id: 'u1', kind: 'routine_result', title: 'Done', body: 'The report', createdAt: DateTime(2027)),
+      ];
+      s.c.listen(signedInProvider, (_, _) {});
+      await s.c.read(signedInProvider.future);
+      await s.c.read(notificationsProvider.future);
+      await s.c.read(approvalsProvider.future);
+      expect(s.c.read(inboxBadgeProvider), greaterThan(s.c.read(needsYouCountProvider)));
+      expect(s.c.read(islandStateProvider)['inbox'], s.c.read(needsYouCountProvider));
     });
 
     test('sends the switches and the bot the ask field goes to', () async {
