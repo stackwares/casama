@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { corsOrigins } from "../src/api/cors.ts";
 
-const EXT = "ppbkfncjfhfhkgbkdleajcpacfljphpl";
+const EXT = "kkfppfhkjnenffibmnkphnbejidkmbkj";
 const env = (over: Partial<Parameters<typeof corsOrigins>[0]> = {}) => ({
   PUBLIC_APP_URL: "https://app.casama.ai",
   CORS_ORIGINS: "https://app.example.com, ",

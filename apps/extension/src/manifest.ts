@@ -44,8 +44,8 @@ export const FIREFOX_MIN_VERSION = "140.0";
  * the server and the web app allow (test/ids.test.ts checks they agree).
  */
 export const DEV_KEY =
-  "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAg+ybXP9Kh5t/pfSWVzYXl4mjV20SJ8Vx5N1cwW/cX0wk/QWtFVd69yTRaIHEG9jSbxLHqTyOsED+LI86NMMpdNfAOT9SFKNB2IOKW4SoLHlM0KiBxO7ACpVk58vWM7CwlAaLBwyMvhjtTcSNTJElx0+lxFeYa+MIU6GrjDi6yxLXnBMReZ3MxkUdje06CcO1qNuu9rXV1hRYcys2XitcQvASO5pLeTgOS8U06a+oDsnSCPH/ahQL/hdtwtu5ut0wLeSjv6ib2kbimS9l4W2fm4OYKiUx2DVWv6UYOG9yzQvlYFxgpFpETfiirw0o+VG+IuVY4XvZvOrdrExCtgbp0QIDAQAB";
-export const DEV_EXTENSION_ID = "ppbkfncjfhfhkgbkdleajcpacfljphpl";
+  "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAuab6v3EXkPtAJyDMpsF2jQwkLWdFfslW0DkwQSCn3D6VxAiD4sb9qIes5wH7tu4BPB6r1tMPNDvi7GWf/TC0NRUfj2dmGCWHnYN4rI9uRj2sQ5zqBbWMKQHvAaZ9sPaynPMZQPbfLdAQx2Mbc24znUb5Efivi3kBfYw+jnlSkRpa8fIvF7tVdlVqu8Mnix8P+1Mnu0hJ9oW/TQWzCa7/oXRSydnuVzWAr3GpEX9iJHvHb7X/wjICILE3vnY6pTfBJTCdPaRtgR02+ck+w2zTdRwnnTrrdNokcebzSX5fzTJSUs0JQqfaVrtaYfuXILQr03mQhfEpraynqjdSGOJQ+QIDAQAB";
+export const DEV_EXTENSION_ID = "kkfppfhkjnenffibmnkphnbejidkmbkj";
 
 /** Pages that may hand the extension a sign-in (route 1 in the plan, §9.2). */
 export function webAppOrigins(target: Target): string[] {

@@ -9,7 +9,7 @@ import 'chrome_extension_web.dart'
 /// Edge Add-ons gives the same package its own id (D-323 Phase 5): add it here once the Edge item
 /// exists, and to the server's CHROME_EXTENSION_IDS, so Connect Chrome works in Edge too. Firefox
 /// can't take a sign-in from a web page, so it has no id here.
-const chromeExtensionIds = ['ppbkfncjfhfhkgbkdleajcpacfljphpl'];
+const chromeExtensionIds = ['kkfppfhkjnenffibmnkphnbejidkmbkj'];
 
 enum ChromeHandover {
   /// The extension is signed in.
