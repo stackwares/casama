@@ -1212,6 +1212,42 @@
       "funnels": []
     },
     {
+      "name": "screen_card_shown",
+      "by": ["client"],
+      "description": "The bot's screen appeared in a small card in its chat (SCREEN-CARD-PLAN).",
+      "properties": {
+        "trigger": {
+          "type": "string",
+          "values": ["screen_step", "takeover"]
+        }
+      },
+      "funnels": []
+    },
+    {
+      "name": "screen_card_opened",
+      "by": ["client"],
+      "description": "The screen card was tapped to open the full live view.",
+      "properties": {
+        "state": {
+          "type": "string",
+          "values": ["watching", "needs_you", "held", "done", "stale"]
+        }
+      },
+      "funnels": []
+    },
+    {
+      "name": "screen_card_hidden",
+      "by": ["client"],
+      "description": "The person hid the screen card for the reply, or turned it off.",
+      "properties": {
+        "how": {
+          "type": "string",
+          "values": ["close", "setting"]
+        }
+      },
+      "funnels": []
+    },
+    {
       "name": "companion_paired",
       "by": ["client"],
       "description": "This computer was paired.",

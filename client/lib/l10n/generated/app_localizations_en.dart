@@ -10070,6 +10070,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get showBotStepsHelp => 'Commands and technical errors in every chat.';
 
   @override
+  String get showScreenCard => 'Show the bot\'s screen while it works';
+
+  @override
+  String get showScreenCardHelp =>
+      'A small live card in the chat. Tap it to watch full screen.';
+
+  @override
   String get showReplyUsage => 'Show usage on replies';
 
   @override

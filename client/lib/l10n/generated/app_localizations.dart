@@ -15898,6 +15898,18 @@ abstract class AppLocalizations {
   /// **'Commands and technical errors in every chat.'**
   String get showBotStepsHelp;
 
+  /// No description provided for @showScreenCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Show the bot\'s screen while it works'**
+  String get showScreenCard;
+
+  /// No description provided for @showScreenCardHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'A small live card in the chat. Tap it to watch full screen.'**
+  String get showScreenCardHelp;
+
   /// No description provided for @showReplyUsage.
   ///
   /// In en, this message translates to:

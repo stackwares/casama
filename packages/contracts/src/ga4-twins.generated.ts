@@ -109,6 +109,15 @@ export const ANALYTICS_CLIENT_EVENTS: Record<string, string[]> = {
   "live_view_failed": [
     "fallback"
   ],
+  "screen_card_shown": [
+    "trigger"
+  ],
+  "screen_card_opened": [
+    "state"
+  ],
+  "screen_card_hidden": [
+    "how"
+  ],
   "companion_paired": [
     "os"
   ],

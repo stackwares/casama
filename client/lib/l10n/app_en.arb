@@ -3095,6 +3095,8 @@
   "photosFromUnsplash": "Photos from Unsplash",
   "showBotSteps": "Show the bot's steps",
   "showBotStepsHelp": "Commands and technical errors in every chat.",
+  "showScreenCard": "Show the bot's screen while it works",
+  "showScreenCardHelp": "A small live card in the chat. Tap it to watch full screen.",
   "showReplyUsage": "Show usage on replies",
   "showReplyUsageHelp": "What each reply cost, in a line under it.",
   "openLinksInApp": "Open links in the app",

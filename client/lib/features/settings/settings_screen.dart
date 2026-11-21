@@ -9,6 +9,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../voice/call_tools_sheet.dart';
 import '../chat/chat_detail.dart';
 import '../../core/fold/fold.dart';
+import '../../core/analytics.dart';
 import '../../core/billing.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../core/mac_bridge.dart';
@@ -335,6 +336,26 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       key: const Key('showBotSteps'),
                       value: ref.watch(showBotStepsProvider),
                       onChanged: hapticOnChanged(ref.read(showBotStepsProvider.notifier).set),
+                    ),
+                  ),
+                  // On by default: the bot's screen in a small card while it works on it (SCREEN-CARD-PLAN).
+                  GroupedTile(
+                    icon: LucideIcons.monitorPlay,
+                    title: l10n.showScreenCard,
+                    subtitle: l10n.showScreenCardHelp,
+                    onTap: () {
+                      HapticsHelper.light();
+                      final on = !ref.read(showScreenCardProvider);
+                      ref.read(showScreenCardProvider.notifier).set(on);
+                      if (!on) Analytics.log('screen_card_hidden', {'how': 'setting'});
+                    },
+                    trailing: Switch(
+                      key: const Key('showScreenCard'),
+                      value: ref.watch(showScreenCardProvider),
+                      onChanged: hapticOnChanged((on) {
+                        ref.read(showScreenCardProvider.notifier).set(on);
+                        if (!on) Analytics.log('screen_card_hidden', {'how': 'setting'});
+                      }),
                     ),
                   ),
                   // Off by default: what each reply cost, in a line under it (D-307).

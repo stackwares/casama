@@ -11,7 +11,7 @@ import {
 } from "@casama/agent";
 import { routes } from "@casama/contracts";
 import { type JwtClaims, schema, withUserSession } from "@casama/db";
-import { type FileThumbnail, SandboxError } from "@casama/sandbox";
+import { type FileThumbnail, SandboxError, type SandboxHandle } from "@casama/sandbox";
 import type { OpenAPIHono } from "@hono/zod-openapi";
 import { desc, eq, inArray, sql } from "drizzle-orm";
 import { WebSocket, WebSocketServer } from "ws";
@@ -20,6 +20,7 @@ import { enforceLimit } from "../../billing/limits.ts";
 import { OpenSockets } from "../drain.ts";
 import { ApiError } from "../errors.ts";
 import { isPresence, throttledTouch } from "../keep-awake.ts";
+import { matchesEtag, ScreenCaptures, shrink } from "../screen-captures.ts";
 import type { AppDeps, AppEnv } from "../types.ts";
 import { iso } from "../util.ts";
 
@@ -152,6 +153,7 @@ async function sandbox<T>(fn: () => Promise<T>): Promise<T> {
 
 export function registerComputerRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
   const { db } = deps;
+  const screenCaptures = new ScreenCaptures();
   const service = (): ComputerService => {
     if (!deps.computers)
       throw new ApiError(
@@ -437,10 +439,38 @@ export function registerComputerRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
   app.openapi(routes.computerScreenshot, async (c) => {
     const claims = requireClaims(c.get("claims"));
     const { id } = c.req.valid("param");
-    const h = await viewerHandle(claims, id);
-    let png: Uint8Array;
+    const { format, width, wake } = c.req.valid("query");
+    const current = await visible(claims, id);
+    let h: SandboxHandle;
+    if (wake === "false") {
+      // The screen card (SCREEN-CARD-PLAN): never wakes a computer or counts as using it.
+      const running = await service().ifRunning(id);
+      if (!running) throw new ApiError(409, "computer_asleep", "The computer is asleep");
+      h = running.forViewer?.(claims.sub) ?? running;
+    } else {
+      h = await viewerHandle(claims, id);
+    }
+    // A personal computer's picture depends on who asks (forViewer); everyone else's is shared.
+    const key = current.kind === "local" ? `${id}:${claims.sub}` : id;
+    const shot = await screenCaptures.get(key, () => captureScreen(h));
+    const headers = { etag: shot.etag, "cache-control": "no-store" };
+    if (matchesEtag(c.req.header("if-none-match"), shot.etag))
+      return c.body(null, 304, headers) as never;
+    if (format === "jpeg" || width) {
+      const kind = format === "jpeg" ? "jpeg" : "png";
+      const small = await shrink(shot, width ?? 480, kind);
+      return c.body(Buffer.from(small), 200, {
+        ...headers,
+        "content-type": `image/${kind}`,
+      }) as never;
+    }
+    return c.body(Buffer.from(shot.png), 200, { ...headers, "content-type": "image/png" }) as never;
+  });
+
+  /** The desktop, or on a headless computer the bot's open browser page. */
+  const captureScreen = async (h: SandboxHandle): Promise<Uint8Array> => {
     try {
-      png = await h.screenshot();
+      return await h.screenshot();
     } catch (err) {
       if (!(err instanceof SandboxError) || err.status !== 501) throw err;
       // Headless: capture the bot's browser page instead, if a browser is open. An empty tab
@@ -456,13 +486,9 @@ export function registerComputerRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
       );
       if (!r.stdout.includes("ok"))
         throw new ApiError(409, "nothing_to_show", "No desktop or open browser page to capture");
-      png = await sandbox(() => h.readFile("/tmp/casama-screen.png"));
+      return await sandbox(() => h.readFile("/tmp/casama-screen.png"));
     }
-    return c.body(Buffer.from(png), 200, {
-      "content-type": "image/png",
-      "cache-control": "no-store",
-    }) as never;
-  });
+  };
 
   /** Team computers are managed by admins; private computers by whoever manages the bot. */
   const canManage = async (claims: JwtClaims, orgId: string, ownerBotId: string | null) => {

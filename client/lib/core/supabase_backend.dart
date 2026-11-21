@@ -6866,6 +6866,34 @@ class SupabaseBackend implements Backend {
   }
 
   @override
+  Future<ScreenPicture> screenPicture(String computerId, {int width = 480, String? etag}) async {
+    try {
+      final res = await api.computers.computerScreenshot(
+        id: computerId,
+        format: 'jpeg',
+        width: width,
+        wake: 'false',
+        headers: {'If-None-Match': ?etag},
+      );
+      final bytes = res.data;
+      if (bytes == null || bytes.isEmpty) return const ScreenPicture(ScreenPictureStatus.failed);
+      return ScreenPicture(ScreenPictureStatus.fresh, bytes: bytes, etag: res.headers.value('etag'));
+    } on DioException catch (e) {
+      final r = e.response;
+      if (r?.statusCode == 304) return ScreenPicture(ScreenPictureStatus.unchanged, etag: etag);
+      if (r?.statusCode == 409) {
+        final data = r?.data;
+        // A binary response type: the error body arrives as bytes.
+        final text = data is List<int> ? utf8.decode(data, allowMalformed: true) : '$data';
+        return ScreenPicture(text.contains('computer_asleep') ? ScreenPictureStatus.asleep : ScreenPictureStatus.nothing);
+      }
+      return const ScreenPicture(ScreenPictureStatus.failed);
+    } catch (_) {
+      return const ScreenPicture(ScreenPictureStatus.failed);
+    }
+  }
+
+  @override
   Future<(Uri, Map<String, String>)> terminal(
     String computerId, {
     int cols = 100,

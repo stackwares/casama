@@ -7497,6 +7497,16 @@ class FakeBackend implements Backend {
   Uint8List? screen;
   @override
   Future<Uint8List?> screenshot(String computerId) async => screen;
+
+  /// What [screenPicture] answers (the screen card), and every call it got.
+  ScreenPicture Function(String computerId, String? etag)? onScreenPicture;
+  final screenPictureCalls = <String>[];
+  @override
+  Future<ScreenPicture> screenPicture(String computerId, {int width = 480, String? etag}) async {
+    screenPictureCalls.add(computerId);
+    return onScreenPicture?.call(computerId, etag) ??
+        (screen == null ? const ScreenPicture(ScreenPictureStatus.asleep) : ScreenPicture(ScreenPictureStatus.fresh, bytes: screen, etag: '"s-1"'));
+  }
   @override
   Future<(Uri, Map<String, String>)> terminal(
     String computerId, {

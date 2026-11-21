@@ -1584,9 +1584,19 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                           ),
                         ),
                       ),
-                      // The bot's screen in a corner (SCREEN-CARD-PLAN), for now only as a debug preview.
-                      if (screenCardPreview && !widget.group && (layout == LayoutSize.phone || layout == LayoutSize.tablet))
-                        Positioned.fill(child: ScreenCardPreview(botName: name, layout: layout)),
+                      // The bot's screen in a corner while it works on it (SCREEN-CARD-PLAN).
+                      if (!widget.group && (layout == LayoutSize.phone || layout == LayoutSize.tablet))
+                        Positioned.fill(
+                          child: screenCardPreview
+                              ? ScreenCardPreview(botName: name, layout: layout)
+                              : ScreenCard(
+                                  botId: widget.botId,
+                                  botName: name,
+                                  computerId: computer?.id,
+                                  layout: layout,
+                                  onOpen: (id) => context.pushOnce('/computer/live?c=$id'),
+                                ),
+                        ),
                     ],
                   ),
                 ),

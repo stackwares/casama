@@ -4,7 +4,13 @@ Status: **approved** (2026-11-21). Oliver took every default in §11. **Phase 0 
 measurements below §7; the sample card (`client/lib/ui/screen_tile.dart`,
 `client/lib/features/chat/widgets/screen_card.dart`, `client/test/screen_card_test.dart`) was driven
 in the web app at iPhone 14 Pro Max size: every state, tap, drag to a corner, the corner kept after a
-reload, close and return. Next: Phase 1.
+reload, close and return. **Phase 1 built** (2026-11-21, not deployed): the lighter screenshot
+(`format=jpeg&width=…&wake=false`, ETag/304, one shared capture a second;
+`apps/server/src/api/screen-captures.ts`, `apps/server/test/screen-card.test.ts`), the card in each
+bot's chat on phones and tablets with the §4 rules (`ScreenCard` in `screen_card.dart`,
+`client/test/screen_card_rules_test.dart`), the setting and the three analytics events. Still to do
+for Phase 1: the check on Oliver's phone (network time, battery, the computer still sleeping on
+time), which needs a server deploy and a Flutter run, each with his yes. Then Phase 2.
 
 Line numbers are from 2026-11-21. Re-find each one before editing.
 
@@ -243,6 +249,21 @@ screen's existing tile tests still pass on the shared tile.
 | **3. Smoother (optional)** | The headless page stream, or video in the card on Wi-Fi | Decided from the Phase 0 numbers and the analytics; its own short plan if it goes ahead |
 
 Phases 1 and 2 need a server deploy and app builds to reach people. Each needs Oliver's yes.
+
+### Phase 1 choices (2026-11-21)
+
+Oliver left these to the builder:
+
+- **The card keeps 16:10** and shows the top of the picture (cover, top aligned), so a headless
+  page and a desktop look the same size in the corner.
+- **Pacing:** the next picture is asked for 1 second after the last one arrives, so a slow network
+  slows it down by itself (decision 6).
+- **The call tile is not merged yet.** The tile is shared code (`ScreenTile`) and the call bubble
+  can move onto it in Phase 2.
+- **A sleeping computer shows nothing.** `wake=false` answers 409 `computer_asleep`; the card
+  stays hidden, and the last picture dims at 8 seconds and goes at 20, as for any failed fetch.
+- **Back from the live view,** the card checks again after 400 ms, since covering a page doesn't
+  rebuild it.
 
 ### Phase 0 measurements (2026-11-21)
 

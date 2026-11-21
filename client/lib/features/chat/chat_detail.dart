@@ -53,3 +53,29 @@ class ShowReplyUsage extends Notifier<bool> {
 }
 
 final showReplyUsageProvider = NotifierProvider<ShowReplyUsage, bool>(ShowReplyUsage.new);
+
+/// On by default (SCREEN-CARD-PLAN §6): while a bot works on its computer's screen, a small card
+/// in its chat shows that screen. Kept on this device.
+class ShowScreenCard extends Notifier<bool> {
+  static const _key = 'chat.showScreenCard';
+
+  @override
+  bool build() {
+    SharedPreferences.getInstance()
+        .then((p) {
+          final saved = p.getBool(_key);
+          if (saved != null && ref.mounted) state = saved;
+        })
+        .catchError((_) {});
+    return true;
+  }
+
+  Future<void> set(bool show) async {
+    state = show;
+    try {
+      await (await SharedPreferences.getInstance()).setBool(_key, show);
+    } catch (_) {}
+  }
+}
+
+final showScreenCardProvider = NotifierProvider<ShowScreenCard, bool>(ShowScreenCard.new);

@@ -289,12 +289,25 @@ export const computerScreenshot = createRoute({
   tags: ["computers"],
   security,
   summary: "PNG of the desktop, or of the bot's browser page on headless computers",
-  request: { params: idParam },
+  description:
+    "Without query parameters: a full-size PNG, waking the computer if it sleeps. The screen card (SCREEN-CARD-PLAN) asks for a small JPEG instead (`format=jpeg`, `width`), with `wake=false` so a sleeping computer answers 409 `computer_asleep` and is neither woken nor counted as used. Each answer carries an ETag; send it back as If-None-Match and an unchanged screen answers 304. A computer is captured at most once a second, shared by everyone watching it.",
+  request: {
+    params: idParam,
+    query: z.object({
+      format: z.enum(["png", "jpeg"]).optional(),
+      width: z.coerce.number().int().min(160).max(1280).optional(),
+      wake: z.enum(["true", "false"]).optional(),
+    }),
+  },
   responses: {
     200: {
-      description: "PNG image",
-      content: { "image/png": { schema: z.string().openapi({ format: "binary" }) } },
+      description: "PNG or JPEG image",
+      content: {
+        "image/png": { schema: z.string().openapi({ format: "binary" }) },
+        "image/jpeg": { schema: z.string().openapi({ format: "binary" }) },
+      },
     },
+    304: { description: "The screen is unchanged since the ETag sent in If-None-Match" },
     401: e401,
     404: e404,
     409: e409,

@@ -1537,7 +1537,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** PNG of the desktop, or of the bot's browser page on headless computers */
+        /**
+         * PNG of the desktop, or of the bot's browser page on headless computers
+         * @description Without query parameters: a full-size PNG, waking the computer if it sleeps. The screen card (SCREEN-CARD-PLAN) asks for a small JPEG instead (`format=jpeg`, `width`), with `wake=false` so a sleeping computer answers 409 `computer_asleep` and is neither woken nor counted as used. Each answer carries an ETag; send it back as If-None-Match and an unchanged screen answers 304. A computer is captured at most once a second, shared by everyone watching it.
+         */
         get: operations["computerScreenshot"];
         put?: never;
         post?: never;
@@ -22103,7 +22106,11 @@ export interface operations {
     };
     computerScreenshot: {
         parameters: {
-            query?: never;
+            query?: {
+                format?: "png" | "jpeg";
+                width?: number;
+                wake?: "true" | "false";
+            };
             header?: never;
             path: {
                 id: string;
@@ -22112,14 +22119,22 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description PNG image */
+            /** @description PNG or JPEG image */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "image/png": string;
+                    "image/jpeg": string;
                 };
+            };
+            /** @description The screen is unchanged since the ETag sent in If-None-Match */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Not authenticated */
             401: {

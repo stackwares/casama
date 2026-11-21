@@ -553,10 +553,13 @@ _responseData = rawData == null ? null : deserialize<ComputerHistory, ComputerHi
   }
 
   /// PNG of the desktop, or of the bot&#39;s browser page on headless computers
-  /// 
+  /// Without query parameters: a full-size PNG, waking the computer if it sleeps. The screen card (SCREEN-CARD-PLAN) asks for a small JPEG instead (&#x60;format&#x3D;jpeg&#x60;, &#x60;width&#x60;), with &#x60;wake&#x3D;false&#x60; so a sleeping computer answers 409 &#x60;computer_asleep&#x60; and is neither woken nor counted as used. Each answer carries an ETag; send it back as If-None-Match and an unchanged screen answers 304. A computer is captured at most once a second, shared by everyone watching it.
   ///
   /// Parameters:
   /// * [id] 
+  /// * [format] 
+  /// * [width] 
+  /// * [wake] 
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -568,6 +571,9 @@ _responseData = rawData == null ? null : deserialize<ComputerHistory, ComputerHi
   /// Throws [DioException] if API call or serialization fails
   Future<Response<Uint8List>> computerScreenshot({ 
     required String id,
+    String? format,
+    int? width,
+    String? wake,
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
     Map<String, dynamic>? extra,
@@ -595,9 +601,16 @@ _responseData = rawData == null ? null : deserialize<ComputerHistory, ComputerHi
       validateStatus: validateStatus,
     );
 
+    final _queryParameters = <String, dynamic>{
+      if (format != null) r'format': format,
+      if (width != null) r'width': width,
+      if (wake != null) r'wake': wake,
+    };
+
     final _response = await _dio.request<Object>(
       _path,
       options: _options,
+      queryParameters: _queryParameters,
       cancelToken: cancelToken,
       onSendProgress: onSendProgress,
       onReceiveProgress: onReceiveProgress,

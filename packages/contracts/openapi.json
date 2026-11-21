@@ -38786,6 +38786,7 @@
           }
         ],
         "summary": "PNG of the desktop, or of the bot's browser page on headless computers",
+        "description": "Without query parameters: a full-size PNG, waking the computer if it sleeps. The screen card (SCREEN-CARD-PLAN) asks for a small JPEG instead (`format=jpeg`, `width`), with `wake=false` so a sleeping computer answers 409 `computer_asleep` and is neither woken nor counted as used. Each answer carries an ETag; send it back as If-None-Match and an unchanged screen answers 304. A computer is captured at most once a second, shared by everyone watching it.",
         "parameters": [
           {
             "schema": {
@@ -38795,19 +38796,62 @@
             "required": true,
             "name": "id",
             "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "png",
+                "jpeg"
+              ]
+            },
+            "required": false,
+            "name": "format",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 160,
+              "maximum": 1280
+            },
+            "required": false,
+            "name": "width",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ]
+            },
+            "required": false,
+            "name": "wake",
+            "in": "query"
           }
         ],
         "responses": {
           "200": {
-            "description": "PNG image",
+            "description": "PNG or JPEG image",
             "content": {
               "image/png": {
                 "schema": {
                   "type": "string",
                   "format": "binary"
                 }
+              },
+              "image/jpeg": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
               }
             }
+          },
+          "304": {
+            "description": "The screen is unchanged since the ETag sent in If-None-Match"
           },
           "401": {
             "description": "Not authenticated",

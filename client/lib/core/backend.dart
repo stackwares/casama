@@ -1393,6 +1393,31 @@ class AdminWaitlist {
   final WaitlistLastBatch? lastBatch;
 }
 
+/// What [Backend.screenPicture] got.
+enum ScreenPictureStatus {
+  /// A new picture, in [ScreenPicture.bytes].
+  fresh,
+
+  /// The same as the picture with the ETag that was sent.
+  unchanged,
+
+  /// The computer sleeps; it wasn't woken.
+  asleep,
+
+  /// Awake, but nothing to show (a headless computer with no page open).
+  nothing,
+
+  /// Couldn't be fetched this time.
+  failed,
+}
+
+class ScreenPicture {
+  const ScreenPicture(this.status, {this.bytes, this.etag});
+  final ScreenPictureStatus status;
+  final Uint8List? bytes;
+  final String? etag;
+}
+
 abstract class Backend {
   // Auth
   Stream<bool> get signedInChanges;
@@ -3237,6 +3262,11 @@ abstract class Backend {
   /// What's on the computer's screen as a PNG. Empty bytes when there is nothing to show (a
   /// headless computer with no page open); null when it could not be fetched.
   Future<Uint8List?> screenshot(String computerId);
+
+  /// The screen card's picture (SCREEN-CARD-PLAN): a small JPEG [width] wide that never wakes the
+  /// computer or counts as using it. Pass the last [etag] to get [ScreenPictureStatus.unchanged]
+  /// instead of the same picture again.
+  Future<ScreenPicture> screenPicture(String computerId, {int width = 480, String? etag});
   Future<(Uri, Map<String, String>)> terminal(
     String computerId, {
     int cols,
