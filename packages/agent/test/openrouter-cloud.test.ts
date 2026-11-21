@@ -6,12 +6,23 @@ import { AiSdkGateway } from "../src/gateway/ai-sdk.ts";
 import {
   openRouterCostFromText,
   openRouterProviderPreferences,
+  readOpenRouterCost,
   rewriteOpenRouterRequest,
   withOpenRouterRouting,
 } from "../src/gateway/openrouter.ts";
 import { cloudCallReserveUsd } from "../src/gateway/registry.ts";
 
 describe("OpenRouter request and cost", () => {
+  it("gives no cost, not a rejection, when the stream is cut off by a stopped reply", async () => {
+    const body = new ReadableStream<Uint8Array>({
+      start(c) {
+        c.enqueue(new TextEncoder().encode('data: {"choices":[]}\n'));
+        c.error(new Error("cancelled"));
+      },
+    });
+    await expect(readOpenRouterCost(body)).resolves.toBeUndefined();
+  });
+
   it("reads the last cost in a streamed response", () => {
     const sse = [
       'data: {"choices":[{"delta":{"content":"hi"}}]}',

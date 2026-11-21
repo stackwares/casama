@@ -11,7 +11,13 @@ export function openRouterCostFromText(text: string): number | undefined {
 export async function readOpenRouterCost(
   body: ReadableStream<Uint8Array>,
 ): Promise<number | undefined> {
-  return openRouterCostFromText(await new Response(body).text());
+  // A stopped reply aborts the fetch, which errors this copy of the body too. Nothing awaits the
+  // cost then, so a rejection here was unhandled and took the whole worker down: cost unknown.
+  try {
+    return openRouterCostFromText(await new Response(body).text());
+  } catch {
+    return undefined;
+  }
 }
 
 /**
