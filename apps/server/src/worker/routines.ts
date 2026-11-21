@@ -260,6 +260,8 @@ export async function claimDueRoutines(
             msg: "routine claim failed",
             routine_id: r.id,
             error: (err as Error).message,
+            // drizzle's message is the failed SQL; the database's own error is the cause.
+            cause: ((err as { cause?: Error }).cause ?? undefined)?.message,
           }),
         );
         const next = (() => {
