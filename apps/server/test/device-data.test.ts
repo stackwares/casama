@@ -287,6 +287,12 @@ describe("device connections", () => {
     expect(r.evs.find((e) => e.type === "tool.failed")?.payload.message).toContain(
       "Device connections",
     );
+    // Nor when the bot asks anyway: an Allow card would grant nothing, and the next read would
+    // still find no device (bug hunt 2026-11-21: "no device is connected" right after Allow).
+    expect(r.evs.some((e) => e.type === "device.access_requested")).toBe(false);
+    const asked = r.evs.filter((e) => e.type === "tool.failed")[1]?.payload;
+    expect(asked).toMatchObject({ call_id: "a1", error_code: "device_kind_off" });
+    expect(asked?.message).toContain("Device connections");
   });
 
   it("writes go through approval and the device; turning a kind off deletes its data", async () => {

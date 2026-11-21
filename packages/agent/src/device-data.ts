@@ -168,6 +168,13 @@ export interface DeviceDataDeps {
   waitMs?: { read?: number; write?: number };
 }
 
+/**
+ * The person shares a kind from no device. Turning it on in Device connections (on the phone or
+ * computer that has it) is the only way forward; an Allow card can't help until then.
+ */
+const notSharedMessage = (kind: DeviceKind) =>
+  `You don't have access to the person's ${LABEL[kind]}: they don't share it from any device yet, so there is nothing to allow. Tell them to turn on ${LABEL[kind]} in Settings → Device connections on the phone or computer that has it. Once it's on, device.read shows them a one-tap card to allow it; don't call device.request_access before then.`;
+
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 export function registerDeviceTools(registry: ToolRegistry, deps: DeviceDataDeps) {
@@ -217,10 +224,7 @@ export function registerDeviceTools(registry: ToolRegistry, deps: DeviceDataDeps
         `You don't have access to the person's ${LABEL[kind]} yet. They now see a one-tap card to allow it: tell them to tap Allow and ask again. Don't call device.request_access, and carry on without it meanwhile.`,
       );
     }
-    throw new ToolError(
-      "no_device_access",
-      `You don't have access to the person's ${LABEL[kind]}, and they don't share it from any device. They can turn it on in Settings → Device connections; then ask with device.request_access.`,
-    );
+    throw new ToolError("no_device_access", notSharedMessage(kind));
   };
   /**
    * The system permission behind a kind (D-376): when every device sharing it reports that
@@ -453,6 +457,11 @@ export function registerDeviceTools(registry: ToolRegistry, deps: DeviceDataDeps
           content: `You already have access to their ${LABEL[kind]}.`,
           preview: "already allowed",
         };
+      // No device shares the kind: an Allow card would grant nothing a read can use, and the
+      // next read would still find no device (bug hunt 2026-11-21: "no device is connected" right
+      // after Allow). They turn it on in Device connections first; the read then shows the card.
+      if (!(await sources(user, kind)).length)
+        throw new ToolError("device_kind_off", notSharedMessage(kind));
       await askOnce(ctx, kind, args.reason);
       return {
         content: `Asked for their ${LABEL[kind]}. They'll see a card to allow it; don't wait for it.`,
