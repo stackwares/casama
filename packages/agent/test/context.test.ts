@@ -28,6 +28,20 @@ const base = {
 };
 
 describe("buildContext", () => {
+  it("tells every bot to do errands and sign in for the person instead of refusing", () => {
+    const system = buildContext(base).system.join("\n");
+    expect(system).toContain("You are the person's own agent");
+    expect(system).toContain("Never turn one down");
+    for (const tool of [
+      'where: "mine"',
+      "logins.list",
+      "secrets.request",
+      "computer.request_takeover",
+      "payments.request",
+    ])
+      expect(system).toContain(tool);
+  });
+
   it("keeps what changes with every message out of the system text, so it stays cached", () => {
     const a = buildContext({
       ...base,

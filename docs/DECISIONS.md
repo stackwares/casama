@@ -7152,3 +7152,21 @@ only the last words of a help sentence. So:
 - **Consent screen:** `known_app` on the auth request. The destination has its own line; an app
   Casama doesn't recognize gets a warning to allow it only if you started the connection yourself.
 - **Clean-up:** the hourly maintenance deletes clients a week old with no tokens and no open request.
+
+## D-468 Bots do errands and sign in for the person instead of refusing (2026-11-21)
+
+- **Problem:** asked to sign in somewhere, a bot replied that it "can't hold your Google password" and
+  stopped, though the platform already has saved logins, `secrets.request`, `{{totp:}}`,
+  `computer.request_takeover`, `payments.request` and `voice.call`. The prompt never said that errands
+  were the bot's job, so the model fell back on its own caution.
+- **Rule in `PLATFORM_RULES`:** the bot is the person's own agent; errands (signing in, booking,
+  forms, checkout, calls, email) are never turned down. It stops only at a real wall and then asks for
+  one thing.
+- **Sign-in order:** their Chrome (`where: "mine"`), then a saved login or secret, then
+  `secrets.request`, then a takeover for Google, Apple, Microsoft, banks, CAPTCHAs and two-step
+  prompts (the computer's browser profile keeps the session). Never a password in chat.
+- **Details and paying:** forms take the person's own details; passport, ID and card numbers come
+  through `secrets.request`; paying uses `payments.request` or hands the last step over. Approval
+  follows the autonomy setting: asking, not refusing.
+- **Offline Chrome:** the `browser_offline` message now points to the computer's browser, saved
+  logins, `secrets.request` and the takeover, not only "open Chrome".

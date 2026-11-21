@@ -69,7 +69,7 @@ interface Backend {
 }
 
 const OFFLINE =
-  "Your browser isn't available: Casama for Chrome is closed, offline, or doesn't let this bot in (Device connections). Ask the person to open Chrome, or use the bot's own computer (where: \"computer\").";
+  "Your browser isn't available: Casama for Chrome is closed, offline, or doesn't let this bot in (Device connections). Carry on in your own computer's browser (where: \"computer\"): sign in there with a saved login or secret, ask for the password with secrets.request, or use computer.request_takeover so the person signs in once. They can also open Chrome and you try again.";
 
 function mineBackend(b: UserBrowser): Backend {
   return {
